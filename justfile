@@ -19,6 +19,13 @@ set dotenv-load := false
 
 root := justfile_directory()
 
+# Put the project environment on PATH for every recipe, so `just` works identically with
+# direnv, without direnv, and in CI. Recipes therefore call `ruff`/`pytest`/`ty` directly
+# rather than prefixing `uv run`, and a bare tool name can never silently resolve to a
+# different copy on the system -- which matters most for `ty`, since this workstation has
+# pyrefly and pyright installed and globally enabled.
+export PATH := justfile_directory() / ".venv/bin" + ":" + env_var("PATH")
+
 [private]
 default:
     @just --list --unsorted
@@ -162,9 +169,11 @@ acceptance-check:
 gate-phase n:
     @"{{ root }}/scripts/gate-phase.sh" "$1"
 
+# Kept in the same order as .github/workflows/ci.yml so a local run and a CI run check the
+# same things. If you add a step to one, add it to the other.
 [doc("Everything that must hold on every change. The default pre-commit surface.")]
 [group('gate')]
-ci: toolchain-check provenance-check fmt-check lint hooks-test rules-test check test deps-policy acceptance-check
+ci: toolchain-check provenance-check hooks-test rules-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
     @echo "ci: complete"
 
 # ---------------------------------------------------------------------------- mutating
