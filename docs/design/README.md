@@ -57,8 +57,8 @@ principles and G1–G7 gates is in
 
 A record may sit at `status: proposed` while a review is outstanding. It becomes `accepted` only
 when the review's verdict is Accept or Accept-scoped — see
-[`../adr/README.md`](../adr/README.md) and `.claude/commands/adr.md` for which changes need a
-review at all.
+[`../adr/README.md`](../adr/README.md) and the `adr` skill for which changes need a review at
+all.
 
 There is no GitHub machinery behind this. pse-arrow, where this process comes from, enforces the
 equivalent with PR labels, a semantic-title action and required checks; this repository has no
@@ -92,8 +92,11 @@ just guardrails-check
 ```
 
 Everything this process needs is outside that boundary: `docs/`, `scripts/adr.py`, the
-`justfile`, `rules/`, `.claude/agents/`, `.claude/commands/`, `.claude/skills/` and
-`tests/gates.toml`.
+`justfile`, `rules/`, `.claude/agents/`, `.claude/skills/` and `tests/gates.toml`.
+
+Workflows are **skills**, never a runtime-specific command directory: `.codex/` and `.agents/`
+expose `.claude/skills` and `.claude/agents` through symlinks, so one file serves Claude Code and
+Codex alike. `just lint-agents` fails if that stops being true.
 
 One item is outstanding and belongs to the operator. `AGENTS.md` carries a nine-row summary of
 the binding decisions that is **not** the same set as blueprint §1.1 — it adds §B12 and §B13 and

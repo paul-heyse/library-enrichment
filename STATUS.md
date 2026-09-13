@@ -321,6 +321,7 @@ Four tiers, chosen by asking what the cheapest reproducible oracle is.
 |---|---|---|
 | PreToolUse hook | `scripts/hooks/` | Visible in the tool call alone. **70 tested cases.** |
 | ast-grep rule | `rules/` + `rule-tests/` | Code shapes. 6 rules, all with fixtures; the newest came from a review finding. |
+| Agent config | `just lint-agents` | The instructions themselves: shared surface, resolvable paths, real recipes. |
 | `just` gate | `justfile` | Needs the whole repo |
 | Prose | `AGENTS.md`, `.claude/rules/` | Only what has no mechanical oracle |
 
@@ -363,10 +364,15 @@ which is why every gate read `not_run` before this phase regardless of what pass
 | `schemas/generated/` | Emitted from the Rust types; never hand-edited |
 | `skills/library-research/` | **The product skill.** Installed only by explicit `just install-skill --apply` |
 
-Subagents: `upstream-verifier`, `acceptance-auditor`, `boundary-reviewer` (diff review).
-Commands: `/phase-gate`, `/adr`, `/verify-upstream`, `/acceptance-report`, `/handoff`.
-Skills: `/design-review` (design review against the charter; writes to
-`docs/design_review/reviews/`).
+**Skills** (`.claude/skills/`, shared with Codex by symlink — ADR-0010): `/adr`,
+`/design-review`, `/phase-gate`, `/verify-upstream`, `/acceptance-report`, `/handoff`.
+**Subagents** (`.claude/agents/`, likewise shared): `upstream-verifier`, `acceptance-auditor`,
+`boundary-reviewer` (diff review).
+
+There is no `.claude/commands/`: a command is visible to Claude Code alone, a skill to every
+runtime. `just lint-agents` fails if a runtime-specific surface reappears, if `.codex/` or
+`.agents/` stops exposing `skills` and `agents`, or if any path or `just` recipe the instructions
+name does not exist.
 
 Development service state is the gitignored `.dev-state/`; production resolves to XDG.
 `just state-leak-check` proves the real paths stayed untouched. `just state-reset` clears it.

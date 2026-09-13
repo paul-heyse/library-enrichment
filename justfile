@@ -185,6 +185,11 @@ acceptance-report:
 acceptance-check:
     @python3 "{{ root }}/scripts/acceptance-check.py"
 
+[doc("Agent configuration: every runtime sees the same skills and agents; every path and recipe resolves.")]
+[group('gate')]
+lint-agents:
+    @python3 "{{ root }}/scripts/check_agent_config.py"
+
 [doc("Run the behaviour tests for the decision-record lint and the register checker.")]
 [group('gate')]
 adr-lint-test:
@@ -211,7 +216,7 @@ gate-phase n:
 # same things. If you add a step to one, add it to the other.
 [doc("Everything that must hold on every change. The default pre-commit surface.")]
 [group('gate')]
-ci: toolchain-check provenance-check guardrails-check hooks-test rules-test adr-lint adr-lint-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
+ci: toolchain-check provenance-check guardrails-check hooks-test rules-test lint-agents adr-lint adr-lint-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
     @echo "ci: complete"
 
 # ---------------------------------------------------------------------------- decisions

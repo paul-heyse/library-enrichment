@@ -1,20 +1,22 @@
 ---
-description: Record an architecture decision, including any deviation from the design.
-argument-hint: <short-slug>
+name: adr
+description: Write, lint, index or supersede an architecture decision record. Use when a change alters a binding decision §B1-§B13, changes the wire contract, the schema-ownership rule, the execution-policy profiles, the epistemic classes or the publication boundary, retires or re-scopes an acceptance gate, deviates from a charter SHOULD, fires a deferred trigger from the register - and whenever someone says "ADR", "decision record", "why was this decided", "supersede ADR-NNNN", or asks whether a change needs a decision record or a design review.
 allowed-tools: Bash, Read, Grep, Glob, Write, Edit
 ---
 
-Create a decision record for: $1
+# Decision records
 
-`docs/design/DESIGN.md` is the design. **ADRs record why it reads the way it is.** Design reviews
-under `docs/design_review/reviews/` are evidence, not authority. Plans under `docs/plans/` record
-how work is sequenced and stay living; an ADR is immutable once accepted.
+**Argument:** a short kebab-case slug for the decision.
+
+`docs/design/DESIGN.md` is the design. **ADRs record why it reads the way it does.** Design
+reviews under `docs/design_review/reviews/` are evidence, not authority. Plans under
+`docs/plans/` record how work is sequenced and stay living; an ADR is immutable once accepted.
 
 ## 1. Does this change need one?
 
 | Change | Needs |
 |---|---|
-| Alters a binding decision §B1–§B13; changes the wire contract, the schema-ownership rule, the execution-policy profiles, the epistemic classes or the publication boundary; retires or re-scopes an acceptance gate; any deviation from a charter SHOULD | **ADR + design review.** Run `/design-review` first; the verdict must be Accept or Accept-scoped before the record's status becomes `accepted` |
+| Alters a binding decision §B1–§B13; changes the wire contract, the schema-ownership rule, the execution-policy profiles, the epistemic classes or the publication boundary; retires or re-scopes an acceptance gate; any deviation from a charter SHOULD | **ADR + design review.** Run the `design-review` skill first; the verdict must be Accept or Accept-scoped before the record's status becomes `accepted` |
 | A new producer, projection, tool body or error code **within** an accepted decision; a small local deviation; moving a pin; a deferred trigger in `docs/adr/register.md` fires | **ADR (short).** Review at your discretion |
 | Bug fixes; refactors inside existing contracts; tests; documentation wording; a patch bump inside a pinned family; tooling | **Neither** |
 
@@ -24,7 +26,7 @@ not an edit to it.
 ## 2. Write it
 
 ```
-just adr-new $1 --title "Imperative one-liner"
+just adr-new <slug> --title "Imperative one-liner"
 ```
 
 That allocates the next number, copies `docs/adr/template.md` and stamps today's date. Then fill
@@ -57,6 +59,9 @@ The three sections that matter most here:
 2. Add a row to `DESIGN.md`'s **Revision history** table.
 3. Keep every existing section number where it is — insert `§6.2.1`, never renumber.
 4. If the record defers anything, add the register row so the trigger has an owner and a date.
+
+Correcting an evidence label as work lands is maintenance, not an amendment, and needs no ADR —
+only a change to what the design *is* does.
 
 ## 4. Before you finish
 

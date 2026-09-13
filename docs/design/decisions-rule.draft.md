@@ -5,7 +5,7 @@
 redirects included, and the denial message says what to do instead: *"Propose the change in
 `docs/adr/` and let the operator apply it."*
 
-This file is that proposal. Three changes, none of them blocking — the process installed by
+This file is that proposal. Four changes, none of them blocking — the process installed by
 ADR-0009 works without any of them, and each is tracked by a register row so it does not simply
 evaporate.
 
@@ -143,7 +143,21 @@ Two smaller edits in the same pass:
 
 ---
 
-## 3. `CLAUDE.md` — say where a plan lives
+## 3. `.claude/rules/process-immutable.md` — the freely-editable table
+
+Register row **R-16**. Its "What you can change freely" table lists `.claude/commands/`. That
+directory no longer exists: ADR-0010 moved every workflow to `.claude/skills/`, because a command
+is visible to Claude Code alone while a skill is exposed to every runtime through the `.codex/`
+and `.agents/` symlinks. Replace the row:
+
+| | |
+|---|---|
+| `.claude/agents/`, `.claude/skills/` | subagents and workflows — **shared with Codex by symlink; a workflow belongs here, never in a runtime-specific command directory** (ADR-0010) |
+
+`just lint-agents` enforces it, and the stale reference is allowlisted in
+`.claude/path-allowlist.txt` until this lands.
+
+## 4. `CLAUDE.md` — say where a plan lives
 
 No register row; a one-line clarification. Plan mode writes to `~/.claude/plans/`, which is a
 single session's scratch proposal. When a session's plan becomes work that will land,
