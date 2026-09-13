@@ -40,6 +40,29 @@ if printf '%s' "$cmd" | grep -Eq '(cargo[[:space:]]+add|uv[[:space:]]+add)[^|;&]
   hook_deny "Banned dependency class (blueprint §1.1: no graph database, embeddings, vector database, gRPC, Redis, or FastAPI in the initial implementation). deny.toml and \`just deps-policy\` are the canonical oracles and will fail the gate."
 fi
 
+# 6. Writing to a frozen or generated path through the shell.
+#    pre_edit.sh blocks these for Edit/Write; without this, `cat > AGENTS.md` would bypass it.
+#    Narrow on purpose: only redirections and in-place editors, only these path prefixes.
+if printf '%s' "$cmd" | grep -Eq '([[:space:]]>|[[:space:]]>>|tee[[:space:]]|sed[[:space:]]+-i|dd[[:space:]]+of=)'; then
+  for frozen in docs/blueprint docs/provenance contracts tests/ACCEPTANCE_PLAN.md \
+                schemas/generated python/enrichment_mcp/_generated \
+                AGENTS.md CLAUDE.md justfile .claude scripts rules rule-tests; do
+    if printf '%s' "$cmd" | grep -Eq "(^|[[:space:]>]|${root}/)${frozen}([[:space:]/]|\"|'|$)" \
+       && printf '%s' "$cmd" | grep -Eq "([[:space:]]>|[[:space:]]>>|tee[[:space:]]+[^|]*|sed[[:space:]]+-i[^|]*|dd[[:space:]]+of=)[^|;&]*${frozen}"; then
+      hook_deny "Refusing to write to \`${frozen}\` through the shell.
+
+This path is frozen, generated, or operator-owned governance, and pre_edit.sh blocks the same write for Edit/Write. Routing around a guardrail through a shell redirect is not a workaround -- it is the thing the guardrail exists to stop.
+
+  frozen provenance      docs/blueprint, docs/provenance -- the specification as delivered
+  frozen contracts       contracts/, tests/ACCEPTANCE_PLAN.md -- verified by just provenance-check
+  generated artifacts    fix the Rust wire type and run just schemas-generate (§6.3)
+  governance             AGENTS.md, .claude/, justfile, scripts/, rules/ -- propose via docs/adr/
+
+If a guardrail is genuinely wrong, say so and stop."
+    fi
+  done
+fi
+
 # 6. Writes outside the repository boundary (blueprint §2.3; gate C20). Only inspect commands
 #    that actually mutate, so read-only exploration stays unimpeded.
 if printf '%s' "$cmd" | grep -Eq '(^|[|;&[:space:]])(rm|mv|cp|tee|install|mkdir|touch|truncate|chmod|chown|ln)([[:space:]])|[[:space:]]>[^>|&]|[[:space:]]>>|sed[[:space:]]+-i'; then

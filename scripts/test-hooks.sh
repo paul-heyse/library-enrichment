@@ -58,6 +58,20 @@ bash_case "relative write"      'mkdir -p crates/enrichment-core/src'           
 bash_case "dev-state write"     'mkdir -p .dev-state/cache'                            allow
 bash_case "plain ls"            'ls -la docs/'                                         allow
 
+echo "pre_bash: frozen paths cannot be written through the shell"
+bash_case "heredoc to AGENTS.md"  'cat > AGENTS.md <<EOF\nx\nEOF'                   deny
+bash_case "redirect to blueprint" 'echo x > docs/blueprint/IMPLEMENTATION_BLUEPRINT.md' deny
+bash_case "sed -i a contract"     'sed -i s/a/b/ contracts/research-envelope.schema.json' deny
+bash_case "tee the justfile"      'echo x | tee justfile'                            deny
+bash_case "write a generated dto" 'echo x > python/enrichment_mcp/_generated/m.py'    deny
+bash_case "absolute frozen path"  'echo x > /home/paul/library-enrichment/AGENTS.md'  deny
+bash_case "READ the blueprint"    'cat docs/blueprint/IMPLEMENTATION_BLUEPRINT.md'    allow
+bash_case "grep the contracts"    'rg envelope contracts/'                           allow
+bash_case "run a script"          './scripts/provenance-check.sh'                    allow
+bash_case "write to STATUS.md"    'echo x > STATUS.md'                               allow
+bash_case "write an ADR"          'cat > docs/adr/0005-x.md <<EOF\nx\nEOF'          allow
+bash_case "write core source"     'echo x > crates/enrichment-core/src/policy.rs'     allow
+
 echo "pre_edit: frozen, generated, governance"
 edit_case "blueprint"           'docs/blueprint/IMPLEMENTATION_BLUEPRINT.md'           deny
 edit_case "provenance manifest" 'docs/provenance/bundle-2026-09-13/MANIFEST.sha256'    deny
