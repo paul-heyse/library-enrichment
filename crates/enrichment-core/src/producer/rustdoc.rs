@@ -180,21 +180,20 @@ mod tests {
 
     /// Measure the supported set against real captures rather than trusting the constant.
     ///
-    /// The captures are produced by `just rustdoc-format-matrix` into the development cache,
-    /// which is gitignored. When they are absent this reports the fact and stops — an
-    /// unmeasured claim is better left unmade than asserted from a fixture that was written to
-    /// agree with the code it checks.
+    /// These are **real rustdoc output**, committed under `tests/fixtures/rustdoc/` precisely so
+    /// this always runs. An earlier revision read them from `$LIBENR_CACHE_HOME` and returned
+    /// early when that was unset — so the test passed while measuring nothing, and gate R04
+    /// rested on it. A test that silently does nothing is worse than no test: it reports
+    /// confidence it has not earned. Absent fixtures are now a failure, not a shrug.
     #[test]
     fn the_supported_set_matches_what_the_parser_actually_accepts() {
-        let Some(cache) = std::env::var_os("LIBENR_CACHE_HOME") else {
-            eprintln!("LIBENR_CACHE_HOME unset; skipping the measured check");
-            return;
-        };
-        let dir = PathBuf::from(cache).join("rustdoc-format-matrix");
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            eprintln!("{} absent; run `just rustdoc-format-matrix`", dir.display());
-            return;
-        };
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .ancestors()
+            .nth(2)
+            .expect("the crate sits two levels below the repository root")
+            .join("tests/fixtures/rustdoc");
+        let entries = std::fs::read_dir(&dir)
+            .unwrap_or_else(|err| panic!("{} is missing ({err})", dir.display()));
 
         let mut measured = Vec::new();
         for entry in entries.flatten() {
@@ -220,9 +219,10 @@ mod tests {
         }
 
         assert!(
-            !measured.is_empty(),
-            "no captures found in {}; run `just rustdoc-format-matrix`",
-            dir.display()
+            measured.len() >= 3,
+            "expected at least the v57/v60/v61 captures in {}, found {}",
+            dir.display(),
+            measured.len()
         );
 
         for (version, parsed, path) in &measured {
@@ -238,5 +238,26 @@ mod tests {
                 path.display()
             );
         }
+    }
+
+    /// `59` is in the supported set with no capture to measure it, so justify it explicitly.
+    ///
+    /// It is `rustdoc_types::FORMAT_VERSION` — the version the vendored parser was generated
+    /// from, and therefore the one it is definitionally correct for. Every other entry is
+    /// measured against a real artifact. If the dependency moves, this fails rather than
+    /// leaving a stale number that nothing checks.
+    #[test]
+    fn the_unmeasured_entry_is_the_parsers_own_format_version() {
+        assert!(
+            SUPPORTED_FORMAT_VERSIONS.contains(&rustdoc_types::FORMAT_VERSION),
+            "the parser's own FORMAT_VERSION ({}) must be supported",
+            rustdoc_types::FORMAT_VERSION
+        );
+        assert_eq!(
+            rustdoc_types::FORMAT_VERSION,
+            59,
+            "rustdoc-types moved; re-measure SUPPORTED_FORMAT_VERSIONS against the fixtures \
+             rather than assuming the old set still holds"
+        );
     }
 }
