@@ -130,6 +130,12 @@ with fixtures in `rule-tests/` when it is a code shape; a **`just` gate** when i
 whole repo; and **prose** only when there is no mechanical oracle. A hook that needs to parse a
 source file is the wrong tier — write a rule instead.
 
+The enforcement layer itself is not editable from inside a session: `AGENTS.md`, `CLAUDE.md`,
+`.claude/rules/`, `.claude/settings.json`, `scripts/hooks/` and `scripts/env.sh` are denied by
+both hooks, shell redirects included. Everything else is yours — the justfile, gate scripts,
+the ast-grep corpus, subagents, commands, and `tests/gates.toml`. Adding a rule to `rules/` is
+frictionless on purpose, because that is where review findings are supposed to land.
+
 ## Conventions
 
 `just`, never `make`. Recipe names are kebab-case and outcome-shaped, annotated with `[doc]`

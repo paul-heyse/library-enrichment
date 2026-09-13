@@ -39,11 +39,16 @@ Changing either requires an ADR (\`/adr\`) that re-freezes the bundle under a ne
 
 Change the Rust type, run \`just schemas-generate\`, and commit both sides together. Hand-editing makes the Rust type, the JSON Schema, and the Pydantic DTO drift silently." ;;
 
-    # Governance layer.
-    AGENTS.md|CLAUDE.md|.claude/*|.codex/*|.agents/*|justfile|scripts/*|rules/*|rule-tests/*)
-      hook_deny "\`${rel}\` is operator-owned governance. An agent working under these constraints does not relax them mid-task.
+    # The enforcement layer itself. An agent that can edit its own guardrails does not have
+    # guardrails. Note this is deliberately NARROWER than "all of .claude/ and scripts/":
+    # the justfile, gate scripts, the ast-grep corpus, subagents and commands all legitimately
+    # grow as phases land, and blocking those would just teach everyone to bypass the hook.
+    AGENTS.md|CLAUDE.md|.claude/rules/*|.claude/settings.json|scripts/hooks/*|scripts/env.sh)
+      hook_deny "\`${rel}\` is the enforcement layer -- the rules an agent works under, not part of the work.
 
-If a guardrail is genuinely wrong, say so and stop -- do not route around it or add a narrow exemption to make the current task pass. Propose the change in docs/adr/." ;;
+An agent that can edit its own guardrails does not have guardrails. If one is genuinely wrong, say so and stop: do not route around it, and do not add a narrow exemption to make the current task pass. Propose the change in docs/adr/ and let the operator apply it.
+
+What you CAN change without an ADR: the justfile, gate scripts in scripts/, the ast-grep corpus in rules/ and rule-tests/, subagents in .claude/agents/, commands in .claude/commands/, and tests/gates.toml. Growing the rule corpus in particular is encouraged -- boundary-reviewer findings are supposed to land there." ;;
 
     # Service state must never be committed into the repo.
     blobs/*|snapshots/*|capsules/*|jobs/*|logs/*|contexts/*|bundles/*)

@@ -46,7 +46,8 @@ fi
 if printf '%s' "$cmd" | grep -Eq '([[:space:]]>|[[:space:]]>>|tee[[:space:]]|sed[[:space:]]+-i|dd[[:space:]]+of=)'; then
   for frozen in docs/blueprint docs/provenance contracts tests/ACCEPTANCE_PLAN.md \
                 schemas/generated python/enrichment_mcp/_generated \
-                AGENTS.md CLAUDE.md justfile .claude scripts rules rule-tests; do
+                AGENTS.md CLAUDE.md .claude/rules .claude/settings.json \
+                scripts/hooks scripts/env.sh; do
     if printf '%s' "$cmd" | grep -Eq "(^|[[:space:]>]|${root}/)${frozen}([[:space:]/]|\"|'|$)" \
        && printf '%s' "$cmd" | grep -Eq "([[:space:]]>|[[:space:]]>>|tee[[:space:]]+[^|]*|sed[[:space:]]+-i[^|]*|dd[[:space:]]+of=)[^|;&]*${frozen}"; then
       hook_deny "Refusing to write to \`${frozen}\` through the shell.

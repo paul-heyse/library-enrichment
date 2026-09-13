@@ -62,7 +62,10 @@ echo "pre_bash: frozen paths cannot be written through the shell"
 bash_case "heredoc to AGENTS.md"  'cat > AGENTS.md <<EOF\nx\nEOF'                   deny
 bash_case "redirect to blueprint" 'echo x > docs/blueprint/IMPLEMENTATION_BLUEPRINT.md' deny
 bash_case "sed -i a contract"     'sed -i s/a/b/ contracts/research-envelope.schema.json' deny
-bash_case "tee the justfile"      'echo x | tee justfile'                            deny
+bash_case "sed -i a hook"         'sed -i s/a/b/ scripts/hooks/pre_bash.sh'           deny
+bash_case "tee a .claude rule"    'echo x | tee .claude/rules/python-boundary.md'     deny
+bash_case "shell-write justfile"  'echo x >> justfile'                                allow
+bash_case "shell-write a rule"    'cat > rules/new.yml <<EOF\nx\nEOF'                allow
 bash_case "write a generated dto" 'echo x > python/enrichment_mcp/_generated/m.py'    deny
 bash_case "absolute frozen path"  'echo x > /home/paul/library-enrichment/AGENTS.md'  deny
 bash_case "READ the blueprint"    'cat docs/blueprint/IMPLEMENTATION_BLUEPRINT.md'    allow
@@ -80,9 +83,11 @@ edit_case "acceptance plan"     'tests/ACCEPTANCE_PLAN.md'                      
 edit_case "generated schema"    'schemas/generated/envelope.json'                      deny
 edit_case "generated dto"       'python/enrichment_mcp/_generated/models.py'           deny
 edit_case "AGENTS.md"           'AGENTS.md'                                            deny
+edit_case "CLAUDE.md"           'CLAUDE.md'                                            deny
 edit_case "settings"            '.claude/settings.json'                                deny
+edit_case "a .claude rule"      '.claude/rules/python-boundary.md'                     deny
 edit_case "a hook"              'scripts/hooks/pre_bash.sh'                            deny
-edit_case "justfile"            'justfile'                                             deny
+edit_case "the shared env"      'scripts/env.sh'                                       deny
 edit_case "state in repo"       'snapshots/snap_x/manifest.json'                       deny
 edit_case "outside repo"        '/home/paul/smartref/src/main.py'                      deny
 edit_case "core source"         'crates/enrichment-core/src/lib.rs'                    allow
@@ -91,6 +96,15 @@ edit_case "a test"              'tests/contract/test_envelope.py'               
 edit_case "an ADR"              'docs/adr/0004-something.md'                           allow
 edit_case "gates registry"      'tests/gates.toml'                                     allow
 edit_case "STATUS.md"           'STATUS.md'                                            allow
+
+echo "pre_edit: the working surface must stay editable"
+edit_case "justfile"            'justfile'                                             allow
+edit_case "a gate script"       'scripts/gate-phase.sh'                                allow
+edit_case "a new ast-grep rule" 'rules/no-unbounded-fetch.yml'                          allow
+edit_case "a rule fixture"      'rule-tests/no-unbounded-fetch-test.yml'                allow
+edit_case "a subagent"          '.claude/agents/upstream-verifier.md'                   allow
+edit_case "a slash command"     '.claude/commands/phase-gate.md'                        allow
+edit_case "a dev skill"         '.claude/skills/some-workflow/SKILL.md'                 allow
 
 printf '\nhooks: %d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
