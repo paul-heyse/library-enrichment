@@ -5,6 +5,11 @@ members = [
   "crates/enrichment-store",
   "crates/enrichment-daemon",
 ]
+# The acceptance fixture crates are packages under study, not members of this workspace. Each
+# declares its own `[workspace]`; excluding them here is what lets `cargo rustdoc` run inside
+# one without Cargo deciding it belongs to us (tests/ACCEPTANCE_PLAN.md, "Deterministic
+# fixtures").
+exclude = ["tests/fixtures/crates/*"]
 
 [workspace.package]
 version = "0.0.0"
@@ -36,7 +41,10 @@ object_store = "0.13.2"
 public-api = "0.52.2"
 
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# `unbounded_depth` exposes `Deserializer::disable_recursion_limit`, which rustdoc JSON needs:
+# nested types in real crates exceed serde_json's default depth of 128. public-api already
+# enables it, so this changes nothing in the graph; it makes the dependency explicit.
+serde_json = { version = "1", features = ["unbounded_depth"] }
 
 # JSON Schema generation from the authoritative Rust wire types (blueprint §6.3). The
 # `emit-schemas` binary is the only consumer; schemas/generated/ is never hand-edited.
@@ -85,9 +93,52 @@ uuid = { version = "1.26.1", features = ["v4"] }
 # new skip.
 toml = { version = "1.1.6", default-features = false, features = ["parse", "serde"] }
 
+# Phase 1 acquisition and storage. Verified 2026-09-13 against the compatibility matrix rows
+# added the same day (docs/architecture/compatibility-matrix.md, "Phase 1 dependencies") and
+# recorded in docs/adr/0009. Versions are the newest published on that date; `cargo search`
+# and the lockfile agree.
+#
+# Already in Cargo.lock transitively -- promoting them adds no crate: sha2 (via DataFusion),
+# semver (via rustc_version), flate2 (via parquet), url (via object_store), rustdoc-types
+# (public-api's own pin, so sharing its `Id` type costs nothing). New subtrees: tar, and the
+# HTTP client below.
+sha2 = "0.11.0"
+semver = "1.0.28"
+flate2 = "1.1.10"
+tar = "0.4.46"
+url = "2.5.8"
+# docs.rs serves rustdoc JSON zstd-compressed by default (measured 2026-09-13:
+# `content-type: application/zstd`). Decoding is bounded; see producer::docsrs::decompress_zstd.
+zstd = "0.14.0"
+
+# The HTTP client, used only by the daemon's `fetch` module under the core's FetchPolicy.
+#
+# `default-features = false` drops charset sniffing and the system proxy. `rustls-no-provider`
+# is deliberate: reqwest 0.13's `rustls` feature enables `__rustls-aws-lc-rs`, and aws-lc-sys
+# carries a licence deny.toml does not allow. The crypto provider is therefore supplied
+# directly -- rustls with `ring` (Apache-2.0 AND ISC, both allowed) -- and installed as the
+# process default in enrichment_daemon::fetch. Verified 2026-09-13 from the sparse-index
+# feature tables of reqwest 0.13.5 and hyper-rustls 0.27.9.
+reqwest = { version = "0.13.5", default-features = false, features = [
+  "rustls-no-provider",
+  "http2",
+] }
+rustls = { version = "0.23.44", default-features = false, features = [
+  "ring",
+  "std",
+  "tls12",
+  "logging",
+] }
+# Pinned to exactly what public-api 0.52.2 depends on: `public_api::PublicItem::id()` returns
+# this crate's `Id`, and that is the join key between the rendered signature and our normalized
+# symbol. A second rustdoc-types version would make the join a compile error, which is the
+# right failure -- see enrichment_core::producer::rustdoc's version test.
+rustdoc-types = "0.59.0"
+
 # Internal crates carry an explicit version alongside the path. A bare `{ path = ... }` is a
 # wildcard requirement, and deny.toml sets `wildcards = "deny"`.
 enrichment-core = { path = "crates/enrichment-core", version = "0.0.0" }
+enrichment-store = { path = "crates/enrichment-store", version = "0.0.0" }
 
 [profile.dev]
 # Evidence snapshots get large; debug info dominates link time without helping much here.

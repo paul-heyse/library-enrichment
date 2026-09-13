@@ -14,8 +14,17 @@
 /// and reject exactly the documents the frozen schema does.
 pub const SCHEMA_VERSION: &str = "1.0";
 
+pub mod archive;
+pub mod canonical;
+pub mod clock;
 pub mod config;
+pub mod evidence;
+pub mod identity;
+pub mod policy;
 pub mod producer;
+pub mod registry;
+pub mod request;
+pub mod search;
 pub mod wire;
 
 #[cfg(test)]

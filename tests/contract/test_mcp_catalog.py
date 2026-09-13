@@ -28,7 +28,16 @@ ROOT = Path(__file__).resolve().parents[2]
 GENERATED_SCHEMA = ROOT / "schemas/generated/research-envelope.schema.json"
 
 #: The eight tools whose producers land in later phases.
-UNIMPLEMENTED = tuple(name for name in TOOL_NAMES if name != "service_status")
+# Tools with a real body no longer belong here; each Phase 1 tool leaves this set as it lands.
+IMPLEMENTED = {
+    "service_status",
+    "resolve_library",
+    "library_overview",
+    "search_evidence",
+    "inspect_symbol",
+    "read_artifact",
+}
+UNIMPLEMENTED = tuple(name for name in TOOL_NAMES if name not in IMPLEMENTED)
 
 
 @pytest.fixture(scope="module")

@@ -8,8 +8,11 @@
 //! `docs/adr/0006-ndjson-rpc-transport.md` for the parts §2.1 left open.
 
 pub mod envelope;
+pub mod fetch;
+pub mod ops;
 pub mod paths;
 pub mod rpc;
 pub mod server;
+pub mod service;
 pub mod status;
 pub mod validate;

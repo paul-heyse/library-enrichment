@@ -9,12 +9,15 @@
 //! Both scripts probe `cargo metadata` for a binary with exactly this name, so renaming the
 //! target silently disables schema generation and the conformance gate reports `not_run`.
 //!
-//! Output is byte-reproducible; `schema-conformance.sh` runs `git diff --exit-code` over the
-//! output directory to prove it. See `enrichment_core::wire::schema::envelope_schema`.
+//! Two files are written: the response envelope (the frozen Phase-0 contract's counterpart)
+//! and the tool payloads (`data` shapes for the research tools). Output is byte-reproducible;
+//! `schema-conformance.sh` runs `git diff --exit-code` over the output directory to prove it.
+//! See `enrichment_core::wire::schema::envelope_schema` and `wire::data::tool_data_schema`.
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use enrichment_core::wire::data::{TOOL_DATA_SCHEMA_FILE, tool_data_schema_json};
 use enrichment_core::wire::{ENVELOPE_SCHEMA_FILE, envelope_schema_json};
 
 const USAGE: &str = "usage: emit-schemas --out <dir>";
@@ -33,13 +36,17 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let path = out.join(ENVELOPE_SCHEMA_FILE);
-    if let Err(err) = std::fs::write(&path, envelope_schema_json()) {
-        eprintln!("emit-schemas: cannot write {}: {err}", path.display());
-        return ExitCode::FAILURE;
+    for (file, contents) in [
+        (ENVELOPE_SCHEMA_FILE, envelope_schema_json()),
+        (TOOL_DATA_SCHEMA_FILE, tool_data_schema_json()),
+    ] {
+        let path = out.join(file);
+        if let Err(err) = std::fs::write(&path, contents) {
+            eprintln!("emit-schemas: cannot write {}: {err}", path.display());
+            return ExitCode::FAILURE;
+        }
+        println!("emit-schemas: wrote {}", path.display());
     }
-
-    println!("emit-schemas: wrote {}", path.display());
     ExitCode::SUCCESS
 }
 

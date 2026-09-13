@@ -7,7 +7,9 @@
 //! The contract is `config/service.example.toml`, which is frozen and documents every key with
 //! its default. Missing keys fall back to those documented defaults; an unparsable file is an
 //! error rather than a silent fallback, because starting with different limits than the
-//! operator wrote is worse than not starting.
+//! operator wrote is worse than not starting. Keys the frozen example does not carry --
+//! `[network]` and the registry base URLs -- were added for Phase 1 and are documented in
+//! `docs/operations/README.md`.
 
 use std::path::{Path, PathBuf};
 
@@ -21,6 +23,12 @@ pub struct Config {
     pub limits: Limits,
     /// Execution-profile policy (§10).
     pub policy: Policy,
+    /// Registry and document freshness (§3.3).
+    pub freshness: FreshnessConfig,
+    /// Per-ecosystem producer settings.
+    pub producers: Producers,
+    /// Outbound network limits (§10).
+    pub network: Network,
     /// Where this came from, so `service_status` can say.
     #[serde(skip)]
     pub source: Source,
@@ -63,10 +71,22 @@ pub struct Limits {
     pub inline_result_bytes: usize,
     /// Maximum search results per page.
     pub search_results: usize,
+    /// Maximum characters in one evidence excerpt.
+    pub excerpt_characters: usize,
+    /// Maximum lines in one source excerpt.
+    pub source_lines: usize,
+    /// Maximum child entries per namespace in an overview.
+    pub namespace_entries: usize,
+    /// Largest verification snippet accepted.
+    pub verification_input_bytes: usize,
     /// Seconds to wait inline before returning a job receipt.
     pub inline_wait_seconds: u64,
     /// Maximum bounded wait in `job_control`.
     pub max_job_wait_seconds: u64,
+    /// Concurrent expensive build/probe workers.
+    pub expensive_worker_concurrency: usize,
+    /// Warm language-server sessions kept alive.
+    pub warm_lsp_sessions: usize,
     /// Largest NDJSON-RPC frame the daemon will accept (§2.1).
     pub rpc_message_bytes: usize,
 }
@@ -76,8 +96,14 @@ impl Default for Limits {
         Self {
             inline_result_bytes: 12288,
             search_results: 12,
+            excerpt_characters: 800,
+            source_lines: 80,
+            namespace_entries: 20,
+            verification_input_bytes: 32768,
             inline_wait_seconds: 2,
             max_job_wait_seconds: 10,
+            expensive_worker_concurrency: 2,
+            warm_lsp_sessions: 2,
             rpc_message_bytes: 1_048_576,
         }
     }
@@ -112,11 +138,115 @@ impl Default for Policy {
     }
 }
 
+/// Freshness policy (§3.3): mutable lookups get finite TTLs; immutable artifacts are reused by
+/// digest.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct FreshnessConfig {
+    /// How long a registry answer is trusted under `cache_ok`.
+    pub registry_ttl_seconds: u64,
+    /// How long a mutable documentation page is trusted under `cache_ok`.
+    pub mutable_docs_ttl_seconds: u64,
+    /// How long an "unavailable" answer is remembered. Shorter than the positive TTLs on
+    /// purpose: a timeout is not a permanent absence (§8.4).
+    pub negative_cache_ttl_seconds: u64,
+    /// Whether a "latest" question always revalidates against the registry.
+    pub latest_requires_revalidation: bool,
+}
+
+impl Default for FreshnessConfig {
+    fn default() -> Self {
+        Self {
+            registry_ttl_seconds: 900,
+            mutable_docs_ttl_seconds: 86400,
+            negative_cache_ttl_seconds: 300,
+            latest_requires_revalidation: true,
+        }
+    }
+}
+
+/// Per-ecosystem producer settings.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
+#[serde(default)]
+pub struct Producers {
+    /// Rust producers.
+    pub rust: RustProducers,
+}
+
+/// Rust producer settings (`[producers.rust]`).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct RustProducers {
+    /// Download hosted rustdoc JSON before any local compilation (§4.1).
+    pub prefer_hosted_rustdoc_json: bool,
+    /// Never explore all feature combinations by default (§4.3).
+    pub all_features_by_default: bool,
+    /// The Rust semantic engine.
+    pub lsp: String,
+    /// Base URL of the sparse registry index. Its host becomes a trusted endpoint.
+    pub crates_io_index_url: String,
+    /// Base URL of the registry web API. Its host becomes a trusted endpoint.
+    pub crates_io_api_url: String,
+    /// Base URL of the documentation host. Its host becomes a trusted endpoint.
+    pub docs_rs_url: String,
+    /// The identifying `User-Agent` sent with every request; crates.io's policy requires one.
+    pub user_agent: String,
+}
+
+impl Default for RustProducers {
+    fn default() -> Self {
+        Self {
+            prefer_hosted_rustdoc_json: true,
+            all_features_by_default: false,
+            lsp: "rust-analyzer".to_owned(),
+            crates_io_index_url: "https://index.crates.io".to_owned(),
+            crates_io_api_url: "https://crates.io/api/v1".to_owned(),
+            docs_rs_url: "https://docs.rs".to_owned(),
+            user_agent: format!(
+                "library-enrichment/{} (+https://github.com/paul-heyse/library-enrichment)",
+                env!("CARGO_PKG_VERSION")
+            ),
+        }
+    }
+}
+
+/// Outbound network limits (§10). Not in the frozen example; added for Phase 1.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct Network {
+    /// Largest response body accepted before decompression.
+    pub max_download_bytes: u64,
+    /// Largest decompressed payload accepted.
+    pub max_decompressed_bytes: u64,
+    /// Redirect hops followed, each re-checked against policy.
+    pub max_redirects: u32,
+    /// Total deadline for one HTTP request.
+    pub request_timeout_seconds: u64,
+    /// Deadline for one acquisition (registry, tarball, docs JSON, normalize, publish). Phase 1
+    /// runs acquisition inline; the adapter waits this long before reporting the daemon slow.
+    pub acquisition_timeout_seconds: u64,
+}
+
+impl Default for Network {
+    fn default() -> Self {
+        Self {
+            max_download_bytes: 64 * 1024 * 1024,
+            max_decompressed_bytes: 512 * 1024 * 1024,
+            max_redirects: 5,
+            request_timeout_seconds: 30,
+            acquisition_timeout_seconds: 120,
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
             limits: Limits::default(),
             policy: Policy::default(),
+            freshness: FreshnessConfig::default(),
+            producers: Producers::default(),
+            network: Network::default(),
             source: Source::BuiltInDefaults,
         }
     }
@@ -200,6 +330,17 @@ mod tests {
         let defaults = Config::default();
         assert_eq!(example.limits, defaults.limits);
         assert_eq!(example.policy, defaults.policy);
+        assert_eq!(example.freshness, defaults.freshness);
+        // The example predates the base-URL keys, so only the keys it carries are compared.
+        assert_eq!(
+            example.producers.rust.prefer_hosted_rustdoc_json,
+            defaults.producers.rust.prefer_hosted_rustdoc_json
+        );
+        assert_eq!(
+            example.producers.rust.all_features_by_default,
+            defaults.producers.rust.all_features_by_default
+        );
+        assert_eq!(example.producers.rust.lsp, defaults.producers.rust.lsp);
     }
 
     #[test]
@@ -224,6 +365,30 @@ mod tests {
         assert_eq!(config.policy.enabled_profiles, vec!["static".to_owned()]);
         // Unmentioned keys keep their documented defaults rather than becoming zero.
         assert_eq!(config.limits.inline_wait_seconds, 2);
+        assert_eq!(config.limits.excerpt_characters, 800);
+    }
+
+    #[test]
+    fn the_registry_base_urls_are_configurable() {
+        // What lets a test point the daemon at a loopback fixture upstream, and nothing else.
+        let config: Config = toml::from_str(
+            "[producers.rust]\ndocs_rs_url = \"http://127.0.0.1:9/\"\n\n[network]\nmax_redirects = 0\n",
+        )
+        .expect("parses");
+        assert_eq!(config.producers.rust.docs_rs_url, "http://127.0.0.1:9/");
+        assert_eq!(
+            config.producers.rust.crates_io_index_url,
+            "https://index.crates.io"
+        );
+        assert_eq!(config.network.max_redirects, 0);
+        assert_eq!(config.network.request_timeout_seconds, 30);
+    }
+
+    #[test]
+    fn the_user_agent_identifies_the_service() {
+        let ua = RustProducers::default().user_agent;
+        assert!(ua.starts_with("library-enrichment/"));
+        assert!(ua.contains("github.com/paul-heyse/library-enrichment"));
     }
 
     #[test]

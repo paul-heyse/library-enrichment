@@ -2,6 +2,16 @@
 
 [graph]
 all-features = true
+# Evaluate the platforms this service ships on (blueprint §2.1: Linux and macOS; a Windows
+# transport is a later profile). Without this, cargo-deny evaluates every target and
+# `rustls-platform-verifier`'s wasm32-only `webpki-root-certs` (CDLA-Permissive-2.0) fails the
+# licence check for a crate that is never built here. Verified 2026-09-13 in a scratch crate:
+# restricting targets clears it; allowing the licence would have been the wider change.
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "aarch64-apple-darwin",
+]
 
 [bans]
 # Blueprint §8.4: pin Arrow/DataFusion to a verified mutually compatible set. Do not force
@@ -30,11 +40,12 @@ skip = [
   { crate = "hashbrown", reason = "std, arrow and datafusion track different releases" },
   { crate = "itertools", reason = "iterator adapters; never in a public type" },
   { crate = "num-bigint", reason = "parquet decimal support vs a transitive consumer" },
-  { crate = "r-efi", reason = "UEFI target support via getrandom; not built on any target we ship" },
   { crate = "syn", reason = "proc-macro expansion only; never in a runtime type" },
-  { crate = "windows-sys", reason = "Windows API bindings; not built on Linux or macOS" },
   { crate = "zstd", reason = "parquet compression vs a transitive consumer" },
   { crate = "zstd-safe", reason = "zstd binding, same reason" },
+  # hyper-util 0.1.20 (its newest, 2026-02-02) still declares base64 0.22 while reqwest 0.13.5
+  # and arrow-cast 59.3.0 use 0.23. Encoding only; never in a public type. Verified 2026-09-13.
+  { crate = "base64", reason = "hyper-util 0.22 vs reqwest/arrow-cast 0.23; encoding internals only" },
 ]
 
 # Blueprint §1.1: do not add a graph database, embeddings, a vector database, a GPU workload,

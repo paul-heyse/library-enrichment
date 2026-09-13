@@ -6,7 +6,14 @@
 //! prevents is a *silent schema misparse*, where a field that changed meaning between formats
 //! is read as though it had not.
 
+pub mod cratesio;
+pub mod docsrs;
+pub mod normalize;
 pub mod rustdoc;
+pub mod source;
+pub mod spec;
+
+pub use spec::{ProducerPlan, ProducerRun, ProducerSpec, RunOutcome};
 
 /// Why a producer refused an artifact.
 ///

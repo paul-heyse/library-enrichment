@@ -7,10 +7,13 @@
 //! binary is not the MCP adapter, but the habit is the one the whole service keeps (§7.4).
 
 use std::process::ExitCode;
+use std::sync::Arc;
 
 use enrichment_core::config::Config;
 use enrichment_daemon::paths::DaemonPaths;
 use enrichment_daemon::server;
+use enrichment_daemon::service::Service;
+use enrichment_store::StatePaths;
 
 const USAGE: &str = "usage: library-enrichmentd <start|status|stop|validate [FILE]|socket-path>";
 
@@ -60,7 +63,7 @@ fn main() -> ExitCode {
     };
 
     match command.as_deref() {
-        Some("start") => runtime.block_on(start(&paths, &config)),
+        Some("start") => runtime.block_on(start(&paths, config)),
         Some("status") => runtime.block_on(status(&paths)),
         Some("stop") => runtime.block_on(stop(&paths)),
         Some("socket-path") => {
@@ -126,7 +129,35 @@ fn validate(source: Option<&str>) -> ExitCode {
 ///
 /// Deliberately not self-daemonizing: a supervised foreground process is easier to log, test
 /// and stop, and `just` or a service manager can background it.
-async fn start(paths: &DaemonPaths, config: &Config) -> ExitCode {
+///
+/// The state roots are resolved here, once, and only for `start`: `status` and `stop` never
+/// touch them. A root that cannot be resolved -- or would be relative -- refuses to start, for
+/// the same reason the socket resolver does (blueprint §2.3, gate C20).
+async fn start(paths: &DaemonPaths, config: Config) -> ExitCode {
+    let state = match StatePaths::from_env() {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("library-enrichmentd: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+    eprintln!(
+        "library-enrichmentd: configuration {}",
+        config.source.describe()
+    );
+    eprintln!(
+        "library-enrichmentd: cache {} data {}",
+        state.cache_root.display(),
+        state.data_root.display()
+    );
+    let service = match Service::open(config, state) {
+        Ok(service) => Arc::new(service),
+        Err(err) => {
+            eprintln!("library-enrichmentd: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
     let shutdown = async {
         let mut term =
             match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
@@ -143,11 +174,7 @@ async fn start(paths: &DaemonPaths, config: &Config) -> ExitCode {
         eprintln!("library-enrichmentd: shutting down");
     };
 
-    eprintln!(
-        "library-enrichmentd: configuration {}",
-        config.source.describe()
-    );
-    match server::serve(paths, config.limits.rpc_message_bytes, shutdown).await {
+    match server::serve(service, paths, shutdown).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("library-enrichmentd: {err}");
@@ -180,7 +207,7 @@ async fn status(paths: &DaemonPaths) -> ExitCode {
 
 /// Stop a running daemon.
 ///
-/// Phase 0 has no durable jobs, so this is a plain shutdown. When jobs land in Phase 4 this
+/// Phase 1 has no durable jobs, so this is a plain shutdown. When jobs land in Phase 4 this
 /// must not cancel work another caller still needs (§2.2, §8.2).
 async fn stop(paths: &DaemonPaths) -> ExitCode {
     match server::request_shutdown(paths).await {

@@ -24,6 +24,11 @@ use super::ProducerError;
 /// The producer name carried in errors and provenance.
 pub const PRODUCER: &str = "rustdoc-json";
 
+/// The normalizer version. Part of every snapshot identity (§6.3): bump it whenever the shape
+/// or meaning of a normalized symbol, relationship or fragment changes, so improved
+/// normalization of the same inputs is a new snapshot and the old one stays readable.
+pub const NORMALIZER_VERSION: &str = "1";
+
 /// Format versions this build can faithfully interpret.
 ///
 /// `59` is `rustdoc_types::FORMAT_VERSION`, the version the vendored parser compiles against.

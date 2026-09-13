@@ -1,0 +1,2144 @@
+{
+  "$defs": {
+    "Artifact": {
+      "description": "An immutable, content-addressed artifact (§6.1).\n\nThe digest is the identity; everything else is provenance. Two retrievals of identical\nbytes share one artifact, and the first retrieval's provenance is the one kept.",
+      "properties": {
+        "artifact_id": {
+          "description": "`art_<32 hex>`, derived from the digest; the handle callers pass to `read_artifact`.",
+          "type": "string"
+        },
+        "compression": {
+          "description": "Transport compression that was removed before storage, e.g. `zstd`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "etag": {
+          "description": "HTTP validator, when the server supplied one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "final_url": {
+          "description": "Where it was actually served from after redirects, when different.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "What the artifact is.",
+          "enum": [
+            "registry_index_entry",
+            "registry_version_metadata",
+            "crate_tarball",
+            "rustdoc_json",
+            "cargo_manifest",
+            "readme",
+            "changelog",
+            "source_file",
+            "other"
+          ],
+          "type": "string"
+        },
+        "last_modified": {
+          "description": "HTTP validator, when the server supplied one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "media_type": {
+          "description": "Media type of the stored bytes (after any transport decompression).",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "description": "When it was retrieved, RFC 3339. Provenance only; never part of any identity.",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "Full SHA-256 of the stored bytes, lower-case hex.",
+          "type": "string"
+        },
+        "size_bytes": {
+          "description": "Size of the stored bytes.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_uri": {
+          "description": "Where it was requested from.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "sha256",
+        "media_type",
+        "size_bytes",
+        "kind",
+        "source_uri",
+        "final_url",
+        "retrieved_at",
+        "etag",
+        "last_modified",
+        "compression"
+      ],
+      "type": "object"
+    },
+    "ArtifactSliceData": {
+      "description": "The `read_artifact` payload.",
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/Artifact",
+          "description": "The artifact record."
+        },
+        "content": {
+          "description": "The slice.",
+          "type": "string"
+        },
+        "content_digest": {
+          "description": "SHA-256 of the slice bytes.",
+          "type": "string"
+        },
+        "encoding": {
+          "description": "How `content` is encoded.",
+          "enum": [
+            "utf8",
+            "base64"
+          ],
+          "type": "string"
+        },
+        "end": {
+          "description": "One past the last byte offset of the slice.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "remaining": {
+          "description": "Bytes after `end`.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "section": {
+          "description": "The section that was selected, when one was.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start": {
+          "description": "First byte offset of the slice.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total": {
+          "description": "Total artifact size.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifact",
+        "encoding",
+        "start",
+        "end",
+        "total",
+        "content",
+        "content_digest",
+        "remaining",
+        "section"
+      ],
+      "type": "object"
+    },
+    "Availability": {
+      "description": "What can and cannot be said about a symbol's availability to a project.",
+      "properties": {
+        "notes": {
+          "description": "Why the status is what it is, in prose.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observed_configuration": {
+          "$ref": "#/$defs/ObservedConfiguration",
+          "description": "The documented build's configuration."
+        },
+        "requested_configuration": {
+          "$ref": "#/$defs/RequestedConfiguration",
+          "description": "The caller's declared configuration."
+        },
+        "status": {
+          "description": "The strongest honest claim.",
+          "enum": [
+            "documented_available",
+            "project_availability_unverified"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "observed_configuration",
+        "requested_configuration",
+        "notes"
+      ],
+      "type": "object"
+    },
+    "Context": {
+      "description": "A context record (§6.1): a release, an environment and a research mode.",
+      "properties": {
+        "context_id": {
+          "description": "Derived from release, environment and mode.",
+          "pattern": "^ctx_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "environment_id": {
+          "description": "The environment it is studied in.",
+          "pattern": "^env_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "mode": {
+          "description": "The research mode.",
+          "enum": [
+            "project",
+            "upstream",
+            "compare",
+            "revision"
+          ],
+          "type": "string"
+        },
+        "parent_context_id": {
+          "description": "The context this one was derived from, if any.",
+          "pattern": "^ctx_[0-9a-f]{16}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "release_id": {
+          "description": "The release under study.",
+          "pattern": "^rel_[0-9a-f]{16}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "context_id",
+        "release_id",
+        "environment_id",
+        "mode",
+        "parent_context_id"
+      ],
+      "type": "object"
+    },
+    "Deprecated": {
+      "description": "A deprecation notice as the producer recorded it.",
+      "properties": {
+        "note": {
+          "description": "The note, if given.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "since": {
+          "description": "The `since` value, if given.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "since",
+        "note"
+      ],
+      "type": "object"
+    },
+    "DocsRsMetadata": {
+      "description": "The nine `[package.metadata.docs.rs]` keys, with docs.rs' documented defaults (§4.3).\n\nThis is the *observed* configuration of the hosted build -- evidence for that documented\nconfiguration, never the API enabled in a caller's project. `declared` says whether the\nmanifest carried the table at all, so a default is never mistaken for a maintainer choice.",
+      "properties": {
+        "additional_targets": {
+          "description": "Targets added to the default set.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "all_features": {
+          "description": "Whether all features were enabled.",
+          "type": "boolean"
+        },
+        "cargo_args": {
+          "description": "Extra `cargo` arguments; these can change what compiles at all.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "declared": {
+          "description": "Whether the manifest declared the table.",
+          "type": "boolean"
+        },
+        "default_target": {
+          "description": "The default target.",
+          "type": "string"
+        },
+        "features": {
+          "description": "Features enabled for the docs build.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "no_default_features": {
+          "description": "Whether default features were disabled.",
+          "type": "boolean"
+        },
+        "rustc_args": {
+          "description": "Extra `rustc` arguments; these can change what compiles at all.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rustdoc_args": {
+          "description": "Extra `rustdoc` arguments.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "targets": {
+          "description": "Explicit target list, when set; `None` means docs.rs' tier-one default set.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "declared",
+        "features",
+        "all_features",
+        "no_default_features",
+        "default_target",
+        "targets",
+        "additional_targets",
+        "rustc_args",
+        "rustdoc_args",
+        "cargo_args"
+      ],
+      "type": "object"
+    },
+    "Environment": {
+      "description": "An environment record (§6.1).",
+      "properties": {
+        "default_features": {
+          "description": "Whether default features are enabled. `None` when unspecified.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "environment_id": {
+          "description": "Derived from every other field.",
+          "pattern": "^env_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "features": {
+          "description": "Enabled features or extras, sorted and deduplicated.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "lock_digest": {
+          "description": "Digest of the dependency lock, when one was supplied.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolution": {
+          "description": "How much of this environment is known.",
+          "enum": [
+            "unspecified",
+            "declared",
+            "resolved",
+            "verified"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "description": "Target triple or platform tag, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toolchain": {
+          "description": "Compiler or interpreter identity, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "environment_id",
+        "resolution",
+        "toolchain",
+        "target",
+        "features",
+        "default_features",
+        "lock_digest"
+      ],
+      "type": "object"
+    },
+    "EvidenceFragment": {
+      "description": "A bounded extract with its locator and epistemic class (§6.1).",
+      "properties": {
+        "artifact_id": {
+          "description": "The artifact it was read from.",
+          "type": "string"
+        },
+        "evidence_class": {
+          "description": "Which epistemic class it belongs to.",
+          "enum": [
+            "declared",
+            "statically_extracted",
+            "compiler_derived",
+            "typechecker_observed",
+            "runtime_observed",
+            "agent_inferred"
+          ],
+          "type": "string"
+        },
+        "fragment_id": {
+          "description": "Content-derived identity.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "What kind of text this is.",
+          "enum": [
+            "api_signature",
+            "doc_text",
+            "feature_definition",
+            "readme_section",
+            "changelog_section",
+            "example",
+            "source_excerpt"
+          ],
+          "type": "string"
+        },
+        "locator": {
+          "additionalProperties": true,
+          "description": "Position within the artifact, as a JSON object.",
+          "type": "object"
+        },
+        "producer": {
+          "description": "Which producer emitted it.",
+          "type": "string"
+        },
+        "producer_version": {
+          "description": "The producer's exact version.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "What it is about: a symbol path, a feature name, a heading.",
+          "type": "string"
+        },
+        "text": {
+          "description": "The text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fragment_id",
+        "kind",
+        "subject",
+        "artifact_id",
+        "locator",
+        "text",
+        "evidence_class",
+        "producer",
+        "producer_version"
+      ],
+      "type": "object"
+    },
+    "Gap": {
+      "description": "One piece of expected evidence that is absent, with why and what would supply it.",
+      "properties": {
+        "detail": {
+          "description": "Human-readable detail, e.g. the format version that was refused.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "What is missing.",
+          "enum": [
+            "registry_metadata",
+            "crate_source",
+            "documentation_build_config",
+            "hosted_rustdoc_json",
+            "public_api",
+            "documentation",
+            "examples",
+            "release_notes",
+            "source_excerpts"
+          ],
+          "type": "string"
+        },
+        "planned_fallback": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlannedFallback"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The producer and profile that would supply it, when one exists."
+        },
+        "reason": {
+          "description": "Why.",
+          "enum": [
+            "hosted_json_missing",
+            "hosted_json_unsupported",
+            "upstream_unavailable",
+            "policy_denied",
+            "extraction_failed",
+            "not_attempted"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "reason",
+        "detail",
+        "planned_fallback"
+      ],
+      "type": "object"
+    },
+    "HostedJsonReport": {
+      "description": "The hosted rustdoc JSON facet of a resolution.",
+      "properties": {
+        "declared_crate_version": {
+          "description": "`crate_version` as the JSON itself declares it, when available.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format_version": {
+          "description": "The format version the payload declared, when one was read.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "state": {
+          "description": "What was found.",
+          "enum": [
+            "available",
+            "missing",
+            "unsupported",
+            "not_attempted"
+          ],
+          "type": "string"
+        },
+        "supported_formats": {
+          "description": "The format versions this build can interpret.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "target": {
+          "description": "The target the JSON was requested for.",
+          "type": "string"
+        },
+        "url": {
+          "description": "The URL that was asked.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "format_version",
+        "supported_formats",
+        "target",
+        "url",
+        "declared_crate_version"
+      ],
+      "type": "object"
+    },
+    "InspectData": {
+      "description": "The `inspect_symbol` payload.",
+      "properties": {
+        "also_at": {
+          "description": "Other public paths to the same definition.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "aspects": {
+          "description": "The aspects actually returned.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "availability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Availability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What can and cannot be said about availability."
+        },
+        "candidates": {
+          "description": "Candidate paths when the reference was ambiguous or unqualified.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "docs_truncated": {
+          "description": "Whether `docs` was cut to fit.",
+          "type": "boolean"
+        },
+        "fragments": {
+          "description": "Fragments about the symbol, bounded.",
+          "items": {
+            "$ref": "#/$defs/EvidenceFragment"
+          },
+          "type": "array"
+        },
+        "relationships": {
+          "description": "Typed edges touching the symbol.",
+          "items": {
+            "$ref": "#/$defs/Relationship"
+          },
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceExcerpt"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source excerpt at `source` depth."
+        },
+        "symbol": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Symbol"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The symbol, when one was selected. Its `docs` are bounded here."
+        }
+      },
+      "required": [
+        "symbol",
+        "docs_truncated",
+        "also_at",
+        "candidates",
+        "aspects",
+        "availability",
+        "relationships",
+        "fragments",
+        "source"
+      ],
+      "type": "object"
+    },
+    "ManifestData": {
+      "description": "The snapshot manifest resource: what a snapshot contains.",
+      "properties": {
+        "is_current": {
+          "description": "Whether this snapshot is the context's current one.",
+          "type": "boolean"
+        },
+        "manifest": {
+          "$ref": "#/$defs/SnapshotManifest",
+          "description": "The immutable manifest as published."
+        }
+      },
+      "required": [
+        "manifest",
+        "is_current"
+      ],
+      "type": "object"
+    },
+    "NamespaceFacet": {
+      "description": "A namespace facet in an overview.",
+      "properties": {
+        "children": {
+          "description": "A bounded sample of direct children, definitions counted once.",
+          "items": {
+            "$ref": "#/$defs/OverviewChild"
+          },
+          "type": "array"
+        },
+        "counts_by_kind": {
+          "additionalProperties": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "description": "Distinct definitions directly under this module, by kind.",
+          "type": "object"
+        },
+        "doc_summary": {
+          "description": "First paragraph of the module docs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "The module path.",
+          "type": "string"
+        },
+        "truncated_children": {
+          "description": "Children beyond the sample.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "doc_summary",
+        "counts_by_kind",
+        "children",
+        "truncated_children"
+      ],
+      "type": "object"
+    },
+    "ObservedConfiguration": {
+      "description": "The configuration a documentation build was observed under (§4.3).",
+      "properties": {
+        "all_features": {
+          "description": "Whether all features were enabled.",
+          "type": "boolean"
+        },
+        "features": {
+          "description": "Features the docs build enabled, as the manifest declared them.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "format_version": {
+          "description": "The rustdoc JSON format version.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "no_default_features": {
+          "description": "Whether default features were disabled.",
+          "type": "boolean"
+        },
+        "source": {
+          "description": "Where the configuration was read from.",
+          "type": "string"
+        },
+        "target": {
+          "description": "The target the JSON itself declares.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "features",
+        "all_features",
+        "no_default_features",
+        "target",
+        "format_version",
+        "source"
+      ],
+      "type": "object"
+    },
+    "OverviewChild": {
+      "description": "One child in a namespace sample.",
+      "properties": {
+        "deprecated": {
+          "description": "Whether deprecated.",
+          "type": "boolean"
+        },
+        "doc_summary": {
+          "description": "Summary, when documented.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_reexport": {
+          "description": "Whether this path re-exports a definition elsewhere.",
+          "type": "boolean"
+        },
+        "kind": {
+          "description": "Kind.",
+          "enum": [
+            "module",
+            "struct",
+            "union",
+            "enum",
+            "variant",
+            "struct_field",
+            "trait",
+            "trait_alias",
+            "type_alias",
+            "function",
+            "method",
+            "constant",
+            "static",
+            "macro",
+            "proc_macro",
+            "assoc_type",
+            "assoc_const",
+            "primitive",
+            "extern_crate",
+            "import"
+          ],
+          "type": "string"
+        },
+        "path": {
+          "description": "Public path.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "doc_summary",
+        "is_reexport",
+        "deprecated"
+      ],
+      "type": "object"
+    },
+    "OverviewData": {
+      "description": "The `library_overview` payload (§7.1: a tree and facets, never a symbol dump).",
+      "properties": {
+        "area": {
+          "description": "The subtree the overview was narrowed to, when any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "crate_name": {
+          "description": "The crate's root module name.",
+          "type": "string"
+        },
+        "crate_version": {
+          "description": "The crate version the documentation declares.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "definitions_by_kind": {
+          "additionalProperties": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "description": "Distinct definitions by kind across the area.",
+          "type": "object"
+        },
+        "documentation_headings": {
+          "description": "README headings, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "examples": {
+          "description": "Example names.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "features": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Feature definitions: name and what it enables.",
+          "type": "object"
+        },
+        "namespaces": {
+          "description": "Namespaces, root first.",
+          "items": {
+            "$ref": "#/$defs/NamespaceFacet"
+          },
+          "type": "array"
+        },
+        "observed_configuration": {
+          "$ref": "#/$defs/ObservedConfiguration",
+          "description": "The documentation build's configuration."
+        },
+        "reexports": {
+          "description": "Paths that re-export a definition reachable elsewhere.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "release_note_headings": {
+          "description": "Changelog headings, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/SnapshotSummary",
+          "description": "The snapshot read."
+        },
+        "truncated_namespaces": {
+          "description": "Namespaces beyond the returned set.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unresolved_reexports": {
+          "description": "Re-exports whose target is outside this crate.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "crate_name",
+        "crate_version",
+        "snapshot",
+        "observed_configuration",
+        "area",
+        "definitions_by_kind",
+        "namespaces",
+        "truncated_namespaces",
+        "features",
+        "documentation_headings",
+        "release_note_headings",
+        "examples",
+        "reexports",
+        "unresolved_reexports"
+      ],
+      "type": "object"
+    },
+    "PlannedFallback": {
+      "description": "A producer that could supply missing evidence, and whether policy currently allows it.",
+      "properties": {
+        "enabled": {
+          "description": "Whether configuration currently enables that profile.",
+          "type": "boolean"
+        },
+        "next_action": {
+          "description": "What a caller or operator would do to make it run.",
+          "type": "string"
+        },
+        "producer": {
+          "description": "Producer name.",
+          "type": "string"
+        },
+        "profile": {
+          "description": "The execution profile it needs.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "producer",
+        "profile",
+        "enabled",
+        "next_action"
+      ],
+      "type": "object"
+    },
+    "ProducerRun": {
+      "description": "Provenance for one producer execution (§6.1).",
+      "properties": {
+        "config_digest": {
+          "description": "Digest of the normalized options the run was configured with.",
+          "type": "string"
+        },
+        "finished_at": {
+          "description": "RFC 3339 finish time. Provenance only.",
+          "type": "string"
+        },
+        "gaps": {
+          "description": "Evidence the run was expected to yield and did not, each with a reason.",
+          "items": {
+            "$ref": "#/$defs/Gap"
+          },
+          "type": "array"
+        },
+        "inputs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Input artifact digests by role.",
+          "type": "object"
+        },
+        "log": {
+          "description": "Bounded log text, when any was kept.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outcome": {
+          "description": "How it ended.",
+          "enum": [
+            "succeeded",
+            "partial",
+            "failed",
+            "skipped"
+          ],
+          "type": "string"
+        },
+        "producer": {
+          "description": "Producer name.",
+          "type": "string"
+        },
+        "producer_version": {
+          "description": "Exact producer version.",
+          "type": "string"
+        },
+        "profile": {
+          "description": "The execution profile the run was performed under.",
+          "enum": [
+            "static",
+            "build",
+            "runtime"
+          ],
+          "type": "string"
+        },
+        "started_at": {
+          "description": "RFC 3339 start time. Provenance only.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "producer",
+        "producer_version",
+        "config_digest",
+        "inputs",
+        "profile",
+        "started_at",
+        "finished_at",
+        "outcome",
+        "gaps",
+        "log"
+      ],
+      "type": "object"
+    },
+    "Relationship": {
+      "description": "One typed edge.",
+      "properties": {
+        "detail": {
+          "description": "A qualifier such as `blanket`, `auto` or `trait_impl`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producer": {
+          "description": "Which producer emitted it.",
+          "type": "string"
+        },
+        "relation": {
+          "description": "The relation.",
+          "enum": [
+            "reexports",
+            "implements",
+            "member_of",
+            "documents",
+            "returns",
+            "accepts"
+          ],
+          "type": "string"
+        },
+        "relationship_id": {
+          "description": "Content-derived identity.",
+          "type": "string"
+        },
+        "source_id": {
+          "description": "The source symbol.",
+          "type": "string"
+        },
+        "source_path": {
+          "description": "The source path, for display without a join.",
+          "type": "string"
+        },
+        "target_id": {
+          "description": "The target symbol or definition, when it is in this snapshot.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_path": {
+          "description": "The target path as written, even when the target is external.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "relationship_id",
+        "source_id",
+        "source_path",
+        "target_id",
+        "target_path",
+        "relation",
+        "detail",
+        "producer"
+      ],
+      "type": "object"
+    },
+    "Release": {
+      "description": "A release record (§6.1).\n\nPackage name, library target name and root module name are three different things for a\nRust crate (`serde-json` / `serde_json` / `serde_json`) and are stored separately.",
+      "properties": {
+        "artifact_digest": {
+          "description": "The registry checksum of the selected artifact, when the registry publishes one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ecosystem": {
+          "description": "Which ecosystem.",
+          "enum": [
+            "rust",
+            "python"
+          ],
+          "type": "string"
+        },
+        "lib_name": {
+          "description": "The library target name declared in the manifest, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "license": {
+          "description": "SPDX licence expression as published.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "links": {
+          "$ref": "#/$defs/ReleaseLinks",
+          "description": "Registry-published links."
+        },
+        "package": {
+          "description": "The normalized package name as the registry knows it.",
+          "type": "string"
+        },
+        "published_at": {
+          "description": "Publication time as the registry records it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry": {
+          "description": "The registry the package was resolved against, e.g. `crates.io`.",
+          "type": "string"
+        },
+        "release_id": {
+          "description": "Derived from `key`; never set independently.",
+          "pattern": "^rel_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "root_module": {
+          "description": "The root module name as it appears in `use` paths, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rust_version": {
+          "description": "Minimum supported Rust version as published.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "The exact version, or an immutable revision for `revision` mode.",
+          "type": "string"
+        },
+        "yanked": {
+          "description": "Whether the registry has yanked this version.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "release_id",
+        "ecosystem",
+        "registry",
+        "package",
+        "version",
+        "artifact_digest",
+        "lib_name",
+        "root_module",
+        "links",
+        "license",
+        "rust_version",
+        "published_at",
+        "yanked"
+      ],
+      "type": "object"
+    },
+    "ReleaseLinks": {
+      "description": "Links a registry publishes for a release.",
+      "properties": {
+        "documentation": {
+          "description": "Documentation site.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "homepage": {
+          "description": "Project homepage.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repository": {
+          "description": "Source repository.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "repository",
+        "documentation",
+        "homepage"
+      ],
+      "type": "object"
+    },
+    "RequestedConfiguration": {
+      "description": "What a caller declared about its own environment, for comparison.",
+      "properties": {
+        "default_features": {
+          "description": "Whether default features are enabled, when declared.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "features": {
+          "description": "Features the project enables, when declared.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "target": {
+          "description": "The project's target, when declared.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "features",
+        "default_features",
+        "target"
+      ],
+      "type": "object"
+    },
+    "ResolveData": {
+      "description": "The `resolve_library` payload.",
+      "properties": {
+        "answered_from_cache": {
+          "description": "Whether this answer was replayed from a recorded resolution rather than fetched.",
+          "type": "boolean"
+        },
+        "artifacts": {
+          "description": "Every artifact this resolution stored or reused.",
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        },
+        "context": {
+          "$ref": "#/$defs/Context",
+          "description": "The context identity every later call takes."
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment",
+          "description": "The environment the context binds, with its resolution status."
+        },
+        "gaps": {
+          "description": "Expected evidence that is absent, each with a reason and a planned fallback.",
+          "items": {
+            "$ref": "#/$defs/Gap"
+          },
+          "type": "array"
+        },
+        "hosted_rustdoc_json": {
+          "$ref": "#/$defs/HostedJsonReport",
+          "description": "Hosted rustdoc JSON availability."
+        },
+        "observed_configuration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DocsRsMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The maintainer's docs.rs build configuration, read from the crate manifest."
+        },
+        "producer_runs": {
+          "description": "Provenance for each producer that ran.",
+          "items": {
+            "$ref": "#/$defs/ProducerRun"
+          },
+          "type": "array"
+        },
+        "release": {
+          "$ref": "#/$defs/Release",
+          "description": "The release that was resolved. Its version is the one asked for, never an upgrade."
+        },
+        "snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SnapshotSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The snapshot published from this resolution, when normalization succeeded."
+        },
+        "upstream": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UpstreamCheck"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the registry said about newer releases, kept apart from the resolution."
+        }
+      },
+      "required": [
+        "release",
+        "environment",
+        "context",
+        "upstream",
+        "observed_configuration",
+        "hosted_rustdoc_json",
+        "snapshot",
+        "artifacts",
+        "gaps",
+        "producer_runs",
+        "answered_from_cache"
+      ],
+      "type": "object"
+    },
+    "ScoreFactor": {
+      "description": "One scoring factor that fired.",
+      "properties": {
+        "name": {
+          "description": "Factor name.",
+          "type": "string"
+        },
+        "points": {
+          "description": "Points contributed.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "points"
+      ],
+      "type": "object"
+    },
+    "SearchData": {
+      "description": "The `search_evidence` payload.",
+      "properties": {
+        "hits": {
+          "description": "The hits on this page.",
+          "items": {
+            "$ref": "#/$defs/SearchHit"
+          },
+          "type": "array"
+        },
+        "kinds": {
+          "description": "The evidence families searched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "offset": {
+          "description": "Page offset.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "query": {
+          "description": "The query as asked.",
+          "type": "string"
+        },
+        "scoring": {
+          "description": "The scoring legend, in rank order.",
+          "items": {
+            "$ref": "#/$defs/ScoreFactor"
+          },
+          "type": "array"
+        },
+        "searched": {
+          "description": "Which sources were searched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokens": {
+          "description": "The tokens it was split into.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "query",
+        "tokens",
+        "kinds",
+        "hits",
+        "scoring",
+        "searched",
+        "offset"
+      ],
+      "type": "object"
+    },
+    "SearchHit": {
+      "description": "One search hit.",
+      "properties": {
+        "also_at": {
+          "description": "Other public paths to the same definition.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deprecated": {
+          "description": "Whether the symbol is deprecated.",
+          "type": "boolean"
+        },
+        "evidence_id": {
+          "description": "The evidence entry this hit is cited by.",
+          "type": "string"
+        },
+        "excerpt": {
+          "description": "Bounded excerpt.",
+          "type": "string"
+        },
+        "factors": {
+          "description": "The factors behind the score.",
+          "items": {
+            "$ref": "#/$defs/ScoreFactor"
+          },
+          "type": "array"
+        },
+        "fragment_kind": {
+          "description": "Fragment kind, for fragment hits.",
+          "enum": [
+            "api_signature",
+            "doc_text",
+            "feature_definition",
+            "readme_section",
+            "changelog_section",
+            "example",
+            "source_excerpt",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hit": {
+          "description": "Symbol or fragment.",
+          "enum": [
+            "symbol",
+            "fragment"
+          ],
+          "type": "string"
+        },
+        "path": {
+          "description": "Symbol path, for symbol hits.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "score": {
+          "description": "Total score.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "signature": {
+          "description": "Rendered signature, for symbol hits.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "description": "Fragment subject, for fragment hits.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symbol_kind": {
+          "description": "Symbol kind, for symbol hits.",
+          "enum": [
+            "module",
+            "struct",
+            "union",
+            "enum",
+            "variant",
+            "struct_field",
+            "trait",
+            "trait_alias",
+            "type_alias",
+            "function",
+            "method",
+            "constant",
+            "static",
+            "macro",
+            "proc_macro",
+            "assoc_type",
+            "assoc_const",
+            "primitive",
+            "extern_crate",
+            "import",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "hit",
+        "score",
+        "factors",
+        "evidence_id",
+        "path",
+        "symbol_kind",
+        "signature",
+        "also_at",
+        "deprecated",
+        "fragment_kind",
+        "subject",
+        "excerpt"
+      ],
+      "type": "object"
+    },
+    "SnapshotCounts": {
+      "description": "Counts an overview and a manifest report.",
+      "properties": {
+        "definitions": {
+          "description": "Distinct definitions.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fragments": {
+          "description": "Fragments.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "producer_items": {
+          "description": "Items the producer saw in total, including those not surfaced as symbols.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "reexports": {
+          "description": "Paths that re-export a definition reachable elsewhere.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "relationships": {
+          "description": "Typed edges.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "symbols": {
+          "description": "Public paths.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unresolved_reexports": {
+          "description": "Re-exports whose target is outside this crate.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "symbols",
+        "definitions",
+        "reexports",
+        "unresolved_reexports",
+        "relationships",
+        "fragments",
+        "producer_items"
+      ],
+      "type": "object"
+    },
+    "SnapshotManifest": {
+      "description": "The immutable description of one snapshot (§6.1).",
+      "properties": {
+        "context_id": {
+          "description": "The context this snapshot serves.",
+          "pattern": "^ctx_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/SnapshotCounts",
+          "description": "Counts."
+        },
+        "crate_name": {
+          "description": "The crate name as rustdoc knows it.",
+          "type": "string"
+        },
+        "crate_version": {
+          "description": "The crate version the JSON declared.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "environment_id": {
+          "description": "The environment.",
+          "pattern": "^env_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "indexed": {
+          "description": "Evidence kinds this snapshot contains.",
+          "items": {
+            "description": "The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
+            "enum": [
+              "registry_metadata",
+              "crate_source",
+              "documentation_build_config",
+              "hosted_rustdoc_json",
+              "public_api",
+              "documentation",
+              "examples",
+              "release_notes",
+              "source_excerpts"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Input artifact digests by role.",
+          "type": "object"
+        },
+        "missing": {
+          "description": "Evidence kinds that were expected and are absent.",
+          "items": {
+            "description": "The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
+            "enum": [
+              "registry_metadata",
+              "crate_source",
+              "documentation_build_config",
+              "hosted_rustdoc_json",
+              "public_api",
+              "documentation",
+              "examples",
+              "release_notes",
+              "source_excerpts"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "normalizer_version": {
+          "description": "Normalizer version at publication.",
+          "type": "string"
+        },
+        "observed_configuration": {
+          "$ref": "#/$defs/ObservedConfiguration",
+          "description": "The documentation build's configuration."
+        },
+        "producer_runs": {
+          "description": "Every producer run that fed this snapshot.",
+          "items": {
+            "$ref": "#/$defs/ProducerRun"
+          },
+          "type": "array"
+        },
+        "producers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Producer identities by name.",
+          "type": "object"
+        },
+        "published_at": {
+          "description": "Publication time, RFC 3339. Provenance only.",
+          "type": "string"
+        },
+        "release_id": {
+          "description": "The release.",
+          "pattern": "^rel_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "schema_version": {
+          "description": "Wire schema version at publication.",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "description": "The snapshot's identity.",
+          "pattern": "^snap_[0-9a-f]{16}$",
+          "type": "string"
+        },
+        "tables": {
+          "additionalProperties": {
+            "$ref": "#/$defs/TableRef"
+          },
+          "description": "Tables and their row counts.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "schema_version",
+        "normalizer_version",
+        "context_id",
+        "release_id",
+        "environment_id",
+        "crate_name",
+        "crate_version",
+        "inputs",
+        "producers",
+        "producer_runs",
+        "tables",
+        "counts",
+        "observed_configuration",
+        "indexed",
+        "missing",
+        "published_at"
+      ],
+      "type": "object"
+    },
+    "SnapshotSummary": {
+      "description": "What the published snapshot holds, summarized.",
+      "properties": {
+        "counts": {
+          "$ref": "#/$defs/SnapshotCounts",
+          "description": "Counts."
+        },
+        "normalizer_version": {
+          "description": "Normalizer version that produced it.",
+          "type": "string"
+        },
+        "published_at": {
+          "description": "Publication time.",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "description": "The snapshot identity.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "normalizer_version",
+        "counts",
+        "published_at"
+      ],
+      "type": "object"
+    },
+    "SourceExcerpt": {
+      "description": "A bounded source excerpt around a line, for `inspect_symbol` at `source` depth.",
+      "properties": {
+        "end_line": {
+          "description": "Last line included, 1-based.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "path": {
+          "description": "The file, relative to the crate root.",
+          "type": "string"
+        },
+        "start_line": {
+          "description": "First line included, 1-based.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "description": "The text.",
+          "type": "string"
+        },
+        "truncated": {
+          "description": "Whether the file had more lines after `end_line`.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "start_line",
+        "end_line",
+        "text",
+        "truncated"
+      ],
+      "type": "object"
+    },
+    "Symbol": {
+      "description": "One public symbol at one public path (§6.1).\n\nA re-export is a symbol whose `path` differs from its `definition_path`; both share one\n`definition_id`, which is how an overview counts capabilities once (gate R07).",
+      "properties": {
+        "cfg_hints": {
+          "description": "`cfg`-shaped attribute strings the producer preserved, as declared hints only. Never\na feature predicate: items compiled out are absent, not annotated (§4.3).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "defined_in_crate": {
+          "description": "The crate the definition belongs to.",
+          "type": "string"
+        },
+        "definition_id": {
+          "description": "Identity of the definition this path names.",
+          "type": "string"
+        },
+        "definition_path": {
+          "description": "The path the item is defined at.",
+          "type": "string"
+        },
+        "deprecated": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Deprecated"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Deprecation, when marked."
+        },
+        "doc_summary": {
+          "description": "First paragraph of the documentation, bounded.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "docs": {
+          "description": "Full documentation text.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_reexport": {
+          "description": "Whether this path is a re-export of a definition elsewhere.",
+          "type": "boolean"
+        },
+        "kind": {
+          "description": "What kind of item this is.",
+          "enum": [
+            "module",
+            "struct",
+            "union",
+            "enum",
+            "variant",
+            "struct_field",
+            "trait",
+            "trait_alias",
+            "type_alias",
+            "function",
+            "method",
+            "constant",
+            "static",
+            "macro",
+            "proc_macro",
+            "assoc_type",
+            "assoc_const",
+            "primitive",
+            "extern_crate",
+            "import"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "description": "The last path segment.",
+          "type": "string"
+        },
+        "parent_path": {
+          "description": "The containing path, when any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Canonical public path, e.g. `enr_fixture::inner::Widget`.",
+          "type": "string"
+        },
+        "producer_local_id": {
+          "description": "The producer's own item identifier -- local, never a cross-release identity.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "signature": {
+          "description": "Rendered signature, when the producer rendered one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span_file": {
+          "description": "Source file as the producer recorded it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span_line": {
+          "description": "1-based source line as the producer recorded it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "symbol_id": {
+          "description": "Identity of this public path: hash of crate, path, kind and (for trait-impl members)\nthe trait.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "symbol_id",
+        "definition_id",
+        "path",
+        "name",
+        "kind",
+        "parent_path",
+        "signature",
+        "doc_summary",
+        "docs",
+        "deprecated",
+        "span_file",
+        "span_line",
+        "is_reexport",
+        "definition_path",
+        "defined_in_crate",
+        "producer_local_id",
+        "cfg_hints"
+      ],
+      "type": "object"
+    },
+    "TableRef": {
+      "description": "A table stored in a snapshot.",
+      "properties": {
+        "file": {
+          "description": "File name within the snapshot directory.",
+          "type": "string"
+        },
+        "rows": {
+          "description": "Row count at publication.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "rows"
+      ],
+      "type": "object"
+    },
+    "UpstreamCheck": {
+      "description": "What the registry says about newer releases, kept separate from what was resolved.",
+      "properties": {
+        "newest_any": {
+          "description": "Newest non-yanked version of any kind.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "newest_stable": {
+          "description": "Newest non-yanked, non-prerelease version.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "published_versions": {
+          "description": "Number of published versions the index listed.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resolved_is_newest_stable": {
+          "description": "Whether the resolved version is the newest stable one.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "newest_stable",
+        "newest_any",
+        "resolved_is_newest_stable",
+        "published_versions"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://library-enrichment.local/schemas/tool-data.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Every tool payload, for schema emission. Never sent on the wire as a union.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ResolveData",
+      "description": "`resolve_library`.",
+      "properties": {
+        "tool": {
+          "const": "resolve_library",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    },
+    {
+      "$ref": "#/$defs/OverviewData",
+      "description": "`library_overview`.",
+      "properties": {
+        "tool": {
+          "const": "library_overview",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    },
+    {
+      "$ref": "#/$defs/SearchData",
+      "description": "`search_evidence`.",
+      "properties": {
+        "tool": {
+          "const": "search_evidence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    },
+    {
+      "$ref": "#/$defs/InspectData",
+      "description": "`inspect_symbol`.",
+      "properties": {
+        "tool": {
+          "const": "inspect_symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    },
+    {
+      "$ref": "#/$defs/ArtifactSliceData",
+      "description": "`read_artifact`.",
+      "properties": {
+        "tool": {
+          "const": "read_artifact",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    },
+    {
+      "$ref": "#/$defs/ManifestData",
+      "description": "The snapshot manifest resource.",
+      "properties": {
+        "tool": {
+          "const": "snapshot_manifest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "LibraryEnrichmentToolData"
+}

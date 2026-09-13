@@ -126,13 +126,21 @@ async def test_service_status_traverses_mcp_rpc_and_daemon(
     assert payload["error"] is None
     assert payload["data"]["versions"]["schema"] == "1.0"
 
-    # And it is still truthful about what is not installed.
+    # And it is still truthful about what is not installed: with an open store the phase-1
+    # static producers are available; every other producer names why it is not.
+    #
+    # The list is pinned rather than merely checked for membership, so that a producer
+    # becoming available is a deliberate edit here. It grows as a phase lands -- it was
+    # `["crates-io-registry"]` at phase 0, and the phase-1 slice added `rustdoc-json`.
     producers = payload["data"]["producers"]
     assert producers, "the daemon must enumerate its producers"
-    assert all(not p["available"] for p in producers), (
-        "no producer is implemented in phase 0, so none may report itself available"
+    available = sorted(p["name"] for p in producers if p["available"])
+    assert available == ["crates-io-registry", "rustdoc-json"], available
+    assert all(p["detail"] for p in producers if not p["available"]), (
+        "an absent producer must name why it is absent"
     )
-    assert payload["data"]["health"]["cache_ready"] is False
+    assert payload["data"]["health"]["cache_ready"] is True
+    assert payload["data"]["health"]["data_root"].startswith(running_daemon["LIBENR_DATA_HOME"])
 
 
 async def test_the_end_to_end_envelope_conforms_to_the_generated_schema(
@@ -150,11 +158,18 @@ async def test_the_end_to_end_envelope_conforms_to_the_generated_schema(
 
     async with Client(_transport(running_daemon)) as client:
         listed = await client.call_tool("service_status", {})
-        unimplemented = await client.call_tool(
-            "resolve_library", {"ecosystem": "rust", "name": "serde"}
+        # `offline` against an empty store: a typed error envelope produced by the real resolve
+        # path, with no socket opened to any registry -- this tier never touches the network.
+        offline = await client.call_tool(
+            "resolve_library",
+            {"ecosystem": "rust", "name": "serde", "version": "1.0.219", "freshness": "offline"},
         )
 
-    for label, result in (("service_status", listed), ("resolve_library", unimplemented)):
+    assert isinstance(offline.data, dict)
+    assert offline.data["status"] == "error"
+    assert offline.data["error"]["code"] == "ARTIFACT_UNAVAILABLE"
+
+    for label, result in (("service_status", listed), ("resolve_library", offline)):
         payload = result.data
         assert isinstance(payload, dict)
         errors = list(validator.iter_errors(payload))

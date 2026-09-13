@@ -82,6 +82,102 @@ pub fn partial(summary: impl Into<String>, data: JsonObject, coverage: Coverage)
     )
 }
 
+/// The fields a research result supplies beyond a status payload: identity, evidence and
+/// artifact handles, and freshness that says what was actually consulted.
+#[derive(Debug, Clone)]
+pub struct Research {
+    /// One-line summary.
+    pub summary: String,
+    /// Tool-specific payload.
+    pub data: JsonObject,
+    /// What was looked at and what was not.
+    pub coverage: Coverage,
+    /// What was consulted and when.
+    pub freshness: Freshness,
+    /// The context the result is about.
+    pub context_id: Option<String>,
+    /// The snapshot actually read, when one was.
+    pub snapshot_id: Option<String>,
+    /// Supporting facts with locators.
+    pub evidence: Vec<enrichment_core::wire::Evidence>,
+    /// Readable artifacts.
+    pub artifacts: Vec<enrichment_core::wire::ArtifactHandle>,
+}
+
+impl Research {
+    fn body(self) -> EnvelopeBody {
+        EnvelopeBody {
+            request_id: new_request_id(),
+            summary: self.summary,
+            context_id: self.context_id,
+            snapshot_id: self.snapshot_id,
+            data: self.data,
+            coverage: self.coverage,
+            freshness: self.freshness,
+            evidence: self.evidence,
+            artifacts: self.artifacts,
+            pagination: single_result_pagination(),
+        }
+    }
+
+    /// Successful within the declared coverage.
+    #[must_use]
+    pub fn ok(self) -> Envelope {
+        Envelope::new(self.body(), Outcome::Ok { job: None })
+    }
+
+    /// Usable evidence together with explicit gaps.
+    #[must_use]
+    pub fn partial(self) -> Envelope {
+        Envelope::new(self.body(), Outcome::Partial { job: None })
+    }
+
+    /// Successful, with explicit pagination (a page of a larger result).
+    #[must_use]
+    pub fn ok_with_pagination(self, pagination: Pagination) -> Envelope {
+        let mut body = self.body();
+        body.pagination = pagination;
+        Envelope::new(body, Outcome::Ok { job: None })
+    }
+}
+
+/// Re-issue an `ok` envelope as `partial`, keeping everything else.
+pub trait IntoPartial {
+    /// The same body with `partial` status.
+    fn into_partial(self) -> Envelope;
+}
+
+impl IntoPartial for Envelope {
+    fn into_partial(self) -> Envelope {
+        // The envelope's body fields are public; only status/job/error are private and are
+        // re-established by `Envelope::new`.
+        let raw: serde_json::Value = serde_json::to_value(&self).unwrap_or_default();
+        let body = EnvelopeBody {
+            request_id: raw["request_id"]
+                .as_str()
+                .and_then(|s| RequestId::try_from(s.to_owned()).ok())
+                .unwrap_or_else(new_request_id),
+            summary: raw["summary"].as_str().unwrap_or_default().to_owned(),
+            context_id: raw["context_id"].as_str().map(str::to_owned),
+            snapshot_id: raw["snapshot_id"].as_str().map(str::to_owned),
+            data: raw["data"].as_object().cloned().unwrap_or_default(),
+            coverage: serde_json::from_value(raw["coverage"].clone()).unwrap_or(Coverage {
+                scope: String::new(),
+                indexed: std::collections::BTreeSet::new(),
+                missing: std::collections::BTreeSet::new(),
+                limitations: Vec::new(),
+            }),
+            freshness: serde_json::from_value(raw["freshness"].clone())
+                .unwrap_or_else(|_| unverified_freshness()),
+            evidence: serde_json::from_value(raw["evidence"].clone()).unwrap_or_default(),
+            artifacts: serde_json::from_value(raw["artifacts"].clone()).unwrap_or_default(),
+            pagination: serde_json::from_value(raw["pagination"].clone())
+                .unwrap_or_else(|_| single_result_pagination()),
+        };
+        Envelope::new(body, Outcome::Partial { job: None })
+    }
+}
+
 /// A typed failure carrying a concrete next action (§7.2).
 #[must_use]
 pub fn error(

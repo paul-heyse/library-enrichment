@@ -1,0 +1,366 @@
+//! Typed `data` payloads for the research tools (blueprint §7).
+//!
+//! The frozen envelope leaves `data` as a free-form object. These types give each tool's
+//! payload a schema of its own, emitted alongside the envelope schema so the adapter can
+//! validate what it forwards and the Python DTOs can be generated rather than hand-written
+//! (§6.3). The envelope's `data` field itself stays a `JsonObject`; a payload is serialized
+//! into it.
+
+use std::collections::BTreeMap;
+
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+use crate::evidence::{
+    Artifact, Availability, EvidenceFragment, FragmentKind, Gap, ObservedConfiguration,
+    Relationship, SnapshotCounts, SnapshotManifest, Symbol, SymbolKind,
+};
+use crate::identity::{Context, Environment, Release};
+use crate::producer::ProducerRun;
+use crate::producer::docsrs::DocsRsMetadata;
+use crate::producer::source::SourceExcerpt;
+use crate::registry::UpstreamCheck;
+
+/// The file the tool payload schemas are emitted to.
+pub const TOOL_DATA_SCHEMA_FILE: &str = "tool-data.schema.json";
+
+/// What docs.rs had for the resolved release.
+///
+/// The values are, in order: `available`, `missing`, `unsupported`, `not_attempted`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+#[schemars(inline)]
+pub enum HostedJsonState {
+    Available,
+    Missing,
+    Unsupported,
+    NotAttempted,
+}
+
+/// The hosted rustdoc JSON facet of a resolution.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct HostedJsonReport {
+    /// What was found.
+    pub state: HostedJsonState,
+    /// The format version the payload declared, when one was read.
+    pub format_version: Option<u32>,
+    /// The format versions this build can interpret.
+    pub supported_formats: Vec<u32>,
+    /// The target the JSON was requested for.
+    pub target: String,
+    /// The URL that was asked.
+    pub url: String,
+    /// `crate_version` as the JSON itself declares it, when available.
+    pub declared_crate_version: Option<String>,
+}
+
+/// What the published snapshot holds, summarized.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct SnapshotSummary {
+    /// The snapshot identity.
+    pub snapshot_id: String,
+    /// Normalizer version that produced it.
+    pub normalizer_version: String,
+    /// Counts.
+    pub counts: SnapshotCounts,
+    /// Publication time.
+    pub published_at: String,
+}
+
+/// The `resolve_library` payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ResolveData {
+    /// The release that was resolved. Its version is the one asked for, never an upgrade.
+    pub release: Release,
+    /// The environment the context binds, with its resolution status.
+    pub environment: Environment,
+    /// The context identity every later call takes.
+    pub context: Context,
+    /// What the registry said about newer releases, kept apart from the resolution.
+    pub upstream: Option<UpstreamCheck>,
+    /// The maintainer's docs.rs build configuration, read from the crate manifest.
+    pub observed_configuration: Option<DocsRsMetadata>,
+    /// Hosted rustdoc JSON availability.
+    pub hosted_rustdoc_json: HostedJsonReport,
+    /// The snapshot published from this resolution, when normalization succeeded.
+    pub snapshot: Option<SnapshotSummary>,
+    /// Every artifact this resolution stored or reused.
+    pub artifacts: Vec<Artifact>,
+    /// Expected evidence that is absent, each with a reason and a planned fallback.
+    pub gaps: Vec<Gap>,
+    /// Provenance for each producer that ran.
+    pub producer_runs: Vec<ProducerRun>,
+    /// Whether this answer was replayed from a recorded resolution rather than fetched.
+    pub answered_from_cache: bool,
+}
+
+/// One child in a namespace sample.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct OverviewChild {
+    /// Public path.
+    pub path: String,
+    /// Kind.
+    pub kind: SymbolKind,
+    /// Summary, when documented.
+    pub doc_summary: Option<String>,
+    /// Whether this path re-exports a definition elsewhere.
+    pub is_reexport: bool,
+    /// Whether deprecated.
+    pub deprecated: bool,
+}
+
+/// A namespace facet in an overview.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct NamespaceFacet {
+    /// The module path.
+    pub path: String,
+    /// First paragraph of the module docs.
+    pub doc_summary: Option<String>,
+    /// Distinct definitions directly under this module, by kind.
+    pub counts_by_kind: BTreeMap<String, u64>,
+    /// A bounded sample of direct children, definitions counted once.
+    pub children: Vec<OverviewChild>,
+    /// Children beyond the sample.
+    pub truncated_children: u64,
+}
+
+/// The `library_overview` payload (§7.1: a tree and facets, never a symbol dump).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct OverviewData {
+    /// The crate's root module name.
+    pub crate_name: String,
+    /// The crate version the documentation declares.
+    pub crate_version: Option<String>,
+    /// The snapshot read.
+    pub snapshot: SnapshotSummary,
+    /// The documentation build's configuration.
+    pub observed_configuration: ObservedConfiguration,
+    /// The subtree the overview was narrowed to, when any.
+    pub area: Option<String>,
+    /// Distinct definitions by kind across the area.
+    pub definitions_by_kind: BTreeMap<String, u64>,
+    /// Namespaces, root first.
+    pub namespaces: Vec<NamespaceFacet>,
+    /// Namespaces beyond the returned set.
+    pub truncated_namespaces: u64,
+    /// Feature definitions: name and what it enables.
+    pub features: BTreeMap<String, String>,
+    /// README headings, in order.
+    pub documentation_headings: Vec<String>,
+    /// Changelog headings, in order.
+    pub release_note_headings: Vec<String>,
+    /// Example names.
+    pub examples: Vec<String>,
+    /// Paths that re-export a definition reachable elsewhere.
+    pub reexports: u64,
+    /// Re-exports whose target is outside this crate.
+    pub unresolved_reexports: u64,
+}
+
+/// What kind of thing a search hit is.
+///
+/// The values are, in order: `symbol`, `fragment`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+#[schemars(inline)]
+pub enum HitKind {
+    Symbol,
+    Fragment,
+}
+
+/// One scoring factor that fired.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ScoreFactor {
+    /// Factor name.
+    pub name: String,
+    /// Points contributed.
+    pub points: u32,
+}
+
+/// One search hit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct SearchHit {
+    /// Symbol or fragment.
+    pub hit: HitKind,
+    /// Total score.
+    pub score: u32,
+    /// The factors behind the score.
+    pub factors: Vec<ScoreFactor>,
+    /// The evidence entry this hit is cited by.
+    pub evidence_id: String,
+    /// Symbol path, for symbol hits.
+    pub path: Option<String>,
+    /// Symbol kind, for symbol hits.
+    pub symbol_kind: Option<SymbolKind>,
+    /// Rendered signature, for symbol hits.
+    pub signature: Option<String>,
+    /// Other public paths to the same definition.
+    pub also_at: Vec<String>,
+    /// Whether the symbol is deprecated.
+    pub deprecated: bool,
+    /// Fragment kind, for fragment hits.
+    pub fragment_kind: Option<FragmentKind>,
+    /// Fragment subject, for fragment hits.
+    pub subject: Option<String>,
+    /// Bounded excerpt.
+    pub excerpt: String,
+}
+
+/// The `search_evidence` payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct SearchData {
+    /// The query as asked.
+    pub query: String,
+    /// The tokens it was split into.
+    pub tokens: Vec<String>,
+    /// The evidence families searched.
+    pub kinds: Vec<String>,
+    /// The hits on this page.
+    pub hits: Vec<SearchHit>,
+    /// The scoring legend, in rank order.
+    pub scoring: Vec<ScoreFactor>,
+    /// Which sources were searched.
+    pub searched: Vec<String>,
+    /// Page offset.
+    pub offset: u64,
+}
+
+/// The `inspect_symbol` payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct InspectData {
+    /// The symbol, when one was selected. Its `docs` are bounded here.
+    pub symbol: Option<Symbol>,
+    /// Whether `docs` was cut to fit.
+    pub docs_truncated: bool,
+    /// Other public paths to the same definition.
+    pub also_at: Vec<String>,
+    /// Candidate paths when the reference was ambiguous or unqualified.
+    pub candidates: Vec<String>,
+    /// The aspects actually returned.
+    pub aspects: Vec<String>,
+    /// What can and cannot be said about availability.
+    pub availability: Option<Availability>,
+    /// Typed edges touching the symbol.
+    pub relationships: Vec<Relationship>,
+    /// Fragments about the symbol, bounded.
+    pub fragments: Vec<EvidenceFragment>,
+    /// Source excerpt at `source` depth.
+    pub source: Option<SourceExcerpt>,
+}
+
+/// How a slice is encoded.
+///
+/// The values are, in order: `utf8`, `base64`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+#[schemars(inline)]
+pub enum SliceEncoding {
+    Utf8,
+    Base64,
+}
+
+/// The `read_artifact` payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ArtifactSliceData {
+    /// The artifact record.
+    pub artifact: Artifact,
+    /// How `content` is encoded.
+    pub encoding: SliceEncoding,
+    /// First byte offset of the slice.
+    pub start: u64,
+    /// One past the last byte offset of the slice.
+    pub end: u64,
+    /// Total artifact size.
+    pub total: u64,
+    /// The slice.
+    pub content: String,
+    /// SHA-256 of the slice bytes.
+    pub content_digest: String,
+    /// Bytes after `end`.
+    pub remaining: u64,
+    /// The section that was selected, when one was.
+    pub section: Option<String>,
+}
+
+/// The snapshot manifest resource: what a snapshot contains.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ManifestData {
+    /// The immutable manifest as published.
+    pub manifest: SnapshotManifest,
+    /// Whether this snapshot is the context's current one.
+    pub is_current: bool,
+}
+
+/// Every tool payload, for schema emission. Never sent on the wire as a union.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "tool", rename_all = "snake_case")]
+#[schemars(rename = "LibraryEnrichmentToolData")]
+pub enum ToolData {
+    /// `resolve_library`.
+    ResolveLibrary(Box<ResolveData>),
+    /// `library_overview`.
+    LibraryOverview(Box<OverviewData>),
+    /// `search_evidence`.
+    SearchEvidence(Box<SearchData>),
+    /// `inspect_symbol`.
+    InspectSymbol(Box<InspectData>),
+    /// `read_artifact`.
+    ReadArtifact(Box<ArtifactSliceData>),
+    /// The snapshot manifest resource.
+    SnapshotManifest(Box<ManifestData>),
+}
+
+/// The tool payload schema, canonicalized like the envelope schema.
+#[must_use]
+pub fn tool_data_schema() -> serde_json::Value {
+    let settings = schemars::generate::SchemaSettings::draft2020_12().for_serialize();
+    let generator = settings.into_generator();
+    let schema = generator.into_root_schema_for::<ToolData>();
+    let mut value = serde_json::to_value(schema).unwrap_or_default();
+    if let Some(object) = value.as_object_mut() {
+        object.insert(
+            "$id".to_owned(),
+            serde_json::Value::String(
+                "https://library-enrichment.local/schemas/tool-data.schema.json".to_owned(),
+            ),
+        );
+    }
+    crate::canonical::canonicalize(value)
+}
+
+/// The tool payload schema as the exact bytes `emit-schemas` writes.
+#[must_use]
+pub fn tool_data_schema_json() -> String {
+    let mut json = serde_json::to_string_pretty(&tool_data_schema())
+        .expect("a generated schema is always serializable");
+    json.push('\n');
+    json
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_tool_data_schema_names_every_payload() {
+        let schema = tool_data_schema();
+        let defs = schema["$defs"].as_object().expect("$defs");
+        for name in [
+            "ResolveData",
+            "OverviewData",
+            "SearchData",
+            "InspectData",
+            "ArtifactSliceData",
+            "Symbol",
+            "Artifact",
+        ] {
+            assert!(defs.contains_key(name), "{name} missing from $defs");
+        }
+        assert_eq!(schema["title"], "LibraryEnrichmentToolData");
+    }
+
+    #[test]
+    fn schema_emission_is_deterministic() {
+        assert_eq!(tool_data_schema_json(), tool_data_schema_json());
+    }
+}

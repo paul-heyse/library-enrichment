@@ -18,12 +18,24 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-__all__ = ["RPC_MESSAGE_BYTES", "DaemonClient", "DaemonUnavailableError", "socket_path"]
+__all__ = [
+    "ACQUISITION_TIMEOUT_SECONDS",
+    "RPC_MESSAGE_BYTES",
+    "DaemonClient",
+    "DaemonUnavailableError",
+    "socket_path",
+]
 
 # `limits.rpc_message_bytes` from the frozen config/service.example.toml. The daemon enforces
 # this on its side; matching it here means an over-long request fails locally with a clear
 # message instead of being truncated on the wire.
 RPC_MESSAGE_BYTES = 1_048_576
+
+# Acquisition (registry, tarball, docs.rs JSON, normalization) runs inline in Phase 1 rather
+# than behind a job receipt; jobs land in Phase 4 (ADR 0010). The daemon's own configured
+# `[network].acquisition_timeout_seconds` (120 by default) is the deadline that produces a
+# typed envelope; this larger adapter bound exists only so a wedged daemon is still reported.
+ACQUISITION_TIMEOUT_SECONDS = 180.0
 
 JSONRPC_VERSION = "2.0"
 
@@ -74,8 +86,19 @@ class DaemonClient:
         """Build a client for the configured socket. Connects to nothing yet."""
         return cls(path=socket_path())
 
-    async def call(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def call(
+        self,
+        method: str,
+        params: dict[str, Any] | None = None,
+        *,
+        timeout_seconds: float | None = None,
+    ) -> dict[str, Any]:
         """Send one JSON-RPC request and return the parsed response.
+
+        ``timeout_seconds`` overrides the client default for one call. Acquisition methods pass
+        :data:`ACQUISITION_TIMEOUT_SECONDS`; the daemon enforces its own, shorter, configured
+        deadline and answers with a typed envelope, so this bound only matters if the daemon
+        itself stops responding.
 
         Raises:
             DaemonUnavailableError: if the daemon is unreachable, too slow, or answers with
@@ -92,10 +115,11 @@ class DaemonClient:
             message = f"request exceeds the {RPC_MESSAGE_BYTES}-byte rpc limit"
             raise DaemonUnavailableError(message)
 
+        deadline = self.timeout_seconds if timeout_seconds is None else timeout_seconds
         try:
-            return await asyncio.wait_for(self._exchange(frame), self.timeout_seconds)
+            return await asyncio.wait_for(self._exchange(frame), deadline)
         except TimeoutError as exc:
-            message = f"daemon did not answer within {self.timeout_seconds}s at {self.path}"
+            message = f"daemon did not answer within {deadline}s at {self.path}"
             raise DaemonUnavailableError(message) from exc
         except (OSError, json.JSONDecodeError) as exc:
             raise DaemonUnavailableError(f"daemon unreachable at {self.path}: {exc}") from exc

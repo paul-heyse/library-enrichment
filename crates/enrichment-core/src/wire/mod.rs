@@ -19,6 +19,7 @@
 //! contract, `Option<T>` fields are dropped from `required`, which would silently lose four of
 //! the fourteen root fields the contract requires. See [`schema::envelope_schema`].
 
+pub mod data;
 pub mod envelope;
 pub mod error;
 pub mod evidence;

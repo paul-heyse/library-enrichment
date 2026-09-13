@@ -8,13 +8,25 @@
 //! Every socket lives under a `tempfile` directory, so nothing here touches `$LIBENR_HOME` or
 //! the real XDG paths. `just state-leak-check` proves that independently.
 
+use std::sync::Arc;
 use std::time::Duration;
 
+use enrichment_core::config::Config;
 use enrichment_daemon::paths::DaemonPaths;
 use enrichment_daemon::rpc::DEFAULT_MAX_MESSAGE_BYTES;
 use enrichment_daemon::server;
+use enrichment_daemon::service::Service;
+use enrichment_store::StatePaths;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
+
+/// A service over explicit roots under `dir`: the service never reads `LIBENR_*` itself.
+fn open_service(dir: &std::path::Path, limit: usize) -> Arc<Service> {
+    let mut config = Config::default();
+    config.limits.rpc_message_bytes = limit;
+    let state = StatePaths::explicit(dir.join("cache"), dir.join("data"));
+    Arc::new(Service::open(config, state).expect("service opens"))
+}
 
 /// A daemon on a private socket, shut down when the guard is dropped.
 struct TestDaemon {
@@ -30,13 +42,15 @@ impl TestDaemon {
     }
 
     async fn start_with_limit(limit: usize) -> Self {
-        let dir = tempfile::tempdir().expect("a temp dir for the socket");
-        let paths = DaemonPaths::under(dir.path().to_path_buf());
+        let dir = tempfile::tempdir().expect("a temp dir for the socket and state");
+        let paths = DaemonPaths::under(dir.path().join("run"));
         let (stop, stopped) = tokio::sync::oneshot::channel();
+
+        let service = open_service(dir.path(), limit);
 
         let serving = paths.clone();
         let handle = tokio::spawn(async move {
-            server::serve(&serving, limit, async {
+            server::serve(service, &serving, async {
                 let _ = stopped.await;
             })
             .await
@@ -104,21 +118,33 @@ async fn service_status_round_trips_over_a_real_socket() {
         "the core mints the request identity"
     );
 
-    // The Phase 0 gate: absent components are reported as absent, truthfully.
+    // The Phase 0 gate, still in force: absent components are reported as absent, truthfully.
+    // With an open store the registry producer is the one that is genuinely available; every
+    // other one still names why it is not.
     let producers = response["result"]["data"]["producers"]
         .as_array()
         .expect("producers are listed");
     assert!(!producers.is_empty());
+    let mut available = Vec::new();
     for producer in producers {
-        assert_eq!(
-            producer["available"], false,
-            "no producer is implemented in phase 0, so none may claim to be"
-        );
-        assert!(
-            !producer["detail"].as_str().unwrap_or_default().is_empty(),
-            "an absent component must name why it is absent"
-        );
+        if producer["available"] == true {
+            available.push(producer["name"].as_str().unwrap_or_default().to_owned());
+        } else {
+            assert!(
+                !producer["detail"].as_str().unwrap_or_default().is_empty(),
+                "an absent component must name why it is absent"
+            );
+        }
     }
+    // Pinned rather than checked for membership, so a producer becoming available is a
+    // deliberate edit here. The list grows as a phase lands: it was `["crates-io-registry"]`
+    // at phase 0, and the phase-1 slice added `rustdoc-json`.
+    available.sort();
+    assert_eq!(
+        available,
+        vec!["crates-io-registry".to_owned(), "rustdoc-json".to_owned()]
+    );
+    assert_eq!(response["result"]["data"]["health"]["cache_ready"], true);
 
     daemon.shutdown().await;
 }
@@ -165,7 +191,7 @@ async fn malformed_json_is_a_typed_error_not_a_dropped_connection() {
 async fn an_unknown_method_is_a_typed_error() {
     let daemon = TestDaemon::start().await;
     let response = daemon
-        .exchange(r#"{"jsonrpc":"2.0","id":7,"method":"library.overview"}"#)
+        .exchange(r#"{"jsonrpc":"2.0","id":7,"method":"library.compare"}"#)
         .await;
 
     assert_eq!(response["id"], 7, "the error correlates with the request");
@@ -252,13 +278,10 @@ async fn the_connection_survives_a_rejected_frame() {
 async fn a_second_daemon_refuses_to_steal_a_live_socket() {
     // Two daemons on one socket would break the single-writer invariant (blueprint §2.1).
     let daemon = TestDaemon::start().await;
-    let err = server::serve(
-        &daemon.paths,
-        DEFAULT_MAX_MESSAGE_BYTES,
-        std::future::pending(),
-    )
-    .await
-    .expect_err("the second bind must fail");
+    let second = open_service(daemon._dir.path(), DEFAULT_MAX_MESSAGE_BYTES);
+    let err = server::serve(second, &daemon.paths, std::future::pending())
+        .await
+        .expect_err("the second bind must fail");
     assert_eq!(err.kind(), std::io::ErrorKind::AddrInUse);
 
     daemon.shutdown().await;
@@ -274,9 +297,10 @@ async fn a_stale_socket_from_a_dead_daemon_is_reclaimed() {
     std::fs::write(&paths.socket, b"").expect("the stale file is writable");
 
     let (stop, stopped) = tokio::sync::oneshot::channel();
+    let service = open_service(dir.path(), DEFAULT_MAX_MESSAGE_BYTES);
     let serving = paths.clone();
     let handle = tokio::spawn(async move {
-        server::serve(&serving, DEFAULT_MAX_MESSAGE_BYTES, async {
+        server::serve(service, &serving, async {
             let _ = stopped.await;
         })
         .await

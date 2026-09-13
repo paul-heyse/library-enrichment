@@ -1,0 +1,36 @@
+# Acceptance fixture crate, release 0.1.0 (tests/ACCEPTANCE_PLAN.md, "Deterministic fixtures").
+#
+# A package under study, not part of the service's workspace: the root Cargo.toml excludes
+# tests/fixtures/crates/* and this file declares its own empty [workspace]. Built only by
+# `just fixtures-build`, with the dated nightly recorded in config/toolchains.toml, into a
+# target directory under .dev-state -- never in place.
+[package]
+name = "enr-fixture"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Deterministic fixture for library-enrichment acceptance gates."
+repository = "https://github.com/paul-heyse/library-enrichment"
+documentation = "https://docs.rs/enr-fixture"
+readme = "README.md"
+build = "build.rs"
+publish = false
+
+[lib]
+name = "enr_fixture"
+
+[features]
+default = ["std"]
+std = []
+# Gate R05: `extra_only` exists only when this feature is enabled. docs.rs builds with
+# `all-features = true` (below), so the hosted documentation shows it; a project with default
+# features does not have it.
+extra = []
+
+# Gate R05/R06: the maintainer-selected docs.rs build configuration (blueprint §4.3). Read from
+# this table by the service; docs.rs itself exposes no API for it.
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[workspace]

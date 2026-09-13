@@ -49,26 +49,12 @@ pub fn envelope_schema() -> serde_json::Value {
 ///
 /// Sorting explicitly makes emission independent of whether `serde_json::Map` is a `BTreeMap`
 /// or an `IndexMap` -- see the determinism note on [`envelope_schema`]. Under a `BTreeMap` this
-/// is a no-op; under an `IndexMap` it is what makes the output reproducible.
+/// is a no-op; under an `IndexMap` it is what makes the output reproducible. Array order is
+/// preserved: `enum` order in particular is what `scripts/schema-conformance.py` compares
+/// against schemas/frozen/enums.json. The same canonical form is what content identities are
+/// hashed over, so it lives in [`crate::canonical`].
 fn canonicalize(value: serde_json::Value) -> serde_json::Value {
-    match value {
-        serde_json::Value::Object(map) => {
-            let mut entries: Vec<_> = map.into_iter().collect();
-            entries.sort_by(|(a, _), (b, _)| a.cmp(b));
-            serde_json::Value::Object(
-                entries
-                    .into_iter()
-                    .map(|(k, v)| (k, canonicalize(v)))
-                    .collect(),
-            )
-        }
-        serde_json::Value::Array(items) => {
-            // Array order is significant in JSON Schema -- `enum` order in particular is what
-            // `scripts/schema-conformance.py` compares against schemas/frozen/enums.json.
-            serde_json::Value::Array(items.into_iter().map(canonicalize).collect())
-        }
-        other => other,
-    }
+    crate::canonical::canonicalize(value)
 }
 
 /// The schema as the exact bytes `emit-schemas` writes.
