@@ -319,15 +319,20 @@ def build_server() -> FastMCP:
 
 
 async def _service_status(component: str | None) -> dict[str, Any]:
-    """Ask the daemon for its status, and answer truthfully when it is not running.
+    """Forward the daemon's envelope, or report its absence.
 
-    A stopped daemon is reported as a fact, not raised as an error: the Phase 0 gate asks that
-    ``service_status`` "truthfully reports absent components", and a tool call that fails tells
-    a caller nothing about what is installed.
+    The daemon builds the whole envelope -- identity, coverage and freshness included -- because
+    those are evidence-model assertions and §1.1 gives the evidence model to the core. This
+    function does what §2.1 says an adapter does: calls, maps a structured error, forwards.
+
+    The one envelope composed here is the daemon-unreachable case, and only because the core is
+    by definition not around to state it. Even then it is `partial` with the gap named, never an
+    empty `ok`: "the daemon is down" and "no producers are installed" are different facts.
     """
     client = DaemonClient.from_env()
+    params = {"component": component} if component is not None else {}
     try:
-        response = await client.call("service.status")
+        response = await client.call("service.status", params)
     except DaemonUnavailableError as exc:
         return envelope.partial(
             "The daemon is not running, so only adapter-local facts are available.",
@@ -355,69 +360,14 @@ async def _service_status(component: str | None) -> dict[str, Any]:
             retryable=True,
         )
 
-    result: dict[str, Any] = response.get("result", {})
-    if component is None:
-        return envelope.ok(
-            "Service status as reported by the daemon.",
-            result,
-            Coverage(
-                scope="installed components and their availability",
-                indexed=["adapter", "daemon", "producers", "features"],
-                missing=[],
-                limitations=[
-                    "Reports what is installed, not whether library evidence has been indexed."
-                ],
-            ),
+    result = response.get("result")
+    if not isinstance(result, dict):
+        return envelope.error(
+            Code.UPSTREAM_UNAVAILABLE,
+            "the daemon returned no envelope",
+            "Check the daemon log, then retry.",
+            retryable=True,
         )
-
-    result, matched = _filter_component(result, component)
-    if matched:
-        return envelope.ok(
-            f"Status for `{component}`.",
-            result,
-            Coverage(
-                scope=f"components matching `{component}`",
-                indexed=["adapter", "daemon", "producers", "features"],
-                missing=[],
-                limitations=[
-                    "Reports what is installed, not whether library evidence has been indexed."
-                ],
-            ),
-        )
-
-    # An empty `ok` here would be indistinguishable from "this build has no such producer",
-    # which is a different and much stronger claim than "the filter matched nothing". The
-    # coverage block has to carry that difference, or a caller cannot tell them apart --
-    # `.claude/rules/evidence-truthfulness.md`'s C01 distinction, in miniature.
-    return envelope.partial(
-        f"No component named `{component}` is known to this build.",
-        result,
-        Coverage(
-            scope=f"components matching `{component}`",
-            indexed=["adapter", "daemon"],
-            missing=[f"producers matching `{component}`", f"features matching `{component}`"],
-            limitations=[
-                f"`{component}` did not match any component this build reports. That is not "
-                f"evidence that no such component exists -- call `service_status` with no "
-                f"filter to see the full list."
-            ],
-        ),
-    )
-
-
-def _filter_component(result: dict[str, Any], component: str) -> tuple[dict[str, Any], bool]:
-    """Narrow a status report to one named component.
-
-    Returns the filtered result and whether anything matched, so the caller can distinguish a
-    narrowed answer from an unmatched filter. Those are different facts and must not share a
-    coverage block.
-    """
-    filtered = dict(result)
-    matched = False
-    for key in ("producers", "features"):
-        entries = result.get(key, [])
-        if isinstance(entries, list):
-            kept = [e for e in entries if e.get("name") == component]
-            matched = matched or bool(kept)
-            filtered[key] = kept
-    return filtered, matched
+    # Forwarded verbatim. `_emit` validates it on the way out, so a malformed core envelope is
+    # caught here rather than reaching a caller.
+    return result

@@ -74,6 +74,16 @@ toolchain-check:
 provenance-check:
     @"{{ root }}/scripts/provenance-check.sh"
 
+[doc("Detect changes to the enforcement layer. A guard cannot check itself; this is the other half.")]
+[group('gate')]
+guardrails-check:
+    @"{{ root }}/scripts/guardrails-check.sh"
+
+[doc("Re-record the enforcement-layer manifest. Operator action; asserts the change was intended.")]
+[group('mutating')]
+guardrails-record:
+    @"{{ root }}/scripts/guardrails-check.sh" --record
+
 [doc("Run the hook behaviour tests. The hooks are the enforcement layer and need regression cover.")]
 [group('gate')]
 hooks-test:
@@ -184,7 +194,7 @@ gate-phase n:
 # same things. If you add a step to one, add it to the other.
 [doc("Everything that must hold on every change. The default pre-commit surface.")]
 [group('gate')]
-ci: toolchain-check provenance-check hooks-test rules-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
+ci: toolchain-check provenance-check guardrails-check hooks-test rules-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
     @echo "ci: complete"
 
 # ---------------------------------------------------------------------------- mutating

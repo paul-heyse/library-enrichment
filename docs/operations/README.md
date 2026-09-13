@@ -124,6 +124,17 @@ how to background it. Two daemons cannot share a socket: a second `start` fails 
 `AddrInUse`, while a socket file left behind by a crash is reclaimed. `stop` is an in-band RPC
 call, acknowledged before the daemon exits, so it needs no pidfile.
 
+### Where is the socket?
+
+```sh
+library-enrichmentd socket-path    # prints the resolved path and exits
+```
+
+The Python adapter re-implements the same resolution order, so
+`tests/contract/test_socket_resolution.py` uses this subcommand to compare the two across every
+branch. A divergence would be quiet and nasty — the adapter would report the daemon unavailable
+while it sat listening elsewhere.
+
 ### Validating a wire document
 
 ```sh

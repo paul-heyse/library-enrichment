@@ -241,6 +241,71 @@ async def test_the_rpc_boundary_agrees_with_the_cli_on_the_shared_corpus(
     assert not disagreements, f"boundaries disagreed: {disagreements}"
 
 
+async def test_the_configured_rpc_limit_is_the_one_enforced(tmp_path: Path) -> None:
+    """A limit set in `LIBENR_CONFIG` reaches the socket, not just `service_status`.
+
+    Reporting a configured value while enforcing a compiled-in one would be worse than not
+    reading configuration at all, so this starts a daemon with a deliberately tiny
+    `rpc_message_bytes` and checks the wire refuses a frame above it.
+    """
+    state = tmp_path / "state"
+    config = tmp_path / "service.toml"
+    config.write_text("[limits]\nrpc_message_bytes = 2048\n")
+    socket_path = state / "run" / "d.sock"
+
+    env = dict(os.environ)
+    env.update(
+        {
+            "LIBENR_HOME": str(state),
+            "LIBENR_SOCKET": str(socket_path),
+            "LIBENR_CONFIG": str(config),
+            "PYTHONPATH": str(ROOT / "python"),
+        }
+    )
+
+    process = subprocess.Popen(  # a first-party binary at a known path
+        [str(DAEMON_BIN), "start"],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        _await_socket(socket_path, process)
+
+        reader, writer = await asyncio.open_unix_connection(str(socket_path))
+        try:
+            padding = "x" * 8192
+            frame = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "service.status",
+                    "params": {"pad": padding},
+                }
+            )
+            writer.write((frame + "\n").encode())
+            await writer.drain()
+            line = await reader.readline()
+        finally:
+            writer.close()
+            await asyncio.gather(writer.wait_closed(), return_exceptions=True)
+
+        response = json.loads(line)
+        assert response["error"]["data"]["code"] == "BUDGET_EXCEEDED"
+        assert "2048" in response["error"]["message"], (
+            "the enforced limit must be the configured one, not the built-in default"
+        )
+    finally:
+        subprocess.run(  # same first-party binary
+            [str(DAEMON_BIN), "stop"], env=env, capture_output=True, check=False, timeout=10
+        )
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=10)
+
+
 async def test_the_rpc_validator_rejects_a_malformed_request(
     running_daemon: dict[str, str],
 ) -> None:
@@ -266,4 +331,6 @@ def test_the_daemon_cli_reports_status_and_stops(running_daemon: dict[str, str])
     )
     assert result.returncode == 0, result.stderr.decode()
     reported = json.loads(result.stdout)
-    assert reported["result"]["versions"]["schema"] == "1.0"
+    # The daemon answers with a full wire envelope, so the status payload sits under `data`.
+    assert reported["result"]["status"] == "ok"
+    assert reported["result"]["data"]["versions"]["schema"] == "1.0"

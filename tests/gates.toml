@@ -35,11 +35,35 @@ assertion = "Useful metadata remains, coverage is partial, fallback is explicit.
 tests = []
 
 [gates.R04]
-phase = 1
+# Re-scoped from phase 1 to phase 0. The blueprint's own Phase-0 gate (§13) ends with "an
+# unsupported producer format returns a typed error", which is exactly this assertion, so
+# leaving R04 in phase 1 made "Phase 0 complete" unprovable by construction. The ID is
+# unchanged -- only the phase field, which is ours and not part of the frozen plan.
+phase = 0
 kind = "fixture"
 scenario = "Unsupported rustdoc JSON format"
 assertion = "Typed unsupported-format result; no silent schema misparse."
-tests = []
+caveat = """\
+The supported set is measured as "deserializes without error", which is necessary but not \
+sufficient: rustdoc format changes are largely additive, so a neighbouring version usually \
+parses even when a field's meaning has shifted. That is why probe_format checks the version \
+BEFORE touching the body. Widening SUPPORTED_FORMAT_VERSIONS needs a round trip checked \
+against known-good output, not just a successful parse."""
+tests = [
+  # The ordering guarantee: refuse on the declared version, before any body interpretation.
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::an_unsupported_document_is_never_body_parsed",
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::an_older_unsupported_version_is_a_typed_refusal",
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::a_newer_unsupported_version_is_a_typed_refusal",
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::a_missing_format_version_is_refused_rather_than_assumed",
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::a_supported_version_is_accepted",
+  # A corrupt download and a version mismatch are different facts with different codes.
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::a_malformed_artifact_is_distinguished_from_an_unsupported_one",
+  # The supported set is measured against real captures, not asserted against itself.
+  "enrichment-core::enrichment_core$producer::rustdoc::tests::the_supported_set_matches_what_the_parser_actually_accepts",
+  # And the typed refusal survives the transport.
+  "enrichment-daemon::enrichment_daemon$server::tests::an_unsupported_producer_format_is_a_typed_error_over_rpc",
+  "enrichment-daemon::enrichment_daemon$server::tests::a_supported_producer_format_is_accepted_over_rpc",
+]
 
 [gates.R05]
 phase = 1

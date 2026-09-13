@@ -60,9 +60,21 @@ be an out-of-memory vector against the process that owns every other agent's job
 rejection the offending frame is consumed, so the connection carries on.
 
 **Method vocabulary:** dotted, `noun.verb`, namespaced by subsystem — `service.status`,
-`daemon.ping`, `daemon.shutdown`, `wire.validate`. Deliberately *not* the MCP tool names: the
+`daemon.ping`, `daemon.shutdown`, `wire.validate`, `producer.probe_format`. Deliberately
+*not* the MCP tool names: the
 tools are the public contract and the RPC methods are an internal one, and letting them drift
 apart is what allows one MCP tool to become several core calls in Phase 1.
+
+`service.status` returns a **complete wire envelope**, not a bare payload. Identity, coverage
+and freshness are evidence-model assertions, and §1.1 gives the evidence model to Rust; an
+adapter that composed its own `coverage` would be asserting what the service looked at without
+having looked. The adapter forwards what the core produced.
+
+`producer.probe_format` is gate R04, and the fourth clause of the blueprint's Phase-0 gate: an
+unsupported producer format returns a typed error. It reads `format_version` and decides
+*before* touching the body, because an unsupported rustdoc document frequently deserializes
+successfully into the wrong shape — that silent misparse is the failure, and it is worse than a
+refusal because the resulting evidence looks fine.
 
 `wire.validate` exists to make gate C19 measurable. The gate says inputs violating the wire
 schema are "rejected **consistently** through CLI/RPC/MCP boundaries", and consistency cannot be

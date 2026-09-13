@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncBufRead, AsyncBufReadExt};
 
-/// The frozen default from `config/service.example.toml` (`limits.rpc_message_bytes`).
+/// The documented default from `config/service.example.toml` (`limits.rpc_message_bytes`).
+///
+/// The operative value comes from configuration -- `Config::limits.rpc_message_bytes`, which
+/// `library-enrichmentd start` passes to [`crate::server::serve`]. This constant is the fallback
+/// that `enrichment_core::config::Limits::default()` also carries, and
+/// `config::tests::defaults_match_the_frozen_example` pins both to the frozen file.
 pub const DEFAULT_MAX_MESSAGE_BYTES: usize = 1_048_576;
 
 /// The JSON-RPC version string this protocol speaks.

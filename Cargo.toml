@@ -72,6 +72,19 @@ tokio = { version = "1.53.1", features = [
 ] }
 thiserror = "2.0.20"
 
+# Mints request identities in the core, where §1.1 puts identity. Already in Cargo.lock via
+# public-api, so promoting it to a direct dependency adds no crate.
+uuid = { version = "1.26.1", features = ["v4"] }
+
+# Reads config/service.*.toml and config/toolchains.toml. `parse` + `serde` only: the `display`
+# feature would pull serialization we never use, and `preserve_order` must stay off for the
+# same reason it must stay off for serde_json -- see wire::schema's determinism note.
+#
+# Verified 2026-09-13: adds serde_spanned, toml_datetime, toml_parser and winnow, each a single
+# version, all MIT OR Apache-2.0. `cargo deny check bans licenses sources` stays green with no
+# new skip.
+toml = { version = "1.1.6", default-features = false, features = ["parse", "serde"] }
+
 # Internal crates carry an explicit version alongside the path. A bare `{ path = ... }` is a
 # wildcard requirement, and deny.toml sets `wildcards = "deny"`.
 enrichment-core = { path = "crates/enrichment-core", version = "0.0.0" }

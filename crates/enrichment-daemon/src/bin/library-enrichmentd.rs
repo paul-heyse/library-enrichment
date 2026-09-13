@@ -8,11 +8,11 @@
 
 use std::process::ExitCode;
 
+use enrichment_core::config::Config;
 use enrichment_daemon::paths::DaemonPaths;
-use enrichment_daemon::rpc::DEFAULT_MAX_MESSAGE_BYTES;
 use enrichment_daemon::server;
 
-const USAGE: &str = "usage: library-enrichmentd <start|status|stop|validate [FILE]>";
+const USAGE: &str = "usage: library-enrichmentd <start|status|stop|validate [FILE]|socket-path>";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -41,6 +41,16 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    // Refuse to start on unparsable configuration rather than running with different limits
+    // than the operator wrote. An unset or absent LIBENR_CONFIG is not an error.
+    let config = match Config::from_env() {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("library-enrichmentd: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
     let runtime = match tokio::runtime::Runtime::new() {
         Ok(runtime) => runtime,
         Err(err) => {
@@ -50,9 +60,17 @@ fn main() -> ExitCode {
     };
 
     match command.as_deref() {
-        Some("start") => runtime.block_on(start(&paths)),
+        Some("start") => runtime.block_on(start(&paths, &config)),
         Some("status") => runtime.block_on(status(&paths)),
         Some("stop") => runtime.block_on(stop(&paths)),
+        Some("socket-path") => {
+            // Prints the resolved socket and exits. The Python adapter re-implements this
+            // resolution order, so `tests/contract/test_socket_resolution.py` uses this
+            // subcommand to compare the two across every branch -- the duplication is real, and
+            // this is what makes a divergence a test failure instead of a silent misconnect.
+            println!("{}", paths.socket.display());
+            ExitCode::SUCCESS
+        }
         Some(other) => {
             eprintln!("library-enrichmentd: unknown command `{other}`\n{USAGE}");
             ExitCode::FAILURE
@@ -108,7 +126,7 @@ fn validate(source: Option<&str>) -> ExitCode {
 ///
 /// Deliberately not self-daemonizing: a supervised foreground process is easier to log, test
 /// and stop, and `just` or a service manager can background it.
-async fn start(paths: &DaemonPaths) -> ExitCode {
+async fn start(paths: &DaemonPaths, config: &Config) -> ExitCode {
     let shutdown = async {
         let mut term =
             match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
@@ -125,7 +143,11 @@ async fn start(paths: &DaemonPaths) -> ExitCode {
         eprintln!("library-enrichmentd: shutting down");
     };
 
-    match server::serve(paths, DEFAULT_MAX_MESSAGE_BYTES, shutdown).await {
+    eprintln!(
+        "library-enrichmentd: configuration {}",
+        config.source.describe()
+    );
+    match server::serve(paths, config.limits.rpc_message_bytes, shutdown).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("library-enrichmentd: {err}");

@@ -9,7 +9,13 @@
 //! report, not an error to raise: `.claude/rules/evidence-truthfulness.md` is explicit that
 //! `ok` means successful within the declared scope, and the scope here is "what is installed".
 
+use std::collections::BTreeSet;
+
+use enrichment_core::config::Config;
+use enrichment_core::wire::{Coverage, Envelope, JsonObject};
 use serde::{Deserialize, Serialize};
+
+use crate::envelope;
 
 /// One producer or component and whether it is actually usable.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,12 +83,10 @@ pub struct SchemaCompatibility {
 /// Execution-profile availability (blueprint §10).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Sandbox {
-    /// Profiles this build enables.
+    /// Profiles configuration has enabled.
     ///
-    /// **Not yet read from configuration.** Phase 0 has no configuration reader, so this is a
-    /// built-in default and `enabled_profiles_source` says so. Describing it as "what your
-    /// configuration enabled" would be a wrong answer about policy -- an operator who set
-    /// `enabled_profiles = []` would still be told `["static"]`.
+    /// Read from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are
+    /// built-in defaults. A caller selects from this list and never grants itself permission.
     pub enabled_profiles: Vec<String>,
     /// Where `enabled_profiles` came from, so a caller is never misled about policy.
     pub enabled_profiles_source: String,
@@ -110,6 +114,17 @@ pub struct Health {
 /// the honest answer, and the Phase 0 gate asks for exactly it.
 #[must_use]
 pub fn service_status() -> ServiceStatus {
+    // A configuration this daemon could not parse is surfaced rather than swallowed: reporting
+    // defaults as though they were the operator's settings is the failure this facet exists to
+    // avoid. `serve` refuses to start on a parse error, so reaching the fallback here means the
+    // file appeared or changed after startup.
+    let config = Config::from_env().unwrap_or_default();
+    from_config(&config)
+}
+
+/// Report status against a specific configuration.
+#[must_use]
+pub fn from_config(config: &Config) -> ServiceStatus {
     ServiceStatus {
         versions: Versions {
             daemon: env!("CARGO_PKG_VERSION").to_owned(),
@@ -120,12 +135,8 @@ pub fn service_status() -> ServiceStatus {
             accepts: vec![enrichment_core::SCHEMA_VERSION.to_owned()],
         },
         sandbox: Sandbox {
-            // Only `static` is enabled until the policy engine lands. A caller selects from
-            // enabled profiles; it never grants itself permission.
-            enabled_profiles: vec!["static".to_owned()],
-            enabled_profiles_source: "built-in default; \
-                 configuration is not read until the policy engine lands in phase 4"
-                .to_owned(),
+            enabled_profiles: config.policy.enabled_profiles.clone(),
+            enabled_profiles_source: config.source.describe(),
             available_runtimes: detect_runtimes(),
         },
         producers: vec![
@@ -172,6 +183,94 @@ fn which(program: &str) -> bool {
     std::env::split_paths(&path).any(|dir| dir.join(program).is_file())
 }
 
+/// The `service.status` response as a complete wire envelope.
+///
+/// Built here rather than in the adapter: `coverage` is an assertion about what the service
+/// looked at, and only the side that looked can make it honestly (§1.1, §7.2).
+///
+/// An unmatched `component` filter yields `partial` with the gap named, never an empty `ok`.
+/// Those are different facts — "this build has no such component" is a much stronger claim than
+/// "the filter matched nothing" — and a caller can only tell them apart if `coverage` says so.
+#[must_use]
+pub fn status_envelope(component: Option<&str>) -> Envelope {
+    let status = service_status();
+    let mut data: JsonObject = serde_json::to_value(&status)
+        .ok()
+        .and_then(|v| v.as_object().cloned())
+        .unwrap_or_default();
+
+    let Some(name) = component else {
+        return envelope::ok(
+            "Service status as reported by the daemon.",
+            data,
+            Coverage {
+                scope: "installed components and their availability".to_owned(),
+                indexed: ["daemon", "producers", "features", "sandbox"]
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect(),
+                missing: BTreeSet::new(),
+                limitations: vec![
+                    "Reports what is installed, not whether library evidence has been indexed."
+                        .to_owned(),
+                ],
+            },
+        );
+    };
+
+    let mut matched = false;
+    for key in ["producers", "features"] {
+        if let Some(entries) = data.get(key).and_then(|v| v.as_array()) {
+            let kept: Vec<_> = entries
+                .iter()
+                .filter(|e| e.get("name").and_then(|n| n.as_str()) == Some(name))
+                .cloned()
+                .collect();
+            matched = matched || !kept.is_empty();
+            data.insert(key.to_owned(), serde_json::Value::Array(kept));
+        }
+    }
+
+    if matched {
+        envelope::ok(
+            format!("Status for `{name}`."),
+            data,
+            Coverage {
+                scope: format!("components matching `{name}`"),
+                indexed: ["daemon", "producers", "features"]
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect(),
+                missing: BTreeSet::new(),
+                limitations: vec![
+                    "Reports what is installed, not whether library evidence has been indexed."
+                        .to_owned(),
+                ],
+            },
+        )
+    } else {
+        envelope::partial(
+            format!("No component named `{name}` is known to this build."),
+            data,
+            Coverage {
+                scope: format!("components matching `{name}`"),
+                indexed: ["daemon"].into_iter().map(str::to_owned).collect(),
+                missing: [
+                    format!("producers matching `{name}`"),
+                    format!("features matching `{name}`"),
+                ]
+                .into_iter()
+                .collect(),
+                limitations: vec![format!(
+                    "`{name}` did not match any component this build reports. That is not \
+                     evidence that no such component exists -- call service.status with no \
+                     filter to see the full list."
+                )],
+            },
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,21 +311,39 @@ mod tests {
     fn the_profile_list_says_where_it_came_from() {
         // Reporting a built-in default as though it were the operator's configuration would be
         // a wrong answer about policy, not a cosmetic one.
-        let status = service_status();
+        let status = from_config(&Config::default());
         assert!(
-            status
-                .sandbox
-                .enabled_profiles_source
-                .contains("built-in default"),
+            status.sandbox.enabled_profiles_source.contains("built-in"),
             "a caller must be able to tell a default from a configured value"
         );
     }
 
     #[test]
+    fn the_reported_profiles_are_the_configured_ones() {
+        // The regression this guards: a hardcoded list presented as policy. An operator who
+        // disables every profile must be told exactly that.
+        let mut config = Config::default();
+        config.policy.enabled_profiles = Vec::new();
+        assert!(from_config(&config).sandbox.enabled_profiles.is_empty());
+
+        config.policy.enabled_profiles = vec!["static".to_owned(), "runtime".to_owned()];
+        assert_eq!(
+            from_config(&config).sandbox.enabled_profiles,
+            vec!["static".to_owned(), "runtime".to_owned()]
+        );
+    }
+
+    #[test]
     fn runtime_detection_does_not_enable_a_profile() {
-        // podman/docker/bwrap are all present on the development workstation, but `build` and
-        // `runtime` stay disabled until configuration enables them.
-        let status = service_status();
+        // podman/docker/bwrap are all present on this workstation, but detection never adds a
+        // profile: the list comes from configuration alone.
+        let mut config = Config::default();
+        config.policy.enabled_profiles = vec!["static".to_owned()];
+        let status = from_config(&config);
         assert_eq!(status.sandbox.enabled_profiles, vec!["static".to_owned()]);
+        assert!(
+            !status.sandbox.available_runtimes.is_empty(),
+            "this workstation has bwrap, podman and docker"
+        );
     }
 }

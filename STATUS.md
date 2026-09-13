@@ -1,31 +1,32 @@
 # Status
 
-**Phase 0 of 6 — both registered gates pass; one blueprint clause is deferred.** The wire
-types, the daemon and the MCP adapter exist and run, and a minimal MCP/daemon handshake works
-end to end. No evidence producer exists yet. Last updated 2026-09-13.
+**Phase 0 of 6 — complete.** All four clauses of the blueprint's §13 Phase-0 gate hold, and the
+three gates scoped to this phase pass. The wire types, the daemon and the MCP adapter exist and
+run; a minimal MCP/daemon handshake works end to end. No evidence *retrieval* exists yet — that
+is Phase 1. Last updated 2026-09-13.
 
-`2 passed / 0 failed / 0 blocked / 46 not_run` of 48 gates. Phase 0 registers exactly two —
-**C14 and C19, both passing**, both carrying recorded caveats in the report. The other 46 belong
-to phases that have not started. Regenerate with `just acceptance-report`.
+`3 passed / 0 failed / 0 blocked / 45 not_run` of 48 gates: **C14, C19 and R04**, each carrying
+a recorded caveat in the report. Regenerate with `just acceptance-report`.
 
-### Why this does not say "Phase 0 complete"
-
-The blueprint's own Phase-0 gate (§13) has four clauses:
+### The blueprint's Phase-0 gate, clause by clause
 
 > Exact dependency locks; tool input/output schema tests; `service_status` truthfully reports
-> absent components; **an unsupported producer format returns a typed error**.
+> absent components; an unsupported producer format returns a typed error.
 
-The first three hold. The fourth does not: it corresponds to gate **R04**, which needs the
-rustdoc producer, is scoped to phase 1, and is `not_run`. Nothing false is being claimed — R04
-reports `not_run` honestly — but "Phase 0 complete" would be, because the phase scoping in
-`tests/gates.toml` is *ours*, not the frozen plan's. `tests/ACCEPTANCE_PLAN.md` has no phase
-column. So: the two gates registered for this phase pass, and the fourth clause lands with
-Phase 1. Gate C13 (working-directory independence) is scoped phase 1 for the same reason, which
-is worth remembering given the cwd-relative defect described below was found in Phase-0 code.
+| Clause | Where |
+|---|---|
+| Exact dependency locks | `Cargo.lock`, `uv.lock`; `just deps-policy` |
+| Tool input/output schema tests | **C19** — one corpus, four boundaries, verdicts compared per document |
+| `service_status` truthfully reports absent components | **C14**, plus the daemon-absent path |
+| An unsupported producer format returns a typed error | **R04** — `producer::rustdoc::probe_format` |
 
-Both gates were audited by `acceptance-auditor` and the diff by `boundary-reviewer`. The first
-audit **downgraded C19**; the review found a **C20 breach**. Both are fixed, and a re-audit
-confirmed both gates. Do not treat a green tally as a substitute for running them.
+R04 was scoped to phase 1 and is now phase 0, because the blueprint puts its assertion in the
+Phase-0 gate. The gate ID is unchanged; only the `phase` field, which is ours — the frozen
+`tests/ACCEPTANCE_PLAN.md` has no phase column.
+
+Both earlier gates were audited by `acceptance-auditor` and the diff by `boundary-reviewer`.
+The first audit **downgraded C19**; the review found a **C20 breach**. Both were fixed and a
+re-audit confirmed both gates. Do not treat a green tally as a substitute for running them.
 
 ---
 
@@ -64,11 +65,9 @@ implements them. That is deliberate: an empty `ok` would assert the question had
 
 ## Next: Phase 1 — the end-to-end static Rust slice
 
-**Start with R04**, the deferred Phase-0 clause: an unsupported rustdoc JSON format must return
-a typed `UNSUPPORTED_FORMAT` result with no silent schema misparse. `config/toolchains.toml`
-already records five nightlies emitting format versions 57, 60 and 61, and `public-api` 0.52.2's
-supported range — not the nightly's — is the binding constraint, so both a supported and an
-unsupported capture exist without synthesising a fake artifact.
+The format adapter R04 needs already exists (`producer::rustdoc`), so Phase 1 starts from a
+producer that can already refuse what it cannot read. What it lacks is a *fetcher*: docs.rs
+metadata and hosted rustdoc JSON, registry identity, and the normalized public API those feed.
 
 
 Registry identity, docs.rs metadata and hosted rustdoc JSON, one format adapter, a normalized
@@ -101,11 +100,14 @@ The groundwork is in place: add a method to `server::dispatch`, a producer behin
 | ty | 0.0.80 | `ty check --python/--venv` is the capsule hook |
 | **datamodel-code-generator** | **0.80.0** | Generates the Pydantic boundary DTOs; resolves on 3.14 |
 | **pytest-asyncio** | **1.4.0** | `asyncio_mode = "auto"` for the contract tier |
+| **toml** | **1.1.6** | Reads `LIBENR_CONFIG`; `parse` + `serde` only, never `preserve_order` |
+| **uuid** | **1.26.1** | Mints request identities in the core, where §1.1 puts identity |
+| **rustdoc-types** | **0.59.0** | Dev-only: measures which rustdoc formats actually parse (R04) |
 | rustc | 1.98.1 | **Current** stable (`rustup check`), pinned exactly |
 | rustdoc producer | `nightly-2026-09-13` | Byte-identical to the rolling nightly |
 
 `cargo deny` passes all four checks with `multiple-versions = "deny"` and 13 individually
-reasoned skips, none an Arrow-stack crate. 69 Rust tests, 56 Python tests, 3 doctest targets.
+reasoned skips, none an Arrow-stack crate. 93 Rust tests, 65 Python tests, 3 doctest targets.
 
 ---
 
@@ -145,10 +147,26 @@ indistinguishable from "no such producer exists"; and `sandbox.enabled_profiles`
 `enabled_profiles_source` saying it is a built-in default, because reporting a hardcoded value
 as the operator's configuration is a wrong answer about policy.
 
-Still open, and worth doing early in Phase 1: nothing reads `LIBENR_CONFIG` yet, so
-`rpc_message_bytes` exists in three places and is read from none; the socket resolver is
-duplicated in Rust and Python; and `request_id`, `coverage` and `freshness` are authored in the
-adapter rather than the core, which stops being acceptable once the daemon emits envelopes.
+Every item the reviews left open has since been closed:
+
+- **Configuration is read.** `enrichment_core::config` loads `LIBENR_CONFIG`; the daemon
+  enforces the configured `rpc_message_bytes` and reports the configured `enabled_profiles` with
+  an `enabled_profiles_source` saying where they came from. An unparsable file refuses to start
+  rather than running with limits the operator did not write.
+- **The daemon emits complete envelopes.** `request_id`, `coverage` and `freshness` are built in
+  the core, where §1.1 puts the evidence model. The adapter forwards them. It keeps one builder
+  of its own, for the daemon-unreachable case, because the core is by definition not around to
+  state that fact.
+- **The duplicated socket resolver is pinned.** `library-enrichmentd socket-path` exposes the
+  Rust answer, and `tests/contract/test_socket_resolution.py` compares both implementations
+  across all five branches *and* their precedence. The previous "divergence detector" only ever
+  exercised one branch.
+- **The enforcement layer has an oracle.** `just guardrails-check` digests `AGENTS.md`,
+  `CLAUDE.md`, `.claude/rules/`, `.claude/settings.json`, `scripts/hooks/` and `scripts/env.sh`
+  against `config/guardrails.sha256`. A guard cannot check itself, so this is the other half:
+  detection, not prevention. It is not tamper-proof — anyone who can edit the layer can
+  re-record — but it makes a change impossible to make *quietly*, and re-recording is gated
+  behind `LIBENR_ALLOW_GUARDRAIL_RERECORD=1`.
 
 ---
 
@@ -272,7 +290,7 @@ which is why every gate read `not_run` before this phase regardless of what pass
 | `docs/blueprint/` | The governing spec — frozen |
 | `docs/provenance/` | Delivered digests + PATHMAP — frozen |
 | `docs/architecture/compatibility-matrix.md` | Every pin, with evidence and retrieval dates |
-| `docs/adr/` | 7 ADRs; `/adr <slug>` to add |
+| `docs/adr/` | 8 ADRs; `/adr <slug>` to add |
 | `docs/operations/` | Install, register, run — the daemon section is live |
 | `contracts/`, `schemas/frozen/` | The Phase-0 acceptance target |
 | `schemas/generated/` | Emitted from the Rust types; never hand-edited |

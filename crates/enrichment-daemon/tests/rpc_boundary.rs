@@ -94,8 +94,18 @@ async fn service_status_round_trips_over_a_real_socket() {
     assert_eq!(response["id"], 1);
     assert!(response.get("error").is_none(), "status must succeed");
 
+    // `result` is a complete wire envelope now, built in the core -- identity, coverage and
+    // freshness included -- so the status payload sits under `data`.
+    assert_eq!(response["result"]["status"], "ok");
+    assert!(
+        response["result"]["request_id"]
+            .as_str()
+            .is_some_and(|id| id.starts_with("req_")),
+        "the core mints the request identity"
+    );
+
     // The Phase 0 gate: absent components are reported as absent, truthfully.
-    let producers = response["result"]["producers"]
+    let producers = response["result"]["data"]["producers"]
         .as_array()
         .expect("producers are listed");
     assert!(!producers.is_empty());
@@ -109,6 +119,27 @@ async fn service_status_round_trips_over_a_real_socket() {
             "an absent component must name why it is absent"
         );
     }
+
+    daemon.shutdown().await;
+}
+
+#[tokio::test]
+async fn the_status_envelope_conforms_to_the_wire_contract() {
+    // The daemon now emits envelopes, so what crosses the socket must satisfy the same
+    // contract every other boundary enforces -- checked with the shared validator rather than
+    // by eye.
+    let daemon = TestDaemon::start().await;
+    let response = daemon
+        .exchange(r#"{"jsonrpc":"2.0","id":1,"method":"service.status"}"#)
+        .await;
+
+    let envelope = response["result"].to_string();
+    let verdict = enrichment_daemon::validate::validate(&envelope);
+    assert!(
+        verdict.valid,
+        "the daemon emitted a non-conforming envelope: {:?}",
+        verdict.detail
+    );
 
     daemon.shutdown().await;
 }

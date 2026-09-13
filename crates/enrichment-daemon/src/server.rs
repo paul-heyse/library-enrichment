@@ -11,6 +11,8 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::Notify;
 
+use enrichment_core::producer::rustdoc;
+
 use crate::paths::DaemonPaths;
 use crate::rpc::{self, Request, Response, RpcError, codes};
 use crate::status;
@@ -198,12 +200,46 @@ pub fn dispatch(frame: &str) -> Dispatched {
             shutdown = true;
             Response::ok(request.id, serde_json::json!({ "stopping": true }))
         }
-        "service.status" => Response::ok(
-            request.id,
-            serde_json::to_value(status::service_status())
-                .expect("ServiceStatus always serializes"),
-        ),
+        // Returns a COMPLETE wire envelope, built here. Identity, coverage and freshness are
+        // evidence-model assertions and belong to the core (§1.1); the adapter forwards this
+        // rather than composing its own, so there is one author of those fields.
+        "service.status" => {
+            let filter = request.params.get("component").and_then(|c| c.as_str());
+            Response::ok(
+                request.id,
+                serde_json::to_value(status::status_envelope(filter))
+                    .expect("an Envelope always serializes"),
+            )
+        }
         "daemon.ping" => Response::ok(request.id, serde_json::json!({ "pong": true })),
+        // Gate R04, and the fourth clause of the blueprint's Phase-0 gate: an unsupported
+        // producer format returns a TYPED error, never a best-effort parse.
+        "producer.probe_format" => match request.params.get("artifact").and_then(|a| a.as_str()) {
+            Some(artifact) => match rustdoc::probe_format(artifact) {
+                Ok(probe) => Response::ok(
+                    request.id,
+                    serde_json::to_value(probe).expect("FormatProbe always serializes"),
+                ),
+                Err(err) => Response::err(
+                    request.id,
+                    RpcError::new(
+                        codes::INVALID_PARAMS,
+                        err.to_string(),
+                        err.code(),
+                        &err.next_action(),
+                    ),
+                ),
+            },
+            None => Response::err(
+                request.id,
+                RpcError::new(
+                    codes::INVALID_PARAMS,
+                    "producer.probe_format requires a string `artifact` parameter",
+                    "UNSUPPORTED_FORMAT",
+                    "Pass the producer artifact as {\"artifact\": \"<json text>\"}.",
+                ),
+            ),
+        },
         // Gate C19's RPC leg. Deliberately the SAME `crate::validate::validate` the CLI calls,
         // so the two boundaries cannot disagree about which documents are well formed.
         "wire.validate" => match request.params.get("document").and_then(|d| d.as_str()) {
@@ -305,8 +341,71 @@ mod tests {
     fn service_status_is_answered_without_a_store() {
         let response = dispatch_str(r#"{"jsonrpc":"2.0","id":1,"method":"service.status"}"#);
         assert!(response.error.is_none());
-        let result = response.result.expect("a status result");
-        assert_eq!(result["health"]["cache_ready"], serde_json::json!(false));
+        let envelope = response.result.expect("a status envelope");
+        assert_eq!(envelope["status"], "ok");
+        assert_eq!(
+            envelope["data"]["health"]["cache_ready"],
+            serde_json::json!(false)
+        );
+    }
+
+    #[test]
+    fn the_status_envelope_is_built_in_the_core() {
+        // The fields the adapter used to author. If these ever come back empty, identity and
+        // coverage have drifted back across the boundary §1.1 draws.
+        let response = dispatch_str(r#"{"jsonrpc":"2.0","id":1,"method":"service.status"}"#);
+        let envelope = response.result.expect("a status envelope");
+
+        assert!(
+            envelope["request_id"]
+                .as_str()
+                .is_some_and(|id| id.starts_with("req_")),
+            "the core mints the request identity"
+        );
+        assert!(
+            !envelope["coverage"]["scope"]
+                .as_str()
+                .unwrap_or_default()
+                .is_empty(),
+            "the core states its own coverage"
+        );
+        assert_eq!(envelope["freshness"]["latest_verified"], false);
+        assert_eq!(envelope["schema_version"], "1.0");
+    }
+
+    #[test]
+    fn an_unmatched_component_filter_is_partial_with_the_gap_named() {
+        // An empty `ok` would be indistinguishable from "no such component exists", which is a
+        // much stronger claim than "the filter matched nothing".
+        let frame = r#"{"jsonrpc":"2.0","id":1,"method":"service.status",
+                        "params":{"component":"no-such-producer"}}"#;
+        let envelope = dispatch_str(frame).result.expect("an envelope");
+
+        assert_eq!(envelope["status"], "partial");
+        assert!(
+            envelope["data"]["producers"]
+                .as_array()
+                .is_some_and(Vec::is_empty)
+        );
+        assert!(
+            !envelope["coverage"]["missing"]
+                .as_array()
+                .unwrap_or(&Vec::new())
+                .is_empty(),
+            "the gap must be explicit"
+        );
+    }
+
+    #[test]
+    fn a_matched_component_filter_narrows_the_report() {
+        let frame = r#"{"jsonrpc":"2.0","id":1,"method":"service.status",
+                        "params":{"component":"griffe"}}"#;
+        let envelope = dispatch_str(frame).result.expect("an envelope");
+
+        assert_eq!(envelope["status"], "ok");
+        let producers = envelope["data"]["producers"].as_array().expect("producers");
+        assert_eq!(producers.len(), 1);
+        assert_eq!(producers[0]["name"], "griffe");
     }
 
     #[test]
@@ -329,6 +428,51 @@ mod tests {
         let response = dispatch_str(r#"{"jsonrpc":"1.0","id":1,"method":"service.status"}"#);
         let error = response.error.expect("an error");
         assert_eq!(error.code, codes::INVALID_REQUEST);
+    }
+
+    #[test]
+    fn an_unsupported_producer_format_is_a_typed_error_over_rpc() {
+        // Gate R04 at the transport, not just in the library: the typed refusal has to survive
+        // the crossing, or a caller sees a generic failure instead of a code it can branch on.
+        let frame = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "producer.probe_format",
+            "params": { "artifact": r#"{"format_version":53,"index":{}}"# },
+        })
+        .to_string();
+
+        let error = dispatch_str(&frame).error.expect("an error");
+        let data = error.data.expect("typed data");
+        assert_eq!(data["code"], "UNSUPPORTED_FORMAT");
+        assert!(
+            !data["next_action"].as_str().unwrap_or_default().is_empty(),
+            "a typed refusal carries a concrete next action"
+        );
+        assert!(
+            error.message.contains("53"),
+            "the refusal names the version it found: {}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn a_supported_producer_format_is_accepted_over_rpc() {
+        let artifact = format!(
+            r#"{{"format_version":{},"index":{{}}}}"#,
+            rustdoc::SUPPORTED_FORMAT_VERSIONS[0]
+        );
+        let frame = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "producer.probe_format",
+            "params": { "artifact": artifact },
+        })
+        .to_string();
+
+        let response = dispatch_str(&frame);
+        assert!(response.error.is_none(), "{:?}", response.error);
+        assert_eq!(response.result.expect("a probe")["supported"], true);
     }
 
     #[test]

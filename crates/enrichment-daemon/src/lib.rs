@@ -7,6 +7,7 @@
 //! thing, neither MCP nor LSP framing. See [`rpc`] for the framing and
 //! `docs/adr/0006-ndjson-rpc-transport.md` for the parts §2.1 left open.
 
+pub mod envelope;
 pub mod paths;
 pub mod rpc;
 pub mod server;
