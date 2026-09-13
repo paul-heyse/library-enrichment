@@ -1,8 +1,22 @@
-# ADR 0006: NDJSON-RPC transport details
+---
+id: ADR-0006
+title: NDJSON-RPC transport details
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-22, DM-42]
+design: [§B8, §2.1]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Tested
+supersedes: []
+superseded-by: null
+revisit: A Windows transport is needed, or payloads exceed the message bound often enough to matter
+verification: `crates/enrichment-daemon/tests/rpc_boundary.rs`; `tests/contract/test_socket_resolution.py`
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** Transport (§1.1 — "Per-client stdio adapters over one local Rust daemon")
+---
+
+# ADR-0006: NDJSON-RPC transport details
 
 ## Context
 
@@ -120,7 +134,7 @@ Connecting is the test, since a pidfile can be stale in the other direction.
 | Lifecycle verbs are start/status/stop | `docs/blueprint/IMPLEMENTATION_BLUEPRINT.md` §2.2 | 2026-09-13 | "Provide explicit `start`, `status`, and `stop` CLI commands… The daemon survives adapter exits and retains jobs." |
 | `sun_path` is 108 bytes on Linux | `unix(7)` man page, `sockaddr_un` | 2026-09-13 | `char sun_path[108];` — measured against on this workstation by `paths::tests::the_socket_path_stays_well_under_the_sun_path_limit` |
 
-## Tests that prove it
+## Verification
 
 `crates/enrichment-daemon/tests/rpc_boundary.rs` drives a real daemon over a real socket:
 
@@ -168,3 +182,7 @@ remains a thin adapter that validates input, calls the daemon, and maps structur
 gained no state here. No FastAPI, gRPC, Redis, or second daemon was added to carry this
 interface, exactly as §2.1 warns against. The frozen thirteen error codes remain the authority
 on what went wrong; the JSON-RPC numbers sit alongside them and never replace them.
+
+## Status history
+
+- 2026-09-13 — accepted.

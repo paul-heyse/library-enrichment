@@ -1,8 +1,22 @@
-# ADR 0007: ruff does not lint the generated boundary DTOs
+---
+id: ADR-0007
+title: ruff does not lint the generated boundary DTOs
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-52]
+design: [§6.3]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Implemented
+supersedes: []
+superseded-by: null
+revisit: A second generated Python directory appears, or ruff gains a rule that should apply to generated code
+verification: `just lint` covers the rest of `python/`; `uv run ty check` still covers `_generated`
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** none — this is a tooling-scope decision, not an architectural one
+---
+
+# ADR-0007: ruff does not lint the generated boundary DTOs
 
 ## Context
 
@@ -59,7 +73,7 @@ chain and must stay visible — that is exactly how the `constr(...)` problem ab
 | An ADR is the sanctioned route | `AGENTS.md` | 2026-09-13 | "No suppressions… no growing an ignore list. Fix the cause or record an ADR." |
 | The violations are inlined descriptions, measured | `ruff check --isolated --line-length 100 --select E,F,I,UP,B,SIM,ANN,RUF,T20 python/enrichment_mcp/_generated/` | 2026-09-13 | 8 errors, all `E501`; the longest line is 340 characters, a three-paragraph Rust doc comment flattened into one string |
 
-## Tests that prove it
+## Verification
 
 `just lint` and `just fmt-check` pass with the exclusion and fail without it — that is the
 executable consequence. `just typecheck` still covers the directory, so a regression in
@@ -90,3 +104,7 @@ The generation chain is unchanged and still one-directional. Generated artifacts
 hand-edited. `ty` remains the Python semantic engine, applied to this directory as to every
 other. No suppression comment was added anywhere in the repository — the ban on `# noqa` and
 `# type: ignore` holds without exception, and the `post_edit` hook still enforces it.
+
+## Status history
+
+- 2026-09-13 — accepted.

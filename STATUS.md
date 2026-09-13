@@ -1,12 +1,32 @@
 # Status
 
-**Phase 0 of 6 — complete.** All four clauses of the blueprint's §13 Phase-0 gate hold, and the
-three gates scoped to this phase pass. The wire types, the daemon and the MCP adapter exist and
-run; a minimal MCP/daemon handshake works end to end. No evidence *retrieval* exists yet — that
-is Phase 1. Last updated 2026-09-13.
+**Phase 0 complete; Phase 1 mostly complete.** All four clauses of the blueprint's §13 Phase-0
+gate hold. The Phase-1 static Rust slice is now largely built — registry identity, docs.rs
+metadata and hosted rustdoc JSON, the format adapter, normalized public API, immutable
+artifacts and snapshots, and six of the nine MCP tools wired to real daemon methods. Last
+updated 2026-09-13.
 
-`3 passed / 0 failed / 0 blocked / 45 not_run` of 48 gates: **C14, C19 and R04**, each carrying
-a recorded caveat in the report. Regenerate with `just acceptance-report`.
+**Read the next two paragraphs before citing any number here.**
+
+`3 passed / 0 failed / 0 blocked / 45 not_run` of 48 gates: **C14, C19 and R04**. That tally is
+*not* a statement that Phase 1 is unverified — it is a statement that **the Phase-1 gates are
+not wired up**. `tests/gates.toml` still has empty `tests` fields for R01–R03, R05–R08 and C13,
+so `acceptance-report` correctly defaults them to `not_run` no matter how many Phase-1 tests
+pass. Wiring them is the remaining Phase-1 task.
+
+**Three Rust tests fail**, all in `crates/enrichment-daemon/tests/retrieval_fixture.rs`, and
+they are open work rather than regressions:
+
+| Test | What it wants |
+|---|---|
+| `a_reexport_is_linked_to_its_definition_and_counted_once` | a `reexports` edge in `data.relationships`; none is recorded |
+| `availability_is_reported_against_the_observed_configuration` | `requested_configuration.features == []`; it is `null` — which is also a DM-08 question, since null and empty mean different things here |
+| `an_empty_search_states_what_was_searched` | a limitation containing `"not proof"`; `ops/search.rs:230` writes `"not evidence"` |
+
+Measured 2026-09-13: **211 Rust tests run, 208 passed, 3 failed; 67 Python tests passed.**
+`just lint`, `typecheck`, `schema-conformance`, `deps-policy`, `rules-test`, `adr-lint` and
+`adr-lint-test` all pass. Regenerate with `just acceptance-report`; re-run rather than trusting
+a report you did not just generate.
 
 ### The blueprint's Phase-0 gate, clause by clause
 
@@ -122,6 +142,21 @@ reasoned skips, none an Arrow-stack crate. 94 Rust tests, 65 Python tests, 3 doc
 ---
 
 ## What the reviews caught
+
+Reviews now leave an artifact. `docs/design_review/reviews/` holds them; the standard they apply
+is `docs/design_review/design_principles/DATA_MODEL_DESIGN_CHARTER.md` (ADR-0009). Run one with
+`/design-review`.
+
+**2026-09-13 — the design spine and the service as it stands.** Verdict **Revise**, on gates G1
+and G7. Four findings: the service's own phase was stated in four places and was wrong in three
+of them, including in text returned to callers (F1, F3); the whole Phase-1 slice was untracked in
+git, so every check that reads git state silently covered nothing (F2); an inaccurate
+single-authority claim in a module header (F4); and the execution-policy profile not being a
+declared input to the snapshot key (F5, unresolved — register row R-13). F3 produced this
+repository's **first review-derived `ast-grep` rule**, `no-service-phase-claim-in-adapter`. F1
+and F2 are closed by this commit; F5 and the structural question behind F1 are register rows.
+
+The two earlier rounds, which predate the artifact and survive only as prose below:
 
 Running `acceptance-auditor` and `boundary-reviewer` was not ceremony — between them they found
 one real defect that would have shipped, one overstated gate, and one wrong report state.
@@ -285,7 +320,7 @@ Four tiers, chosen by asking what the cheapest reproducible oracle is.
 | Tier | Where | Covers |
 |---|---|---|
 | PreToolUse hook | `scripts/hooks/` | Visible in the tool call alone. **70 tested cases.** |
-| ast-grep rule | `rules/` + `rule-tests/` | Code shapes. 5 rules, all with fixtures. |
+| ast-grep rule | `rules/` + `rule-tests/` | Code shapes. 6 rules, all with fixtures; the newest came from a review finding. |
 | `just` gate | `justfile` | Needs the whole repo |
 | Prose | `AGENTS.md`, `.claude/rules/` | Only what has no mechanical oracle |
 
@@ -293,6 +328,12 @@ Four tiers, chosen by asking what the cheapest reproducible oracle is.
 and scratch paths, which are neither service state nor user configuration. The exemption is
 narrow and its narrowness is tested: `~/.claude/skills` and `~/.claude/settings.json` are still
 denied, because those are exactly what `pre_bash.sh` gates behind `LIBENR_ALLOW_USER_INSTALL=1`.
+
+**Decisions are mechanical too.** `just adr-lint` validates all nine records — fourteen required
+fields, four enums, contiguous numbering, every `§` citation resolving to a real `DESIGN.md`
+heading, and immutability against `main`. `just adr-lint-test` is 33 behaviour tests over the
+lint itself, because the immutability check cannot fire anywhere in this tree yet and would
+otherwise have shipped unexercised.
 
 **Truthful reporting is mechanical.** `tests/gates.toml` registers all 48 IDs.
 `acceptance-report` defaults every gate not matched by an executed test to `not_run`, and
@@ -313,14 +354,19 @@ which is why every gate read `not_run` before this phase regardless of what pass
 | `docs/blueprint/` | The governing spec — frozen |
 | `docs/provenance/` | Delivered digests + PATHMAP — frozen |
 | `docs/architecture/compatibility-matrix.md` | Every pin, with evidence and retrieval dates |
-| `docs/adr/` | 8 ADRs; `/adr <slug>` to add |
+| `docs/design/DESIGN.md` | **The authoritative design.** A spine over the frozen blueprint; §B1–§B13 are the binding decisions |
+| `docs/design_review/` | The charter (DM-01–DM-60, G1–G7) and the reviews written against it |
+| `docs/adr/` | 9 ADRs + the deferred-decision register; `/adr <slug>` to add, `just adr-lint` to check |
+| `docs/plans/` | How work was sequenced, and what it actually cost; `just plan <slug>` |
 | `docs/operations/` | Install, register, run — the daemon section is live |
 | `contracts/`, `schemas/frozen/` | The Phase-0 acceptance target |
 | `schemas/generated/` | Emitted from the Rust types; never hand-edited |
 | `skills/library-research/` | **The product skill.** Installed only by explicit `just install-skill --apply` |
 
-Subagents: `upstream-verifier`, `acceptance-auditor`, `boundary-reviewer`.
+Subagents: `upstream-verifier`, `acceptance-auditor`, `boundary-reviewer` (diff review).
 Commands: `/phase-gate`, `/adr`, `/verify-upstream`, `/acceptance-report`, `/handoff`.
+Skills: `/design-review` (design review against the charter; writes to
+`docs/design_review/reviews/`).
 
 Development service state is the gitignored `.dev-state/`; production resolves to XDG.
 `just state-leak-check` proves the real paths stayed untouched. `just state-reset` clears it.

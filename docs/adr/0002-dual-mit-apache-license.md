@@ -1,8 +1,22 @@
-# ADR 0002: Dual MIT / Apache-2.0 license
+---
+id: ADR-0002
+title: Dual MIT / Apache-2.0 license
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: []
+design: [§12.1]
+review: not-required: licensing; it governs no design surface
+evidence: Implemented
+supersedes: []
+superseded-by: null
+revisit: A dependency's license makes `MIT OR Apache-2.0` unpublishable, or a consumer needs a different grant
+verification: `just deps-policy` — `cargo deny check licenses`
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** none
+---
+
+# ADR-0002: Dual MIT / Apache-2.0 license
 
 ## Context
 
@@ -25,7 +39,7 @@ Offering both lets a consumer pick whichever fits their own licensing.
 The Apache-2.0 text was fetched verbatim from `https://www.apache.org/licenses/LICENSE-2.0.txt`
 on 2026-09-13 rather than reproduced from memory.
 
-## Tests that prove it
+## Verification
 
 `cargo deny check licenses` enforces the allowed-license set for dependencies. It does not check
 our own license declaration; that is verified by review.
@@ -41,3 +55,7 @@ committed.
 ## Boundaries preserved
 
 All of them.
+
+## Status history
+
+- 2026-09-13 — accepted.

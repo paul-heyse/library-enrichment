@@ -1,8 +1,22 @@
-# ADR 0001: Repository location and name
+---
+id: ADR-0001
+title: Repository location and name
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-11]
+design: [§12.1]
+review: not-required: repository identity; it governs no design surface
+evidence: Implemented
+supersedes: []
+superseded-by: null
+revisit: The repository is relocated, or a second checkout is needed on this workstation
+verification: `rg -n '/home/paul/library-enrichment' scripts justfile` returns nothing; every root is derived at run time
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** none
+---
+
+# ADR-0001: Repository location and name
 
 ## Context
 
@@ -31,7 +45,7 @@ the repository again requires no edits.
 | The blueprint proposes `~/src/library-enrichment` | `docs/blueprint/IMPLEMENTATION_BLUEPRINT.md` §2.3 | 2026-09-13 | "`~/src/library-enrichment/ # implementation only`" |
 | Registration templates hardcode that path | `docs/blueprint/IMPLEMENTATION_BLUEPRINT.md` §12.2 | 2026-09-13 | "`REPO=\"$HOME/src/library-enrichment\"`" |
 
-## Tests that prove it
+## Verification
 
 `scripts/provenance-check.sh`, `scripts/test-hooks.sh`, and every `just` recipe resolve their
 own root. Acceptance gate C13 ("tool runs from an unrelated current directory") asserts the
@@ -47,3 +61,7 @@ portable elsewhere.
 
 All of them. This is a filesystem-location choice; it changes nothing about repository/state
 separation, core ownership, or the tool contract.
+
+## Status history
+
+- 2026-09-13 — accepted.

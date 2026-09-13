@@ -1,8 +1,22 @@
-# ADR 0003: In-repo development state sandbox
+---
+id: ADR-0003
+title: In-repo development state sandbox
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-28, DM-29]
+design: [§B1, §2.3]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Tested
+supersedes: []
+superseded-by: null
+revisit: A second development checkout needs to share state, or `.dev-state/` appears in a commit
+verification: `just state-leak-check`; the service-state deny cases in `scripts/test-hooks.sh`
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** repository boundary (§1.1 "Repository boundary")
+---
+
+# ADR-0003: In-repo development state sandbox
 
 ## Context
 
@@ -38,7 +52,7 @@ human and an agent cannot end up running against different state.
 The third quote is what makes this legitimate rather than a deviation: the blueprint already
 requires configurable overrides. This exercises that mechanism.
 
-## Tests that prove it
+## Verification
 
 - `just state-leak-check` digests the real XDG paths before and after a run and fails on any
   change — so if a code path resolves the production policy instead of the configured root, it
@@ -59,3 +73,7 @@ against a temporary root, not against `$HOME`.
 No working repository under study is ever written to or used as a working directory. Production
 still resolves to XDG. Nothing about core ownership, the evidence model, or execution policy
 changes.
+
+## Status history
+
+- 2026-09-13 — accepted.

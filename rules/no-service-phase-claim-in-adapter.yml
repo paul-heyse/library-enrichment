@@ -1,0 +1,21 @@
+id: no-service-phase-claim-in-adapter
+language: Python
+severity: error
+message: The adapter must not state which phase the service is at; that claim goes stale silently.
+note: |
+  Blueprint §7.1 and §14.4: the service reports its capabilities truthfully, and an
+  UNSUPPORTED_CAPABILITY result says what is absent -- not what the service as a whole is.
+
+  A literal "this service is at phase N" in caller-visible text is a second, hand-maintained
+  statement of service state that nothing updates when a phase lands. It was wrong within one
+  phase: the message claimed phase 0 while five phase-1 tools were wired to live daemon
+  methods (design review 2026-09-13, finding F3).
+
+  Say where the individual tool lands -- a stable fact about the plan -- and point the caller
+  at `service_status`, which derives the live set from what the daemon actually dispatches.
+files:
+  - python/enrichment_mcp/**/*.py
+  - python/enrichment_worker/**/*.py
+rule:
+  kind: string
+  regex: '(?i)(this|the)\s+(service|build|server)\s+is\s+(currently\s+)?at\s+phase'

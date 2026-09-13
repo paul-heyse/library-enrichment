@@ -1,8 +1,22 @@
-# ADR 0008: harness paths are exempt from the outside-repository write guard
+---
+id: ADR-0008
+title: harness paths are exempt from the outside-repository write guard
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: should-deviation
+principles: [DM-45]
+design: [§B1, §2.3]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Tested
+supersedes: []
+superseded-by: null
+revisit: A third harness path needs the exemption, or the harness stops writing plans where it does today
+verification: `scripts/test-hooks.sh` — the narrowness cases: the user-scope skills and settings paths stay denied
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** repository boundary (§1.1, §2.3) — narrowed, not removed
+---
+
+# ADR-0008: harness paths are exempt from the outside-repository write guard
 
 ## Context
 
@@ -61,7 +75,7 @@ through that in one line.
 | The bash hook already allowlists harness paths | `scripts/hooks/pre_bash.sh:72-76` | 2026-09-13 | `/tmp/claude-*\|/tmp/claude-*/*) ;;` |
 | User-scope skill installation stays gated | `AGENT_HANDOFF.md` | 2026-09-13 | "Do not install it into user configuration without explicit setup invocation." |
 
-## Tests that prove it
+## Verification
 
 `scripts/test-hooks.sh`, run by `just hooks-test` and by CI — 70 cases, six of them added for
 this decision. The deny cases are the load-bearing half:
@@ -102,3 +116,7 @@ service-state directory became writable. User-scope configuration — `~/.claude
 `~/.claude/settings.json`, and the `claude mcp add` / `codex mcp add` commands in
 `pre_bash.sh` — remains denied and still requires `LIBENR_ALLOW_USER_INSTALL=1`. The product
 skill still installs only through an explicit `just install-skill --apply`.
+
+## Status history
+
+- 2026-09-13 — accepted.

@@ -185,6 +185,23 @@ acceptance-report:
 acceptance-check:
     @python3 "{{ root }}/scripts/acceptance-check.py"
 
+[doc("Run the behaviour tests for the decision-record lint and the register checker.")]
+[group('gate')]
+adr-lint-test:
+    @bash "{{ root }}/scripts/test-adr-lint.sh"
+
+[doc("Validate every decision record, the generated index, and the deferred-decision register.")]
+[group('gate')]
+adr-lint:
+    @python3 "{{ root }}/scripts/adr.py" lint
+    @python3 "{{ root }}/scripts/adr.py" index --check
+    @python3 "{{ root }}/scripts/check_register.py" --lint
+
+[doc("Report the deferred-decision register rows that are due, running their checks.")]
+[group('gate')]
+register-check:
+    @python3 "{{ root }}/scripts/check_register.py" --due
+
 [doc("Run the acceptance gate for one phase (0-6).")]
 [group('gate')]
 gate-phase n:
@@ -194,8 +211,33 @@ gate-phase n:
 # same things. If you add a step to one, add it to the other.
 [doc("Everything that must hold on every change. The default pre-commit surface.")]
 [group('gate')]
-ci: toolchain-check provenance-check guardrails-check hooks-test rules-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
+ci: toolchain-check provenance-check guardrails-check hooks-test rules-test adr-lint adr-lint-test fmt-check lint check test typecheck schema-conformance deps-policy acceptance-report acceptance-check
     @echo "ci: complete"
+
+# ---------------------------------------------------------------------------- decisions
+
+# These write files. They are in [mutating] because a validation recipe must never depend on
+# something that rewrites the tree -- `adr-lint` is the read-only half and lives in [gate].
+
+[doc("Start a decision record from the template: just adr-new my-slug --title \"...\"")]
+[group('mutating')]
+adr-new slug *args:
+    @python3 "{{ root }}/scripts/adr.py" new "$@"
+
+[doc("Regenerate docs/adr/README.md from the records' front matter.")]
+[group('mutating')]
+adr-index:
+    @python3 "{{ root }}/scripts/adr.py" index
+
+[doc("Mark one decision record superseded by another: symmetric links and a status-history line.")]
+[group('mutating')]
+adr-supersede old new:
+    @python3 "{{ root }}/scripts/adr.py" supersede "$1" "$2"
+
+[doc("Start an implementation plan under docs/plans/NN-<slug>.md.")]
+[group('mutating')]
+plan slug:
+    @"{{ root }}/scripts/plan-new.sh" "$1"
 
 # ---------------------------------------------------------------------------- mutating
 
@@ -215,6 +257,15 @@ schemas-generate:
 [group('mutating')]
 rustdoc-format-matrix:
     @"{{ root }}/scripts/rustdoc-format-matrix.sh"
+
+# Rebuilds the fixture crate captures (rustdoc JSON, .crate tarballs, index and API documents)
+# with the dated nightly from config/toolchains.toml, and records their provenance. The
+# outputs are committed; run this only when the fixture crate or the producer nightly changes,
+# and inspect the diff.
+[doc("Rebuild the Rust fixture captures under tests/fixtures/ and record their provenance.")]
+[group('mutating')]
+fixtures-build:
+    @"{{ root }}/scripts/fixtures-build.sh"
 
 [doc("Install the companion skill to user scope. Requires --apply; defaults to a dry run.")]
 [group('mutating')]

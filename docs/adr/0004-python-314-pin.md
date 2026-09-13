@@ -1,8 +1,22 @@
-# ADR 0004: Python 3.14 pin, pending upstream verification
+---
+id: ADR-0004
+title: Python 3.14 pin, pending upstream verification
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-31, DM-48]
+design: [§12.1]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Tested
+supersedes: []
+superseded-by: null
+revisit: A required dependency drops 3.14 support, or 3.15 becomes the pinned interpreter
+verification: `just sync` then `just test-python`; `uv.lock` pins fastmcp 4.0.3, griffe 2.3.0 and ty 0.0.80 on 3.14.7
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** none
+---
+
+# ADR-0004: Python 3.14 pin, pending upstream verification
 
 ## Context
 
@@ -46,7 +60,7 @@ This is evidence of resolution and import, which is what the pin decision needs.
 evidence that every runtime path works on 3.14; that is established by the test suite as it is
 written. `ty 0.0.80` is pre-1.0 and should be expected to churn.
 
-## Tests that prove it
+## Verification
 
 `just doctor` fails when `ty` is absent. `just sync` fails if the lockfile cannot be resolved
 for the pinned interpreter. The Phase 0 gate runs both.
@@ -60,3 +74,7 @@ cheap, provided it happens before a lockfile and CI depend on the pin.
 ## Boundaries preserved
 
 All of them.
+
+## Status history
+
+- 2026-09-13 — accepted.

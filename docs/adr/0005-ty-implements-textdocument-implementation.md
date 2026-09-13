@@ -1,8 +1,22 @@
-# ADR 0005: ty implements `textDocument/implementation`; gate P08 is superseded
+---
+id: ADR-0005
+title: ty implements `textDocument/implementation`; gate P08 is superseded
+status: accepted
+date: 2026-09-13
+deciders: [paul-heyse]
+level: decision
+principles: [DM-43, DM-59]
+design: [§B4, §5.4, §13]
+review: not-required: backfilled; recorded before the design-review process existed (ADR-0009)
+evidence: Tested
+supersedes: []
+superseded-by: null
+revisit: A ty release changes `textDocument/implementation` support, or another [S18] claim is relied on
+verification: Gates P08a and P08b in `tests/gates.toml`; the `initialize` capability probe recorded in the ProducerRun
 
-- **Status:** accepted
-- **Date:** 2026-09-13
-- **Binding boundary touched:** none — this corrects a factual premise, not a design decision
+---
+
+# ADR-0005: ty implements `textDocument/implementation`; gate P08 is superseded
 
 ## Context
 
@@ -62,7 +76,7 @@ contradicted the sentence that precedes it.
 Verified twice independently: by direct LSP probe during this session, and by an
 `upstream-verifier` run that additionally located the changelog entry and the closed issue.
 
-## Tests that prove it
+## Verification
 
 `P08a` and `P08b` in `tests/gates.toml`, once the ty LSP client exists in Phase 4. Until then
 both are `not_run`, and `P08` is reported as superseded rather than passing or failing.
@@ -83,3 +97,7 @@ probing is not belt-and-braces here; it is the only reliable source.
 ty remains the Python semantic engine. The epistemic classes are unchanged — this evidence is
 `typechecker_observed`. Nothing about core ownership, execution policy, or the repository
 boundary moves.
+
+## Status history
+
+- 2026-09-13 — accepted.
