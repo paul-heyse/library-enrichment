@@ -22,7 +22,17 @@ a recorded caveat in the report. Regenerate with `just acceptance-report`.
 
 R04 was scoped to phase 1 and is now phase 0, because the blueprint puts its assertion in the
 Phase-0 gate. The gate ID is unchanged; only the `phase` field, which is ours — the frozen
-`tests/ACCEPTANCE_PLAN.md` has no phase column.
+`tests/ACCEPTANCE_PLAN.md` has no phase column. The capability was built first and the gate
+moved after, not the reverse.
+
+**"Complete" is true of the `**Gate:**` line, not of the whole §13 phase paragraph.** That
+paragraph also asks to "Build DTO/schema and fixture scaffolding". The DTO/schema half is done.
+The fixture half is barely started: `tests/fixtures/` holds three rustdoc captures and nothing
+else, while `tests/ACCEPTANCE_PLAN.md`'s "Deterministic fixtures" section asks for a two-release
+Rust fixture crate, a two-release Python distribution with a differing import name, a
+namespace-package fixture, an extension/stub-only fixture, a stub/runtime disagreement, a Sphinx
+inventory and changelogs. Those exist to serve Phases 1–3, so building them now would be
+premature — but the distinction is worth stating rather than letting "complete" cover both.
 
 Both earlier gates were audited by `acceptance-auditor` and the diff by `boundary-reviewer`.
 The first audit **downgraded C19**; the review found a **C20 breach**. Both were fixed and a
@@ -76,7 +86,7 @@ public API, immutable artifacts and snapshots, and five real tools: `resolve_lib
 
 **Gate:** a real crate resolves cold and then offline from the same snapshot; missing docs.rs
 JSON yields `partial` with explicit gaps, never an empty success. Nine gates are registered for
-phase 1 (R01–R08, C13).
+phase 1 (R01–R03, R05–R08, C13) — eight, not nine: R04 moved to phase 0.
 
 The groundwork is in place: add a method to `server::dispatch`, a producer behind a
 `ProducerSpec`, and the tool's real body in `python/enrichment_mcp/server.py` in place of its
@@ -215,6 +225,12 @@ against the generated *schema*, and
 `test_the_generated_dto_alone_is_not_a_sufficient_validator` pins the limitation so it cannot
 quietly become an assumption. If a future release does emit those validators, that test fails
 and the indirection can go.
+
+**`just gate-phase 0` used to join whatever logs were on disk.** Phases 1–6 run `just test`
+first; phase 0 did not, so it reported against `docs/reports/logs/*.json` that may have come
+from a different tree. Fixed — but the deeper gap remains: the logs carry no commit hash and
+`generated_at` is the *join* time, not the *test* time, so nothing structurally ties a result to
+the tree that produced it. Re-run rather than trusting a report you did not just generate.
 
 **A test that returns early passes; a test that skips is `blocked`.** The reporting pipeline
 can see a skip and cannot see an early `return`, so a conditional guard inside a test body is a

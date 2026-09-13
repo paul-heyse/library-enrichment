@@ -50,7 +50,18 @@ parses even when a field's meaning has shifted. That is why probe_format checks 
 BEFORE touching the body, and why widening SUPPORTED_FORMAT_VERSIONS needs a round trip \
 checked against known-good output rather than a clean parse. The measurement covers formats \
 57, 60 and 61 from committed captures; 59 is the vendored parser's own FORMAT_VERSION and is \
-justified by a separate test rather than measured."""
+justified by a separate test rather than measured.
+
+The measurement is also one-directional. A fixture that probe_format refuses aborts the test \
+before the claimed-vs-parsed comparison, so it detects a supported set that is too NARROW and \
+cannot detect one that is too WIDE for a version with no fixture: adding 55 or 58 to the \
+constant would pass the whole suite. Only 53 and 999 are pinned as refusals, by unit test. \
+tests/ACCEPTANCE_PLAN.md asks for captured artifacts with supported AND unsupported format \
+versions; only supported captures are committed, and the unsupported cases are synthetic \
+headers -- behaviourally identical for probe_format, which reads only the header, but that is \
+what leaves the negative direction unmeasured.
+
+Coverage stops at the RPC boundary: no MCP tool reaches producer.probe_format yet."""
 tests = [
   # The ordering guarantee: refuse on the declared version, before any body interpretation.
   "enrichment-core::enrichment_core$producer::rustdoc::tests::an_unsupported_document_is_never_body_parsed",
@@ -304,7 +315,15 @@ caveat = """\
 "No package fetch" is measured as no child process plus an unchanged service-state tree. An \
 in-process HTTP call that wrote nothing to $LIBENR_CACHE_HOME would not be caught: there is no \
 network isolation in this tier. The child-process check is also a single sample taken after \
-tools/list returns, so a subprocess that started and exited within that window is invisible."""
+tools/list returns, so a subprocess that started and exited within that window is invisible.
+
+The registration is deliberately broader than the assertion. Five of the eleven tests cover MCP \
+annotation truthfulness and the daemon-absent service_status path, which are the blueprint's \
+§13 Phase-0 clause "service_status truthfully reports absent components" -- a clause the frozen \
+ACCEPTANCE_PLAN.md gives no ID of its own. They are filed here so they reach the report at all. \
+The cost is that a break in one of them would fail C14 for a reason unrelated to its own \
+assertion; the alternative was leaving a blueprint clause evidenced by nothing the report can \
+see."""
 # The in-process tests prove the catalog is REGISTERED; the stdio-subprocess tests prove it is
 # registered CHEAPLY, which is the actual assertion. A fetch, a build or an LSP start would each
 # show up as a child process and as a write under $LIBENR_CACHE_HOME, so both are measured

@@ -27,7 +27,11 @@ MANIFEST="config/guardrails.sha256"
 # rule is as visible as editing one.
 current() {
   {
-    printf '%s\n' AGENTS.md CLAUDE.md .claude/settings.json scripts/env.sh
+    # `guardrails-check.sh` covers itself. It is not in pre_edit.sh's deny list, so editing the
+    # checker is a second escape hatch alongside re-recording -- listing it here does not close
+    # that (nothing can, from inside), but it does mean the edit cannot be silent.
+    printf '%s\n' AGENTS.md CLAUDE.md .claude/settings.json scripts/env.sh \
+                  scripts/guardrails-check.sh
     find .claude/rules -type f -name '*.md' 2>/dev/null
     find scripts/hooks -type f -name '*.sh' 2>/dev/null
   } | LC_ALL=C sort | while IFS= read -r p; do

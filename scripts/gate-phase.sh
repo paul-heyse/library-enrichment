@@ -27,6 +27,11 @@ step "rule corpus"          ast-grep test
 
 case "$n" in
   0)
+    # Phase 0 runs the suite like every other phase. It used to skip straight to the join,
+    # which meant `gate-phase 0` reported against whatever docs/reports/logs/*.json happened to
+    # be on disk -- possibly produced by a different tree. A gate that reads `passed` from a
+    # stale log is the failure mode this whole pipeline exists to prevent.
+    step "tests"                just test
     step "schema conformance"   ./scripts/schema-conformance.sh
     step "dependency policy"    just deps-policy
     step "acceptance report"    just acceptance-report
