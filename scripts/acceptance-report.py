@@ -83,7 +83,8 @@ def main() -> int:
         matched = {t: executed[t] for t in named if t in executed}
 
         if spec.get("superseded"):
-            status, command, log, limitation = "not_run", "", "", f"superseded: {spec['superseded']}"
+            # A retired gate is never passed and never failed: its premise no longer holds.
+            status, command, log, limitation = "not_run", "", "", f"superseded -- {spec['superseded']}"
         elif not named:
             status, command, log = "not_run", "", ""
             limitation = "No test is registered for this gate yet."
@@ -115,6 +116,8 @@ def main() -> int:
             "command": command,
             "log_path": log,
             "limitation": limitation,
+            **({"superseded": spec["superseded"]} if spec.get("superseded") else {}),
+            **({"supersedes": spec["supersedes"]} if spec.get("supersedes") else {}),
         })
 
     report = {

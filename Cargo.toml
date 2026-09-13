@@ -19,8 +19,24 @@ publish = false
 # FIRST and derive arrow/parquet/object_store from it -- the reverse order fails, and
 # deny.toml sets multiple-versions = "deny" so a second arrow major is a hard error.
 #
-# Nothing is pinned until its row in docs/architecture/compatibility-matrix.md is `verified`.
+# Verified 2026-09-13 by resolving DataFusion first and reading back what it pulled:
+# `cargo add datafusion` -> datafusion 55.1.0, which selects arrow/arrow-schema/parquet 59.3.0
+# and object_store 0.13.2. `cargo tree -d` shows NO duplicate arrow/parquet/datafusion/
+# object_store major, i.e. a single Arrow type universe.
 [workspace.dependencies]
+datafusion = "55.1.0"
+arrow = "59.3.0"
+arrow-schema = "59.3.0"
+parquet = "59.3.0"
+object_store = "0.13.2"
+
+# Consumes rustdoc JSON directly, so the public-API projection needs no Cargo build
+# (blueprint §4.2). The CLI is deliberately NOT a dependency. Verified 2026-09-13: 0.52.2
+# parses every format version we can produce locally -- 57, 60 and 61.
+public-api = "0.52.2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [profile.dev]
 # Evidence snapshots get large; debug info dominates link time without helping much here.

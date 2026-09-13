@@ -38,8 +38,24 @@ def main() -> int:
 
     if missing := plan_ids - registry_ids:
         problems.append(f"gates.toml is missing IDs from ACCEPTANCE_PLAN.md: {sorted(missing)}")
-    if invented := registry_ids - plan_ids:
-        problems.append(f"gates.toml has IDs absent from ACCEPTANCE_PLAN.md: {sorted(invented)}")
+    # An ID absent from the frozen plan is legitimate only as a registered successor to a
+    # superseded gate, with an ADR. Anything else is an invented gate.
+    registry = tomllib.load(open(ROOT / "tests/gates.toml", "rb"))["gates"]
+    extra = registry_ids - plan_ids
+    invented = {
+        g for g in extra
+        if not (registry[g].get("supersedes") in plan_ids and registry[g].get("adr"))
+    }
+    if invented:
+        problems.append(
+            f"gates.toml has IDs absent from ACCEPTANCE_PLAN.md and not registered as a "
+            f"successor with an ADR: {sorted(invented)}")
+    for g in sorted(extra - invented):
+        superseded = registry[g]["supersedes"]
+        if not registry.get(superseded, {}).get("superseded"):
+            problems.append(
+                f"{g} claims to supersede {superseded}, but {superseded} is not marked "
+                f"superseded. Retire a gate in place; never renumber or delete an ID.")
     if dupes := [i for i, n in Counter(report_ids).items() if n > 1]:
         problems.append(f"acceptance.json repeats gate IDs: {sorted(dupes)}")
     if missing := plan_ids - set(report_ids):

@@ -138,6 +138,29 @@ kind = "fixture"
 scenario = "ty implementation method unsupported"
 assertion = "`UNSUPPORTED_CAPABILITY`, not an empty implementation list."
 tests = []
+# Retired in place: the ID is never renumbered, deleted or reused. ty implemented
+# textDocument/implementation in 0.0.64 (2026-07-27) and the pinned ty 0.0.80 serves it, so
+# this assertion's premise is false. Verified twice by LSP probe on 2026-09-13. Replaced by
+# P08a and P08b below. tests/ACCEPTANCE_PLAN.md is frozen and still records the original.
+superseded = "ADR 0005: ty 0.0.80 implements textDocument/implementation; replaced by P08a and P08b"
+
+[gates.P08a]
+phase = 4
+kind = "fixture"
+scenario = "ty implementation lookup on a nominal base class or @abstractmethod"
+assertion = "Mapped subclass locations are returned; no UNSUPPORTED_CAPABILITY branch is exercised for this method."
+tests = []
+supersedes = "P08"
+adr = "0005"
+
+[gates.P08b]
+phase = 4
+kind = "fixture"
+scenario = "ty implementation lookup on a typing.Protocol"
+assertion = "Only the protocol's own declaration is returned; structural implementors are absent, and the result is recorded as incomplete evidence rather than as no implementors."
+tests = []
+supersedes = "P08"
+adr = "0005"
 
 [gates.P09]
 phase = 4

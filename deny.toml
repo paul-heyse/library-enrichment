@@ -9,7 +9,33 @@ all-features = true
 # incompatible RecordBatch types and silent conversion cost.
 multiple-versions = "deny"
 wildcards = "deny"
-skip = []
+
+# What §8.4 actually requires is ONE Arrow type universe: two arrow majors means two
+# incompatible RecordBatch types and silent conversion cost. Verified 2026-09-13 that
+# datafusion 55.1.0 yields exactly one arrow/parquet/object_store version each.
+#
+# These are low-level transitive crates the ecosystem is midway through migrating, plus two
+# that only build for targets we do not ship. None appears in our own types or in an Arrow
+# schema, so a duplicate costs binary size, not correctness. Each is listed deliberately with
+# a reason, and cargo-deny rejects an unnecessary skip, so this list cannot quietly rot.
+#
+# Do NOT widen it to silence an arrow, parquet, datafusion or object_store duplicate -- that
+# is the exact failure this setting exists to catch.
+skip = [
+  { crate = "block-buffer", reason = "digest 0.10 vs 0.11 migration; block hashing internals only" },
+  { crate = "crypto-common", reason = "digest 0.10 vs 0.11 migration; hashing internals only" },
+  { crate = "digest", reason = "0.10 vs 0.11 migration is mid-flight across the ecosystem" },
+  { crate = "foldhash", reason = "hashbrown's internal hasher; never in a public type" },
+  { crate = "getrandom", reason = "0.2/0.3/0.4 migration; entropy source only" },
+  { crate = "hashbrown", reason = "std, arrow and datafusion track different releases" },
+  { crate = "itertools", reason = "iterator adapters; never in a public type" },
+  { crate = "num-bigint", reason = "parquet decimal support vs a transitive consumer" },
+  { crate = "r-efi", reason = "UEFI target support via getrandom; not built on any target we ship" },
+  { crate = "syn", reason = "proc-macro expansion only; never in a runtime type" },
+  { crate = "windows-sys", reason = "Windows API bindings; not built on Linux or macOS" },
+  { crate = "zstd", reason = "parquet compression vs a transitive consumer" },
+  { crate = "zstd-safe", reason = "zstd binding, same reason" },
+]
 
 # Blueprint §1.1: do not add a graph database, embeddings, a vector database, a GPU workload,
 # a generic workflow engine, or an additional server framework to the initial implementation.
@@ -46,6 +72,11 @@ allow = [
   "Zlib",
   "CC0-1.0",
   "MPL-2.0",
+  # libbz2-rs-sys, reached through parquet's bzip2 compression support. Permissive,
+  # BSD-style with a no-endorsement clause.
+  "bzip2-1.0.6",
+  # snapshot-testing, reached through public-api. Public-domain dedication.
+  "Unlicense",
 ]
 confidence-threshold = 0.9
 
