@@ -1,0 +1,31 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/enrichment-core",
+  "crates/enrichment-store",
+  "crates/enrichment-daemon",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98.1"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/paul-heyse/library-enrichment"
+publish = false
+
+# Dependency versions are declared here once so the workspace shares one type universe.
+# Blueprint §8.4: pin Arrow/DataFusion to a verified mutually compatible set. Pin DataFusion
+# FIRST and derive arrow/parquet/object_store from it -- the reverse order fails, and
+# deny.toml sets multiple-versions = "deny" so a second arrow major is a hard error.
+#
+# Nothing is pinned until its row in docs/architecture/compatibility-matrix.md is `verified`.
+[workspace.dependencies]
+
+[profile.dev]
+# Evidence snapshots get large; debug info dominates link time without helping much here.
+debug = 1
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

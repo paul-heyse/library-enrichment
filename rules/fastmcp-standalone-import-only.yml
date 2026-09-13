@@ -1,0 +1,14 @@
+id: fastmcp-standalone-import-only
+language: Python
+severity: error
+message: Import FastMCP from the standalone `fastmcp` package, not the bundled MCP SDK.
+note: |
+  Blueprint §1.2 [S01, S02]: use `from fastmcp import FastMCP` with the standalone `fastmcp`
+  package pinned to an exact v4 release and the lockfile committed. `mcp.server.fastmcp` is
+  the older SDK-bundled copy with a different API surface, and v4 changed the sampling and
+  roots APIs that older examples still use.
+rule:
+  any:
+    - pattern: from mcp.server.fastmcp import $$$
+    - pattern: from mcp.server.fastmcp.$$$MOD import $$$
+    - pattern: import mcp.server.fastmcp

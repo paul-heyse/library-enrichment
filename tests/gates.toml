@@ -1,0 +1,336 @@
+# Machine-readable registry of the acceptance gates in tests/ACCEPTANCE_PLAN.md.
+#
+# Generated once from the frozen plan and then maintained by hand as tests are written:
+# fill in `tests` with the test identifiers that actually exercise each gate.
+#
+# `just acceptance-report` joins real test output against this registry and defaults every
+# unmatched gate to `not_run`. A gate becomes `passed` only when a command ran and a log was
+# written; `just acceptance-check` enforces that. Gate IDs are stable identifiers -- never
+# renumber, never delete, never reuse. Retire by setting `superseded = "<reason>"`.
+#
+# kind: fixture (deterministic, offline) | live (needs network) | client (needs a real
+#       MCP client) | manual (human-verified, must still record a command and a log)
+
+schema_version = "1.0"
+
+[gates.R01]
+phase = 1
+kind = "fixture"
+scenario = "Resolve exact Rust version while a newer release exists"
+assertion = "Result retains requested version; upstream version is separate."
+tests = []
+
+[gates.R02]
+phase = 1
+kind = "fixture"
+scenario = "Hosted rustdoc JSON available"
+assertion = "API index succeeds without invoking Cargo compilation."
+tests = []
+
+[gates.R03]
+phase = 1
+kind = "fixture"
+scenario = "Hosted rustdoc JSON missing"
+assertion = "Useful metadata remains, coverage is partial, fallback is explicit."
+tests = []
+
+[gates.R04]
+phase = 1
+kind = "fixture"
+scenario = "Unsupported rustdoc JSON format"
+assertion = "Typed unsupported-format result; no silent schema misparse."
+tests = []
+
+[gates.R05]
+phase = 1
+kind = "fixture"
+scenario = "Default vs optional feature"
+assertion = "Separate observed availability/configuration; no invented universal feature predicate."
+tests = []
+
+[gates.R06]
+phase = 1
+kind = "fixture"
+scenario = "Target-gated item"
+assertion = "Target differences are identified before making availability claims."
+tests = []
+
+[gates.R07]
+phase = 1
+kind = "fixture"
+scenario = "Re-exported public symbol"
+assertion = "Public path and original definition are linked without duplicate capability counts."
+tests = []
+
+[gates.R08]
+phase = 1
+kind = "fixture"
+scenario = "No public API change, behavior-only release note"
+assertion = "Comparison surfaces the relevant behavior note."
+tests = []
+
+[gates.R09]
+phase = 4
+kind = "fixture"
+scenario = "Rust compile probe passes on nightly but fails on project stable"
+assertion = "Result does not claim project compatibility."
+tests = []
+
+[gates.R10]
+phase = 4
+kind = "fixture"
+scenario = "Build/proc-macro activity requested without sandbox"
+assertion = "Policy denial, not host execution."
+tests = []
+
+[gates.P01]
+phase = 2
+kind = "fixture"
+scenario = "Distribution/import-name mismatch"
+assertion = "Correct import root is discovered or ambiguity returned."
+tests = []
+
+[gates.P02]
+phase = 2
+kind = "fixture"
+scenario = "Static extraction of import-side-effect fixture"
+assertion = "Side-effect marker is absent; Griffe inspection is disabled."
+tests = []
+
+[gates.P03]
+phase = 2
+kind = "fixture"
+scenario = "`.py` and `.pyi` disagreement"
+assertion = "Separate source/stub observations with provenance; no silent overwrite."
+tests = []
+
+[gates.P04]
+phase = 2
+kind = "fixture"
+scenario = "Extension-only package"
+assertion = "Useful stubs/docs are returned; missing signatures/source are explicit."
+tests = []
+
+[gates.P05]
+phase = 2
+kind = "fixture"
+scenario = "Namespace package"
+assertion = "Available import roots and partial package coverage are represented."
+tests = []
+
+[gates.P06]
+phase = 2
+kind = "fixture"
+scenario = "Added function with no compatibility break"
+assertion = "Normalized additive diff detects it independently of Griffe break checks."
+tests = []
+
+[gates.P07]
+phase = 2
+kind = "fixture"
+scenario = "Documented inventory omits a public API"
+assertion = "The API is not automatically classified as nonexistent/private."
+tests = []
+
+[gates.P08]
+phase = 4
+kind = "fixture"
+scenario = "ty implementation method unsupported"
+assertion = "`UNSUPPORTED_CAPABILITY`, not an empty implementation list."
+tests = []
+
+[gates.P09]
+phase = 4
+kind = "fixture"
+scenario = "Typecheck success but runtime assertion failure"
+assertion = "Distinct outcomes and scopes are preserved."
+tests = []
+
+[gates.P10]
+phase = 4
+kind = "fixture"
+scenario = "Worker uses service env accidentally"
+assertion = "Test fails; selected consumer interpreter/dependencies must be recorded."
+tests = []
+
+[gates.C01]
+phase = 3
+kind = "fixture"
+scenario = "A first search returns zero matches"
+assertion = "Response distinguishes searched scope from whole-library absence."
+tests = []
+
+[gates.C02]
+phase = 3
+kind = "fixture"
+scenario = "Requested result exceeds byte budget"
+assertion = "Valid bounded JSON, explicit truncation, stable cursor/artifact pointer."
+tests = []
+
+[gates.C03]
+phase = 3
+kind = "fixture"
+scenario = "Cursor reused after query/snapshot change"
+assertion = "`INVALID_CURSOR`; no inconsistent pagination."
+tests = []
+
+[gates.C04]
+phase = 6
+kind = "fixture"
+scenario = "Two clients request the same extraction"
+assertion = "One producer job; both receive equivalent evidence."
+tests = []
+
+[gates.C05]
+phase = 6
+kind = "fixture"
+scenario = "One caller cancels a shared job"
+assertion = "Other caller's required work remains available."
+tests = []
+
+[gates.C06]
+phase = 6
+kind = "fixture"
+scenario = "Daemon crashes during publication"
+assertion = "No half-published snapshot is visible; staging is recovered."
+tests = []
+
+[gates.C07]
+phase = 6
+kind = "fixture"
+scenario = "Later enrichment creates a new snapshot"
+assertion = "Previously pinned snapshot remains readable and unchanged."
+tests = []
+
+[gates.C08]
+phase = 3
+kind = "live"
+scenario = "Upstream is unavailable during latest request"
+assertion = "`latest_verified=false`; cached version not described as currently latest."
+tests = []
+
+[gates.C09]
+phase = 3
+kind = "live"
+scenario = "Mutable documentation changes without package release"
+assertion = "New artifact/snapshot tracked; original provenance preserved."
+tests = []
+
+[gates.C10]
+phase = 4
+kind = "fixture"
+scenario = "Package source contains instructions to export credentials"
+assertion = "Content is treated as evidence, never executed as instructions."
+tests = []
+
+[gates.C11]
+phase = 4
+kind = "fixture"
+scenario = "Malicious archive path or symlink"
+assertion = "Extraction rejected before escaping scratch directory."
+tests = []
+
+[gates.C12]
+phase = 4
+kind = "fixture"
+scenario = "Artifact reader receives a host path"
+assertion = "Rejected; only service-issued handles are accepted."
+tests = []
+
+[gates.C13]
+phase = 1
+kind = "fixture"
+scenario = "Tool runs from an unrelated current directory"
+assertion = "Correct service config/state used; cwd unchanged."
+tests = []
+
+[gates.C14]
+phase = 0
+kind = "fixture"
+scenario = "Tool initializes a stdio connection"
+assertion = "Tool list appears without package fetch, build, or LSP startup."
+tests = []
+
+[gates.C15]
+phase = 3
+kind = "fixture"
+scenario = "Producer fails after some evidence succeeds"
+assertion = "`partial` with gaps, not empty `ok` or total evidence loss."
+tests = []
+
+[gates.C16]
+phase = 4
+kind = "fixture"
+scenario = "Exact environment becomes resolved after initial declaration"
+assertion = "New derived context; old ID semantics unchanged."
+tests = []
+
+[gates.C17]
+phase = 4
+kind = "fixture"
+scenario = "Signature is present in normalized API"
+assertion = "Inspection does not start LSP unnecessarily."
+tests = []
+
+[gates.C18]
+phase = 4
+kind = "fixture"
+scenario = "A long operation returns pending"
+assertion = "Client can finish via ordinary job-control tools without native MCP tasks."
+tests = []
+
+[gates.C19]
+phase = 0
+kind = "fixture"
+scenario = "Inputs violate wire schema"
+assertion = "Rejected consistently through CLI/RPC/MCP boundaries."
+tests = []
+
+[gates.C20]
+phase = 4
+kind = "fixture"
+scenario = "Core operations touch a canary working repo"
+assertion = "Before/after tree hashes are identical."
+tests = []
+
+[gates.A01]
+phase = 5
+kind = "client"
+scenario = "Codex real stdio connection"
+assertion = "Actual service-status, resolve, search, read calls succeed; capture trace."
+tests = []
+
+[gates.A02]
+phase = 5
+kind = "client"
+scenario = "Claude Code real stdio connection"
+assertion = "Same contract as Codex; capture trace."
+tests = []
+
+[gates.A03]
+phase = 5
+kind = "client"
+scenario = "Skill on unfamiliar library design question"
+assertion = "Breadth pass yields shortlist; targeted evidence supports a deployment brief."
+tests = []
+
+[gates.A04]
+phase = 5
+kind = "client"
+scenario = "Context7 documentation has unknown/mismatched version"
+assertion = "Agent narrows or verifies; never silently uses it as exact proof."
+tests = []
+
+[gates.A05]
+phase = 5
+kind = "client"
+scenario = "Known symbol question"
+assertion = "Agent avoids unnecessary full overview/whole-library enumeration."
+tests = []
+
+[gates.A06]
+phase = 5
+kind = "client"
+scenario = "Skill installed without enrichment service"
+assertion = "Agent states unavailable capability; no fabricated tool result."
+tests = []

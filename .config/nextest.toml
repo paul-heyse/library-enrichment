@@ -1,0 +1,20 @@
+[profile.default]
+# Evidence gaps must be visible; a silently slow test is usually a network call that should
+# have been a fixture.
+slow-timeout = { period = "30s", terminate-after = 4 }
+failure-output = "immediate-final"
+fail-fast = false
+
+[profile.ci]
+slow-timeout = { period = "60s", terminate-after = 4 }
+failure-output = "immediate-final"
+fail-fast = false
+
+# Tests that construct capsules or start a daemon share process-level state; bound them
+# so a parallel run cannot make snapshot publication races look like flakes.
+[[profile.default.overrides]]
+filter = 'test(/^capsule_|^daemon_|^publish_/)'
+test-group = "stateful"
+
+[test-groups.stateful]
+max-threads = 2

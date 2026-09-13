@@ -1,0 +1,16 @@
+id: mcp-stdout-protocol-only
+language: Python
+severity: error
+message: Adapter and worker diagnostics go to stderr; stdout is the MCP protocol channel.
+note: |
+  Blueprint §7.4: all logs go to stderr or the daemon log, never MCP stdout. A stray print()
+  in the adapter corrupts the protocol stream and the client sees a malformed session rather
+  than a clear error. Pass file=sys.stderr, or use the configured logger.
+files:
+  - python/enrichment_mcp/**/*.py
+  - python/enrichment_worker/**/*.py
+rule:
+  all:
+    - pattern: print($$$ARGS)
+    - not:
+        regex: 'file\s*=\s*sys\.stderr'

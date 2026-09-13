@@ -1,0 +1,82 @@
+[project]
+name = "library-enrichment"
+version = "0.0.0"
+description = "Thin FastMCP 4 adapter and extraction worker for the library-enrichment evidence service"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+requires-python = ">=3.14,<3.15"
+authors = [{ name = "Paul Heyse" }]
+
+# Runtime dependencies are added once their rows in
+# docs/architecture/compatibility-matrix.md are `verified`. Blueprint §1.2 and §12.1 require
+# exact pins with a committed lockfile -- no floors, no ranges, no `uvx ...@latest`.
+#
+# Verified 2026-09-13: all three resolve for requires-python >=3.14,<3.15 (see
+# docs/architecture/compatibility-matrix.md and ADR 0004).
+dependencies = [
+  # The standalone package. NOT mcp.server.fastmcp -- rules/fastmcp-standalone-import-only.yml
+  # enforces the import form in the edit loop.
+  "fastmcp==4.0.3",
+  # Static Python API extraction. Always with allow_inspection=False and explicit search_paths
+  # (blueprint §5.2 [S12]); rules/griffe-static-only.yml enforces it.
+  "griffe==2.3.0",
+]
+
+[project.scripts]
+library-enrichment-mcp = "enrichment_mcp.__main__:main"
+library-enrichment-worker = "enrichment_worker.__main__:main"
+
+[dependency-groups]
+dev = [
+  # ty is the Python semantic engine (blueprint §1.1, §5.4). It belongs in the lockfile, not
+  # in a global `uv tool install`, so the analysed version is reproducible (§12.1).
+  # pyrefly/pyright/mypy are installed on this workstation and are NOT this project's engine.
+  "ty==0.0.80",
+  # Validates the frozen response envelope and the generated schemas against the fixture corpus.
+  "jsonschema==4.26.0",
+  "pytest==9.0.1",
+  "pytest-json-report==1.5.0",
+  "ruff==0.14.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/enrichment_mcp", "python/enrichment_worker"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["python", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ANN", "RUF", "T20"]
+# T20 (flake8-print) is deliberate: stdout is the MCP protocol channel, so a stray print()
+# corrupts the session. rules/mcp-stdout-protocol-only.yml covers the same ground in the edit
+# loop; this catches it in lint.
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["python"]
+addopts = "--strict-markers --strict-config"
+markers = [
+  "live: requires network access to a real registry; opt-in, reported separately from deterministic tests",
+  "client: requires a real MCP client (Codex or Claude Code); `not_run` when unavailable, never mocked",
+  "sandbox: requires an operational container runtime or bwrap for the build/runtime execution profiles",
+]
+
+[tool.ty.environment]
+# ty checks THIS project's own Python. Libraries under study are analysed in service-owned
+# consumer capsules with their own selected interpreter, never against this environment
+# (blueprint §5.4, gate P10).
+python-version = "3.14"
+root = ["python"]

@@ -1,0 +1,21 @@
+# Cargo aliases and build settings.
+#
+# Keep this short. The task surface is the justfile; these are the shorthands that are
+# genuinely worth having when working inside a single crate.
+
+[alias]
+c = "check --workspace --all-targets"
+t = "nextest run --workspace"
+lint = "clippy --workspace --all-targets --all-features -- -D warnings"
+
+[build]
+# Incremental is on by default for dev; sccache is wired through RUSTC_WRAPPER in
+# scripts/env.sh rather than here, so a shell without direnv still builds correctly.
+
+[term]
+color = "never"
+
+[net]
+# Fail fast rather than hanging when the network is unavailable, so an offline run
+# produces a clear gap instead of a timeout mistaken for a missing package.
+retry = 2

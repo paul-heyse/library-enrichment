@@ -1,0 +1,58 @@
+# cargo-deny policy. `just deps-policy` is the gate.
+
+[graph]
+all-features = true
+
+[bans]
+# Blueprint §8.4: pin Arrow/DataFusion to a verified mutually compatible set. Do not force
+# unrelated major versions into one Rust type universe -- a second arrow major means two
+# incompatible RecordBatch types and silent conversion cost.
+multiple-versions = "deny"
+wildcards = "deny"
+skip = []
+
+# Blueprint §1.1: do not add a graph database, embeddings, a vector database, a GPU workload,
+# a generic workflow engine, or an additional server framework to the initial implementation.
+[[bans.deny]]
+name = "lancedb"
+reason = "Blueprint §8.4: emit portable Arrow/Parquet/JSON for the future store; no LanceDB dependency is required."
+
+[[bans.deny]]
+name = "tonic"
+reason = "Blueprint §2.1: do not add gRPC to carry a small local interface."
+
+[[bans.deny]]
+name = "redis"
+reason = "Blueprint §2.1: do not add Redis to carry a small local interface."
+
+[[bans.deny]]
+name = "neo4rs"
+reason = "Blueprint §1.1: no graph database in the initial implementation."
+
+[[bans.deny]]
+name = "qdrant-client"
+reason = "Blueprint §1.1: no vector database in the initial implementation."
+
+[licenses]
+version = 2
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Unicode-3.0",
+  "Zlib",
+  "CC0-1.0",
+  "MPL-2.0",
+]
+confidence-threshold = 0.9
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

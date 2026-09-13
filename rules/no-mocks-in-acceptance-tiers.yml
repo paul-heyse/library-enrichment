@@ -1,0 +1,20 @@
+id: no-mocks-in-acceptance-tiers
+language: Python
+severity: error
+message: The contract, integration and e2e tiers test real boundaries; do not mock them.
+note: |
+  Blueprint §14.1 and AGENT_HANDOFF.md: do not claim success from mocks. These tiers exist to
+  exercise the real FastMCP transport, the real daemon RPC, and real producers. A mocked client
+  is never a pass for A01 or A02 -- an unavailable client is `not_run`, with reproduction steps.
+  Unit tests may mock freely.
+files:
+  - tests/contract/**/*.py
+  - tests/integration/**/*.py
+  - tests/e2e/**/*.py
+rule:
+  any:
+    - pattern: import unittest.mock
+    - pattern: from unittest.mock import $$$
+    - pattern: from unittest import mock
+    - pattern: import mock
+    - pattern: $MOCKER.patch($$$ARGS)

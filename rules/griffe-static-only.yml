@@ -1,0 +1,18 @@
+id: griffe-static-only
+language: Python
+severity: error
+message: Griffe must be loaded with allow_inspection=False and explicit search_paths.
+note: |
+  Blueprint §5.2 [S12]: without allow_inspection=False, Griffe imports packages when static
+  sources are unavailable -- which executes library code inside the extraction worker and
+  breaks acceptance gate P02 (static extraction must not trigger an import-time side effect).
+  Explicit search_paths keeps extraction pinned to the selected artifact rather than whatever
+  happens to be importable in the worker's own environment.
+rule:
+  all:
+    - any:
+        - pattern: griffe.load($$$ARGS)
+        - pattern: griffe.load_git($$$ARGS)
+        - pattern: GriffeLoader($$$ARGS)
+    - not:
+        regex: 'allow_inspection\s*=\s*False'

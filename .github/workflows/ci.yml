@@ -1,0 +1,101 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Also run the opt-in live tests against real registries"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  RUST_BACKTRACE: 1
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # rust-toolchain.toml is the single toolchain authority. Installing from it rather than
+      # naming a version here keeps CI and local builds on the same compiler by construction.
+      - name: Install the pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-deny,just,ast-grep
+
+      - name: Sync the Python environment from the lockfile
+        run: uv sync --frozen --all-groups
+
+      # Invariants that hold from commit #1 and must never regress. These run before anything
+      # expensive, because a broken toolchain pin or an edited frozen contract invalidates
+      # every result that follows.
+      - name: Toolchain pin
+        run: just toolchain-check
+      - name: Bundle provenance
+        run: just provenance-check
+      - name: Hook behaviour
+        run: just hooks-test
+      - name: Rule corpus
+        run: just rules-test
+
+      - name: Format
+        run: just fmt-check
+      - name: Lint
+        run: just lint
+      - name: Compile
+        run: just check
+      - name: Tests
+        run: just test
+      - name: Python types
+        run: just typecheck
+
+      - name: Schema conformance
+        run: just schema-conformance
+      - name: Dependency policy
+        run: just deps-policy
+
+      # Truthful reporting is enforced here as well as locally: a gate cannot be marked passed
+      # without a recorded command and log.
+      - name: Acceptance integrity
+        run: |
+          just acceptance-report
+          just acceptance-check
+
+      - name: Upload the acceptance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-report
+          path: docs/reports/acceptance.json
+          if-no-files-found: ignore
+
+  # Live tests reach real registries, so they are opt-in and never gate a pull request.
+  # A live failure is an upstream change to investigate, not a regression in this repository.
+  live:
+    if: github.event_name == 'workflow_dispatch' && inputs.live
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: astral-sh/setup-uv@v7
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      - run: uv sync --frozen --all-groups
+      - name: Live tests
+        run: just test-live

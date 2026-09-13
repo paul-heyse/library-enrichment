@@ -1,0 +1,28 @@
+# LOAD-BEARING PIN.
+#
+# This workstation's rustup DEFAULT toolchain is `nightly` (1.100.0). Without this file every
+# bare `cargo` invocation in this repository silently compiles against nightly, and acceptance
+# gate R09 ("compile probe passes on nightly but fails on project stable") becomes untestable
+# because the probe would already be running on nightly.
+#
+# 1.98.1 is the CURRENT stable release, verified with `rustup check` on 2026-09-13:
+#     stable-x86_64-unknown-linux-gnu - up to date: 1.98.1 (48a229cea 2026-09-01)
+# It is written as an exact version rather than `stable` so the pin is reproducible: `stable`
+# floats to whatever ships next, which is the opposite of what an evidence service needs.
+# Re-check with `rustup check` and bump deliberately.
+#
+# The rustdoc-JSON fallback producer (blueprint §4.4) does NOT build our code on nightly -- it
+# shells `cargo +<dated-nightly> rustdoc` against a third-party crate inside a service capsule.
+# That nightly is recorded as a producer *identity* in config/toolchains.toml, not as a second
+# build domain. Do not add a second rust-toolchain.toml.
+
+[toolchain]
+channel = "1.98.1"
+components = [
+  "rustfmt",
+  "clippy",
+  "rust-analyzer",
+  "rust-src",
+  "llvm-tools-preview",
+]
+profile = "minimal"

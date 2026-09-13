@@ -1,0 +1,66 @@
+# Proposed service configuration to implement, not an existing package's config.
+# Relative data paths are resolved by the service's OS-aware directory policy.
+config_version = "1.0"
+
+[service]
+name = "library-enrichment"
+transport = "stdio-adapter-to-unix-daemon"
+auto_start_daemon = true
+log_level = "info"
+
+[storage]
+layout = "content-addressed-artifacts-and-parquet-snapshots"
+single_writer = true
+retain_published_snapshots = true
+
+[limits]
+inline_result_bytes = 12288
+search_results = 12
+excerpt_characters = 800
+source_lines = 80
+namespace_entries = 20
+verification_input_bytes = 32768
+inline_wait_seconds = 2
+max_job_wait_seconds = 10
+expensive_worker_concurrency = 2
+warm_lsp_sessions = 2
+rpc_message_bytes = 1048576
+
+[freshness]
+registry_ttl_seconds = 900
+mutable_docs_ttl_seconds = 86400
+negative_cache_ttl_seconds = 300
+latest_requires_revalidation = true
+
+[policy]
+enabled_profiles = ["static", "build"]
+require_sandbox_for_build = true
+require_sandbox_for_runtime = true
+execution_network = false
+inherit_home = false
+inherit_project = false
+inherit_credentials = false
+allow_untrusted_griffe_extensions = false
+allow_arbitrary_shell = false
+allow_arbitrary_filesystem_read = false
+
+[producers.rust]
+prefer_hosted_rustdoc_json = true
+all_features_by_default = false
+lsp = "rust-analyzer"
+
+[producers.python]
+static_api = "griffe"
+allow_griffe_inspection = false
+lsp = "ty"
+separate_analysis_environment = true
+
+[mcp]
+native_tasks_required = false
+expose_paged_read_tool = true
+embedded_context7_client = false
+embedded_llm = false
+
+[skill]
+name = "library-research"
+automatic_project_file_creation = false

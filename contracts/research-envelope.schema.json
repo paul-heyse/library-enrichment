@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LibraryEnrichmentResponseEnvelope",
+  "description": "Proposed baseline envelope. Implementation must specialize data per tool; examples are synthetic, not actual library results.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "partial",
+        "pending",
+        "error"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "context_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "snapshot_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "data": {
+      "type": "object"
+    },
+    "coverage": {
+      "$ref": "#/$defs/Coverage"
+    },
+    "freshness": {
+      "$ref": "#/$defs/Freshness"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ArtifactHandle"
+      }
+    },
+    "pagination": {
+      "$ref": "#/$defs/Pagination"
+    },
+    "job": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/JobHandle"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "status",
+    "summary",
+    "context_id",
+    "snapshot_id",
+    "data",
+    "coverage",
+    "freshness",
+    "evidence",
+    "artifacts",
+    "pagination",
+    "job",
+    "error"
+  ],
+  "$defs": {
+    "Coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "indexed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "scope",
+        "indexed",
+        "missing",
+        "limitations"
+      ]
+    },
+    "Freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registry_checked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "source_version_match": {
+          "enum": [
+            "exact",
+            "compatible_claimed",
+            "mismatched",
+            "unknown"
+          ]
+        },
+        "latest_verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "registry_checked_at",
+        "source_version_match",
+        "latest_verified"
+      ]
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "type": "string"
+        },
+        "evidence_class": {
+          "enum": [
+            "declared",
+            "statically_extracted",
+            "compiler_derived",
+            "typechecker_observed",
+            "runtime_observed",
+            "agent_inferred"
+          ]
+        },
+        "subject": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "type": "string"
+        },
+        "source_uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "locator": {
+          "type": "object",
+          "description": "Specialize as a discriminated locator union in the implementation."
+        },
+        "source_version_match": {
+          "enum": [
+            "exact",
+            "compatible_claimed",
+            "mismatched",
+            "unknown"
+          ]
+        },
+        "producer": {
+          "type": "string"
+        },
+        "producer_version": {
+          "type": "string"
+        },
+        "excerpt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "evidence_class",
+        "subject",
+        "artifact_id",
+        "source_uri",
+        "locator",
+        "source_version_match",
+        "producer",
+        "producer_version",
+        "excerpt"
+      ]
+    },
+    "ArtifactHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string",
+          "pattern": "^library-evidence://"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "uri",
+        "media_type",
+        "description"
+      ]
+    },
+    "Pagination": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_matches": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "returned",
+        "total_matches",
+        "truncated",
+        "next_cursor"
+      ]
+    },
+    "JobHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "job_id": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "queued",
+            "running",
+            "succeeded",
+            "partial",
+            "failed",
+            "cancel_requested",
+            "cancelled"
+          ]
+        },
+        "stage": {
+          "type": "string"
+        },
+        "poll_after_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "job_id",
+        "state",
+        "stage",
+        "poll_after_ms"
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "VERSION_NOT_FOUND",
+            "AMBIGUOUS_PACKAGE",
+            "ARTIFACT_UNAVAILABLE",
+            "UNSUPPORTED_FORMAT",
+            "ENVIRONMENT_UNRESOLVED",
+            "ENVIRONMENT_MISMATCH",
+            "POLICY_DENIED",
+            "UNSUPPORTED_CAPABILITY",
+            "UPSTREAM_UNAVAILABLE",
+            "EXTRACTION_FAILED",
+            "VERIFICATION_FAILED",
+            "BUDGET_EXCEEDED",
+            "INVALID_CURSOR"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "next_action": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "next_action"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "pending"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "job": {
+            "$ref": "#/$defs/JobHandle"
+          },
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "$ref": "#/$defs/Error"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok",
+              "partial"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

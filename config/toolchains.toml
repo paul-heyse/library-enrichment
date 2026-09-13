@@ -1,0 +1,60 @@
+# Recorded toolchain IDENTITIES for the producers that need a nightly compiler.
+#
+# This is data, not a build configuration. The rustdoc-JSON fallback producer does not compile
+# our code on nightly -- it shells `cargo +<toolchain> rustdoc` against a third-party crate
+# inside a service capsule. The values here feed ProducerRun provenance (blueprint §6.1) so an
+# extracted API can be traced to the exact compiler that emitted it.
+#
+# Our own toolchain is pinned by rust-toolchain.toml. Do not add a second one.
+#
+# Regenerate with: just rustdoc-format-matrix
+
+config_version = "1.0"
+
+[rustdoc_producer]
+# The CURRENT nightly, dated for reproducibility. `nightly-2026-09-13` is byte-identical to
+# this workstation's rolling `nightly` channel (both rustc 1.100.0-nightly 809936eac), so this
+# is simultaneously the newest available and a fixed, re-installable identity. A rolling
+# `+nightly` would float; scripts/hooks/pre_bash.sh denies the bare form for that reason.
+#
+# The parser adapter must still inspect `format_version` at read time rather than trusting this
+# value -- docs.rs may serve JSON built by any rustdoc release (blueprint §4.1 [S07]).
+toolchain = "nightly-2026-09-13"
+rustc_release = "1.100.0-nightly"
+rustc_commit_hash = "809936eac"
+rustdoc_format_version = 61
+recorded_at = "2026-09-13"
+target_dir = "${LIBENR_CACHE_HOME}/capsules/rustdoc-target"
+
+# Every installed nightly and the format version it emits, measured on 2026-09-13 by
+# `just rustdoc-format-matrix`. Gate R04 requires both a supported and an unsupported format
+# capture; the spread from 57 to 61 supplies both without synthesising a fake artifact.
+[[rustdoc_producer.observed]]
+toolchain = "nightly-2026-02-28"
+rustc_release = "1.95.0-nightly"
+rustc_commit_hash = "3a70d0349"
+format_version = 57
+
+[[rustdoc_producer.observed]]
+toolchain = "nightly-2026-05-23"
+rustc_release = "1.98.0-nightly"
+rustc_commit_hash = "54333ff07"
+format_version = 57
+
+[[rustdoc_producer.observed]]
+toolchain = "nightly-2026-07-15"
+rustc_release = "1.99.0-nightly"
+rustc_commit_hash = "da80ed070"
+format_version = 60
+
+[[rustdoc_producer.observed]]
+toolchain = "nightly-2026-08-18"
+rustc_release = "1.100.0-nightly"
+rustc_commit_hash = "8fa1c96cf"
+format_version = 61
+
+[[rustdoc_producer.observed]]
+toolchain = "nightly-2026-09-13"
+rustc_release = "1.100.0-nightly"
+rustc_commit_hash = "809936eac"
+format_version = 61
