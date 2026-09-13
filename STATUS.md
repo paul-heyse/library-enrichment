@@ -107,7 +107,7 @@ The groundwork is in place: add a method to `server::dispatch`, a producer behin
 | rustdoc producer | `nightly-2026-09-13` | Byte-identical to the rolling nightly |
 
 `cargo deny` passes all four checks with `multiple-versions = "deny"` and 13 individually
-reasoned skips, none an Arrow-stack crate. 93 Rust tests, 65 Python tests, 3 doctest targets.
+reasoned skips, none an Arrow-stack crate. 94 Rust tests, 65 Python tests, 3 doctest targets.
 
 ---
 
@@ -215,6 +215,13 @@ against the generated *schema*, and
 `test_the_generated_dto_alone_is_not_a_sufficient_validator` pins the limitation so it cannot
 quietly become an assumption. If a future release does emit those validators, that test fails
 and the indirection can go.
+
+**A test that returns early passes; a test that skips is `blocked`.** The reporting pipeline
+can see a skip and cannot see an early `return`, so a conditional guard inside a test body is a
+silent false pass. R04's central measurement had one — it read captures from `$LIBENR_CACHE_HOME`
+and returned when unset, reporting PASS having examined nothing. Real captures now live in
+`tests/fixtures/rustdoc/` and absent fixtures are a failure. If a test genuinely cannot run,
+`#[ignore]` or `pytest.mark.skipif` is the honest mechanism, because both reach the report.
 
 **`git diff --exit-code` over `schemas/generated/` only sees tracked files.** Until that
 directory is committed the reproducibility half of `schema-conformance.sh` is a no-op. The Rust
