@@ -15,13 +15,32 @@ from pathlib import Path
 import pytest
 
 # Environment variables that redirect the service's directory resolver.
-_STATE_VARS = ("LIBENR_HOME", "LIBENR_CACHE_HOME", "LIBENR_DATA_HOME", "LIBENR_CONFIG")
+# LIBENR_SOCKET is listed deliberately: an inherited one would point a test at the production
+# socket path, writing real user state that the digest below would flag far from its cause.
+_STATE_VARS = (
+    "LIBENR_HOME",
+    "LIBENR_CACHE_HOME",
+    "LIBENR_DATA_HOME",
+    "LIBENR_CONFIG",
+    "LIBENR_SOCKET",
+)
 
 
 def _real_xdg_paths() -> list[Path]:
+    """Every real location the service could resolve, including the daemon's runtime directory.
+
+    `XDG_RUNTIME_DIR` is in the list because the socket resolver reaches it before
+    `XDG_CACHE_HOME`; omitting it would leave the one directory Phase 0 actually writes to
+    unguarded.
+    """
     cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
     data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
-    return [cache / "library-enrichment", data / "library-enrichment"]
+    runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+    return [
+        cache / "library-enrichment",
+        data / "library-enrichment",
+        runtime / "library-enrichment",
+    ]
 
 
 def _digest(paths: list[Path]) -> list[tuple[str, int]]:
@@ -52,6 +71,7 @@ def isolate_service_state(tmp_path_factory: pytest.TempPathFactory) -> Iterator[
     os.environ["LIBENR_HOME"] = str(root)
     os.environ["LIBENR_CACHE_HOME"] = str(root / "cache")
     os.environ["LIBENR_DATA_HOME"] = str(root / "data")
+    os.environ["LIBENR_SOCKET"] = str(root / "run" / "d.sock")
     os.environ["LIBENR_TEST_ROOT"] = str(root)
 
     try:

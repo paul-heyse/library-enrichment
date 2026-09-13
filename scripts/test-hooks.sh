@@ -106,5 +106,19 @@ edit_case "a subagent"          '.claude/agents/upstream-verifier.md'           
 edit_case "a slash command"     '.claude/commands/phase-gate.md'                        allow
 edit_case "a dev skill"         '.claude/skills/some-workflow/SKILL.md'                 allow
 
+# The outside-repo guard exists for gate C20: a repository under study is never a write target.
+# It is not meant to block the agent harness's own plan and scratch files, which are neither
+# service state nor user-scope configuration. The exemption is narrow on purpose, and the deny
+# cases below are the half that matters: the user-scope skill and settings paths are exactly
+# what pre_bash.sh gates behind LIBENR_ALLOW_USER_INSTALL=1, and a blanket $HOME/.claude/*
+# exemption would punch straight through that.
+echo "pre_edit: harness paths are exempt, user configuration is not"
+edit_case "harness plan file"   "$HOME/.claude/plans/some-plan.md"                      allow
+edit_case "session scratch"     '/tmp/claude-1000/x/scratchpad/notes.md'                allow
+edit_case "user-scope skill"    "$HOME/.claude/skills/library-research/SKILL.md"        deny
+edit_case "user settings"       "$HOME/.claude/settings.json"                           deny
+edit_case "a repo under study"  "$HOME/some-other-project/src/main.rs"                  deny
+edit_case "real XDG cache"      "$HOME/.cache/library-enrichment/blobs/x"               deny
+
 printf '\nhooks: %d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -272,7 +272,30 @@ phase = 0
 kind = "fixture"
 scenario = "Tool initializes a stdio connection"
 assertion = "Tool list appears without package fetch, build, or LSP startup."
-tests = []
+caveat = """\
+"No package fetch" is measured as no child process plus an unchanged service-state tree. An \
+in-process HTTP call that wrote nothing to $LIBENR_CACHE_HOME would not be caught: there is no \
+network isolation in this tier. The child-process check is also a single sample taken after \
+tools/list returns, so a subprocess that started and exited within that window is invisible."""
+# The in-process tests prove the catalog is REGISTERED; the stdio-subprocess tests prove it is
+# registered CHEAPLY, which is the actual assertion. A fetch, a build or an LSP start would each
+# show up as a child process and as a write under $LIBENR_CACHE_HOME, so both are measured
+# rather than asserted. Blueprint §14.1 asks for both boundaries.
+tests = [
+  # In-process: the catalog itself.
+  "tests/contract/test_mcp_catalog.py::test_all_nine_tools_are_registered",
+  "tests/contract/test_mcp_catalog.py::test_every_tool_declares_an_input_schema",
+  "tests/contract/test_mcp_catalog.py::test_verify_usage_is_not_advertised_as_read_only",
+  "tests/contract/test_mcp_catalog.py::test_cached_reads_state_their_world_openness_explicitly",
+  "tests/contract/test_mcp_catalog.py::test_service_status_is_truthful_when_the_daemon_is_absent",
+  # Real stdio subprocess: no fetch, no build, no LSP -- measured.
+  "tests/contract/test_stdio_startup.py::test_the_tool_list_appears_over_real_stdio",
+  "tests/contract/test_stdio_startup.py::test_listing_tools_starts_no_subprocess",
+  "tests/contract/test_stdio_startup.py::test_listing_tools_writes_no_service_state",
+  "tests/contract/test_stdio_startup.py::test_the_catalog_appears_within_the_inline_budget",
+  "tests/contract/test_stdio_startup.py::test_service_status_works_over_stdio_with_no_daemon",
+  "tests/contract/test_stdio_startup.py::test_nothing_is_written_to_protocol_stdout",
+]
 
 [gates.C15]
 phase = 3
@@ -307,7 +330,81 @@ phase = 0
 kind = "fixture"
 scenario = "Inputs violate wire schema"
 assertion = "Rejected consistently through CLI/RPC/MCP boundaries."
-tests = []
+caveat = """\
+Two limits on what this establishes. (1) The four verdict producers are three transports over \
+two independent implementations: CLI and RPC share one Rust validator, and the adapter and \
+generated-schema legs share one emitted file. The genuinely independent pair is Rust \
+serde/TryFrom against jsonschema over the FROZEN contract. (2) No corpus document crosses the \
+real MCP stdio transport, because phase 0 exposes no tool that accepts a wire document; the \
+MCP path is covered on the output side instead."""
+# "Consistently" is the content of this gate, so it is measured rather than annotated: ONE
+# corpus (tests/wire_corpus.py) is submitted to every boundary and the verdicts are compared
+# per document. Three validators that each rejected something would satisfy the words and not
+# the gate -- they could disagree about which documents are valid and nothing would notice.
+#
+# Registered here are only tests that bear on rejection or on cross-boundary agreement. Schema
+# hygiene (enum ordering, $defs shape, generation reproducibility) is real and runs in `just
+# ci`, but it establishes that the wire schema is well defined, not that inputs are refused --
+# registering it here would inflate the evidence count without strengthening the claim.
+tests = [
+  # Cross-boundary agreement: the same document through CLI, both schemas, and the adapter.
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[ok_fixture]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[partial_fixture]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[pending_fixture]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[error_fixture]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[pending_without_job]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[error_without_error_object]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[unknown_root_field]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[ok_with_error_object]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[partial_with_error_object]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[pending_with_error_object]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[unknown_status]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[unknown_error_code]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[missing_required_root_field]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[wrong_schema_version]",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_boundary_agrees_on_every_document[not_an_object]",
+  "tests/contract/test_wire_rejection_consistency.py::test_the_cli_reports_a_typed_code_on_rejection",
+  "tests/contract/test_wire_rejection_consistency.py::test_the_corpus_covers_every_root_conditional",
+  "tests/contract/test_wire_rejection_consistency.py::test_every_builder_emits_a_conforming_envelope",
+  "tests/contract/test_wire_rejection_consistency.py::test_the_generated_dto_alone_is_not_a_sufficient_validator",
+  # RPC boundary: the same corpus over a real socket, compared against the CLI.
+  "tests/e2e/test_mcp_daemon_handshake.py::test_the_rpc_boundary_agrees_with_the_cli_on_the_shared_corpus",
+  "tests/e2e/test_mcp_daemon_handshake.py::test_the_rpc_validator_rejects_a_malformed_request",
+  "tests/e2e/test_mcp_daemon_handshake.py::test_the_end_to_end_envelope_conforms_to_the_generated_schema",
+  # The shared validator itself.
+  "enrichment-daemon::enrichment_daemon$validate::tests::a_delivered_fixture_is_accepted",
+  "enrichment-daemon::enrichment_daemon$validate::tests::a_pending_document_without_a_job_is_rejected",
+  "enrichment-daemon::enrichment_daemon$validate::tests::a_document_that_is_not_json_is_rejected_rather_than_panicking",
+  # Rust wire types: the authoritative definition every boundary is downstream of.
+  "enrichment-core::wire_conformance$ok_fixture_round_trips",
+  "enrichment-core::wire_conformance$partial_fixture_round_trips",
+  "enrichment-core::wire_conformance$pending_fixture_round_trips",
+  "enrichment-core::wire_conformance$error_fixture_round_trips",
+  "enrichment-core::wire_conformance$pending_without_a_job_handle_is_rejected",
+  "enrichment-core::wire_conformance$error_status_without_an_error_object_is_rejected",
+  "enrichment-core::wire_conformance$an_unknown_root_field_is_rejected",
+  "enrichment-core::wire_conformance$ok_status_with_an_error_object_is_rejected",
+  "enrichment-core::wire_conformance$pending_status_with_an_error_object_is_rejected",
+  "enrichment-core::enrichment_core$wire::envelope::tests::try_from_is_exhaustive_over_the_status_matrix",
+  # Construction side: the rule as a Rust fact, not only a schema assertion.
+  "enrichment-core::wire_conformance$pending_outcome_always_emits_a_job_and_a_null_error",
+  "enrichment-core::wire_conformance$ok_and_partial_outcomes_always_emit_a_null_error",
+  "enrichment-core::wire_conformance$error_outcome_always_emits_an_error_object",
+  # The emitted schema must keep restating the frozen contract's conditionals.
+  "enrichment-core::wire_conformance$root_conditionals_match_the_frozen_contract",
+  "enrichment-core::wire_conformance$root_required_fields_match_the_frozen_contract",
+  "enrichment-core::wire_conformance$root_forbids_additional_properties",
+  "enrichment-core::wire_conformance$every_ref_in_the_schema_resolves",
+  # Python schema boundary: the frozen contract validated with jsonschema.
+  "tests/contract/test_frozen_envelope.py::test_delivered_fixtures_validate[ok]",
+  "tests/contract/test_frozen_envelope.py::test_delivered_fixtures_validate[partial]",
+  "tests/contract/test_frozen_envelope.py::test_delivered_fixtures_validate[pending]",
+  "tests/contract/test_frozen_envelope.py::test_delivered_fixtures_validate[error]",
+  "tests/contract/test_frozen_envelope.py::test_pending_without_a_job_handle_is_rejected",
+  "tests/contract/test_frozen_envelope.py::test_error_without_an_error_object_is_rejected",
+  "tests/contract/test_frozen_envelope.py::test_unknown_root_field_is_rejected",
+  "tests/contract/test_frozen_envelope.py::test_error_codes_are_complete",
+]
 
 [gates.C20]
 phase = 4

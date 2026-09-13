@@ -2,9 +2,10 @@
 
 Install, configure, register, and run the service.
 
-> **Nothing here is implemented yet.** These are the procedures the implementation must satisfy
-> (blueprint §12). They are recorded now so the setup contract is fixed before code depends on
-> it. Commands marked *(not yet available)* will work once the corresponding phase lands.
+> **Phase 0 is implemented.** The daemon runs, the MCP adapter serves its tool catalog, and
+> `service_status` answers truthfully. No evidence producer exists yet, so every research tool
+> returns a typed `UNSUPPORTED_CAPABILITY` result naming the phase that implements it. Commands
+> still marked *(not yet available)* need a later phase.
 
 ## Development setup
 
@@ -105,14 +106,64 @@ resolves and deduplicates destinations so the skill is not written twice.
 
 Installing the skill does **not** register the service. They are separate steps.
 
-## Running the daemon *(not yet available)*
+## Running the daemon
 
 ```sh
-library-enrichmentd start
-library-enrichmentd status
+cargo build -p enrichment-daemon   # or `just check`; the binary lands in target/debug
+library-enrichmentd start          # foreground; Ctrl-C or SIGTERM stops it
+library-enrichmentd status         # prints the service status as JSON, exits 1 if not running
 library-enrichmentd stop
 ```
 
 The daemon is the single writer and job owner. It survives adapter exits and retains jobs; an
 adapter disconnect does not cancel a job another caller still needs. Logs go to stderr and the
 daemon log — never to MCP stdout.
+
+`start` runs in the foreground rather than self-daemonizing, so a supervisor or shell decides
+how to background it. Two daemons cannot share a socket: a second `start` fails with
+`AddrInUse`, while a socket file left behind by a crash is reclaimed. `stop` is an in-band RPC
+call, acknowledged before the daemon exits, so it needs no pidfile.
+
+### Validating a wire document
+
+```sh
+library-enrichmentd validate contracts/examples/ok.fixture.json   # or read stdin
+```
+
+Prints a verdict as JSON and exits 0 for a conforming response envelope, 1 otherwise. Needs no
+running daemon: it calls the same validator the `wire.validate` RPC method uses, which is what
+lets acceptance gate C19 compare the two boundaries rather than merely observe that each rejects
+something. Useful for checking a captured response by hand.
+
+### Where the socket lives
+
+Resolved in this order — ADR 0006 records why, and
+`python/enrichment_mcp/daemon_client.py` resolves it identically so the adapter and the daemon
+cannot disagree:
+
+| Source | Path |
+|---|---|
+| `LIBENR_SOCKET` | used verbatim |
+| `LIBENR_HOME` | `$LIBENR_HOME/run/d.sock` — the development sandbox |
+| `XDG_RUNTIME_DIR` | `$XDG_RUNTIME_DIR/library-enrichment/d.sock` |
+| `XDG_CACHE_HOME` | `$XDG_CACHE_HOME/library-enrichment/run/d.sock` |
+| `HOME` | `~/.cache/library-enrichment/run/d.sock` |
+| nothing set | the daemon refuses to start |
+
+No relative path is accepted from any source, and there is no working-directory fallback: a
+relative socket path would resolve against wherever the daemon was started, which may be a
+repository under study (§2.3, gate C20).
+
+The transport is bounded newline-delimited JSON-RPC 2.0 — not MCP framing, not LSP framing
+(blueprint §2.1). The bound is `limits.rpc_message_bytes` from the configuration, 1 MiB by
+default; an over-long frame is refused with `BUDGET_EXCEEDED` rather than buffered.
+
+## Running the adapter
+
+```sh
+library-enrichment-mcp             # serves MCP over stdio; normally launched by a client
+```
+
+It starts without the daemon: `service_status` then returns `partial`, reporting the daemon as
+unavailable and naming the gap. That is deliberate — a stopped daemon is exactly when a caller
+most needs a usable answer, so it is reported rather than raised.

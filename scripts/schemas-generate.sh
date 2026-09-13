@@ -22,11 +22,18 @@ cargo run --quiet -p enrichment-core --bin emit-schemas -- --out schemas/generat
 
 echo "==> Pydantic boundary DTOs from those schemas"
 if [ -x .venv/bin/datamodel-codegen ]; then
+  # --field-constraints emits `Field(min_length=1)` rather than `constr(min_length=1)`. The
+  # latter is a function call, which is not a valid type expression -- `ty` rejects it with
+  # invalid-type-form, and it is Pydantic v1 idiom besides.
+  #
+  # --formatters ruff-format keeps the output consistent with `just fmt-check`; without it the
+  # generator formats with black, whose result ruff then wants to reformat.
   .venv/bin/datamodel-codegen \
     --input schemas/generated --input-file-type jsonschema \
     --output python/enrichment_mcp/_generated \
     --output-model-type pydantic_v2.BaseModel \
-    --use-standard-collections --use-union-operator --target-python-version 3.14
+    --use-standard-collections --use-union-operator --target-python-version 3.14 \
+    --field-constraints --formatters ruff-format
 else
   echo "    datamodel-codegen absent; add it to [dependency-groups] dev and run \`just sync\`." >&2
 fi

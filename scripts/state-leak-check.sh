@@ -12,9 +12,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SNAP="${ROOT}/.dev-state/.xdg-snapshot"
 REAL_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/library-enrichment"
 REAL_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/library-enrichment"
+# The daemon's socket resolver reaches XDG_RUNTIME_DIR before XDG_CACHE_HOME, so a run that
+# resolved the production policy would write here and neither path above would notice.
+# See crates/enrichment-daemon/src/paths.rs and ADR 0006.
+REAL_RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/library-enrichment"
 
 digest() {
-  for d in "$REAL_CACHE" "$REAL_DATA"; do
+  for d in "$REAL_CACHE" "$REAL_DATA" "$REAL_RUNTIME"; do
     if [ -e "$d" ]; then
       find "$d" -printf '%P\t%s\t%m\t%y\n' 2>/dev/null | LC_ALL=C sort
     else

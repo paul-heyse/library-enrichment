@@ -17,6 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+#: node id -> (skip reason, log path), filled by `load_pytest`.
+SKIPPED: dict[str, tuple[str, str]] = {}
+
 
 def tool_versions() -> dict[str, str]:
     out = {}
@@ -49,11 +52,27 @@ def load_nextest(path: Path | None) -> dict[str, tuple[bool, str]]:
         except json.JSONDecodeError:
             continue
         if ev.get("type") == "test" and ev.get("event") in {"ok", "failed", "ignored"}:
-            results[ev.get("name", "")] = (ev["event"] == "ok", str(path))
+            name = ev.get("name", "")
+            if ev["event"] == "ignored":
+                # Same rule as a pytest skip: an unexecuted test is `blocked` with its
+                # prerequisite named, never `failed`. Dormant today (no #[ignore] tests exist),
+                # fixed here so the two suites cannot drift apart on what a skip means.
+                SKIPPED[name] = (
+                    str(ev.get("reason") or "marked #[ignore]"),
+                    str(path),
+                )
+                continue
+            results[name] = (ev["event"] == "ok", str(path))
     return results
 
 
 def load_pytest(path: Path | None) -> dict[str, tuple[bool, str]]:
+    """Map node id -> (passed, log line). A skipped test is reported separately.
+
+    A skip is NOT a failure: an unsupported platform or an unbuilt prerequisite is `blocked`
+    with the prerequisite named (AGENTS.md's four states). Collapsing it into `failed` would
+    claim a regression where there is only a missing tool.
+    """
     results: dict[str, tuple[bool, str]] = {}
     if not path or not path.exists():
         return results
@@ -62,8 +81,26 @@ def load_pytest(path: Path | None) -> dict[str, tuple[bool, str]]:
     except json.JSONDecodeError:
         return results
     for t in data.get("tests", []):
-        results[t.get("nodeid", "")] = (t.get("outcome") == "passed", str(path))
+        node = t.get("nodeid", "")
+        if t.get("outcome") == "skipped":
+            SKIPPED[node] = (_skip_reason(t), str(path))
+            continue
+        results[node] = (t.get("outcome") == "passed", str(path))
     return results
+
+
+def _skip_reason(test: dict) -> str:
+    """Pull pytest's own skip reason out of the json-report entry."""
+    for phase in ("setup", "call", "teardown"):
+        info = test.get(phase) or {}
+        reason = info.get("longrepr") or ""
+        if reason:
+            # json-report renders a skip as "('path', lineno, 'Skipped: <reason>')".
+            marker = "Skipped: "
+            if marker in reason:
+                return reason.split(marker, 1)[1].strip("')\" ")
+            return str(reason)
+    return "skipped without a recorded reason"
 
 
 def main() -> int:
@@ -88,13 +125,28 @@ def main() -> int:
         elif not named:
             status, command, log = "not_run", "", ""
             limitation = "No test is registered for this gate yet."
+        elif skipped := [t for t in named if t in SKIPPED]:
+            # A prerequisite was missing, which is `blocked`, not `failed` and not a pass.
+            reasons = sorted({SKIPPED[t][0] for t in skipped})
+            status = "blocked"
+            command, log = "", SKIPPED[skipped[0]][1]
+            limitation = (
+                f"{len(skipped)} of {len(named)} registered tests were skipped. "
+                f"Prerequisite: {'; '.join(reasons)}"
+            )
         elif not matched:
             status, command, log = "not_run", "", ""
             limitation = f"Registered tests did not execute in this run: {', '.join(named)}"
         elif all(ok for ok, _ in matched.values()):
             status = "passed"
+            # `caveat` is carried below: a gate can pass and still have a limitation worth
+            # reading, and a limitation that lives only in a test docstring is invisible to
+            # anyone reading the report.
             command = f"tests: {', '.join(sorted(matched))}"
-            log = next(iter(matched.values()))[1]
+            # Every distinct log, not just the first: a gate spanning both suites has half its
+            # evidence in nextest.json and half in pytest.json, and naming one of them points an
+            # auditor at an incomplete record.
+            log = ", ".join(sorted({path for _, path in matched.values()}))
             limitation = ""
             if len(matched) < len(named):
                 missing = sorted(set(named) - set(matched))
@@ -103,8 +155,12 @@ def main() -> int:
         else:
             status = "failed"
             command = f"tests: {', '.join(sorted(matched))}"
-            log = next(iter(matched.values()))[1]
+            log = ", ".join(sorted({path for _, path in matched.values()}))
             limitation = ""
+
+        # A declared caveat survives into the report even on a pass.
+        if caveat := spec.get("caveat"):
+            limitation = f"{limitation} {caveat}".strip() if limitation else caveat
 
         gates.append({
             "gate_id": gid,
@@ -133,7 +189,11 @@ def main() -> int:
     c = Counter(g["status"] for g in gates)
     print(f"acceptance: {c['passed']} passed / {c['failed']} failed / "
           f"{c['blocked']} blocked / {c['not_run']} not_run  (of {len(gates)})")
-    print(f"  -> {args.out.relative_to(ROOT)}")
+    try:
+        shown = args.out.relative_to(ROOT)
+    except ValueError:
+        shown = args.out  # an --out outside the repo is legitimate for an ad-hoc check
+    print(f"  -> {shown}")
     return 0
 
 

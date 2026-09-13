@@ -13,6 +13,8 @@ while read -r p; do
   # Outside the repository entirely.
   case "$abs" in
     "$root"/*) ;;
+    "$HOME"/.claude/plans/*) ;;
+    /tmp/claude-*/*) ;;
     *) hook_deny "Refusing to edit outside the repository: ${abs}
 
 Blueprint §2.3: a working repository is never an extraction or install destination (gate C20). Development service state belongs in \$LIBENR_HOME (.dev-state/)." ;;

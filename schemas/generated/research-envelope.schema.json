@@ -1,0 +1,476 @@
+{
+  "$defs": {
+    "ArtifactHandle": {
+      "additionalProperties": false,
+      "description": "A pointer to a bounded, readable artifact.",
+      "properties": {
+        "artifact_id": {
+          "description": "Stable handle, usable with `read_artifact`.",
+          "type": "string"
+        },
+        "description": {
+          "description": "What the artifact contains, so a caller can decide whether to read it.",
+          "type": "string"
+        },
+        "media_type": {
+          "description": "The artifact's media type.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.",
+          "pattern": "^library-evidence://",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "uri",
+        "media_type",
+        "description"
+      ],
+      "type": "object"
+    },
+    "Coverage": {
+      "additionalProperties": false,
+      "description": "What was actually looked at, and what was not.\n\n`ok` means successful within this scope, never complete knowledge of a library. An empty\n`search_evidence` result with `indexed: [\"public_api\"]` is a valid negative answer; the same\nresult with `missing: [\"public_api\"]` is an evidence gap. The two must never collapse.",
+      "properties": {
+        "indexed": {
+          "description": "Evidence kinds that were successfully indexed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "limitations": {
+          "description": "Known reasons this result may not generalize.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "missing": {
+          "description": "Evidence kinds that were expected but are absent.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "scope": {
+          "description": "What the result claims to cover, in prose.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scope",
+        "indexed",
+        "missing",
+        "limitations"
+      ],
+      "type": "object"
+    },
+    "Error": {
+      "additionalProperties": false,
+      "description": "A typed failure with a concrete next action.\n\nEmitted into `$defs` as `Error`; the Rust name avoids colliding with `std::error::Error` at\nevery use site. Renaming this type, or dropping the `rename`, leaves a dangling `$ref` in\nthe root conditionals -- `wire_conformance::every_ref_in_the_schema_resolves` catches that.",
+      "properties": {
+        "code": {
+          "description": "The stable code a caller can branch on.",
+          "enum": [
+            "VERSION_NOT_FOUND",
+            "AMBIGUOUS_PACKAGE",
+            "ARTIFACT_UNAVAILABLE",
+            "UNSUPPORTED_FORMAT",
+            "ENVIRONMENT_UNRESOLVED",
+            "ENVIRONMENT_MISMATCH",
+            "POLICY_DENIED",
+            "UNSUPPORTED_CAPABILITY",
+            "UPSTREAM_UNAVAILABLE",
+            "EXTRACTION_FAILED",
+            "VERIFICATION_FAILED",
+            "BUDGET_EXCEEDED",
+            "INVALID_CURSOR"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "description": "Human-readable explanation. Not a stable interface.",
+          "type": "string"
+        },
+        "next_action": {
+          "description": "What the caller should do instead. Blueprint §7.2 requires this, not just a code.",
+          "type": "string"
+        },
+        "retryable": {
+          "description": "Whether retrying the identical request could succeed.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "next_action"
+      ],
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "One supporting fact, with the provenance needed to check it.\n\nBlueprint §7.2: every entry carries an ID, class, subject, exact locator, source-version\nmatch and producer, plus a compact excerpt -- not an unexplained numeric confidence.",
+      "properties": {
+        "artifact_id": {
+          "description": "The artifact this was read out of.",
+          "type": "string"
+        },
+        "evidence_class": {
+          "description": "Which epistemic class this fact belongs to.",
+          "enum": [
+            "declared",
+            "statically_extracted",
+            "compiler_derived",
+            "typechecker_observed",
+            "runtime_observed",
+            "agent_inferred"
+          ],
+          "type": "string"
+        },
+        "evidence_id": {
+          "description": "Stable handle for citation.",
+          "type": "string"
+        },
+        "excerpt": {
+          "description": "A compact supporting quote.",
+          "type": "string"
+        },
+        "locator": {
+          "additionalProperties": true,
+          "description": "Position within the artifact. Specialized as a discriminated union per producer.",
+          "type": "object"
+        },
+        "producer": {
+          "description": "Which producer emitted this.",
+          "type": "string"
+        },
+        "producer_version": {
+          "description": "The exact producer version, for reproducibility.",
+          "type": "string"
+        },
+        "source_uri": {
+          "description": "Where the artifact came from.",
+          "format": "uri",
+          "type": "string"
+        },
+        "source_version_match": {
+          "description": "How the source's version relates to the requested one.",
+          "enum": [
+            "exact",
+            "compatible_claimed",
+            "mismatched",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "subject": {
+          "description": "What the fact is about -- a symbol path, a setting, a release.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "evidence_class",
+        "subject",
+        "artifact_id",
+        "source_uri",
+        "locator",
+        "source_version_match",
+        "producer",
+        "producer_version",
+        "excerpt"
+      ],
+      "type": "object"
+    },
+    "Freshness": {
+      "additionalProperties": false,
+      "description": "Registry freshness. Blueprint §3.3: freshness is not one timestamp.",
+      "properties": {
+        "latest_verified": {
+          "description": "Whether \"this is the latest release\" was actually revalidated. A cache hit alone is not\nevidence that a release is still latest.",
+          "type": "boolean"
+        },
+        "registry_checked_at": {
+          "description": "When the registry was last consulted, or `null` if it was not consulted at all.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_version_match": {
+          "description": "How the evidence's source version relates to the requested one.",
+          "enum": [
+            "exact",
+            "compatible_claimed",
+            "mismatched",
+            "unknown"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "registry_checked_at",
+        "source_version_match",
+        "latest_verified"
+      ],
+      "type": "object"
+    },
+    "JobHandle": {
+      "additionalProperties": false,
+      "description": "A receipt for submitted work. Never evidence that the work finished.",
+      "properties": {
+        "job_id": {
+          "description": "Durable core job identity. Distinct from the request ID: jobs are shared and reusable.",
+          "type": "string"
+        },
+        "poll_after_ms": {
+          "description": "Advisory next-poll delay. Not a completion-time guarantee.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "stage": {
+          "description": "Which stage is executing, for a caller to report progress.",
+          "type": "string"
+        },
+        "state": {
+          "description": "Where the job is now.",
+          "enum": [
+            "queued",
+            "running",
+            "succeeded",
+            "partial",
+            "failed",
+            "cancel_requested",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "state",
+        "stage",
+        "poll_after_ms"
+      ],
+      "type": "object"
+    },
+    "Pagination": {
+      "additionalProperties": false,
+      "description": "Bounded-result accounting (blueprint §7.3).\n\nA first page is not the whole result set. A cursor binds the query digest, snapshot, filters\nand sort, so a mismatched cursor is rejected with `INVALID_CURSOR` rather than producing an\ninconsistent page.",
+      "properties": {
+        "next_cursor": {
+          "description": "Opaque cursor for the next page, or `null` at the end.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "returned": {
+          "description": "How many entries this page carries.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_matches": {
+          "description": "Total matches when known. `null` means \"not counted\", never \"zero\".",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "truncated": {
+          "description": "Whether output was cut short by a budget.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "returned",
+        "total_matches",
+        "truncated",
+        "next_cursor"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "pending"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          },
+          "job": {
+            "$ref": "#/$defs/JobHandle"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "$ref": "#/$defs/Error"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok",
+              "partial"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "description": "The response envelope every tool returns.\n\n`status`, `job` and `error` are private: [`Envelope::new`] and the [`Outcome`] enum are the\nonly way to populate them, which is what makes the cross-field rule a type-level fact rather\nthan a convention.",
+  "properties": {
+    "artifacts": {
+      "description": "Bounded artifacts available for reading.",
+      "items": {
+        "$ref": "#/$defs/ArtifactHandle"
+      },
+      "type": "array"
+    },
+    "context_id": {
+      "description": "The research context, or `null`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "coverage": {
+      "$ref": "#/$defs/Coverage",
+      "description": "What was looked at, and what was not."
+    },
+    "data": {
+      "additionalProperties": true,
+      "description": "Tool-specific payload.",
+      "type": "object"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Error"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "description": "Supporting facts with provenance.",
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "type": "array"
+    },
+    "freshness": {
+      "$ref": "#/$defs/Freshness",
+      "description": "Registry freshness."
+    },
+    "job": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/JobHandle"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pagination": {
+      "$ref": "#/$defs/Pagination",
+      "description": "Result-bounding accounting."
+    },
+    "request_id": {
+      "description": "Opaque per-request identifier.",
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema_version": {
+      "description": "Always `1.0` for this contract.",
+      "enum": [
+        "1.0"
+      ],
+      "type": "string"
+    },
+    "snapshot_id": {
+      "description": "The snapshot read, or `null`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "description": "The four result statuses (blueprint §7.2).\n\nThe values are, in order: `ok`, `partial`, `pending`, `error`. `ok` means successful within\nthe declared coverage, not complete knowledge; `partial` carries usable evidence *and* gaps.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
+      "enum": [
+        "ok",
+        "partial",
+        "pending",
+        "error"
+      ],
+      "type": "string"
+    },
+    "summary": {
+      "description": "One-line account of what this result establishes.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "status",
+    "summary",
+    "context_id",
+    "snapshot_id",
+    "data",
+    "coverage",
+    "freshness",
+    "evidence",
+    "artifacts",
+    "pagination",
+    "job",
+    "error"
+  ],
+  "title": "LibraryEnrichmentResponseEnvelope",
+  "type": "object"
+}

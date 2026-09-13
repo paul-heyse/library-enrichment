@@ -38,6 +38,44 @@ public-api = "0.52.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+# JSON Schema generation from the authoritative Rust wire types (blueprint §6.3). The
+# `emit-schemas` binary is the only consumer; schemas/generated/ is never hand-edited.
+#
+# Verified 2026-09-13: resolves 6 new crates -- schemars, schemars_derive, dyn-clone,
+# ref-cast, ref-cast-impl, serde_derive_internals -- each a single version, all MIT or
+# `MIT OR Apache-2.0`, all already on deny.toml's licence allowlist. schemars_derive,
+# ref-cast-impl and serde_derive_internals all declare `syn = "3"`, so they unify onto the
+# 3.0.5 already in the lock; no NEW duplicate major, and no new deny.toml skip is required.
+#
+# Do NOT enable the `preserve_order` feature. It turns on serde_json/preserve_order for the
+# whole workspace through feature unification -- DataFusion included -- and swaps the BTreeMap
+# key ordering that makes schema emission byte-reproducible for `git diff --exit-code`.
+schemars = "1.2.2"
+
+# Already in Cargo.lock transitively (tokio via DataFusion/object_store, thiserror via
+# public-api), so promoting them to direct dependencies adds no new crate except tokio/net's
+# mio + socket2. Verified 2026-09-13 with `cargo deny check bans`: still one version of each,
+# no new skip required.
+#
+# The daemon is the single writer and job owner (blueprint §2.1) and will need this runtime for
+# Phase 4 job supervision and Phase 6 single-flight; writing the accept loop on it now avoids
+# rewriting it then.
+tokio = { version = "1.53.1", features = [
+  "rt-multi-thread",
+  "macros",
+  "net",
+  "io-util",
+  "time",
+  "signal",
+  "sync",
+  "fs",
+] }
+thiserror = "2.0.20"
+
+# Internal crates carry an explicit version alongside the path. A bare `{ path = ... }` is a
+# wildcard requirement, and deny.toml sets `wildcards = "deny"`.
+enrichment-core = { path = "crates/enrichment-core", version = "0.0.0" }
+
 [profile.dev]
 # Evidence snapshots get large; debug info dominates link time without helping much here.
 debug = 1

@@ -114,17 +114,28 @@ fmt-check:
 typecheck:
     @if [ -d python ]; then ty check python; else echo "typecheck: no python/ yet (phase 0)"; fi
 
+# Writes docs/reports/logs/nextest.json. That file is the ONLY thing that can promote a gate
+# past not_run: scripts/acceptance-report.py joins it against tests/gates.toml, and
+# scripts/acceptance-check.py refuses any `passed` gate without a log_path. libtest-json is
+# still experimental in nextest 0.9.143, hence the opt-in env var.
 [doc("Run the Rust test suite, including doctests (nextest does not run them).")]
 [group('gate')]
 test-rust:
-    @if [ -f Cargo.toml ]; then cargo nextest run --workspace && cargo test --doc --workspace; \
-     else echo "test-rust: no Cargo workspace yet (phase 0)"; fi
+    @mkdir -p "{{ root }}/docs/reports/logs"
+    @NEXTEST_EXPERIMENTAL_LIBTEST_JSON=1 cargo nextest run --workspace \
+        --message-format libtest-json-plus > "{{ root }}/docs/reports/logs/nextest.json"
+    @cargo test --doc --workspace
 
+# Writes docs/reports/logs/pytest.json, for the same reason as test-rust above.
 [doc("Run the Python test suite.")]
 [group('gate')]
 test-python:
-    @if [ -d tests ] && [ -f pyproject.toml ]; then pytest; \
-     else echo "test-python: no Python test target yet (phase 0)"; fi
+    @mkdir -p "{{ root }}/docs/reports/logs"
+    # The contract and e2e tiers drive the real daemon binary. Without this they skip, and
+    # acceptance-report then reports their gates `blocked` -- a correct report of a needlessly
+    # incomplete run.
+    @cargo build --quiet -p enrichment-daemon --bin library-enrichmentd
+    @pytest --json-report --json-report-file="{{ root }}/docs/reports/logs/pytest.json"
 
 [doc("Run every test tier that does not require the network.")]
 [group('gate')]
