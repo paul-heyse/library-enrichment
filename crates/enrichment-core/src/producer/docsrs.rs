@@ -270,11 +270,39 @@ struct RawMetadata {
     docs: Option<RawDocs>,
 }
 
+/// A manifest field that may be inherited from `[workspace.package]` rather than stated here.
+///
+/// `version.workspace = true` is how most multi-crate repositories are written, so declaring
+/// these as `Option<String>` made the whole manifest a **parse error** — not a wrong version, but
+/// a hard failure of the enclosing resolve. In revision mode that reads the repository's own
+/// manifest rather than the normalized one `cargo package` publishes, so it is the ordinary case,
+/// not an exotic one.
+///
+/// Resolving the inherited value would mean reading the workspace root's `[workspace.package]`,
+/// which this producer does not have and which is a larger change. Reporting the field as
+/// **absent** is the honest answer available here: absent means "this manifest does not state
+/// it", which is exactly true, and the revision path already tells a caller that a manifest
+/// version does not establish a published release association.
+#[derive(Deserialize)]
+#[serde(transparent)]
+struct Inheritable(toml::Value);
+
+impl Inheritable {
+    /// The value this manifest states, or `None` when it inherits or omits one.
+    ///
+    /// Anything that is not a string reports absent. `{ workspace = true }` is the case that
+    /// matters, and treating every non-string the same way is the conservative reading: a field
+    /// this producer cannot interpret is one the manifest did not state *to it*.
+    fn stated(&self) -> Option<String> {
+        self.0.as_str().map(str::to_owned)
+    }
+}
+
 #[derive(Deserialize, Default)]
 #[serde(default)]
 struct RawPackage {
-    name: Option<String>,
-    version: Option<String>,
+    name: Option<Inheritable>,
+    version: Option<Inheritable>,
     metadata: Option<RawMetadata>,
 }
 
@@ -333,13 +361,14 @@ pub fn manifest_facts(manifest_toml: &str) -> Result<ManifestFacts, toml::de::Er
         },
         None => DocsRsMetadata::default(),
     };
+    let package_name = package.name.as_ref().and_then(Inheritable::stated);
     let lib_name = raw
         .lib
         .and_then(|l| l.name)
-        .or_else(|| package.name.as_ref().map(|n| n.replace('-', "_")));
+        .or_else(|| package_name.as_ref().map(|n| n.replace('-', "_")));
     Ok(ManifestFacts {
-        package_name: package.name,
-        package_version: package.version,
+        package_name,
+        package_version: package.version.as_ref().and_then(Inheritable::stated),
         lib_name,
         features: raw.features,
         docs_rs,
@@ -349,6 +378,44 @@ pub fn manifest_facts(manifest_toml: &str) -> Result<ManifestFacts, toml::de::Er
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_workspace_inherited_version_reports_absent_rather_than_failing_the_manifest() {
+        // The failure this replaces: `version.workspace = true` is a table, and declaring the
+        // field as `Option<String>` made the whole manifest a parse error -- which in revision
+        // mode fails the enclosing resolve. Most multi-crate repositories are written this way,
+        // and revision mode reads the repository's manifest rather than the normalized one
+        // `cargo package` publishes, so this is the ordinary case.
+        let facts = manifest_facts(
+            "[package]\nname = \"demo\"\nversion.workspace = true\nedition.workspace = true\n",
+        )
+        .expect("an inherited version is not a malformed manifest");
+        assert_eq!(facts.package_name.as_deref(), Some("demo"));
+        assert_eq!(
+            facts.package_version, None,
+            "absent is the honest answer: this manifest states no version, and guessing one \
+             would attribute the workspace root's version to a crate that did not claim it"
+        );
+        // The derived lib name still follows from the stated package name.
+        assert_eq!(facts.lib_name.as_deref(), Some("demo"));
+
+        // The long form Cargo also accepts.
+        let facts = manifest_facts("[package]\nname = \"demo\"\nversion = { workspace = true }\n")
+            .expect("the table form parses too");
+        assert_eq!(facts.package_version, None);
+
+        // An inherited *name* is absent rather than a parse error for the same reason.
+        let facts = manifest_facts("[package]\nname.workspace = true\nversion = \"1.2.3\"\n")
+            .expect("an inherited name is not a malformed manifest");
+        assert_eq!(facts.package_name, None);
+        assert_eq!(facts.package_version.as_deref(), Some("1.2.3"));
+        assert_eq!(facts.lib_name, None, "no name to derive one from");
+
+        // And a stated version is still read, which is what the crates.io path always sees.
+        let facts =
+            manifest_facts("[package]\nname = \"demo\"\nversion = \"4.5.6\"\n").expect("facts");
+        assert_eq!(facts.package_version.as_deref(), Some("4.5.6"));
+    }
 
     #[test]
     fn the_json_url_has_the_measured_shape() {

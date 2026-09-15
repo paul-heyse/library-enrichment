@@ -18,21 +18,32 @@ phase = 1
 kind = "fixture"
 scenario = "Resolve exact Rust version while a newer release exists"
 assertion = "Result retains requested version; upstream version is separate."
-tests = []
+tests = [
+  "enrichment-daemon::resolve_fixture$resolve_keeps_the_requested_version_while_a_newer_release_exists",
+]
 
 [gates.R02]
 phase = 1
 kind = "fixture"
 scenario = "Hosted rustdoc JSON available"
 assertion = "API index succeeds without invoking Cargo compilation."
-tests = []
+tests = [
+  "enrichment-daemon::resolve_fixture$a_release_with_hosted_json_stores_it_and_never_runs_cargo",
+  "enrichment-daemon::retrieval_fixture$hosted_json_indexes_the_api_without_compiling_the_crate",
+  "tests/e2e/test_retrieval_fixture.py::test_every_tool_answers_cold_then_offline_from_the_same_snapshot",
+  "tests/live/test_rust_live.py::test_real_rust_crate_cold_then_offline",
+]
 
 [gates.R03]
 phase = 1
 kind = "fixture"
 scenario = "Hosted rustdoc JSON missing"
 assertion = "Useful metadata remains, coverage is partial, fallback is explicit."
-tests = []
+tests = [
+  "tests/e2e/test_retrieval_fixture.py::test_mismatched_hosted_version_is_not_admitted_as_requested_api",
+  "enrichment-daemon::resolve_fixture$a_release_without_hosted_json_is_partial_with_the_fallback_named",
+  "enrichment-daemon::retrieval_fixture$missing_json_publishes_readable_metadata_and_source",
+]
 
 [gates.R04]
 # Re-scoped from phase 1 to phase 0. The blueprint's own Phase-0 gate (§13) ends with "an
@@ -85,91 +96,131 @@ phase = 1
 kind = "fixture"
 scenario = "Default vs optional feature"
 assertion = "Separate observed availability/configuration; no invented universal feature predicate."
-tests = []
+tests = [
+  "enrichment-daemon::retrieval_fixture$feature_gated_items_follow_the_documented_build_configuration",
+  "enrichment-daemon::retrieval_fixture$availability_is_reported_against_the_observed_configuration",
+  "enrichment-core::enrichment_core$identity::tests::omitted_and_explicit_empty_features_have_different_identities",
+]
 
 [gates.R06]
 phase = 1
 kind = "fixture"
 scenario = "Target-gated item"
 assertion = "Target differences are identified before making availability claims."
-tests = []
+tests = [
+  "enrichment-daemon::retrieval_fixture$a_target_difference_is_identified_before_any_availability_claim",
+]
 
 [gates.R07]
 phase = 1
 kind = "fixture"
 scenario = "Re-exported public symbol"
 assertion = "Public path and original definition are linked without duplicate capability counts."
-tests = []
+tests = [
+  "enrichment-daemon::retrieval_fixture$a_reexport_is_linked_to_its_definition_and_counted_once",
+]
 
 [gates.R08]
-phase = 1
+# ADR-0011: comparison is the Phase-3 slice.
+phase = 3
 kind = "fixture"
 scenario = "No public API change, behavior-only release note"
 assertion = "Comparison surfaces the relevant behavior note."
-tests = []
+tests = [
+  "enrichment-daemon::retrieval_fixture$comparison_surfaces_behavior_only_release_notes_with_unchanged_rust_api",
+  "enrichment-daemon::retrieval_fixture$same_release_configuration_differences_are_separate_from_release_changes",
+]
 
 [gates.R09]
 phase = 4
 kind = "fixture"
 scenario = "Rust compile probe passes on nightly but fails on project stable"
 assertion = "Result does not claim project compatibility."
-tests = []
+tests = [
+  "tests/e2e/test_rustdoc_fallback.py::test_a_nightly_documentation_build_does_not_claim_stable_compatibility",
+  "enrichment-daemon::execution_boundary$identical_rust_consumer_and_lock_fail_stable_and_pass_dated_nightly",
+]
 
 [gates.R10]
 phase = 4
 kind = "fixture"
 scenario = "Build/proc-macro activity requested without sandbox"
 assertion = "Policy denial, not host execution."
-tests = []
+tests = [
+  "tests/e2e/test_verification_scope.py::test_build_activity_without_a_working_sandbox_is_policy_denied",
+  "tests/e2e/test_rustdoc_fallback.py::test_build_and_proc_macro_activity_without_a_sandbox_is_policy_denied",
+  "tests/e2e/test_rustdoc_fallback.py::test_asking_for_a_local_build_without_the_build_profile_is_denied",
+]
 
 [gates.P01]
 phase = 2
 kind = "fixture"
 scenario = "Distribution/import-name mismatch"
 assertion = "Correct import root is discovered or ambiguity returned."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_python_distribution_mapping_conflicts_namespaces_and_offline",
+  "tests/live/test_python_live.py::test_real_python_distribution_cold_then_offline",
+]
 
 [gates.P02]
 phase = 2
 kind = "fixture"
 scenario = "Static extraction of import-side-effect fixture"
 assertion = "Side-effect marker is absent; Griffe inspection is disabled."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_python_distribution_mapping_conflicts_namespaces_and_offline",
+  "tests/contract/test_python_worker.py::test_separate_worker_does_not_execute_target_or_use_its_cwd",
+]
 
 [gates.P03]
 phase = 2
 kind = "fixture"
 scenario = "`.py` and `.pyi` disagreement"
 assertion = "Separate source/stub observations with provenance; no silent overwrite."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_python_distribution_mapping_conflicts_namespaces_and_offline",
+  "tests/contract/test_python_worker.py::test_source_stub_overloads_exports_and_aliases_remain_separate",
+  "enrichment-store::typed_arrow$nested_observations_round_trip_through_parquet_and_datafusion",
+  "enrichment-daemon::retrieval_fixture$corrupted_stored_observations_are_errors_across_retrieval_boundaries",
+]
 
 [gates.P04]
 phase = 2
 kind = "fixture"
 scenario = "Extension-only package"
 assertion = "Useful stubs/docs are returned; missing signatures/source are explicit."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_extension_only_package_returns_stubs_and_explicit_runtime_gaps[with-stubs]",
+  "tests/e2e/test_python_fixture.py::test_extension_only_package_returns_stubs_and_explicit_runtime_gaps[without-stubs]",
+]
 
 [gates.P05]
 phase = 2
 kind = "fixture"
 scenario = "Namespace package"
 assertion = "Available import roots and partial package coverage are represented."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_python_distribution_mapping_conflicts_namespaces_and_offline",
+]
 
 [gates.P06]
-phase = 2
+# ADR-0011: comparison is the Phase-3 slice.
+phase = 3
 kind = "fixture"
 scenario = "Added function with no compatibility break"
 assertion = "Normalized additive diff detects it independently of Griffe break checks."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_added_python_function_is_discovered_independently_of_break_checks",
+]
 
 [gates.P07]
 phase = 2
 kind = "fixture"
 scenario = "Documented inventory omits a public API"
 assertion = "The API is not automatically classified as nonexistent/private."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_python_distribution_mapping_conflicts_namespaces_and_offline",
+]
 
 [gates.P08]
 phase = 4
@@ -188,7 +239,9 @@ phase = 4
 kind = "fixture"
 scenario = "ty implementation lookup on a nominal base class or @abstractmethod"
 assertion = "Mapped subclass locations are returned; no UNSUPPORTED_CAPABILITY branch is exercised for this method."
-tests = []
+tests = [
+  "tests/e2e/test_semantics_fixture.py::test_nominal_implementation_lookup_returns_mapped_subclass_locations",
+]
 supersedes = "P08"
 adr = "0005"
 
@@ -196,8 +249,10 @@ adr = "0005"
 phase = 4
 kind = "fixture"
 scenario = "ty implementation lookup on a typing.Protocol"
-assertion = "Only the protocol's own declaration is returned; structural implementors are absent, and the result is recorded as incomplete evidence rather than as no implementors."
-tests = []
+assertion = "The protocol's own declaration and its explicitly declared subclasses are returned; structurally compatible implementors are absent, and the result is recorded as incomplete evidence rather than as no implementors."
+tests = [
+  "tests/e2e/test_semantics_fixture.py::test_a_protocol_lookup_is_recorded_as_incomplete_not_as_no_implementors",
+]
 supersedes = "P08"
 adr = "0005"
 
@@ -206,105 +261,154 @@ phase = 4
 kind = "fixture"
 scenario = "Typecheck success but runtime assertion failure"
 assertion = "Distinct outcomes and scopes are preserved."
-tests = []
+tests = [
+  "tests/e2e/test_verification_scope.py::test_typecheck_success_and_runtime_failure_remain_distinct_observations",
+]
 
 [gates.P10]
 phase = 4
 kind = "fixture"
 scenario = "Worker uses service env accidentally"
 assertion = "Test fails; selected consumer interpreter/dependencies must be recorded."
-tests = []
+tests = [
+  "tests/e2e/test_verification_scope.py::test_the_probe_records_its_own_interpreter_and_never_the_service_environment",
+]
 
 [gates.C01]
 phase = 3
 kind = "fixture"
 scenario = "A first search returns zero matches"
 assertion = "Response distinguishes searched scope from whole-library absence."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_namespace_search_and_cursor_scope_remain_deterministic",
+]
 
 [gates.C02]
 phase = 3
 kind = "fixture"
 scenario = "Requested result exceeds byte budget"
 assertion = "Valid bounded JSON, explicit truncation, stable cursor/artifact pointer."
-tests = []
+tests = [
+  "enrichment-daemon::retrieval_fixture$escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievable",
+  "tests/e2e/test_python_fixture.py::test_mcp_budget_overflow_artifact_recovers_exact_escaped_query",
+  "tests/e2e/test_python_fixture.py::test_complete_stdio_frames_have_one_envelope_and_measured_allowance",
+]
 
 [gates.C03]
 phase = 3
 kind = "fixture"
 scenario = "Cursor reused after query/snapshot change"
 assertion = "`INVALID_CURSOR`; no inconsistent pagination."
-tests = []
+# The scenario has two halves and the e2e test proves one. Changing the `area` filter is the
+# *query* change; the *snapshot* change is proved by the core test below, which asserts a cursor
+# decoded against a different snapshot id is `CursorError::Mismatch { field: "snapshot or
+# artifact" }`. Registering both is what makes this gate cover its frozen scenario rather than
+# most of it.
+tests = [
+  "tests/e2e/test_python_fixture.py::test_namespace_search_and_cursor_scope_remain_deterministic",
+  "enrichment-core::enrichment_core$search::tests::cursors_bind_scope_query_and_sort",
+]
 
 [gates.C04]
 phase = 6
 kind = "fixture"
 scenario = "Two clients request the same extraction"
 assertion = "One producer job; both receive equivalent evidence."
-tests = []
+tests = [
+  "tests/e2e/test_operations.py::test_two_clients_asking_for_one_extraction_get_one_producer_run",
+]
 
 [gates.C05]
 phase = 6
 kind = "fixture"
 scenario = "One caller cancels a shared job"
 assertion = "Other caller's required work remains available."
-tests = []
+tests = [
+  "tests/e2e/test_operations.py::test_one_caller_cancelling_leaves_another_callers_work_alone[verify]",
+  "tests/e2e/test_operations.py::test_one_caller_cancelling_leaves_another_callers_work_alone[inspect]",
+]
 
 [gates.C06]
 phase = 6
 kind = "fixture"
 scenario = "Daemon crashes during publication"
 assertion = "No half-published snapshot is visible; staging is recovered."
-tests = []
+tests = [
+  "tests/e2e/test_operations.py::test_a_crash_during_publication_leaves_no_half_published_snapshot",
+]
 
 [gates.C07]
 phase = 6
 kind = "fixture"
 scenario = "Later enrichment creates a new snapshot"
 assertion = "Previously pinned snapshot remains readable and unchanged."
-tests = []
+tests = [
+  "tests/e2e/test_operations.py::test_a_later_snapshot_leaves_a_pinned_one_readable_and_unchanged",
+]
 
 [gates.C08]
 phase = 3
-kind = "live"
+kind = "fixture"
 scenario = "Upstream is unavailable during latest request"
 assertion = "`latest_verified=false`; cached version not described as currently latest."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_unavailable_latest_does_not_promote_cached_release_to_current_latest",
+]
 
 [gates.C09]
 phase = 3
-kind = "live"
+kind = "fixture"
 scenario = "Mutable documentation changes without package release"
 assertion = "New artifact/snapshot tracked; original provenance preserved."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_mutable_docs_revalidate_without_changing_release_and_keep_old_snapshot",
+]
 
 [gates.C10]
 phase = 4
 kind = "fixture"
 scenario = "Package source contains instructions to export credentials"
 assertion = "Content is treated as evidence, never executed as instructions."
-tests = []
+tests = [
+  "tests/e2e/test_untrusted_content.py::test_a_package_that_tells_the_reader_to_export_credentials_is_only_read",
+]
 
 [gates.C11]
 phase = 4
 kind = "fixture"
 scenario = "Malicious archive path or symlink"
 assertion = "Extraction rejected before escaping scratch directory."
-tests = []
+tests = [
+  "enrichment-core::enrichment_core$archive::tests::a_parent_directory_component_is_refused_before_any_write",
+  "enrichment-core::enrichment_core$archive::tests::an_absolute_path_is_refused",
+  "enrichment-core::enrichment_core$archive::tests::symlinks_and_hard_links_are_refused",
+  "enrichment-core::enrichment_core$archive::tests::device_files_and_fifos_are_refused",
+  "enrichment-core::enrichment_core$archive::tests::an_oversized_entry_is_refused_from_its_header",
+  "enrichment-core::enrichment_core$producer::python::archive::tests::wheel_extraction_rejects_escape_and_enforces_actual_bounds",
+]
 
 [gates.C12]
 phase = 4
 kind = "fixture"
 scenario = "Artifact reader receives a host path"
 assertion = "Rejected; only service-issued handles are accepted."
-tests = []
+tests = [
+  "tests/e2e/test_untrusted_content.py::test_the_artifact_reader_accepts_only_service_issued_handles[/etc/passwd-an absolute host path]",
+  "tests/e2e/test_untrusted_content.py::test_the_artifact_reader_accepts_only_service_issued_handles[../../etc/passwd-a traversing relative path]",
+  "tests/e2e/test_untrusted_content.py::test_the_artifact_reader_accepts_only_service_issued_handles[file:///etc/passwd-a file URI]",
+  "tests/e2e/test_untrusted_content.py::test_the_artifact_reader_accepts_only_service_issued_handles[library-evidence://artifacts/art_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-a resource URI rather than a handle]",
+  "tests/e2e/test_untrusted_content.py::test_the_artifact_reader_accepts_only_service_issued_handles[art_ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff-a well-formed handle that was never issued]",
+  "tests/e2e/test_untrusted_content.py::test_an_empty_handle_is_refused_before_the_daemon_is_asked",
+]
 
 [gates.C13]
 phase = 1
 kind = "fixture"
 scenario = "Tool runs from an unrelated current directory"
 assertion = "Correct service config/state used; cwd unchanged."
-tests = []
+tests = [
+  "tests/e2e/test_retrieval_fixture.py::test_tools_run_from_an_unrelated_directory_and_leave_it_untouched",
+]
 
 [gates.C14]
 phase = 0
@@ -349,28 +453,37 @@ phase = 3
 kind = "fixture"
 scenario = "Producer fails after some evidence succeeds"
 assertion = "`partial` with gaps, not empty `ok` or total evidence loss."
-tests = []
+tests = [
+  "tests/e2e/test_python_fixture.py::test_failed_worker_preserves_acquired_source_and_documentation",
+]
 
 [gates.C16]
 phase = 4
 kind = "fixture"
 scenario = "Exact environment becomes resolved after initial declaration"
 assertion = "New derived context; old ID semantics unchanged."
-tests = []
+tests = [
+  "tests/e2e/test_verification_scope.py::test_a_resolved_environment_derives_a_readable_context_and_leaves_the_original",
+]
 
 [gates.C17]
 phase = 4
 kind = "fixture"
 scenario = "Signature is present in normalized API"
 assertion = "Inspection does not start LSP unnecessarily."
-tests = []
+tests = [
+  "tests/e2e/test_semantics_fixture.py::test_a_signature_read_starts_no_server_and_two_semantic_reads_share_one[1]",
+  "tests/e2e/test_semantics_fixture.py::test_a_signature_read_starts_no_server_and_two_semantic_reads_share_one[2]",
+]
 
 [gates.C18]
 phase = 4
 kind = "fixture"
 scenario = "A long operation returns pending"
 assertion = "Client can finish via ordinary job-control tools without native MCP tasks."
-tests = []
+tests = [
+  "tests/e2e/test_verification_fixture.py::test_a_long_operation_returns_pending_and_finishes_through_ordinary_tools",
+]
 
 [gates.C19]
 phase = 0
@@ -458,46 +571,66 @@ phase = 4
 kind = "fixture"
 scenario = "Core operations touch a canary working repo"
 assertion = "Before/after tree hashes are identical."
-tests = []
+tests = [
+  "tests/e2e/test_canary_repository.py::test_core_operations_leave_a_canary_repository_byte_identical[static]",
+  "tests/e2e/test_canary_repository.py::test_core_operations_leave_a_canary_repository_byte_identical[static+build]",
+  "tests/e2e/test_canary_repository.py::test_core_operations_leave_a_canary_repository_byte_identical[static+build+runtime]",
+  "tests/e2e/test_canary_repository.py::test_completed_rust_operations_leave_canary_unchanged[static]",
+  "tests/e2e/test_canary_repository.py::test_completed_rust_operations_leave_canary_unchanged[static+build]",
+  "tests/e2e/test_canary_repository.py::test_completed_rust_operations_leave_canary_unchanged[static+build+runtime]",
+
+]
 
 [gates.A01]
 phase = 5
 kind = "client"
 scenario = "Codex real stdio connection"
 assertion = "Actual service-status, resolve, search, read calls succeed; capture trace."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a01_codex_connects_over_real_stdio_and_calls_the_service",
+]
 
 [gates.A02]
 phase = 5
 kind = "client"
 scenario = "Claude Code real stdio connection"
 assertion = "Same contract as Codex; capture trace."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a02_claude_code_connects_over_real_stdio_and_calls_the_service",
+]
 
 [gates.A03]
 phase = 5
 kind = "client"
 scenario = "Skill on unfamiliar library design question"
 assertion = "Breadth pass yields shortlist; targeted evidence supports a deployment brief."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a03_an_unfamiliar_library_question_goes_breadth_then_depth",
+]
 
 [gates.A04]
 phase = 5
 kind = "client"
 scenario = "Context7 documentation has unknown/mismatched version"
 assertion = "Agent narrows or verifies; never silently uses it as exact proof."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a04_a_version_mismatched_context7_answer_is_narrowed_or_verified",
+]
 
 [gates.A05]
 phase = 5
 kind = "client"
 scenario = "Known symbol question"
 assertion = "Agent avoids unnecessary full overview/whole-library enumeration."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a05_a_known_symbol_question_does_not_enumerate_the_library",
+]
 
 [gates.A06]
 phase = 5
 kind = "client"
 scenario = "Skill installed without enrichment service"
 assertion = "Agent states unavailable capability; no fabricated tool result."
-tests = []
+tests = [
+  "tests/client/test_client_acceptance.py::test_a06_an_unavailable_service_is_stated_rather_than_invented",
+]

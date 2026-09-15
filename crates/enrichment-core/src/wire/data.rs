@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::evidence::{
     Artifact, Availability, EvidenceFragment, FragmentKind, Gap, ObservedConfiguration,
-    Relationship, SnapshotCounts, SnapshotManifest, Symbol, SymbolKind,
+    SnapshotCounts, Symbol, SymbolKind,
 };
 use crate::identity::{Context, Environment, Release};
 use crate::producer::ProducerRun;
@@ -81,7 +81,10 @@ pub struct ResolveData {
     /// The maintainer's docs.rs build configuration, read from the crate manifest.
     pub observed_configuration: Option<DocsRsMetadata>,
     /// Hosted rustdoc JSON availability.
-    pub hosted_rustdoc_json: HostedJsonReport,
+    pub hosted_rustdoc_json: Option<HostedJsonReport>,
+    /// Distribution metadata and file inventory, only for Python.
+    #[serde(default)]
+    pub python: Option<crate::producer::python::Distribution>,
     /// The snapshot published from this resolution, when normalization succeeded.
     pub snapshot: Option<SnapshotSummary>,
     /// Every artifact this resolution stored or reused.
@@ -134,7 +137,7 @@ pub struct OverviewData {
     /// The snapshot read.
     pub snapshot: SnapshotSummary,
     /// The documentation build's configuration.
-    pub observed_configuration: ObservedConfiguration,
+    pub observed_configuration: Option<ObservedConfiguration>,
     /// The subtree the overview was narrowed to, when any.
     pub area: Option<String>,
     /// Distinct definitions by kind across the area.
@@ -215,6 +218,9 @@ pub struct SearchData {
     pub tokens: Vec<String>,
     /// The evidence families searched.
     pub kinds: Vec<String>,
+    /// Namespace subtree that was searched, when requested.
+    #[serde(default)]
+    pub area: Option<String>,
     /// The hits on this page.
     pub hits: Vec<SearchHit>,
     /// The scoring legend, in rank order.
@@ -225,7 +231,30 @@ pub struct SearchData {
     pub offset: u64,
 }
 
-/// The `inspect_symbol` payload.
+/// A selected projection of an admitted API observation, never a replacement stored fact.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ApiObservationProjection {
+    /// Identity of the complete admitted fact, not a hash of this query projection.
+    pub observation_id: String,
+    pub subject: crate::evidence::relational::SubjectRef,
+    pub origin: crate::evidence::relational::ApiOrigin,
+    pub environment_id: String,
+    pub payload: crate::evidence::relational::ApiPayload,
+    pub source: crate::evidence::relational::FactSource,
+    /// False means docs were omitted by projection; it does not assert absent documentation.
+    pub docs_included: bool,
+}
+
+/// One exact definition a caller can select when a public path is ambiguous.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct InspectionCandidate {
+    pub path: String,
+    pub definition_id: String,
+    pub kind: SymbolKind,
+    pub qualifier: Option<String>,
+}
+
+/// Bounded inspection payload with independently qualified observation projections.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct InspectData {
     /// The symbol, when one was selected. Its `docs` are bounded here.
@@ -234,18 +263,24 @@ pub struct InspectData {
     pub docs_truncated: bool,
     /// Other public paths to the same definition.
     pub also_at: Vec<String>,
-    /// Candidate paths when the reference was ambiguous or unqualified.
-    pub candidates: Vec<String>,
+    /// Distinct selectable definitions; public paths alone may collide across kinds.
+    pub candidates: Vec<InspectionCandidate>,
     /// The aspects actually returned.
     pub aspects: Vec<String>,
     /// What can and cannot be said about availability.
     pub availability: Option<Availability>,
     /// Typed edges touching the symbol.
-    pub relationships: Vec<Relationship>,
+    pub relationships: Vec<crate::evidence::relational::RelationshipObservation>,
+    /// Qualified projections; complete immutable observations remain in the snapshot.
+    pub observations: Vec<ApiObservationProjection>,
     /// Fragments about the symbol, bounded.
     pub fragments: Vec<EvidenceFragment>,
     /// Source excerpt at `source` depth.
     pub source: Option<SourceExcerpt>,
+    /// Retained execution facts selected natively by symbol/document and exact scope.
+    pub execution_observations: Vec<crate::evidence::execution::ExecutionObservation>,
+    /// Actual attempt attribution for an execution job result.
+    pub producer_runs: Vec<crate::producer::ProducerRun>,
 }
 
 /// How a slice is encoded.
@@ -286,16 +321,56 @@ pub struct ArtifactSliceData {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ManifestData {
     /// The immutable manifest as published.
-    pub manifest: SnapshotManifest,
+    pub manifest: crate::evidence::snapshot::EvidenceManifest,
     /// Whether this snapshot is the context's current one.
     pub is_current: bool,
+    /// Operational attribution from the catalog generation pinned by this request.
+    pub producer_runs: Vec<crate::producer::ProducerRun>,
+    pub catalog_generation: u64,
+}
+
+/// Identity of one side of an immutable comparison.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ComparisonSide {
+    pub context_id: String,
+    pub snapshot_id: String,
+    pub release: Release,
+    pub environment: Environment,
+}
+
+/// A changed environment/configuration field, separate from release changes.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct ConfigurationDifference {
+    pub field: String,
+    pub before: serde_json::Value,
+    pub after: serde_json::Value,
+}
+
+/// An observed diff with explicit completeness and environment confounders.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct CompareData {
+    pub before: ComparisonSide,
+    pub after: ComparisonSide,
+    pub comparable: bool,
+    pub same_release: bool,
+    pub configuration_differences: Vec<ConfigurationDifference>,
+    pub confounders: Vec<String>,
+    pub scopes: Vec<crate::compare::Scope>,
+    pub api_complete: bool,
+    pub total_changes: u64,
+    pub changes: Vec<crate::compare::Change>,
+    pub offset: u64,
 }
 
 /// Every tool payload, for schema emission. Never sent on the wire as a union.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "tool", rename_all = "snake_case")]
 #[schemars(rename = "LibraryEnrichmentToolData")]
 pub enum ToolData {
+    VerifyUsage(Box<crate::execution::VerificationData>),
+    JobControl(Box<crate::execution::JobData>),
+    /// `compare_releases`.
+    CompareReleases(Box<CompareData>),
     /// `resolve_library`.
     ResolveLibrary(Box<ResolveData>),
     /// `library_overview`.
@@ -308,6 +383,8 @@ pub enum ToolData {
     ReadArtifact(Box<ArtifactSliceData>),
     /// The snapshot manifest resource.
     SnapshotManifest(Box<ManifestData>),
+    /// `service_status`.
+    ServiceStatus(Box<super::status::StatusData>),
 }
 
 /// The tool payload schema, canonicalized like the envelope schema.

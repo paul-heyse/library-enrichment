@@ -1,484 +1,851 @@
-//! Structured retrieval over a published snapshot with DataFusion (blueprint §1.1, §7.1).
-//!
-//! A [`SnapshotReader`] registers the snapshot's Parquet tables in a `SessionContext` and
-//! answers the questions the research tools ask: the faceted overview, exact and prefix
-//! symbol lookups, candidate rows for lexical search, and the fragments and edges around one
-//! symbol. Every filter is a bound parameter or a DataFrame expression, never interpolated
-//! text, so a caller-supplied string is only ever data.
-
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
-
-use datafusion::common::ScalarValue;
-use datafusion::error::DataFusionError;
-use datafusion::prelude::{ParquetReadOptions, SessionConfig, SessionContext, col, lit};
-use enrichment_core::evidence::{
-    EvidenceFragment, FragmentKind, Relationship, SnapshotManifest, Symbol, SymbolKind,
+//! Bounded operation projections over one admitted, catalog-pinned snapshot.
+use crate::{
+    catalog_generation::PinnedCatalog,
+    projection,
+    repository::{EvidenceRepository, OpenedSnapshot},
+    runtime::QueryRuntime,
 };
-use enrichment_core::identity::SnapshotId;
-use serde::{Deserialize, Serialize};
+use datafusion::{
+    dataframe::DataFrame,
+    error::DataFusionError,
+    prelude::{SessionContext, col, lit},
+};
+use enrichment_core::{
+    evidence::{
+        EvidenceFragment, FragmentKind, Symbol,
+        metadata::ReleaseMetadata,
+        path::PublicPath,
+        relational::{CoverageFact, InputArtifact, RelationshipObservation},
+        snapshot::EvidenceManifest,
+    },
+    identity::SnapshotId,
+    producer::ProducerRun,
+    wire::data::NamespaceFacet,
+};
+use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
 
-use crate::paths::StatePaths;
-use crate::snapshot;
-use crate::tables;
-
-/// One open snapshot.
 pub struct SnapshotReader {
     ctx: SessionContext,
-    dir: PathBuf,
-    manifest: SnapshotManifest,
+    opened: OpenedSnapshot,
+    runtime: QueryRuntime,
 }
 
-/// Why a snapshot could not be read.
 #[derive(Debug, thiserror::Error)]
 pub enum QueryError {
-    /// The snapshot is not published.
     #[error("snapshot {0} is not published")]
     NotPublished(String),
-    /// Filesystem failure.
     #[error(transparent)]
     Io(#[from] std::io::Error),
-    /// Query engine failure.
     #[error("query failed: {0}")]
     DataFusion(#[from] DataFusionError),
+    #[error(transparent)]
+    Arrow(#[from] arrow::error::ArrowError),
 }
 
-/// A namespace facet in an overview.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NamespaceFacet {
-    /// The module path.
-    pub path: String,
-    /// First paragraph of the module docs.
-    pub doc_summary: Option<String>,
-    /// Distinct definitions directly under this module, by kind.
-    pub counts_by_kind: BTreeMap<String, u64>,
-    /// A bounded sample of direct children (path, kind, summary), definitions counted once.
-    pub children: Vec<OverviewChild>,
-    /// Children beyond the sample.
-    pub truncated_children: u64,
+impl QueryError {
+    #[must_use]
+    pub fn is_budget(&self) -> bool {
+        matches!(
+            self,
+            Self::DataFusion(DataFusionError::ResourcesExhausted(_))
+        )
+    }
 }
 
-/// One child in a namespace sample.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct OverviewChild {
-    /// Public path.
-    pub path: String,
-    /// Kind.
-    pub kind: SymbolKind,
-    /// Summary, when documented.
-    pub doc_summary: Option<String>,
-    /// Whether this path re-exports a definition elsewhere.
-    pub is_reexport: bool,
-    /// Whether deprecated.
-    pub deprecated: bool,
-}
-
-/// The faceted overview of a snapshot (§7.1: a tree and facets, not a symbol dump).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Overview {
-    /// Distinct definitions by kind, crate-wide.
     pub definitions_by_kind: BTreeMap<String, u64>,
-    /// Namespaces, root first.
     pub namespaces: Vec<NamespaceFacet>,
-    /// Feature definitions: name and what it enables.
+    pub truncated_namespaces: u64,
     pub features: BTreeMap<String, String>,
-    /// Documentation headings from README sections, in order.
     pub documentation_headings: Vec<String>,
-    /// Changelog headings, in order.
     pub release_note_headings: Vec<String>,
-    /// Example names.
     pub examples: Vec<String>,
-    /// Re-export count and unresolved count, from the manifest.
     pub reexports: u64,
-    /// Re-exports whose target is outside this crate.
     pub unresolved_reexports: u64,
 }
 
+/// Filters lower to native predicates before the bounded alternatives page is decoded.
+#[derive(Default)]
+pub struct ExecutionSelection<'a> {
+    pub symbol_id: Option<&'a str>,
+    pub document_id: Option<&'a str>,
+    pub kind: Option<&'a str>,
+    pub methods: &'a [enrichment_core::evidence::execution::SemanticMethod],
+    pub position: Option<enrichment_core::evidence::execution::Utf8Position>,
+    pub runtime: Option<&'a enrichment_core::request::RuntimeSelection>,
+    pub result_artifact_ids: &'a [String],
+    pub image: Option<&'a str>,
+    pub containment: Option<&'a str>,
+    pub producer: Option<(&'a str, &'a str)>,
+}
+
+/// Closed fragment selection. Exact inspection refuses incomplete alternatives; overview
+/// citations intentionally select a bounded sample, separate from complete evidence facts.
+pub struct FragmentSelection<'a> {
+    pub path: Option<&'a str>,
+    pub symbol_id: Option<&'a str>,
+    pub kinds: &'a [FragmentKind],
+    pub limit: usize,
+    pub require_complete: bool,
+}
+
 impl SnapshotReader {
-    /// Open a published snapshot.
-    ///
     /// # Errors
-    ///
-    /// Fails if the snapshot is not published or a table cannot be registered.
-    pub async fn open(paths: &StatePaths, id: &SnapshotId) -> Result<Self, QueryError> {
-        let manifest = snapshot::read_manifest(paths, id)?
-            .ok_or_else(|| QueryError::NotPublished(id.to_string()))?;
-        let dir = snapshot::snapshot_dir(paths, id);
-        // DataFusion rewrites Utf8 columns to Utf8View when scanning Parquet unless told not
-        // to; the decoders in `tables` read the schema the writer produced, and a view array
-        // would decode as no rows at all. Measured by `symbols_round_trip_through_datafusion`.
-        let config = SessionConfig::new().set_bool(
-            "datafusion.execution.parquet.schema_force_view_types",
-            false,
-        );
-        let ctx = SessionContext::new_with_config(config);
-        for (name, file) in [
-            ("symbols", tables::SYMBOLS_FILE),
-            ("relationships", tables::RELATIONSHIPS_FILE),
-            ("fragments", tables::FRAGMENTS_FILE),
-        ] {
-            let path = dir.join(file);
-            ctx.register_parquet(
-                name,
-                path.to_string_lossy().as_ref(),
-                ParquetReadOptions::default(),
-            )
-            .await?;
+    /// Membership, exact file integrity and admission must all succeed before domain views exist.
+    pub async fn open(
+        repository: &EvidenceRepository,
+        catalog: Arc<PinnedCatalog>,
+        id: &SnapshotId,
+    ) -> Result<Self, QueryError> {
+        if catalog.snapshot(&repository.runtime, id).await?.is_none() {
+            return Err(QueryError::NotPublished(id.to_string()));
         }
-        Ok(Self { ctx, dir, manifest })
+        let opened = repository.open_snapshot(catalog, id).await?;
+        let ctx = opened.research_session(&repository.runtime).await?;
+        Ok(Self {
+            ctx,
+            opened,
+            runtime: repository.runtime.clone(),
+        })
     }
-
-    /// The manifest.
     #[must_use]
-    pub fn manifest(&self) -> &SnapshotManifest {
-        &self.manifest
+    pub fn manifest(&self) -> &EvidenceManifest {
+        &self.opened.manifest
     }
-
-    /// The snapshot directory.
     #[must_use]
     pub fn dir(&self) -> &PathBuf {
-        &self.dir
+        &self.opened.directory
+    }
+    #[must_use]
+    pub fn session(&self) -> &SessionContext {
+        &self.ctx
+    }
+    #[must_use]
+    pub fn runtime(&self) -> &QueryRuntime {
+        &self.runtime
+    }
+    #[must_use]
+    pub fn pinned(&self) -> &OpenedSnapshot {
+        &self.opened
     }
 
-    async fn symbols_where(
+    /// Dependency identities of static declarations, excluding mutable registry selection
+    /// and execution-only inputs. This bounded identity projection never hydrates API text.
+    pub async fn static_inputs(&self) -> Result<Vec<(String, String)>, QueryError> {
+        let frame = self.ctx.sql("WITH bindings AS (SELECT source.producer_binding_id AS id FROM api_observations UNION SELECT source.producer_binding_id AS id FROM fragments WHERE source.evidence_class IN ('declared', 'statically_extracted')) SELECT DISTINCT i.sha256, i.source_uri FROM input_artifacts i LEFT SEMI JOIN bindings b ON i.producer_binding_id = b.id WHERE i.kind NOT IN ('registry_index_entry', 'registry_version_metadata') ORDER BY i.sha256, i.source_uri LIMIT 8193").await?;
+        let out = self.runtime.execute(frame).await?;
+        if out.rows > 8192 {
+            return Err(DataFusionError::ResourcesExhausted(
+                "static dependency identity projection exceeds 8192 inputs".into(),
+            )
+            .into());
+        }
+        let digests = projection::render::strings(&out.batches, "sha256")?;
+        let sources = projection::render::strings(&out.batches, "source_uri")?;
+        Ok(digests.into_iter().zip(sources).collect())
+    }
+
+    /// Native retained execution selection, with a sentinel rather than silent alternatives loss.
+    /// # Errors
+    /// Excessive alternatives or admission/query failures remain explicit.
+    pub async fn execution_observations(
         &self,
-        sql: &str,
-        params: Vec<ScalarValue>,
+        symbol_id: Option<&str>,
+        document_id: Option<&str>,
+    ) -> Result<Vec<enrichment_core::evidence::execution::ExecutionObservation>, QueryError> {
+        self.execution_selection(ExecutionSelection {
+            symbol_id,
+            document_id,
+            ..Default::default()
+        })
+        .await
+    }
+
+    pub async fn execution_selection(
+        &self,
+        selection: ExecutionSelection<'_>,
+    ) -> Result<Vec<enrichment_core::evidence::execution::ExecutionObservation>, QueryError> {
+        use datafusion::functions::core::expr_ext::FieldAccessor;
+        let mut plan = self.ctx.table("execution_observations").await?;
+        if let Some(image) = selection.image {
+            plan = plan.filter(col("image_id").eq(lit(image)))?;
+        }
+        if let Some(containment) = selection.containment {
+            plan = plan.filter(col("containment_identity").eq(lit(containment)))?;
+        }
+        if let Some((name, version)) = selection.producer {
+            plan = plan.filter(
+                col("source")
+                    .field("extractor")
+                    .eq(lit(name))
+                    .and(col("source").field("extractor_version").eq(lit(version))),
+            )?;
+        }
+        if let Some(symbol) = selection.symbol_id {
+            plan = plan.filter(
+                col("subject")
+                    .field("symbol_id")
+                    .eq(lit(symbol))
+                    .or(col("payload")
+                        .field("semantic_query")
+                        .field("anchor_symbol_id")
+                        .eq(lit(symbol))),
+            )?;
+        }
+        if let Some(document) = selection.document_id {
+            plan = plan.filter(col("subject").field("artifact_id").eq(lit(document)))?;
+        }
+        if let Some(kind) = selection.kind {
+            plan = plan.filter(col("payload").field("kind").eq(lit(kind)))?;
+        }
+        let semantic = col("payload").field("semantic_query");
+        if !selection.methods.is_empty() {
+            plan = plan.filter(semantic.clone().field("method").in_list(
+                selection.methods.iter().map(|m| lit(m.as_str())).collect(),
+                false,
+            ))?;
+        }
+        if let Some(position) = selection.position {
+            let point = semantic.clone().field("position");
+            plan = plan.filter(
+                semantic.field("method").eq(lit("diagnostics")).or(point
+                    .clone()
+                    .field("line")
+                    .eq(lit(position.line))
+                    .and(point.field("byte").eq(lit(position.byte)))),
+            )?;
+        }
+        if let Some(runtime) = selection.runtime {
+            let object = col("payload").field("runtime_object");
+            // Validated import components cannot contain '.', making this rendering injective.
+            let path = datafusion::functions_nested::string::array_to_string_udf()
+                .call(vec![object.clone().field("selection"), lit(".")]);
+            plan = plan.filter(
+                object
+                    .field("module")
+                    .eq(lit(&runtime.module))
+                    .and(path.eq(lit(runtime.attributes.join(".")))),
+            )?;
+        }
+        if !selection.result_artifact_ids.is_empty() {
+            plan = plan.filter(col("source").field("artifact_id").in_list(
+                selection.result_artifact_ids.iter().map(lit).collect(),
+                false,
+            ))?;
+        }
+        let output = self
+            .runtime
+            .execute(
+                plan.sort(vec![col("observation_id").sort(true, false)])?
+                    .limit(0, Some(65))?,
+            )
+            .await?;
+        if output.rows > 64 {
+            return Err(DataFusionError::ResourcesExhausted(
+                "more than 64 retained execution alternatives; refine query".into(),
+            )
+            .into());
+        }
+        let mut observations = Vec::new();
+        for batch in output.batches {
+            observations.extend(projection::execution::decode(&batch)?);
+        }
+        Ok(observations)
+    }
+    /// # Errors
+    /// Invalid public paths are errors, never a broadened namespace.
+    pub fn area(&self, display: &str) -> Result<PublicPath, QueryError> {
+        PublicPath::parse(self.manifest().metadata.ecosystem, display)
+            .map_err(|e| DataFusionError::Plan(e).into())
+    }
+
+    async fn render_symbols(
+        &self,
+        frame: DataFrame,
+        docs: bool,
     ) -> Result<Vec<Symbol>, QueryError> {
-        let df = self.ctx.sql(sql).await?.with_param_values(params)?;
-        let batches = df.collect().await?;
-        Ok(batches
-            .iter()
-            .flat_map(tables::symbols_from_batch)
-            .collect())
+        // A small exact inspection can have multiple declaration/trait alternatives. The
+        // sentinel is checked before rendering rather than silently dropping alternatives.
+        let output = self
+            .runtime
+            .execute(
+                frame
+                    .sort(vec![
+                        col("symbol_id").sort(true, false),
+                        col("origin").sort(true, true),
+                        col("observation_id").sort(true, true),
+                    ])?
+                    .limit(0, Some(1025))?,
+            )
+            .await?;
+        if output.rows > 1024 {
+            return Err(DataFusionError::ResourcesExhausted(
+                "inspection has more than 1024 observation rows; refine the path".into(),
+            )
+            .into());
+        }
+        Ok(projection::render::symbols(&output.batches, docs)?)
     }
 
-    /// Every symbol, in stored order. Small crates fit comfortably; callers page above this.
-    ///
     /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn all_symbols(&self) -> Result<Vec<Symbol>, QueryError> {
-        self.symbols_where("SELECT * FROM symbols", Vec::new())
-            .await
-    }
-
-    /// Symbols at exactly this path (a path may carry several kinds, e.g. a struct and its
-    /// constructor macro; trait-impl methods share a path across traits).
-    ///
-    /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn symbols_at(&self, path: &str) -> Result<Vec<Symbol>, QueryError> {
-        self.symbols_where(
-            "SELECT * FROM symbols WHERE path = $1",
-            vec![ScalarValue::from(path)],
+    /// Exact lookup is bounded and retains same-path definition/observation alternatives.
+    pub async fn symbols_at(
+        &self,
+        path: &str,
+        definition_id: Option<&str>,
+        docs: bool,
+    ) -> Result<Vec<Symbol>, QueryError> {
+        let mut predicate = col("path").eq(lit(path));
+        if let Some(id) = definition_id {
+            predicate = predicate.and(col("definition_id").eq(lit(id)));
+        }
+        self.render_symbols(
+            self.ctx
+                .table(if docs {
+                    "api_surface"
+                } else {
+                    "inspection_surface"
+                })
+                .await?
+                .filter(predicate)?,
+            docs,
         )
         .await
     }
 
-    /// Symbols whose path ends with `::<suffix>` or equals it, for unqualified lookups.
-    ///
     /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn symbols_ending_with(&self, suffix: &str) -> Result<Vec<Symbol>, QueryError> {
-        let pattern = format!("%::{}", escape_like(suffix));
-        self.symbols_where(
-            "SELECT * FROM symbols WHERE path = $1 OR path LIKE $2 ESCAPE '\\'",
-            vec![
-                ScalarValue::from(suffix),
-                ScalarValue::from(pattern.as_str()),
-            ],
-        )
-        .await
-    }
-
-    /// Symbols whose path, signature or docs contain any of the tokens, case-insensitively.
-    /// Ranking happens in the core; this only narrows.
-    ///
-    /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn symbols_matching_any(&self, tokens: &[String]) -> Result<Vec<Symbol>, QueryError> {
-        if tokens.is_empty() {
-            return Ok(Vec::new());
-        }
-        let df = self.ctx.table("symbols").await?;
-        let mut predicate = None;
-        for token in tokens {
-            let pattern = format!("%{}%", escape_like(&token.to_lowercase()));
-            let clause = datafusion::functions::string::expr_fn::lower(col("path"))
-                .like(lit(pattern.clone()))
-                .or(
-                    datafusion::functions::string::expr_fn::lower(col("signature"))
-                        .like(lit(pattern.clone())),
-                )
-                .or(datafusion::functions::string::expr_fn::lower(col("docs")).like(lit(pattern)));
-            predicate = Some(match predicate {
-                None => clause,
-                Some(p) => datafusion::prelude::Expr::or(p, clause),
-            });
-        }
-        let Some(predicate) = predicate else {
-            return Ok(Vec::new());
+    /// Unqualified lookup uses literal typed suffix components in the snapshot's ecosystem.
+    pub async fn symbols_ending_with(
+        &self,
+        suffix: &str,
+        definition_id: Option<&str>,
+        docs: bool,
+    ) -> Result<Vec<Symbol>, QueryError> {
+        use datafusion::{
+            common::ScalarValue,
+            functions_nested::expr_fn::{array_length, array_slice},
         };
-        let batches = df.filter(predicate)?.collect().await?;
-        Ok(batches
+        let path = self.area(suffix)?;
+        let parts = path
+            .components()
             .iter()
-            .flat_map(tables::symbols_from_batch)
-            .collect())
+            .map(|p| ScalarValue::Utf8(Some(p.clone())))
+            .collect::<Vec<_>>();
+        let length = array_length(col("components"));
+        let mut predicate = array_slice(
+            col("components"),
+            length.clone() - lit(parts.len() as i64) + lit(1i64),
+            length,
+            None,
+        )
+        .eq(lit(ScalarValue::List(ScalarValue::new_list(
+            &parts,
+            &arrow::datatypes::DataType::Utf8,
+            false,
+        ))));
+        if let Some(id) = definition_id {
+            predicate = predicate.and(col("definition_id").eq(lit(id)));
+        }
+        self.render_symbols(
+            self.ctx
+                .table(if docs {
+                    "api_surface"
+                } else {
+                    "inspection_surface"
+                })
+                .await?
+                .filter(predicate)?,
+            docs,
+        )
+        .await
     }
 
-    /// Fragments about one subject.
-    ///
     /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn fragments_for(&self, subject: &str) -> Result<Vec<EvidenceFragment>, QueryError> {
-        let df = self
-            .ctx
-            .sql("SELECT * FROM fragments WHERE subject = $1")
-            .await?
-            .with_param_values(vec![ScalarValue::from(subject)])?;
-        let batches = df.collect().await?;
-        Ok(batches
-            .iter()
-            .flat_map(tables::fragments_from_batch)
-            .collect())
-    }
-
-    /// Fragments of one kind, in stored order.
-    ///
-    /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn fragments_of_kind(
+    /// Alias discovery filters the definition before materializing a bounded path list.
+    pub async fn aliases_for(
         &self,
-        kind: FragmentKind,
-    ) -> Result<Vec<EvidenceFragment>, QueryError> {
-        let df = self
-            .ctx
-            .sql("SELECT * FROM fragments WHERE kind = $1")
-            .await?
-            .with_param_values(vec![ScalarValue::from(kind.as_str())])?;
-        let batches = df.collect().await?;
-        Ok(batches
-            .iter()
-            .flat_map(tables::fragments_from_batch)
-            .collect())
+        definition: &str,
+        except_path: &str,
+    ) -> Result<Vec<String>, QueryError> {
+        let output = self
+            .runtime
+            .execute(
+                self.ctx
+                    .table("symbols")
+                    .await?
+                    .filter(
+                        col("definition_id")
+                            .eq(lit(definition))
+                            .and(col("path").not_eq(lit(except_path))),
+                    )?
+                    .select(vec![col("path")])?
+                    .distinct()?
+                    .sort(vec![col("path").sort(true, false)])?,
+            )
+            .await?;
+        Ok(projection::render::strings(&output.batches, "path")?)
     }
 
-    /// Fragments whose text contains any token, case-insensitively, optionally limited to kinds.
-    ///
     /// # Errors
-    ///
-    /// Fails on a query error.
-    pub async fn fragments_matching_any(
+    /// Every independently qualified API observation of the selected binding is retained.
+    pub async fn observations_for(
         &self,
-        tokens: &[String],
-        kinds: Option<&[FragmentKind]>,
-    ) -> Result<Vec<EvidenceFragment>, QueryError> {
-        if tokens.is_empty() {
-            return Ok(Vec::new());
+        symbol_id: &str,
+        docs: bool,
+    ) -> Result<Vec<enrichment_core::wire::data::ApiObservationProjection>, QueryError> {
+        let (base, bound) = if docs {
+            ("api_observations", "bound_observations")
+        } else {
+            ("inspection_observations", "inspection_bound")
+        };
+        let sql = format!(
+            "SELECT o.* FROM {base} o LEFT SEMI JOIN {bound} b ON o.observation_id = b.observation_id AND b.binding_id = $1"
+        );
+        let frame = self
+            .ctx
+            .sql(&sql)
+            .await?
+            .with_param_values(vec![datafusion::common::ScalarValue::from(symbol_id)])?;
+        let output = self
+            .runtime
+            .execute(
+                frame
+                    .sort(vec![col("observation_id").sort(true, false)])?
+                    .limit(0, Some(1025))?,
+            )
+            .await?;
+        if output.rows > 1024 {
+            return Err(DataFusionError::ResourcesExhausted(
+                "inspection has more than 1024 qualified observations".into(),
+            )
+            .into());
         }
-        let df = self.ctx.table("fragments").await?;
-        let mut predicate: Option<datafusion::prelude::Expr> = None;
-        for token in tokens {
-            let pattern = format!("%{}%", escape_like(&token.to_lowercase()));
-            let clause = datafusion::functions::string::expr_fn::lower(col("text"))
-                .like(lit(pattern.clone()))
-                .or(
-                    datafusion::functions::string::expr_fn::lower(col("subject"))
-                        .like(lit(pattern)),
-                );
-            predicate = Some(match predicate {
-                None => clause,
-                Some(p) => p.or(clause),
-            });
-        }
-        let mut predicate = predicate.expect("tokens is non-empty");
-        if let Some(kinds) = kinds {
-            let list: Vec<datafusion::prelude::Expr> =
-                kinds.iter().map(|k| lit(k.as_str())).collect();
-            predicate = predicate.and(col("kind").in_list(list, false));
-        }
-        let batches = df.filter(predicate)?.collect().await?;
-        Ok(batches
-            .iter()
-            .flat_map(tables::fragments_from_batch)
-            .collect())
+        Ok(projection::render::api_observations(&output.batches, docs)?)
     }
 
-    /// Edges touching one symbol, as source or target.
-    ///
+    async fn render_fragments(
+        &self,
+        frame: DataFrame,
+    ) -> Result<Vec<EvidenceFragment>, QueryError> {
+        let output = self
+            .runtime
+            .execute(frame.sort(vec![col("fragment_id").sort(true, false)])?)
+            .await?;
+        Ok(projection::render::fragments(&output.batches)?)
+    }
     /// # Errors
-    ///
-    /// Fails on a query error.
+    /// Resolve symbol/definition subjects through binding membership before materialization.
+    pub async fn fragments(
+        &self,
+        selection: FragmentSelection<'_>,
+    ) -> Result<Vec<EvidenceFragment>, QueryError> {
+        if selection.limit == 0 || selection.limit > 1024 || selection.kinds.is_empty() {
+            return Err(DataFusionError::Plan(
+                "fragment kinds and a limit in 1..=1024 are required".into(),
+            )
+            .into());
+        }
+        let mut frame = self.ctx.table("fragment_surface").await?;
+        if let Some(symbol) = selection.symbol_id {
+            frame = self.ctx.sql("SELECT f.* FROM fragment_surface f LEFT SEMI JOIN fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
+        } else if let Some(path) = selection.path {
+            frame = self.ctx.sql("SELECT f.* FROM fragment_surface f LEFT SEMI JOIN (SELECT DISTINCT p.fragment_id FROM fragment_paths p JOIN symbols s ON p.symbol_id = s.symbol_id WHERE s.path = $1) m ON f.fragment_id = m.fragment_id").await?.with_param_values(vec![datafusion::common::ScalarValue::from(path)])?;
+        }
+        frame = frame
+            .filter(
+                col("kind").in_list(
+                    selection
+                        .kinds
+                        .iter()
+                        .map(|kind| lit(kind.as_str()))
+                        .collect(),
+                    false,
+                ),
+            )?
+            .sort(vec![col("fragment_id").sort(true, false)])?
+            .limit(
+                0,
+                Some(selection.limit + usize::from(selection.require_complete)),
+            )?;
+        let output = self.runtime.execute(frame).await?;
+        if output.rows > selection.limit {
+            return Err(DataFusionError::ResourcesExhausted(
+                "fragment alternatives exceed the requested complete selection".into(),
+            )
+            .into());
+        }
+        Ok(projection::render::fragments(&output.batches)?)
+    }
+    /// # Errors
+    /// Example eligibility remains literal and the plan limits the final citations.
+    pub async fn examples_for(&self, name: &str) -> Result<Vec<EvidenceFragment>, QueryError> {
+        let spec = enrichment_core::search::spec::SearchSpec::new(name);
+        let frame = self
+            .ctx
+            .table("fragment_surface")
+            .await?
+            .filter(
+                col("kind")
+                    .eq(lit(FragmentKind::Example.as_str()))
+                    .and(crate::scoring::fragment_eligibility(&spec.fragment_clauses)),
+            )?
+            .sort(vec![col("fragment_id").sort(true, false)])?
+            .limit(0, Some(3))?;
+        self.render_fragments(frame).await
+    }
+    /// # Errors
+    /// Explicit symbol and definition references remain distinct, including external targets.
     pub async fn relationships_for(
         &self,
         symbol_id: &str,
-    ) -> Result<Vec<Relationship>, QueryError> {
-        let df = self
+        limit: usize,
+    ) -> Result<Vec<RelationshipObservation>, QueryError> {
+        let frame = self
             .ctx
-            .sql("SELECT * FROM relationships WHERE source_id = $1 OR target_id = $1")
+            .sql(
+                r"SELECT r.* FROM relationships r LEFT SEMI JOIN symbols s ON (
+            r.subject.symbol_id = s.symbol_id OR r.subject.definition_id = s.definition_id OR
+            r.target.symbol_id = s.symbol_id OR r.target.definition_id = s.definition_id
+            ) AND s.symbol_id = $1",
+            )
             .await?
-            .with_param_values(vec![ScalarValue::from(symbol_id)])?;
-        let batches = df.collect().await?;
-        Ok(batches
+            .with_param_values(vec![datafusion::common::ScalarValue::from(symbol_id)])?;
+        let limit = limit.clamp(1, 1024);
+        let output = self
+            .runtime
+            .execute(
+                frame
+                    .sort(vec![col("relationship_id").sort(true, false)])?
+                    .limit(0, Some(limit + 1))?,
+            )
+            .await?;
+        if output.rows > limit {
+            return Err(DataFusionError::ResourcesExhausted(
+                "relationship alternatives exceed inspection bound".into(),
+            )
+            .into());
+        }
+        Ok(output
+            .batches
             .iter()
-            .flat_map(tables::relationships_from_batch)
+            .map(projection::relationships_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
             .collect())
     }
 
-    /// The faceted overview (§7.1), optionally narrowed to one module subtree.
-    ///
     /// # Errors
-    ///
-    /// Fails on a query error.
+    /// Facets are computed by native aggregates/windows with bounded final batches.
     pub async fn overview(
         &self,
         area: Option<&str>,
         per_namespace: usize,
     ) -> Result<Overview, QueryError> {
-        let symbols = self.all_symbols().await?;
-        let in_area = |s: &Symbol| match area {
-            None => true,
-            Some(area) => s.path == area || s.path.starts_with(&format!("{area}::")),
-        };
-
-        let mut definitions_by_kind: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        for s in symbols.iter().filter(|s| in_area(s)) {
-            definitions_by_kind
-                .entry(s.kind.as_str().to_owned())
-                .or_default()
-                .insert(s.definition_id.clone());
+        let area = area.map(|a| self.area(a)).transpose()?;
+        let page = crate::browse::overview(
+            &self.ctx,
+            &self.runtime,
+            area.as_ref(),
+            per_namespace.min(128),
+            (10_000 / per_namespace.max(1)).min(256),
+        )
+        .await?;
+        let feature_rows = self
+            .runtime
+            .execute(
+                self.ctx
+                    .table("fragment_surface")
+                    .await?
+                    .filter(col("kind").eq(lit(FragmentKind::FeatureDefinition.as_str())))?
+                    .select(vec![col("label"), col("text")])?
+                    .distinct()?
+                    .sort(vec![
+                        col("label").sort(true, false),
+                        col("text").sort(true, false),
+                    ])?
+                    .limit(0, Some(129))?,
+            )
+            .await?;
+        if feature_rows.rows > 128 {
+            return Err(DataFusionError::ResourcesExhausted(
+                "feature summary exceeds 128 qualified entries".into(),
+            )
+            .into());
         }
-
-        let mut namespaces = Vec::new();
-        let modules: Vec<&Symbol> = symbols
-            .iter()
-            .filter(|s| s.kind == SymbolKind::Module && in_area(s))
-            .collect();
-        let root_path = self.manifest.crate_name.clone();
-        let mut namespace_paths: Vec<(String, Option<String>)> = Vec::new();
-        if area.is_none_or(|a| a == root_path) {
-            namespace_paths.push((root_path.clone(), None));
-        }
-        for m in &modules {
-            namespace_paths.push((m.path.clone(), m.doc_summary.clone()));
-        }
-        namespace_paths.sort();
-        namespace_paths.dedup_by(|a, b| a.0 == b.0);
-
-        for (ns, doc_summary) in namespace_paths {
-            let mut seen_definitions = BTreeSet::new();
-            let mut counts_by_kind: BTreeMap<String, u64> = BTreeMap::new();
-            let mut children = Vec::new();
-            let mut truncated = 0u64;
-            for s in symbols
-                .iter()
-                .filter(|s| s.parent_path.as_deref() == Some(ns.as_str()))
-                .filter(|s| {
-                    !matches!(
-                        s.kind,
-                        SymbolKind::Method
-                            | SymbolKind::StructField
-                            | SymbolKind::Variant
-                            | SymbolKind::AssocConst
-                            | SymbolKind::AssocType
-                    )
-                })
-            {
-                if !seen_definitions.insert(s.definition_id.clone()) {
-                    continue;
-                }
-                *counts_by_kind
-                    .entry(s.kind.as_str().to_owned())
-                    .or_default() += 1;
-                if children.len() < per_namespace {
-                    children.push(OverviewChild {
-                        path: s.path.clone(),
-                        kind: s.kind,
-                        doc_summary: s.doc_summary.clone(),
-                        is_reexport: s.is_reexport,
-                        deprecated: s.deprecated.is_some(),
-                    });
-                } else {
-                    truncated += 1;
-                }
-            }
-            namespaces.push(NamespaceFacet {
-                path: ns,
-                doc_summary,
-                counts_by_kind,
-                children,
-                truncated_children: truncated,
-            });
-        }
-
+        let subjects = projection::render::strings(&feature_rows.batches, "label")?;
+        let texts = projection::render::strings(&feature_rows.batches, "text")?;
         let mut features = BTreeMap::new();
-        for f in self
-            .fragments_of_kind(FragmentKind::FeatureDefinition)
-            .await?
-        {
-            features.insert(f.subject, f.text);
+        for (subject, text) in subjects.into_iter().zip(texts) {
+            if features.insert(subject, text).is_some() {
+                return Err(DataFusionError::ResourcesExhausted(
+                    "feature summary has conflicting qualified definitions; retrieve the feature evidence explicitly".into(),
+                ).into());
+            }
         }
-        let documentation_headings = self
-            .fragments_of_kind(FragmentKind::ReadmeSection)
-            .await?
-            .into_iter()
-            .map(|f| f.subject)
-            .collect();
-        let release_note_headings = self
-            .fragments_of_kind(FragmentKind::ChangelogSection)
-            .await?
-            .into_iter()
-            .map(|f| f.subject)
-            .collect();
-        let examples = self
-            .fragments_of_kind(FragmentKind::Example)
-            .await?
-            .into_iter()
-            .map(|f| f.subject)
-            .collect();
-
+        let mut headings = BTreeMap::new();
+        for kind in [
+            FragmentKind::ReadmeSection,
+            FragmentKind::ChangelogSection,
+            FragmentKind::Example,
+        ] {
+            let output = self
+                .runtime
+                .execute(
+                    self.ctx
+                        .table("fragment_surface")
+                        .await?
+                        .filter(col("kind").eq(lit(kind.as_str())))?
+                        .select(vec![col("label")])?
+                        .distinct()?
+                        .sort(vec![col("label").sort(true, false)])?
+                        .limit(0, Some(257))?,
+                )
+                .await?;
+            if output.rows > 256 {
+                return Err(DataFusionError::ResourcesExhausted(
+                    "overview headings exceed 256 entries".into(),
+                )
+                .into());
+            }
+            headings.insert(
+                kind.as_str(),
+                projection::render::strings(&output.batches, "label")?,
+            );
+        }
         Ok(Overview {
-            definitions_by_kind: definitions_by_kind
-                .into_iter()
-                .map(|(k, v)| (k, v.len() as u64))
-                .collect(),
-            namespaces,
+            definitions_by_kind: page.definitions_by_kind,
+            namespaces: page.namespaces,
+            truncated_namespaces: page.truncated_namespaces,
             features,
-            documentation_headings,
-            release_note_headings,
-            examples,
-            reexports: self.manifest.counts.reexports,
-            unresolved_reexports: self.manifest.counts.unresolved_reexports,
+            documentation_headings: headings
+                .remove(FragmentKind::ReadmeSection.as_str())
+                .unwrap_or_default(),
+            release_note_headings: headings
+                .remove(FragmentKind::ChangelogSection.as_str())
+                .unwrap_or_default(),
+            examples: headings
+                .remove(FragmentKind::Example.as_str())
+                .unwrap_or_default(),
+            reexports: self.manifest().counts.reexports,
+            unresolved_reexports: self.manifest().counts.unresolved_reexports,
         })
     }
-}
 
-/// Escape `%`, `_` and `\` for a `LIKE ... ESCAPE '\'` pattern.
-#[must_use]
-pub fn escape_like(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    for c in text.chars() {
-        if matches!(c, '%' | '_' | '\\') {
-            out.push('\\');
-        }
-        out.push(c);
+    /// # Errors
+    /// Input references are selected from the exact admitted snapshot.
+    pub async fn inputs(&self) -> Result<Vec<InputArtifact>, QueryError> {
+        let output = self
+            .runtime
+            .execute(self.ctx.table("input_artifacts").await?)
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::input_artifacts_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
     }
-    out
-}
+    /// # Errors
+    /// Artifact selection is performed before decoding input descriptors.
+    pub async fn inputs_of_kind(
+        &self,
+        kind: enrichment_core::evidence::ArtifactKind,
+    ) -> Result<Vec<InputArtifact>, QueryError> {
+        let output = self
+            .runtime
+            .execute(
+                self.ctx
+                    .table("input_artifacts")
+                    .await?
+                    .filter(col("kind").eq(lit(kind.as_str())))?,
+            )
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::input_artifacts_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+    /// # Errors
+    /// Role lookup never falls back to a different acquisition.
+    pub async fn inputs_for_role(&self, role: &str) -> Result<Vec<InputArtifact>, QueryError> {
+        let output = self
+            .runtime
+            .execute(
+                self.ctx
+                    .table("input_artifacts")
+                    .await?
+                    .filter(col("role").eq(lit(role)))?,
+            )
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::input_artifacts_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+    /// # Errors
+    /// Returned attempts belong to this pinned snapshot's catalog generation.
+    pub async fn producer_runs(&self) -> Result<Vec<ProducerRun>, QueryError> {
+        let session = self.opened.catalog.session(&self.runtime).await?;
+        let output = self
+            .runtime
+            .execute(
+                session
+                    .table("attempts")
+                    .await?
+                    .filter(col("snapshot_id").eq(lit(self.manifest().snapshot_id.as_str())))?,
+            )
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::catalog::attempts_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .map(|a| a.run)
+            .collect())
+    }
+    /// # Errors
+    /// Exact attempt lookup refuses ambiguous identities rather than selecting a receipt.
+    pub async fn attempt(
+        &self,
+        id: &str,
+    ) -> Result<enrichment_core::evidence::catalog::SnapshotAttempt, QueryError> {
+        let session = self.opened.catalog.session(&self.runtime).await?;
+        let output = self
+            .runtime
+            .execute(
+                session
+                    .table("attempts")
+                    .await?
+                    .filter(
+                        col("snapshot_id")
+                            .eq(lit(self.manifest().snapshot_id.as_str()))
+                            .and(col("attempt_id").eq(lit(id))),
+                    )?
+                    .limit(0, Some(2))?,
+            )
+            .await?;
+        if output.rows != 1 {
+            return Err(DataFusionError::Execution(
+                "expected one qualified producer attempt".into(),
+            )
+            .into());
+        }
+        let mut rows = Vec::new();
+        for batch in output.batches {
+            rows.extend(projection::catalog::attempts_from_batch(&batch)?);
+        }
+        rows.pop()
+            .ok_or_else(|| DataFusionError::Execution("producer attempt disappeared".into()).into())
+    }
+    /// # Errors
+    /// Acquisition-specific URIs, clocks and validators come from actual catalog attempts.
+    pub async fn artifacts(&self) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
+        self.catalog_artifacts(
+            "WITH raw AS (
+            SELECT unnest(acquisitions) AS artifact, started_at, attempt_id FROM attempts
+            WHERE snapshot_id = $1
+        ), ranked AS (
+            SELECT artifact, row_number() OVER (
+                PARTITION BY artifact.artifact_id, artifact.source_uri
+                ORDER BY started_at, attempt_id
+            ) AS position FROM raw
+        ) SELECT artifact FROM ranked WHERE position = 1
+          ORDER BY artifact.artifact_id, artifact.source_uri",
+        )
+        .await
+    }
+    /// Complete presentation artifacts are operational catalog references, not producer inputs.
+    /// # Errors
+    /// Invalid catalog rows and bounded selection errors are explicit.
+    pub async fn job_deliveries(
+        &self,
+    ) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
+        self.catalog_artifacts(
+            "SELECT artifact FROM (
+            SELECT delivery AS artifact, row_number() OVER (
+                PARTITION BY delivery.artifact_id ORDER BY job_id
+            ) AS position FROM job_publications WHERE snapshot_id = $1
+        ) WHERE position = 1 ORDER BY artifact.artifact_id",
+        )
+        .await
+    }
+    /// Bounded operational outputs associated with actual attempts, outside snapshot identity.
+    /// # Errors
+    /// The catalog must supply an exact acquisition descriptor for every non-null log.
+    pub async fn attempt_logs(
+        &self,
+    ) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
+        self.catalog_artifacts(
+            "WITH raw AS (
+            SELECT unnest(acquisitions) AS artifact, log, started_at, attempt_id
+            FROM attempts WHERE snapshot_id = $1 AND log IS NOT NULL
+        ), ranked AS (
+            SELECT artifact, row_number() OVER (
+                PARTITION BY artifact.artifact_id ORDER BY started_at, attempt_id
+            ) AS position FROM raw WHERE artifact.artifact_id = log
+        ) SELECT artifact FROM ranked WHERE position = 1 ORDER BY artifact.artifact_id",
+        )
+        .await
+    }
+    async fn catalog_artifacts(
+        &self,
+        sql: &str,
+    ) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
+        let session = self.opened.catalog.session(&self.runtime).await?;
+        let plan = session.sql(sql).await?.with_param_values(vec![
+            datafusion::common::ScalarValue::from(self.manifest().snapshot_id.as_str()),
+        ])?;
+        let output = self.runtime.execute(plan).await?;
+        let mut artifacts = Vec::new();
+        for batch in output.batches {
+            artifacts.extend(projection::catalog::selected_artifacts(&batch)?);
+        }
+        Ok(artifacts)
+    }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn like_patterns_are_escaped() {
-        assert_eq!(escape_like("a_b%c\\d"), "a\\_b\\%c\\\\d");
-        assert_eq!(escape_like("plain"), "plain");
+    /// # Errors
+    /// Coverage remains explicit for successful empty and missing scopes.
+    pub async fn coverage(&self) -> Result<Vec<CoverageFact>, QueryError> {
+        let output = self
+            .runtime
+            .execute(self.ctx.table("coverage").await?)
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::coverage_from_batch)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
+    }
+    /// # Errors
+    /// Offline resolution never re-runs archive extraction to recreate these facts.
+    pub async fn release_metadata(&self) -> Result<Vec<ReleaseMetadata>, QueryError> {
+        let output = self
+            .runtime
+            .execute(self.ctx.table("release_metadata").await?)
+            .await?;
+        Ok(output
+            .batches
+            .iter()
+            .map(projection::metadata::decode)
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .flatten()
+            .collect())
     }
 }

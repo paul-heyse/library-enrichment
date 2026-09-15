@@ -34,6 +34,7 @@ pytest tier.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import threading
@@ -55,6 +56,8 @@ class FixtureUpstream(ThreadingHTTPServer):
     def __init__(self, root: Path, host: str = "127.0.0.1", port: int = 0) -> None:
         self.root = root
         self.request_log: list[str] = []
+        self.response_log: list[tuple[str, int, str | None]] = []
+        self.held_paths: dict[str, tuple[threading.Event, threading.Event]] = {}
         super().__init__((host, port), FixtureHandler)
 
     @property
@@ -69,10 +72,10 @@ class FixtureHandler(BaseHTTPRequestHandler):
     server: FixtureUpstream
     protocol_version = "HTTP/1.1"
 
-    def log_message(self, fmt: str, *args: object) -> None:
+    def log_message(self, format: str, *args: object) -> None:
         # Keep stdout clean (the port line is a protocol) and stderr quiet in tests. The
         # request log is what a test inspects instead.
-        del fmt, args
+        del format, args
         self.server.request_log.append(self.path)
 
     def do_GET(self) -> None:  # the stdlib dispatches on this exact name
@@ -82,10 +85,44 @@ class FixtureHandler(BaseHTTPRequestHandler):
         self._route()
 
     def _route(self) -> None:
+        hold = self.server.held_paths.get(self.path)
+        if hold:
+            entered, release = hold
+            entered.set()
+            if not release.wait(timeout=30):
+                return
         parts = [p for p in self.path.split("?")[0].split("/") if p]
         root = self.server.root
 
-        if len(parts) >= 3 and parts[0] == "index":
+        if len(parts) == 5 and parts[0] == "repos" and parts[3] in {"commits", "tarball"}:
+            if self.headers.get("X-GitHub-Api-Version") != "2026-03-10":
+                self._bytes(HTTPStatus.BAD_REQUEST, b"Missing API version", "text/plain")
+            else:
+                self._file(
+                    root.joinpath(*parts),
+                    "application/json" if parts[3] == "commits" else "application/gzip",
+                )
+        elif len(parts) == 3 and parts[0] == "pypi" and parts[2] == "json":
+            path = root / "pypi" / parts[1] / "registry.json"
+            if path.is_file():
+                body = path.read_bytes().replace(b"{{BASE_URL}}", self.server.base_url.encode())
+                self._bytes(HTTPStatus.OK, body, "application/json")
+            else:
+                self._bytes(HTTPStatus.NOT_FOUND, NOT_FOUND_BODY, "text/html")
+        elif len(parts) == 4 and parts[0] == "pypi" and parts[3] == "json":
+            path = root / "pypi" / parts[1] / f"{parts[2]}.json"
+            if path.is_file():
+                body = path.read_bytes().replace(b"{{BASE_URL}}", self.server.base_url.encode())
+                self._bytes(HTTPStatus.OK, body, "application/json")
+            else:
+                self._bytes(HTTPStatus.NOT_FOUND, NOT_FOUND_BODY, "text/html")
+        elif len(parts) == 2 and parts[0] == "simple":
+            self._file(
+                root / "pypi" / parts[1] / "index.json", "application/vnd.pypi.simple.v1+json"
+            )
+        elif parts and parts[0] == "docs":
+            self._file(root.joinpath(*parts), "application/octet-stream")
+        elif len(parts) >= 3 and parts[0] == "index":
             self._file(root / "index" / f"{parts[-1]}.ndjson", "text/plain")
         elif len(parts) == 5 and parts[:3] == ["api", "v1", "crates"]:
             name, version = parts[3], parts[4]
@@ -119,7 +156,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
             self._bytes(HTTPStatus.NOT_FOUND, NOT_FOUND_BODY, "text/html")
             return
         body = path.read_bytes()
-        self._bytes(HTTPStatus.OK, body, content_type, etag=f'"{path.stat().st_size:x}"')
+        self._bytes(HTTPStatus.OK, body, content_type, etag=f'"{hashlib.sha256(body).hexdigest()}"')
 
     def _redirect(self, location: str) -> None:
         self.send_response(HTTPStatus.FOUND)
@@ -134,6 +171,9 @@ class FixtureHandler(BaseHTTPRequestHandler):
         content_type: str,
         etag: str | None = None,
     ) -> None:
+        if status == HTTPStatus.OK and etag and self.headers.get("If-None-Match") == etag:
+            status, body = HTTPStatus.NOT_MODIFIED, b""
+        self.server.response_log.append((self.path, int(status), self.headers.get("If-None-Match")))
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
@@ -141,7 +181,11 @@ class FixtureHandler(BaseHTTPRequestHandler):
             self.send_header("ETag", etag)
         self.end_headers()
         if self.command != "HEAD":
-            self.wfile.write(body)
+            try:
+                self.wfile.write(body)
+            except (BrokenPipeError, ConnectionResetError):
+                # Cancellation tests deliberately close the fetch while this server is held.
+                return
 
 
 @contextmanager

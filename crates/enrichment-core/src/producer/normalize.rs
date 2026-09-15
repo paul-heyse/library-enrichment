@@ -12,13 +12,16 @@
 //! `cfg` information (`Attribute` has no cfg variant in formats 57–61); items compiled out are
 //! simply absent. Any `cfg`-shaped attribute string is kept as a declared hint and nothing more.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+#[cfg(test)]
+use std::collections::BTreeMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use rustdoc_types::{Attribute, Crate, Id, Item, ItemEnum, StructKind, VariantKind, Visibility};
 
 use super::ProducerError;
 use super::rustdoc::{self, NORMALIZER_VERSION, PRODUCER};
+use crate::evidence::ingest::ProducerSource;
 use crate::evidence::{
     EvidenceFragment, FragmentKind, RelationKind, Relationship, Symbol, SymbolKind,
 };
@@ -58,8 +61,9 @@ pub struct NormalizeStats {
 }
 
 /// The normalizer's output.
+#[cfg(test)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Normalized {
+struct Normalized {
     /// The crate's root module name.
     pub crate_name: String,
     /// `crate_version` as the JSON declares it.
@@ -89,22 +93,48 @@ fn deserialize_crate(payload: &str) -> Result<Crate, ProducerError> {
     })
 }
 
-/// Normalize a supported rustdoc JSON document.
-///
+/// A bounded raw producer document and header. No normalized output corpus is retained.
+/// Each visit walks the same document and transfers only the requested record type.
+#[derive(Debug)]
+pub struct Prepared {
+    pub crate_name: String,
+    pub crate_version: Option<String>,
+    pub target: String,
+    pub format_version: u32,
+    pub producer_items: u64,
+    krate: Option<Crate>,
+    signatures: HashMap<u32, String>,
+    summary_chars: usize,
+    rustdoc_artifact_id: String,
+}
+
+fn malformed(message: impl Into<String>) -> ProducerError {
+    ProducerError::Malformed {
+        producer: PRODUCER,
+        message: message.into(),
+    }
+}
+
+/// Admit the bounded raw document once, before any normalized output is constructed.
 /// # Errors
-///
-/// Refuses unsupported or malformed documents through [`rustdoc::probe_format`] before
-/// interpreting the body, then fails only on a body that does not deserialize.
-pub fn normalize(input: &NormalizeInput<'_>) -> Result<Normalized, ProducerError> {
+/// Unsupported formats, malformed documents and resource limits are explicit refusals.
+pub fn prepare(input: &NormalizeInput<'_>) -> Result<Prepared, ProducerError> {
+    if input.payload.len() > 256 * 1024 * 1024 {
+        return Err(malformed("rustdoc input exceeds 256 MiB"));
+    }
     let probe = rustdoc::probe_format(input.payload)?;
     let krate = deserialize_crate(input.payload)?;
+    if krate.index.len() > 1_000_000 || krate.paths.len() > 1_000_000 {
+        return Err(malformed("rustdoc input exceeds the item limit"));
+    }
+    for item in krate.index.values() {
+        crate::canonical::serialized_size(item, 1024 * 1024)
+            .map_err(|e| malformed(e.to_string()))?;
+    }
     let root = krate
         .index
         .get(&krate.root)
-        .ok_or_else(|| ProducerError::Malformed {
-            producer: PRODUCER,
-            message: "root item is missing from the index".to_owned(),
-        })?;
+        .ok_or_else(|| malformed("root item is missing from the index"))?;
     let crate_name = root
         .name
         .clone()
@@ -115,52 +145,144 @@ pub fn normalize(input: &NormalizeInput<'_>) -> Result<Normalized, ProducerError
                 .and_then(|s| s.path.first().cloned())
         })
         .unwrap_or_else(|| "crate".to_owned());
-
-    let signatures = input.json_path.map(render_signatures).unwrap_or_default();
-
-    let mut walker = Walker {
-        krate: &krate,
-        crate_name: &crate_name,
-        signatures: &signatures,
-        summary_chars: input.summary_chars.max(16),
-        rustdoc_artifact_id: input.rustdoc_artifact_id,
-        symbols: Vec::new(),
-        relationships: Vec::new(),
-        fragments: Vec::new(),
-        stats: NormalizeStats {
-            producer_items: krate.index.len() as u64,
-            ..NormalizeStats::default()
-        },
-        visited_modules: HashSet::new(),
-        emitted: HashSet::new(),
-    };
-    walker.walk_module(krate.root, std::slice::from_ref(&crate_name), &[]);
-
-    let definitions: HashSet<&str> = walker
-        .symbols
-        .iter()
-        .map(|s| s.definition_id.as_str())
-        .collect();
-    walker.stats.definitions = definitions.len() as u64;
-    walker.stats.symbols = walker.symbols.len() as u64;
-    walker.stats.rendered_signatures = walker
-        .symbols
-        .iter()
-        .filter(|s| s.signature.is_some())
-        .count() as u64;
-
-    let Walker {
-        symbols,
-        relationships,
-        fragments,
-        stats,
-        ..
-    } = walker;
-    Ok(Normalized {
+    let signatures = input
+        .json_path
+        .map(render_signatures)
+        .transpose()?
+        .unwrap_or_default();
+    Ok(Prepared {
         crate_name,
         crate_version: krate.crate_version.clone(),
         target: krate.target.triple.clone(),
         format_version: probe.format_version,
+        producer_items: krate.index.len() as u64,
+        krate: Some(krate),
+        signatures,
+        summary_chars: input.summary_chars.clamp(16, 64 * 1024),
+        rustdoc_artifact_id: input.rustdoc_artifact_id.to_owned(),
+    })
+}
+
+impl Prepared {
+    /// A source-only acquisition has no rustdoc observations.
+    pub fn source_only(crate_name: String, crate_version: Option<String>) -> Self {
+        Self {
+            crate_name,
+            crate_version,
+            target: String::new(),
+            format_version: 0,
+            producer_items: 0,
+            krate: None,
+            signatures: HashMap::new(),
+            summary_chars: 16,
+            rustdoc_artifact_id: String::new(),
+        }
+    }
+    fn walk<'a>(&'a self, output: WalkOutput<'a>) -> Result<NormalizeStats, String> {
+        let Some(krate) = &self.krate else {
+            return Ok(NormalizeStats::default());
+        };
+        let mut walker = Walker {
+            krate,
+            crate_name: &self.crate_name,
+            signatures: &self.signatures,
+            summary_chars: self.summary_chars,
+            rustdoc_artifact_id: &self.rustdoc_artifact_id,
+            output,
+            owners: HashMap::new(),
+            definitions: HashSet::new(),
+            state_bytes: 0,
+            error: None,
+            stats: NormalizeStats {
+                producer_items: self.producer_items,
+                ..NormalizeStats::default()
+            },
+            visited_modules: HashSet::new(),
+            emitted: HashSet::new(),
+        };
+        walker.walk_module(krate.root, std::slice::from_ref(&self.crate_name), &[]);
+        if let Some(error) = walker.error {
+            return Err(error);
+        }
+        walker.stats.definitions = walker.definitions.len() as u64;
+        Ok(walker.stats)
+    }
+}
+impl ProducerSource for Prepared {
+    fn visit_symbols(
+        &self,
+        emit: &mut dyn FnMut(Symbol) -> Result<(), String>,
+    ) -> Result<(), String> {
+        self.walk(WalkOutput::Symbols(emit)).map(|_| ())
+    }
+    fn visit_relationships(
+        &self,
+        emit: &mut dyn FnMut(Relationship) -> Result<(), String>,
+    ) -> Result<(), String> {
+        self.walk(WalkOutput::Relationships(emit)).map(|_| ())
+    }
+    fn visit_fragments(
+        &self,
+        emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+    ) -> Result<(), String> {
+        self.walk(WalkOutput::Fragments(emit)).map(|_| ())
+    }
+}
+
+/// Collect a small bounded transport batch for callers that explicitly need one.
+/// Production static publication consumes [`Prepared`] directly.
+/// # Errors
+/// The collector refuses more than 4096 records or 16 MiB before retaining another record.
+#[cfg(test)]
+fn normalize(input: &NormalizeInput<'_>) -> Result<Normalized, ProducerError> {
+    let prepared = prepare(input)?;
+    let mut rows = 0usize;
+    let mut bytes = 0usize;
+    let mut charge = |size: usize| -> Result<(), String> {
+        rows += 1;
+        bytes = bytes
+            .checked_add(size)
+            .ok_or("producer batch size overflow")?;
+        if rows > 4096 || bytes > 16 * 1024 * 1024 {
+            return Err("producer batch limit exceeded; use record visits".into());
+        }
+        Ok(())
+    };
+    let mut symbols = Vec::new();
+    let stats = prepared
+        .walk(WalkOutput::Symbols(&mut |row| {
+            charge(
+                crate::canonical::serialized_size(&row, 1024 * 1024).map_err(|e| e.to_string())?,
+            )?;
+            symbols.push(row);
+            Ok(())
+        }))
+        .map_err(malformed)?;
+    let mut relationships = Vec::new();
+    prepared
+        .visit_relationships(&mut |row| {
+            charge(
+                crate::canonical::serialized_size(&row, 1024 * 1024).map_err(|e| e.to_string())?,
+            )?;
+            relationships.push(row);
+            Ok(())
+        })
+        .map_err(malformed)?;
+    let mut fragments = Vec::new();
+    prepared
+        .visit_fragments(&mut |row| {
+            charge(
+                crate::canonical::serialized_size(&row, 1024 * 1024).map_err(|e| e.to_string())?,
+            )?;
+            fragments.push(row);
+            Ok(())
+        })
+        .map_err(malformed)?;
+    Ok(Normalized {
+        crate_name: prepared.crate_name,
+        crate_version: prepared.crate_version,
+        target: prepared.target,
+        format_version: prepared.format_version,
         symbols,
         relationships,
         fragments,
@@ -169,29 +291,51 @@ pub fn normalize(input: &NormalizeInput<'_>) -> Result<Normalized, ProducerError
 }
 
 /// Rendered signatures keyed by rustdoc item id, from `public-api`.
-fn render_signatures(path: &Path) -> HashMap<u32, String> {
-    let Ok(api) = public_api::Builder::from_rustdoc_json(path)
+fn render_signatures(path: &Path) -> Result<HashMap<u32, String>, ProducerError> {
+    let api = public_api::Builder::from_rustdoc_json(path)
         .omit_blanket_impls(true)
         .omit_auto_trait_impls(true)
         .omit_auto_derived_impls(true)
         .build()
-    else {
-        return HashMap::new();
-    };
-    api.into_items()
-        .map(|item| (item.id().0, item.to_string()))
-        .collect()
+        .map_err(|e| malformed(format!("public-api signature extraction failed: {e}")))?;
+    let mut signatures = HashMap::new();
+    let mut bytes = 0usize;
+    for item in api.into_items() {
+        let signature = item.to_string();
+        bytes = bytes
+            .checked_add(signature.len() + 128)
+            .ok_or_else(|| malformed("signature size overflow"))?;
+        if signature.len() > 1024 * 1024
+            || bytes > 64 * 1024 * 1024
+            || signatures.len() >= 1_000_000
+        {
+            return Err(malformed("rustdoc signature state limit exceeded"));
+        }
+        signatures.insert(item.id().0, signature);
+    }
+    Ok(signatures)
 }
 
+enum WalkOutput<'a> {
+    Symbols(&'a mut dyn FnMut(Symbol) -> Result<(), String>),
+    Relationships(&'a mut dyn FnMut(Relationship) -> Result<(), String>),
+    Fragments(&'a mut dyn FnMut(EvidenceFragment) -> Result<(), String>),
+}
+struct Owner {
+    symbol_id: String,
+    definition_path: String,
+}
 struct Walker<'a> {
     krate: &'a Crate,
     crate_name: &'a str,
     signatures: &'a HashMap<u32, String>,
     summary_chars: usize,
     rustdoc_artifact_id: &'a str,
-    symbols: Vec<Symbol>,
-    relationships: Vec<Relationship>,
-    fragments: Vec<EvidenceFragment>,
+    output: WalkOutput<'a>,
+    owners: HashMap<String, Owner>,
+    definitions: HashSet<String>,
+    state_bytes: usize,
+    error: Option<String>,
     stats: NormalizeStats,
     /// `(module id, path)` pairs already expanded, so glob re-export cycles terminate.
     visited_modules: HashSet<(Id, String)>,
@@ -200,6 +344,72 @@ struct Walker<'a> {
 }
 
 impl Walker<'_> {
+    fn charge(&mut self, bytes: usize) -> bool {
+        if self.error.is_some() {
+            return false;
+        }
+        match self
+            .state_bytes
+            .checked_add(bytes)
+            .filter(|n| *n <= 64 * 1024 * 1024)
+        {
+            Some(size) => {
+                self.state_bytes = size;
+                true
+            }
+            None => {
+                self.error = Some("rustdoc walk identity state exceeds 64 MiB".into());
+                false
+            }
+        }
+    }
+    fn track(
+        &mut self,
+        path: &str,
+        symbol_id: &str,
+        definition_id: &str,
+        definition_path: &str,
+        signature: bool,
+    ) -> bool {
+        if !self.charge(
+            4 * (path.len() + symbol_id.len() + definition_id.len() + definition_path.len()) + 1024,
+        ) {
+            return false;
+        }
+        self.owners.insert(
+            path.to_owned(),
+            Owner {
+                symbol_id: symbol_id.to_owned(),
+                definition_path: definition_path.to_owned(),
+            },
+        );
+        self.definitions.insert(definition_id.to_owned());
+        self.stats.symbols += 1;
+        self.stats.rendered_signatures += u64::from(signature);
+        true
+    }
+    fn symbol(&mut self, make: impl FnOnce() -> Symbol) {
+        if self.error.is_none()
+            && let WalkOutput::Symbols(emit) = &mut self.output
+        {
+            self.error = emit(make()).err();
+        }
+    }
+    fn relationship(&mut self, make: impl FnOnce() -> Relationship) {
+        if self.error.is_none()
+            && let WalkOutput::Relationships(emit) = &mut self.output
+        {
+            self.error = emit(make()).err();
+        }
+    }
+    fn fragment(&mut self, make: impl FnOnce() -> Result<EvidenceFragment, String>) {
+        if self.error.is_none()
+            && let WalkOutput::Fragments(emit) = &mut self.output
+        {
+            self.error = make().and_then(emit).err();
+        }
+    }
+
     fn is_public(item: &Item) -> bool {
         matches!(item.visibility, Visibility::Public | Visibility::Default)
     }
@@ -225,8 +435,16 @@ impl Walker<'_> {
     }
 
     fn walk_module(&mut self, module_id: Id, path: &[String], parent_chain: &[String]) {
+        if self.error.is_some() || path.len() > 128 {
+            self.error
+                .get_or_insert_with(|| "rustdoc public path recursion limit exceeded".into());
+            return;
+        }
         let key = (module_id, path.join("::"));
-        if !self.visited_modules.insert(key) {
+        if self.visited_modules.contains(&key) {
+            return;
+        }
+        if !self.charge(key.1.len() * 4 + 128) || !self.visited_modules.insert(key) {
             return;
         }
         let Some(module) = self.krate.index.get(&module_id) else {
@@ -242,6 +460,9 @@ impl Walker<'_> {
     }
 
     fn walk_item(&mut self, id: Id, parent: &[String], via_reexport: bool) {
+        if self.error.is_some() {
+            return;
+        }
         let Some(item) = self.krate.index.get(&id) else {
             return;
         };
@@ -404,15 +625,17 @@ impl Walker<'_> {
                     kind_of(target_item).unwrap_or(SymbolKind::Import),
                     None,
                 );
-                self.relationships.push(Relationship::new(
-                    &source_id,
-                    &path.join("::"),
-                    Some(&target_def),
-                    &definition_path,
-                    RelationKind::Reexports,
-                    None,
-                    PRODUCER,
-                ));
+                self.relationship(|| {
+                    Relationship::new(
+                        &source_id,
+                        &path.join("::"),
+                        Some(&target_def),
+                        &definition_path,
+                        RelationKind::Reexports,
+                        None,
+                        PRODUCER,
+                    )
+                });
             }
             None => {
                 // An external re-export: kept as an `import` symbol whose definition is named
@@ -423,22 +646,37 @@ impl Walker<'_> {
                 let external_crate = u.source.split("::").next().unwrap_or("").to_owned();
                 let symbol_id =
                     Symbol::symbol_id_for(self.crate_name, &path_str, SymbolKind::Import, None);
-                if !self.emitted.insert(symbol_id.clone()) {
+                if self.error.is_some() || self.emitted.contains(&symbol_id) {
                     return;
                 }
+                if !self.charge(symbol_id.len() * 4 + 128) {
+                    return;
+                }
+                self.emitted.insert(symbol_id.clone());
                 let definition_id =
                     Symbol::definition_id_for(&external_crate, &u.source, SymbolKind::Import, None);
                 self.stats.reexports += 1;
                 self.stats.unresolved_reexports += 1;
-                self.symbols.push(Symbol {
+                if !self.track(
+                    &path_str,
+                    &symbol_id,
+                    &definition_id,
+                    &u.source,
+                    self.signatures.contains_key(&use_item.id.0),
+                ) {
+                    return;
+                }
+                let signature = self.signatures.get(&use_item.id.0);
+                let summary_chars = self.summary_chars;
+                self.symbol(|| Symbol {
                     symbol_id: symbol_id.clone(),
                     definition_id: definition_id.clone(),
                     path: path_str.clone(),
                     name: u.name.clone(),
                     kind: SymbolKind::Import,
                     parent_path: Some(parent.join("::")),
-                    signature: self.signatures.get(&use_item.id.0).cloned(),
-                    doc_summary: summary(use_item.docs.as_deref(), self.summary_chars),
+                    signature: signature.cloned(),
+                    doc_summary: summary(use_item.docs.as_deref(), summary_chars),
                     docs: use_item.docs.clone(),
                     deprecated: None,
                     span_file: None,
@@ -447,17 +685,21 @@ impl Walker<'_> {
                     definition_path: u.source.clone(),
                     defined_in_crate: external_crate,
                     producer_local_id: use_item.id.0,
+                    qualifier: None,
                     cfg_hints: cfg_hints(use_item),
+                    python: None,
                 });
-                self.relationships.push(Relationship::new(
-                    &symbol_id,
-                    &path_str,
-                    None,
-                    &u.source,
-                    RelationKind::Reexports,
-                    Some("external"),
-                    PRODUCER,
-                ));
+                self.relationship(|| {
+                    Relationship::new(
+                        &symbol_id,
+                        &path_str,
+                        None,
+                        &u.source,
+                        RelationKind::Reexports,
+                        Some("external"),
+                        PRODUCER,
+                    )
+                });
             }
         }
     }
@@ -507,32 +749,24 @@ impl Walker<'_> {
         if emitted {
             let source_id =
                 Symbol::symbol_id_for(self.crate_name, &path.join("::"), kind, qualifier);
-            let owner_id = self
-                .symbols
-                .iter()
-                .rev()
-                .find(|s| s.path == owner)
-                .map(|s| s.symbol_id.clone());
-            self.relationships.push(Relationship::new(
-                &source_id,
-                &path.join("::"),
-                owner_id.as_deref(),
-                &owner,
-                RelationKind::MemberOf,
-                qualifier,
-                PRODUCER,
-            ));
+            let owner_id = self.owners.get(&owner).map(|s| s.symbol_id.clone());
+            self.relationship(|| {
+                Relationship::new(
+                    &source_id,
+                    &path.join("::"),
+                    owner_id.as_deref(),
+                    &owner,
+                    RelationKind::MemberOf,
+                    qualifier,
+                    PRODUCER,
+                )
+            });
         }
     }
 
     fn walk_impls(&mut self, impls: &[Id], owner_path: &[String]) {
         let owner = owner_path.join("::");
-        let owner_id = self
-            .symbols
-            .iter()
-            .rev()
-            .find(|s| s.path == owner)
-            .map(|s| s.symbol_id.clone());
+        let owner_id = self.owners.get(&owner).map(|s| s.symbol_id.clone());
         for impl_id in impls {
             let Some(impl_item) = self.krate.index.get(impl_id) else {
                 continue;
@@ -562,15 +796,17 @@ impl Walker<'_> {
                     });
                     let target_path = self.definition_path(trait_path.id, &trait_path.path);
                     if let Some(owner_id) = &owner_id {
-                        self.relationships.push(Relationship::new(
-                            owner_id,
-                            &owner,
-                            trait_def.as_deref(),
-                            &target_path,
-                            RelationKind::Implements,
-                            Some(detail),
-                            PRODUCER,
-                        ));
+                        self.relationship(|| {
+                            Relationship::new(
+                                owner_id,
+                                &owner,
+                                trait_def.as_deref(),
+                                &target_path,
+                                RelationKind::Implements,
+                                Some(detail),
+                                PRODUCER,
+                            )
+                        });
                     }
                     if generated || imp.is_negative {
                         self.stats.generated_impls += 1;
@@ -615,9 +851,13 @@ impl Walker<'_> {
     ) -> bool {
         let path_str = path.join("::");
         let symbol_id = Symbol::symbol_id_for(self.crate_name, &path_str, kind, qualifier);
-        if !self.emitted.insert(symbol_id.clone()) {
+        if self.error.is_some() || self.emitted.contains(&symbol_id) {
             return false;
         }
+        if !self.charge(symbol_id.len() * 4 + 128) {
+            return false;
+        }
+        self.emitted.insert(symbol_id.clone());
         let definition_path = match kind {
             // Members have no `paths` entry of their own; their definition path follows the
             // owner's definition path.
@@ -628,10 +868,8 @@ impl Walker<'_> {
             | SymbolKind::Variant => {
                 let owner = path[..path.len() - 1].join("::");
                 let owner_definition = self
-                    .symbols
-                    .iter()
-                    .rev()
-                    .find(|s| s.path == owner)
+                    .owners
+                    .get(&owner)
                     .map(|s| s.definition_path.clone())
                     .unwrap_or(owner);
                 format!("{owner_definition}::{}", path[path.len() - 1])
@@ -645,18 +883,27 @@ impl Walker<'_> {
         if is_reexport && !via_reexport {
             self.stats.reexports += 1;
         }
-        let docs = item.docs.clone();
-        let signature = self.signatures.get(&item.id.0).cloned();
-        let symbol = Symbol {
-            symbol_id: symbol_id.clone(),
+        if !self.track(
+            &path_str,
+            &symbol_id,
+            &definition_id,
+            &definition_path,
+            self.signatures.contains_key(&item.id.0),
+        ) {
+            return false;
+        }
+        let signature = self.signatures.get(&item.id.0);
+        let summary_chars = self.summary_chars;
+        self.symbol(|| Symbol {
+            symbol_id,
             definition_id,
             path: path_str.clone(),
             name: path[path.len() - 1].clone(),
             kind,
             parent_path: (path.len() > 1).then(|| path[..path.len() - 1].join("::")),
-            signature: signature.clone(),
-            doc_summary: summary(docs.as_deref(), self.summary_chars),
-            docs: docs.clone(),
+            signature: signature.cloned(),
+            doc_summary: summary(item.docs.as_deref(), summary_chars),
+            docs: item.docs.clone(),
             deprecated: item
                 .deprecation
                 .as_ref()
@@ -670,38 +917,44 @@ impl Walker<'_> {
             definition_path,
             defined_in_crate,
             producer_local_id: item.id.0,
+            qualifier: qualifier.map(str::to_owned),
             cfg_hints: cfg_hints(item),
-        };
-        let locator = serde_json::json!({
-            "rustdoc_id": item.id.0,
-            "span_file": symbol.span_file,
-            "span_line": symbol.span_line,
+            python: None,
         });
-        if let Some(text) = docs.filter(|d| !d.trim().is_empty()) {
-            self.fragments.push(EvidenceFragment::new(
-                FragmentKind::DocText,
-                &path_str,
-                self.rustdoc_artifact_id,
-                locator.clone(),
-                text,
-                EvidenceClass::StaticallyExtracted,
-                PRODUCER,
-                NORMALIZER_VERSION,
-            ));
+        if matches!(self.output, WalkOutput::Fragments(_)) {
+            let locator = serde_json::json!({ "rustdoc_id": item.id.0,
+                "span_file": item.span.as_ref().map(|s| s.filename.display().to_string()),
+                "span_line": item.span.as_ref().map(|s| s.begin.0 as u32) });
+            let artifact = self.rustdoc_artifact_id;
+            if let Some(text) = item.docs.as_deref().filter(|d| !d.trim().is_empty()) {
+                self.fragment(|| {
+                    EvidenceFragment::new(
+                        FragmentKind::DocText,
+                        &path_str,
+                        artifact,
+                        locator.clone(),
+                        text.to_owned(),
+                        EvidenceClass::StaticallyExtracted,
+                        PRODUCER,
+                        NORMALIZER_VERSION,
+                    )
+                });
+            }
+            if let Some(text) = signature {
+                self.fragment(|| {
+                    EvidenceFragment::new(
+                        FragmentKind::ApiSignature,
+                        &path_str,
+                        artifact,
+                        locator,
+                        text.clone(),
+                        EvidenceClass::StaticallyExtracted,
+                        "public-api",
+                        public_api_version(),
+                    )
+                });
+            }
         }
-        if let Some(text) = signature {
-            self.fragments.push(EvidenceFragment::new(
-                FragmentKind::ApiSignature,
-                &path_str,
-                self.rustdoc_artifact_id,
-                locator,
-                text,
-                EvidenceClass::StaticallyExtracted,
-                "public-api",
-                public_api_version(),
-            ));
-        }
-        self.symbols.push(symbol);
         true
     }
 }
@@ -770,7 +1023,8 @@ pub fn public_api_version() -> &'static str {
 
 /// Group symbols by definition, for callers that need "one capability, several paths".
 #[must_use]
-pub fn paths_by_definition(symbols: &[Symbol]) -> BTreeMap<String, Vec<String>> {
+#[cfg(test)]
+fn paths_by_definition(symbols: &[Symbol]) -> BTreeMap<String, Vec<String>> {
     let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for symbol in symbols {
         map.entry(symbol.definition_id.clone())

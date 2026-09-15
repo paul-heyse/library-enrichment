@@ -127,9 +127,12 @@ impl FetchPolicy {
     pub fn from_config(config: &Config) -> Self {
         let mut trusted_hosts = BTreeSet::new();
         for base in [
+            &config.producers.github_api_url,
             &config.producers.rust.crates_io_index_url,
             &config.producers.rust.crates_io_api_url,
             &config.producers.rust.docs_rs_url,
+            &config.producers.python.pypi_url,
+            &config.producers.python.simple_url,
         ] {
             if let Some(authority) = Url::parse(base).ok().and_then(|u| host_key(&u)) {
                 trusted_hosts.insert(authority);

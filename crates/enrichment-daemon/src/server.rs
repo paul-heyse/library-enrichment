@@ -17,7 +17,8 @@ use tokio::sync::Notify;
 
 use enrichment_core::producer::rustdoc;
 use enrichment_core::request::{
-    InspectRequest, OverviewRequest, ReadArtifactRequest, ResolveRequest, SearchRequest,
+    CompareRequest, InspectRequest, OverviewRequest, ReadArtifactRequest, ResolveRequest,
+    SearchRequest,
 };
 
 use crate::ops;
@@ -47,7 +48,61 @@ pub async fn serve(
     // In-band shutdown: `daemon.shutdown` over the socket, so `library-enrichmentd stop` needs
     // no pidfile and no signal-sending privileges.
     let stop = Arc::new(Notify::new());
-    let result = accept_loop(&listener, service, shutdown, Arc::clone(&stop)).await;
+    // `Runner::serve` gives a warm session no container wall clock, on the stated grounds that
+    // the session manager's idle policy bounds it. That is only true if something drives the
+    // sweep, so this is that something. Without it the policy would be decorative and a single
+    // inspection could leave a language server running until the daemon stopped.
+    let sweeper = tokio::spawn({
+        let service = Arc::clone(&service);
+        async move {
+            let interval = std::time::Duration::from_secs(
+                service
+                    .config
+                    .execution
+                    .lsp_idle_seconds
+                    .clamp(10, 3600)
+                    .min(60),
+            );
+            loop {
+                tokio::time::sleep(interval).await;
+                service.lsp.evict_idle().await;
+            }
+        }
+    });
+    let result = accept_loop(&listener, service.clone(), shutdown, Arc::clone(&stop)).await;
+    sweeper.abort();
+    let deadline = tokio::time::Instant::now()
+        + std::time::Duration::from_secs(
+            service
+                .config
+                .network
+                .request_timeout_seconds
+                .saturating_add(30)
+                .min(600),
+        );
+    // Cancel queued/running jobs before waiting for the manager: a warm start may itself be
+    // waiting for their slot. The same deadline bounds lock acquisition, polite stop and cleanup.
+    service.jobs.request_shutdown()?;
+    service.lsp.shutdown(deadline).await?;
+    // Journals going terminal is not the same fact as containers being gone. Wait for both, and
+    // name the containers still outstanding rather than exiting on a half-kept promise.
+    while service.jobs.counts() != (0, 0) || !service.execution.is_idle() {
+        if tokio::time::Instant::now() >= deadline {
+            let outstanding = service.execution.outstanding();
+            let detail = if outstanding.is_empty() {
+                "retained journals require inspection".to_owned()
+            } else {
+                format!(
+                    "these owned containers were not confirmed absent: {}",
+                    outstanding.join(", ")
+                )
+            };
+            return Err(std::io::Error::other(format!(
+                "shutdown could not confirm all job cleanup; {detail}"
+            )));
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+    }
 
     // Leaving a live socket behind would make the next `start` look like a running daemon.
     let _ = std::fs::remove_file(&paths.socket);
@@ -175,6 +230,7 @@ impl Dispatched {
 
 /// Route one frame.
 pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
+    let began = std::time::Instant::now();
     let request: Request = match serde_json::from_str(frame) {
         Ok(request) => request,
         Err(err) => {
@@ -205,7 +261,12 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
     // A notification is a request with no id; it is still dispatched, but answered with nothing.
     let is_notification = request.id.is_none();
     let mut shutdown = false;
-    let response = match request.method.as_str() {
+    let requested_budget = request
+        .params
+        .get("max_bytes")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|n| usize::try_from(n).ok());
+    let mut response = match request.method.as_str() {
         "daemon.shutdown" => {
             shutdown = true;
             Response::ok(request.id, serde_json::json!({ "stopping": true }))
@@ -244,6 +305,45 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         },
         // The retrieval methods read a published snapshot; each answers with a complete
         // envelope and refuses malformed parameters with a typed RPC error.
+        "usage.verify" => {
+            match serde_json::from_value::<enrichment_core::execution::VerifyRequest>(
+                request.params,
+            ) {
+                Ok(req) => Response::ok(
+                    request.id,
+                    serde_json::to_value(ops::verify::verify(service, req).await)
+                        .expect("envelope"),
+                ),
+                Err(err) => invalid_params(
+                    request.id,
+                    "usage.verify",
+                    &err,
+                    "context, snippet, mode and enabled profile",
+                ),
+            }
+        }
+        "job.control" => {
+            match serde_json::from_value::<enrichment_core::execution::JobRequest>(request.params) {
+                Ok(req) => Response::ok(
+                    request.id,
+                    serde_json::to_value(ops::verify::control(service, req).await)
+                        .expect("envelope"),
+                ),
+                Err(err) => invalid_params(request.id, "job.control", &err, "job_id and action"),
+            }
+        }
+        "library.compare" => match serde_json::from_value::<CompareRequest>(request.params) {
+            Ok(req) => Response::ok(
+                request.id,
+                serde_json::to_value(ops::compare::compare(service, req).await).expect("envelope"),
+            ),
+            Err(err) => invalid_params(
+                request.id,
+                "library.compare",
+                &err,
+                "a before/after context pair",
+            ),
+        },
         "library.overview" => match serde_json::from_value::<OverviewRequest>(request.params) {
             Ok(req) => Response::ok(
                 request.id,
@@ -286,7 +386,7 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         "artifact.read" => match serde_json::from_value::<ReadArtifactRequest>(request.params) {
             Ok(req) => Response::ok(
                 request.id,
-                serde_json::to_value(ops::artifact::read(service, req))
+                serde_json::to_value(ops::artifact::read(service, req).await)
                     .expect("an Envelope always serializes"),
             ),
             Err(err) => invalid_params(
@@ -300,7 +400,7 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             match serde_json::from_value::<ops::manifest::ManifestRequest>(request.params) {
                 Ok(req) => Response::ok(
                     request.id,
-                    serde_json::to_value(ops::manifest::manifest(service, req))
+                    serde_json::to_value(ops::manifest::manifest(service, req).await)
                         .expect("an Envelope always serializes"),
                 ),
                 Err(err) => invalid_params(
@@ -367,6 +467,38 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             ),
         ),
     };
+
+    // Budget enforcement happens before the counters read the response, so `response_bytes`
+    // is what a caller actually receives rather than what a handler wanted to send.
+    let mut status = None;
+    let mut has_gap = false;
+    if let Some(value) = response.result.take() {
+        response.result = Some(
+            if let Ok(result) =
+                serde_json::from_value::<enrichment_core::wire::Envelope>(value.clone())
+            {
+                let bounded = ops::common::enforce_budget(service, result, requested_budget);
+                status = Some(bounded.status());
+                has_gap = !bounded.coverage.missing.is_empty();
+                serde_json::to_value(bounded).expect("bounded envelope")
+            } else {
+                value
+            },
+        );
+    }
+
+    // Measured even for a notification: the work happened, and a counter that quietly skipped
+    // it would understate what this process did.
+    let bytes = serde_json::to_vec(&response).map_or(0, |v| v.len());
+    service
+        .metrics
+        .record_response(status, has_gap, bytes as u64);
+    crate::metrics::Metrics::log_request(
+        &request.method,
+        status,
+        u64::try_from(began.elapsed().as_millis()).unwrap_or(u64::MAX),
+        bytes,
+    );
 
     Dispatched {
         response: (!is_notification).then_some(response),

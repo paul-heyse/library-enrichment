@@ -26,6 +26,7 @@ pub mod evidence;
 pub mod ids;
 pub mod job;
 pub mod schema;
+pub mod status;
 
 pub use envelope::{Envelope, EnvelopeBody, EnvelopeError, Outcome, SchemaVersion, Status};
 pub use error::{ErrorCode, ErrorDetail};
@@ -35,6 +36,10 @@ pub use evidence::{
 pub use ids::{ArtifactUri, ArtifactUriError, RequestId, RequestIdError};
 pub use job::{JobHandle, JobState, Pagination};
 pub use schema::{ENVELOPE_SCHEMA_FILE, envelope_schema, envelope_schema_json};
+pub use status::{
+    ComponentStatus, EvidenceCounters, FetchCounters, Health, LspMetrics, Sandbox,
+    SchemaCompatibility, SingleFlightCounts, StatusData, VerificationCounters, Versions,
+};
 
 /// A JSON object on the wire -- `{"type": "object"}`, not an arbitrary `Value`.
 ///

@@ -42,7 +42,7 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     // Bound the namespace list by the byte budget: fewer complete namespaces, never a cut one.
     let budget = common::byte_budget(service, request.max_bytes);
     let mut namespaces: Vec<NamespaceFacet> = Vec::new();
-    let mut truncated_namespaces = 0u64;
+    let mut truncated_namespaces = raw.truncated_namespaces;
     let mut used = 2048usize; // headroom for the rest of the payload
     for ns in raw.namespaces {
         let facet = NamespaceFacet {
@@ -83,12 +83,22 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     // Cite the module docs and the feature table as evidence, bounded.
     let excerpt_chars = service.config.limits.excerpt_characters;
     let mut evidence = Vec::new();
-    if let Ok(fragments) = opened.reader.fragments_for(&manifest.crate_name).await {
-        for fragment in fragments
-            .iter()
-            .filter(|f| f.kind == FragmentKind::DocText)
-            .take(1)
-        {
+    let fragments = match opened
+        .reader
+        .fragments(enrichment_store::query::FragmentSelection {
+            path: Some(&manifest.crate_name),
+            symbol_id: None,
+            kinds: &[FragmentKind::DocText],
+            limit: 1,
+            require_complete: false,
+        })
+        .await
+    {
+        Ok(rows) => rows,
+        Err(err) => return common::query_error(&err),
+    };
+    {
+        for fragment in &fragments {
             evidence.push(evidence_from_fragment(
                 service,
                 fragment,
@@ -97,12 +107,22 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
             ));
         }
     }
-    if let Ok(fragments) = opened
+    let fragments = match opened
         .reader
-        .fragments_of_kind(FragmentKind::FeatureDefinition)
+        .fragments(enrichment_store::query::FragmentSelection {
+            path: None,
+            symbol_id: None,
+            kinds: &[FragmentKind::FeatureDefinition],
+            limit: per_namespace.clamp(1, 128),
+            require_complete: false,
+        })
         .await
     {
-        for fragment in fragments.iter().take(per_namespace) {
+        Ok(rows) => rows,
+        Err(err) => return common::query_error(&err),
+    };
+    {
+        for fragment in &fragments {
             evidence.push(evidence_from_fragment(
                 service,
                 fragment,

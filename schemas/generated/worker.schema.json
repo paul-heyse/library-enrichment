@@ -1,0 +1,300 @@
+{
+  "$defs": {
+    "Observation": {
+      "additionalProperties": false,
+      "description": "One independent declaration emitted by Griffe.",
+      "properties": {
+        "alias_target": {
+          "description": "Alias target even if unresolved.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bases": {
+          "description": "Declared base expressions, not resolved inheritance claims.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "docs": {
+          "description": "Full bounded docstring.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "description": "Relative archive path, never an arbitrary local path.",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Module, class, function or attribute.",
+          "type": "string"
+        },
+        "line": {
+          "description": "First declaration line.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "origin": {
+          "$ref": "#/$defs/ObservationOrigin",
+          "description": "Source versus stub provenance."
+        },
+        "overloads": {
+          "description": "Every declared overload, including stub-only overload groups.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "path": {
+          "description": "Qualified Python path.",
+          "type": "string"
+        },
+        "publicness": {
+          "$ref": "#/$defs/Publicness",
+          "description": "Signals remain separate."
+        },
+        "signature": {
+          "description": "Rendered signature or annotation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "origin",
+        "file",
+        "line",
+        "signature",
+        "overloads",
+        "docs",
+        "alias_target",
+        "bases",
+        "publicness"
+      ],
+      "type": "object"
+    },
+    "ObservationOrigin": {
+      "description": "A source or stub annotation is not a runtime observation.",
+      "enum": [
+        "source",
+        "stub"
+      ],
+      "type": "string"
+    },
+    "Publicness": {
+      "description": "Independent publicness signals. Unknown author/export signals stay absent.",
+      "properties": {
+        "declared_exports": {
+          "description": "Literal __all__ entries.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "docstring": {
+          "description": "A docstring exists; absence does not prove private API.",
+          "type": "boolean"
+        },
+        "exported": {
+          "description": "Membership in a statically resolved __all__, when known.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reexport": {
+          "description": "This is a reexport declaration.",
+          "type": "boolean"
+        },
+        "underscore": {
+          "description": "Underscore naming convention, not a privacy verdict.",
+          "type": "boolean"
+        },
+        "unresolved_exports": {
+          "description": "Export expressions not statically reduced to literals.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "exported",
+        "underscore",
+        "reexport",
+        "docstring",
+        "declared_exports",
+        "unresolved_exports"
+      ],
+      "type": "object"
+    },
+    "WorkerFile": {
+      "additionalProperties": false,
+      "description": "One source file selected by Rust for the static worker.",
+      "properties": {
+        "file": {
+          "description": "Archive-relative file path.",
+          "type": "string"
+        },
+        "module": {
+          "description": "Qualified module import path.",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/ObservationOrigin",
+          "description": "Whether it is .py or .pyi."
+        }
+      },
+      "required": [
+        "file",
+        "module",
+        "origin"
+      ],
+      "type": "object"
+    },
+    "WorkerGap": {
+      "additionalProperties": false,
+      "description": "An extraction gap, associated with its exact file.",
+      "properties": {
+        "file": {
+          "description": "Archive path.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why it could not be fully characterized.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "WorkerRequest": {
+      "additionalProperties": false,
+      "description": "A static extraction request, generated into Python boundary DTOs.",
+      "properties": {
+        "files": {
+          "description": "Exhaustive expected file list; worker must account for each.",
+          "items": {
+            "$ref": "#/$defs/WorkerFile"
+          },
+          "type": "array"
+        },
+        "max_cpu_seconds": {
+          "description": "Rust-owned CPU deadline installed before parsing studied source.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_memory_bytes": {
+          "description": "Rust-owned address-space ceiling installed before parsing studied source.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_observations": {
+          "description": "Maximum observations returned.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "root": {
+          "description": "Absolute service-owned input root.",
+          "type": "string"
+        },
+        "schema_version": {
+          "description": "Protocol version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "root",
+        "files",
+        "max_observations",
+        "max_memory_bytes",
+        "max_cpu_seconds"
+      ],
+      "type": "object"
+    },
+    "WorkerResponse": {
+      "additionalProperties": false,
+      "description": "Raw worker output. Only Rust normalizes and publishes it.",
+      "properties": {
+        "gaps": {
+          "description": "Explicit limitations/errors.",
+          "items": {
+            "$ref": "#/$defs/WorkerGap"
+          },
+          "type": "array"
+        },
+        "griffe_version": {
+          "description": "Griffe version actually used.",
+          "type": "string"
+        },
+        "observations": {
+          "description": "One or more facts per file.",
+          "items": {
+            "$ref": "#/$defs/Observation"
+          },
+          "type": "array"
+        },
+        "processed_files": {
+          "description": "Files successfully visited, including files with no declarations.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "description": "Protocol version.",
+          "type": "string"
+        },
+        "worker_python": {
+          "description": "The worker's own interpreter, never the analyzed interpreter.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "griffe_version",
+        "worker_python",
+        "observations",
+        "processed_files",
+        "gaps"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "JSON schema covering both halves of the worker boundary.",
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/WorkerRequest",
+      "description": "Input."
+    },
+    "response": {
+      "$ref": "#/$defs/WorkerResponse",
+      "description": "Output."
+    }
+  },
+  "required": [
+    "request",
+    "response"
+  ],
+  "title": "WorkerProtocol",
+  "type": "object"
+}

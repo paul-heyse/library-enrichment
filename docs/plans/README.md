@@ -4,9 +4,27 @@ A plan records **how work is sequenced and verified**. A decision record
 ([`../adr/`](../adr/README.md)) records **what was decided and why**. The two have different
 lifecycles, which is why they live in different directories.
 
+**Current direction, 2026-09-14:** [Plan 12](12-architecture-first-completion.md) is functionally
+complete. Native architecture and legacy decommission precede the completed Phase 4–6 capabilities.
+Full implementation CI and actual producer/client checks passed. The user stopped redundant replay
+after a registry-only recording correction; current-registry gate certification is not claimed.
+Performance tuning is deferred. Earlier plan labels are historical; Plan 12 records final scope,
+validation and deliberate deviations.
+
 | Plan | Covers | ADRs | Status |
 |---|---|---|---|
 | [01 — Port the design process](01-port-the-design-process.md) | The charter, the living design document, decision-record front matter and lint, the deferred-decision register, the review skill, and the `just` surface for all of it | ADR-0009 | done |
+| [2 — Close the static Rust slice](02-phase-1-closure.md) | Blueprint Phase 1 | ADR-0011, ADR-0012 | done |
+| [3 — Deliver static Python evidence](03-phase-2-python.md) | Blueprint Phase 2 | ADR-0013 | done |
+| [4 — Deliver comparisons and bounded research](04-phase-3-research.md) | Blueprint Phase 3 | ADR-0014, ADR-0015 | done |
+| [5 — Deliver isolated semantics and durable verification](05-phase-4-verification.md) | Blueprint Phase 4 | ADR-0017 (supersedes ADR-0016) | done; gate 13/13 |
+| [6 — Qualify the skill and real clients](06-phase-5-clients.md) | Blueprint Phase 5 | — | completed through Plan 12; actual client journeys passed |
+| [7 — Harden publication and operations](07-phase-6-operations.md) | Blueprint Phase 6 | ADR-0018 | done; gate 4/4 |
+| [8 — Resume remaining Phase 4–6](08-phase-4-6-resumption.md) | Checkpoint, commands, findings and remaining gates | ADR-0005, ADR-0017 | done; its scope was executed on 2026-09-14 |
+| [9 — Complete Phase 4–6](09-phase-4-6-completion.md) | Reopened correctness and product completion requirements | ADR-0020, ADR-0021 | remaining functional scope completed through Plan 12 |
+| [10 — Arrow/DataFusion target architecture](10-arrow-datafusion-architecture.md) | Hard pivot: typed evidence/catalog, batch execution, publication, clean development reset and full completion | ADR-0022–ADR-0027 | target implementation completed through Plan 12 |
+| [11 — Complete architecture and remove legacy paths](11-arrow-datafusion-completion-and-legacy-removal.md) | Architecture work, explicit deletion ledger and independent completion exits; progress in the [execution ledger](11-arrow-datafusion-execution-ledger.md) | ADR-0022–ADR-0032 | remaining functional/deletion scope completed through Plan 12 |
+| [12 — Architecture-first completion](12-architecture-first-completion.md) | Remaining architecture gaps and legacy removal first, then Phase 4–6 functionality and integrated acceptance | ADR-0022–ADR-0035 | done; user stopped redundant registry-only replay; [execution ledger](12-architecture-first-execution-ledger.md) |
 
 ## Norms
 

@@ -24,10 +24,18 @@ use super::ProducerError;
 /// The producer name carried in errors and provenance.
 pub const PRODUCER: &str = "rustdoc-json";
 
+/// Provenance for JSON this service compiled itself, rather than downloaded from docs.rs.
+///
+/// Blueprint §4.4 requires the two to stay distinguishable: a locally built document came from
+/// a dated nightly against a synthesised capsule, and "it compiled on nightly" is not "it
+/// compiles on the project's stable compiler". Collapsing the names would make that distinction
+/// unrecoverable from a snapshot manifest.
+pub const LOCAL_PRODUCER: &str = "locally_built_rustdoc";
+
 /// The normalizer version. Part of every snapshot identity (§6.3): bump it whenever the shape
 /// or meaning of a normalized symbol, relationship or fragment changes, so improved
 /// normalization of the same inputs is a new snapshot and the old one stays readable.
-pub const NORMALIZER_VERSION: &str = "1";
+pub const NORMALIZER_VERSION: &str = "4";
 
 /// Format versions this build can faithfully interpret.
 ///

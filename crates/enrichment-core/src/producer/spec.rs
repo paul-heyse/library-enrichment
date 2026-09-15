@@ -146,9 +146,32 @@ pub enum RunOutcome {
     Skipped,
 }
 
+impl RunOutcome {
+    /// Canonical producer outcome, shared by typed storage and provenance DTOs.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Succeeded => "succeeded",
+            Self::Partial => "partial",
+            Self::Failed => "failed",
+            Self::Skipped => "skipped",
+        }
+    }
+
+    /// Parse an outcome without accepting alternate or debug spellings.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        [Self::Succeeded, Self::Partial, Self::Failed, Self::Skipped]
+            .into_iter()
+            .find(|v| v.as_str() == value)
+    }
+}
+
 /// Provenance for one producer execution (§6.1).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ProducerRun {
+    /// Unique execution-attempt identity, excluded from semantic content and reuse keys.
+    pub attempt_id: String,
     /// Producer name.
     pub producer: String,
     /// Exact producer version.
@@ -172,6 +195,20 @@ pub struct ProducerRun {
 }
 
 impl ProducerRun {
+    /// Semantic producer identity includes outcome/coverage but excludes attempt provenance.
+    #[must_use]
+    pub fn semantic_binding_id(&self) -> String {
+        let mut gaps: Vec<_> = self.gaps.iter().map(|gap| serde_json::json!(gap)).collect();
+        gaps.sort_by_cached_key(canonical::to_canonical_string);
+        gaps.dedup();
+        format!(
+            "producer_{}",
+            canonical::digest_hex(&serde_json::json!({
+                "version": "producer-binding/1", "dedupe": self.dedupe_key(),
+                "outcome": self.outcome, "gaps": gaps,
+            }))
+        )
+    }
     /// The single-flight key (§8.2): producer version, normalized options, input digests and
     /// profile. Deliberately excludes timestamps and the request that triggered the run.
     #[must_use]
@@ -188,10 +225,8 @@ impl ProducerRun {
 
 /// Digest a producer's options so identical configurations share one run.
 #[must_use]
-pub fn config_digest<T: Serialize>(options: &T) -> String {
-    serde_json::to_value(options)
-        .map(|v| canonical::digest_hex(&v))
-        .unwrap_or_default()
+pub fn config_digest(options: &serde_json::Value) -> String {
+    canonical::digest_hex(options)
 }
 
 #[cfg(test)]
@@ -222,6 +257,7 @@ mod tests {
     #[test]
     fn the_dedupe_key_ignores_time() {
         let mut run = ProducerRun {
+            attempt_id: "attempt-test".into(),
             producer: "p".to_owned(),
             producer_version: "1".to_owned(),
             config_digest: config_digest(&serde_json::json!({"a": 1})),

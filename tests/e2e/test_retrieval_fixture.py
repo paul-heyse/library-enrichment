@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -57,7 +58,7 @@ async def _call(
 ) -> dict[str, Any]:
     async with Client(daemon.transport(env, cwd=cwd)) as client:
         result = await client.call_tool(tool, arguments)
-    payload = result.data
+        payload = await daemon.read_complete_answer(client, result.structured_content)
     assert isinstance(payload, dict)
     return payload
 
@@ -210,3 +211,26 @@ async def test_tools_run_from_an_unrelated_directory_and_leave_it_untouched(
     blobs = state / "data/blobs"
     assert blobs.is_dir() and any(blobs.rglob("*")), "state landed in the configured root"
     assert (state / "data/snapshots" / resolved["snapshot_id"]).is_dir()
+
+
+async def test_mismatched_hosted_version_is_not_admitted_as_requested_api(tmp_path: Path) -> None:
+    root = tmp_path / "upstream"
+    shutil.copytree(FIXTURE_ROOT, root)
+    shutil.copyfile(
+        root / "docsrs/enr-fixture-0.2.0.json.zst", root / "docsrs/enr-fixture-0.1.0.json.zst"
+    )
+    config = tmp_path / "service.toml"
+    with serve(root) as upstream:
+        _write_config(config, upstream)
+        env = daemon.daemon_env(tmp_path / "state", config)
+        with daemon.running(env):
+            resolved = await _call(
+                env, "resolve_library", ecosystem="rust", name="enr-fixture", version="0.1.0"
+            )
+            assert resolved["status"] == "partial", resolved
+            assert resolved["freshness"]["source_version_match"] == "mismatched"
+            assert any("declares version" in g["detail"] for g in resolved["data"]["gaps"])
+            overview = await _call(env, "library_overview", context_id=resolved["context_id"])
+            assert "public_api" in overview["coverage"]["missing"]
+            assert overview["data"]["snapshot"]["counts"]["symbols"] == 0
+            assert _readme_id(resolved)

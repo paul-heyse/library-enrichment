@@ -1,0 +1,18 @@
+# What `taplo check` is allowed to look at.
+#
+# A scoping choice, not a suppression: the excluded paths are not this repository's TOML. They
+# are gitignored service state and build output, and `.dev-state/` in particular holds fixtures
+# that are *deliberately* malformed -- upstream-verification probes that checked how a tool
+# behaves when handed a broken configuration file. Linting those would report our own test
+# inputs as our own defects.
+#
+# Everything the repository actually owns stays in scope, which is what let `just lint` stop
+# swallowing taplo's exit code.
+
+include = ["**/*.toml"]
+exclude = [
+  ".dev-state/**",
+  "target/**",
+  ".venv/**",
+  "tests/fixtures/**",
+]

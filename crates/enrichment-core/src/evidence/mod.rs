@@ -9,12 +9,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::canonical;
 
+pub mod catalog;
+pub mod execution;
+pub mod ingest;
+pub mod metadata;
 pub mod model;
+pub mod path;
+pub mod relational;
+pub mod snapshot;
+pub mod text;
 
 pub use model::{
     Availability, AvailabilityStatus, Deprecated, EvidenceFragment, FragmentKind,
     ObservedConfiguration, RelationKind, Relationship, RequestedConfiguration, SnapshotCounts,
-    SnapshotManifest, Symbol, SymbolKind, TableRef,
+    Symbol, SymbolKind,
 };
 
 /// The kinds of evidence a producer can require or yield, and that `coverage.indexed` and
@@ -38,9 +46,38 @@ pub enum EvidenceKind {
     Examples,
     ReleaseNotes,
     SourceExcerpts,
+    DistributionSource,
+    Stubs,
+    Inventory,
+    RuntimeApi,
+    SemanticQueries,
+    UsageProbes,
 }
 
 impl EvidenceKind {
+    /// Parse the one canonical evidence-kind vocabulary.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        [
+            Self::RegistryMetadata,
+            Self::CrateSource,
+            Self::DocumentationBuildConfig,
+            Self::HostedRustdocJson,
+            Self::PublicApi,
+            Self::Documentation,
+            Self::Examples,
+            Self::ReleaseNotes,
+            Self::SourceExcerpts,
+            Self::DistributionSource,
+            Self::Stubs,
+            Self::Inventory,
+            Self::RuntimeApi,
+            Self::SemanticQueries,
+            Self::UsageProbes,
+        ]
+        .into_iter()
+        .find(|v| v.as_str() == value)
+    }
     /// The `coverage` spelling of this kind.
     #[must_use]
     pub fn as_str(self) -> &'static str {
@@ -54,6 +91,12 @@ impl EvidenceKind {
             Self::Examples => "examples",
             Self::ReleaseNotes => "release_notes",
             Self::SourceExcerpts => "source_excerpts",
+            Self::DistributionSource => "distribution_source",
+            Self::Stubs => "stubs",
+            Self::Inventory => "inventory",
+            Self::RuntimeApi => "runtime_api",
+            Self::SemanticQueries => "semantic_queries",
+            Self::UsageProbes => "usage_probes",
         }
     }
 }
@@ -74,6 +117,36 @@ pub enum GapReason {
     PolicyDenied,
     ExtractionFailed,
     NotAttempted,
+}
+
+impl GapReason {
+    /// Canonical token shared by Arrow and wire projections.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::HostedJsonMissing => "hosted_json_missing",
+            Self::HostedJsonUnsupported => "hosted_json_unsupported",
+            Self::UpstreamUnavailable => "upstream_unavailable",
+            Self::PolicyDenied => "policy_denied",
+            Self::ExtractionFailed => "extraction_failed",
+            Self::NotAttempted => "not_attempted",
+        }
+    }
+
+    /// Parse a canonical gap reason, rejecting unknown spellings.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        [
+            Self::HostedJsonMissing,
+            Self::HostedJsonUnsupported,
+            Self::UpstreamUnavailable,
+            Self::PolicyDenied,
+            Self::ExtractionFailed,
+            Self::NotAttempted,
+        ]
+        .into_iter()
+        .find(|v| v.as_str() == value)
+    }
 }
 
 /// One piece of expected evidence that is absent, with why and what would supply it.
@@ -122,10 +195,51 @@ pub enum ArtifactKind {
     Other,
 }
 
+impl ArtifactKind {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::RegistryIndexEntry => "registry_index_entry",
+            Self::RegistryVersionMetadata => "registry_version_metadata",
+            Self::CrateTarball => "crate_tarball",
+            Self::RustdocJson => "rustdoc_json",
+            Self::CargoManifest => "cargo_manifest",
+            Self::Readme => "readme",
+            Self::Changelog => "changelog",
+            Self::SourceFile => "source_file",
+            Self::Other => "other",
+        }
+    }
+
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        Some(match value {
+            "registry_index_entry" => Self::RegistryIndexEntry,
+            "registry_version_metadata" => Self::RegistryVersionMetadata,
+            "crate_tarball" => Self::CrateTarball,
+            "rustdoc_json" => Self::RustdocJson,
+            "cargo_manifest" => Self::CargoManifest,
+            "readme" => Self::Readme,
+            "changelog" => Self::Changelog,
+            "source_file" => Self::SourceFile,
+            "other" => Self::Other,
+            _ => return None,
+        })
+    }
+}
+
 /// An immutable, content-addressed artifact (§6.1).
 ///
-/// The digest is the identity; everything else is provenance. Two retrievals of identical
-/// bytes share one artifact, and the first retrieval's provenance is the one kept.
+/// The digest is the identity; everything else is provenance. Two retrievals of identical bytes
+/// share one artifact, and the **stored** record keeps the first retrieval's provenance.
+///
+/// That is not only about an earlier clock. Per-file `source_uri`s are version- or
+/// commit-qualified (`…/serde/1.0.0#README.md`), and a file unchanged between two releases hashes
+/// identically — so a stored record can name a *different release* than the one being reported
+/// on. Acquisition results carry the current call's locator instead, but a citation resolved from
+/// a published snapshot reads the stored record, and there `source_uri` should be read as "a
+/// place these exact bytes were retrieved from", not "the place this release served them from".
+/// The digest is what is guaranteed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Artifact {
     /// `art_<32 hex>`, derived from the digest; the handle callers pass to `read_artifact`.

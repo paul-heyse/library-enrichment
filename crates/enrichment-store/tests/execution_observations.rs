@@ -1,0 +1,722 @@
+use enrichment_core::{
+    canonical,
+    evidence::{
+        Artifact, ArtifactKind,
+        execution::*,
+        ingest::EvidenceBatch,
+        relational::{FactSource, InputArtifact, Locator, SubjectRef},
+        snapshot::SnapshotMetadata,
+    },
+    execution::{ProbeMode, ProcessEnd},
+    identity::{Context, Ecosystem, Environment, Release, ReleaseKey, ResearchMode},
+    policy::ExecutionProfile,
+    producer::{ProducerRun, RunOutcome},
+    wire::{EvidenceClass, SourceVersionMatch},
+};
+use enrichment_store::{
+    BlobStore, SnapshotReader, StatePaths,
+    admission::AdmissionLimits,
+    dataset::WriteLimits,
+    projection,
+    repository::EvidenceRepository,
+    runtime::{QueryLimits, QueryRuntime},
+};
+
+fn metadata() -> SnapshotMetadata {
+    let release = Release::new(ReleaseKey {
+        ecosystem: Ecosystem::Python,
+        registry: "pypi.org".into(),
+        package: "fixture".into(),
+        version: "1.0".into(),
+        artifact_digest: None,
+    });
+    let environment = Environment::resolved(
+        "python-3.14.7".into(),
+        "linux-x86_64".into(),
+        vec![],
+        None,
+        canonical::sha256_hex(b"lock"),
+    );
+    SnapshotMetadata {
+        context: Context::new(
+            release.release_id.clone(),
+            environment.environment_id.clone(),
+            ResearchMode::Project,
+        ),
+        release,
+        environment,
+        symbol_package: "python:fixture".into(),
+        crate_name: "fixture".into(),
+        crate_version: Some("1.0".into()),
+        normalizer_version: "execution/1".into(),
+        observed_configuration: None,
+        producer_items: 0,
+    }
+}
+fn evidence(blobs: &BlobStore, metadata: &SnapshotMetadata) -> EvidenceBatch {
+    evidence_with_position(blobs, metadata, Utf8Position { line: 1, byte: 3 })
+}
+fn evidence_with_position(
+    blobs: &BlobStore,
+    metadata: &SnapshotMetadata,
+    position: Utf8Position,
+) -> EvidenceBatch {
+    let put = |bytes: &[u8], uri: &str| {
+        blobs
+            .put(bytes, |_| {
+                Artifact::describe(
+                    bytes,
+                    ArtifactKind::Other,
+                    "application/json",
+                    uri,
+                    "2026-09-14T00:00:00Z",
+                )
+            })
+            .unwrap()
+            .acquired
+    };
+    let input = put("# 😀\nfixture.f()\n".as_bytes(), "consumer://fixture/1");
+    let lock = put(b"lock", "consumer://fixture/lock");
+    let range = Utf8Range {
+        start: Utf8Position { line: 1, byte: 0 },
+        end: Utf8Position { line: 1, byte: 7 },
+    };
+    let payloads = vec![
+        ExecutionPayload::SemanticQuery(SemanticQuery {
+            method: SemanticMethod::Definition,
+            document_artifact_id: input.artifact_id.clone(),
+            position: Some(position),
+            anchor_symbol_id: None,
+            server: "ty 0.0.80".into(),
+            outcome: ExecutionOutcome::Results,
+            hover: None,
+            locations: vec![
+                ExecutionTarget::Artifact {
+                    artifact_id: input.artifact_id.clone(),
+                    range,
+                },
+                ExecutionTarget::External {
+                    scope: "image:fixture".into(),
+                    path: "stdlib/builtins.pyi".into(),
+                    limitation: "external document not retained".into(),
+                },
+            ],
+            diagnostics: vec![],
+            limitations: vec![],
+        }),
+        ExecutionPayload::SemanticQuery(SemanticQuery {
+            method: SemanticMethod::Diagnostics,
+            document_artifact_id: input.artifact_id.clone(),
+            position: None,
+            anchor_symbol_id: None,
+            server: "ty 0.0.80".into(),
+            outcome: ExecutionOutcome::Results,
+            hover: None,
+            locations: vec![],
+            diagnostics: vec![ExecutionDiagnostic {
+                range,
+                severity: Some(1),
+                code: Some("unresolved-reference".into()),
+                source: Some("ty".into()),
+                message: "fixture is not imported".into(),
+            }],
+            limitations: vec![],
+        }),
+        ExecutionPayload::RuntimeObject(RuntimeObject {
+            module: "fixture".into(),
+            selection: vec!["f".into()],
+            outcome: ExecutionOutcome::Results,
+            type_name: Some("builtins.function".into()),
+            signature: Some("(x, /)".into()),
+            docstring: Some(String::new()),
+            attributes: vec![],
+            limitations: vec![],
+        }),
+        ExecutionPayload::UsageProbe(UsageProbe {
+            mode: ProbeMode::Runtime,
+            snippet_artifact_id: input.artifact_id.clone(),
+            end: ProcessEnd::Exited,
+            exit_code: Some(1),
+            stdout: String::new(),
+            stderr: "NameError: fixture is not defined\n".into(),
+        }),
+    ];
+    let mut evidence = EvidenceBatch::default();
+    for (index, payload) in payloads.into_iter().enumerate() {
+        let result = put(
+            &payload.canonical_bytes().unwrap(),
+            "producer-result://execution/1",
+        );
+        let runtime = matches!(
+            payload,
+            ExecutionPayload::RuntimeObject(_) | ExecutionPayload::UsageProbe(_)
+        );
+        let receipt = put(
+            format!("fixture attempt {index}").as_bytes(),
+            &format!("attempt://fixture/{index}"),
+        );
+        let run = ProducerRun {
+            attempt_id: format!("attempt-{index}"),
+            producer: "execution-fixture".into(),
+            producer_version: "1".into(),
+            config_digest: "fixture".into(),
+            inputs: [
+                ("document".into(), input.sha256.clone()),
+                ("lock".into(), lock.sha256.clone()),
+                ("result".into(), result.sha256.clone()),
+            ]
+            .into(),
+            profile: if runtime {
+                ExecutionProfile::Runtime
+            } else {
+                ExecutionProfile::Build
+            },
+            started_at: "2026-09-14T00:00:00Z".into(),
+            finished_at: "2026-09-14T00:00:01Z".into(),
+            outcome: RunOutcome::Succeeded,
+            gaps: vec![],
+            log: Some(receipt.artifact_id.clone()),
+        };
+        let binding = run.semantic_binding_id();
+        for (role, artifact) in [("document", &input), ("lock", &lock), ("result", &result)] {
+            evidence
+                .input_artifacts
+                .push(InputArtifact::new(binding.clone(), role.into(), artifact).unwrap());
+        }
+        evidence.execution_observations.push(
+            ExecutionObservation::new(
+                SubjectRef::Document {
+                    artifact_id: input.artifact_id.clone(),
+                    heading: "consumer".into(),
+                },
+                metadata.environment.environment_id.to_string(),
+                format!("sha256:{}", "a".repeat(64)),
+                "b".repeat(64),
+                payload,
+                FactSource {
+                    producer_binding_id: binding,
+                    extractor: "execution".into(),
+                    extractor_version: "1".into(),
+                    artifact_id: result.artifact_id.clone(),
+                    source_uri: Some(result.source_uri.clone()),
+                    source_version_match: SourceVersionMatch::Exact,
+                    locator: Locator::Artifact,
+                    evidence_class: if runtime {
+                        EvidenceClass::RuntimeObserved
+                    } else {
+                        EvidenceClass::TypecheckerObserved
+                    },
+                },
+            )
+            .unwrap(),
+        );
+        evidence.attempt_artifacts.insert(
+            run.attempt_id.clone(),
+            vec![input.clone(), lock.clone(), result, receipt],
+        );
+        evidence.producer_runs.push(run);
+    }
+    evidence
+}
+
+#[tokio::test]
+async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
+    let dir = tempfile::tempdir().unwrap();
+    let paths = StatePaths {
+        data_root: dir.path().join("data"),
+        cache_root: dir.path().join("cache"),
+    };
+    let blobs = BlobStore::open(&paths.data_root).unwrap();
+    let metadata = metadata();
+    let mut evidence = evidence(&blobs, &metadata);
+    let batch = projection::execution::encode(&evidence.execution_observations).unwrap();
+    assert_eq!(
+        batch.schema(),
+        projection::execution::encode(&[]).unwrap().schema()
+    );
+    assert_eq!(
+        projection::execution::decode(&batch).unwrap(),
+        evidence.execution_observations
+    );
+    let runtime =
+        QueryRuntime::new(&paths.cache_root.join("spill"), QueryLimits::default()).unwrap();
+    let repository = EvidenceRepository::new(
+        paths.clone(),
+        runtime,
+        WriteLimits::default(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    use enrichment_core::evidence::{
+        Symbol, SymbolKind,
+        path::PublicPath,
+        relational::{Definition, PublicBinding},
+    };
+    let definition = Definition {
+        definition_id: Symbol::definition_id_for(
+            "python:fixture",
+            "fixture.f",
+            SymbolKind::Function,
+            None,
+        ),
+        definition_path: "fixture.f".into(),
+        kind: SymbolKind::Function,
+        defined_in_package: "python:fixture".into(),
+        qualifier: None,
+    };
+    let path = PublicPath::parse(Ecosystem::Python, "fixture.f").unwrap();
+    let symbol = PublicBinding {
+        symbol_id: PublicBinding::id_for("python:fixture", &path, SymbolKind::Function, None),
+        definition_id: definition.definition_id.clone(),
+        path,
+        name: "f".into(),
+        is_reexport: false,
+        qualifier: None,
+    };
+    repository
+        .publish(
+            metadata.clone(),
+            EvidenceBatch {
+                definitions: vec![definition],
+                symbols: vec![symbol.clone()],
+                ..Default::default()
+            },
+            None,
+        )
+        .await
+        .unwrap();
+    let object = evidence.execution_observations[2].clone();
+    evidence.execution_observations[2] = ExecutionObservation::new(
+        SubjectRef::Symbol {
+            symbol_id: symbol.symbol_id.clone(),
+        },
+        object.environment_id,
+        object.image_id,
+        object.containment_identity,
+        object.payload,
+        object.source,
+    )
+    .unwrap();
+    // This delta intentionally omits its referenced static symbol. Native assembly must add
+    // the pinned base before full foreign-key admission, without publishing a dangling delta.
+    let manifest = repository
+        .publish(metadata.clone(), evidence.clone(), None)
+        .await
+        .unwrap();
+    let reader = SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.unwrap(),
+        &manifest.snapshot_id,
+    )
+    .await
+    .unwrap();
+    let retained = reader.execution_observations(None, None).await.unwrap();
+    assert_eq!(retained.len(), 4);
+    assert_eq!(reader.runtime().execute(reader.session().sql("SELECT payload.runtime_object.signature FROM execution_observations WHERE payload.kind = 'runtime_object'").await.unwrap()).await.unwrap().rows,1);
+    use enrichment_store::query::ExecutionSelection;
+    let selection = enrichment_core::request::RuntimeSelection {
+        module: "fixture".into(),
+        attributes: vec!["f".into()],
+    };
+    assert_eq!(
+        reader
+            .execution_selection(ExecutionSelection {
+                runtime: Some(&selection),
+                ..Default::default()
+            })
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
+    let absent = enrichment_core::request::RuntimeSelection {
+        module: "fixture".into(),
+        attributes: vec!["different".into()],
+    };
+    assert!(
+        reader
+            .execution_selection(ExecutionSelection {
+                runtime: Some(&absent),
+                ..Default::default()
+            })
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let queries = reader
+        .execution_selection(ExecutionSelection {
+            methods: &[SemanticMethod::Diagnostics],
+            position: Some(Utf8Position { line: 0, byte: 0 }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    assert_eq!(
+        queries.len(),
+        1,
+        "diagnostics are selected independently of a cursor position"
+    );
+    let mut reordered = evidence.clone();
+    reordered.execution_observations.reverse();
+    reordered.input_artifacts.reverse();
+    let again = repository
+        .contribute(metadata.clone(), reordered)
+        .await
+        .unwrap();
+    assert_eq!(again.snapshot_id, manifest.snapshot_id);
+    let bundle = dir.path().join("bundle");
+    enrichment_store::bundle::export(&paths, metadata.context.context_id.as_str(), &bundle)
+        .await
+        .unwrap();
+    enrichment_store::bundle::verify(&bundle).await.unwrap();
+    drop(reader);
+    drop(repository);
+    std::fs::remove_dir_all(&paths.data_root).unwrap();
+    enrichment_store::bundle::verify(&bundle).await.unwrap();
+}
+
+#[test]
+fn execution_identity_is_nonrecursive_and_malformed_payloads_are_refused() {
+    let dir = tempfile::tempdir().unwrap();
+    let evidence = evidence(&BlobStore::open(dir.path()).unwrap(), &metadata());
+    let mut observation = evidence.execution_observations[0].clone();
+    let before = observation.observation_id.clone();
+    observation.source.evidence_class = EvidenceClass::StaticallyExtracted;
+    assert!(observation.validate().is_err());
+    let mut observation = evidence.execution_observations[0].clone();
+    if let ExecutionPayload::SemanticQuery(query) = &mut observation.payload {
+        query.outcome = ExecutionOutcome::Empty;
+    }
+    assert!(observation.validate().is_err());
+    assert_eq!(before, evidence.execution_observations[0].observation_id);
+    assert!(
+        Utf8Position { line: 0, byte: 3 }
+            .validate("# 😀\n")
+            .is_err()
+    );
+    Utf8Position { line: 0, byte: 6 }
+        .validate("# 😀\n")
+        .unwrap();
+    Utf8Position { line: 1, byte: 0 }
+        .validate("# 😀\n")
+        .unwrap();
+    assert!(
+        Utf8Position { line: 2, byte: 0 }
+            .validate("# 😀\n")
+            .is_err()
+    );
+    assert!(
+        serde_json::from_str::<enrichment_core::evidence::relational::ApiOrigin>("\"runtime\"")
+            .is_err()
+    );
+}
+
+#[tokio::test]
+async fn catalog_job_publication_is_atomic_recoverable_and_requires_result_closure() {
+    publication_case(false, false).await;
+}
+#[tokio::test]
+async fn delivery_failure_prevents_job_catalog_commit() {
+    publication_case(true, false).await;
+}
+#[tokio::test]
+async fn exported_job_delivery_has_complete_artifact_closure() {
+    publication_case(false, true).await;
+}
+async fn publication_case(write_failure: bool, export_delivery: bool) {
+    use enrichment_core::evidence::catalog::PublishedJobKind;
+    use enrichment_store::repository::JobCompletion;
+    let dir = tempfile::tempdir().unwrap();
+    let paths = StatePaths {
+        data_root: dir.path().join("data"),
+        cache_root: dir.path().join("cache"),
+    };
+    let blobs = BlobStore::open(&paths.data_root).unwrap();
+    let metadata = metadata();
+    let evidence = evidence(&blobs, &metadata);
+    let runtime =
+        QueryRuntime::new(&paths.cache_root.join("spill"), QueryLimits::default()).unwrap();
+    let repository = EvidenceRepository::new(
+        paths.clone(),
+        runtime.clone(),
+        WriteLimits::default(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let job_id = format!("job_{}", "1".repeat(32));
+    let delivery_blobs = blobs.clone();
+    let prepare_delivery: enrichment_store::repository::JobDeliveryFactory = std::sync::Arc::new(
+        move |manifest| {
+            let bytes = serde_json::to_vec(
+                &serde_json::json!({"context_id":manifest.context_id,"snapshot_id":manifest.snapshot_id,"status":"error",
+            "schema_version":"1.0", "summary":"probe failed", "data":{}, "coverage":{"scope":"fixture","indexed":[],"missing":[],"limitations":[]},
+            "freshness":{"registry_checked_at":null,"source_version_match":"exact","latest_verified":false},"evidence":[],"artifacts":[],
+            "pagination":{"returned":0,"total_matches":null,"truncated":false,"next_cursor":null},"job":null,
+            "error":{"code":"VERIFICATION_FAILED","message":"probe failed","next_action":"inspect evidence","retryable":false}}),
+            )?;
+            Ok(delivery_blobs
+                .put(&bytes, |_| {
+                    Artifact::describe(
+                        &bytes,
+                        ArtifactKind::Other,
+                        "application/json",
+                        "service:job-delivery/1",
+                        "2026-09-14T00:00:00Z",
+                    )
+                })?
+                .acquired)
+        },
+    );
+    let completion = JobCompletion {
+        job_id: job_id.clone(),
+        prepare_delivery,
+        kind: PublishedJobKind::Verify,
+        state: enrichment_core::wire::JobState::Failed,
+        attempt_id: evidence.producer_runs[3].attempt_id.clone(),
+        result_artifact_ids: vec![
+            evidence.execution_observations[3]
+                .source
+                .artifact_id
+                .clone(),
+        ],
+    };
+    if write_failure {
+        let staging = blobs.root().join(".staging");
+        std::fs::remove_dir(&staging).unwrap();
+        std::fs::write(&staging, b"artifact write must fail").unwrap();
+        assert!(
+            repository
+                .publish_job(metadata.clone(), evidence.clone(), completion.clone())
+                .await
+                .is_err()
+        );
+        let catalog = repository.catalog.pin().await.unwrap();
+        assert!(
+            catalog
+                .job_publication(&runtime, &job_id)
+                .await
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            catalog
+                .current(&runtime, &metadata.context.context_id)
+                .await
+                .unwrap()
+                .is_none()
+        );
+        std::fs::remove_file(&staging).unwrap();
+        std::fs::create_dir(staging).unwrap();
+    }
+    let manifest = repository
+        .publish_job(metadata.clone(), evidence.clone(), completion.clone())
+        .await
+        .unwrap();
+    let publication = repository
+        .catalog
+        .pin()
+        .await
+        .unwrap()
+        .job_publication(&runtime, &job_id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(publication.snapshot_id, manifest.snapshot_id);
+    assert_eq!(publication.state, enrichment_core::wire::JobState::Failed);
+    if export_delivery {
+        let bundle = dir.path().join("bundle");
+        enrichment_store::bundle::export(&paths, metadata.context.context_id.as_str(), &bundle)
+            .await
+            .unwrap();
+        assert!(
+            enrichment_store::bundle::verify(&bundle)
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        let delivery_file = bundle
+            .join("data/blobs/sha256")
+            .join(&publication.delivery.sha256[..2])
+            .join(&publication.delivery.sha256);
+        assert_eq!(
+            std::fs::metadata(&delivery_file).unwrap().len(),
+            publication.delivery.size_bytes
+        );
+        assert!(
+            !bundle.join("data/blobs/.staging").exists(),
+            "bundle verification is read-only"
+        );
+        std::fs::remove_file(delivery_file).unwrap();
+        assert!(
+            !enrichment_store::bundle::verify(&bundle)
+                .await
+                .unwrap()
+                .is_empty()
+        );
+    }
+    drop(repository);
+    // No terminal journal was written. The catalog alone still names the completed result.
+    let reopened = EvidenceRepository::new(
+        paths,
+        runtime.clone(),
+        WriteLimits::default(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    assert_eq!(
+        reopened
+            .catalog
+            .pin()
+            .await
+            .unwrap()
+            .job_publication(&runtime, &job_id)
+            .await
+            .unwrap(),
+        Some(publication)
+    );
+    let mut invalid = completion;
+    invalid.job_id = format!("job_{}", "2".repeat(32));
+    invalid.result_artifact_ids = vec![enrichment_core::evidence::artifact_id_for(&"e".repeat(64))];
+    assert!(
+        reopened
+            .publish_job(metadata, evidence, invalid.clone())
+            .await
+            .is_err()
+    );
+    assert!(
+        reopened
+            .catalog
+            .pin()
+            .await
+            .unwrap()
+            .job_publication(&runtime, &invalid.job_id)
+            .await
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[tokio::test]
+async fn canonical_results_with_nonexistent_or_split_character_positions_are_not_published() {
+    for position in [
+        Utf8Position { line: 0, byte: 3 },
+        Utf8Position { line: 30, byte: 0 },
+        Utf8Position { line: 1, byte: 100 },
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = StatePaths::explicit(dir.path().join("cache"), dir.path().join("data"));
+        let blobs = BlobStore::open(&paths.data_root).unwrap();
+        let metadata = metadata();
+        let evidence = evidence_with_position(&blobs, &metadata, position);
+        let runtime =
+            QueryRuntime::new(&paths.cache_root.join("spill"), QueryLimits::default()).unwrap();
+        let repository = EvidenceRepository::new(
+            paths,
+            runtime,
+            WriteLimits::default(),
+            AdmissionLimits::default(),
+        )
+        .unwrap();
+        let error = repository
+            .publish(metadata.clone(), evidence, None)
+            .await
+            .unwrap_err();
+        assert!(error.to_string().contains("position"), "{error}");
+        assert!(
+            repository
+                .catalog
+                .pin()
+                .await
+                .unwrap()
+                .current(&repository.runtime, &metadata.context.context_id)
+                .await
+                .unwrap()
+                .is_none()
+        );
+    }
+}
+
+#[tokio::test]
+async fn repeated_environment_derivation_preserves_child_execution_observations() {
+    let dir = tempfile::tempdir().unwrap();
+    let paths = StatePaths::explicit(dir.path().join("cache"), dir.path().join("data"));
+    let blobs = BlobStore::open(&paths.data_root).unwrap();
+    let repository = EvidenceRepository::new(
+        paths.clone(),
+        QueryRuntime::new(&paths.cache_root.join("spill"), QueryLimits::default()).unwrap(),
+        WriteLimits::default(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let parent_metadata = metadata();
+    let parent_manifest = repository
+        .publish(
+            parent_metadata.clone(),
+            evidence(&blobs, &parent_metadata),
+            None,
+        )
+        .await
+        .unwrap();
+    let parent = repository
+        .open_snapshot(
+            repository.catalog.pin().await.unwrap(),
+            &parent_manifest.snapshot_id,
+        )
+        .await
+        .unwrap();
+    let environment = Environment::resolved(
+        "python-3.14.7".into(),
+        "linux-x86_64".into(),
+        vec![],
+        None,
+        canonical::sha256_hex(b"different exact lock"),
+    );
+    let context = parent_metadata
+        .context
+        .derived_with(environment.environment_id.clone());
+    let derived = repository
+        .derive_environment(&parent, context.clone(), environment.clone())
+        .await
+        .unwrap();
+    let reader = SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.unwrap(),
+        &derived.snapshot_id,
+    )
+    .await
+    .unwrap();
+    assert!(
+        reader
+            .execution_observations(None, None)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    let child_metadata = SnapshotMetadata {
+        context: context.clone(),
+        environment: environment.clone(),
+        ..parent_metadata
+    };
+    let child_evidence = evidence(&blobs, &child_metadata);
+    let mut expected = child_evidence.execution_observations.clone();
+    expected.sort_by(|a, b| a.observation_id.cmp(&b.observation_id));
+    repository
+        .contribute(child_metadata, child_evidence)
+        .await
+        .unwrap();
+    let repeated = repository
+        .derive_environment(&parent, context, environment)
+        .await
+        .unwrap();
+    let reader = SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.unwrap(),
+        &repeated.snapshot_id,
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        reader.execution_observations(None, None).await.unwrap(),
+        expected
+    );
+}

@@ -68,7 +68,7 @@ def daemon_env(tmp_path: Path, upstream: FixtureUpstream) -> Iterator[dict[str, 
 async def _resolve(env: dict[str, str], **arguments: Any) -> dict[str, Any]:
     async with Client(daemon.transport(env)) as client:
         result = await client.call_tool("resolve_library", {"ecosystem": "rust", **arguments})
-    payload = result.data
+        payload = await daemon.wait_for_answer(client, result.structured_content)
     assert isinstance(payload, dict)
     return payload
 
@@ -99,7 +99,9 @@ async def test_missing_hosted_json_is_partial_with_the_fallback_named(
     assert payload["data"]["hosted_rustdoc_json"]["state"] == "missing"
     gap = next(g for g in payload["data"]["gaps"] if g["kind"] == "hosted_rustdoc_json")
     assert gap["reason"] == "hosted_json_missing"
-    assert gap["planned_fallback"]["producer"] == "rustdoc-json-local-build"
+    # The gap names the producer that would actually run, and the same name appears in the
+    # snapshot provenance if it does -- so a caller can tell a locally built API from a hosted one.
+    assert gap["planned_fallback"]["producer"] == "locally_built_rustdoc"
     assert gap["planned_fallback"]["enabled"] is False
     assert payload["data"]["observed_configuration"]["all_features"] is True
     assert all(a["uri"].startswith("library-evidence://artifacts/") for a in payload["artifacts"])
@@ -131,7 +133,7 @@ async def test_a_recorded_resolution_replays_offline_through_mcp(
     assert offline["data"]["answered_from_cache"] is True
     assert offline["freshness"]["latest_verified"] is False
     assert offline["data"]["release"] == online["data"]["release"]
-    assert any("recorded at" in note for note in offline["coverage"]["limitations"])
+    assert any("without age-based expiry" in note for note in offline["coverage"]["limitations"])
 
     assert revalidate["status"] == "error"
     assert revalidate["error"]["code"] == "UPSTREAM_UNAVAILABLE"

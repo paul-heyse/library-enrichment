@@ -1,388 +1,81 @@
-# Status
-
-**Phase 0 complete; Phase 1 mostly complete.** All four clauses of the blueprint's §13 Phase-0
-gate hold. The Phase-1 static Rust slice is now largely built — registry identity, docs.rs
-metadata and hosted rustdoc JSON, the format adapter, normalized public API, immutable
-artifacts and snapshots, and six of the nine MCP tools wired to real daemon methods. Last
-updated 2026-09-13.
-
-**Read the next two paragraphs before citing any number here.**
-
-`3 passed / 0 failed / 0 blocked / 45 not_run` of 48 gates: **C14, C19 and R04**. That tally is
-*not* a statement that Phase 1 is unverified — it is a statement that **the Phase-1 gates are
-not wired up**. `tests/gates.toml` still has empty `tests` fields for R01–R03, R05–R08 and C13,
-so `acceptance-report` correctly defaults them to `not_run` no matter how many Phase-1 tests
-pass. Wiring them is the remaining Phase-1 task.
-
-**Three Rust tests fail**, all in `crates/enrichment-daemon/tests/retrieval_fixture.rs`, and
-they are open work rather than regressions:
-
-| Test | What it wants |
-|---|---|
-| `a_reexport_is_linked_to_its_definition_and_counted_once` | a `reexports` edge in `data.relationships`; none is recorded |
-| `availability_is_reported_against_the_observed_configuration` | `requested_configuration.features == []`; it is `null` — which is also a DM-08 question, since null and empty mean different things here |
-| `an_empty_search_states_what_was_searched` | a limitation containing `"not proof"`; `ops/search.rs:230` writes `"not evidence"` |
-
-Measured 2026-09-13: **211 Rust tests run, 208 passed, 3 failed; 67 Python tests passed.**
-`just lint`, `typecheck`, `schema-conformance`, `deps-policy`, `rules-test`, `adr-lint` and
-`adr-lint-test` all pass. Regenerate with `just acceptance-report`; re-run rather than trusting
-a report you did not just generate.
-
-### The blueprint's Phase-0 gate, clause by clause
-
-> Exact dependency locks; tool input/output schema tests; `service_status` truthfully reports
-> absent components; an unsupported producer format returns a typed error.
-
-| Clause | Where |
-|---|---|
-| Exact dependency locks | `Cargo.lock`, `uv.lock`; `just deps-policy` |
-| Tool input/output schema tests | **C19** — one corpus, four boundaries, verdicts compared per document |
-| `service_status` truthfully reports absent components | **C14**, plus the daemon-absent path |
-| An unsupported producer format returns a typed error | **R04** — `producer::rustdoc::probe_format` |
-
-R04 was scoped to phase 1 and is now phase 0, because the blueprint puts its assertion in the
-Phase-0 gate. The gate ID is unchanged; only the `phase` field, which is ours — the frozen
-`tests/ACCEPTANCE_PLAN.md` has no phase column. The capability was built first and the gate
-moved after, not the reverse.
-
-**"Complete" is true of the `**Gate:**` line, not of the whole §13 phase paragraph.** That
-paragraph also asks to "Build DTO/schema and fixture scaffolding". The DTO/schema half is done.
-The fixture half is barely started: `tests/fixtures/` holds three rustdoc captures and nothing
-else, while `tests/ACCEPTANCE_PLAN.md`'s "Deterministic fixtures" section asks for a two-release
-Rust fixture crate, a two-release Python distribution with a differing import name, a
-namespace-package fixture, an extension/stub-only fixture, a stub/runtime disagreement, a Sphinx
-inventory and changelogs. Those exist to serve Phases 1–3, so building them now would be
-premature — but the distinction is worth stating rather than letting "complete" cover both.
-
-Both earlier gates were audited by `acceptance-auditor` and the diff by `boundary-reviewer`.
-The first audit **downgraded C19**; the review found a **C20 breach**. Both were fixed and a
-re-audit confirmed both gates. Do not treat a green tally as a substitute for running them.
-
----
-
-## Read this first if you are new to the repo
-
-```sh
-direnv allow      # once; then ty/ruff/pytest/binaries work with no prefix
-just --list       # the command surface
-just doctor       # what is actually installed
-just ci           # everything that must hold (~1 min)
-just gate-phase 0 # the phase gate specifically
-```
-
-The governing specification is `docs/blueprint/IMPLEMENTATION_BLUEPRINT.md` (§1–16) and the
-execution brief is `docs/blueprint/AGENT_HANDOFF.md`. Both are frozen — read, never edit.
-`AGENTS.md` is the working contract; detail lives in `.claude/rules/`, scoped by path.
-
-### What runs today
-
-```sh
-cargo build -p enrichment-daemon
-library-enrichmentd start      # Unix socket, bounded NDJSON-RPC 2.0
-library-enrichmentd status     # truthful component report as JSON
-library-enrichmentd stop
-library-enrichment-mcp         # nine MCP tools over stdio; normally launched by a client
-```
-
-The adapter starts **without** the daemon. `service_status` then returns `partial`, reports the
-daemon as unavailable, and names the gap — a stopped daemon is exactly when a caller most needs
-a usable answer, so it is reported rather than raised.
-
-Eight of the nine tools return a typed `UNSUPPORTED_CAPABILITY` envelope naming the phase that
-implements them. That is deliberate: an empty `ok` would assert the question had been answered.
-
----
-
-## Next: Phase 1 — the end-to-end static Rust slice
-
-The format adapter R04 needs already exists (`producer::rustdoc`), so Phase 1 starts from a
-producer that can already refuse what it cannot read. What it lacks is a *fetcher*: docs.rs
-metadata and hosted rustdoc JSON, registry identity, and the normalized public API those feed.
-
-
-Registry identity, docs.rs metadata and hosted rustdoc JSON, one format adapter, a normalized
-public API, immutable artifacts and snapshots, and five real tools: `resolve_library`,
-`library_overview`, `search_evidence`, `inspect_symbol`, `read_artifact`.
-
-**Gate:** a real crate resolves cold and then offline from the same snapshot; missing docs.rs
-JSON yields `partial` with explicit gaps, never an empty success. Nine gates are registered for
-phase 1 (R01–R03, R05–R08, C13) — eight, not nine: R04 moved to phase 0.
-
-The groundwork is in place: add a method to `server::dispatch`, a producer behind a
-`ProducerSpec`, and the tool's real body in `python/enrichment_mcp/server.py` in place of its
-`_not_implemented` call. The framing, the bound, the error mapping, and the envelope are settled.
-
----
-
-## Verified 2026-09-13 — measured or executed, not read from memory
-
-| Pin | Version | Established by |
-|---|---|---|
-| datafusion | 55.1.0 | Resolved **first**; the Arrow stack derived from it |
-| arrow / arrow-schema / parquet | 59.3.0 | Selected by datafusion 55.1.0 |
-| object_store | 0.13.2 | Selected by datafusion 55.1.0 |
-| public-api | 0.52.2 | Parses captured rustdoc formats 57, 60 **and** 61 |
-| **schemars** | **1.2.2** | Added for schema emission; 6 new crates, no new duplicate major, no new `deny.toml` skip |
-| **tokio** | **1.53.1** | Promoted from transitive to direct; `net` adds only `mio` + `socket2` |
-| **thiserror** | **2.0.20** | Promoted from transitive; already in the lock via `public-api` |
-| fastmcp | 4.0.3 | Imports on 3.14.7 → `fastmcp.server.server.FastMCP` |
-| griffe | 2.3.0 | Published signature byte-identical to the installed one |
-| ty | 0.0.80 | `ty check --python/--venv` is the capsule hook |
-| **datamodel-code-generator** | **0.80.0** | Generates the Pydantic boundary DTOs; resolves on 3.14 |
-| **pytest-asyncio** | **1.4.0** | `asyncio_mode = "auto"` for the contract tier |
-| **toml** | **1.1.6** | Reads `LIBENR_CONFIG`; `parse` + `serde` only, never `preserve_order` |
-| **uuid** | **1.26.1** | Mints request identities in the core, where §1.1 puts identity |
-| **rustdoc-types** | **0.59.0** | Dev-only: measures which rustdoc formats actually parse (R04) |
-| rustc | 1.98.1 | **Current** stable (`rustup check`), pinned exactly |
-| rustdoc producer | `nightly-2026-09-13` | Byte-identical to the rolling nightly |
-
-`cargo deny` passes all four checks with `multiple-versions = "deny"` and 13 individually
-reasoned skips, none an Arrow-stack crate. 94 Rust tests, 65 Python tests, 3 doctest targets.
-
----
-
-## What the reviews caught
-
-Reviews now leave an artifact. `docs/design_review/reviews/` holds them; the standard they apply
-is `docs/design_review/design_principles/DATA_MODEL_DESIGN_CHARTER.md` (ADR-0009). Run one with
-`/design-review`.
-
-**2026-09-13 — the design spine and the service as it stands.** Verdict **Revise**, on gates G1
-and G7. Four findings: the service's own phase was stated in four places and was wrong in three
-of them, including in text returned to callers (F1, F3); the whole Phase-1 slice was untracked in
-git, so every check that reads git state silently covered nothing (F2); an inaccurate
-single-authority claim in a module header (F4); and the execution-policy profile not being a
-declared input to the snapshot key (F5, unresolved — register row R-13). F3 produced this
-repository's **first review-derived `ast-grep` rule**, `no-service-phase-claim-in-adapter`. F1
-and F2 are closed by this commit; F5 and the structural question behind F1 are register rows.
-
-The two earlier rounds, which predate the artifact and survive only as prose below:
-
-Running `acceptance-auditor` and `boundary-reviewer` was not ceremony — between them they found
-one real defect that would have shipped, one overstated gate, and one wrong report state.
-
-**The daemon could write a socket into a repository under study.** When `HOME` and every XDG
-variable were unset, path resolution fell back to a *relative* `.library-enrichment/run`, which
-resolves against the working directory. Reproduced against a canary repo: a live socket appeared
-inside it. That is precisely the breach gate C20 exists to catch. Resolution now fails loudly —
-`PathError::NoRuntimeDirectory`, or `NotAbsolute` for a relative value from any source — and
-`paths::tests` covers all five sources. A daemon that will not start beats one that quietly
-writes into someone's checkout.
-
-**C19 was passing on an assertion it had not earned.** The gate says inputs are "rejected
-**consistently** through CLI/RPC/MCP boundaries". Three boundaries each rejected *something*,
-but no single document ever traversed more than one, so nothing measured agreement — and the
-CLI leg had no document-accepting surface at all. Fixed by making consistency the mechanism:
-one `enrichment_daemon::validate::validate`, reached through `library-enrichmentd validate`
-(CLI) and `wire.validate` (RPC); one corpus in `tests/wire_corpus.py`; and a test that pushes
-every document through every boundary and compares verdicts. It found a real disagreement on
-its first run — see the next trap.
-
-**A skipped test reported the gate as `failed`.** `acceptance-report.py` mapped every non-`passed`
-pytest outcome to a failure, so an unsupported platform or an unbuilt binary produced a claimed
-regression. `AGENTS.md` is explicit that a missing prerequisite is `blocked` with the
-prerequisite named. Now it is, and `just test-python` builds the daemon binary first so the
-e2e tier does not silently skip.
-
-Also fixed from the review: `state-leak-check` and `conftest` now digest
-`$XDG_RUNTIME_DIR/library-enrichment` (the one directory Phase 0 actually writes to, previously
-watched by neither); the session fixture neutralises `LIBENR_SOCKET`; an unmatched
-`service_status` component filter returns `partial` with the gap named rather than an empty `ok`
-indistinguishable from "no such producer exists"; and `sandbox.enabled_profiles` now carries
-`enabled_profiles_source` saying it is a built-in default, because reporting a hardcoded value
-as the operator's configuration is a wrong answer about policy.
-
-Every item the reviews left open has since been closed:
-
-- **Configuration is read.** `enrichment_core::config` loads `LIBENR_CONFIG`; the daemon
-  enforces the configured `rpc_message_bytes` and reports the configured `enabled_profiles` with
-  an `enabled_profiles_source` saying where they came from. An unparsable file refuses to start
-  rather than running with limits the operator did not write.
-- **The daemon emits complete envelopes.** `request_id`, `coverage` and `freshness` are built in
-  the core, where §1.1 puts the evidence model. The adapter forwards them. It keeps one builder
-  of its own, for the daemon-unreachable case, because the core is by definition not around to
-  state that fact.
-- **The duplicated socket resolver is pinned.** `library-enrichmentd socket-path` exposes the
-  Rust answer, and `tests/contract/test_socket_resolution.py` compares both implementations
-  across all five branches *and* their precedence. The previous "divergence detector" only ever
-  exercised one branch.
-- **The enforcement layer has an oracle.** `just guardrails-check` digests `AGENTS.md`,
-  `CLAUDE.md`, `.claude/rules/`, `.claude/settings.json`, `scripts/hooks/` and `scripts/env.sh`
-  against `config/guardrails.sha256`. A guard cannot check itself, so this is the other half:
-  detection, not prevention. It is not tamper-proof — anyone who can edit the layer can
-  re-record — but it makes a change impossible to make *quietly*, and re-recording is gated
-  behind `LIBENR_ALLOW_GUARDRAIL_RERECORD=1`.
-
----
-
-## Traps found the hard way
-
-These cost real time. Do not re-derive them.
-
-**DataFusion turns on `serde_json/preserve_order`, and Cargo unifies features across whatever
-is being built.** So `serde_json::Map` is a `BTreeMap` under `cargo run -p enrichment-core`
-(what `just schemas-generate` uses) and an insertion-ordered `IndexMap` under
-`cargo nextest run --workspace`. The emitted schema's key order therefore depended on *which
-cargo command produced it*, which would have made `schema-conformance.sh`'s
-`git diff --exit-code` churn forever. `wire::schema::canonicalize` sorts every object key
-explicitly rather than relying on the map type;
-`wire_conformance::every_object_key_is_emitted_in_sorted_order` and
-`emitted_schema_matches_the_committed_file` are the guards — the second only catches it because
-it runs under workspace unification while the file is written under `-p`.
-
-**schemars drops `Option<T>` fields from `required` under its default deserialize contract.**
-That would silently lose four of the fourteen root fields the frozen contract demands. Generate
-with `SchemaSettings::draft2020_12().for_serialize()`. Do **not** reach for
-`#[schemars(required)]` instead: it strips the `null` from the type union and would reject every
-fixture's `"job": null`.
-
-**One `///` on a unit enum variant turns the emitted `enum` into `oneOf` + `const`.** schemars
-only emits `{"type":"string","enum":[…]}` while every variant carries no doc, title, description
-or examples. The documents validated are the same, but `schemas/frozen/enums.json` no longer
-matches and a structural conformance check fails with no obvious cause. Document the values in
-the enum's own doc comment — container docs are safe. Tests 13–17 in `wire_conformance.rs` are
-the oracle.
-
-**`mcp.types.ToolAnnotations` leaves every hint unset, and the MCP spec reads an absent
-`destructiveHint`/`openWorldHint` as `true`.** So silence is the *permissive* answer and the
-risk runs opposite to intuition. Set them explicitly. Use the snake_case field names
-(`read_only_hint`), not the camelCase aliases: both populate the model and both serialize to
-camelCase, but `ty` cannot see through the alias generator and flags the aliases as discarded.
-
-**`cargo deny` counts a bare `{ path = ... }` as a wildcard dependency.** `wildcards = "deny"`
-is set, so an internal crate needs an explicit `version` alongside its path.
-
-**The generated Pydantic DTO does not enforce the contract's root conditionals.**
-`datamodel-codegen` renders properties, types and `additionalProperties: false`, but not the
-`allOf` if/then blocks — so the DTO alone accepts a `pending` envelope with a null job, which
-every other boundary rejects. `enrichment_mcp.envelope.validate_document` therefore validates
-against the generated *schema*, and
-`test_the_generated_dto_alone_is_not_a_sufficient_validator` pins the limitation so it cannot
-quietly become an assumption. If a future release does emit those validators, that test fails
-and the indirection can go.
-
-**`just gate-phase 0` used to join whatever logs were on disk.** Phases 1–6 run `just test`
-first; phase 0 did not, so it reported against `docs/reports/logs/*.json` that may have come
-from a different tree. Fixed — but the deeper gap remains: the logs carry no commit hash and
-`generated_at` is the *join* time, not the *test* time, so nothing structurally ties a result to
-the tree that produced it. Re-run rather than trusting a report you did not just generate.
-
-**A test that returns early passes; a test that skips is `blocked`.** The reporting pipeline
-can see a skip and cannot see an early `return`, so a conditional guard inside a test body is a
-silent false pass. R04's central measurement had one — it read captures from `$LIBENR_CACHE_HOME`
-and returned when unset, reporting PASS having examined nothing. Real captures now live in
-`tests/fixtures/rustdoc/` and absent fixtures are a failure. If a test genuinely cannot run,
-`#[ignore]` or `pytest.mark.skipif` is the honest mechanism, because both reach the report.
-
-**`git diff --exit-code` over `schemas/generated/` only sees tracked files.** Until that
-directory is committed the reproducibility half of `schema-conformance.sh` is a no-op. The Rust
-test `emitted_schema_matches_the_committed_file` covers the same invariant without depending on
-git state.
-
-**The `pre_bash` hook scans command *text*, so a heredoc containing `//!` or `~/.claude/skills`
-trips the outside-repo and user-config guards.** Both are false positives on file *content*.
-Use `Write`/`Edit` for file content rather than a heredoc; that is the right tool anyway, and it
-still goes through `pre_edit`.
-
-### Still true from before
-
-`ty`'s `textDocument/implementation` works and the docs say it does not (ADR 0005); a
-`typing.Protocol` returns only itself, with no error signal. No format negotiation on docs.rs —
-exactly one `/json/{n}` returns 200 per build. A target-qualified 404 means "no JSON for this
-target", never "crate missing". `griffe.load(allow_inspection=…)` defaults to `True`. The PyPI
-Simple API returns HTML with a 200 if you omit the Accept header. Native FastMCP tasks need the
-separate `fastmcp-tasks` package *and* a client on protocol `2026-07-28`. `observed_configuration`
-needs nine docs.rs keys, not five. `cargo nextest` does not run doctests.
-
----
-
-## What Phase 0 built
-
-| | |
-|---|---|
-| `crates/enrichment-core/src/wire/` | The authoritative envelope types. The status/job/error rule is enforced three times: `Outcome` makes an invalid combination unrepresentable, `TryFrom<RawEnvelope>` re-establishes it from JSON, and `status_conditionals` restates it as the schema's root `allOf`. |
-| `crates/enrichment-core/src/bin/emit-schemas.rs` | Writes `schemas/generated/`. Both schema scripts probe `cargo metadata` for this exact binary name. |
-| `crates/enrichment-daemon/` | `library-enrichmentd`, bounded NDJSON-RPC 2.0 over a Unix socket. One real method, `service.status`. |
-| `python/enrichment_mcp/` | The FastMCP 4 adapter: nine tools, real input schemas, lazy per-call daemon connection. |
-| `python/enrichment_mcp/_generated/` | Pydantic boundary DTOs, generated from the emitted schemas. Never hand-edited; ruff is scoped away from it (ADR 0007), `ty` is not. |
-| `docs/adr/0006`, `0007` | The RPC details §2.1 left open, and the ruff scoping decision. |
-
-**The generation chain runs end to end**: Rust wire types → JSON Schema → Pydantic DTOs, with
-`just schemas-generate`, and `just schema-conformance` proves the result accepts and rejects
-exactly what the frozen contract does.
-
----
-
-## How the guardrails actually work
-
-Four tiers, chosen by asking what the cheapest reproducible oracle is.
-
-| Tier | Where | Covers |
-|---|---|---|
-| PreToolUse hook | `scripts/hooks/` | Visible in the tool call alone. **70 tested cases.** |
-| ast-grep rule | `rules/` + `rule-tests/` | Code shapes. 6 rules, all with fixtures; the newest came from a review finding. |
-| Agent config | `just lint-agents` | The instructions themselves: shared surface, resolvable paths, real recipes. |
-| `just` gate | `justfile` | Needs the whole repo |
-| Prose | `AGENTS.md`, `.claude/rules/` | Only what has no mechanical oracle |
-
-`pre_edit.sh` now exempts `$HOME/.claude/plans/*` and `/tmp/claude-*/*` — the harness's own plan
-and scratch paths, which are neither service state nor user configuration. The exemption is
-narrow and its narrowness is tested: `~/.claude/skills` and `~/.claude/settings.json` are still
-denied, because those are exactly what `pre_bash.sh` gates behind `LIBENR_ALLOW_USER_INSTALL=1`.
-
-**Decisions are mechanical too.** `just adr-lint` validates all nine records — fourteen required
-fields, four enums, contiguous numbering, every `§` citation resolving to a real `DESIGN.md`
-heading, and immutability against `main`. `just adr-lint-test` is 33 behaviour tests over the
-lint itself, because the immutability check cannot fire anywhere in this tree yet and would
-otherwise have shipped unexercised.
-
-**Truthful reporting is mechanical.** `tests/gates.toml` registers all 48 IDs.
-`acceptance-report` defaults every gate not matched by an executed test to `not_run`, and
-downgrades a partially-executed set back to `not_run`. `acceptance-check` refuses any gate marked
-`passed` without a recorded command and log. `just test-rust` and `just test-python` now write
-`docs/reports/logs/{nextest,pytest}.json` — without those logs no gate can ever be promoted,
-which is why every gate read `not_run` before this phase regardless of what passed.
-
-**What you cannot edit:** `AGENTS.md`, `CLAUDE.md`, `.claude/rules/`, `.claude/settings.json`,
-`scripts/hooks/`, `scripts/env.sh`, plus frozen provenance and contracts.
-
----
-
-## Where things are
-
-| | |
-|---|---|
-| `docs/blueprint/` | The governing spec — frozen |
-| `docs/provenance/` | Delivered digests + PATHMAP — frozen |
-| `docs/architecture/compatibility-matrix.md` | Every pin, with evidence and retrieval dates |
-| `docs/design/DESIGN.md` | **The authoritative design.** A spine over the frozen blueprint; §B1–§B13 are the binding decisions |
-| `docs/design_review/` | The charter (DM-01–DM-60, G1–G7) and the reviews written against it |
-| `docs/adr/` | 9 ADRs + the deferred-decision register; `/adr <slug>` to add, `just adr-lint` to check |
-| `docs/plans/` | How work was sequenced, and what it actually cost; `just plan <slug>` |
-| `docs/operations/` | Install, register, run — the daemon section is live |
-| `contracts/`, `schemas/frozen/` | The Phase-0 acceptance target |
-| `schemas/generated/` | Emitted from the Rust types; never hand-edited |
-| `skills/library-research/` | **The product skill.** Installed only by explicit `just install-skill --apply` |
-
-**Skills** (`.claude/skills/`, shared with Codex by symlink — ADR-0010): `/adr`,
-`/design-review`, `/phase-gate`, `/verify-upstream`, `/acceptance-report`, `/handoff`.
-**Subagents** (`.claude/agents/`, likewise shared): `upstream-verifier`, `acceptance-auditor`,
-`boundary-reviewer` (diff review).
-
-There is no `.claude/commands/`: a command is visible to Claude Code alone, a skill to every
-runtime. `just lint-agents` fails if a runtime-specific surface reappears, if `.codex/` or
-`.agents/` stops exposing `skills` and `agents`, or if any path or `just` recipe the instructions
-name does not exist.
-
-Development service state is the gitignored `.dev-state/`; production resolves to XDG.
-`just state-leak-check` proves the real paths stayed untouched. `just state-reset` clears it.
-
----
-
-## Conventions
-
-`just`, never `make`. Mutating recipes are never dependencies of validation recipes. No
-suppressions — no `# noqa`, no `# type: ignore`, no `#[allow(...)]`; there are none in the tree.
-Ruff line length 100. Rust edition 2024. Generated artifacts are never hand-edited.
-
-Date your verification claims. Known failures stay visible rather than being quietly skipped.
+# Implementation handoff
+
+Updated 2026-09-14. **[Plan 12](docs/plans/12-architecture-first-completion.md) is functionally
+complete and validated.** The user explicitly stopped the redundant independent replay after a
+test-registry mapping correction. No further test campaign is pending. Performance tuning remains
+deferred. See the [execution ledger](docs/plans/12-architecture-first-execution-ledger.md) and
+[accepted scoped review](docs/design_review/reviews/design_review_plan12-integrated-completion_2026-09-14.md).
+Do not restart Plans 09–11 or treat their historical gaps as current.
+
+## Completed scope
+
+Rust owns typed Arrow/Parquet evidence, relational catalogs, bounded DataFusion assembly/query,
+identities, jobs, policy and publication. The mandatory native worker handles raw Rustdoc and
+Parquet admission. Python remains the thin MCP adapter and separate static worker. Legacy
+readers/writers, whole-corpus normalizers, parallel query paths and old installer/client harness
+logic are removed. ADR-0028–ADR-0035 are accepted with scoped reviews.
+
+The development cutover removed 340 owned payload roots/files across 36 physical roots, with
+2,818 entries and 43 reconciled ownership records; five confirmed exited containers were removed.
+No historical reader or migration remains. Future unchanged exact-version and qualified-context
+evidence remains reusable without age expiry; registry revalidation and explicit cleanup are separate.
+
+Functional scope includes durable comparison, semantic/runtime inspection and qualified reuse,
+stable/nightly comparison, six Rust/Python canary cases, precommitted delivery and crash recovery,
+export closure, generational installer recovery, two-adapter survivors and bounded diagnostics.
+Exact definition selection resolves same-path ambiguity; overview retains available documentation.
+
+## Executed validation — 2026-09-14
+
+- Final functional source: `4b434e3f7fd604068cf5e59205d7a0a54de09b442ce1a0d3267913babfd0db0a`.
+  `CARGO_INCREMENTAL=0 LIBENR_EXECUTION_ROOT=/home/paul/library-enrichment/.dev-state/p4p just ci`
+  passed **390 Rust and 189 Python tests**, Clippy, Ruff, ty, formatting, schemas, dependency policy,
+  rules, provenance and state checks. Log: `.dev-state/plan12-ci-final.log`.
+- `CARGO_INCREMENTAL=0 LIBENR_EXECUTION_ROOT=/home/paul/library-enrichment/.dev-state/p4p just test-execution`
+  passed **12 real contained cases**; `.dev-state/plan12-execution-final.log`.
+- `CARGO_INCREMENTAL=0 just test-live` passed **2 live cases** on final functional source;
+  `.dev-state/plan12-live-final-source.log`.
+- Refreshed authenticated `just test-client` passed **11 checks covering all 10 actual client
+  scenarios**; `.dev-state/plan12-client-current.log`. All outputs were reviewed. This run preceded
+  the final overview correction, subsequently covered by its deterministic native regression,
+  strengthened real Python/MCP journey and full CI. Real user configuration remained unchanged.
+
+Only P03/C17 registry references changed afterward; IDs and assertions did not. The final source
+fingerprint is `6f5a3646a3fbb6ac5c9faca18a579b8364ac4cd506d317b3811e4a547f2886c8`.
+The independent auditor found no functional blocker and replayed **390 Rust tests successfully**.
+The user then stopped redundant validation during the Python tier. That interrupted tier is not a
+pass or a source failure; execution/live/client replays were not started.
+
+The regenerated source-bound report records **7 passed / 0 failed / 0 blocked / 41 not_run** out
+of 48 IDs, including retired P08. Earlier receipts remain preserved and were not rewritten after
+the registry changed. This is not a full current-registry certification; the remaining `not_run`
+entries do not overturn the completed functional runs above. No repeat campaign is requested.
+Audit and cleanup evidence: `.dev-state/plan12-independent-audit/AUDIT.md`, `stop.json`,
+`cleanup.json`, `ci.log` and `prior-logs/`. All nine recorded processes exited; the selected
+execution root has zero containers and zero ownership records. No cleanup obligation remains.
+
+## Remaining work
+
+No functional Plan 12 work remains. Performance optimization and threshold enforcement are
+explicitly deferred: the existing five-run optimized workload passed output checks with median
+2.20897 seconds against the older 1.5-second target. No target was changed or performance pass
+claimed. Do not restart tuning or certification without new work or user direction.
+
+## Environment and ownership
+
+All work remains uncommitted over `cd6d9490a6433ae355b04a465538062e1320544c`, including substantial
+inherited changes. Do not reset, clean, stash or overwrite the shared tree.
+
+Verified 2026-09-14: Rust 1.98.1, Python 3.14.7, uv 0.12.13, ty 0.0.80, Griffe 2.3.0,
+rust-analyzer 1.98.1; DataFusion 55.1.0, Arrow/Parquet 59.3.0, object_store 0.13.2.
+Clients: Codex 0.154.0, Claude 2.1.270. All hard doctor prerequisites are present.
+The workstation default is nightly; retain `rust-toolchain.toml` and the producer's dated
+`nightly-2026-09-13`. Use `CARGO_INCREMENTAL=0` after the earlier incremental compiler ICE.
+
+Build/deploy all three binaries: `library-enrichmentd`, `library-enrichment-executor`,
+`library-enrichment-native-worker`. Selected execution root is `.dev-state/p4p`; its receipt
+binds current helper/broker/configuration and the pinned Rust/Python images. The systemd user-bus
+repair is complete; see the [environment report](docs/reports/user-session-environment-2026-09-14.md).
+Do not repeat the repair or alter unrelated Podman state. The
+[operations guide](docs/operations/README.md) documents setup, qualification, retention,
+export, explicit cleanup and recovery.

@@ -19,6 +19,10 @@ use serde::Deserialize;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(default)]
 pub struct Config {
+    /// Daemon-wide Arrow query and storage admission budgets (ADR-0024).
+    pub arrow: ArrowConfig,
+    /// Isolated producer configuration; never enabled by a client request.
+    pub execution: Execution,
     /// Result and transport budgets (§7.3).
     pub limits: Limits,
     /// Execution-profile policy (§10).
@@ -32,6 +36,50 @@ pub struct Config {
     /// Where this came from, so `service_status` can say.
     #[serde(skip)]
     pub source: Source,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ArrowConfig {
+    pub memory_bytes: usize,
+    pub spill_bytes: u64,
+    pub metadata_cache_bytes: usize,
+    pub batch_rows: usize,
+    pub partitions: usize,
+    pub concurrency: usize,
+    pub result_rows: usize,
+    pub result_bytes: usize,
+    pub query_deadline_seconds: u64,
+    pub admission_deadline_seconds: u64,
+    pub cached_snapshots: usize,
+    pub record_bytes: usize,
+    pub batch_bytes: usize,
+    pub file_bytes: u64,
+    pub table_rows: usize,
+    pub row_groups: usize,
+}
+
+impl Default for ArrowConfig {
+    fn default() -> Self {
+        Self {
+            memory_bytes: 128 * 1024 * 1024,
+            spill_bytes: 512 * 1024 * 1024,
+            metadata_cache_bytes: 16 * 1024 * 1024,
+            batch_rows: 1024,
+            partitions: 2,
+            concurrency: 4,
+            result_rows: 10_000,
+            result_bytes: 16 * 1024 * 1024,
+            query_deadline_seconds: 30,
+            admission_deadline_seconds: 30,
+            cached_snapshots: 32,
+            record_bytes: 1024 * 1024,
+            batch_bytes: 16 * 1024 * 1024,
+            file_bytes: 256 * 1024 * 1024,
+            table_rows: 1_000_000,
+            row_groups: 1024,
+        }
+    }
 }
 
 /// Where a [`Config`] came from.
@@ -138,6 +186,41 @@ impl Default for Policy {
     }
 }
 
+impl Policy {
+    /// Refuse a configuration this build cannot honour, rather than reading past it.
+    ///
+    /// These three keys are in the frozen example configuration, so an operator can set them and
+    /// reasonably expect them to mean something. Two of them only have one supported value here:
+    /// this service always contains execution and always runs target code without a network, and
+    /// a configuration asking otherwise is a request we cannot satisfy. Accepting the file and
+    /// quietly doing the opposite is the failure mode worth preventing -- it would leave an
+    /// operator believing they had loosened a boundary that in fact still held, or tightened one
+    /// that in fact did not exist.
+    ///
+    /// # Errors
+    ///
+    /// Returns the unsupported setting and what this build does instead.
+    pub fn validate(&self) -> Result<(), String> {
+        if self.execution_network {
+            return Err(
+                "[policy].execution_network = true is not supported: target execution always \
+                 runs with no network, and dependency acquisition is a separate, bounded step \
+                 (blueprint §10). Remove the key or set it to false"
+                    .to_owned(),
+            );
+        }
+        if !self.require_sandbox_for_build || !self.require_sandbox_for_runtime {
+            return Err(
+                "[policy].require_sandbox_for_build and require_sandbox_for_runtime cannot be \
+                 false: this build has no host-execution path to fall back to, and an \
+                 unavailable sandbox is POLICY_DENIED rather than a looser profile"
+                    .to_owned(),
+            );
+        }
+        Ok(())
+    }
+}
+
 /// Freshness policy (§3.3): mutable lookups get finite TTLs; immutable artifacts are reused by
 /// digest.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -166,11 +249,49 @@ impl Default for FreshnessConfig {
 }
 
 /// Per-ecosystem producer settings.
-#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(default)]
 pub struct Producers {
+    /// GitHub REST base for public immutable source acquisition.
+    pub github_api_url: String,
     /// Rust producers.
     pub rust: RustProducers,
+    /// Static Python distribution and worker settings.
+    pub python: PythonProducers,
+}
+
+impl Default for Producers {
+    fn default() -> Self {
+        Self {
+            github_api_url: "https://api.github.com".into(),
+            rust: RustProducers::default(),
+            python: PythonProducers::default(),
+        }
+    }
+}
+
+/// Python producers. The worker executable belongs to the service installation.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct PythonProducers {
+    /// PyPI JSON API base, including /pypi.
+    pub pypi_url: String,
+    /// Simple API base for artifact corroboration.
+    pub simple_url: String,
+    /// Service-owned Python interpreter containing enrichment_worker and pinned Griffe.
+    pub worker_python: PathBuf,
+    /// Total worker deadline.
+    pub worker_timeout_seconds: u64,
+}
+impl Default for PythonProducers {
+    fn default() -> Self {
+        Self {
+            pypi_url: "https://pypi.org/pypi".into(),
+            simple_url: "https://pypi.org/simple".into(),
+            worker_python: PathBuf::from("python3"),
+            worker_timeout_seconds: 30,
+        }
+    }
 }
 
 /// Rust producer settings (`[producers.rust]`).
@@ -222,8 +343,8 @@ pub struct Network {
     pub max_redirects: u32,
     /// Total deadline for one HTTP request.
     pub request_timeout_seconds: u64,
-    /// Deadline for one acquisition (registry, tarball, docs JSON, normalize, publish). Phase 1
-    /// runs acquisition inline; the adapter waits this long before reporting the daemon slow.
+    /// Deadline for one durable acquisition. On expiry cancel producer work and settle cleanup;
+    /// a publication already admitted commits before the terminal job result is reported.
     pub acquisition_timeout_seconds: u64,
 }
 
@@ -242,6 +363,8 @@ impl Default for Network {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            arrow: ArrowConfig::default(),
+            execution: Execution::default(),
             limits: Limits::default(),
             policy: Policy::default(),
             freshness: FreshnessConfig::default(),
@@ -311,6 +434,13 @@ impl Config {
             path: path.to_path_buf(),
             message: err.to_string(),
         })?;
+        config
+            .execution
+            .resources()
+            .map_err(|err| ConfigError::Parse {
+                path: path.to_path_buf(),
+                message: err.to_string(),
+            })?;
         config.source = Source::File(path.to_path_buf());
         Ok(config)
     }
@@ -420,4 +550,158 @@ mod tests {
                 .contains("/x/service.toml")
         );
     }
+
+    #[test]
+    fn workstation_capacity_is_preserved_and_invalid_requests_are_rejected() {
+        let config: Config =
+            toml::from_str(include_str!("../../../config/service.workstation.toml")).unwrap();
+        let resource = config.execution.resources().unwrap();
+        assert_eq!(resource.cpu_quota_micros, 3_200_000);
+        assert_eq!(resource.memory_bytes, 32 * 1024 * 1024 * 1024);
+        assert_eq!(resource.scratch_bytes, 16 * 1024 * 1024 * 1024);
+        assert_eq!(resource.pids, 2048);
+        assert_eq!(resource.swap_bytes, 0);
+        for field in ["cpus", "memory_mib", "scratch_mib", "pids"] {
+            let config: Execution = toml::from_str(&format!("{field} = 0")).unwrap();
+            assert!(config.resources().is_err(), "{field}");
+        }
+        let small = Execution {
+            memory_mib: 256,
+            ..Execution::default()
+        };
+        assert_eq!(small.resources().unwrap().scratch_bytes, 256 * 1024 * 1024);
+        let maximum = Execution {
+            scratch_mib: 65_536,
+            memory_mib: 65_536,
+            ..Execution::default()
+        };
+        assert_eq!(
+            maximum.resources().unwrap().scratch_bytes,
+            crate::capsule_protocol::DATA_LIMIT
+        );
+    }
+}
+
+/// Service-owned rootless execution backend. Immutable image IDs are operator admitted.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Execution {
+    pub storage_root: Option<PathBuf>,
+    pub python_image: Option<String>,
+    pub rust_image: Option<String>,
+    pub deadline_seconds: u64,
+    pub output_bytes: usize,
+    /// CPU bandwidth in logical CPUs, not affinity or a guaranteed scheduling allocation.
+    pub cpus: u32,
+    pub memory_mib: u64,
+    /// Hard writable tmpfs ceiling, additionally limited by the effective memory bound.
+    pub scratch_mib: u64,
+    /// First-party executor binary, mounted read-only and bound into qualification.
+    pub executor_path: Option<PathBuf>,
+    pub pids: u32,
+    pub queue_limit: usize,
+    /// The container broker executable. Absent means the packaged `/usr/bin/podman`.
+    ///
+    /// Configurable because an operator may install Podman elsewhere, and because a cleanup
+    /// failure is otherwise unreachable from a test: the F3 oracle points this at a wrapper
+    /// that fails `rm` a bounded number of times.
+    pub broker_path: Option<PathBuf>,
+    /// How long the cleanup supervisor keeps retrying removal before the owned container is
+    /// declared unresolved. Its worker permit is held for the whole window.
+    pub cleanup_deadline_seconds: u64,
+    /// Aggregate ceiling on writable capsule storage, in MiB.
+    pub capsule_budget_mib: u64,
+    /// Idle seconds before a warm session is evicted and its container removed.
+    pub lsp_idle_seconds: u64,
+}
+impl Default for Execution {
+    fn default() -> Self {
+        Self {
+            storage_root: None,
+            python_image: None,
+            rust_image: None,
+            deadline_seconds: 60,
+            output_bytes: 65536,
+            cpus: 2,
+            memory_mib: 1024,
+            scratch_mib: 512,
+            executor_path: None,
+            pids: 128,
+            queue_limit: 32,
+            broker_path: None,
+            cleanup_deadline_seconds: 120,
+            capsule_budget_mib: 8192,
+            lsp_idle_seconds: 300,
+        }
+    }
+}
+
+impl Execution {
+    /// One validated resource contract for container flags, qualification and provenance.
+    /// Reject unsupported requests instead of silently reducing the operator's capacity.
+    pub fn resources(&self) -> std::io::Result<ExecutionResources> {
+        if !(1..=4096).contains(&self.cpus)
+            || !(128..=1_048_576).contains(&self.memory_mib)
+            || !(16..=65_536).contains(&self.scratch_mib)
+            || !(16..=1_048_576).contains(&self.pids)
+        {
+            return Err(std::io::Error::other(
+                "execution resources require cpus 1..4096, memory_mib 128..1048576, \
+                 scratch_mib 16..65536, and pids 16..1048576",
+            ));
+        }
+        Ok(ExecutionResources {
+            cpu_quota_micros: u64::from(self.cpus) * 100_000,
+            cpu_period_micros: 100_000,
+            memory_bytes: self.memory_mib * 1024 * 1024,
+            // Equal Podman memory and memory-swap limits prohibit additional swap.
+            swap_bytes: 0,
+            scratch_bytes: self.scratch_bytes(),
+            pids: self.pids,
+        })
+    }
+
+    pub fn scratch_bytes(&self) -> u64 {
+        // All entry points validate resources before reserving or creating workspaces.
+        self.scratch_mib
+            .min(self.memory_mib)
+            .saturating_mul(1024 * 1024)
+    }
+
+    pub fn executor(&self) -> std::io::Result<PathBuf> {
+        match &self.executor_path {
+            Some(path) => path.canonicalize(),
+            None => {
+                let executable = std::env::current_exe()?;
+                let mut parent = executable
+                    .parent()
+                    .ok_or_else(|| std::io::Error::other("executable has no parent"))?;
+                if parent.file_name().is_some_and(|name| name == "deps") {
+                    parent = parent.parent().ok_or_else(|| {
+                        std::io::Error::other("test executable has no profile directory")
+                    })?;
+                }
+                parent.join("library-enrichment-executor").canonicalize()
+            }
+        }
+    }
+    /// The broker executable actually invoked.
+    #[must_use]
+    pub fn broker(&self) -> PathBuf {
+        self.broker_path
+            .clone()
+            .unwrap_or_else(|| PathBuf::from("/usr/bin/podman"))
+    }
+}
+
+/// Requested cgroup and writable-workspace limits. These are capacities, not eager allocations.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutionResources {
+    pub cpu_quota_micros: u64,
+    pub cpu_period_micros: u64,
+    pub memory_bytes: u64,
+    pub swap_bytes: u64,
+    pub scratch_bytes: u64,
+    pub pids: u32,
 }

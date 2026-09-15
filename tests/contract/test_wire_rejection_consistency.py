@@ -224,20 +224,20 @@ def test_the_adapter_validates_every_response_it_emits() -> None:
     call sites outside tests -- the MCP leg of C19 was a claim about code nobody ran. This
     asserts the wiring itself, so the claim cannot drift back into being decorative.
     """
-    import inspect
-
     from enrichment_mcp import server
 
-    assert "validate_document" in inspect.getsource(server._emit), (
-        "server._emit must validate against the generated schema"
-    )
-
-    emit_callers = [
-        name
-        for name, obj in vars(server).items()
-        if inspect.isfunction(obj) and "_emit(" in inspect.getsource(obj)
-    ]
-    assert "_not_implemented" in emit_callers, "the unimplemented-tool path must validate"
+    # Exercise the real tool projection, with and without a per-tool payload check. Every one of
+    # the nine tools is wired to a daemon method now, so there is no unimplemented-tool path left
+    # to exercise -- a stub kept alive only for this assertion would be testing nothing.
+    for emitted in (
+        server._tool_result({"schema_version": "1.0"}),
+        server._tool_result({"schema_version": "1.0"}, tool="job_control"),
+    ):
+        structured = emitted.structured_content
+        valid, reason = validate_document(json.dumps(structured))
+        assert valid, reason
+        assert structured is not None
+        assert structured["status"] == "error"
 
     # And a malformed envelope is replaced rather than returned.
     replaced = server._emit({"schema_version": "1.0"})

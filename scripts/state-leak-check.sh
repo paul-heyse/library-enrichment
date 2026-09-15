@@ -17,10 +17,16 @@ REAL_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/library-enrichment"
 # See crates/enrichment-daemon/src/paths.rs and ADR 0006.
 REAL_RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/library-enrichment"
 
+# Path, type, mode AND content. Size and mtime alone would miss an in-place rewrite that kept
+# the length -- a snapshot pointer flipped to another ID, a config value changed, a journal
+# entry rewritten. Those are exactly the writes worth catching, and they are all same-length.
+# Sockets and FIFOs are listed by type rather than read, because reading one blocks.
 digest() {
   for d in "$REAL_CACHE" "$REAL_DATA" "$REAL_RUNTIME"; do
     if [ -e "$d" ]; then
-      find "$d" -printf '%P\t%s\t%m\t%y\n' 2>/dev/null | LC_ALL=C sort
+      find "$d" \( -type f -printf '%P\t%y\t%m\t' -exec sha256sum -b {} \; \) -o \
+                \( -type l -printf '%P\t%y\t%m\t%l\n' \) -o \
+                \( ! -type f ! -type l -printf '%P\t%y\t%m\n' \) 2>/dev/null | LC_ALL=C sort
     else
       printf 'ABSENT\t%s\n' "$d"
     fi

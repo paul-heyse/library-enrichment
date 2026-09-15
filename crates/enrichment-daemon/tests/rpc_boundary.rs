@@ -142,7 +142,11 @@ async fn service_status_round_trips_over_a_real_socket() {
     available.sort();
     assert_eq!(
         available,
-        vec!["crates-io-registry".to_owned(), "rustdoc-json".to_owned()]
+        vec![
+            "crates-io-registry".to_owned(),
+            "pypi-registry".to_owned(),
+            "rustdoc-json".to_owned()
+        ]
     );
     assert_eq!(response["result"]["data"]["health"]["cache_ready"], true);
 
@@ -191,7 +195,7 @@ async fn malformed_json_is_a_typed_error_not_a_dropped_connection() {
 async fn an_unknown_method_is_a_typed_error() {
     let daemon = TestDaemon::start().await;
     let response = daemon
-        .exchange(r#"{"jsonrpc":"2.0","id":7,"method":"library.compare"}"#)
+        .exchange(r#"{"jsonrpc":"2.0","id":7,"method":"library.nonexistent"}"#)
         .await;
 
     assert_eq!(response["id"], 7, "the error correlates with the request");
@@ -277,8 +281,29 @@ async fn the_connection_survives_a_rejected_frame() {
 #[tokio::test]
 async fn a_second_daemon_refuses_to_steal_a_live_socket() {
     // Two daemons on one socket would break the single-writer invariant (blueprint §2.1).
+    // Two independent guards enforce it and both are checked here, because they fail at
+    // different moments and a caller sees different errors.
     let daemon = TestDaemon::start().await;
-    let second = open_service(daemon._dir.path(), DEFAULT_MAX_MESSAGE_BYTES);
+
+    // Same state roots: refused by the exclusive writer lock, before anything is served. This
+    // is the earlier and stronger guard -- recovery must never race a live writer.
+    let err = Service::open(
+        Config::default(),
+        StatePaths::explicit(
+            daemon._dir.path().join("cache"),
+            daemon._dir.path().join("data"),
+        ),
+    )
+    .expect_err("a second writer over the same state roots must be refused");
+    assert!(
+        err.to_string()
+            .contains("another writer owns this data root"),
+        "{err}"
+    );
+
+    // State elsewhere, so the locks say nothing: the live socket must still refuse the bind.
+    let elsewhere = tempfile::tempdir().expect("a temp dir");
+    let second = open_service(elsewhere.path(), DEFAULT_MAX_MESSAGE_BYTES);
     let err = server::serve(second, &daemon.paths, std::future::pending())
         .await
         .expect_err("the second bind must fail");

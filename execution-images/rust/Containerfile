@@ -1,0 +1,11 @@
+FROM docker.io/library/rust@sha256:a2de23e559fd8afd260d22beb00f3987073ea0dcc2ba2646cccdaeda6a62a095
+COPY provenance /opt/producer-provenance
+RUN rustup component add --toolchain 1.98.1 rust-analyzer rust-src
+RUN rustup toolchain install nightly-2026-09-13 --profile minimal --no-self-update
+ENV RUSTUP_HOME=/usr/local/rustup
+ENV RUSTUP_TOOLCHAIN=1.98.1
+ENV CARGO_HOME=/capsule/cargo-home
+ENV CARGO_TARGET_DIR=/capsule/target
+ENV PATH=/usr/local/cargo/bin:/usr/local/bin:/usr/bin:/bin
+WORKDIR /capsule
+USER 65532:65532

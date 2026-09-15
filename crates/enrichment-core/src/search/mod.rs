@@ -15,7 +15,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::canonical;
-use crate::evidence::{EvidenceFragment, Symbol};
+#[cfg(test)]
+use crate::evidence::Symbol;
+pub mod page;
 
 /// Lower-case tokens of length two or more, split on anything that is not a word character.
 /// A `::`-qualified path stays a single token as well, so exact-path matching sees it whole.
@@ -27,10 +29,11 @@ pub fn tokenize(query: &str) -> Vec<String> {
         .filter(|t| t.len() >= 2)
         .map(str::to_owned)
         .collect();
-    if lower.contains("::") {
+    if lower.contains("::") || lower.contains('.') {
         tokens.insert(0, lower.clone());
     }
-    tokens.dedup();
+    let mut seen = std::collections::BTreeSet::new();
+    tokens.retain(|token| seen.insert(token.clone()));
     tokens
 }
 
@@ -73,33 +76,42 @@ fn factor(name: &'static str) -> Factor {
     }
 }
 
-/// A symbol hit with its score.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SymbolHit {
-    /// The symbol.
-    pub symbol: Symbol,
-    /// Total points.
-    pub score: u32,
-    /// Factors that fired.
-    pub factors: Vec<Factor>,
-    /// Other public paths to the same definition, folded into this hit.
-    pub also_at: Vec<String>,
-}
-
-/// A fragment hit with its score.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FragmentHit {
-    /// The fragment.
-    pub fragment: EvidenceFragment,
-    /// Total points.
-    pub score: u32,
-    /// Factors that fired.
-    pub factors: Vec<Factor>,
-}
-
 /// Score one symbol against a query. `None` when nothing matched.
 #[must_use]
-pub fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(u32, Vec<Factor>)> {
+#[cfg(test)]
+fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(u32, Vec<Factor>)> {
+    score_symbol_fields(
+        SymbolScoreFields {
+            path: &symbol.path,
+            name: &symbol.name,
+            signature: symbol.signature.as_deref(),
+            summary: symbol.doc_summary.as_deref(),
+            docs: symbol.docs.as_deref(),
+            is_reexport: symbol.is_reexport,
+        },
+        query,
+        tokens,
+    )
+}
+
+/// Only the borrowed fields needed by the pure scoring kernel; no producer or wire DTO.
+#[derive(Debug, Clone, Copy)]
+pub struct SymbolScoreFields<'a> {
+    pub path: &'a str,
+    pub name: &'a str,
+    pub signature: Option<&'a str>,
+    pub summary: Option<&'a str>,
+    pub docs: Option<&'a str>,
+    pub is_reexport: bool,
+}
+
+/// Score already selected fields. Matching remains independently lowerable to native filters.
+#[must_use]
+pub fn score_symbol_fields(
+    symbol: SymbolScoreFields<'_>,
+    query: &str,
+    tokens: &[String],
+) -> Option<(u32, Vec<Factor>)> {
     let q = query.trim().to_lowercase();
     let path = symbol.path.to_lowercase();
     let name = symbol.name.to_lowercase();
@@ -107,7 +119,9 @@ pub fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(
 
     if !q.is_empty() && path == q {
         factors.push(factor("exact_path"));
-    } else if !q.is_empty() && path.ends_with(&format!("::{q}")) {
+    } else if !q.is_empty()
+        && (path.ends_with(&format!("::{q}")) || path.ends_with(&format!(".{q}")))
+    {
         factors.push(factor("path_suffix"));
     } else if !q.is_empty() && name == q {
         factors.push(factor("name_exact"));
@@ -118,7 +132,10 @@ pub fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(
     let mut signature_token = false;
     let mut summary_token = false;
     let mut docs_token = false;
-    for token in tokens.iter().filter(|t| !t.contains("::")) {
+    for token in tokens
+        .iter()
+        .filter(|t| !t.contains("::") && !t.contains('.'))
+    {
         if name.starts_with(token.as_str()) {
             name_prefix = true;
         }
@@ -127,21 +144,18 @@ pub fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(
         }
         if symbol
             .signature
-            .as_deref()
             .is_some_and(|s| s.to_lowercase().contains(token.as_str()))
         {
             signature_token = true;
         }
         if symbol
-            .doc_summary
-            .as_deref()
+            .summary
             .is_some_and(|s| s.to_lowercase().contains(token.as_str()))
         {
             summary_token = true;
         }
         if symbol
             .docs
-            .as_deref()
             .is_some_and(|s| s.to_lowercase().contains(token.as_str()))
         {
             docs_token = true;
@@ -176,23 +190,27 @@ pub fn score_symbol(symbol: &Symbol, query: &str, tokens: &[String]) -> Option<(
     Some((score, factors))
 }
 
-/// Score one fragment against a query. `None` when nothing matched.
+/// Score fragment fields without reconstructing a persistence or wire object.
 #[must_use]
-pub fn score_fragment(
-    fragment: &EvidenceFragment,
+pub fn score_fragment_fields(
+    subject: &str,
+    text: &str,
     query: &str,
     tokens: &[String],
 ) -> Option<(u32, Vec<Factor>)> {
     let q = query.trim().to_lowercase();
-    let subject = fragment.subject.to_lowercase();
-    let text = fragment.text.to_lowercase();
+    let subject = subject.to_lowercase();
+    let text = text.to_lowercase();
     let mut factors = Vec::new();
     if !q.is_empty() && subject == q {
         factors.push(factor("subject_exact"));
     }
     let mut subject_token = false;
     let mut text_hits = 0u32;
-    for token in tokens.iter().filter(|t| !t.contains("::")) {
+    for token in tokens
+        .iter()
+        .filter(|t| !t.contains("::") && !t.contains('.'))
+    {
         if subject.contains(token.as_str()) {
             subject_token = true;
         }
@@ -216,91 +234,10 @@ pub fn score_fragment(
     Some((score, factors))
 }
 
-/// Score and fold symbols: one hit per definition, the definition's own path preferred.
-#[must_use]
-pub fn rank_symbols(symbols: &[Symbol], query: &str, tokens: &[String]) -> Vec<SymbolHit> {
-    let mut best: std::collections::BTreeMap<String, SymbolHit> = std::collections::BTreeMap::new();
-    for symbol in symbols {
-        let Some((score, factors)) = score_symbol(symbol, query, tokens) else {
-            continue;
-        };
-        match best.get_mut(&symbol.definition_id) {
-            None => {
-                best.insert(
-                    symbol.definition_id.clone(),
-                    SymbolHit {
-                        symbol: symbol.clone(),
-                        score,
-                        factors,
-                        also_at: Vec::new(),
-                    },
-                );
-            }
-            Some(existing) => {
-                let better = score > existing.score
-                    || (score == existing.score
-                        && !symbol.is_reexport
-                        && existing.symbol.is_reexport);
-                if better {
-                    let previous = std::mem::replace(
-                        existing,
-                        SymbolHit {
-                            symbol: symbol.clone(),
-                            score,
-                            factors,
-                            also_at: Vec::new(),
-                        },
-                    );
-                    existing.also_at.push(previous.symbol.path);
-                    existing.also_at.extend(previous.also_at);
-                } else {
-                    existing.also_at.push(symbol.path.clone());
-                }
-            }
-        }
-    }
-    let mut hits: Vec<SymbolHit> = best.into_values().collect();
-    for hit in &mut hits {
-        hit.also_at.sort();
-        hit.also_at.dedup();
-    }
-    hits.sort_by(|a, b| {
-        b.score
-            .cmp(&a.score)
-            .then_with(|| a.symbol.path.cmp(&b.symbol.path))
-    });
-    hits
-}
-
-/// Score fragments, best first, ties by subject then id.
-#[must_use]
-pub fn rank_fragments(
-    fragments: &[EvidenceFragment],
-    query: &str,
-    tokens: &[String],
-) -> Vec<FragmentHit> {
-    let mut hits: Vec<FragmentHit> = fragments
-        .iter()
-        .filter_map(|f| {
-            score_fragment(f, query, tokens).map(|(score, factors)| FragmentHit {
-                fragment: f.clone(),
-                score,
-                factors,
-            })
-        })
-        .collect();
-    hits.sort_by(|a, b| {
-        b.score
-            .cmp(&a.score)
-            .then_with(|| a.fragment.subject.cmp(&b.fragment.subject))
-            .then_with(|| a.fragment.fragment_id.cmp(&b.fragment.fragment_id))
-    });
-    hits
-}
-
 /// Digest of what a search asked for, so a cursor can be checked against it.
 #[must_use]
-pub fn query_digest(query: &str, kinds: &[String]) -> String {
+#[cfg(test)]
+fn query_digest(query: &str, kinds: &[String]) -> String {
     let mut kinds = kinds.to_vec();
     kinds.sort();
     canonical::short_id(
@@ -359,10 +296,10 @@ impl Cursor {
     }
 
     /// The opaque wire form.
-    #[must_use]
-    pub fn encode(&self) -> String {
-        let json = serde_json::to_string(self).unwrap_or_default();
-        format!("cur_{}", hex(json.as_bytes()))
+    /// # Errors
+    /// Serialization failure cannot become an empty valid-looking cursor.
+    pub fn encode(&self) -> Result<String, serde_json::Error> {
+        Ok(format!("cur_{}", hex(&serde_json::to_vec(self)?)))
     }
 
     /// Parse and check a cursor against what the caller is paging now.
@@ -376,6 +313,9 @@ impl Cursor {
         query_digest: &str,
         sort: &str,
     ) -> Result<Self, CursorError> {
+        if text.len() > 32768 {
+            return Err(CursorError::Malformed);
+        }
         let body = text.strip_prefix("cur_").ok_or(CursorError::Malformed)?;
         let bytes = unhex(body).ok_or(CursorError::Malformed)?;
         let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
@@ -406,7 +346,7 @@ impl Cursor {
     }
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     let mut out = String::with_capacity(bytes.len() * 2);
     for b in bytes {
@@ -416,7 +356,7 @@ fn hex(bytes: &[u8]) -> String {
     out
 }
 
-fn unhex(text: &str) -> Option<Vec<u8>> {
+pub(crate) fn unhex(text: &str) -> Option<Vec<u8>> {
     if !text.len().is_multiple_of(2) {
         return None;
     }
@@ -450,7 +390,9 @@ mod tests {
             definition_path: "c::inner::widget".to_owned(),
             defined_in_crate: "c".to_owned(),
             producer_local_id: 1,
+            qualifier: None,
             cfg_hints: vec![],
+            python: None,
         }
     }
 
@@ -465,25 +407,16 @@ mod tests {
     }
 
     #[test]
-    fn exact_paths_outrank_fuzzy_matches_and_reexports_fold() {
-        let symbols = vec![
-            symbol("c::widget", true, "A square widget."),
-            symbol("c::inner::widget", false, "A square widget."),
-        ];
-        let q = "c::inner::widget";
-        let hits = rank_symbols(&symbols, q, &tokenize(q));
-        assert_eq!(hits.len(), 1, "one definition, one hit");
-        assert_eq!(hits[0].symbol.path, "c::inner::widget");
-        assert_eq!(hits[0].also_at, vec!["c::widget".to_owned()]);
-        assert!(hits[0].factors.iter().any(|f| f.name == "exact_path"));
-
-        let hits = rank_symbols(&symbols, "widget", &tokenize("widget"));
-        assert_eq!(hits.len(), 1);
-        assert_eq!(
-            hits[0].symbol.path, "c::inner::widget",
-            "definition path preferred on a tie"
-        );
-        assert!(hits[0].factors.iter().any(|f| f.name == "path_suffix"));
+    fn exact_paths_have_the_declared_score_advantage() {
+        let qualified = symbol("c::inner::widget", false, "A square widget.");
+        let alias = symbol("c::widget", true, "A square widget.");
+        let query = "c::inner::widget";
+        let (score, factors) =
+            score_symbol(&qualified, query, &tokenize(query)).expect("qualified match");
+        let (alias_score, _) =
+            score_symbol(&alias, query, &tokenize(query)).expect("alias token match");
+        assert!(score > alias_score);
+        assert!(factors.iter().any(|f| f.name == "exact_path"));
     }
 
     #[test]
@@ -501,7 +434,7 @@ mod tests {
     fn cursors_bind_scope_query_and_sort() {
         let digest = query_digest("Widget", &["api".to_owned()]);
         let cursor = Cursor::new("snap_x", &digest, "score", 12);
-        let text = cursor.encode();
+        let text = cursor.encode().expect("cursor serializes");
         assert!(text.starts_with("cur_"));
         assert_eq!(
             Cursor::decode(&text, "snap_x", &digest, "score")
@@ -534,8 +467,14 @@ mod tests {
         let mut tampered = cursor.clone();
         tampered.offset = 99;
         assert!(matches!(
-            Cursor::decode(&tampered.encode(), "snap_x", &digest, "score"),
+            Cursor::decode(
+                &tampered.encode().expect("cursor serializes"),
+                "snap_x",
+                &digest,
+                "score"
+            ),
             Err(CursorError::Malformed)
         ));
     }
 }
+pub mod spec;

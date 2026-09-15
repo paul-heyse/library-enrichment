@@ -21,27 +21,16 @@ from pathlib import Path
 import pytest
 from fastmcp import Client
 from jsonschema import Draft202012Validator
+from jsonschema.protocols import Validator
 
 from enrichment_mcp.server import TOOL_NAMES, build_server
 
 ROOT = Path(__file__).resolve().parents[2]
 GENERATED_SCHEMA = ROOT / "schemas/generated/research-envelope.schema.json"
 
-#: The eight tools whose producers land in later phases.
-# Tools with a real body no longer belong here; each Phase 1 tool leaves this set as it lands.
-IMPLEMENTED = {
-    "service_status",
-    "resolve_library",
-    "library_overview",
-    "search_evidence",
-    "inspect_symbol",
-    "read_artifact",
-}
-UNIMPLEMENTED = tuple(name for name in TOOL_NAMES if name not in IMPLEMENTED)
-
 
 @pytest.fixture(scope="module")
-def envelope_validator() -> Draft202012Validator:
+def envelope_validator() -> Validator:
     """Validate against the *generated* schema, which is emitted from the Rust wire types.
 
     Using the generated schema rather than the frozen one is deliberate: it proves the adapter
@@ -62,8 +51,23 @@ async def test_all_nine_tools_are_registered() -> None:
 async def test_every_tool_declares_an_input_schema() -> None:
     async with Client(build_server()) as client:
         tools = await client.list_tools()
+    canonical = json.loads(GENERATED_SCHEMA.read_text())
+
+    def inline(value):
+        if isinstance(value, list):
+            return [inline(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        if "$ref" in value:
+            target = canonical
+            for part in value["$ref"].removeprefix("#/").split("/"):
+                target = target[part]
+            value = {**target, **{k: v for k, v in value.items() if k != "$ref"}}
+        return {key: inline(item) for key, item in value.items() if key != "$defs"}
+
     for tool in tools:
         assert tool.input_schema, f"{tool.name} has no input schema"
+        assert inline(tool.output_schema) == inline(canonical)
         assert tool.description, f"{tool.name} has no description"
 
 
@@ -72,9 +76,10 @@ async def test_verify_usage_is_not_advertised_as_read_only() -> None:
     async with Client(build_server()) as client:
         tools = {tool.name: tool for tool in await client.list_tools()}
 
-    annotations = tools["verify_usage"].annotations
-    assert annotations is not None, "verify_usage must disclose its behaviour"
-    assert annotations.read_only_hint is not True
+    for name in ("verify_usage", "inspect_symbol"):
+        annotations = tools[name].annotations
+        assert annotations is not None, f"{name} must disclose explicit execution behaviour"
+        assert annotations.read_only_hint is not True
 
 
 async def test_cached_reads_state_their_world_openness_explicitly() -> None:
@@ -90,45 +95,27 @@ async def test_cached_reads_state_their_world_openness_explicitly() -> None:
     assert annotations.open_world_hint is False
 
 
-@pytest.mark.parametrize("tool", UNIMPLEMENTED)
-async def test_unimplemented_tools_return_a_typed_error_not_an_empty_success(
-    tool: str, envelope_validator: Draft202012Validator
-) -> None:
-    """An absent capability is `error`/`UNSUPPORTED_CAPABILITY`, never an empty `ok`.
-
-    An empty successful result would assert that the question had been answered, which is the
-    exact failure `.claude/rules/evidence-truthfulness.md` exists to prevent.
-    """
-    arguments: dict[str, object] = {
-        "resolve_library": {"ecosystem": "rust", "name": "serde"},
-        "library_overview": {"context_id": "ctx_x"},
-        "search_evidence": {"context_id": "ctx_x", "query": "async runtime"},
-        "inspect_symbol": {"context_id": "ctx_x", "symbol_path": "serde::Serialize"},
-        "compare_releases": {
-            "ecosystem": "rust",
-            "name": "serde",
-            "from_version": "1.0.0",
-            "to_version": "1.0.1",
-        },
-        "verify_usage": {"context_id": "ctx_x", "snippet": "fn main() {}"},
-        "read_artifact": {"artifact_id": "artifact_x"},
-        "job_control": {"job_id": "job_x"},
-    }[tool]
-
+@pytest.mark.parametrize(
+    "tool,arguments",
+    [
+        ("verify_usage", {"context_id": "ctx_x", "snippet": "value: int = 1"}),
+        ("job_control", {"job_id": "job_x"}),
+    ],
+)
+async def test_execution_tools_report_unreachable_daemon_truthfully(
+    tool, arguments, tmp_path, monkeypatch, envelope_validator
+):
+    monkeypatch.setenv("LIBENR_SOCKET", str(tmp_path / "absent.sock"))
     async with Client(build_server()) as client:
-        result = await client.call_tool(tool, arguments)
-
-    payload = result.data
-    assert isinstance(payload, dict)
-    errors = list(envelope_validator.iter_errors(payload))
-    assert not errors, f"{tool} returned a non-conforming envelope: {errors[0].message}"
-    assert payload["status"] == "error"
-    assert payload["error"]["code"] == "UNSUPPORTED_CAPABILITY"
-    assert payload["error"]["next_action"], "a typed error must carry a next action"
+        result = (await client.call_tool(tool, arguments)).structured_content
+    assert not list(envelope_validator.iter_errors(result))
+    assert result["status"] == "error"
+    assert result["error"]["code"] == "UPSTREAM_UNAVAILABLE"
+    assert result["error"]["next_action"]
 
 
 async def test_service_status_is_truthful_when_the_daemon_is_absent(
-    envelope_validator: Draft202012Validator, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    envelope_validator: Validator, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The Phase 0 gate: "`service_status` truthfully reports absent components".
 
@@ -140,7 +127,7 @@ async def test_service_status_is_truthful_when_the_daemon_is_absent(
     async with Client(build_server()) as client:
         result = await client.call_tool("service_status", {})
 
-    payload = result.data
+    payload = result.structured_content
     assert isinstance(payload, dict)
     errors = list(envelope_validator.iter_errors(payload))
     assert not errors, f"non-conforming envelope: {errors[0].message}"
@@ -166,3 +153,16 @@ async def test_a_missing_required_argument_is_rejected() -> None:
     async with Client(build_server()) as client:
         with pytest.raises(Exception, match=r"(?i)valid|error|required|input"):
             await client.call_tool("resolve_library", {"ecosystem": "rust"})
+
+
+def test_rust_generated_request_contract_rejects_unknown_and_invalid_types():
+    from enrichment_mcp.envelope import validate_request
+
+    assert validate_request(
+        "resolve_library",
+        {"ecosystem": "python", "name": "some.pkg", "python_version": "3.14", "extras": []},
+    )[0]
+    assert not validate_request("resolve_library", {"name": "pkg", "python_version": 314})[0]
+    assert not validate_request("resolve_library", {"name": "pkg", "install": True})[0]
+    assert not validate_request("inspect_symbol", {"depth": "execute"})[0]
+    assert not validate_request("search_evidence", {"max_items": -1})[0]

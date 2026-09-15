@@ -8,15 +8,38 @@
 //! once, in the daemon binary, through [`paths::StatePaths::from_env`]; library code and tests
 //! never read `LIBENR_*` themselves, so a parallel test run cannot race on a shared directory.
 
+pub mod admission;
+pub mod atomic;
 pub mod blob;
-pub mod catalog;
+pub mod browse;
+pub mod bundle;
+pub mod catalog_generation;
+pub mod comparison;
+pub mod dataset;
+pub mod ingest;
+pub mod leases;
+pub mod native_rustdoc;
 pub mod paths;
+pub mod projection;
+mod provider;
+pub mod publication_probe;
 pub mod query;
-pub mod snapshot;
-pub mod tables;
+pub mod query_diagnostics;
+pub mod repository;
+pub mod runtime;
+pub mod scoring;
+pub mod search_plan;
+mod semantic;
+pub mod state;
+pub mod views;
 
 pub use blob::{BlobStore, StoredBlob};
-pub use catalog::Catalog;
 pub use paths::{StatePathError, StatePaths};
 pub use query::{Overview, QueryError, SnapshotReader};
-pub use snapshot::{PublishError, SnapshotTables, publish};
+
+mod execution_documents;
+
+pub mod record_writer;
+
+#[doc(hidden)]
+pub mod parquet_admission;

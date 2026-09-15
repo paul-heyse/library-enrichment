@@ -118,7 +118,7 @@ async def test_service_status_traverses_mcp_rpc_and_daemon(
     async with Client(_transport(running_daemon)) as client:
         result = await client.call_tool("service_status", {})
 
-    payload = result.data
+    payload = result.structured_content
     assert isinstance(payload, dict)
 
     # The daemon answered, so this is a full result rather than the adapter-local fallback.
@@ -135,7 +135,7 @@ async def test_service_status_traverses_mcp_rpc_and_daemon(
     producers = payload["data"]["producers"]
     assert producers, "the daemon must enumerate its producers"
     available = sorted(p["name"] for p in producers if p["available"])
-    assert available == ["crates-io-registry", "rustdoc-json"], available
+    assert available == ["crates-io-registry", "pypi-registry", "rustdoc-json"], available
     assert all(p["detail"] for p in producers if not p["available"]), (
         "an absent producer must name why it is absent"
     )
@@ -165,12 +165,12 @@ async def test_the_end_to_end_envelope_conforms_to_the_generated_schema(
             {"ecosystem": "rust", "name": "serde", "version": "1.0.219", "freshness": "offline"},
         )
 
-    assert isinstance(offline.data, dict)
-    assert offline.data["status"] == "error"
-    assert offline.data["error"]["code"] == "ARTIFACT_UNAVAILABLE"
+    assert isinstance(offline.structured_content, dict)
+    assert offline.structured_content["status"] == "error"
+    assert offline.structured_content["error"]["code"] == "ARTIFACT_UNAVAILABLE"
 
     for label, result in (("service_status", listed), ("resolve_library", offline)):
-        payload = result.data
+        payload = result.structured_content
         assert isinstance(payload, dict)
         errors = list(validator.iter_errors(payload))
         assert not errors, f"{label} emitted a non-conforming envelope: {errors[0].message}"
@@ -187,20 +187,23 @@ async def test_a_component_filter_narrows_the_report(running_daemon: dict[str, s
         known = await client.call_tool("service_status", {"component": "griffe"})
         unknown = await client.call_tool("service_status", {"component": "no-such-producer"})
 
-    assert isinstance(known.data, dict)
-    assert known.data["status"] == "ok"
-    assert [p["name"] for p in known.data["data"]["producers"]] == ["griffe"]
+    assert isinstance(known.structured_content, dict)
+    assert known.structured_content["status"] == "ok"
+    assert [p["name"] for p in known.structured_content["data"]["producers"]] == ["griffe"]
 
-    assert isinstance(unknown.data, dict)
-    assert unknown.data["status"] == "partial", "an unmatched filter is not a complete answer"
-    assert unknown.data["data"]["producers"] == []
-    assert unknown.data["coverage"]["missing"], "the gap must be explicit"
+    assert isinstance(unknown.structured_content, dict)
+    assert unknown.structured_content["status"] == "partial", (
+        "an unmatched filter is not a complete answer"
+    )
+    assert unknown.structured_content["data"]["producers"] == []
+    assert unknown.structured_content["coverage"]["missing"], "the gap must be explicit"
     assert any(
-        "no-such-producer" in limitation for limitation in unknown.data["coverage"]["limitations"]
+        "no-such-producer" in limitation
+        for limitation in unknown.structured_content["coverage"]["limitations"]
     ), "the limitation must name the filter that matched nothing"
 
     # And the two coverage blocks must not be interchangeable.
-    assert known.data["coverage"] != unknown.data["coverage"]
+    assert known.structured_content["coverage"] != unknown.structured_content["coverage"]
 
 
 async def _rpc(socket_path: Path, method: str, params: dict[str, object]) -> dict[str, object]:

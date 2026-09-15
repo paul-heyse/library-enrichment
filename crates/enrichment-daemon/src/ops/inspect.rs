@@ -8,8 +8,7 @@
 //! such rather than silently degraded.
 
 use enrichment_core::evidence::{
-    ArtifactKind, Availability, EvidenceKind, FragmentKind, ObservedConfiguration,
-    RequestedConfiguration, Symbol,
+    ArtifactKind, Availability, EvidenceKind, FragmentKind, RequestedConfiguration, Symbol,
 };
 use enrichment_core::producer::source;
 use enrichment_core::request::{InspectDepth, InspectRequest};
@@ -30,8 +29,41 @@ pub const ASPECTS: &[&str] = &[
     "source",
 ];
 
-/// Inspect one symbol.
+/// Select retained results first. Only explicit execution intent can schedule a producer.
 pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
+    use enrichment_core::request::InspectionIntent;
+    if let Some(options) = &request.execution {
+        if let Err(error) = options.validate(service.config.limits.verification_input_bytes) {
+            return envelope::error(
+                ErrorCode::UnsupportedFormat,
+                error,
+                "Use bounded typed inspection options.",
+                false,
+            );
+        }
+        if options.intent != InspectionIntent::Retained
+            && request
+                .aspects
+                .as_ref()
+                .is_some_and(|a| a.iter().any(|a| a == "runtime"))
+            && options.runtime.is_none()
+        {
+            return envelope::error(
+                ErrorCode::UnsupportedFormat,
+                "Runtime execution requires an explicit module and attribute selection",
+                "Set execution.runtime to the exact selected public binding.",
+                false,
+            );
+        }
+        if options.intent != InspectionIntent::Retained {
+            return super::inspect_execution::submit(service, request).await;
+        }
+    }
+    read(service, request).await
+}
+
+/// Inspect one symbol.
+pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     let wanted = request.symbol_path.trim();
     if wanted.is_empty() {
         return envelope::error(
@@ -47,16 +79,17 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
         .unwrap_or_else(|| ASPECTS.iter().map(|a| (*a).to_owned()).collect());
     if let Some(unknown) = aspects
         .iter()
-        .find(|a| !ASPECTS.contains(&a.as_str()) && a.as_str() != "semantics")
+        .find(|a| !ASPECTS.contains(&a.as_str()) && !matches!(a.as_str(), "semantics" | "runtime"))
     {
         return envelope::error(
             ErrorCode::UnsupportedFormat,
             format!("`{unknown}` is not an aspect"),
-            format!("Use any of: {}, semantics.", ASPECTS.join(", ")),
+            format!("Use any of: {}, semantics, runtime.", ASPECTS.join(", ")),
             false,
         );
     }
     let want = |a: &str| aspects.iter().any(|x| x == a);
+    let include_docs = want("documentation") && request.depth != InspectDepth::Signature;
 
     let opened =
         match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
@@ -68,12 +101,20 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
     let manifest = opened.reader.manifest().clone();
 
     // Exact path first; a bare name is accepted only when it names one definition.
-    let mut matches = match opened.reader.symbols_at(wanted).await {
+    let mut matches = match opened
+        .reader
+        .symbols_at(wanted, request.definition_id.as_deref(), include_docs)
+        .await
+    {
         Ok(m) => m,
         Err(err) => return common::query_error(&err),
     };
-    if matches.is_empty() && !wanted.contains("::") {
-        matches = match opened.reader.symbols_ending_with(wanted).await {
+    if matches.is_empty() && !wanted.contains("::") && !wanted.contains('.') {
+        matches = match opened
+            .reader
+            .symbols_ending_with(wanted, request.definition_id.as_deref(), include_docs)
+            .await
+        {
             Ok(m) => m,
             Err(err) => return common::query_error(&err),
         };
@@ -103,18 +144,32 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
                 "`{wanted}` is not a public path in {} {} as documented",
                 opened.release.key.package, opened.release.key.version
             ),
-            "Use `search_evidence` or `library_overview` to find the path; absence from the \
+            "Use `search_evidence` or `library_overview` to find the path and its definition_id; \
+             an explicit definition_id must belong to that path in this snapshot. Absence from the \
              documented build is not proof the item does not exist under another feature set \
              or target.",
             false,
         );
     }
     if definitions.len() > 1 {
-        let mut candidates: Vec<String> = matches.iter().map(|s| s.path.clone()).collect();
-        candidates.sort();
+        let mut candidates: Vec<_> = matches
+            .iter()
+            .map(|s| enrichment_core::wire::data::InspectionCandidate {
+                path: s.path.clone(),
+                definition_id: s.definition_id.clone(),
+                kind: s.kind,
+                qualifier: s.qualifier.clone(),
+            })
+            .collect();
+        candidates.sort_by(|a, b| {
+            a.definition_id
+                .cmp(&b.definition_id)
+                .then_with(|| a.path.cmp(&b.path))
+        });
         candidates.dedup();
         let data = InspectData {
             symbol: None,
+            observations: Vec::new(),
             docs_truncated: false,
             also_at: Vec::new(),
             candidates: candidates.clone(),
@@ -123,6 +178,8 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
             relationships: Vec::new(),
             fragments: Vec::new(),
             source: None,
+            execution_observations: Vec::new(),
+            producer_runs: Vec::new(),
         };
         return Research {
             summary: format!(
@@ -131,14 +188,14 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
             ),
             data: common::to_object(&data),
             coverage: Coverage {
-                scope: format!("candidate paths for `{wanted}`"),
+                scope: format!("candidate definitions for `{wanted}`"),
                 indexed: [EvidenceKind::PublicApi.as_str().to_owned()]
                     .into_iter()
                     .collect(),
                 missing: std::collections::BTreeSet::new(),
                 limitations: vec![
                     "The reference matched more than one definition; nothing was guessed. Pass \
-                     one of `candidates` as a qualified path."
+                     a candidate's path as symbol_path and its definition_id to select exactly."
                         .to_owned(),
                 ],
             },
@@ -158,23 +215,22 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
             .then_with(|| a.path.cmp(&b.path))
     });
     let selected: Symbol = matches[0].clone();
-    let also_at: Vec<String> = matches
-        .iter()
-        .skip(1)
-        .map(|s| s.path.clone())
-        .chain(
-            opened
-                .reader
-                .all_symbols()
-                .await
-                .unwrap_or_default()
-                .into_iter()
-                .filter(|s| s.definition_id == selected.definition_id && s.path != selected.path)
-                .map(|s| s.path),
-        )
-        .collect::<std::collections::BTreeSet<_>>()
-        .into_iter()
-        .collect();
+    let also_at = match opened
+        .reader
+        .aliases_for(&selected.definition_id, &selected.path)
+        .await
+    {
+        Ok(rows) => rows,
+        Err(err) => return common::query_error(&err),
+    };
+    let observations = match opened
+        .reader
+        .observations_for(&selected.symbol_id, include_docs)
+        .await
+    {
+        Ok(rows) => rows,
+        Err(err) => return common::query_error(&err),
+    };
 
     let excerpt_chars = service.config.limits.excerpt_characters;
     let budget = common::byte_budget(service, request.max_bytes);
@@ -183,24 +239,30 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
     let mut returned_aspects = Vec::new();
 
     // signature: always cheap, from the normalized evidence -- never LSP (gate C17 premise).
-    let symbol_fragments = opened
-        .reader
-        .fragments_for(&selected.path)
-        .await
-        .unwrap_or_default();
     if want("signature") {
         returned_aspects.push("signature".to_owned());
-        for f in symbol_fragments
-            .iter()
-            .filter(|f| f.kind == FragmentKind::ApiSignature)
+        let selected_fragments = match opened
+            .reader
+            .fragments(enrichment_store::query::FragmentSelection {
+                path: None,
+                symbol_id: Some(&selected.symbol_id),
+                kinds: &[FragmentKind::ApiSignature],
+                limit: 256,
+                require_complete: true,
+            })
+            .await
         {
+            Ok(rows) => rows,
+            Err(err) => return common::query_error(&err),
+        };
+        for f in selected_fragments {
             evidence.push(evidence_from_fragment(
                 service,
-                f,
+                &f,
                 source_version_match,
                 excerpt_chars,
             ));
-            fragments.push(f.clone());
+            fragments.push(f);
         }
     }
 
@@ -220,10 +282,21 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
                     symbol.docs = Some(common::truncate(docs, cap));
                     docs_truncated = true;
                 }
-                for f in symbol_fragments
-                    .iter()
-                    .filter(|f| f.kind == FragmentKind::DocText)
+                let docs = match opened
+                    .reader
+                    .fragments(enrichment_store::query::FragmentSelection {
+                        path: None,
+                        symbol_id: Some(&selected.symbol_id),
+                        kinds: &[FragmentKind::DocText],
+                        limit: 256,
+                        require_complete: true,
+                    })
+                    .await
                 {
+                    Ok(rows) => rows,
+                    Err(err) => return common::query_error(&err),
+                };
+                for f in &docs {
                     evidence.push(evidence_from_fragment(
                         service,
                         f,
@@ -240,23 +313,28 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
     let mut relationships = Vec::new();
     if want("relationships") {
         returned_aspects.push("relationships".to_owned());
-        relationships = opened
+        relationships = match opened
             .reader
-            .relationships_for(&selected.symbol_id)
+            .relationships_for(
+                &selected.symbol_id,
+                service.config.limits.namespace_entries.saturating_mul(2),
+            )
             .await
-            .unwrap_or_default();
-        relationships.truncate(service.config.limits.namespace_entries * 2);
+        {
+            Ok(rows) => rows,
+            Err(err) => return common::query_error(&err),
+        };
     }
 
     if want("examples") {
         returned_aspects.push("examples".to_owned());
         let name = selected.name.clone();
-        if let Ok(examples) = opened
-            .reader
-            .fragments_matching_any(std::slice::from_ref(&name), Some(&[FragmentKind::Example]))
-            .await
+        let examples = match opened.reader.examples_for(&name).await {
+            Ok(rows) => rows,
+            Err(err) => return common::query_error(&err),
+        };
         {
-            for f in examples.iter().take(3) {
+            for f in &examples {
                 evidence.push(evidence_from_fragment(
                     service,
                     f,
@@ -270,29 +348,34 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
 
     let mut missing = std::collections::BTreeSet::new();
     let mut limitations = Vec::new();
+    if selected.python.is_some() && manifest.missing.contains(&EvidenceKind::RuntimeApi) {
+        missing.insert(EvidenceKind::RuntimeApi.as_str().to_owned());
+        limitations.push("Only source/stub declarations are available: native implementation source and runtime signatures have not been observed.".into());
+    }
+
     let mut availability = None;
     if want("availability") {
         returned_aspects.push("availability".to_owned());
-        let observed: ObservedConfiguration = manifest.observed_configuration.clone();
         let requested = RequestedConfiguration {
-            features: (!opened.environment.features.is_empty())
-                .then(|| opened.environment.features.clone()),
+            features: (opened.environment.features_known
+                || !opened.environment.features.is_empty())
+            .then(|| opened.environment.features.clone()),
             default_features: opened.environment.default_features,
             target: opened.environment.target.clone(),
         };
-        availability = Some(Availability::assess(
-            observed,
-            requested,
-            &selected.cfg_hints,
-        ));
+        availability = manifest
+            .observed_configuration
+            .clone()
+            .map(|observed| Availability::assess(observed, requested, &selected.cfg_hints));
     }
 
     let mut source_excerpt = None;
     if request.depth == InspectDepth::Source && want("source") {
         returned_aspects.push("source".to_owned());
-        match source_for(service, &opened, &selected) {
-            Some(excerpt) => source_excerpt = Some(excerpt),
-            None => {
+        match source_for(service, &opened, &selected).await {
+            Ok(Some(excerpt)) => source_excerpt = Some(excerpt),
+            Err(error) => return common::query_error(&error),
+            Ok(None) => {
                 missing.insert(EvidenceKind::SourceExcerpts.as_str().to_owned());
                 limitations.push(
                     "The recorded span could not be located in the extracted crate archive; \
@@ -302,13 +385,60 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
             }
         }
     }
-    if want("semantics") {
-        missing.insert("semantics".to_owned());
-        limitations.push(
-            "Semantic observations (rust-analyzer) are not implemented in this build; they \
-             land in phase 4. The signature above comes from normalized evidence."
-                .to_owned(),
-        );
+    let is_runtime = want("runtime")
+        || request
+            .execution
+            .as_ref()
+            .is_some_and(|o| o.runtime.is_some());
+    let mut execution_observations = Vec::new();
+    if want("semantics") || want("runtime") || request.execution.is_some() {
+        execution_observations = match super::inspect_execution::retained(
+            &opened.reader,
+            &selected,
+            request.execution.as_ref(),
+            is_runtime,
+        )
+        .await
+        {
+            Ok(rows) => rows,
+            Err(error) => return common::query_error(&error),
+        };
+        if execution_observations.is_empty() {
+            missing.insert(
+                if is_runtime {
+                    "runtime_api"
+                } else {
+                    "semantic_queries"
+                }
+                .into(),
+            );
+            limitations.push("No retained execution observation matches this exact scope. Execution requires explicit execute_on_miss or rerun intent and an enabled profile.".into());
+        } else {
+            returned_aspects.push(if is_runtime { "runtime" } else { "semantics" }.into());
+        }
+    }
+    for observation in &execution_observations {
+        use enrichment_core::evidence::execution::{ExecutionOutcome, ExecutionPayload};
+        let (outcome, notes) = match &observation.payload {
+            ExecutionPayload::SemanticQuery(q) => (q.outcome, &q.limitations),
+            ExecutionPayload::RuntimeObject(q) => (q.outcome, &q.limitations),
+            ExecutionPayload::UsageProbe(_) => continue,
+        };
+        for note in notes {
+            if !limitations.contains(note) {
+                limitations.push(note.clone());
+            }
+        }
+        if !matches!(outcome, ExecutionOutcome::Results | ExecutionOutcome::Empty) {
+            missing.insert(
+                if is_runtime {
+                    "runtime_api"
+                } else {
+                    "semantic_queries"
+                }
+                .into(),
+            );
+        }
     }
     limitations.push(
         "Availability describes the documented build; whether the project has this item \
@@ -318,6 +448,7 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
 
     let data = InspectData {
         symbol: Some(symbol),
+        observations,
         docs_truncated,
         also_at,
         candidates: Vec::new(),
@@ -326,6 +457,8 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
         relationships,
         fragments,
         source: source_excerpt,
+        execution_observations,
+        producer_runs: Vec::new(),
     };
     let partial = !missing.is_empty();
     let research = Research {
@@ -375,48 +508,85 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
 }
 
 /// Cut a bounded source excerpt for a symbol from the extracted crate tarball.
-fn source_for(
+async fn source_for(
     service: &Service,
     opened: &common::Opened,
     symbol: &Symbol,
-) -> Option<source::SourceExcerpt> {
-    let file = symbol.span_file.as_deref()?;
-    let line = symbol.span_line? as usize;
-    // The tarball artifact is recorded with the release's resolution; its digest names the
-    // extraction directory.
-    let stored: serde_json::Value = service
-        .catalog
-        .document(&opened.context.context_id, "resolution")
-        .ok()
-        .flatten()?;
-    let tarball_kind = serde_json::to_value(ArtifactKind::CrateTarball).ok()?;
-    let tarball_sha = stored["data"]["artifacts"]
-        .as_array()?
-        .iter()
-        .find(|a| a["kind"] == tarball_kind)
-        .and_then(|a| a["sha256"].as_str())?
-        .to_owned();
-    let unpacked = service.paths.unpacked().join(tarball_sha);
-    let crate_root = std::fs::read_dir(&unpacked)
-        .ok()?
-        .filter_map(Result::ok)
-        .map(|e| e.path())
-        .find(|p| p.is_dir())?;
-    // rustdoc records spans relative to the crate root for hosted builds; strip any prefix up
-    // to a component that exists under the extracted root.
-    let candidates = std::iter::once(file.to_owned()).chain(
-        file.match_indices('/')
-            .map(|(i, _)| file[i + 1..].to_owned()),
-    );
-    for candidate in candidates {
-        if crate_root.join(&candidate).is_file() {
-            return source::source_excerpt(
-                &crate_root,
-                &candidate,
-                line,
-                service.config.limits.source_lines,
-            );
+) -> Result<Option<source::SourceExcerpt>, enrichment_store::QueryError> {
+    let (Some(file), Some(line)) = (symbol.span_file.as_deref(), symbol.span_line) else {
+        return Ok(None);
+    };
+    let line = line as usize;
+    if symbol.python.is_some() {
+        let inputs = opened
+            .reader
+            .inputs_for_role(&format!("python-source:{file}"))
+            .await?;
+        let Some(input) = inputs.first() else {
+            return Ok(None);
+        };
+        if inputs.iter().any(|i| i.sha256 != input.sha256) {
+            return Err(std::io::Error::other(
+                "conflicting source inputs require qualified inspection",
+            )
+            .into());
         }
+        let artifact = input.clone();
+        let blobs = service.blobs.clone();
+        let file = file.to_owned();
+        let max_lines = service.config.limits.source_lines;
+        return tokio::task::spawn_blocking(move || {
+            let capture = blobs.capture_input(&artifact, 64 * 1024 * 1024)?;
+            source::source_excerpt_reader(std::io::BufReader::new(capture), &file, line, max_lines)
+        })
+        .await
+        .map_err(std::io::Error::other)?
+        .map_err(Into::into);
     }
-    None
+    let inputs = opened
+        .reader
+        .inputs_of_kind(ArtifactKind::CrateTarball)
+        .await?;
+    let Some(input) = inputs.first() else {
+        return Ok(None);
+    };
+    if inputs.iter().any(|i| i.sha256 != input.sha256) {
+        return Err(std::io::Error::other(
+            "conflicting crate source artifacts require qualified inspection",
+        )
+        .into());
+    }
+    let artifact = input.clone();
+    let blobs = service.blobs.clone();
+    let root = service.paths.unpacked();
+    let digest = input.sha256.clone();
+    let file = file.to_owned();
+    let max_lines = service.config.limits.source_lines;
+    tokio::task::spawn_blocking(move || {
+        let crate_root = super::source_tree::open(
+            &root,
+            &digest,
+            blobs.capture_input(&artifact, 256 * 1024 * 1024)?,
+        )?;
+        let candidates = std::iter::once(file.clone()).chain(
+            file.match_indices('/')
+                .map(|(i, _)| file[i + 1..].to_owned()),
+        );
+        for candidate in candidates {
+            let relative = std::path::Path::new(&candidate);
+            if relative
+                .components()
+                .any(|c| !matches!(c, std::path::Component::Normal(_)))
+            {
+                continue;
+            }
+            if crate_root.join(relative).is_file() {
+                return source::source_excerpt_checked(&crate_root, &candidate, line, max_lines);
+            }
+        }
+        Ok(None)
+    })
+    .await
+    .map_err(std::io::Error::other)?
+    .map_err(Into::into)
 }

@@ -84,6 +84,19 @@ def validate_tool_data(tool: str, data: dict[str, Any]) -> tuple[bool, str | Non
 
 
 @cache
+def _request_validator() -> Validator:
+    return Draft202012Validator(
+        json.loads(SCHEMA_PATH.with_name("request.schema.json").read_text())
+    )
+
+
+def validate_request(method: str, params: dict[str, Any]) -> tuple[bool, str | None]:
+    """Apply Rust-owned structural input constraints at the adapter boundary."""
+    errors = list(_request_validator().iter_errors({"method": method, "params": params}))
+    return (False, errors[0].message) if errors else (True, None)
+
+
+@cache
 def _validator() -> Validator:
     """Load the generated schema once per process.
 

@@ -103,6 +103,28 @@ pub fn extract_tar_gz<R: Read>(
     destination: &Path,
     policy: &ArchivePolicy,
 ) -> Result<Extracted, ArchiveError> {
+    extract_tar_gz_inner(reader, destination, policy, None)
+}
+
+/// Extract a Git revision archive, allowing only a bounded global commit comment.
+///
+/// # Errors
+/// Archive policy and mismatched or unsupported PAX metadata are rejected.
+pub fn extract_revision_tar_gz<R: Read>(
+    reader: R,
+    destination: &Path,
+    policy: &ArchivePolicy,
+    commit: &str,
+) -> Result<Extracted, ArchiveError> {
+    extract_tar_gz_inner(reader, destination, policy, Some(commit))
+}
+
+fn extract_tar_gz_inner<R: Read>(
+    reader: R,
+    destination: &Path,
+    policy: &ArchivePolicy,
+    commit: Option<&str>,
+) -> Result<Extracted, ArchiveError> {
     fs::create_dir_all(destination)?;
     if fs::read_dir(destination)?.next().is_some() {
         return Err(ArchiveError::DestinationNotEmpty(destination.to_path_buf()));
@@ -113,6 +135,7 @@ pub fn extract_tar_gz<R: Read>(
     archive.set_preserve_mtime(false);
     archive.set_unpack_xattrs(false);
 
+    let mut seen = std::collections::BTreeSet::new();
     let mut written_entries = 0usize;
     let mut written_bytes = 0u64;
     let mut top_level: Option<Option<String>> = None;
@@ -130,6 +153,26 @@ pub fn extract_tar_gz<R: Read>(
         }
 
         let kind = entry.header().entry_type();
+        if kind == EntryType::XGlobalHeader && commit.is_some() {
+            let size = entry.header().size()?;
+            if size > 16384 {
+                return Err(ArchiveError::EntryTooLarge {
+                    path: shown,
+                    size,
+                    limit: 16384,
+                });
+            }
+            written_bytes = written_bytes.saturating_add(size);
+            if written_bytes > policy.max_total_bytes {
+                return Err(ArchiveError::TotalTooLarge {
+                    limit: policy.max_total_bytes,
+                });
+            }
+            let mut metadata = Vec::new();
+            entry.by_ref().take(16385).read_to_end(&mut metadata)?;
+            validate_commit_pax(&metadata, commit.unwrap_or_default())?;
+            continue;
+        }
         let kind_name = match kind {
             EntryType::Regular | EntryType::Directory => None,
             EntryType::Symlink => Some("symlink"),
@@ -144,6 +187,11 @@ pub fn extract_tar_gz<R: Read>(
         }
 
         let relative = safe_relative_path(&raw_path, &shown)?;
+        if !seen.insert(relative.clone()) {
+            return Err(ArchiveError::Io(io::Error::other(format!(
+                "duplicate archive path {shown}"
+            ))));
+        }
         let first = relative
             .components()
             .next()
@@ -196,6 +244,30 @@ pub fn extract_tar_gz<R: Read>(
         bytes: written_bytes,
         top_level: top_level.flatten(),
     })
+}
+
+fn validate_commit_pax(mut bytes: &[u8], commit: &str) -> Result<(), ArchiveError> {
+    let invalid = || {
+        ArchiveError::Io(io::Error::other(
+            "unsupported or mismatched global revision PAX metadata",
+        ))
+    };
+    while !bytes.is_empty() {
+        let space = bytes.iter().position(|b| *b == b' ').ok_or_else(invalid)?;
+        let count: usize = std::str::from_utf8(&bytes[..space])
+            .map_err(|_| invalid())?
+            .parse()
+            .map_err(|_| invalid())?;
+        if count <= space + 1 || count > bytes.len() {
+            return Err(invalid());
+        }
+        let record = std::str::from_utf8(&bytes[space + 1..count]).map_err(|_| invalid())?;
+        if record != format!("comment={commit}\n") {
+            return Err(invalid());
+        }
+        bytes = &bytes[count..];
+    }
+    Ok(())
 }
 
 /// Validate an entry path: relative, no `..`, no root or prefix components.

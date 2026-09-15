@@ -8,6 +8,9 @@
 //!
 //! Every service here has explicit roots under a temp directory; nothing reads `LIBENR_*`.
 
+#[path = "support/complete_answer.rs"]
+mod complete_answer;
+
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -94,7 +97,7 @@ async fn resolve(service: &Service, params: serde_json::Value) -> serde_json::Va
         .response
         .expect("a response");
     assert!(response.error.is_none(), "{:?}", response.error);
-    response.result.expect("an envelope")
+    complete_answer::wait_for_answer(service, response.result.expect("an envelope")).await
 }
 
 fn strings(value: &serde_json::Value) -> Vec<String> {
@@ -192,7 +195,9 @@ async fn a_release_without_hosted_json_is_partial_with_the_fallback_named() {
     assert_eq!(gap["reason"], "hosted_json_missing");
     assert_eq!(
         gap["planned_fallback"]["producer"],
-        "rustdoc-json-local-build"
+        enrichment_core::producer::rustdoc::LOCAL_PRODUCER,
+        "the gap advertises the producer that actually runs, so a caller can recognise what it \
+         got in the resulting snapshot"
     );
     assert_eq!(gap["planned_fallback"]["profile"], "build");
     assert_eq!(
@@ -394,7 +399,7 @@ async fn a_recorded_resolution_replays_offline_with_the_same_context() {
         assert!(
             strings(&envelope["coverage"]["limitations"])
                 .iter()
-                .any(|l| l.contains("recorded at")),
+                .any(|l| l.contains("retained without age-based expiry")),
             "{freshness}: the replay says it is a replay"
         );
     }

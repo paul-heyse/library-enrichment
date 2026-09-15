@@ -119,12 +119,6 @@ impl StatePaths {
         self.data_root.join("snapshots")
     }
 
-    /// Per-context records and the `current` snapshot pointer.
-    #[must_use]
-    pub fn contexts(&self) -> PathBuf {
-        self.data_root.join("contexts")
-    }
-
     /// Where a snapshot is assembled before publication. Never read by a query.
     #[must_use]
     pub fn staging(&self) -> PathBuf {

@@ -1,9 +1,35 @@
+[default]
+# Content-addressed identifiers are not words. A sha256 digest or an `art_` handle is a fact
+# about bytes, and any three of its hex characters can spell something; correcting one would
+# change an identity, not a spelling.
+extend-ignore-re = [
+  "\\b(?:art_|snap_|ctx_|env_|rel_|job_|req_|interest_|sha256:)[0-9a-f]{16,64}\\b",
+  "\\b[0-9a-f]{32,64}\\b",
+  # RFC 4648's own base64 test vectors ("f", "fo", "foo", ...). The whole point of a test
+  # vector is that it is quoted exactly as the specification writes it.
+  "b\"f(?:o{1,2})?b?a?r?\"",
+]
+
 [default.extend-words]
 # Domain vocabulary that is not a typo.
 crate = "crate"
 ser = "ser"
 nd = "nd"
+# `flate2`, and the `deflate-flate2` feature that selects it.
+flate = "flate"
+# As in "catch-alls": distinct failure classes flattened into one branch.
+alls = "alls"
 
+# Paths whose bytes are not ours to correct.
+#
+# Every entry here is either frozen provenance, a generated artifact, or captured upstream
+# content. A spell-checker finding `endianity` inside a rustdoc capture of the `gimli` crate has
+# found someone else's identifier in evidence we are required to keep byte-for-byte -- "fixing"
+# it would corrupt the capture and break the digest that makes it evidence.
+#
+# This is a scoping choice about which files the tool governs. It is not a suppression: nothing
+# hand-written by this project is excluded, and `just lint` no longer swallows the exit code, so
+# a real typo in real prose now fails the gate.
 [files]
 extend-exclude = [
   "docs/blueprint/**",
@@ -14,4 +40,7 @@ extend-exclude = [
   "uv.lock",
   "schemas/generated/**",
   "rule-tests/__snapshots__/**",
+  "tests/fixtures/**",
+  ".dev-state/**",
+  "docs/reports/**",
 ]

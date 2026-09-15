@@ -1,0 +1,59 @@
+# Exact inputs for the two producer images, by digest.
+#
+# These are the images `verify_usage`, the LSP session manager and the rustdoc fallback run in.
+# Nothing here is fetched by tag: a tag is a mutable pointer, and an execution image whose
+# contents can change is not a recorded producer identity (blueprint §6.1, §10).
+#
+# Large inputs -- the two wheels and the two rustup channel manifests -- are fetched at setup
+# time and checked against the hashes below rather than committed. `scripts/execution-images.sh`
+# is the only thing that reads this file; `just execution-images` is the operator entry point.
+#
+# Every value here was verified against its primary source on 2026-09-13 and is recorded in
+# docs/architecture/compatibility-matrix.md. Re-verify before changing any of them.
+
+config_version = "1.0"
+
+# Fixed build timestamp, so a rebuild differs only where its inputs differ.
+source_date_epoch = 1789257600
+
+[python]
+# docker.io/library/python:3.14.7-slim-trixie, amd64 manifest.
+base = "docker.io/library/python@sha256:810da6270e43d30a1f3e0e1eabbeb6fbd9d78ad9dd2e754d5297a3d6cb42df46"
+# The image this workstation built from these inputs on 2026-09-13. An operator's rebuild may
+# legitimately differ (upstream layers are not bit-reproducible); qualification records what
+# was actually built, and this is only the expected value to compare against.
+recorded_image_id = "sha256:44afc73e29e9a456265b868623b52b76d48e22e7ea3b9a0ff24853f75d5e11de"
+
+# The download URL is resolved from the PyPI JSON API by exact filename at setup time, then the
+# bytes are checked against the hash below. A hand-written CDN path would be a guess about
+# someone else's URL layout; the hash is the thing that actually pins the artifact, and it is
+# the same hash `requirements.txt` gives pip inside the build.
+[[python.wheels]]
+name = "ty"
+version = "0.0.80"
+file = "ty-0.0.80-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+sha256 = "fe95feffa7156800c6f804195acb9fb5846a39671c7192c30fff23351aaf7c31"
+
+[[python.wheels]]
+name = "uv"
+version = "0.12.13"
+file = "uv-0.12.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+sha256 = "5312891392eb5b72eaca9b880e85fe3e706a2b11342e59f7a5cf0304d14d5cc5"
+
+[rust]
+# docker.io/library/rust:1.98.1-slim-trixie, amd64 manifest.
+base = "docker.io/library/rust@sha256:a2de23e559fd8afd260d22beb00f3987073ea0dcc2ba2646cccdaeda6a62a095"
+recorded_image_id = "sha256:28fc46e4b2dab9405af3b813727fc05f9e1d935b8724e77364016114f2e5588d"
+
+# Recorded for provenance and copied into the image at /opt/producer-provenance. The dated
+# nightly is the rustdoc-fallback producer identity from config/toolchains.toml; never a bare
+# `+nightly`, which floats.
+[[rust.manifests]]
+file = "nightly-manifest.toml"
+url = "https://static.rust-lang.org/dist/2026-09-13/channel-rust-nightly.toml"
+sha256 = "1940817baf8e016a115efb4442f587709ca77901820d97b018891806db175d32"
+
+[[rust.manifests]]
+file = "stable-manifest.toml"
+url = "https://static.rust-lang.org/dist/channel-rust-1.98.1.toml"
+sha256 = "a7c8774a5fd8441c997d94c029776cbc5eb111e9d72ab5d256fa69866644347e"

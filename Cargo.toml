@@ -30,10 +30,12 @@ publish = false
 # object_store major, i.e. a single Arrow type universe.
 [workspace.dependencies]
 datafusion = "55.1.0"
-arrow = "59.3.0"
-arrow-schema = "59.3.0"
-parquet = "59.3.0"
+arrow = { version = "59.3.0", features = ["canonical_extension_types"] }
+arrow-schema = { version = "59.3.0", features = ["canonical_extension_types"] }
+parquet = { version = "59.3.0", features = ["arrow_canonical_extension_types"] }
 object_store = "0.13.2"
+async-trait = "0.1.92"
+futures = "0.3.34"
 
 # Consumes rustdoc JSON directly, so the public-API projection needs no Cargo build
 # (blueprint §4.2). The CLI is deliberately NOT a dependency. Verified 2026-09-13: 0.52.2
@@ -77,6 +79,7 @@ tokio = { version = "1.53.1", features = [
   "signal",
   "sync",
   "fs",
+  "process",
 ] }
 thiserror = "2.0.20"
 
@@ -104,6 +107,8 @@ toml = { version = "1.1.6", default-features = false, features = ["parse", "serd
 # HTTP client below.
 sha2 = "0.11.0"
 semver = "1.0.28"
+pep440_rs = "=0.7.3"
+zip = { version = "=8.6.0", default-features = false, features = ["deflate-flate2"] }
 flate2 = "1.1.10"
 tar = "0.4.46"
 url = "2.5.8"

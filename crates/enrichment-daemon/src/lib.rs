@@ -7,12 +7,20 @@
 //! thing, neither MCP nor LSP framing. See [`rpc`] for the framing and
 //! `docs/adr/0006-ndjson-rpc-transport.md` for the parts §2.1 left open.
 
+mod delivery;
 pub mod envelope;
+pub mod execution;
+pub mod export;
 pub mod fetch;
+pub mod jobs;
+pub mod lsp;
+pub mod maintenance;
+pub mod metrics;
 pub mod ops;
 pub mod paths;
 pub mod rpc;
 pub mod server;
 pub mod service;
+pub mod single_flight;
 pub mod status;
 pub mod validate;

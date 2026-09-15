@@ -5,7 +5,7 @@
 //! evidence: the author wrote them, and nothing here executes or interprets them. Source
 //! excerpts for a symbol are cut on demand from the same tree.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ use crate::wire::EvidenceClass;
 /// Producer name.
 pub const PRODUCER: &str = "crate-source";
 /// Producer version.
-pub const VERSION: &str = "1";
+pub const VERSION: &str = "2";
 
 /// Largest text kept for one section or example.
 const MAX_FRAGMENT_CHARS: usize = 8_000;
@@ -32,51 +32,81 @@ pub const DOCUMENT_FILES: &[(&str, FragmentKind)] = &[
 
 /// Files under an extracted crate that are worth storing as their own text artifacts: the
 /// documents above plus every `examples/*.rs`.
-#[must_use]
-pub fn text_files(crate_root: &Path) -> Vec<(String, FragmentKind)> {
-    let mut out: Vec<(String, FragmentKind)> = DOCUMENT_FILES
-        .iter()
-        .filter(|(file, _)| crate_root.join(file).is_file())
-        .map(|(file, kind)| ((*file).to_owned(), *kind))
-        .collect();
-    if let Ok(entries) = std::fs::read_dir(crate_root.join("examples")) {
-        let mut files: Vec<PathBuf> = entries
-            .filter_map(Result::ok)
-            .map(|e| e.path())
-            .filter(|p| p.extension().is_some_and(|e| e == "rs"))
-            .collect();
-        files.sort();
-        for file in files {
-            if let Some(name) = file.file_name().and_then(|f| f.to_str()) {
-                out.push((format!("examples/{name}"), FragmentKind::Example));
+/// # Errors
+/// Unsafe entries, I/O and excessive document inventories remain explicit.
+pub fn text_files(crate_root: &Path) -> std::io::Result<Vec<(String, FragmentKind)>> {
+    let mut out = Vec::new();
+    for (file, kind) in DOCUMENT_FILES {
+        match std::fs::symlink_metadata(crate_root.join(file)) {
+            Ok(metadata) if metadata.is_file() => out.push(((*file).into(), *kind)),
+            Ok(_) => {
+                return Err(std::io::Error::other(
+                    "source document is not a regular file",
+                ));
             }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => return Err(e),
         }
     }
-    out
+    let directory = crate_root.join("examples");
+    match std::fs::symlink_metadata(&directory) {
+        Ok(metadata) if metadata.is_dir() => {}
+        Ok(_) => {
+            return Err(std::io::Error::other(
+                "examples is not a physical directory",
+            ));
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(out),
+        Err(e) => return Err(e),
+    }
+    let mut count = 0usize;
+    let mut bytes = 0usize;
+    for entry in std::fs::read_dir(directory)? {
+        let entry = entry?;
+        count += 1;
+        if count > 20_000 {
+            return Err(std::io::Error::other(
+                "source inventory exceeds 20000 entries",
+            ));
+        }
+        if entry.path().extension().is_some_and(|ext| ext == "rs") {
+            if !entry.file_type()?.is_file() {
+                return Err(std::io::Error::other(
+                    "source example is not a regular file",
+                ));
+            }
+            let name = entry
+                .file_name()
+                .into_string()
+                .map_err(|_| std::io::Error::other("source example name is not UTF-8"))?;
+            bytes += name.len() + 9;
+            if bytes > 1024 * 1024 || out.len() >= 8192 {
+                return Err(std::io::Error::other(
+                    "source descriptor inventory exceeds budget",
+                ));
+            }
+            out.push((format!("examples/{name}"), FragmentKind::Example));
+        }
+    }
+    out.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(out)
 }
 
-/// Read the declared fragments out of an extracted crate directory.
-///
-/// `crate_root` is the directory holding `Cargo.toml`. `artifact_for` maps a relative file
-/// path to the artifact it was stored as; a file with no artifact of its own is attributed
-/// to `tarball_artifact_id`. Missing files are simply absent; nothing here fails.
-#[must_use]
-pub fn source_fragments(
-    crate_root: &Path,
+/// Emit declared feature records without retaining a feature-document collection.
+pub fn visit_features(
     facts: &ManifestFacts,
     manifest_artifact_id: &str,
-    tarball_artifact_id: &str,
-    artifact_for: &dyn Fn(&str) -> Option<String>,
-) -> Vec<EvidenceFragment> {
-    let mut out = Vec::new();
-
+    emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+) -> Result<(), String> {
     for (feature, enables) in &facts.features {
+        crate::canonical::serialized_size(&(feature, enables), 256 * 1024)
+            .map_err(|e| e.to_string())?;
         let text = if enables.is_empty() {
             format!("feature `{feature}` enables nothing further")
         } else {
             format!("feature `{feature}` enables: {}", enables.join(", "))
         };
-        out.push(EvidenceFragment::new(
+        emit(EvidenceFragment::new(
             FragmentKind::FeatureDefinition,
             feature,
             manifest_artifact_id,
@@ -85,103 +115,131 @@ pub fn source_fragments(
             EvidenceClass::Declared,
             PRODUCER,
             VERSION,
-        ));
+        )?)?;
     }
+    Ok(())
+}
 
-    for (file, kind) in text_files(crate_root) {
-        let Ok(text) = std::fs::read_to_string(crate_root.join(&file)) else {
-            continue;
-        };
-        let artifact_id = artifact_for(&file).unwrap_or_else(|| tarball_artifact_id.to_owned());
-        if kind == FragmentKind::Example {
-            let name = Path::new(&file)
+/// Emit bounded text from one verified document. Rust markdown is sectioned; examples and
+/// Python document excerpts retain their declared file label. No complete section list exists.
+pub fn visit_document(
+    text: &str,
+    file: &str,
+    artifact: &str,
+    kind: FragmentKind,
+    rust_sections: bool,
+    emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+) -> Result<(), String> {
+    if text.len() > 64 * 1024 * 1024 {
+        return Err("source document exceeds 64 MiB".into());
+    }
+    if !rust_sections || kind == FragmentKind::Example {
+        let subject = if rust_sections {
+            Path::new(file)
                 .file_stem()
                 .and_then(|s| s.to_str())
                 .unwrap_or("example")
-                .to_owned();
-            out.push(EvidenceFragment::new(
+        } else {
+            file
+        };
+        emit(EvidenceFragment::new(
+            kind,
+            subject,
+            artifact,
+            serde_json::json!({"path":file,"line":1}),
+            bounded(text),
+            EvidenceClass::Declared,
+            PRODUCER,
+            VERSION,
+        )?)?;
+    } else {
+        visit_markdown_sections(text, &mut |heading, line, body| {
+            emit(EvidenceFragment::new(
                 kind,
-                &name,
-                &artifact_id,
-                serde_json::json!({ "path": file, "line": 1 }),
-                bounded(&text),
+                heading,
+                artifact,
+                serde_json::json!({"path":file,"heading":heading,"line":line}),
+                bounded(body),
                 EvidenceClass::Declared,
                 PRODUCER,
                 VERSION,
-            ));
-            continue;
-        }
-        for section in split_markdown_sections(&text) {
-            out.push(EvidenceFragment::new(
-                kind,
-                &section.heading,
-                &artifact_id,
-                serde_json::json!({
-                    "path": file, "heading": section.heading, "line": section.line
-                }),
-                bounded(&section.body),
-                EvidenceClass::Declared,
-                PRODUCER,
-                VERSION,
-            ));
-        }
+            )?)
+        })?;
     }
-
-    out
+    Ok(())
 }
 
-/// One markdown section: the heading text and the body under it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MarkdownSection {
-    /// Heading text without the `#` markers; `preamble` for text before any heading.
-    pub heading: String,
-    /// 1-based line of the heading.
-    pub line: usize,
-    /// Body text, trimmed.
-    pub body: String,
-}
-
-/// Split markdown at ATX headings. Text before the first heading becomes a `preamble` section.
-#[must_use]
-pub fn split_markdown_sections(text: &str) -> Vec<MarkdownSection> {
-    let mut sections = Vec::new();
-    let mut current = MarkdownSection {
-        heading: "preamble".to_owned(),
-        line: 1,
-        body: String::new(),
-    };
+/// Visit borrowed markdown section slices. Original line delimiters are retained in bodies.
+/// The only live state is one heading, line number and byte range, even for very long sections.
+pub fn visit_markdown_sections(
+    text: &str,
+    emit: &mut dyn FnMut(&str, usize, &str) -> Result<(), String>,
+) -> Result<(), String> {
+    let mut heading = "preamble";
+    let mut heading_line = 1;
+    let mut start = 0;
     let mut in_fence = false;
-    for (i, line) in text.lines().enumerate() {
+    for (i, range) in crate::evidence::text::lines(text).enumerate() {
+        let line = &text[range.start..range.content_end];
         if line.trim_start().starts_with("```") {
             in_fence = !in_fence;
         }
         let hashes = line.trim_start().chars().take_while(|c| *c == '#').count();
-        let heading = (!in_fence && (1..=6).contains(&hashes))
+        let next = (!in_fence && (1..=6).contains(&hashes))
             .then(|| line.trim_start().trim_start_matches('#').trim())
             .filter(|h| !h.is_empty());
-        if let Some(heading) = heading {
-            let body = current.body.trim().to_owned();
-            if !body.is_empty() || current.heading != "preamble" {
-                sections.push(MarkdownSection {
-                    body,
-                    ..current.clone()
-                });
+        if let Some(next) = next {
+            if next.len() > 16 * 1024 {
+                return Err("markdown heading exceeds 16 KiB".into());
             }
-            current = MarkdownSection {
-                heading: heading.to_owned(),
-                line: i + 1,
-                body: String::new(),
-            };
-        } else {
-            current.body.push_str(line);
-            current.body.push('\n');
+            let body = text[start..range.start].trim();
+            if !body.is_empty() || heading != "preamble" {
+                emit(heading, heading_line, body)?;
+            }
+            heading = next;
+            heading_line = i + 1;
+            start = range.end;
         }
     }
-    let body = current.body.trim().to_owned();
-    if !body.is_empty() || current.heading != "preamble" {
-        sections.push(MarkdownSection { body, ..current });
+    let body = text[start..].trim();
+    if !body.is_empty() || heading != "preamble" {
+        emit(heading, heading_line, body)?;
     }
-    sections
+    Ok(())
+}
+
+/// Read an already validated extracted member with a byte bound before allocation growth.
+pub fn read_file(path: &Path) -> std::io::Result<Vec<u8>> {
+    read_file_limited(path, 64 * 1024 * 1024)
+}
+
+/// Read a regular source member with an operation-specific byte bound.
+/// # Errors
+/// Non-regular or oversized bytes fail before the output grows beyond the bound.
+pub fn read_file_limited(path: &Path, limit: u64) -> std::io::Result<Vec<u8>> {
+    use std::io::Read;
+    if limit == 0 || limit > 64 * 1024 * 1024 {
+        return Err(std::io::Error::other("invalid source byte bound"));
+    }
+    let mut options = std::fs::File::options();
+    options.read(true);
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(0x20000 | 0x800);
+    }
+    let file = options.open(path)?;
+    if !file.metadata()?.is_file() || file.metadata()?.len() > limit {
+        return Err(std::io::Error::other(
+            "source member is not a bounded regular file",
+        ));
+    }
+    let mut bytes = Vec::new();
+    file.take(limit + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > limit {
+        return Err(std::io::Error::other("source member grew beyond bound"));
+    }
+    Ok(bytes)
 }
 
 /// A bounded source excerpt around a line, for `inspect_symbol` at `source` depth.
@@ -203,35 +261,94 @@ pub struct SourceExcerpt {
 ///
 /// `file` must be a relative path with no parent components; anything else is refused, so a
 /// recorded span can never read outside the extracted crate.
-#[must_use]
-pub fn source_excerpt(
+pub fn source_excerpt_checked(
     crate_root: &Path,
     file: &str,
     line: usize,
     max_lines: usize,
-) -> Option<SourceExcerpt> {
+) -> std::io::Result<Option<SourceExcerpt>> {
     let rel = Path::new(file);
     if rel.is_absolute()
         || rel
             .components()
             .any(|c| !matches!(c, std::path::Component::Normal(_)))
     {
-        return None;
+        return Err(std::io::Error::other(
+            "source path must be a relative archive member",
+        ));
     }
-    let text = std::fs::read_to_string(crate_root.join(rel)).ok()?;
-    let lines: Vec<&str> = text.lines().collect();
-    if lines.is_empty() {
-        return None;
+    let mut path = crate_root.to_owned();
+    for component in rel.components() {
+        path.push(component);
+        if std::fs::symlink_metadata(&path)?.file_type().is_symlink() {
+            return Err(std::io::Error::other("source member contains a link"));
+        }
     }
-    let start = line.max(1).min(lines.len());
-    let end = (start + max_lines.max(1) - 1).min(lines.len());
-    Some(SourceExcerpt {
-        path: file.to_owned(),
+    let mut options = std::fs::File::options();
+    options.read(true);
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(0x20000 | 0x800);
+    }
+    let input = options.open(path)?;
+    if !input.metadata()?.is_file() || input.metadata()?.len() > 64 * 1024 * 1024 {
+        return Err(std::io::Error::other(
+            "source member is not a bounded regular file",
+        ));
+    }
+    source_excerpt_reader(std::io::BufReader::new(input), file, line, max_lines)
+}
+
+/// Cut original source bytes from an already verified reader, sharing CRLF/CR/LF semantics.
+/// # Errors
+/// Invalid selected UTF-8, I/O, a long line or an excerpt above one MiB is refused.
+pub fn source_excerpt_reader(
+    source: impl std::io::BufRead,
+    file: &str,
+    line: usize,
+    max_lines: usize,
+) -> std::io::Result<Option<SourceExcerpt>> {
+    let mut reader = crate::evidence::text::LineReader::new(source, 1024 * 1024);
+    let start = line.max(1);
+    let limit = max_lines.clamp(1, 1024);
+    let mut selected = Vec::new();
+    let mut count = 0;
+    let mut end = 0;
+    let mut truncated = false;
+    for index in 1..=start.saturating_add(limit) {
+        let Some(bytes) = reader.next_line()? else {
+            break;
+        };
+        if index < start {
+            continue;
+        }
+        if count == limit {
+            truncated = true;
+            break;
+        }
+        if bytes.len() > (1024 * 1024usize).saturating_sub(selected.len()) {
+            return Err(std::io::Error::other("source excerpt exceeds one MiB"));
+        }
+        let text = std::str::from_utf8(&bytes).map_err(std::io::Error::other)?;
+        let span = crate::evidence::text::lines(text)
+            .next()
+            .expect("one logical line");
+        end = selected.len() + span.content_end;
+        selected.extend_from_slice(&bytes);
+        count += 1;
+    }
+    if count == 0 {
+        return Ok(None);
+    }
+    selected.truncate(end);
+    Ok(Some(SourceExcerpt {
+        path: file.into(),
         start_line: start,
-        end_line: end,
-        text: lines[start - 1..end].join("\n"),
-        truncated: end < lines.len(),
-    })
+        end_line: start + count - 1,
+        text: String::from_utf8(selected).map_err(std::io::Error::other)?,
+        truncated,
+    }))
 }
 
 fn bounded(text: &str) -> String {
@@ -246,6 +363,85 @@ fn bounded(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct MarkdownSection {
+        heading: String,
+        line: usize,
+        body: String,
+    }
+    fn split_markdown_sections(text: &str) -> Vec<MarkdownSection> {
+        let mut out = Vec::new();
+        visit_markdown_sections(text, &mut |heading, line, body| {
+            out.push(MarkdownSection {
+                heading: heading.into(),
+                line,
+                body: body.into(),
+            });
+            Ok(())
+        })
+        .expect("sections");
+        out
+    }
+    fn source_fragments(
+        root: &Path,
+        facts: &ManifestFacts,
+        manifest: &str,
+        tarball: &str,
+        artifact_for: &dyn Fn(&str) -> Option<String>,
+    ) -> Vec<EvidenceFragment> {
+        let mut out = Vec::new();
+        visit_features(facts, manifest, &mut |row| {
+            out.push(row);
+            Ok(())
+        })
+        .expect("features");
+        for (file, kind) in text_files(root).expect("fixture inventory") {
+            let text = std::fs::read_to_string(root.join(&file)).expect("text");
+            visit_document(
+                &text,
+                &file,
+                &artifact_for(&file).unwrap_or_else(|| tarball.into()),
+                kind,
+                true,
+                &mut |row| {
+                    out.push(row);
+                    Ok(())
+                },
+            )
+            .expect("document");
+        }
+        out
+    }
+
+    #[test]
+    fn section_visits_borrow_original_crlf_body_and_propagate_sink_failure() {
+        let text = format!(
+            "# Large\r\n{}\r\n# Next\r\nlast",
+            "x".repeat(2 * 1024 * 1024)
+        );
+        let mut visits = 0;
+        visit_markdown_sections(&text, &mut |heading, line, body| {
+            visits += 1;
+            if visits == 1 {
+                assert_eq!((heading, line), ("Large", 1));
+                assert_eq!(body.len(), 2 * 1024 * 1024);
+                assert_eq!(body.as_ptr(), text[9..].as_ptr());
+            } else {
+                assert_eq!((heading, line, body), ("Next", 3, "last"));
+            }
+            Ok(())
+        })
+        .unwrap();
+        assert_eq!(visits, 2);
+        let mut calls = 0;
+        let error = visit_markdown_sections(&text, &mut |_, _, _| {
+            calls += 1;
+            Err("stop".into())
+        })
+        .unwrap_err();
+        assert_eq!(error, "stop");
+        assert_eq!(calls, 1);
+    }
 
     #[test]
     fn markdown_splits_at_headings_and_ignores_fenced_hashes() {
@@ -265,13 +461,42 @@ mod tests {
         let src = dir.path().join("src");
         std::fs::create_dir_all(&src).expect("mkdir");
         std::fs::write(src.join("lib.rs"), "l1\nl2\nl3\nl4\nl5\n").expect("write");
-        let ex = source_excerpt(dir.path(), "src/lib.rs", 2, 3).expect("excerpt");
+        let ex = source_excerpt_checked(dir.path(), "src/lib.rs", 2, 3)
+            .expect("read")
+            .expect("excerpt");
         assert_eq!((ex.start_line, ex.end_line), (2, 4));
         assert_eq!(ex.text, "l2\nl3\nl4");
         assert!(ex.truncated);
-        assert!(source_excerpt(dir.path(), "../etc/passwd", 1, 3).is_none());
-        assert!(source_excerpt(dir.path(), "/etc/passwd", 1, 3).is_none());
-        assert!(source_excerpt(dir.path(), "src/missing.rs", 1, 3).is_none());
+        assert!(source_excerpt_checked(dir.path(), "../etc/passwd", 1, 3).is_err());
+        assert!(source_excerpt_checked(dir.path(), "/etc/passwd", 1, 3).is_err());
+        assert!(source_excerpt_checked(dir.path(), "src/missing.rs", 1, 3).is_err());
+    }
+
+    #[test]
+    fn source_excerpt_preserves_original_delimiters_and_final_empty_line() {
+        let bytes = "a\r\r\n🌎é\r\n".as_bytes();
+        let excerpt =
+            source_excerpt_reader(std::io::BufReader::with_capacity(1, bytes), "src.py", 2, 2)
+                .expect("read")
+                .expect("excerpt");
+        assert_eq!(excerpt.text, "\r\n🌎é");
+        assert_eq!(
+            (excerpt.start_line, excerpt.end_line, excerpt.truncated),
+            (2, 3, true)
+        );
+        let end = source_excerpt_reader(bytes, "src.py", 4, 2)
+            .expect("read")
+            .expect("final empty line");
+        assert_eq!(
+            (
+                end.text.as_str(),
+                end.start_line,
+                end.end_line,
+                end.truncated
+            ),
+            ("", 4, 4, false)
+        );
+        assert!(source_excerpt_reader(&b"\xff\n"[..], "bad", 1, 2).is_err());
     }
 
     #[test]
@@ -283,7 +508,7 @@ mod tests {
             .join("tests/fixtures/crates/enr-fixture-0.2.0");
         let manifest = std::fs::read_to_string(root.join("Cargo.toml")).expect("manifest");
         let facts = super::super::docsrs::manifest_facts(&manifest).expect("facts");
-        let files = text_files(&root);
+        let files = text_files(&root).expect("fixture inventory");
         assert!(files.iter().any(|(f, _)| f == "README.md"));
         assert!(
             files

@@ -10,6 +10,11 @@ cd "$ROOT"
 n="${1:-}"
 case "$n" in 0|1|2|3|4|5|6) ;; *) echo "usage: gate-phase.sh <0-6>" >&2; exit 2 ;; esac
 
+# Phase 4 onwards needs admitted execution images. Export them from the qualification receipt
+# so the sandbox tier actually runs. `just test-python` reads the same script, so a gate result
+# cannot depend on which recipe was typed.
+eval "$(bash "${ROOT}/scripts/execution-env.sh")"
+
 fails=0
 step() { # description, command...
   local d="$1"; shift
@@ -42,6 +47,8 @@ case "$n" in
     step "lint"                 just lint
     step "compile"              just check
     step "tests"                just test
+    step "live acceptance"      just test-live
+    step "client acceptance"    just test-client
     step "schema conformance"   ./scripts/schema-conformance.sh
     step "dependency policy"    just deps-policy
     step "state isolation"      ./scripts/state-leak-check.sh
@@ -52,7 +59,7 @@ esac
 
 # Report this phase's gates truthfully.
 printf '\n--- gates registered for phase %s\n' "$n"
-python3 - "$n" <<'PY'
+python3 - "$n" <<'PY' || fails=$((fails+1))
 import json, sys, tomllib
 from collections import Counter
 from pathlib import Path
@@ -66,13 +73,15 @@ if p.exists():
 c = Counter()
 for g in ids:
     st = rep.get(g, {}).get("status", "not_run")
-    c[st] += 1
+    if not reg[g].get("superseded"):
+        c[st] += 1
     lim = rep.get(g, {}).get("limitation", "")
     print(f"  {g}  {st:<8} {reg[g]['scenario'][:58]}" + (f"\n        {lim}" if lim and st != 'passed' else ""))
 print(f"\n  phase {n}: {c['passed']} passed / {c['failed']} failed / "
       f"{c['blocked']} blocked / {c['not_run']} not_run  (of {len(ids)})")
-if c['not_run'] or c['failed']:
+if c['not_run'] or c['failed'] or c['blocked']:
     print(f"  Phase {n} is NOT complete. A gate is passed only when a test actually ran.")
+    sys.exit(1)
 PY
 
 printf '\n=== phase %s: %d check(s) failed ===\n' "$n" "$fails"

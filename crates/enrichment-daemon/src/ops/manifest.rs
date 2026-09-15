@@ -8,21 +8,15 @@
 use enrichment_core::identity::SnapshotId;
 use enrichment_core::wire::data::ManifestData;
 use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch};
-use serde::Deserialize;
 
 use super::common;
 use crate::envelope::{self, Research};
 use crate::service::Service;
 
-/// Parameters of `snapshot.manifest`.
-#[derive(Debug, Clone, Deserialize)]
-pub struct ManifestRequest {
-    /// The snapshot to describe.
-    pub snapshot_id: String,
-}
+pub use enrichment_core::request::ManifestRequest;
 
 /// Read a published manifest.
-pub fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
+pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
     let Ok(id) = SnapshotId::try_from(request.snapshot_id.trim().to_owned()) else {
         return envelope::error(
             ErrorCode::ArtifactUnavailable,
@@ -31,28 +25,33 @@ pub fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
             false,
         );
     };
-    let manifest = match enrichment_store::snapshot::read_manifest(&service.paths, &id) {
-        Ok(Some(manifest)) => manifest,
-        Ok(None) => {
-            return envelope::error(
-                ErrorCode::ArtifactUnavailable,
-                format!("snapshot {id} is not published on this service"),
-                "Resolve the release again; a snapshot is published when hosted rustdoc JSON \
-                 normalizes.",
-                false,
-            );
-        }
-        Err(err) => return common::store_error(&err),
+    let catalog = match service.repository.catalog.pin().await {
+        Ok(value) => value,
+        Err(e) => return common::store_error(&e),
     };
-    let is_current = service
-        .catalog
-        .current_snapshot(&manifest.context_id)
-        .ok()
-        .flatten()
-        .is_some_and(|current| current == id);
+    let reader =
+        match enrichment_store::SnapshotReader::open(&service.repository, catalog.clone(), &id)
+            .await
+        {
+            Ok(value) => value,
+            Err(e) => return common::query_error(&e),
+        };
+    let manifest = reader.manifest().clone();
+    let is_current = match catalog
+        .current(&service.repository.runtime, &manifest.context_id)
+        .await
+    {
+        Ok(value) => value.as_ref() == Some(&id),
+        Err(e) => return common::store_error(&e),
+    };
     let data = ManifestData {
         manifest: manifest.clone(),
         is_current,
+        producer_runs: match reader.producer_runs().await {
+            Ok(value) => value,
+            Err(e) => return common::query_error(&e),
+        },
+        catalog_generation: catalog.generation(),
     };
     Research {
         summary: format!(

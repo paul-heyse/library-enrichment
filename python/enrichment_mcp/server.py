@@ -14,10 +14,9 @@ initialization." The daemon connection is opened per call, never here.
 ``print()`` corrupts the session, which is why ruff's ``T20`` is enabled and
 ``rules/mcp-stdout-protocol-only.yml`` scans for it in the edit loop.
 
-All nine tools are registered from the start with their real input schemas, so the contract a
-calling agent sees is the contract Phase 1 will fill in. The eight that are not implemented yet
-return a typed ``UNSUPPORTED_CAPABILITY`` envelope naming the phase that will implement them --
-an honest typed error, never a fabricated success and never an empty ``ok``.
+All nine tools are registered with their real input schemas and every one is now wired to a
+daemon method. What a tool cannot answer, the daemon says so in the envelope -- a typed error or
+a ``partial`` with the gap named, never a fabricated success and never an empty ``ok``.
 """
 
 from __future__ import annotations
@@ -27,10 +26,12 @@ import sys
 from typing import Annotated, Any, Literal
 
 from fastmcp import FastMCP
+from fastmcp.tools.base import ToolResult
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from enrichment_mcp import envelope
+from enrichment_mcp._generated.request_schema import InspectionOptions
 from enrichment_mcp._generated.research_envelope_schema import Code, Coverage
 from enrichment_mcp.daemon_client import (
     ACQUISITION_TIMEOUT_SECONDS,
@@ -53,24 +54,19 @@ TOOL_NAMES = (
     "service_status",
 )
 
-#: The tools that are not wired to a daemon method yet, and where each one lands.
-#:
-#: Only tools that actually reach `_not_implemented` belong here. Listing a tool that already
-#: routes through `_research` makes this look like a registry of service state, which it is not
-#: -- the dispatch table is. Keeping a stale entry here is what let the caller-visible message
-#: claim a phase the service had already left.
-_UNIMPLEMENTED_IN = {
-    "compare_releases": 3,
-    "verify_usage": 4,
-    "job_control": 4,
-}
-
 Ecosystem = Literal["rust", "python"]
 ResearchMode = Literal["project", "upstream", "compare", "revision"]
 FreshnessMode = Literal["cache_ok", "revalidate", "offline"]
 EvidenceFamily = Literal["api", "docs", "examples", "release_notes", "features", "source"]
 Aspect = Literal[
-    "signature", "availability", "relationships", "documentation", "examples", "source", "semantics"
+    "signature",
+    "availability",
+    "relationships",
+    "documentation",
+    "examples",
+    "source",
+    "semantics",
+    "runtime",
 ]
 
 # Retrieval reads a published snapshot: no network, so a short bound is enough to tell a
@@ -124,24 +120,21 @@ def _emit(result: dict[str, Any], *, tool: str | None = None) -> dict[str, Any]:
     )
 
 
-def _not_implemented(tool: str) -> dict[str, Any]:
-    """The typed answer for a tool whose producers do not exist yet.
+MCP_FRAME_ALLOWANCE_BYTES = 512
 
-    ``UNSUPPORTED_CAPABILITY`` is the honest code from the frozen thirteen: the capability is
-    genuinely absent, and the next action says when it arrives. Deliberately not an empty
-    ``ok`` -- a successful empty result would assert that the question had been answered.
+
+def _tool_result(result: dict[str, Any], *, tool: str | None = None) -> ToolResult:
+    """Emit one canonical envelope plus at most 160 encoded bytes of readable summary.
+
+    The core budgets the complete envelope. MCP framing and this compact text have a fixed
+    512-byte allowance, measured by the raw stdio regression rather than a token estimate.
+    Resources continue returning the same canonical envelope without a second text projection.
     """
-    phase = _UNIMPLEMENTED_IN[tool]
-    return _emit(
-        envelope.error(
-            Code.UNSUPPORTED_CAPABILITY,
-            f"`{tool}` is not implemented in this build",
-            f"`{tool}` lands in phase {phase}. "
-            f"Call `service_status` to see which producers are installed and which "
-            f"tools this build answers.",
-            retryable=False,
-        )
-    )
+    result = _emit(result, tool=tool)
+    summary = str(result.get("summary", "Evidence response"))[:160]
+    while len(json.dumps(summary, ensure_ascii=False).encode()) > 160:
+        summary = summary[:-1]
+    return ToolResult(content=summary, structured_content=result)
 
 
 # Annotations are disclosure, never enforcement -- policy is enforced in the Rust core
@@ -178,16 +171,22 @@ def build_server() -> FastMCP:
 
     Pure construction: no socket is opened, no package is fetched, no subprocess is started.
     """
+    output_schema = json.loads(envelope.SCHEMA_PATH.read_text())
     mcp: FastMCP = FastMCP(
         name="library-enrichment",
         instructions=(
             "Evidence service for Rust and Python libraries. Resolve exact release identity "
             "before asking anything else, and read `coverage` on every result: `ok` means "
-            "successful within that scope, never complete knowledge of a library."
+            "successful within that scope, never complete knowledge of a library. For Rust, "
+            "empty cfg_hints mean no condition was recorded; they do not establish availability "
+            "under default features. Keep docs.rs observed build configuration separate from "
+            "the requested project configuration. Preserve project_availability_unverified "
+            "until matching configuration evidence or qualified execution establishes it."
         ),
     )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="service_status",
         description="Inspect readiness and capabilities, without indexing.",
         annotations=_CACHED_READ,
@@ -197,11 +196,17 @@ def build_server() -> FastMCP:
             str | None,
             Field(description="Restrict the report to one producer or component."),
         ] = None,
-    ) -> dict[str, Any]:
+    ) -> ToolResult:
         """Report what this build can actually do, including what is absent."""
-        return _emit(await _service_status(component))
+        payload, from_core = await _service_status(component)
+        # The payload schema is checked only for an answer the core composed. The
+        # daemon-unreachable envelope below is adapter-local by necessity -- there is no core to
+        # ask -- and its data is deliberately *not* a status payload. Validating it against one
+        # would turn a truthful "the daemon is down" into a reported internal defect.
+        return _tool_result(payload, tool="service_status" if from_core else None)
 
     @mcp.tool(
+        output_schema=output_schema,
         name="resolve_library",
         description="Establish exact identity and environment before research.",
         annotations=_READ_ONLY,
@@ -223,7 +228,7 @@ def build_server() -> FastMCP:
         ] = None,
         features: Annotated[
             list[str] | None,
-            Field(description="Features (Rust) or extras (Python) your project enables."),
+            Field(description="Rust features your project enables; use extras for Python."),
         ] = None,
         default_features: Annotated[
             bool | None,
@@ -232,11 +237,20 @@ def build_server() -> FastMCP:
         target: Annotated[
             str | None, Field(description="Your project's target triple or platform, if known.")
         ] = None,
+        repository: str | None = None,
+        revision: str | None = None,
+        package_subdir: str | None = None,
+        python_version: str | None = None,
+        extras: list[str] | None = None,
+        allow_prerelease: bool = False,
+        allow_yanked: bool = False,
         freshness: Annotated[
             FreshnessMode,
             Field(
                 description=(
-                    "`cache_ok` reuses a recorded resolution within its TTL; `revalidate` "
+                    "`cache_ok` retains exact-version evidence indefinitely; "
+                    "latest selection has a TTL. "
+                    "`revalidate` "
                     "always consults the registry; `offline` never opens a socket."
                 )
             ),
@@ -245,7 +259,20 @@ def build_server() -> FastMCP:
             bool,
             Field(description="Shorthand for `freshness=revalidate`."),
         ] = False,
-    ) -> dict[str, Any]:
+        allow_local_build: Annotated[
+            bool,
+            Field(
+                description=(
+                    "Accept a local rustdoc build when docs.rs JSON is missing or in an "
+                    "unreadable format, or its observed build differs from requested "
+                    "features/target. "
+                    "Compiles the crate on a dated nightly in an isolated "
+                    "capsule and can take minutes. Requires the operator-enabled `build` "
+                    "profile; asking never grants it."
+                )
+            ),
+        ] = False,
+    ) -> ToolResult:
         """Resolve a release to a stable context identity."""
         params: dict[str, Any] = {
             "ecosystem": ecosystem,
@@ -255,14 +282,23 @@ def build_server() -> FastMCP:
             "features": features,
             "default_features": default_features,
             "target": target,
+            "repository": repository,
+            "revision": revision,
+            "package_subdir": package_subdir,
+            "python_version": python_version,
+            "extras": extras,
+            "allow_prerelease": allow_prerelease,
+            "allow_yanked": allow_yanked,
+            "allow_local_build": allow_local_build,
             "freshness": "revalidate" if revalidate else freshness,
         }
-        return _emit(
+        return _tool_result(
             await _research("library.resolve", params, timeout=ACQUISITION_TIMEOUT_SECONDS),
             tool="resolve_library",
         )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="library_overview",
         description="Discover unfamiliar capabilities without knowing symbol names.",
         annotations=_READ_ONLY,
@@ -284,9 +320,9 @@ def build_server() -> FastMCP:
             int | None,
             Field(description="Inline byte budget; the server caps it.", ge=1024),
         ] = None,
-    ) -> dict[str, Any]:
+    ) -> ToolResult:
         """Return the module/feature map and documentation headings."""
-        return _emit(
+        return _tool_result(
             await _research(
                 "library.overview",
                 {
@@ -302,6 +338,7 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="search_evidence",
         description="Search a bounded set of API, docs, examples, source, or release evidence.",
         annotations=_READ_ONLY,
@@ -312,6 +349,9 @@ def build_server() -> FastMCP:
         kinds: Annotated[
             list[EvidenceFamily] | None,
             Field(description="Restrict to evidence kinds; all but `source` when omitted."),
+        ] = None,
+        area: Annotated[
+            str | None, Field(description="Restrict to this namespace subtree.")
         ] = None,
         cursor: Annotated[
             str | None,
@@ -328,9 +368,9 @@ def build_server() -> FastMCP:
             int | None,
             Field(description="Inline byte budget; the server caps it.", ge=1024),
         ] = None,
-    ) -> dict[str, Any]:
+    ) -> ToolResult:
         """Search bounded evidence for a context."""
-        return _emit(
+        return _tool_result(
             await _research(
                 "evidence.search",
                 {
@@ -338,6 +378,7 @@ def build_server() -> FastMCP:
                     "snapshot_id": snapshot_id,
                     "query": query,
                     "kinds": kinds,
+                    "area": area,
                     "cursor": cursor,
                     "max_items": max_items,
                     "max_bytes": max_bytes,
@@ -348,15 +389,25 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="inspect_symbol",
-        description="Characterize a known candidate and its deployment requirements.",
-        annotations=_READ_ONLY,
+        description=(
+            "Read retained symbol evidence; explicit execution options can run "
+            "isolated semantic or runtime inspection."
+        ),
+        annotations=_EXECUTES,
     )
     async def inspect_symbol(
         context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
         symbol_path: Annotated[
             str, Field(description="Fully qualified symbol path.", min_length=1)
         ],
+        definition_id: Annotated[
+            str | None,
+            Field(
+                description="Select a definition from candidates when the public path is ambiguous."
+            ),
+        ] = None,
         depth: Annotated[
             Literal["signature", "documentation", "source"],
             Field(description="How much to retrieve. Request `source` only when needed."),
@@ -369,21 +420,27 @@ def build_server() -> FastMCP:
             str | None,
             Field(description="Read a specific snapshot; the context's current one otherwise."),
         ] = None,
+        execution: Annotated[
+            InspectionOptions | None,
+            Field(description="Read retained evidence or explicitly select an execution profile."),
+        ] = None,
         max_bytes: Annotated[
             int | None,
             Field(description="Inline byte budget; the server caps it.", ge=1024),
         ] = None,
-    ) -> dict[str, Any]:
+    ) -> ToolResult:
         """Describe one symbol and what deploying it requires."""
-        return _emit(
+        return _tool_result(
             await _research(
                 "symbol.inspect",
                 {
                     "context_id": context_id,
                     "snapshot_id": snapshot_id,
                     "symbol_path": symbol_path,
+                    "definition_id": definition_id,
                     "depth": depth,
                     "aspects": aspects,
+                    "execution": execution.model_dump(mode="json") if execution else None,
                     "max_bytes": max_bytes,
                 },
                 timeout=RETRIEVAL_TIMEOUT_SECONDS,
@@ -392,20 +449,54 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="compare_releases",
         description="Discover additions/removals and non-API changes.",
         annotations=_READ_ONLY,
     )
     async def compare_releases(
-        ecosystem: Annotated[Ecosystem, Field(description="Which package ecosystem.")],
-        name: Annotated[str, Field(description="Crate or distribution name.", min_length=1)],
-        from_version: Annotated[str, Field(description="Baseline version.", min_length=1)],
-        to_version: Annotated[str, Field(description="Candidate version.", min_length=1)],
-    ) -> dict[str, Any]:
-        """Compare two releases across API, configuration and release notes."""
-        return _not_implemented("compare_releases")
+        ecosystem: Ecosystem | None = None,
+        name: str | None = None,
+        from_version: str | None = None,
+        to_version: str | None = None,
+        before_context_id: str | None = None,
+        after_context_id: str | None = None,
+        before_snapshot_id: str | None = None,
+        after_snapshot_id: str | None = None,
+        scopes: list[
+            Literal["api", "docs", "configuration", "release_notes", "examples", "relationships"]
+        ]
+        | None = None,
+        cursor: str | None = None,
+        max_items: Annotated[int | None, Field(ge=1)] = None,
+        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
+    ) -> ToolResult:
+        """Compare pinned contexts locally, or explicitly resolve a version pair first.
+
+        Use exactly one input form. Environment differences and incomplete coverage are reported
+        before interpreting API additions/removals, documentation and behavior notes.
+        """
+        params = {
+            "ecosystem": ecosystem,
+            "name": name,
+            "from_version": from_version,
+            "to_version": to_version,
+            "before_context_id": before_context_id,
+            "after_context_id": after_context_id,
+            "before_snapshot_id": before_snapshot_id,
+            "after_snapshot_id": after_snapshot_id,
+            "scopes": scopes,
+            "cursor": cursor,
+            "max_items": max_items,
+            "max_bytes": max_bytes,
+        }
+        return _tool_result(
+            await _research("library.compare", params, timeout=ACQUISITION_TIMEOUT_SECONDS),
+            tool="compare_releases",
+        )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="verify_usage",
         description="Test a proposed invocation or composition in isolation.",
         annotations=_EXECUTES,
@@ -414,14 +505,34 @@ def build_server() -> FastMCP:
         context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
         snippet: Annotated[str, Field(description="The code to verify.", min_length=1)],
         mode: Annotated[
-            Literal["typecheck", "compile", "run"],
+            Literal["typecheck", "compile", "runtime", "run"],
             Field(description="What to establish. These prove different things."),
         ] = "typecheck",
-    ) -> dict[str, Any]:
+        profile: Literal["build", "runtime"] = "build",
+        snapshot_id: str | None = None,
+        test_intent: str | None = None,
+        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
+    ) -> ToolResult:
         """Verify a usage pattern in a service-owned isolated environment."""
-        return _not_implemented("verify_usage")
+        return _tool_result(
+            await _research(
+                "usage.verify",
+                {
+                    "context_id": context_id,
+                    "snapshot_id": snapshot_id,
+                    "snippet": snippet,
+                    "mode": "runtime" if mode == "run" else mode,
+                    "profile": profile,
+                    "test_intent": test_intent,
+                    "max_bytes": max_bytes,
+                },
+                timeout=RETRIEVAL_TIMEOUT_SECONDS,
+            ),
+            tool="verify_usage",
+        )
 
     @mcp.tool(
+        output_schema=output_schema,
         name="read_artifact",
         description="Retrieve large result sections without flooding context.",
         annotations=_READ_ONLY,
@@ -438,9 +549,9 @@ def build_server() -> FastMCP:
             int | None,
             Field(description="Bytes per slice; the server caps it.", ge=1024),
         ] = None,
-    ) -> dict[str, Any]:
+    ) -> ToolResult:
         """Read a bounded section of a stored artifact, addressed by ID and never by path."""
-        return _emit(
+        return _tool_result(
             await _read_artifact(artifact_id, section, cursor, max_bytes),
             tool="read_artifact",
         )
@@ -487,6 +598,7 @@ def build_server() -> FastMCP:
         return json.dumps(_emit(payload, tool="snapshot_manifest"))
 
     @mcp.tool(
+        output_schema=output_schema,
         name="job_control",
         description="Observe or cancel an explicitly submitted long-running operation.",
         annotations=_READ_ONLY,
@@ -500,9 +612,42 @@ def build_server() -> FastMCP:
         wait_seconds: Annotated[
             int, Field(description="Bounded wait for `wait`.", ge=0, le=10)
         ] = 0,
-    ) -> dict[str, Any]:
+        interest_token: str | None = None,
+        max_bytes: Annotated[int | None, Field(ge=1024)] = None,
+    ) -> ToolResult:
         """Observe or cancel a durable core job."""
-        return _not_implemented("job_control")
+        return _tool_result(
+            await _research(
+                "job.control",
+                {
+                    "job_id": job_id,
+                    "action": action,
+                    "wait_seconds": wait_seconds,
+                    "interest_token": interest_token,
+                    "max_bytes": max_bytes,
+                },
+                timeout=RETRIEVAL_TIMEOUT_SECONDS + wait_seconds,
+            ),
+            tool="job_control",
+        )
+
+    # The frozen template in blueprint 7.4 is `.../jobs/{job_id}/result`, and a resource URI is
+    # part of the contract a client binds to -- an adapter that served a different one would be
+    # answering a question nobody asked.
+    @mcp.resource(
+        "library-evidence://jobs/{job_id}/result",
+        name="job_result",
+        mime_type="application/json",
+    )
+    async def job_resource(job_id: str) -> str:
+        return json.dumps(
+            _emit(
+                await _research(
+                    "job.control", {"job_id": job_id}, timeout=RETRIEVAL_TIMEOUT_SECONDS
+                ),
+                tool="job_control",
+            )
+        )
 
     return mcp
 
@@ -536,6 +681,26 @@ async def _research(method: str, params: dict[str, Any], *, timeout: float) -> d
     ``error`` here rather than the ``partial`` `service_status` returns: with no daemon there
     is no evidence at all, and the next action is the same either way.
     """
+    tool = {
+        "usage.verify": "verify_usage",
+        "job.control": "job_control",
+        "library.resolve": "resolve_library",
+        "library.compare": "compare_releases",
+        "library.overview": "library_overview",
+        "evidence.search": "search_evidence",
+        "symbol.inspect": "inspect_symbol",
+        "artifact.read": "read_artifact",
+        "snapshot.manifest": "snapshot_manifest",
+    }.get(method)
+    if tool is not None:
+        valid, reason = envelope.validate_request(tool, params)
+        if not valid:
+            return envelope.error(
+                Code.UNSUPPORTED_FORMAT,
+                f"invalid {tool} request: {reason}",
+                "Use the tool's declared input schema.",
+                retryable=False,
+            )
     client = DaemonClient.from_env()
     try:
         response = await client.call(method, params, timeout_seconds=timeout)
@@ -579,7 +744,7 @@ async def _read_artifact(
     )
 
 
-async def _service_status(component: str | None) -> dict[str, Any]:
+async def _service_status(component: str | None) -> tuple[dict[str, Any], bool]:
     """Forward the daemon's envelope, or report its absence.
 
     The daemon builds the whole envelope -- identity, coverage and freshness included -- because
@@ -589,6 +754,9 @@ async def _service_status(component: str | None) -> dict[str, Any]:
     The one envelope composed here is the daemon-unreachable case, and only because the core is
     by definition not around to state it. Even then it is `partial` with the gap named, never an
     empty `ok`: "the daemon is down" and "no producers are installed" are different facts.
+
+    Returns the envelope and whether the core composed it, because only a core-composed one
+    carries a `service_status` payload the generated schema can check.
     """
     client = DaemonClient.from_env()
     params = {"component": component} if component is not None else {}
@@ -610,7 +778,7 @@ async def _service_status(component: str | None) -> dict[str, Any]:
                     "rather than absent. Start it with `library-enrichmentd start`."
                 ],
             ),
-        )
+        ), False
 
     if response.get("error") is not None:
         detail = response["error"]
@@ -619,7 +787,7 @@ async def _service_status(component: str | None) -> dict[str, Any]:
             str(detail.get("message", "the daemon returned an error")),
             "Check the daemon log, then retry.",
             retryable=True,
-        )
+        ), False
 
     result = response.get("result")
     if not isinstance(result, dict):
@@ -628,7 +796,8 @@ async def _service_status(component: str | None) -> dict[str, Any]:
             "the daemon returned no envelope",
             "Check the daemon log, then retry.",
             retryable=True,
-        )
-    # Forwarded verbatim. `_emit` validates it on the way out, so a malformed core envelope is
-    # caught here rather than reaching a caller.
-    return result
+        ), False
+    # Forwarded verbatim. `_emit` validates both the envelope and, because this one came from
+    # the core, its `service_status` payload -- so a drifted field name in the daemon is caught
+    # here rather than by the calling agent.
+    return result, True

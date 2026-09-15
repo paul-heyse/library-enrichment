@@ -179,7 +179,7 @@ async def test_service_status_works_over_stdio_with_no_daemon(
     async with Client(_transport(adapter_env)) as client:
         result = await client.call_tool("service_status", {})
 
-    payload = result.data
+    payload = result.structured_content
     assert isinstance(payload, dict)
     assert payload["status"] == "partial"
     assert payload["data"]["daemon"]["available"] is False
@@ -200,5 +200,5 @@ async def test_nothing_is_written_to_protocol_stdout(adapter_env: dict[str, str]
     # Both a list and a call completed over the same stdio pipe, so every byte the client read
     # parsed as a JSON-RPC frame. FastMCP's own startup banner goes to stderr, where it belongs.
     assert len(tools) == len(TOOL_NAMES)
-    assert isinstance(result.data, dict)
-    assert result.data["schema_version"] == "1.0"
+    assert isinstance(result.structured_content, dict)
+    assert result.structured_content["schema_version"] == "1.0"

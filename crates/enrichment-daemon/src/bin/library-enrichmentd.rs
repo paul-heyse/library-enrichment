@@ -15,11 +15,39 @@ use enrichment_daemon::server;
 use enrichment_daemon::service::Service;
 use enrichment_store::StatePaths;
 
-const USAGE: &str = "usage: library-enrichmentd <start|status|stop|validate [FILE]|socket-path>";
+const USAGE: &str = "usage: library-enrichmentd \
+<start|status|stop|validate [FILE]|socket-path|export CONTEXT DIR|verify-bundle DIR|cleanup cache|evidence [--plan|--apply]|reset-development ROOT [--plan|--apply]>";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     let command = args.next();
+
+    if matches!(
+        command.as_deref(),
+        Some("execution-describe" | "execution-probe")
+    ) {
+        return execution_operator(
+            command.as_deref() == Some("execution-probe"),
+            args.collect(),
+        );
+    }
+
+    if matches!(command.as_deref(), Some("cleanup" | "reset-development")) {
+        let operand = args.next();
+        let mode = args.next();
+        if operand.is_none()
+            || args.next().is_some()
+            || !matches!(mode.as_deref(), None | Some("--plan" | "--apply"))
+        {
+            eprintln!("library-enrichmentd: invalid cleanup arguments\n{USAGE}");
+            return ExitCode::FAILURE;
+        }
+        return maintenance(
+            command.as_deref() == Some("reset-development"),
+            operand.as_deref().unwrap_or_default(),
+            mode.as_deref() == Some("--apply"),
+        );
+    }
 
     // `validate` is the only subcommand that takes an operand, so it is handled before the
     // arity check the others share.
@@ -30,6 +58,25 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
         return validate(source.as_deref());
+    }
+
+    // `export` and `verify-bundle` read the store directly and need no running daemon: a
+    // bundle is a copy of what is already on disk, and taking one should not require the
+    // service to be up.
+    if command.as_deref() == Some("export") {
+        let (context, out) = (args.next(), args.next());
+        let (Some(context), Some(out)) = (context, out) else {
+            eprintln!("library-enrichmentd: export needs a context id and a directory\n{USAGE}");
+            return ExitCode::FAILURE;
+        };
+        return export(&context, std::path::Path::new(&out));
+    }
+    if command.as_deref() == Some("verify-bundle") {
+        let Some(dir) = args.next() else {
+            eprintln!("library-enrichmentd: verify-bundle needs a directory\n{USAGE}");
+            return ExitCode::FAILURE;
+        };
+        return verify_bundle(std::path::Path::new(&dir));
     }
 
     if args.next().is_some() {
@@ -80,6 +127,149 @@ fn main() -> ExitCode {
         }
         None => {
             eprintln!("{USAGE}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn execution_operator(probe: bool, args: Vec<String>) -> ExitCode {
+    let result = (|| -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        if args.len() != if probe { 3 } else { 1 } {
+            return Err("execution-describe ROOT or execution-probe ROOT ECOSYSTEM IMAGE".into());
+        }
+        let root = std::path::Path::new(&args[0]);
+        let mut execution = Config::from_env()?.execution;
+        execution.storage_root = Some(root.to_owned());
+        if let Some(path) = std::env::var_os("LIBENR_BROKER") {
+            execution.broker_path = Some(path.into());
+        }
+        if probe {
+            let paths = enrichment_daemon::execution::description::qualification_paths(root)?;
+            enrichment_store::state::initialize(&paths)?;
+            let cache = paths.cache_root;
+            let runtime = tokio::runtime::Runtime::new()?;
+            Ok(serde_json::to_value(runtime.block_on(
+                enrichment_daemon::execution::description::probe(
+                    &execution, &cache, &args[1], &args[2],
+                ),
+            )?)?)
+        } else {
+            Ok(serde_json::to_value(
+                enrichment_daemon::execution::description::describe(&execution, root)?,
+            )?)
+        }
+    })();
+    match result.and_then(|value| Ok(serde_json::to_string_pretty(&value)?)) {
+        Ok(value) => {
+            println!("{value}");
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("library-enrichmentd: execution setup: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn maintenance(development: bool, operand: &str, apply: bool) -> ExitCode {
+    let result = (|| -> Result<_, Box<dyn std::error::Error>> {
+        let config = Config::from_env()?;
+        if development {
+            Ok(enrichment_daemon::maintenance::reset_development(
+                &config,
+                std::path::Path::new(operand),
+                apply,
+            )?)
+        } else {
+            let scope = match operand {
+                "cache" => enrichment_daemon::maintenance::Scope::Cache,
+                "evidence" => enrichment_daemon::maintenance::Scope::Evidence,
+                _ => return Err("cleanup scope must be cache or evidence".into()),
+            };
+            Ok(enrichment_daemon::maintenance::cleanup(
+                &config,
+                &StatePaths::from_env()?,
+                scope,
+                apply,
+            )?)
+        }
+    })();
+    match result {
+        Ok(report) => match serde_json::to_string_pretty(&report) {
+            Ok(output) => {
+                println!("{output}");
+                if report.error.is_none() {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::FAILURE
+                }
+            }
+            Err(error) => {
+                eprintln!("library-enrichmentd: cannot render cleanup report: {error}");
+                ExitCode::FAILURE
+            }
+        },
+        Err(error) => {
+            eprintln!("library-enrichmentd: cleanup refused: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Write a portable bundle for one context, reading the store directly (ADR-0018).
+///
+/// No daemon is needed and none is contacted: a bundle is a copy of immutable evidence that is
+/// already on disk, and requiring the service to be up to take one would make export unavailable
+/// in exactly the situation -- a wedged or stopped service -- where an operator most wants it.
+fn export(context_id: &str, out: &std::path::Path) -> ExitCode {
+    let paths = match StatePaths::from_env() {
+        Ok(paths) => paths,
+        Err(err) => {
+            eprintln!("library-enrichmentd: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+    match enrichment_daemon::export::export(&paths, context_id, out) {
+        Ok(exported) => {
+            eprintln!(
+                "library-enrichmentd: exported {} ({} file(s), {} artifact(s)) to {}",
+                exported.context_id,
+                exported.files,
+                exported.artifacts,
+                exported.root.display()
+            );
+            eprintln!(
+                "  verify it anywhere with: library-enrichmentd verify-bundle {}",
+                exported.root.display()
+            );
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("library-enrichmentd: export failed: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Check a bundle against its own manifest. Needs nothing but the bundle.
+fn verify_bundle(root: &std::path::Path) -> ExitCode {
+    match enrichment_daemon::export::verify(root) {
+        Ok(problems) if problems.is_empty() => {
+            eprintln!(
+                "library-enrichmentd: {} verifies against its manifest",
+                root.display()
+            );
+            ExitCode::SUCCESS
+        }
+        Ok(problems) => {
+            eprintln!("library-enrichmentd: {} does NOT verify:", root.display());
+            for problem in problems {
+                eprintln!("  - {problem}");
+            }
+            ExitCode::FAILURE
+        }
+        Err(err) => {
+            eprintln!("library-enrichmentd: {err}");
             ExitCode::FAILURE
         }
     }

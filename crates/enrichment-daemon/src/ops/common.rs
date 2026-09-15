@@ -35,99 +35,88 @@ pub async fn open_context(
     context_id: &str,
     snapshot_id: Option<&str>,
 ) -> Result<Opened, Box<Envelope>> {
-    let Ok(id) = ContextId::try_from(context_id.to_owned()) else {
-        return Err(Box::new(envelope::error(
+    let catalog = service
+        .repository
+        .catalog
+        .pin()
+        .await
+        .map_err(|e| Box::new(store_error(&e)))?;
+    open_context_at(service, catalog, context_id, snapshot_id).await
+}
+
+/// Bind every part of a multi-snapshot operation to the same coherent catalog generation.
+pub async fn open_context_at(
+    service: &Service,
+    catalog: std::sync::Arc<enrichment_store::catalog_generation::PinnedCatalog>,
+    context_id: &str,
+    snapshot_id: Option<&str>,
+) -> Result<Opened, Box<Envelope>> {
+    let id = ContextId::try_from(context_id.to_owned()).map_err(|_| {
+        Box::new(envelope::error(
             ErrorCode::ArtifactUnavailable,
-            format!("`{context_id}` is not a context identity"),
-            "Pass the `context_id` returned by `resolve_library`.",
+            "Invalid context identity",
+            "Use the context_id returned by resolve_library.",
             false,
-        )));
-    };
-    let (context, environment) = match service.catalog.context(&id) {
-        Ok(Some(pair)) => pair,
-        Ok(None) => {
-            return Err(Box::new(envelope::error(
+        ))
+    })?;
+    let runtime = &service.repository.runtime;
+    let (context, environment) = catalog
+        .context(runtime, &id)
+        .await
+        .map_err(|e| Box::new(store_error(&e)))?
+        .ok_or_else(|| {
+            Box::new(envelope::error(
                 ErrorCode::ArtifactUnavailable,
-                format!("context {context_id} is not known to this service"),
-                "Call `resolve_library` first; contexts are minted there.",
+                "Context is not in the committed catalog",
+                "Resolve this library and environment first.",
                 false,
-            )));
-        }
-        Err(err) => return Err(Box::new(store_error(&err))),
-    };
-    let release = match service.catalog.release(&context.release_id) {
-        Ok(Some(release)) => release,
-        Ok(None) => {
-            return Err(Box::new(envelope::error(
-                ErrorCode::ArtifactUnavailable,
-                format!("release record for {context_id} is missing"),
-                "Resolve the release again with freshness=revalidate.",
-                true,
-            )));
-        }
-        Err(err) => return Err(Box::new(store_error(&err))),
-    };
-
-    let snapshot_id = match snapshot_id {
-        Some(requested) => match SnapshotId::try_from(requested.to_owned()) {
-            Ok(id) => id,
-            Err(_) => {
-                return Err(Box::new(envelope::error(
-                    ErrorCode::ArtifactUnavailable,
-                    format!("`{requested}` is not a snapshot identity"),
-                    "Pass a `snapshot_id` from an earlier result, or omit it.",
-                    false,
-                )));
-            }
-        },
-        None => match service.catalog.current_snapshot(&id) {
-            Ok(Some(current)) => current,
-            Ok(None) => {
-                return Err(Box::new(envelope::error(
-                    ErrorCode::ArtifactUnavailable,
-                    format!(
-                        "no snapshot is published for {context_id}: its resolution found no \
-                         rustdoc JSON this build can read"
-                    ),
-                    "Read the `gaps` in the `resolve_library` result; the planned fallback \
-                     names what would supply the API. Registry and source evidence are still \
-                     available through `read_artifact`.",
-                    false,
-                )));
-            }
-            Err(err) => return Err(Box::new(store_error(&err))),
-        },
-    };
-
-    let reader = match SnapshotReader::open(&service.paths, &snapshot_id).await {
-        Ok(reader) => reader,
-        Err(enrichment_store::QueryError::NotPublished(_)) => {
-            return Err(Box::new(envelope::error(
-                ErrorCode::ArtifactUnavailable,
-                format!("snapshot {snapshot_id} is not published"),
-                "Omit `snapshot_id` to read the context's current snapshot.",
-                false,
-            )));
-        }
-        Err(err) => {
-            return Err(Box::new(envelope::error(
+            ))
+        })?;
+    let release = catalog
+        .release(runtime, &context.release_id)
+        .await
+        .map_err(|e| Box::new(store_error(&e)))?
+        .ok_or_else(|| {
+            Box::new(envelope::error(
                 ErrorCode::ExtractionFailed,
-                format!("snapshot {snapshot_id} could not be opened: {err}"),
-                "Resolve the release again to republish; if it persists, report it with the \
-                 daemon log.",
-                true,
-            )));
-        }
+                "Context release is missing",
+                "Check service storage integrity.",
+                false,
+            ))
+        })?;
+    let snapshot_id = match snapshot_id {
+        Some(value) => SnapshotId::try_from(value.to_owned()).map_err(|_| {
+            Box::new(envelope::error(
+                ErrorCode::ArtifactUnavailable,
+                "Invalid snapshot identity",
+                "Use a snapshot_id returned by this service.",
+                false,
+            ))
+        })?,
+        None => catalog
+            .current(runtime, &id)
+            .await
+            .map_err(|e| Box::new(store_error(&e)))?
+            .ok_or_else(|| {
+                Box::new(envelope::error(
+                    ErrorCode::ArtifactUnavailable,
+                    "No snapshot is selected for this context",
+                    "Resolve this library and read its declared gaps.",
+                    false,
+                ))
+            })?,
     };
+    let reader = SnapshotReader::open(&service.repository, catalog, &snapshot_id)
+        .await
+        .map_err(|e| Box::new(query_error(&e)))?;
     if reader.manifest().context_id != id {
         return Err(Box::new(envelope::error(
             ErrorCode::ArtifactUnavailable,
-            format!("snapshot {snapshot_id} belongs to a different context"),
-            "Use a snapshot returned for this context, or omit `snapshot_id`.",
+            "Snapshot belongs to a different context",
+            "Use a snapshot returned for this exact context.",
             false,
         )));
     }
-
     Ok(Opened {
         context,
         environment,
@@ -139,7 +128,7 @@ pub async fn open_context(
 
 /// A store failure as an envelope.
 #[must_use]
-pub fn store_error(err: &std::io::Error) -> Envelope {
+pub fn store_error(err: &impl std::fmt::Display) -> Envelope {
     envelope::error(
         ErrorCode::ArtifactUnavailable,
         format!("service state could not be read: {err}"),
@@ -152,9 +141,15 @@ pub fn store_error(err: &std::io::Error) -> Envelope {
 #[must_use]
 pub fn query_error(err: &enrichment_store::QueryError) -> Envelope {
     envelope::error(
-        ErrorCode::ExtractionFailed,
+        if err.is_budget() {
+            ErrorCode::BudgetExceeded
+        } else if matches!(err, enrichment_store::QueryError::NotPublished(_)) {
+            ErrorCode::ArtifactUnavailable
+        } else {
+            ErrorCode::ExtractionFailed
+        },
         format!("snapshot query failed: {err}"),
-        "Retry; if it persists, resolve the release again to republish the snapshot.",
+        "Refine the requested scope or inspect the configured query budgets and storage integrity.",
         true,
     )
 }
@@ -181,17 +176,14 @@ pub fn handle_for(artifact: &Artifact, description: String) -> Option<ArtifactHa
 /// Cite a fragment as an evidence entry, with a bounded excerpt.
 #[must_use]
 pub fn evidence_from_fragment(
-    service: &Service,
+    _service: &Service,
     fragment: &EvidenceFragment,
     source_version_match: SourceVersionMatch,
     excerpt_chars: usize,
 ) -> Evidence {
-    let source_uri = service
-        .blobs
-        .find(&fragment.artifact_id)
-        .ok()
-        .flatten()
-        .map(|a| a.source_uri)
+    let source_uri = fragment
+        .source_uri
+        .clone()
         .unwrap_or_else(|| artifact_uri_for(&fragment.artifact_id));
     Evidence {
         evidence_id: format!(
@@ -203,7 +195,13 @@ pub fn evidence_from_fragment(
         artifact_id: fragment.artifact_id.clone(),
         source_uri,
         locator: fragment.locator.clone(),
-        source_version_match,
+        source_version_match: if fragment.source_uri.is_none() {
+            SourceVersionMatch::Unknown
+        } else {
+            fragment
+                .source_version_match
+                .unwrap_or(source_version_match)
+        },
         producer: fragment.producer.clone(),
         producer_version: fragment.producer_version.clone(),
         excerpt: truncate(&fragment.text, excerpt_chars),
@@ -224,21 +222,42 @@ pub fn truncate(text: &str, max_chars: usize) -> String {
 /// The byte budget for one inline result: the caller's request bounded by configuration.
 #[must_use]
 pub fn byte_budget(service: &Service, requested: Option<usize>) -> usize {
-    let configured = service.config.limits.inline_result_bytes;
+    let configured = service.config.limits.inline_result_bytes.max(1024);
     requested.map_or(configured, |r| r.clamp(1024, configured))
 }
 
 /// Serialized size of a value, for budget accounting.
 #[must_use]
 pub fn json_size<T: serde::Serialize>(value: &T) -> usize {
-    serde_json::to_vec(value).map_or(0, |v| v.len())
+    crate::delivery::size(value, crate::delivery::MAX_RESULT_BYTES).unwrap_or(usize::MAX)
 }
 
 /// A JSON object from any serializable payload.
 #[must_use]
 pub fn to_object<T: serde::Serialize>(value: &T) -> enrichment_core::wire::JsonObject {
-    serde_json::to_value(value)
-        .ok()
-        .and_then(|v| v.as_object().cloned())
-        .unwrap_or_default()
+    let serde_json::Value::Object(object) =
+        serde_json::to_value(value).expect("Rust wire payload must serialize")
+    else {
+        panic!("tool data must be a JSON object");
+    };
+    object
+}
+
+/// Enforce the complete serialized envelope budget. Oversized answers remain available as
+/// immutable JSON artifacts; only the per-call request ID is excluded from reusable content.
+pub fn enforce_budget(service: &Service, result: Envelope, requested: Option<usize>) -> Envelope {
+    crate::delivery::encode(
+        &service.blobs,
+        result,
+        byte_budget(service, requested),
+        true,
+    )
+    .unwrap_or_else(|error| {
+        envelope::error(
+            ErrorCode::BudgetExceeded,
+            format!("Answer delivery failed: {error}"),
+            "Inspect service storage and request a bounded evidence selection.",
+            false,
+        )
+    })
 }

@@ -5,15 +5,10 @@
 //! canonical public path, a definition by the path it is defined at. Rustdoc's item IDs are
 //! kept only as `producer_local_id`, never as cross-release identity.
 
-use std::collections::BTreeMap;
-
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::EvidenceKind;
 use crate::canonical;
-use crate::identity::{ContextId, EnvironmentId, ReleaseId, SnapshotId};
-use crate::producer::ProducerRun;
 use crate::wire::EvidenceClass;
 
 /// What kind of item a symbol is.
@@ -29,6 +24,8 @@ use crate::wire::EvidenceClass;
 pub enum SymbolKind {
     Module,
     Struct,
+    Class,
+    Attribute,
     Union,
     Enum,
     Variant,
@@ -56,6 +53,8 @@ impl SymbolKind {
         match self {
             Self::Module => "module",
             Self::Struct => "struct",
+            Self::Class => "class",
+            Self::Attribute => "attribute",
             Self::Union => "union",
             Self::Enum => "enum",
             Self::Variant => "variant",
@@ -83,6 +82,8 @@ impl SymbolKind {
         [
             Self::Module,
             Self::Struct,
+            Self::Class,
+            Self::Attribute,
             Self::Union,
             Self::Enum,
             Self::Variant,
@@ -155,9 +156,14 @@ pub struct Symbol {
     pub defined_in_crate: String,
     /// The producer's own item identifier -- local, never a cross-release identity.
     pub producer_local_id: u32,
+    /// Trait or declaration qualifier included in symbol/definition identity.
+    pub qualifier: Option<String>,
     /// `cfg`-shaped attribute strings the producer preserved, as declared hints only. Never
     /// a feature predicate: items compiled out are absent, not annotated (§4.3).
     pub cfg_hints: Vec<String>,
+    /// Separate Python source/stub observations; absent in legacy/Rust snapshots.
+    #[serde(default)]
+    pub python: Option<crate::producer::python::PythonSymbol>,
 }
 
 impl Symbol {
@@ -204,6 +210,7 @@ impl Symbol {
 pub enum RelationKind {
     Reexports,
     Implements,
+    Inherits,
     MemberOf,
     Documents,
     Returns,
@@ -217,6 +224,7 @@ impl RelationKind {
         match self {
             Self::Reexports => "reexports",
             Self::Implements => "implements",
+            Self::Inherits => "inherits",
             Self::MemberOf => "member_of",
             Self::Documents => "documents",
             Self::Returns => "returns",
@@ -230,6 +238,7 @@ impl RelationKind {
         [
             Self::Reexports,
             Self::Implements,
+            Self::Inherits,
             Self::MemberOf,
             Self::Documents,
             Self::Returns,
@@ -377,11 +386,18 @@ pub struct EvidenceFragment {
     pub producer: String,
     /// The producer's exact version.
     pub producer_version: String,
+    /// Source-specific version match, overriding the release default for mutable docs.
+    #[serde(default)]
+    pub source_version_match: Option<crate::wire::SourceVersionMatch>,
+    /// This fragment's acquisition locator, not the blob's first retrieval locator.
+    #[serde(default)]
+    pub source_uri: Option<String>,
 }
 
 impl EvidenceFragment {
     /// Build a fragment with a content-derived identity.
-    #[must_use]
+    /// # Errors
+    /// A locator must be an object; malformed coordinates are never replaced with emptiness.
     pub fn new(
         kind: FragmentKind,
         subject: &str,
@@ -391,24 +407,29 @@ impl EvidenceFragment {
         evidence_class: EvidenceClass,
         producer: &str,
         producer_version: &str,
-    ) -> Self {
+    ) -> Result<Self, String> {
+        let serde_json::Value::Object(locator) = locator else {
+            return Err("fragment locator must be an object".into());
+        };
         let fragment_id = canonical::short_id(
             "frag",
             &serde_json::json!({
                 "kind": kind, "subject": subject, "artifact": artifact_id, "locator": locator
             }),
         );
-        Self {
+        Ok(Self {
             fragment_id,
             kind,
             subject: subject.to_owned(),
             artifact_id: artifact_id.to_owned(),
-            locator: locator.as_object().cloned().unwrap_or_default(),
+            locator,
             text,
             evidence_class,
             producer: producer.to_owned(),
             producer_version: producer_version.to_owned(),
-        }
+            source_version_match: None,
+            source_uri: None,
+        })
     }
 }
 
@@ -534,15 +555,6 @@ impl Availability {
     }
 }
 
-/// A table stored in a snapshot.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct TableRef {
-    /// File name within the snapshot directory.
-    pub file: String,
-    /// Row count at publication.
-    pub rows: u64,
-}
-
 /// Counts an overview and a manifest report.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SnapshotCounts {
@@ -560,43 +572,4 @@ pub struct SnapshotCounts {
     pub fragments: u64,
     /// Items the producer saw in total, including those not surfaced as symbols.
     pub producer_items: u64,
-}
-
-/// The immutable description of one snapshot (§6.1).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct SnapshotManifest {
-    /// The snapshot's identity.
-    pub snapshot_id: SnapshotId,
-    /// Wire schema version at publication.
-    pub schema_version: String,
-    /// Normalizer version at publication.
-    pub normalizer_version: String,
-    /// The context this snapshot serves.
-    pub context_id: ContextId,
-    /// The release.
-    pub release_id: ReleaseId,
-    /// The environment.
-    pub environment_id: EnvironmentId,
-    /// The crate name as rustdoc knows it.
-    pub crate_name: String,
-    /// The crate version the JSON declared.
-    pub crate_version: Option<String>,
-    /// Input artifact digests by role.
-    pub inputs: BTreeMap<String, String>,
-    /// Producer identities by name.
-    pub producers: BTreeMap<String, String>,
-    /// Every producer run that fed this snapshot.
-    pub producer_runs: Vec<ProducerRun>,
-    /// Tables and their row counts.
-    pub tables: BTreeMap<String, TableRef>,
-    /// Counts.
-    pub counts: SnapshotCounts,
-    /// The documentation build's configuration.
-    pub observed_configuration: ObservedConfiguration,
-    /// Evidence kinds this snapshot contains.
-    pub indexed: Vec<EvidenceKind>,
-    /// Evidence kinds that were expected and are absent.
-    pub missing: Vec<EvidenceKind>,
-    /// Publication time, RFC 3339. Provenance only.
-    pub published_at: String,
 }

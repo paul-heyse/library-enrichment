@@ -1,0 +1,34 @@
+# Personal workstation resource configuration, selected with the operator on 2026-09-14.
+# Hardware: Ryzen 9 9950X3D, 16 physical cores / 32 threads, approximately 192 GiB RAM.
+# These are shared daemon limits, not allocations eagerly reserved at startup.
+# Execution permissions remain independently configured below.
+config_version = "1.0"
+
+[arrow]
+memory_bytes = 34359738368         # 32 GiB shared managed query memory
+spill_bytes = 68719476736          # 64 GiB shared spill ceiling
+metadata_cache_bytes = 2147483648  # 2 GiB metadata cache
+partitions = 16
+concurrency = 16
+cached_snapshots = 256
+
+[limits]
+expensive_worker_concurrency = 8
+warm_lsp_sessions = 8
+
+[execution]
+cpus = 32                       # CPU bandwidth; no core affinity restriction
+memory_mib = 32768               # 32 GiB per active producer, no additional swap
+scratch_mib = 16384              # 16 GiB tmpfs, charged to the producer memory limit
+pids = 2048                     # Includes compiler and language-server threads
+capsule_budget_mib = 131072      # 128 GiB aggregate writable capsule reservation budget
+
+[policy]
+enabled_profiles = ["static"]
+require_sandbox_for_build = true
+require_sandbox_for_runtime = true
+execution_network = false
+
+# launch_configuration.py supplies the installation's absolute worker interpreter.
+# Merge these resource settings into the generated configuration. Qualified container images
+# and execution profiles are enabled separately when their actual acceptance probes pass.

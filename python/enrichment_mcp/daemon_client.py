@@ -32,7 +32,7 @@ __all__ = [
 RPC_MESSAGE_BYTES = 1_048_576
 
 # Acquisition (registry, tarball, docs.rs JSON, normalization) runs inline in Phase 1 rather
-# than behind a job receipt; jobs land in Phase 4 (ADR 0010). The daemon's own configured
+# than behind a job receipt; jobs are ADR 0017 (superseding ADR 0016). The daemon's own configured
 # `[network].acquisition_timeout_seconds` (120 by default) is the deadline that produces a
 # typed envelope; this larger adapter bound exists only so a wedged daemon is still reported.
 ACQUISITION_TIMEOUT_SECONDS = 180.0

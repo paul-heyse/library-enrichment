@@ -6,6 +6,21 @@
 //! daemon's real fetcher, zstd path, normalizer and publisher run. Every service here has
 //! explicit roots under a temp directory; nothing reads `LIBENR_*`.
 
+#[path = "../../enrichment-store/tests/support/producer_records.rs"]
+mod producer_records;
+
+#[path = "support/complete_answer.rs"]
+mod complete_answer;
+use complete_answer::complete_answer;
+
+#[path = "../../enrichment-store/tests/support/read_parquet.rs"]
+mod parquet_read;
+#[path = "../../enrichment-store/tests/support/write_parquet.rs"]
+mod parquet_write;
+
+#[path = "../../enrichment-store/tests/support/native_ingest.rs"]
+mod native_ingest;
+
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -82,6 +97,7 @@ fn service_with(config: Config, dir: &Path) -> Service {
 }
 
 async fn call(service: &Service, method: &str, params: serde_json::Value) -> serde_json::Value {
+    let before = service.repository.runtime.diagnostic_summary();
     let frame = serde_json::json!({
         "jsonrpc": "2.0", "id": 1, "method": method, "params": params
     })
@@ -91,7 +107,127 @@ async fn call(service: &Service, method: &str, params: serde_json::Value) -> ser
         .response
         .expect("a response");
     assert!(response.error.is_none(), "{method}: {:?}", response.error);
-    response.result.expect("an envelope")
+    if std::env::var_os("LIBENR_MEASURE_QUERIES").is_some() && method != "artifact.read" {
+        eprintln!(
+            "PLAN11_QUERY_DIAGNOSTICS {}",
+            serde_json::json!({
+                "method":method,"before":before,"after":service.repository.runtime.diagnostic_summary(),
+                "recent":service.repository.runtime.diagnostics(),
+            })
+        );
+    }
+    let result = response.result.expect("an envelope");
+    if method == "library.resolve" {
+        complete_answer::wait_for_answer(service, result).await
+    } else {
+        result
+    }
+}
+
+async fn comparison_result(service: &Service, response: serde_json::Value) -> serde_json::Value {
+    if response["status"] != "pending" {
+        return complete_answer(service, response).await;
+    }
+    let id = response["data"]["job_id"].as_str().expect("comparison job");
+    tokio::time::timeout(std::time::Duration::from_secs(60), async {
+        loop {
+            let record = call(
+                service,
+                "job.control",
+                serde_json::json!({"job_id":id,"action":"wait","wait_seconds":1}),
+            )
+            .await;
+            let record = complete_answer(service, record).await;
+            assert_eq!(record["status"], "ok", "job polling failed: {record}");
+            if !record["data"]["result"].is_null() {
+                return complete_answer(service, record["data"]["result"].clone()).await;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+    })
+    .await
+    .expect("bounded comparison completion")
+}
+
+#[tokio::test]
+async fn cold_version_comparison_waits_for_exact_acquisitions() {
+    let dir = tempfile::tempdir().unwrap();
+    let upstream = Upstream::start();
+    let mut config = config_for(&upstream);
+    config.limits.inline_wait_seconds = 0;
+    let request = serde_json::json!({"ecosystem":"rust", "name":"enr-fixture", "from_version":"0.1.0", "to_version":"0.2.0", "scopes":["api"]});
+    let (job_id, result) = {
+        let service = service_with(config.clone(), dir.path());
+        let pending = call(&service, "library.compare", request.clone()).await;
+        assert_eq!(pending["status"], "pending", "{pending}");
+        let job_id = pending["data"]["job_id"].as_str().unwrap().to_owned();
+        let result = comparison_result(&service, pending).await;
+        assert!(
+            matches!(result["status"].as_str(), Some("ok" | "partial")),
+            "{result}"
+        );
+        assert_eq!(result["data"]["before"]["release"]["version"], "0.1.0");
+        assert_eq!(result["data"]["after"]["release"]["version"], "0.2.0");
+        (job_id, result)
+    };
+    drop(upstream);
+    let service = service_with(config, dir.path());
+    let journal = call(
+        &service,
+        "job.control",
+        serde_json::json!({"job_id":job_id,"action":"status"}),
+    )
+    .await;
+    let journal = complete_answer(&service, journal).await;
+    assert_eq!(
+        complete_answer(&service, journal["data"]["result"].clone()).await["data"],
+        result["data"]
+    );
+    let pending = call(&service, "library.compare", request).await;
+    let warm = comparison_result(&service, pending).await;
+    assert_eq!(
+        warm["data"], result["data"],
+        "offline exact evidence is reused"
+    );
+}
+
+#[tokio::test]
+async fn signature_projection_retains_qualified_ids_without_documentation() {
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().unwrap();
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let context = ctx(&resolved);
+    let signature = call(&service, "symbol.inspect", serde_json::json!({
+        "context_id": context, "symbol_path": "enr_fixture::Widget", "depth": "signature", "aspects": ["signature"]
+    })).await;
+    let signature = complete_answer(&service, signature).await;
+    assert_ne!(signature["status"], "error", "{signature}");
+    assert!(signature["data"]["symbol"]["docs"].is_null());
+    let projected = signature["data"]["observations"].as_array().unwrap();
+    assert!(!projected.is_empty());
+    assert!(
+        projected
+            .iter()
+            .all(|o| o["docs_included"] == false && o["payload"]["docs"].is_null())
+    );
+    let complete = call(&service, "symbol.inspect", serde_json::json!({
+        "context_id": context, "symbol_path": "enr_fixture::Widget", "depth": "documentation", "aspects": ["signature", "documentation"]
+    })).await;
+    let complete = complete_answer(&service, complete).await;
+    assert_ne!(complete["status"], "error", "{complete}");
+    let facts = complete["data"]["observations"].as_array().unwrap();
+    assert_eq!(projected.len(), facts.len());
+    for (selection, full) in projected.iter().zip(facts) {
+        assert_eq!(selection["observation_id"], full["observation_id"]);
+        assert_eq!(selection["source"], full["source"]);
+        assert_eq!(
+            selection["payload"]["signature"],
+            full["payload"]["signature"]
+        );
+        assert_eq!(full["docs_included"], true);
+    }
+    assert!(facts.iter().any(|o| o["payload"]["docs"].is_string()));
 }
 
 /// Resolve the fixture release that has hosted JSON, and return its envelope.
@@ -102,6 +238,7 @@ async fn resolve_0_2_0(service: &Service) -> serde_json::Value {
         serde_json::json!({ "name": "enr-fixture", "version": "0.2.0" }),
     )
     .await;
+    let envelope = complete_answer(service, envelope).await;
     assert_eq!(
         envelope["status"], "ok",
         "0.2.0 has JSON and a tarball: {}",
@@ -154,7 +291,10 @@ async fn hosted_json_indexes_the_api_without_compiling_the_crate() {
     let context_id = ctx(&resolved);
     let snapshot = &resolved["data"]["snapshot"];
     assert!(snapshot["counts"]["definitions"].as_u64().unwrap_or(0) >= 5);
-    assert_eq!(snapshot["normalizer_version"], "1");
+    assert_eq!(
+        snapshot["normalizer_version"],
+        enrichment_core::producer::rustdoc::NORMALIZER_VERSION
+    );
     let indexed = strings(&resolved["coverage"]["indexed"]);
     for kind in [
         "registry_metadata",
@@ -205,7 +345,10 @@ async fn hosted_json_indexes_the_api_without_compiling_the_crate() {
     );
     assert!(!strings(&data["documentation_headings"]).is_empty());
     assert!(!strings(&data["release_note_headings"]).is_empty());
-    assert_eq!(strings(&data["examples"]), vec!["basic".to_owned()]);
+    assert_eq!(
+        strings(&data["examples"]),
+        vec!["examples/basic.rs".to_owned()]
+    );
 
     let search = call(
         &service,
@@ -238,12 +381,15 @@ fn feature_gated_items_follow_the_documented_build_configuration() {
     let root = repo_root().join("tests/fixtures/rustdoc");
     let paths_for = |name: &str| {
         let payload = std::fs::read_to_string(root.join(name)).expect(name);
-        let normalized = normalize::normalize(&NormalizeInput {
-            payload: &payload,
-            rustdoc_artifact_id: "art_00000000000000000000000000000000",
-            json_path: Some(&root.join(name)),
-            summary_chars: 200,
-        })
+        let normalized = producer_records::collect(
+            normalize::prepare(&NormalizeInput {
+                payload: &payload,
+                rustdoc_artifact_id: "art_00000000000000000000000000000000",
+                json_path: Some(&root.join(name)),
+                summary_chars: 200,
+            })
+            .expect("prepared fixture producer"),
+        )
         .expect("fixture JSON normalizes");
         normalized
             .symbols
@@ -282,6 +428,7 @@ async fn availability_is_reported_against_the_observed_configuration() {
         }),
     )
     .await;
+    let resolved = complete_answer(&service, resolved).await;
     assert_eq!(resolved["status"], "ok", "{}", resolved["summary"]);
     assert_eq!(resolved["data"]["environment"]["resolution"], "declared");
     assert_eq!(
@@ -337,6 +484,7 @@ async fn a_target_difference_is_identified_before_any_availability_claim() {
         }),
     )
     .await;
+    let resolved = complete_answer(&service, resolved).await;
     assert_eq!(resolved["status"], "ok", "{}", resolved["summary"]);
     let observed_target = resolved["data"]["hosted_rustdoc_json"]["target"]
         .as_str()
@@ -410,6 +558,8 @@ async fn a_reexport_is_linked_to_its_definition_and_counted_once() {
         }),
     )
     .await;
+    let at_root = complete_answer(&service, at_root).await;
+    let inner = complete_answer(&service, inner).await;
     assert_eq!(at_root["status"], "ok", "{}", at_root["summary"]);
     assert_eq!(inner["status"], "ok", "{}", inner["summary"]);
     let root_symbol = &at_root["data"]["symbol"];
@@ -429,7 +579,7 @@ async fn a_reexport_is_linked_to_its_definition_and_counted_once() {
     );
     let edges = at_root["data"]["relationships"].as_array().expect("edges");
     assert!(
-        edges.iter().any(|e| e["kind"] == "reexports"),
+        edges.iter().any(|e| e["relation"] == "reexports"),
         "a reexports edge is recorded: {edges:?}"
     );
 
@@ -441,7 +591,8 @@ async fn a_reexport_is_linked_to_its_definition_and_counted_once() {
     )
     .await;
     assert_eq!(overview["data"]["definitions_by_kind"]["struct"], 1);
-    assert_eq!(overview["data"]["reexports"], 1);
+    // The root alias and its seven public associated-item paths are all re-exports.
+    assert_eq!(overview["data"]["reexports"], 8);
 
     // Search folds the two paths into one hit that names the other path.
     let search = call(
@@ -486,7 +637,7 @@ async fn search_pages_with_a_checksummed_cursor_and_rejects_a_foreign_one() {
         .as_str()
         .expect("a cursor")
         .to_owned();
-    assert!(cursor.starts_with("cur_"));
+    assert!(cursor.starts_with("search_"));
 
     let second = call(
         &service,
@@ -547,7 +698,7 @@ async fn an_empty_search_states_what_was_searched() {
     assert!(!strings(&empty["data"]["searched"]).is_empty());
     let limitations = strings(&empty["coverage"]["limitations"]);
     assert!(
-        limitations.iter().any(|l| l.contains("not proof")),
+        limitations.iter().any(|l| l.contains("does not establish")),
         "absence is not evidence of absence: {limitations:?}"
     );
 }
@@ -566,17 +717,27 @@ async fn artifacts_are_read_by_handle_in_bounded_slices() {
         .expect("the README is stored as its own artifact");
     let readme_id = readme["artifact_id"].as_str().expect("id").to_owned();
 
-    // Page through with a small budget; the pieces reassemble to the whole.
+    // A budget below the full metadata envelope is an explicit error, never oversized JSON.
+    let tiny = call(
+        &service,
+        "artifact.read",
+        serde_json::json!({"artifact_id":readme_id,"max_bytes":1024}),
+    )
+    .await;
+    assert_eq!(tiny["error"]["code"], "BUDGET_EXCEEDED");
+    assert!(serde_json::to_vec(&tiny).expect("json").len() <= 1024);
+    // Page through with a small complete-envelope budget; the pieces reassemble to the whole.
     let mut cursor: Option<String> = None;
     let mut assembled = String::new();
     let mut pages = 0;
     loop {
-        let mut params = serde_json::json!({ "artifact_id": readme_id, "max_bytes": 1024 });
+        let mut params = serde_json::json!({ "artifact_id": readme_id, "max_bytes": 2048 });
         if let Some(c) = &cursor {
             params["cursor"] = serde_json::Value::String(c.clone());
         }
         let page = call(&service, "artifact.read", params).await;
         assert_ne!(page["status"], "error", "{}", page["summary"]);
+        assert!(serde_json::to_vec(&page).expect("json").len() <= 2048);
         assert_eq!(page["data"]["encoding"], "utf8");
         assembled.push_str(page["data"]["content"].as_str().expect("text"));
         pages += 1;
@@ -628,6 +789,17 @@ async fn artifacts_are_read_by_handle_in_bounded_slices() {
     assert_eq!(slice["data"]["encoding"], "base64");
     assert!(slice["data"]["content_digest"].is_string());
 
+    // A read by handle makes no claim about versions, and must not look like one. `source_uri`
+    // on the stored record is the FIRST retrieval's -- a file unchanged between two releases
+    // hashes identically, so it can name a different release of the same package. Stamping
+    // `exact` beside that URI would read as a guarantee the service cannot make; the digest is
+    // the guarantee. See register row R-17.
+    assert_eq!(
+        slice["freshness"]["source_version_match"], "unknown",
+        "read_artifact is reached by digest with no version asked about"
+    );
+    assert!(slice["freshness"]["registry_checked_at"].is_null());
+
     // Only service-issued handles are accepted.
     let path = call(
         &service,
@@ -678,9 +850,28 @@ async fn the_manifest_resource_describes_the_published_snapshot() {
 
 #[tokio::test]
 async fn every_tool_answers_offline_from_the_snapshot_published_cold() {
+    offline_fixture(None).await;
+}
+
+#[tokio::test]
+async fn workstation_every_tool_answers_offline_from_the_snapshot_published_cold() {
+    let config = Config::from_path(&repo_root().join("config/service.workstation.toml"))
+        .expect("workstation configuration");
+    assert_eq!(config.arrow.memory_bytes, 32 * 1024 * 1024 * 1024);
+    assert_eq!(config.arrow.partitions, 16);
+    assert_eq!(config.arrow.concurrency, 16);
+    offline_fixture(Some(config)).await;
+}
+
+async fn offline_fixture(resources: Option<Config>) {
     let dir = tempfile::tempdir().expect("dir");
     let upstream = Upstream::start();
-    let config = config_for(&upstream);
+    let mut config = config_for(&upstream);
+    if let Some(resources) = resources {
+        config.arrow = resources.arrow;
+        config.limits = resources.limits;
+        config.source = resources.source;
+    }
 
     let (context_id, snapshot_id, cold) = {
         let service = service_with(config.clone(), dir.path());
@@ -780,4 +971,527 @@ async fn retrieval_round(
         inspect["data"].clone(),
         artifact["data"].clone(),
     ]
+}
+
+#[tokio::test]
+async fn missing_json_publishes_readable_metadata_and_source() {
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = call(
+        &service,
+        "library.resolve",
+        serde_json::json!({
+            "name": "enr-fixture", "version": "0.1.0"
+        }),
+    )
+    .await;
+    let resolved = complete_answer(&service, resolved).await;
+    assert_eq!(resolved["status"], "partial", "{resolved}");
+    assert!(resolved["snapshot_id"].as_str().is_some());
+    let overview = call(
+        &service,
+        "library.overview",
+        serde_json::json!({
+            "context_id": ctx(&resolved), "snapshot_id": resolved["snapshot_id"]
+        }),
+    )
+    .await;
+    assert_eq!(overview["status"], "partial", "{overview}");
+    assert!(overview["data"]["observed_configuration"].is_null());
+    assert!(strings(&overview["coverage"]["missing"]).contains(&"public_api".to_owned()));
+    let manifest = call(
+        &service,
+        "snapshot.manifest",
+        serde_json::json!({
+            "snapshot_id": resolved["snapshot_id"]
+        }),
+    )
+    .await;
+    let readme = resolved["data"]["artifacts"]
+        .as_array()
+        .expect("artifacts")
+        .iter()
+        .find(|a| a["kind"] == "readme")
+        .expect("README")["artifact_id"]
+        .clone();
+    let read = call(
+        &service,
+        "artifact.read",
+        serde_json::json!({"artifact_id": readme}),
+    )
+    .await;
+    assert_eq!(read["status"], "ok", "{read}");
+    assert!(!read["data"]["content"].as_str().expect("text").is_empty());
+    let runs = manifest["data"]["producer_runs"].as_array().expect("runs");
+    assert!(
+        runs.iter()
+            .any(|run| run["producer"] == "rust-source-snapshot")
+    );
+}
+
+#[tokio::test]
+async fn invalid_catalog_selection_cannot_redirect_retained_resolution() {
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let original = resolve_0_2_0(&service).await;
+    let context = enrichment_core::identity::ContextId::try_from(ctx(&original)).expect("context");
+    let different =
+        enrichment_core::identity::SnapshotId::try_from("snap_0123456789abcdef".to_owned())
+            .expect("id");
+    let original_id = enrichment_core::identity::SnapshotId::try_from(
+        original["snapshot_id"]
+            .as_str()
+            .expect("snapshot")
+            .to_owned(),
+    )
+    .expect("id");
+    assert!(
+        service
+            .repository
+            .catalog
+            .commit(enrichment_store::catalog_generation::CatalogDelta {
+                publication: None,
+                selection: Some(enrichment_store::catalog_generation::SelectionChange {
+                    context_id: context,
+                    snapshot_id: different,
+                    expected_base: Some(original_id)
+                }),
+                ..Default::default()
+            })
+            .await
+            .is_err()
+    );
+    let replay = call(
+        &service,
+        "library.resolve",
+        serde_json::json!({
+            "name": "enr-fixture", "version": "0.2.0", "freshness": "offline"
+        }),
+    )
+    .await;
+    assert_eq!(replay["snapshot_id"], original["snapshot_id"]);
+    assert_eq!(
+        replay["snapshot_id"],
+        replay["data"]["snapshot"]["snapshot_id"]
+    );
+}
+
+#[tokio::test]
+async fn corrupted_stored_observations_are_errors_across_retrieval_boundaries() {
+    use arrow::array::StringArray;
+    use arrow::record_batch::RecordBatch;
+    use std::sync::Arc;
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let snapshot_id = enrichment_core::identity::SnapshotId::try_from(
+        resolved["snapshot_id"].as_str().expect("id").to_owned(),
+    )
+    .expect("id");
+    let snapshot = service.paths.snapshots().join(snapshot_id.as_str());
+    // Deliberate corruption of service-owned test evidence: malformed present fields must
+    // never become empty evidence. A real file read follows, not a mocked query Result.
+    let path = snapshot.join("fragments.parquet");
+    let batches = parquet_read::read_parquet(&path).expect("read");
+    assert_eq!(batches.len(), 1);
+    let batch = &batches[0];
+    let mut columns = batch.columns().to_vec();
+    let text_index = batch.schema().index_of("text").expect("text column");
+    columns[text_index] = Arc::new(StringArray::from(vec![
+        Some("tampered content");
+        batch.num_rows()
+    ]));
+    let corrupted = RecordBatch::try_new(batch.schema(), columns).expect("batch");
+    parquet_write::write_parquet(&path, &corrupted, &[]).expect("corrupt test snapshot");
+    for (method, mut params) in [
+        (
+            "symbol.inspect",
+            serde_json::json!({"symbol_path":"enr_fixture::Widget"}),
+        ),
+        ("library.overview", serde_json::json!({})),
+        (
+            "evidence.search",
+            serde_json::json!({"query":"Widget", "kinds":["docs"]}),
+        ),
+    ] {
+        params["context_id"] = resolved["context_id"].clone();
+        let result = call(&service, method, params).await;
+        assert_eq!(result["status"], "error", "{method}: {result}");
+        assert_eq!(result["error"]["code"], "EXTRACTION_FAILED");
+    }
+}
+
+// A deterministic comparison fixture derived from real normalized Rust input. Only the
+// synthetic release record, declared configuration and a stored release note change.
+async fn publish_comparison_variant(
+    service: &Service,
+    resolved: &serde_json::Value,
+    version: &str,
+    environment: enrichment_core::identity::Environment,
+    note: &str,
+    api_complete: bool,
+) -> (String, String) {
+    use enrichment_core::{
+        evidence::{
+            Artifact, ArtifactKind, EvidenceFragment, EvidenceKind, FragmentKind,
+            ingest::{IngestContext, ProducerBatch},
+            snapshot::SnapshotMetadata,
+        },
+        identity::Context,
+        policy::ExecutionProfile,
+        producer::{ProducerRun, RunOutcome},
+        wire::{EvidenceClass, SourceVersionMatch},
+    };
+    let original = enrichment_daemon::ops::common::open_context(service, &ctx(resolved), None)
+        .await
+        .expect("context");
+    let mut release = original.release.clone();
+    release.key.version = version.into();
+    release.release_id = release.key.id();
+    let context = Context::new(
+        release.release_id.clone(),
+        environment.environment_id.clone(),
+        original.context.mode,
+    );
+    let artifact = service
+        .blobs
+        .put(note.as_bytes(), |_| {
+            Artifact::describe(
+                note.as_bytes(),
+                ArtifactKind::Changelog,
+                "text/plain",
+                "fixture:behavior-note",
+                "2026-09-14T00:00:00Z",
+            )
+        })
+        .expect("note")
+        .acquired;
+    let input = original
+        .reader
+        .inputs_of_kind(ArtifactKind::RustdocJson)
+        .await
+        .expect("inputs")
+        .remove(0);
+    let payload =
+        String::from_utf8(service.blobs.read(&input.sha256).expect("rustdoc bytes")).expect("utf8");
+    let produced = producer_records::collect(
+        normalize::prepare(&NormalizeInput {
+            payload: &payload,
+            rustdoc_artifact_id: &input.artifact_id,
+            json_path: Some(&service.blobs.path_for(&input.sha256)),
+            summary_chars: 240,
+        })
+        .expect("prepared fixture producer"),
+    )
+    .expect("normalize actual Rust fixture");
+    let source = original
+        .reader
+        .artifacts()
+        .await
+        .expect("acquisitions")
+        .into_iter()
+        .find(|a| a.artifact_id == input.artifact_id && a.source_uri == input.source_uri)
+        .expect("rustdoc source");
+    let mut fragments = produced.fragments;
+    fragments.push(
+        EvidenceFragment::new(
+            FragmentKind::ChangelogSection,
+            "Behavior",
+            &artifact.artifact_id,
+            serde_json::json!({"path":"CHANGELOG.md","line":1,"heading":"Behavior"}),
+            note.into(),
+            EvidenceClass::Declared,
+            "comparison-fixture",
+            "1",
+        )
+        .expect("valid fixture locator"),
+    );
+    let components = fragments
+        .iter()
+        .map(|f| (f.producer.clone(), f.producer_version.clone()))
+        .collect();
+    let run = ProducerRun {
+        attempt_id: format!("fixture-{version}-{}", environment.environment_id),
+        producer: "comparison-fixture".into(),
+        producer_version: "1".into(),
+        config_digest: "fixture-normalization".into(),
+        inputs: [
+            ("rustdoc_json".into(), input.sha256),
+            ("note".into(), artifact.sha256.clone()),
+        ]
+        .into_iter()
+        .collect(),
+        profile: ExecutionProfile::Static,
+        started_at: "2026-09-14T00:00:00Z".into(),
+        finished_at: "2026-09-14T00:00:01Z".into(),
+        outcome: RunOutcome::Succeeded,
+        gaps: vec![],
+        log: None,
+    };
+    let evidence = native_ingest::normalize(
+        IngestContext {
+            ecosystem: release.key.ecosystem,
+            symbol_package: produced.source.crate_name.clone(),
+            release_id: release.release_id.to_string(),
+            environment_id: environment.environment_id.to_string(),
+            source_version_match: SourceVersionMatch::Unknown,
+            producing_attempt: run.attempt_id.clone(),
+            producer_runs: vec![run],
+            artifacts: vec![artifact, source],
+            component_versions: components,
+            indexed: vec![
+                EvidenceKind::PublicApi,
+                EvidenceKind::Documentation,
+                EvidenceKind::ReleaseNotes,
+            ],
+            missing: vec![],
+            gaps: if api_complete {
+                vec![]
+            } else {
+                vec![enrichment_core::evidence::Gap {
+                    kind: EvidenceKind::PublicApi,
+                    reason: enrichment_core::evidence::GapReason::ExtractionFailed,
+                    detail: "Fixture declaration could not be extracted".into(),
+                    planned_fallback: None,
+                }]
+            },
+        },
+        ProducerBatch {
+            symbols: produced.symbols,
+            relationships: produced.relationships,
+            fragments,
+        },
+    )
+    .expect("typed fixture evidence");
+    let published = service
+        .repository
+        .publish(
+            SnapshotMetadata {
+                context: context.clone(),
+                release,
+                environment,
+                symbol_package: produced.source.crate_name.clone(),
+                crate_name: produced.source.crate_name,
+                crate_version: Some(version.into()),
+                normalizer_version: original.reader.manifest().normalizer_version.clone(),
+                observed_configuration: original.reader.manifest().observed_configuration.clone(),
+                producer_items: produced.source.producer_items,
+            },
+            evidence,
+            None,
+        )
+        .await
+        .expect("publish typed fixture");
+    (
+        context.context_id.to_string(),
+        published.snapshot_id.to_string(),
+    )
+}
+
+#[tokio::test]
+async fn comparison_surfaces_behavior_only_release_notes_with_unchanged_rust_api() {
+    use enrichment_core::identity::Environment;
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let (before, before_snapshot) = publish_comparison_variant(
+        &service,
+        &resolved,
+        "0.2.1",
+        Environment::unspecified(),
+        "Whitespace is trimmed.",
+        true,
+    )
+    .await;
+    let (after, after_snapshot) = publish_comparison_variant(
+        &service,
+        &resolved,
+        "0.2.2",
+        Environment::unspecified(),
+        "Whitespace is now preserved, fixing data loss.",
+        true,
+    )
+    .await;
+    drop(upstream);
+    let result = call(&service,"library.compare",serde_json::json!({"before_context_id":before,"after_context_id":after,"before_snapshot_id":before_snapshot,"after_snapshot_id":after_snapshot,"scopes":["api","release_notes"]})).await;
+    assert_ne!(result["status"], "error", "{result}");
+    let changes = result["data"]["changes"].as_array().expect("changes");
+    assert!(changes.iter().all(|c| c["scope"] != "api"));
+    let note = changes
+        .iter()
+        .find(|c| c["scope"] == "release_notes")
+        .expect("behavior note");
+    assert!(note["after"].to_string().contains("preserved"));
+    let artifact = note["after_sources"][0]["artifact_id"]
+        .as_str()
+        .expect("source");
+    assert!(service.blobs.find(artifact).expect("read").is_some());
+    assert!(!result["data"]["same_release"].as_bool().expect("identity"));
+}
+
+#[tokio::test]
+async fn partial_api_observations_never_establish_complete_unchanged_api() {
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let (context, _) = publish_comparison_variant(
+        &service,
+        &resolved,
+        "0.2.1",
+        enrichment_core::identity::Environment::unspecified(),
+        "Same partial API",
+        false,
+    )
+    .await;
+    let result = call(
+        &service,
+        "library.compare",
+        serde_json::json!({
+            "before_context_id": context, "after_context_id": context, "scopes": ["api"]
+        }),
+    )
+    .await;
+    assert_ne!(result["status"], "error", "{result}");
+    assert_eq!(result["data"]["total_changes"], 0);
+    assert_eq!(result["data"]["api_complete"], false);
+    assert_eq!(result["data"]["comparable"], false);
+    assert!(
+        result["coverage"]["limitations"]
+            .to_string()
+            .contains("API coverage")
+    );
+}
+
+#[tokio::test]
+async fn same_release_configuration_differences_are_separate_from_release_changes() {
+    use enrichment_core::identity::Environment;
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let (before, _) = publish_comparison_variant(
+        &service,
+        &resolved,
+        "0.2.1",
+        Environment::declared(
+            Some("x86_64-unknown-linux-gnu".into()),
+            Some(vec![]),
+            Some(true),
+        ),
+        "Same behavior.",
+        true,
+    )
+    .await;
+    let (after, _) = publish_comparison_variant(
+        &service,
+        &resolved,
+        "0.2.1",
+        Environment::declared(
+            Some("aarch64-unknown-linux-gnu".into()),
+            Some(vec!["extra".into()]),
+            Some(false),
+        ),
+        "Same behavior.",
+        true,
+    )
+    .await;
+    let result = call(
+        &service,
+        "library.compare",
+        serde_json::json!({"before_context_id":before,"after_context_id":after,"scopes":["api"]}),
+    )
+    .await;
+    assert_eq!(result["status"], "partial", "{result}");
+    assert_eq!(result["data"]["same_release"], true);
+    assert_eq!(result["data"]["comparable"], false);
+    assert!(
+        result["data"]["changes"]
+            .as_array()
+            .expect("changes")
+            .is_empty()
+    );
+    let fields: Vec<_> = result["data"]["configuration_differences"]
+        .as_array()
+        .expect("differences")
+        .iter()
+        .map(|d| d["field"].as_str().expect("field"))
+        .collect();
+    assert!(
+        fields.contains(&"target")
+            && fields.contains(&"features")
+            && fields.contains(&"default_features")
+    );
+}
+
+#[tokio::test]
+async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievable() {
+    use enrichment_core::evidence::{Artifact, ArtifactKind};
+    let dir = tempfile::tempdir().expect("dir");
+    let service = service_with(Config::default(), dir.path());
+    let text = "\"\\\n\t漢字🙂".repeat(4000);
+    let artifact = service
+        .blobs
+        .put(text.as_bytes(), |_| {
+            Artifact::describe(
+                text.as_bytes(),
+                ArtifactKind::Other,
+                "text/plain",
+                "fixture:unicode",
+                "2026-09-13T00:00:00Z",
+            )
+        })
+        .expect("artifact")
+        .artifact;
+    let mut cursor = None;
+    let mut recovered = String::new();
+    loop {
+        let page = call(&service,"artifact.read",serde_json::json!({"artifact_id":artifact.artifact_id,"max_bytes":4096,"cursor":cursor})).await;
+        assert_ne!(page["status"], "error", "{page}");
+        assert!(serde_json::to_vec(&page).expect("json").len() <= 4096);
+        recovered.push_str(page["data"]["content"].as_str().expect("text"));
+        cursor = page["pagination"]["next_cursor"]
+            .as_str()
+            .map(str::to_owned);
+        if cursor.is_none() {
+            break;
+        }
+    }
+    assert_eq!(recovered, text);
+    let answer = enrichment_daemon::envelope::ok(
+        "large answer",
+        serde_json::json!({"text":text})
+            .as_object()
+            .expect("object")
+            .clone(),
+        enrichment_core::wire::Coverage {
+            scope: "fixture".into(),
+            indexed: Default::default(),
+            missing: Default::default(),
+            limitations: vec![],
+        },
+    );
+    let bounded =
+        enrichment_daemon::ops::common::enforce_budget(&service, answer.clone(), Some(1024));
+    assert!(serde_json::to_vec(&bounded).expect("json").len() <= 1024);
+    assert_eq!(
+        bounded.error().expect("budget").code,
+        enrichment_core::wire::ErrorCode::BudgetExceeded
+    );
+    let id = bounded.data["result_artifact_id"]
+        .as_str()
+        .expect("pointer");
+    let mut second = answer.clone();
+    second.request_id = enrichment_daemon::envelope::new_request_id();
+    let second = enrichment_daemon::ops::common::enforce_budget(&service, second, Some(1024));
+    assert_eq!(second.data["result_artifact_id"], id);
+    let artifact = service.blobs.find(id).expect("lookup").expect("saved");
+    let saved: serde_json::Value =
+        serde_json::from_slice(&service.blobs.read(&artifact.sha256).expect("read")).expect("JSON");
+    assert_eq!(saved["data"], serde_json::json!(answer.data));
+    assert!(saved.get("request_id").is_none());
 }

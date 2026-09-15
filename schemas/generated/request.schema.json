@@ -1,0 +1,877 @@
+{
+  "$defs": {
+    "CompareRequest": {
+      "additionalProperties": false,
+      "description": "Compare a pinned snapshot pair, or explicitly acquire a version pair first.",
+      "properties": {
+        "after_context_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after_snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_context_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before_snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ecosystem": {
+          "default": null,
+          "description": "Which package ecosystem a release belongs to.\n\nThe values are, in order: `rust`, `python`. No variant carries a doc comment -- see the\nmodule docs in [`crate::wire`].",
+          "enum": [
+            "rust",
+            "python",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from_version": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "name": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scopes": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/Scope"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "to_version": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "InspectRequest": {
+      "additionalProperties": false,
+      "description": "What `inspect_symbol` asks for.",
+      "properties": {
+        "aspects": {
+          "default": null,
+          "description": "Aspects to include; all supported ones when omitted.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "context_id": {
+          "default": "",
+          "description": "The context from `resolve_library`.",
+          "type": "string"
+        },
+        "definition_id": {
+          "default": null,
+          "description": "Select one definition at this path, using an inspection candidate or search result.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "depth": {
+          "default": "documentation",
+          "description": "How much to retrieve.",
+          "enum": [
+            "signature",
+            "documentation",
+            "source"
+          ],
+          "type": "string"
+        },
+        "execution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InspectionOptions"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Retained execution selection and explicit execution intent (ADR-0026)."
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symbol_path": {
+          "default": "",
+          "description": "A qualified path, or a bare name when unambiguous.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "InspectionIntent": {
+      "description": "Reading retained evidence has no execution effects or qualification prerequisite.",
+      "enum": [
+        "retained",
+        "execute_on_miss",
+        "rerun"
+      ],
+      "type": "string"
+    },
+    "InspectionOptions": {
+      "additionalProperties": false,
+      "description": "A finite inspection request, never a shell command or arbitrary LSP method.",
+      "properties": {
+        "intent": {
+          "$ref": "#/$defs/InspectionIntent",
+          "default": "retained"
+        },
+        "methods": {
+          "default": [],
+          "description": "Empty selects hover, definition, references and diagnostics for semantic inspection.",
+          "items": {
+            "$ref": "#/$defs/SemanticMethod"
+          },
+          "type": "array"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Utf8Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Advanced override; zero-based UTF-8 byte position at a character boundary."
+        },
+        "profile": {
+          "default": null,
+          "description": "Required only for execution: build for semantics, runtime for runtime objects.",
+          "enum": [
+            "static",
+            "build",
+            "runtime",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuntimeSelection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Explicit Python selection. Import and introspection hooks may execute in the runtime capsule."
+        },
+        "snippet": {
+          "default": null,
+          "description": "Omitted uses the selected symbol's generated consumer.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "JobRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "default": "status",
+          "enum": [
+            "status",
+            "wait",
+            "cancel"
+          ],
+          "type": "string"
+        },
+        "interest_token": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "job_id": {
+          "default": "",
+          "type": "string"
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "wait_seconds": {
+          "default": 0,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "ManifestRequest": {
+      "additionalProperties": false,
+      "description": "What the snapshot-manifest resource asks for.",
+      "properties": {
+        "snapshot_id": {
+          "default": "",
+          "description": "The snapshot to describe.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "OverviewRequest": {
+      "additionalProperties": false,
+      "description": "What `library_overview` asks for.",
+      "properties": {
+        "area": {
+          "default": null,
+          "description": "Narrow to one module subtree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "context_id": {
+          "default": "",
+          "description": "The context from `resolve_library`.",
+          "type": "string"
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Advisory byte budget; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "description": "Cap on child entries per namespace; the configured limit bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ReadArtifactRequest": {
+      "additionalProperties": false,
+      "description": "What `read_artifact` asks for.",
+      "properties": {
+        "artifact_id": {
+          "default": "",
+          "description": "A service-issued artifact handle.",
+          "type": "string"
+        },
+        "cursor": {
+          "default": null,
+          "description": "Continue a previous read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget for this slice; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "section": {
+          "default": null,
+          "description": "A named section (a markdown heading) instead of the whole artifact.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ResolveRequest": {
+      "additionalProperties": false,
+      "description": "What `resolve_library` asks for.",
+      "properties": {
+        "allow_local_build": {
+          "default": false,
+          "description": "Whether the caller accepts a local rustdoc build when hosted JSON is unusable.\n\nHosted docs.rs JSON comes first, always (§4.1). This opts into the §4.4 fallback, which\ncompiles third-party code on a dated nightly inside a capsule and can take minutes. It is\na request, not a grant: the `build` profile must also be enabled and its images qualified,\nor the answer is `POLICY_DENIED` with the setup action.",
+          "type": "boolean"
+        },
+        "allow_prerelease": {
+          "default": false,
+          "description": "Whether a prerelease may satisfy an unversioned request.",
+          "type": "boolean"
+        },
+        "allow_yanked": {
+          "default": false,
+          "description": "Whether a yanked release may be resolved.",
+          "type": "boolean"
+        },
+        "default_features": {
+          "default": null,
+          "description": "Whether the caller's project enables default features, when known.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ecosystem": {
+          "default": "rust",
+          "description": "Which ecosystem.",
+          "enum": [
+            "rust",
+            "python"
+          ],
+          "type": "string"
+        },
+        "extras": {
+          "default": null,
+          "description": "Explicit Python extras, distinct from Rust feature selection.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "features": {
+          "default": null,
+          "description": "Features the caller's project enables, when known.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "freshness": {
+          "default": "cache_ok",
+          "description": "Freshness policy for this call.",
+          "enum": [
+            "cache_ok",
+            "revalidate",
+            "offline"
+          ],
+          "type": "string"
+        },
+        "mode": {
+          "default": null,
+          "description": "Research mode; defaults to `project` when a version is given and `upstream` otherwise.",
+          "enum": [
+            "project",
+            "upstream",
+            "compare",
+            "revision",
+            null
+          ],
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "default": "",
+          "description": "Package name as the caller spelled it.",
+          "type": "string"
+        },
+        "package_subdir": {
+          "default": null,
+          "description": "Explicit package root within the repository; omitted means root.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "python_version": {
+          "default": null,
+          "description": "Exact analyzed Python interpreter version; never inferred from the worker.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repository": {
+          "default": null,
+          "description": "Canonical public GitHub repository URL for revision mode.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "default": null,
+          "description": "Full immutable commit SHA; exclusive with version.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "default": null,
+          "description": "The caller's target triple, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "default": null,
+          "description": "Exact version. Omitted only for an explicit upstream question.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RuntimeSelection": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "module": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "attributes"
+      ],
+      "type": "object"
+    },
+    "Scope": {
+      "description": "Independent axes of a release comparison.",
+      "enum": [
+        "api",
+        "docs",
+        "configuration",
+        "release_notes",
+        "examples",
+        "relationships"
+      ],
+      "type": "string"
+    },
+    "SearchRequest": {
+      "additionalProperties": false,
+      "description": "What `search_evidence` asks for.",
+      "properties": {
+        "area": {
+          "default": null,
+          "description": "Restrict symbol/fragment subjects to this namespace subtree.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "context_id": {
+          "default": "",
+          "description": "The context from `resolve_library`.",
+          "type": "string"
+        },
+        "cursor": {
+          "default": null,
+          "description": "Continue a previous page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kinds": {
+          "default": null,
+          "description": "Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "max_bytes": {
+          "default": null,
+          "description": "Byte budget for the page; the configured inline budget bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_items": {
+          "default": null,
+          "description": "Page size; the configured limit bounds it.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "query": {
+          "default": "",
+          "description": "The query.",
+          "type": "string"
+        },
+        "snapshot_id": {
+          "default": null,
+          "description": "A specific snapshot; the context's current one when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "SemanticMethod": {
+      "enum": [
+        "hover",
+        "definition",
+        "implementation",
+        "references",
+        "diagnostics"
+      ],
+      "type": "string"
+    },
+    "Utf8Position": {
+      "additionalProperties": false,
+      "properties": {
+        "byte": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "line": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "line",
+        "byte"
+      ],
+      "type": "object"
+    },
+    "VerifyRequest": {
+      "additionalProperties": false,
+      "description": "Exact consumer input, pinned to a snapshot before scheduling.",
+      "properties": {
+        "context_id": {
+          "type": "string"
+        },
+        "max_bytes": {
+          "default": null,
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "compile",
+            "typecheck",
+            "runtime"
+          ],
+          "type": "string"
+        },
+        "profile": {
+          "description": "The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
+          "enum": [
+            "static",
+            "build",
+            "runtime"
+          ],
+          "type": "string"
+        },
+        "snapshot_id": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snippet": {
+          "type": "string"
+        },
+        "test_intent": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "context_id",
+        "snippet",
+        "mode",
+        "profile"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Authoritative request schemas for implemented research methods.",
+  "oneOf": [
+    {
+      "properties": {
+        "method": {
+          "const": "verify_usage",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/VerifyRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "job_control",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/JobRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "compare_releases",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/CompareRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "resolve_library",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/ResolveRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "library_overview",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/OverviewRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "search_evidence",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/SearchRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "inspect_symbol",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/InspectRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "read_artifact",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/ReadArtifactRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "method": {
+          "const": "snapshot_manifest",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/$defs/ManifestRequest"
+        }
+      },
+      "required": [
+        "method",
+        "params"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "ResearchRequest"
+}

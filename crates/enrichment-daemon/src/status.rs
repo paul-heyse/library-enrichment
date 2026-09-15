@@ -13,116 +13,22 @@ use std::collections::BTreeSet;
 
 use enrichment_core::config::Config;
 use enrichment_core::producer::{cratesio, normalize, rustdoc};
+use enrichment_core::wire::status::{
+    EvidenceCounters, FetchCounters, LspMetrics, SingleFlightCounts, VerificationCounters,
+};
 use enrichment_core::wire::{Coverage, Envelope, JsonObject};
-use serde::{Deserialize, Serialize};
 
 use crate::envelope;
 use crate::service::Service;
 
-/// One producer or component and whether it is actually usable.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ComponentStatus {
-    /// The component's stable name.
-    pub name: String,
-    /// Whether it can be used right now.
-    pub available: bool,
-    /// The exact version when known, `None` when the component is absent.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
-    /// Why it is unavailable, or what it covers when it is. Never left blank on an absent
-    /// component -- "blocked" must always name its missing prerequisite.
-    pub detail: String,
-}
-
-impl ComponentStatus {
-    /// A component that is not implemented yet, naming the phase that will implement it.
-    #[must_use]
-    pub fn not_implemented(name: &str, phase: u8) -> Self {
-        Self {
-            name: name.to_owned(),
-            available: false,
-            version: None,
-            detail: format!("not implemented; scheduled for phase {phase}"),
-        }
-    }
-
-    /// A component that is installed and usable.
-    #[must_use]
-    pub fn available(name: &str, version: &str, detail: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            available: true,
-            version: Some(version.to_owned()),
-            detail: detail.to_owned(),
-        }
-    }
-}
-
-/// The `service.status` result.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ServiceStatus {
-    /// Component versions.
-    pub versions: Versions,
-    /// Which wire schema versions this daemon can speak.
-    pub schema_compatibility: SchemaCompatibility,
-    /// Which execution profiles are actually usable here.
-    pub sandbox: Sandbox,
-    /// Evidence producers and whether each is installed.
-    pub producers: Vec<ComponentStatus>,
-    /// Optional capabilities and whether each is supported.
-    pub features: Vec<ComponentStatus>,
-    /// Job queue and cache health.
-    pub health: Health,
-}
-
-/// Versions of the daemon and its toolchain.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Versions {
-    /// The daemon crate version.
-    pub daemon: String,
-    /// The wire schema version this build emits.
-    pub schema: String,
-}
-
-/// Wire schema compatibility.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SchemaCompatibility {
-    /// The version emitted on every response.
-    pub emits: String,
-    /// Every version this daemon can accept.
-    pub accepts: Vec<String>,
-}
-
-/// Execution-profile availability (blueprint §10).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Sandbox {
-    /// Profiles configuration has enabled.
-    ///
-    /// Read from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are
-    /// built-in defaults. A caller selects from this list and never grants itself permission.
-    pub enabled_profiles: Vec<String>,
-    /// Where `enabled_profiles` came from, so a caller is never misled about policy.
-    pub enabled_profiles_source: String,
-    /// Container/isolation runtimes detected on this host.
-    ///
-    /// Detection only. A runtime being present is not the same as a profile being enabled, and
-    /// this never enables one.
-    pub available_runtimes: Vec<String>,
-}
-
-/// Queue and cache health.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Health {
-    /// Jobs currently queued.
-    pub queued_jobs: u64,
-    /// Jobs currently running.
-    pub running_jobs: u64,
-    /// Whether the evidence store is open and writable.
-    pub cache_ready: bool,
-    /// The data root in use, when a store is open. Absent otherwise.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data_root: Option<String>,
-}
+// The payload types live in `enrichment_core::wire::status`, not here. `data` is wire
+// surface, and §6.3 gives the core one authoritative definition from which the generated
+// schema and the Python DTOs are emitted; a status payload defined in the daemon would be the
+// one tool result the adapter cannot check against its own contract. What stays here is the
+// logic that decides what is true, which is a daemon concern.
+pub use enrichment_core::wire::status::{
+    ComponentStatus, Health, Sandbox, SchemaCompatibility, StatusData as ServiceStatus, Versions,
+};
 
 /// Report what this build can do without an open store: configuration only.
 ///
@@ -150,10 +56,21 @@ pub fn from_config(config: &Config) -> ServiceStatus {
             emits: enrichment_core::SCHEMA_VERSION.to_owned(),
             accepts: vec![enrichment_core::SCHEMA_VERSION.to_owned()],
         },
+        snapshot_compatibility: SchemaCompatibility {
+            emits: enrichment_core::SNAPSHOT_SCHEMA_VERSION.to_owned(),
+            accepts: vec![enrichment_core::SNAPSHOT_SCHEMA_VERSION.to_owned()],
+        },
         sandbox: Sandbox {
             enabled_profiles: config.policy.enabled_profiles.clone(),
             enabled_profiles_source: config.source.describe(),
             available_runtimes: detect_runtimes(),
+            // Without a store there is no data root to read a receipt from, so the honest
+            // answer here is "not qualified, and this process cannot even look".
+            execution_qualified: false,
+            execution_readiness: "no evidence store is open in this process, so no qualification \
+                                  receipt can be read"
+                .to_owned(),
+            admitted_images: std::collections::BTreeMap::new(),
         },
         producers: vec![
             ComponentStatus::not_implemented("rustdoc-json", 1),
@@ -181,6 +98,13 @@ pub fn from_config(config: &Config) -> ServiceStatus {
             // exists to avoid.
             cache_ready: false,
             data_root: None,
+            single_flight: SingleFlightCounts::default(),
+            lsp: LspMetrics::default(),
+            fetch: FetchCounters::default(),
+            evidence: EvidenceCounters::default(),
+            verification: VerificationCounters::default(),
+            native_queries: None,
+            uptime_seconds: 0,
         },
     }
 }
@@ -190,6 +114,15 @@ pub fn from_config(config: &Config) -> ServiceStatus {
 pub fn from_service(service: &Service) -> ServiceStatus {
     let mut status = from_config(&service.config);
     let cache_ready = service.cache_ready();
+    // Read fresh rather than caching at startup: an operator may qualify while the daemon runs,
+    // and a cached "not qualified" would be a stale answer presented as a current one.
+    let qualification = crate::execution::admission::qualification(
+        &service.config.execution,
+        &service.paths.cache_root,
+    );
+    status.sandbox.execution_qualified = qualification.is_qualified();
+    status.sandbox.execution_readiness = qualification.detail();
+    status.sandbox.admitted_images = qualification.admitted_images();
     for producer in &mut status.producers {
         if producer.name == "crates-io-registry" {
             *producer = if cache_ready {
@@ -218,6 +151,91 @@ pub fn from_service(service: &Service) -> ServiceStatus {
             .map(u32::to_string)
             .collect();
         for producer in &mut status.producers {
+            if producer.name == "pypi-registry" {
+                *producer = ComponentStatus::available(
+                    "pypi-registry",
+                    enrichment_core::producer::python::VERSION,
+                    "Exact distribution selection, bounded archive inspection and immutable snapshots",
+                );
+            }
+            if producer.name == "griffe" {
+                *producer = if service
+                    .python_worker_qualified
+                    .load(std::sync::atomic::Ordering::Relaxed)
+                {
+                    ComponentStatus::available(
+                        "griffe",
+                        "2.3.0",
+                        "Pinned static worker completed a validated job in this daemon process",
+                    )
+                } else {
+                    ComponentStatus {
+                        name: "griffe".into(),
+                        available: false,
+                        version: None,
+                        detail: format!(
+                            "Static adapter implemented; worker {} has not completed qualification in this daemon process",
+                            service.config.producers.python.worker_python.display()
+                        ),
+                    }
+                };
+            }
+            // A language server is available only when *its own* ecosystem's image is both
+            // configured and qualified. Qualification is per-image, so a service with a Python
+            // image and no Rust one can run ty and cannot run rust-analyzer -- and saying
+            // otherwise would advertise a capability that has no image to run in.
+            if producer.name == "ty" {
+                *producer = if qualification.is_qualified()
+                    && service.config.execution.python_image.is_some()
+                {
+                    ComponentStatus::available(
+                        "ty",
+                        "0.0.80",
+                        "Typecheck probes run `ty check` in the admitted Python image, and the \
+                         explicit semantic execution in inspect_symbol uses a warm `ty server` session \
+                         against the same capsule.",
+                    )
+                } else {
+                    // The else branch is the point. Leaving the `from_config` default in place
+                    // told a caller "not implemented; scheduled for phase 4" about a component
+                    // that shipped -- pointing them at a phase instead of at the one recipe that
+                    // would make it available.
+                    ComponentStatus {
+                        name: "ty".into(),
+                        available: false,
+                        version: Some("0.0.80".into()),
+                        detail: format!(
+                            "ty probes and warm sessions are implemented, but no qualified Python \
+                             producer image is available: {}",
+                            qualification.detail()
+                        ),
+                    }
+                };
+            }
+            if producer.name == "rust-analyzer" {
+                *producer = if qualification.is_qualified()
+                    && service.config.execution.rust_image.is_some()
+                {
+                    ComponentStatus::available(
+                        "rust-analyzer",
+                        "1.98.1",
+                        "Explicit semantic execution in inspect_symbol uses a warm rust-analyzer \
+                         session in the admitted Rust image, with build scripts, proc macros \
+                         and check-on-save disabled.",
+                    )
+                } else {
+                    ComponentStatus {
+                        name: "rust-analyzer".into(),
+                        available: false,
+                        version: Some("1.98.1".into()),
+                        detail: format!(
+                            "Warm rust-analyzer sessions are implemented, but no qualified Rust \
+                             producer image is available: {}",
+                            qualification.detail()
+                        ),
+                    }
+                };
+            }
             if producer.name == "rustdoc-json" {
                 *producer = ComponentStatus::available(
                     "rustdoc-json",
@@ -232,6 +250,44 @@ pub fn from_service(service: &Service) -> ServiceStatus {
             }
         }
         for feature in &mut status.features {
+            if feature.name == "release-comparison" {
+                *feature = ComponentStatus::available(
+                    "release-comparison",
+                    "1",
+                    "Pinned API/document/configuration comparison with bounded output and confounders",
+                );
+            }
+            if feature.name == "jobs" {
+                *feature = ComponentStatus::available(
+                    "jobs",
+                    "1",
+                    "Durable journal, bounded queue, independent caller interests and restart interruption",
+                );
+            }
+            if feature.name == "usage-verification" {
+                *feature = if qualification.is_qualified() {
+                    ComponentStatus::available(
+                        "usage-verification",
+                        "1",
+                        &format!(
+                            "Compile/typecheck/runtime probes in an admitted image; {}. Each \
+                             request still requires an operator-enabled build or runtime profile.",
+                            qualification.detail()
+                        ),
+                    )
+                } else {
+                    ComponentStatus {
+                        name: "usage-verification".into(),
+                        available: false,
+                        version: Some("1".into()),
+                        detail: format!(
+                            "Compile/typecheck/runtime probes are implemented, but execution is \
+                             not qualified: {}",
+                            qualification.detail()
+                        ),
+                    }
+                };
+            }
             if feature.name == "evidence-search" {
                 *feature = ComponentStatus::available(
                     "evidence-search",
@@ -242,8 +298,20 @@ pub fn from_service(service: &Service) -> ServiceStatus {
             }
         }
     }
+    let (queued, running) = service.jobs.counts();
+    status.health.queued_jobs = queued as u64;
+    status.health.running_jobs = running as u64;
     status.health.cache_ready = cache_ready;
     status.health.data_root = Some(service.paths.data_root.display().to_string());
+    status.health.lsp = service.lsp.metrics();
+    status.health.single_flight = service.single_flight.counts();
+    // The §14.3 diagnostics. Every one is scoped to this process, which is why
+    // `uptime_seconds` travels beside them: a count with no window is not readable.
+    status.health.fetch = service.metrics.fetch();
+    status.health.evidence = service.metrics.evidence();
+    status.health.verification = service.metrics.verification();
+    status.health.native_queries = Some(service.repository.runtime.operational_counters());
+    status.health.uptime_seconds = service.started_instant.elapsed().as_secs();
     status
 }
 
@@ -368,6 +436,56 @@ mod tests {
         (dir, service)
     }
 
+    /// Components whose implementation landed, and which must therefore never be described to a
+    /// caller as waiting for a phase.
+    ///
+    /// The list is deliberately explicit rather than derived: a component is added here when its
+    /// code ships, and forgetting to add one is the same oversight this test exists to catch --
+    /// except that here the oversight is visible in a diff.
+    const SHIPPED: &[&str] = &[
+        "rustdoc-json",
+        "crates-io-registry",
+        "griffe",
+        "pypi-registry",
+        "rust-analyzer",
+        "ty",
+        "evidence-search",
+        "release-comparison",
+        "usage-verification",
+        "jobs",
+    ];
+
+    #[test]
+    fn a_component_that_shipped_never_tells_a_caller_to_wait_for_a_phase() {
+        // The failure this catches: `from_config` seeds every component with
+        // "not implemented; scheduled for phase N", and a branch that only fills in the
+        // *available* case leaves that default standing on an unqualified host. The caller is
+        // then told to wait for a phase that already shipped, instead of being told to run
+        // `just execution-qualify` -- which is the difference between a missing prerequisite and
+        // a missing feature. `ty` did exactly this until 2026-09-14.
+        //
+        // A service with no qualified image is the interesting case, because it is the one where
+        // the default survives. `open_service` has none.
+        let (_dir, service) = open_service();
+        let status = service.into_status();
+        for component in status.producers.iter().chain(status.features.iter()) {
+            if SHIPPED.contains(&component.name.as_str()) {
+                assert!(
+                    !component.detail.contains("not implemented"),
+                    "{} shipped, but reports: {}",
+                    component.name,
+                    component.detail
+                );
+                assert!(
+                    !component.detail.contains("scheduled for phase"),
+                    "{} shipped, but points the caller at a phase: {}",
+                    component.name,
+                    component.detail
+                );
+            }
+        }
+    }
+
     #[test]
     fn every_absent_producer_names_a_reason() {
         for status in [service_status(), open_service().1.into_status()] {
@@ -421,7 +539,13 @@ mod tests {
             .expect("listed");
         assert!(search.available);
         // Phase 2+ components stay absent: a store does not conjure a producer.
-        for name in ["griffe", "pypi-registry", "rust-analyzer", "ty"] {
+        assert!(
+            status
+                .producers
+                .iter()
+                .any(|p| p.name == "pypi-registry" && p.available)
+        );
+        for name in ["griffe", "rust-analyzer", "ty"] {
             let p = status
                 .producers
                 .iter()

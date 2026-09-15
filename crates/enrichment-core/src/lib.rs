@@ -14,11 +14,16 @@
 /// and reject exactly the documents the frozen schema does.
 pub const SCHEMA_VERSION: &str = "1.0";
 
+/// Canonical snapshot storage, independent of the frozen response envelope.
+pub const SNAPSHOT_SCHEMA_VERSION: &str = evidence::snapshot::FORMAT;
+
 pub mod archive;
 pub mod canonical;
 pub mod clock;
+pub mod compare;
 pub mod config;
 pub mod evidence;
+pub mod execution;
 pub mod identity;
 pub mod policy;
 pub mod producer;
@@ -46,3 +51,4 @@ mod tests {
         );
     }
 }
+pub mod capsule_protocol;

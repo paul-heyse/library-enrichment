@@ -39,6 +39,33 @@ fn main() -> ExitCode {
     for (file, contents) in [
         (ENVELOPE_SCHEMA_FILE, envelope_schema_json()),
         (TOOL_DATA_SCHEMA_FILE, tool_data_schema_json()),
+        (
+            "request.schema.json",
+            format!(
+                "{}\n",
+                serde_json::to_string_pretty(&enrichment_core::canonical::canonicalize(
+                    schemars::generate::SchemaSettings::draft2020_12()
+                        .into_generator()
+                        .into_root_schema_for::<enrichment_core::request::ResearchRequest>()
+                        .to_value()
+                ))
+                .expect("request schema")
+            ),
+        ),
+        (
+            "worker.schema.json",
+            format!(
+                "{}\n",
+                serde_json::to_string_pretty(&enrichment_core::canonical::canonicalize(
+                    schemars::generate::SchemaSettings::draft2020_12()
+                        .for_serialize()
+                        .into_generator()
+                        .into_root_schema_for::<enrichment_core::producer::python::WorkerProtocol>()
+                        .to_value()
+                ))
+                .expect("schema")
+            ),
+        ),
     ] {
         let path = out.join(file);
         if let Err(err) = std::fs::write(&path, contents) {

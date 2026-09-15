@@ -278,6 +278,10 @@ pub struct Environment {
     pub target: Option<String>,
     /// Enabled features or extras, sorted and deduplicated.
     pub features: Vec<String>,
+    /// Whether an empty feature selection was explicitly supplied. Older records did not
+    /// retain this distinction; their empty selections remain unknown when read.
+    #[serde(default)]
+    pub features_known: bool,
     /// Whether default features are enabled. `None` when unspecified.
     pub default_features: Option<bool>,
     /// Digest of the dependency lock, when one was supplied.
@@ -285,6 +289,20 @@ pub struct Environment {
 }
 
 impl Environment {
+    /// Check that the complete environment record agrees with its content identity.
+    #[must_use]
+    pub fn has_valid_identity(&self) -> bool {
+        let rebuilt = Self::build(
+            self.resolution,
+            self.toolchain.clone(),
+            self.target.clone(),
+            self.features_known.then(|| self.features.clone()),
+            self.default_features,
+            self.lock_digest.clone(),
+        );
+        rebuilt == *self
+    }
+
     /// The environment of a request that said nothing about its environment.
     #[must_use]
     pub fn unspecified() -> Self {
@@ -292,7 +310,7 @@ impl Environment {
             EnvironmentResolution::Unspecified,
             None,
             None,
-            Vec::new(),
+            None,
             None,
             None,
         )
@@ -302,7 +320,7 @@ impl Environment {
     #[must_use]
     pub fn declared(
         target: Option<String>,
-        features: Vec<String>,
+        features: Option<Vec<String>>,
         default_features: Option<bool>,
     ) -> Self {
         Self::build(
@@ -315,14 +333,52 @@ impl Environment {
         )
     }
 
+    /// A declared Python environment. Static extraction does not resolve dependencies.
+    #[must_use]
+    pub fn python(
+        version: Option<String>,
+        target: Option<String>,
+        extras: Option<Vec<String>>,
+    ) -> Self {
+        Self::build(
+            EnvironmentResolution::Declared,
+            version.map(|v| format!("python-{v}")),
+            target,
+            extras,
+            None,
+            None,
+        )
+    }
+
+    /// An actually resolved capsule, preserving declared identity by deriving a new record.
+    #[must_use]
+    pub fn resolved(
+        toolchain: String,
+        target: String,
+        features: Vec<String>,
+        default_features: Option<bool>,
+        lock_digest: String,
+    ) -> Self {
+        Self::build(
+            EnvironmentResolution::Resolved,
+            Some(toolchain),
+            Some(target),
+            Some(features),
+            default_features,
+            Some(lock_digest),
+        )
+    }
+
     fn build(
         resolution: EnvironmentResolution,
         toolchain: Option<String>,
         target: Option<String>,
-        mut features: Vec<String>,
+        features: Option<Vec<String>>,
         default_features: Option<bool>,
         lock_digest: Option<String>,
     ) -> Self {
+        let features_known = features.is_some();
+        let mut features = features.unwrap_or_default();
         features.sort();
         features.dedup();
         let environment_id = EnvironmentId::from_content(&json!({
@@ -330,6 +386,7 @@ impl Environment {
             "toolchain": toolchain,
             "target": target,
             "features": features,
+            "features_known": features_known,
             "default_features": default_features,
             "lock_digest": lock_digest,
         }));
@@ -339,6 +396,7 @@ impl Environment {
             toolchain,
             target,
             features,
+            features_known,
             default_features,
             lock_digest,
         }
@@ -440,6 +498,37 @@ impl SnapshotId {
 mod tests {
     use super::*;
 
+    #[test]
+    fn target_identity_vectors_preserve_environment_knowledge_and_separate_scopes() {
+        // Independently calculated from canonical JSON preimages, not by another call to id().
+        let release = Release::new(ReleaseKey {
+            ecosystem: Ecosystem::Rust,
+            registry: "crates.io".into(),
+            package: "enr-fixture".into(),
+            version: "0.1.0".into(),
+            artifact_digest: None,
+        });
+        assert_eq!(release.release_id.as_str(), "rel_ff2b5582ba719811");
+        let unknown = Environment::unspecified();
+        let empty = Environment::declared(None, Some(vec![]), None);
+        assert_eq!(unknown.environment_id.as_str(), "env_78680489738d4b44");
+        assert_eq!(empty.environment_id.as_str(), "env_095205ea45d67431");
+        let context = Context::new(
+            release.release_id,
+            empty.environment_id,
+            ResearchMode::Upstream,
+        );
+        assert_eq!(context.context_id.as_str(), "ctx_a1cd4cd6cb1c0d1c");
+        let snapshot = SnapshotId::derive(&SnapshotInputs {
+            schema_version: "4.0".into(),
+            normalizer_version: "2".into(),
+            context_id: context.context_id,
+            input_digests: [("coverage".into(), "a".repeat(64))].into_iter().collect(),
+            producers: [("fixture".into(), "1".into())].into_iter().collect(),
+        });
+        assert_eq!(snapshot.as_str(), "snap_11f9097220e1c45e");
+    }
+
     fn key() -> ReleaseKey {
         ReleaseKey {
             ecosystem: Ecosystem::Rust,
@@ -507,16 +596,40 @@ mod tests {
 
     #[test]
     fn feature_order_does_not_change_an_environment() {
-        let a = Environment::declared(None, vec!["b".into(), "a".into()], Some(true));
-        let b = Environment::declared(None, vec!["a".into(), "b".into(), "a".into()], Some(true));
+        let a = Environment::declared(None, Some(vec!["b".into(), "a".into()]), Some(true));
+        let b = Environment::declared(
+            None,
+            Some(vec!["a".into(), "b".into(), "a".into()]),
+            Some(true),
+        );
         assert_eq!(a.environment_id, b.environment_id);
         assert_eq!(a.features, vec!["a".to_owned(), "b".to_owned()]);
     }
 
     #[test]
+    fn omitted_and_explicit_empty_features_have_different_identities() {
+        let omitted = Environment::declared(None, None, Some(true));
+        let empty = Environment::declared(None, Some(vec![]), Some(true));
+        assert_ne!(omitted.environment_id, empty.environment_id);
+        assert!(!omitted.features_known);
+        assert!(empty.features_known);
+        let mut legacy = serde_json::to_value(&empty).expect("serialize");
+        legacy
+            .as_object_mut()
+            .expect("object")
+            .remove("features_known");
+        let decoded: Environment = serde_json::from_value(legacy).expect("legacy reader");
+        assert_eq!(decoded.environment_id, empty.environment_id);
+        assert!(
+            !decoded.features_known,
+            "legacy empty records cannot establish a declaration"
+        );
+    }
+
+    #[test]
     fn an_unspecified_and_a_declared_environment_differ_even_when_empty() {
         let unspecified = Environment::unspecified();
-        let declared = Environment::declared(None, Vec::new(), None);
+        let declared = Environment::declared(None, Some(Vec::new()), None);
         assert_ne!(unspecified.environment_id, declared.environment_id);
         assert_eq!(unspecified.resolution, EnvironmentResolution::Unspecified);
     }
@@ -529,7 +642,8 @@ mod tests {
             Environment::unspecified().environment_id,
             ResearchMode::Project,
         );
-        let better = Environment::declared(Some("x86_64-unknown-linux-gnu".into()), vec![], None);
+        let better =
+            Environment::declared(Some("x86_64-unknown-linux-gnu".into()), Some(vec![]), None);
         let derived = original.derived_with(better.environment_id.clone());
         assert_ne!(derived.context_id, original.context_id);
         assert_eq!(derived.parent_context_id, Some(original.context_id.clone()));
