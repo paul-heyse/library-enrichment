@@ -1,0 +1,224 @@
+{
+  "module": "arrow_pyarrow",
+  "crate": "arrow-pyarrow",
+  "api": "api/arrow_pyarrow.md",
+  "items": [
+    {
+      "path": "arrow_pyarrow::ArrowException",
+      "name": "ArrowException",
+      "kind": "struct",
+      "crate": "arrow-pyarrow",
+      "signature": "struct ArrowException",
+      "summary": "A Rust type representing an exception defined in Python code.",
+      "doc": "api/arrow_pyarrow.md#arrowexception",
+      "aliases": [
+        "arrow::pyarrow::ArrowException"
+      ],
+      "implements": [
+        "pyo3::err::ToPyErr",
+        "pyo3::type_object::PyTypeInfo",
+        "pyo3::types::DerefToPyAny"
+      ],
+      "methods": [
+        {
+          "name": "new_err",
+          "signature": "fn new_err<A>(args: A) -> PyErr where A: PyErrArguments + ::core::marker::Send + ::core::marker::Sync + 'static",
+          "summary": "Creates a new [`PyErr`] of this type."
+        },
+        {
+          "name": "type_object_raw",
+          "signature": "fn type_object_raw(py: Python<'_>) -> *mut ffi::PyTypeObject",
+          "via_trait": "pyo3::type_object::PyTypeInfo"
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::PyArrowType",
+      "name": "PyArrowType",
+      "kind": "struct",
+      "crate": "arrow-pyarrow",
+      "signature": "struct PyArrowType<T>",
+      "summary": "A newtype wrapper for types implementing [`FromPyArrow`] or [`IntoPyArrow`].",
+      "doc": "api/arrow_pyarrow.md#pyarrowtype",
+      "aliases": [
+        "arrow::pyarrow::PyArrowType"
+      ],
+      "implements": [
+        "core::convert::From",
+        "pyo3::conversion::FromPyObject",
+        "pyo3::conversion::IntoPyObject"
+      ],
+      "methods": [
+        {
+          "name": "extract",
+          "signature": "fn extract(value: Borrowed<'_, '_, PyAny>) -> PyResult<Self>",
+          "via_trait": "pyo3::conversion::FromPyObject"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(s: T) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_pyobject",
+          "signature": "fn into_pyobject(self, py: Python<'py>) -> PyResult<Self::Output>",
+          "via_trait": "pyo3::conversion::IntoPyObject"
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::Table",
+      "name": "Table",
+      "kind": "struct",
+      "crate": "arrow-pyarrow",
+      "signature": "struct Table",
+      "summary": "This is a convenience wrapper around `Vec<RecordBatch>` that tries to simplify conversion from and to `pyarrow.Table`.",
+      "doc": "api/arrow_pyarrow.md#table",
+      "aliases": [
+        "arrow::pyarrow::Table"
+      ],
+      "implements": [
+        "arrow_pyarrow::FromPyArrow",
+        "arrow_pyarrow::IntoPyArrow",
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "from_pyarrow_bound",
+          "signature": "fn from_pyarrow_bound(ob: &Bound<'_, PyAny>) -> PyResult<Self>",
+          "via_trait": "arrow_pyarrow::FromPyArrow"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> (Vec<RecordBatch>, SchemaRef)"
+        },
+        {
+          "name": "into_pyarrow",
+          "signature": "fn into_pyarrow(self, py: Python<'_>) -> PyResult<Bound<'_, PyAny>>",
+          "via_trait": "arrow_pyarrow::IntoPyArrow"
+        },
+        {
+          "name": "record_batches",
+          "signature": "fn record_batches(&self) -> &[RecordBatch]"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: Box<dyn RecordBatchReader>) -> Result<Self, ArrowError>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(record_batches: Vec<RecordBatch>, schema: SchemaRef) -> Result<Self, ArrowError>"
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::FromPyArrow",
+      "name": "FromPyArrow",
+      "kind": "trait",
+      "crate": "arrow-pyarrow",
+      "signature": "trait FromPyArrow: Sized",
+      "summary": "Trait for converting Python objects to arrow-rs types.",
+      "doc": "api/arrow_pyarrow.md#frompyarrow",
+      "aliases": [
+        "arrow::pyarrow::FromPyArrow"
+      ],
+      "implementors": [
+        "alloc::vec::Vec",
+        "arrow_array::ffi_stream::ArrowArrayStreamReader",
+        "arrow_array::record_batch::RecordBatch",
+        "arrow_data::data::ArrayData",
+        "arrow_pyarrow::Table",
+        "arrow_schema::datatype::DataType",
+        "arrow_schema::field::Field",
+        "arrow_schema::schema::Schema"
+      ],
+      "required_methods": [
+        "from_pyarrow_bound"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "from_pyarrow_bound",
+          "signature": "fn from_pyarrow_bound(value: &Bound<'_, PyAny>) -> PyResult<Self>",
+          "summary": "Convert a Python object to an arrow-rs type."
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::IntoPyArrow",
+      "name": "IntoPyArrow",
+      "kind": "trait",
+      "crate": "arrow-pyarrow",
+      "signature": "trait IntoPyArrow",
+      "summary": "Convert an arrow-rs type into a PyArrow object.",
+      "doc": "api/arrow_pyarrow.md#intopyarrow",
+      "aliases": [
+        "arrow::pyarrow::IntoPyArrow"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "arrow_array::ffi_stream::ArrowArrayStreamReader",
+        "arrow_pyarrow::Table"
+      ],
+      "required_methods": [
+        "into_pyarrow"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "into_pyarrow",
+          "signature": "fn into_pyarrow<'py>(self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>",
+          "summary": "Convert the implemented type into a Python object while consuming it."
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::ToPyArrow",
+      "name": "ToPyArrow",
+      "kind": "trait",
+      "crate": "arrow-pyarrow",
+      "signature": "trait ToPyArrow",
+      "summary": "Create a new PyArrow object from a arrow-rs type.",
+      "doc": "api/arrow_pyarrow.md#topyarrow",
+      "aliases": [
+        "arrow::pyarrow::ToPyArrow"
+      ],
+      "implementors": [
+        "alloc::vec::Vec",
+        "arrow_array::record_batch::RecordBatch",
+        "arrow_data::data::ArrayData",
+        "arrow_schema::datatype::DataType",
+        "arrow_schema::field::Field",
+        "arrow_schema::schema::Schema"
+      ],
+      "required_methods": [
+        "to_pyarrow"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "to_pyarrow",
+          "signature": "fn to_pyarrow<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>",
+          "summary": "Convert the implemented type into a Python object without consuming it."
+        }
+      ]
+    },
+    {
+      "path": "arrow_pyarrow::PyArrowException",
+      "name": "PyArrowException",
+      "kind": "type_alias",
+      "crate": "arrow-pyarrow",
+      "signature": "type PyArrowException = ArrowException",
+      "summary": "Represents an exception raised by PyArrow.",
+      "doc": "api/arrow_pyarrow.md#pyarrowexception",
+      "aliases": [
+        "arrow::pyarrow::PyArrowException"
+      ]
+    }
+  ]
+}

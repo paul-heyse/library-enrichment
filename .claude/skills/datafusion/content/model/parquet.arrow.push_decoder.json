@@ -1,0 +1,87 @@
+{
+  "module": "parquet::arrow::push_decoder",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.push_decoder.md",
+  "items": [
+    {
+      "path": "parquet::arrow::push_decoder::ParquetPushDecoder",
+      "name": "ParquetPushDecoder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ParquetPushDecoder",
+      "summary": "A push based Parquet Decoder",
+      "doc": "api/parquet.arrow.push_decoder.md#parquetpushdecoder",
+      "methods": [
+        {
+          "name": "buffered_bytes",
+          "signature": "fn buffered_bytes(&self) -> u64",
+          "summary": "Returns the total number of buffered bytes in the decoder"
+        },
+        {
+          "name": "clear_all_ranges",
+          "signature": "fn clear_all_ranges(&mut self)",
+          "summary": "Clear any staged byte ranges currently buffered for future decode work."
+        },
+        {
+          "name": "into_builder",
+          "signature": "fn into_builder(self) -> Result<ParquetPushDecoderBuilder, ParquetError>",
+          "summary": "Decompose this decoder back into a [`ParquetPushDecoderBuilder`] for the row groups that have *not* yet been decoded."
+        },
+        {
+          "name": "is_at_row_group_boundary",
+          "signature": "fn is_at_row_group_boundary(&self) -> bool",
+          "summary": "True iff the decoder is at a row-group boundary, where [`Self::into_builder`] can reconfigure the scan."
+        },
+        {
+          "name": "peek_next_row_group",
+          "signature": "fn peek_next_row_group(&self) -> Result<Option<usize>, ParquetError>",
+          "summary": "Returns the row-group index that the next call to [`Self::try_next_reader`] will yield a reader for, after applying any internal skipping (row selection emptiness, exhausted budget, finished state)."
+        },
+        {
+          "name": "push_range",
+          "signature": "fn push_range(&mut self, range: Range<u64>, data: Bytes) -> Result<(), ParquetError>",
+          "summary": "Push data into the decoder for processing"
+        },
+        {
+          "name": "push_ranges",
+          "signature": "fn push_ranges(&mut self, ranges: Vec<Range<u64>>, data: Vec<Bytes>) -> Result<(), ParquetError>",
+          "summary": "Push data into the decoder for processing"
+        },
+        {
+          "name": "row_groups_remaining",
+          "signature": "fn row_groups_remaining(&self) -> usize",
+          "summary": "Number of row groups left to decode after the one currently in flight. Useful as a \"should I bother reconfiguring the scan?\" signal."
+        },
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&mut self) -> Result<DecodeResult<RecordBatch>, ParquetError>",
+          "summary": "Attempt to decode the next batch of data, or return what data is needed"
+        },
+        {
+          "name": "try_next_reader",
+          "signature": "fn try_next_reader(&mut self) -> Result<DecodeResult<ParquetRecordBatchReader>, ParquetError>",
+          "summary": "Return a [`ParquetRecordBatchReader`] that reads the next set of rows, or  return what data is needed to produce it."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::push_decoder::PushDecoderInput",
+      "name": "PushDecoderInput",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PushDecoderInput",
+      "summary": "The `input` of a [`ParquetPushDecoderBuilder`].",
+      "doc": "api/parquet.arrow.push_decoder.md#pushdecoderinput",
+      "methods": []
+    },
+    {
+      "path": "parquet::arrow::push_decoder::ParquetPushDecoderBuilder",
+      "name": "ParquetPushDecoderBuilder",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type ParquetPushDecoderBuilder = arrow::arrow_reader::ArrowReaderBuilder<PushDecoderInput>",
+      "summary": "A builder for [`ParquetPushDecoder`].",
+      "doc": "api/parquet.arrow.push_decoder.md#parquetpushdecoderbuilder"
+    }
+  ]
+}

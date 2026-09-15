@@ -1,0 +1,431 @@
+{
+  "module": "datafusion_common::dfschema",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.dfschema.md",
+  "items": [
+    {
+      "path": "datafusion_common::dfschema::qualified_name",
+      "name": "qualified_name",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn qualified_name(qualifier: Option<&TableReference>, name: &str) -> String",
+      "summary": "Build a fully-qualified field name string. This is equivalent to `format!(\"{q}.{name}\")` when `qualifier` is `Some`, or just `name` when `None`. We avoid going through the `fmt` machinery for performance reasons.",
+      "doc": "api/datafusion_common.dfschema.md#qualified_name",
+      "aliases": [
+        "datafusion::common::qualified_name",
+        "datafusion_common::qualified_name"
+      ]
+    },
+    {
+      "path": "datafusion_common::dfschema::DFSchema",
+      "name": "DFSchema",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct DFSchema",
+      "summary": "DFSchema wraps an Arrow schema and add a relation (table) name.",
+      "doc": "api/datafusion_common.dfschema.md#dfschema",
+      "aliases": [
+        "datafusion::common::DFSchema",
+        "datafusion_common::DFSchema"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "datafusion_common::dfschema::ExprSchema"
+      ],
+      "methods": [
+        {
+          "name": "as_arrow",
+          "signature": "fn as_arrow(&self) -> &Schema",
+          "summary": "Return a reference to the inner Arrow [`Schema`]"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &Schema",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "check_names",
+          "signature": "fn check_names(&self) -> Result<()>",
+          "summary": "Check if the schema have some fields with the same name"
+        },
+        {
+          "name": "columns",
+          "signature": "fn columns(&self) -> Vec<Column>",
+          "summary": "Return all `Column`s for the schema"
+        },
+        {
+          "name": "columns_with_unqualified_name",
+          "signature": "fn columns_with_unqualified_name(&self, name: &str) -> Vec<Column>",
+          "summary": "Find all fields that match the given name and convert to column"
+        },
+        {
+          "name": "datatype_is_logically_equal",
+          "signature": "fn datatype_is_logically_equal(dt1: &DataType, dt2: &DataType) -> bool",
+          "summary": "Checks if two [`DataType`]s are logically equal. This is a notably weaker constraint than datatype_is_semantically_equal in that different representations of same data can be logically but not semantically equivalent. Semantically equivale…"
+        },
+        {
+          "name": "datatype_is_semantically_equal",
+          "signature": "fn datatype_is_semantically_equal(dt1: &DataType, dt2: &DataType) -> bool",
+          "summary": "Returns true of two [`DataType`]s are semantically equal (same name and type), ignoring both metadata and nullability, decimal precision/scale, and timezone time units/timezones."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Creates an empty `DFSchema`"
+        },
+        {
+          "name": "empty_ref",
+          "signature": "fn empty_ref() -> &'static DFSchemaRef",
+          "summary": "Returns a reference to a shared empty [`DFSchema`]."
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self, i: usize) -> &FieldRef",
+          "summary": "Returns a reference to [`FieldRef`] for a column at specific index within the schema."
+        },
+        {
+          "name": "field_from_column",
+          "signature": "fn field_from_column(&self, col: &Column) -> Result<&FieldRef>",
+          "via_trait": "datafusion_common::dfschema::ExprSchema"
+        },
+        {
+          "name": "field_names",
+          "signature": "fn field_names(&self) -> Vec<String>",
+          "summary": "Get list of fully-qualified field names in this schema"
+        },
+        {
+          "name": "field_with_name",
+          "signature": "fn field_with_name(&self, qualifier: Option<&TableReference>, name: &str) -> Result<&FieldRef>",
+          "summary": "Find the [`FieldRef`] with the given name and optional qualifier"
+        },
+        {
+          "name": "field_with_qualified_name",
+          "signature": "fn field_with_qualified_name(&self, qualifier: &TableReference, name: &str) -> Result<&FieldRef>",
+          "summary": "Find the field with the given qualified name"
+        },
+        {
+          "name": "field_with_unqualified_name",
+          "signature": "fn field_with_unqualified_name(&self, name: &str) -> Result<&FieldRef>",
+          "summary": "Find the field with the given name"
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> &Fields",
+          "summary": "Get a list of fields for this schema"
+        },
+        {
+          "name": "fields_indices_with_qualified",
+          "signature": "fn fields_indices_with_qualified(&self, qualifier: &TableReference) -> Vec<usize>",
+          "summary": "Find all fields indices having the given qualifier"
+        },
+        {
+          "name": "fields_with_qualified",
+          "signature": "fn fields_with_qualified(&self, qualifier: &TableReference) -> Vec<&FieldRef>",
+          "summary": "Find all fields having the given qualifier"
+        },
+        {
+          "name": "fields_with_unqualified_name",
+          "signature": "fn fields_with_unqualified_name(&self, name: &str) -> Vec<&FieldRef>",
+          "summary": "Find all fields that match the given name"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_field_specific_qualified_schema",
+          "signature": "fn from_field_specific_qualified_schema(qualifiers: Vec<Option<TableReference>>, schema: &SchemaRef) -> Result<Self>",
+          "summary": "Create a `DFSchema` from an Arrow schema where all the fields have a given qualifier"
+        },
+        {
+          "name": "from_unqualified_fields",
+          "signature": "fn from_unqualified_fields(fields: Fields, metadata: HashMap<String, String>) -> Result<Self>",
+          "summary": "Create a new `DFSchema` from a list of Arrow [Field]s"
+        },
+        {
+          "name": "functional_dependencies",
+          "signature": "fn functional_dependencies(&self) -> &FunctionalDependencies",
+          "summary": "Get functional dependencies"
+        },
+        {
+          "name": "has_column",
+          "signature": "fn has_column(&self, column: &Column) -> bool",
+          "summary": "Find if the field exists with the given qualified column"
+        },
+        {
+          "name": "has_column_with_qualified_name",
+          "signature": "fn has_column_with_qualified_name(&self, qualifier: &TableReference, name: &str) -> bool",
+          "summary": "Find if the field exists with the given qualified name"
+        },
+        {
+          "name": "has_column_with_unqualified_name",
+          "signature": "fn has_column_with_unqualified_name(&self, name: &str) -> bool",
+          "summary": "Find if the field exists with the given name"
+        },
+        {
+          "name": "has_equivalent_names_and_types",
+          "signature": "fn has_equivalent_names_and_types(&self, other: &Self) -> Result<()>",
+          "summary": "Returns Ok if the two schemas have the same qualified named fields with the compatible data types."
+        },
+        {
+          "name": "index_of_column",
+          "signature": "fn index_of_column(&self, col: &Column) -> Result<usize>",
+          "summary": "Find the index of the column with the given qualifier and name, returning `Err` if not found"
+        },
+        {
+          "name": "index_of_column_by_name",
+          "signature": "fn index_of_column_by_name(&self, qualifier: Option<&TableReference>, name: &str) -> Option<usize>"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &SchemaRef",
+          "summary": "Return a reference to the inner Arrow [`SchemaRef`]"
+        },
+        {
+          "name": "is_column_from_schema",
+          "signature": "fn is_column_from_schema(&self, col: &Column) -> bool",
+          "summary": "Check if the column is in the current schema"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (Option<&TableReference>, &FieldRef)>",
+          "summary": "Iterate over the qualifiers and fields in the DFSchema"
+        },
+        {
+          "name": "join",
+          "signature": "fn join(&self, schema: &DFSchema) -> Result<Self>",
+          "summary": "Create a new schema that contains the fields from this schema followed by the fields from the supplied schema. An error will be returned if there are duplicate field names."
+        },
+        {
+          "name": "logically_equivalent_names_and_types",
+          "signature": "fn logically_equivalent_names_and_types(&self, other: &Self) -> bool",
+          "summary": "Returns true if the two schemas have the same qualified named fields with logically equivalent data types. Returns false otherwise."
+        },
+        {
+          "name": "matches_arrow_schema",
+          "signature": "fn matches_arrow_schema(&self, arrow_schema: &Schema) -> bool",
+          "summary": "Check to see if unqualified field names matches field names in Arrow schema"
+        },
+        {
+          "name": "maybe_index_of_column",
+          "signature": "fn maybe_index_of_column(&self, col: &Column) -> Option<usize>",
+          "summary": "Find the index of the column with the given qualifier and name, returning `None` if not found"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(&mut self, other_schema: &DFSchema)",
+          "summary": "Modify this schema by appending the fields from the supplied schema, ignoring any duplicate fields."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &HashMap<String, String>",
+          "summary": "Get metadata of this schema"
+        },
+        {
+          "name": "new_with_metadata",
+          "signature": "fn new_with_metadata(qualified_fields: Vec<(Option<TableReference>, Arc<Field>)>, metadata: HashMap<String, String>) -> Result<Self>",
+          "summary": "Create a `DFSchema` from an Arrow schema where all the fields have a given qualifier"
+        },
+        {
+          "name": "qualified_field",
+          "signature": "fn qualified_field(&self, i: usize) -> (Option<&TableReference>, &FieldRef)",
+          "summary": "Returns the qualifier (if any) and [`FieldRef`] for a column at specific index within the schema."
+        },
+        {
+          "name": "qualified_field_from_column",
+          "signature": "fn qualified_field_from_column(&self, column: &Column) -> Result<(Option<&TableReference>, &FieldRef)>",
+          "summary": "Find the field with the given qualified column"
+        },
+        {
+          "name": "qualified_field_with_name",
+          "signature": "fn qualified_field_with_name(&self, qualifier: Option<&TableReference>, name: &str) -> Result<(Option<&TableReference>, &FieldRef)>",
+          "summary": "Find the qualified field with the given name"
+        },
+        {
+          "name": "qualified_field_with_unqualified_name",
+          "signature": "fn qualified_field_with_unqualified_name(&self, name: &str) -> Result<(Option<&TableReference>, &FieldRef)>",
+          "summary": "Find the qualified field with the given unqualified name"
+        },
+        {
+          "name": "qualified_fields_with_unqualified_name",
+          "signature": "fn qualified_fields_with_unqualified_name(&self, name: &str) -> Vec<(Option<&TableReference>, &FieldRef)>",
+          "summary": "Find all fields that match the given name and return them with their qualifier"
+        },
+        {
+          "name": "replace_qualifier",
+          "signature": "fn replace_qualifier(self, qualifier: impl Into<TableReference>) -> Self",
+          "summary": "Replace all field qualifier with new value in schema"
+        },
+        {
+          "name": "strip_qualifiers",
+          "signature": "fn strip_qualifiers(self) -> Self",
+          "summary": "Strip all field qualifier in schema"
+        },
+        {
+          "name": "tree_string",
+          "signature": "fn tree_string(&self) -> impl Display + '_",
+          "summary": "Returns a tree-like string representation of the schema."
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(schema: Schema) -> Result<Self, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "try_from_qualified_schema",
+          "signature": "fn try_from_qualified_schema(qualifier: impl Into<TableReference>, schema: &Schema) -> Result<Self>",
+          "summary": "Create a `DFSchema` from an Arrow schema and a given qualifier"
+        },
+        {
+          "name": "with_field_specific_qualified_schema",
+          "signature": "fn with_field_specific_qualified_schema(&self, qualifiers: Vec<Option<TableReference>>) -> Result<Self>",
+          "summary": "Return the same schema, where all fields have a given qualifier."
+        },
+        {
+          "name": "with_functional_dependencies",
+          "signature": "fn with_functional_dependencies(self, functional_dependencies: FunctionalDependencies) -> Result<Self>",
+          "summary": "Assigns functional dependencies."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::dfschema::ExprSchema",
+      "name": "ExprSchema",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait ExprSchema: std::fmt::Debug",
+      "summary": "Provides schema information needed by certain methods of `Expr` (defined in the datafusion-common crate).",
+      "doc": "api/datafusion_common.dfschema.md#exprschema",
+      "aliases": [
+        "datafusion::common::ExprSchema",
+        "datafusion_common::ExprSchema"
+      ],
+      "implementors": [
+        "datafusion_common::dfschema::DFSchema"
+      ],
+      "required_methods": [
+        "field_from_column"
+      ],
+      "provided_methods": [
+        "data_type",
+        "data_type_and_nullable",
+        "metadata",
+        "nullable"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self, col: &Column) -> Result<&DataType>",
+          "summary": "What is the datatype of this column?"
+        },
+        {
+          "name": "data_type_and_nullable",
+          "signature": "fn data_type_and_nullable(&self, col: &Column) -> Result<(&DataType, bool)>",
+          "summary": "Return the column's datatype and nullability"
+        },
+        {
+          "name": "field_from_column",
+          "signature": "fn field_from_column(&self, col: &Column) -> Result<&FieldRef>"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self, col: &Column) -> Result<&HashMap<String, String>>",
+          "summary": "Returns the column's optional metadata."
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self, col: &Column) -> Result<bool>",
+          "summary": "Is this column reference nullable?"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::dfschema::SchemaExt",
+      "name": "SchemaExt",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait SchemaExt",
+      "summary": "DataFusion-specific extensions to [`Schema`].",
+      "doc": "api/datafusion_common.dfschema.md#schemaext",
+      "aliases": [
+        "datafusion::common::SchemaExt",
+        "datafusion_common::SchemaExt"
+      ],
+      "implementors": [
+        "arrow_schema::schema::Schema"
+      ],
+      "required_methods": [
+        "equivalent_names_and_types",
+        "logically_equivalent_names_and_types"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "equivalent_names_and_types",
+          "signature": "fn equivalent_names_and_types(&self, other: &Self) -> bool",
+          "summary": "This is a specialized version of Eq that ignores differences in nullability and metadata."
+        },
+        {
+          "name": "logically_equivalent_names_and_types",
+          "signature": "fn logically_equivalent_names_and_types(&self, other: &Self) -> Result<()>",
+          "summary": "Returns nothing if the two schemas have the same qualified named fields with logically equivalent data types. Returns internal error otherwise."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::dfschema::ToDFSchema",
+      "name": "ToDFSchema",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait ToDFSchema where Self: Sized",
+      "summary": "Convenience trait to convert Schema like things to DFSchema and DFSchemaRef with fewer keystrokes",
+      "doc": "api/datafusion_common.dfschema.md#todfschema",
+      "aliases": [
+        "datafusion::common::ToDFSchema",
+        "datafusion_common::ToDFSchema"
+      ],
+      "implementors": [
+        "alloc::vec::Vec",
+        "arrow_schema::schema::Schema",
+        "arrow_schema::schema::SchemaRef"
+      ],
+      "required_methods": [
+        "to_dfschema"
+      ],
+      "provided_methods": [
+        "to_dfschema_ref"
+      ],
+      "methods": [
+        {
+          "name": "to_dfschema",
+          "signature": "fn to_dfschema(self) -> Result<DFSchema>",
+          "summary": "Attempt to create a DSSchema"
+        },
+        {
+          "name": "to_dfschema_ref",
+          "signature": "fn to_dfschema_ref(self) -> Result<DFSchemaRef>",
+          "summary": "Attempt to create a DSSchemaRef"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::dfschema::DFSchemaRef",
+      "name": "DFSchemaRef",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type DFSchemaRef = std::sync::Arc<DFSchema>",
+      "summary": "A reference-counted reference to a [DFSchema].",
+      "doc": "api/datafusion_common.dfschema.md#dfschemaref",
+      "aliases": [
+        "datafusion::common::DFSchemaRef",
+        "datafusion_common::DFSchemaRef"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ]
+    }
+  ]
+}

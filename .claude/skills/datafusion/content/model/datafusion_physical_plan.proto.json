@@ -1,0 +1,145 @@
+{
+  "module": "datafusion_physical_plan::proto",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.proto.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx",
+      "name": "ExecutionPlanDecodeCtx",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ExecutionPlanDecodeCtx<'a>",
+      "summary": "Context handed to a plan's `try_from_proto` associated function.",
+      "doc": "api/datafusion_physical_plan.proto.md#executionplandecodectx",
+      "implements": [
+        "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecode"
+      ],
+      "methods": [
+        {
+          "name": "decode",
+          "signature": "fn decode(&self, node: &PhysicalExprNode, schema: &Schema) -> Result<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecode"
+        },
+        {
+          "name": "decode_child",
+          "signature": "fn decode_child(&self, node: &PhysicalPlanNode) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Deserialize a single child plan."
+        },
+        {
+          "name": "decode_child_with_scalar_subquery_results",
+          "signature": "fn decode_child_with_scalar_subquery_results(&self, node: &PhysicalPlanNode, results: ScalarSubqueryResults) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Deserialize a child plan with `results` active for scalar subquery expressions in that plan's subtree."
+        },
+        {
+          "name": "decode_expr",
+          "signature": "fn decode_expr(&self, node: &PhysicalExprNode, input_schema: &Schema) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Deserialize a physical expression against `input_schema`."
+        },
+        {
+          "name": "decode_required_child",
+          "signature": "fn decode_required_child(&self, node: Option<&PhysicalPlanNode>, plan_name: &str, field: &str) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Deserialize a required child plan, producing a uniform \"missing required field\" error when the optional wire field is absent."
+        },
+        {
+          "name": "decode_required_expr",
+          "signature": "fn decode_required_expr(&self, node: Option<&PhysicalExprNode>, input_schema: &Schema, plan_name: &str, field: &str) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Deserialize a required physical expression against `input_schema`."
+        },
+        {
+          "name": "decode_udaf",
+          "signature": "fn decode_udaf(&self, name: &str, payload: Option<&[u8]>) -> Result<Arc<AggregateUDF>>",
+          "summary": "Reconstruct an aggregate UDF from its name and optional payload."
+        },
+        {
+          "name": "decode_udf",
+          "signature": "fn decode_udf(&self, name: &str, payload: Option<&[u8]>) -> Result<Arc<ScalarUDF>>",
+          "summary": "Reconstruct a scalar UDF from its name and optional payload. The lookup-order policy is owned by `datafusion-proto`; no proto types cross this boundary."
+        },
+        {
+          "name": "decode_udwf",
+          "signature": "fn decode_udwf(&self, name: &str, payload: Option<&[u8]>) -> Result<Arc<WindowUDF>>",
+          "summary": "Reconstruct a window UDF from its name and optional payload."
+        },
+        {
+          "name": "expr_ctx",
+          "signature": "fn expr_ctx<'s>(&'s self, input_schema: &'s Schema) -> PhysicalExprDecodeCtx<'s>",
+          "summary": "An expression-level decode context backed by this plan context, bound to `input_schema`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(decoder: &'a dyn ExecutionPlanDecode) -> Self",
+          "summary": "Create a new decode context wrapping an [`ExecutionPlanDecode`] implementation (supplied by `datafusion-proto`)."
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> &TaskContext",
+          "summary": "The session task context (function registry + session config). Never exposes the proto extension codec."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx",
+      "name": "ExecutionPlanEncodeCtx",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ExecutionPlanEncodeCtx<'a>",
+      "summary": "Context handed to [`ExecutionPlan::try_to_proto`].",
+      "doc": "api/datafusion_physical_plan.proto.md#executionplanencodectx",
+      "implements": [
+        "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncode"
+      ],
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncode"
+        },
+        {
+          "name": "encode_child",
+          "signature": "fn encode_child(&self, plan: &Arc<dyn ExecutionPlan>) -> Result<PhysicalPlanNode>",
+          "summary": "Serialize a single child plan."
+        },
+        {
+          "name": "encode_children",
+          "signature": "fn encode_children<'b, I>(&self, plans: I) -> Result<Vec<PhysicalPlanNode>> where I: IntoIterator<Item = &'b Arc<dyn ExecutionPlan>>",
+          "summary": "Serialize an iterator of child plans."
+        },
+        {
+          "name": "encode_expr",
+          "signature": "fn encode_expr(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>",
+          "summary": "Serialize a single physical expression."
+        },
+        {
+          "name": "encode_expressions",
+          "signature": "fn encode_expressions<'b, I>(&self, exprs: I) -> Result<Vec<PhysicalExprNode>> where I: IntoIterator<Item = &'b Arc<dyn PhysicalExpr>>",
+          "summary": "Serialize an iterator of physical expressions."
+        },
+        {
+          "name": "encode_udaf",
+          "signature": "fn encode_udaf(&self, udaf: &AggregateUDF) -> Result<Option<Vec<u8>>>",
+          "summary": "Serialize an aggregate UDF to an opaque payload (`None` = decodable by name)."
+        },
+        {
+          "name": "encode_udf",
+          "signature": "fn encode_udf(&self, udf: &ScalarUDF) -> Result<Option<Vec<u8>>>",
+          "summary": "Serialize a scalar UDF to an opaque payload (`None` = built-in, decodable by name). No proto types cross this boundary."
+        },
+        {
+          "name": "encode_udwf",
+          "signature": "fn encode_udwf(&self, udwf: &WindowUDF) -> Result<Option<Vec<u8>>>",
+          "summary": "Serialize a window UDF to an opaque payload (`None` = decodable by name)."
+        },
+        {
+          "name": "expr_ctx",
+          "signature": "fn expr_ctx(&self) -> PhysicalExprEncodeCtx<'_>",
+          "summary": "An expression-level encode context backed by this plan context."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(encoder: &'a dyn ExecutionPlanEncode) -> Self",
+          "summary": "Create a new encode context wrapping an [`ExecutionPlanEncode`] implementation (supplied by `datafusion-proto`)."
+        }
+      ]
+    }
+  ]
+}

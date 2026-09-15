@@ -30,7 +30,7 @@ fn candidate(name: &str, revision: &str) -> (CatalogDelta, Context, SnapshotId) 
         ResearchMode::Upstream,
     );
     let snapshot_id = SnapshotId::derive(&SnapshotInputs {
-        schema_version: "5.0".into(),
+        schema_version: "6.0".into(),
         normalizer_version: "target/1".into(),
         context_id: context.context_id.clone(),
         input_digests: [("fixture".into(), revision.into())].into_iter().collect(),
@@ -38,6 +38,7 @@ fn candidate(name: &str, revision: &str) -> (CatalogDelta, Context, SnapshotId) 
     });
     let delta = CatalogDelta {
         publication: None,
+        comparison: None,
         releases: vec![release],
         environments: vec![environment],
         contexts: vec![context.clone()],

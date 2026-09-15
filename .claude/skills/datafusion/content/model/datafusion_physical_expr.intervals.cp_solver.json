@@ -1,0 +1,133 @@
+{
+  "module": "datafusion_physical_expr::intervals::cp_solver",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.intervals.cp_solver.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::intervals::cp_solver::PropagationResult",
+      "name": "PropagationResult",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr",
+      "signature": "enum PropagationResult",
+      "summary": "This object encapsulates all possible constraint propagation results.",
+      "doc": "api/datafusion_physical_expr.intervals.cp_solver.md#propagationresult",
+      "variants": [
+        "CannotPropagate",
+        "Infeasible",
+        "Success"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_expr::intervals::cp_solver::propagate_arithmetic",
+      "name": "propagate_arithmetic",
+      "kind": "function",
+      "crate": "datafusion-physical-expr",
+      "signature": "fn propagate_arithmetic(op: &datafusion_expr::Operator, parent: &datafusion_expr::interval_arithmetic::Interval, left_child: &datafusion_expr::interval_arithmetic::Interval, right_child: &datafusion_expr::interval_arithmetic::Interval) -> datafusion_common::Result<Option<(datafusion_expr::interval_arithmetic::Interval, datafusion_expr::interval_arithmetic::Interval)>>",
+      "summary": "This function refines intervals `left_child` and `right_child` by applying constraint propagation through `parent` via operation. The main idea is that we can shrink ranges of variables x and y using parent interval p.",
+      "doc": "api/datafusion_physical_expr.intervals.cp_solver.md#propagate_arithmetic"
+    },
+    {
+      "path": "datafusion_physical_expr::intervals::cp_solver::propagate_comparison",
+      "name": "propagate_comparison",
+      "kind": "function",
+      "crate": "datafusion-physical-expr",
+      "signature": "fn propagate_comparison(op: &datafusion_expr::Operator, parent: &datafusion_expr::interval_arithmetic::Interval, left_child: &datafusion_expr::interval_arithmetic::Interval, right_child: &datafusion_expr::interval_arithmetic::Interval) -> datafusion_common::Result<Option<(datafusion_expr::interval_arithmetic::Interval, datafusion_expr::interval_arithmetic::Interval)>>",
+      "summary": "This function refines intervals `left_child` and `right_child` by applying comparison propagation through `parent` via operation. The main idea is that we can shrink ranges of variables x and y using parent interval p. Two intervals can be…",
+      "doc": "api/datafusion_physical_expr.intervals.cp_solver.md#propagate_comparison"
+    },
+    {
+      "path": "datafusion_physical_expr::intervals::cp_solver::ExprIntervalGraph",
+      "name": "ExprIntervalGraph",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct ExprIntervalGraph",
+      "summary": "This object implements a directed acyclic expression graph (DAEG) that is used to compute ranges for expressions through interval arithmetic.",
+      "doc": "api/datafusion_physical_expr.intervals.cp_solver.md#exprintervalgraph",
+      "methods": [
+        {
+          "name": "assign_intervals",
+          "signature": "fn assign_intervals(&mut self, assignments: &[(usize, Interval)])",
+          "summary": "This function assigns given ranges to expressions in the DAEG. The argument `assignments` associates indices of sought expressions with their corresponding new ranges."
+        },
+        {
+          "name": "evaluate_bounds",
+          "signature": "fn evaluate_bounds(&mut self) -> Result<&Interval>",
+          "summary": "Computes bounds for an expression using interval arithmetic via a bottom-up traversal."
+        },
+        {
+          "name": "gather_node_indices",
+          "signature": "fn gather_node_indices(&mut self, exprs: &[Arc<dyn PhysicalExpr>]) -> Vec<(Arc<dyn PhysicalExpr>, usize)>",
+          "summary": "This function associates stable node indices with [`PhysicalExpr`]s so that we can match `Arc<dyn PhysicalExpr>` and NodeIndex objects during membership tests."
+        },
+        {
+          "name": "get_interval",
+          "signature": "fn get_interval(&self, index: usize) -> Interval",
+          "summary": "Returns the interval associated with the node at the given `index`."
+        },
+        {
+          "name": "node_count",
+          "signature": "fn node_count(&self) -> usize"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Estimate size of bytes including `Self`."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(expr: Arc<dyn PhysicalExpr>, schema: &Schema) -> Result<Self>"
+        },
+        {
+          "name": "update_intervals",
+          "signature": "fn update_intervals(&self, assignments: &mut [(usize, Interval)])",
+          "summary": "This function fetches ranges of expressions from the DAEG. The argument `assignments` associates indices of sought expressions with their ranges, which this function modifies to reflect the intervals in the DAEG."
+        },
+        {
+          "name": "update_ranges",
+          "signature": "fn update_ranges(&mut self, leaf_bounds: &mut [(usize, Interval)], given_range: Interval) -> Result<PropagationResult>",
+          "summary": "Updates intervals for all expressions in the DAEG by successive bottom-up and top-down traversals."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::intervals::cp_solver::ExprIntervalGraphNode",
+      "name": "ExprIntervalGraphNode",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct ExprIntervalGraphNode",
+      "summary": "This is a node in the DAEG; it encapsulates a reference to the actual [`PhysicalExpr`] as well as an interval containing expression bounds.",
+      "doc": "api/datafusion_physical_expr.intervals.cp_solver.md#exprintervalgraphnode",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "interval",
+          "signature": "fn interval(&self) -> &Interval",
+          "summary": "Get the interval object representing the range of the expression."
+        },
+        {
+          "name": "make_node",
+          "signature": "fn make_node(node: &ExprTreeNode<NodeIndex>, schema: &Schema) -> Result<Self>",
+          "summary": "This function creates a DAEG node from DataFusion's [`ExprTreeNode`] object. Literals are created with definite, singleton intervals while any other expression starts with an indefinite interval (`[-∞, ∞]`)."
+        },
+        {
+          "name": "new_unbounded",
+          "signature": "fn new_unbounded(expr: Arc<dyn PhysicalExpr>, dt: &DataType) -> Result<Self>",
+          "summary": "Constructs a new DAEG node with an `[-∞, ∞]` range."
+        },
+        {
+          "name": "new_with_interval",
+          "signature": "fn new_with_interval(expr: Arc<dyn PhysicalExpr>, interval: Interval) -> Self",
+          "summary": "Constructs a new DAEG node with the given range."
+        }
+      ]
+    }
+  ]
+}

@@ -11,6 +11,14 @@ after a registry-only recording correction; current-registry gate certification 
 Performance tuning is deferred. Earlier plan labels are historical; Plan 12 records final scope,
 validation and deliberate deviations.
 
+**Completed and deployed, 2026-09-15:** [Plan 13](13-datafusion-research-operations-hard-pivot.md)
+replaces research-operation and FastMCP delivery contracts in a hard pivot, with shared native
+coverage/selection, structured diagnostics, explicit deletion and functional acceptance.
+Native replacement, installed 55.1.0 family outcomes, measured operation-local reuse, actual
+Codex/Claude tasks and the fresh-generation production activation passed. All 47 active acceptance
+gates passed; retired P08 remains not_run. See the [execution ledger](13-research-operations-execution-ledger.md)
+and [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
+
 | Plan | Covers | ADRs | Status |
 |---|---|---|---|
 | [01 — Port the design process](01-port-the-design-process.md) | The charter, the living design document, decision-record front matter and lint, the deferred-decision register, the review skill, and the `just` surface for all of it | ADR-0009 | done |
@@ -25,6 +33,7 @@ validation and deliberate deviations.
 | [10 — Arrow/DataFusion target architecture](10-arrow-datafusion-architecture.md) | Hard pivot: typed evidence/catalog, batch execution, publication, clean development reset and full completion | ADR-0022–ADR-0027 | target implementation completed through Plan 12 |
 | [11 — Complete architecture and remove legacy paths](11-arrow-datafusion-completion-and-legacy-removal.md) | Architecture work, explicit deletion ledger and independent completion exits; progress in the [execution ledger](11-arrow-datafusion-execution-ledger.md) | ADR-0022–ADR-0032 | remaining functional/deletion scope completed through Plan 12 |
 | [12 — Architecture-first completion](12-architecture-first-completion.md) | Remaining architecture gaps and legacy removal first, then Phase 4–6 functionality and integrated acceptance | ADR-0022–ADR-0035 | done; user stopped redundant registry-only replay; [execution ledger](12-architecture-first-execution-ledger.md) |
+| [13 — DataFusion research operations hard pivot](13-datafusion-research-operations-hard-pivot.md) | Shared scope/selection, native query integration, safe revision reachability, structured errors, durable delivery and faithful FastMCP; no compatibility paths | ADR-0036–ADR-0039 accepted | done and deployed; all required journeys and active gates passed |
 
 ## Norms
 

@@ -1,0 +1,433 @@
+{
+  "module": "datafusion_common::tree_node",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.tree_node.md",
+  "items": [
+    {
+      "path": "datafusion_common::tree_node::TreeNodeRecursion",
+      "name": "TreeNodeRecursion",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum TreeNodeRecursion",
+      "summary": "Controls how [`TreeNode`] recursions should proceed.",
+      "doc": "api/datafusion_common.tree_node.md#treenoderecursion",
+      "variants": [
+        "Continue",
+        "Jump",
+        "Stop"
+      ],
+      "methods": [
+        {
+          "name": "visit_children",
+          "signature": "fn visit_children<F: FnOnce() -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Continues visiting nodes with `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is visiting the current node's children."
+        },
+        {
+          "name": "visit_parent",
+          "signature": "fn visit_parent<F: FnOnce() -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Continues visiting nodes with `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is visiting the current node's parent."
+        },
+        {
+          "name": "visit_sibling",
+          "signature": "fn visit_sibling<F: FnOnce() -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Continues visiting nodes with `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is visiting the current node's sibling."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::Transformed",
+      "name": "Transformed",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Transformed<T>",
+      "summary": "Result of tree walk / transformation APIs",
+      "doc": "api/datafusion_common.tree_node.md#transformed",
+      "fields": [
+        "data",
+        "transformed",
+        "tnr"
+      ],
+      "methods": [
+        {
+          "name": "complete",
+          "signature": "fn complete(data: T) -> Self",
+          "summary": "Wrapper for transformed data with [`TreeNodeRecursion::Stop`] statement."
+        },
+        {
+          "name": "map_data",
+          "signature": "fn map_data<U, F: FnOnce(T) -> Result<U>>(self, f: F) -> Result<Transformed<U>>",
+          "summary": "Applies a fallible `f` (returns `Result`) to the data of this [`Transformed`] object, without modifying the `transformed` flag."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: T, transformed: bool, tnr: TreeNodeRecursion) -> Self",
+          "summary": "Create a new `Transformed` object with the given information."
+        },
+        {
+          "name": "new_transformed",
+          "signature": "fn new_transformed(data: T, transformed: bool) -> Self",
+          "summary": "Create a `Transformed` with `transformed` and [`TreeNodeRecursion::Continue`]."
+        },
+        {
+          "name": "no",
+          "signature": "fn no(data: T) -> Self",
+          "summary": "Wrapper for unchanged data with [`TreeNodeRecursion::Continue`] statement."
+        },
+        {
+          "name": "transform_children",
+          "signature": "fn transform_children<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+          "summary": "Maps the [`Transformed`] object to the result of the given `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is changing the current node's children."
+        },
+        {
+          "name": "transform_data",
+          "signature": "fn transform_data<U, F: FnOnce(T) -> Result<Transformed<U>>>(self, f: F) -> Result<Transformed<U>>",
+          "summary": "Applies a fallible transforming `f` to the data of this [`Transformed`] object."
+        },
+        {
+          "name": "transform_parent",
+          "signature": "fn transform_parent<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+          "summary": "Maps the [`Transformed`] object to the result of the given `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is changing the current node's parent."
+        },
+        {
+          "name": "transform_sibling",
+          "signature": "fn transform_sibling<F: FnOnce(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<T>>",
+          "summary": "Maps the [`Transformed`] object to the result of the given `f` depending on the current [`TreeNodeRecursion`] value and the fact that `f` is changing the current node's sibling."
+        },
+        {
+          "name": "update_data",
+          "signature": "fn update_data<U, F: FnOnce(T) -> U>(self, f: F) -> Transformed<U>",
+          "summary": "Applies an infallible `f` to the data of this [`Transformed`] object, without modifying the `transformed` flag."
+        },
+        {
+          "name": "yes",
+          "signature": "fn yes(data: T) -> Self",
+          "summary": "Wrapper for transformed data with [`TreeNodeRecursion::Continue`] statement."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::ConcreteTreeNode",
+      "name": "ConcreteTreeNode",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait ConcreteTreeNode: Sized",
+      "summary": "Instead of implementing [`TreeNode`], it's recommended to implement a [`ConcreteTreeNode`] for trees that contain nodes with payloads. This approach ensures safe execution of algorithms involving payloads, by enforcing rules for detaching…",
+      "doc": "api/datafusion_common.tree_node.md#concretetreenode",
+      "implementors": [
+        "datafusion_physical_expr_common::tree_node::ExprContext",
+        "datafusion_physical_plan::tree_node::PlanContext"
+      ],
+      "required_methods": [
+        "children",
+        "take_children",
+        "with_new_children"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> &[Self]",
+          "summary": "Provides read-only access to child nodes."
+        },
+        {
+          "name": "take_children",
+          "signature": "fn take_children(self) -> (Self, Vec<Self>)",
+          "summary": "Detaches the node from its children, returning the node itself and its detached children."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(self, children: Vec<Self>) -> Result<Self>",
+          "summary": "Reattaches updated child nodes to the node, returning the updated node."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::DynTreeNode",
+      "name": "DynTreeNode",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait DynTreeNode",
+      "summary": "Helper trait for implementing [`TreeNode`] that have children stored as `Arc`s. If some trait object, such as `dyn T`, implements this trait, its related `Arc<dyn T>` will automatically implement [`TreeNode`].",
+      "doc": "api/datafusion_common.tree_node.md#dyntreenode",
+      "required_methods": [
+        "arc_children",
+        "with_new_arc_children"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "arc_children",
+          "signature": "fn arc_children(&self) -> Vec<&Arc<Self>>",
+          "summary": "Returns all children of the specified `TreeNode`."
+        },
+        {
+          "name": "with_new_arc_children",
+          "signature": "fn with_new_arc_children(&self, arc_self: Arc<Self>, new_children: Vec<Arc<Self>>) -> Result<Arc<Self>>",
+          "summary": "Constructs a new node with the specified children."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TransformedResult",
+      "name": "TransformedResult",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TransformedResult<T>",
+      "summary": "Transformation helper to access [`Transformed`] fields in a [`Result`] easily.",
+      "doc": "api/datafusion_common.tree_node.md#transformedresult",
+      "implementors": [
+        "datafusion_common::error::Result"
+      ],
+      "required_methods": [
+        "data",
+        "tnr",
+        "transformed"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "data",
+          "signature": "fn data(self) -> Result<T>"
+        },
+        {
+          "name": "tnr",
+          "signature": "fn tnr(self) -> Result<TreeNodeRecursion>"
+        },
+        {
+          "name": "transformed",
+          "signature": "fn transformed(self) -> Result<bool>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNode",
+      "name": "TreeNode",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNode: Sized",
+      "summary": "API for inspecting and rewriting tree data structures.",
+      "doc": "api/datafusion_common.tree_node.md#treenode",
+      "implementors": [
+        "alloc::sync::Arc",
+        "datafusion_expr::expr::Expr",
+        "datafusion_expr::logical_plan::plan::LogicalPlan"
+      ],
+      "required_methods": [
+        "apply_children",
+        "map_children"
+      ],
+      "provided_methods": [
+        "apply",
+        "exists",
+        "rewrite",
+        "transform",
+        "transform_down",
+        "transform_down_up",
+        "transform_up",
+        "visit"
+      ],
+      "methods": [
+        {
+          "name": "apply",
+          "signature": "fn apply<'n, F: FnMut(&'n Self) -> Result<TreeNodeRecursion>>(&'n self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Applies `f` to the node then each of its children, recursively (a top-down, pre-order traversal)."
+        },
+        {
+          "name": "apply_children",
+          "signature": "fn apply_children<'n, F: FnMut(&'n Self) -> Result<TreeNodeRecursion>>(&'n self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Low-level API used to implement other APIs."
+        },
+        {
+          "name": "exists",
+          "signature": "fn exists<F: FnMut(&Self) -> Result<bool>>(&self, f: F) -> Result<bool>",
+          "summary": "Returns true if `f` returns true for any node in the tree."
+        },
+        {
+          "name": "map_children",
+          "signature": "fn map_children<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Low-level API used to implement other APIs."
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite<R: TreeNodeRewriter<Node = Self>>(self, rewriter: &mut R) -> Result<Transformed<Self>>",
+          "summary": "Rewrite the tree node with a [`TreeNodeRewriter`], performing a depth-first walk of the node and its children."
+        },
+        {
+          "name": "transform",
+          "signature": "fn transform<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Recursively rewrite the node's children and then the node using `f` (a bottom-up post-order traversal)."
+        },
+        {
+          "name": "transform_down",
+          "signature": "fn transform_down<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Recursively rewrite the tree using `f` in a top-down (pre-order) fashion."
+        },
+        {
+          "name": "transform_down_up",
+          "signature": "fn transform_down_up<FD: FnMut(Self) -> Result<Transformed<Self>>, FU: FnMut(Self) -> Result<Transformed<Self>>>(self, f_down: FD, f_up: FU) -> Result<Transformed<Self>>",
+          "summary": "Transforms the node using `f_down` while traversing the tree top-down (pre-order), and using `f_up` while traversing the tree bottom-up (post-order)."
+        },
+        {
+          "name": "transform_up",
+          "signature": "fn transform_up<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Recursively rewrite the node using `f` in a bottom-up (post-order) fashion."
+        },
+        {
+          "name": "visit",
+          "signature": "fn visit<'n, V: TreeNodeVisitor<'n, Node = Self>>(&'n self, visitor: &mut V) -> Result<TreeNodeRecursion>",
+          "summary": "Visit the tree node with a [`TreeNodeVisitor`], performing a depth-first walk of the node and its children."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNodeContainer",
+      "name": "TreeNodeContainer",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNodeContainer<'a, T: 'a>: Sized",
+      "summary": "[`TreeNodeContainer`] contains elements that a function can be applied on or mapped. The elements of the container are siblings so the continuation rules are similar to [`TreeNodeRecursion::visit_sibling`] / [`Transformed::transform_siblin…",
+      "doc": "api/datafusion_common.tree_node.md#treenodecontainer",
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::sync::Arc",
+        "alloc::vec::Vec",
+        "core::option::Option",
+        "datafusion_expr::expr::Expr",
+        "datafusion_expr::expr::Sort",
+        "datafusion_expr::logical_plan::ddl::CreateFunctionBody",
+        "datafusion_expr::logical_plan::ddl::OperateFunctionArg",
+        "datafusion_expr::logical_plan::plan::LogicalPlan",
+        "std::collections::hash::map::HashMap"
+      ],
+      "required_methods": [
+        "apply_elements",
+        "map_elements"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "apply_elements",
+          "signature": "fn apply_elements<F: FnMut(&'a T) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Applies `f` to all elements of the container. This method is usually called from [`TreeNode::apply_children`] implementations as a node is actually a container of the node's children."
+        },
+        {
+          "name": "map_elements",
+          "signature": "fn map_elements<F: FnMut(T) -> Result<Transformed<T>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Maps all elements of the container with `f`. This method is usually called from [`TreeNode::map_children`] implementations as a node is actually a container of the node's children."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNodeIterator",
+      "name": "TreeNodeIterator",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNodeIterator: Iterator",
+      "summary": "Transformation helper to process a sequence of iterable tree nodes that are siblings.",
+      "doc": "api/datafusion_common.tree_node.md#treenodeiterator",
+      "required_methods": [
+        "apply_until_stop",
+        "map_until_stop_and_collect"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "apply_until_stop",
+          "signature": "fn apply_until_stop<F: FnMut(Self::Item) -> Result<TreeNodeRecursion>>(self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Apples `f` to each item in this iterator"
+        },
+        {
+          "name": "map_until_stop_and_collect",
+          "signature": "fn map_until_stop_and_collect<F: FnMut(Self::Item) -> Result<Transformed<Self::Item>>>(self, f: F) -> Result<Transformed<Vec<Self::Item>>>",
+          "summary": "Apples `f` to each item in this iterator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNodeRefContainer",
+      "name": "TreeNodeRefContainer",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNodeRefContainer<'a, T: 'a>: Sized",
+      "summary": "[`TreeNodeRefContainer`] contains references to elements that a function can be applied on. The elements of the container are siblings so the continuation rules are similar to [`TreeNodeRecursion::visit_sibling`].",
+      "doc": "api/datafusion_common.tree_node.md#treenoderefcontainer",
+      "implementors": [
+        "alloc::vec::Vec"
+      ],
+      "required_methods": [
+        "apply_ref_elements"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "apply_ref_elements",
+          "signature": "fn apply_ref_elements<F: FnMut(&'a T) -> Result<TreeNodeRecursion>>(&self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Applies `f` to all elements of the container. This method is usually called from [`TreeNode::apply_children`] implementations as a node is actually a container of the node's children."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNodeRewriter",
+      "name": "TreeNodeRewriter",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNodeRewriter: Sized",
+      "summary": "A [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for recursively rewriting [`TreeNode`]s via [`TreeNode::rewrite`].",
+      "doc": "api/datafusion_common.tree_node.md#treenoderewriter",
+      "implementors": [
+        "datafusion_expr::expr_rewriter::guarantees::GuaranteeRewriter",
+        "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+        "datafusion_optimizer::decorrelate::PullUpCorrelatedExpr",
+        "datafusion_physical_plan::column_rewriter::PhysicalColumnRewriter"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "f_down",
+        "f_up"
+      ],
+      "methods": [
+        {
+          "name": "f_down",
+          "signature": "fn f_down(&mut self, node: Self::Node) -> Result<Transformed<Self::Node>>",
+          "summary": "Invoked while traversing down the tree before any children are rewritten. Default implementation returns the node as is and continues recursion."
+        },
+        {
+          "name": "f_up",
+          "signature": "fn f_up(&mut self, node: Self::Node) -> Result<Transformed<Self::Node>>",
+          "summary": "Invoked while traversing up the tree after all children have been rewritten. Default implementation returns the node as is and continues recursion."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::tree_node::TreeNodeVisitor",
+      "name": "TreeNodeVisitor",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait TreeNodeVisitor<'n>: Sized",
+      "summary": "A [Visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for recursively inspecting [`TreeNode`]s via [`TreeNode::visit`].",
+      "doc": "api/datafusion_common.tree_node.md#treenodevisitor",
+      "implementors": [
+        "datafusion_expr::logical_plan::display::GraphvizVisitor",
+        "datafusion_expr::logical_plan::display::IndentVisitor",
+        "datafusion_expr::logical_plan::display::PgJsonVisitor"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "f_down",
+        "f_up"
+      ],
+      "methods": [
+        {
+          "name": "f_down",
+          "signature": "fn f_down(&mut self, _node: &'n Self::Node) -> Result<TreeNodeRecursion>",
+          "summary": "Invoked while traversing down the tree, before any children are visited. Default implementation continues the recursion."
+        },
+        {
+          "name": "f_up",
+          "signature": "fn f_up(&mut self, _node: &'n Self::Node) -> Result<TreeNodeRecursion>",
+          "summary": "Invoked while traversing up the tree after children are visited. Default implementation continues the recursion."
+        }
+      ]
+    }
+  ]
+}

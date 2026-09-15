@@ -1,0 +1,168 @@
+{
+  "module": "arrow_buffer::util::bit_chunk_iterator",
+  "crate": "arrow-buffer",
+  "api": "api/arrow_buffer.util.bit_chunk_iterator.md",
+  "items": [
+    {
+      "path": "arrow_buffer::util::bit_chunk_iterator::BitChunkIterator",
+      "name": "BitChunkIterator",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct BitChunkIterator<'a>",
+      "summary": "Iterator over chunks of 64 bits represented as an u64",
+      "doc": "api/arrow_buffer.util.bit_chunk_iterator.md#bitchunkiterator",
+      "aliases": [
+        "arrow::util::bit_chunk_iterator::BitChunkIterator"
+      ],
+      "implements": [
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<u64>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "arrow_buffer::util::bit_chunk_iterator::BitChunks",
+      "name": "BitChunks",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct BitChunks<'a>",
+      "summary": "Iterates over an arbitrarily aligned byte buffer 64 bits at a time",
+      "doc": "api/arrow_buffer.util.bit_chunk_iterator.md#bitchunks",
+      "aliases": [
+        "arrow::util::bit_chunk_iterator::BitChunks"
+      ],
+      "implements": [
+        "core::iter::traits::collect::IntoIterator"
+      ],
+      "methods": [
+        {
+          "name": "chunk_len",
+          "signature": "const fn chunk_len(&self) -> usize",
+          "summary": "Returns the number of `u64` chunks"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "iter",
+          "signature": "const fn iter(&self) -> BitChunkIterator<'a>",
+          "summary": "Returns an iterator over chunks of 64 bits represented as an `u64`"
+        },
+        {
+          "name": "iter_padded",
+          "signature": "fn iter_padded(&self) -> impl Iterator<Item = u64> + 'a",
+          "summary": "Returns an iterator over chunks of 64 bits, with the remaining bits zero padded to 64-bits"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(buffer: &'a [u8], offset: usize, len: usize) -> Self",
+          "summary": "Create a new [`BitChunks`] from a byte array, and an offset and length in bits"
+        },
+        {
+          "name": "num_bytes",
+          "signature": "fn num_bytes(&self) -> usize",
+          "summary": "Return the number of *bytes* that are needed to represent all bits (including remainder)."
+        },
+        {
+          "name": "num_u64s",
+          "signature": "fn num_u64s(&self) -> usize",
+          "summary": "Return the number of `u64` that are needed to represent all bits (including remainder)."
+        },
+        {
+          "name": "remainder_bits",
+          "signature": "fn remainder_bits(&self) -> u64",
+          "summary": "Returns the bitmask of remaining bits"
+        },
+        {
+          "name": "remainder_len",
+          "signature": "const fn remainder_len(&self) -> usize",
+          "summary": "Returns the number of remaining bits, guaranteed to be between 0 and 63 (inclusive)"
+        }
+      ]
+    },
+    {
+      "path": "arrow_buffer::util::bit_chunk_iterator::UnalignedBitChunk",
+      "name": "UnalignedBitChunk",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct UnalignedBitChunk<'a>",
+      "summary": "Iterates over an arbitrarily aligned byte buffer",
+      "doc": "api/arrow_buffer.util.bit_chunk_iterator.md#unalignedbitchunk",
+      "aliases": [
+        "arrow::util::bit_chunk_iterator::UnalignedBitChunk"
+      ],
+      "methods": [
+        {
+          "name": "chunks",
+          "signature": "fn chunks(&self) -> &'a [u64]",
+          "summary": "Returns reference to the chunks"
+        },
+        {
+          "name": "count_ones",
+          "signature": "fn count_ones(&self) -> usize",
+          "summary": "Counts the number of ones"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> UnalignedBitChunkIterator<'a>",
+          "summary": "Returns an iterator over the chunks"
+        },
+        {
+          "name": "lead_padding",
+          "signature": "fn lead_padding(&self) -> usize",
+          "summary": "Returns the number of leading padding bits"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(buffer: &'a [u8], offset: usize, len: usize) -> Self",
+          "summary": "Create a from a byte array, and and an offset and length in bits"
+        },
+        {
+          "name": "prefix",
+          "signature": "fn prefix(&self) -> Option<u64>",
+          "summary": "Returns the prefix, if any"
+        },
+        {
+          "name": "suffix",
+          "signature": "fn suffix(&self) -> Option<u64>",
+          "summary": "Returns the suffix, if any"
+        },
+        {
+          "name": "trailing_padding",
+          "signature": "fn trailing_padding(&self) -> usize",
+          "summary": "Returns the number of trailing padding bits"
+        }
+      ]
+    },
+    {
+      "path": "arrow_buffer::util::bit_chunk_iterator::UnalignedBitChunkIterator",
+      "name": "UnalignedBitChunkIterator",
+      "kind": "type_alias",
+      "crate": "arrow-buffer",
+      "signature": "type UnalignedBitChunkIterator<'a> = std::iter::Chain<std::iter::Chain<std::option::IntoIter<u64>, std::iter::Cloned<std::slice::Iter<'a, u64>>>, std::option::IntoIter<u64>>",
+      "summary": "Iterator over an [`UnalignedBitChunk`]",
+      "doc": "api/arrow_buffer.util.bit_chunk_iterator.md#unalignedbitchunkiterator",
+      "aliases": [
+        "arrow::util::bit_chunk_iterator::UnalignedBitChunkIterator"
+      ]
+    }
+  ]
+}

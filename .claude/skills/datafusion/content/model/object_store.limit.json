@@ -1,0 +1,116 @@
+{
+  "module": "object_store::limit",
+  "crate": "object_store",
+  "api": "api/object_store.limit.md",
+  "items": [
+    {
+      "path": "object_store::limit::LimitStore",
+      "name": "LimitStore",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct LimitStore<T: ObjectStore>",
+      "summary": "Store wrapper that wraps an inner store and limits the maximum number of concurrent object store operations. Where each call to an [`ObjectStore`] member function is considered a single operation, even if it may result in more than one net…",
+      "doc": "api/object_store.limit.md#limitstore",
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore"
+      ],
+      "methods": [
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "get_ranges",
+          "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> Result<Vec<Bytes>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: T, max_requests: usize) -> Self",
+          "summary": "Create new limit store that will limit the maximum number of outstanding concurrent requests to `max_requests`"
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "rename_opts",
+          "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>",
+          "via_trait": "object_store::ObjectStore"
+        }
+      ]
+    },
+    {
+      "path": "object_store::limit::LimitUpload",
+      "name": "LimitUpload",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct LimitUpload",
+      "summary": "An [`MultipartUpload`] wrapper that limits the maximum number of concurrent requests",
+      "doc": "api/object_store.limit.md#limitupload",
+      "implements": [
+        "object_store::upload::MultipartUpload"
+      ],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(&mut self) -> Result<()>",
+          "via_trait": "object_store::upload::MultipartUpload"
+        },
+        {
+          "name": "complete",
+          "signature": "async fn complete(&mut self) -> Result<PutResult>",
+          "via_trait": "object_store::upload::MultipartUpload"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(upload: Box<dyn MultipartUpload>, max_concurrency: usize) -> Self",
+          "summary": "Create a new [`LimitUpload`] limiting `upload` to `max_concurrency` concurrent requests"
+        },
+        {
+          "name": "put_part",
+          "signature": "fn put_part(&mut self, data: PutPayload) -> UploadPart",
+          "via_trait": "object_store::upload::MultipartUpload"
+        }
+      ]
+    }
+  ]
+}

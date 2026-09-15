@@ -32,13 +32,13 @@ fn refused(service: &Service, envelope: Envelope) -> Envelope {
 }
 
 pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
-    if let Err(message) = request.validate(&service.config) {
+    if let Err(message) = request.validate_shape(&service.config) {
         return refused(
             service,
             envelope::error(
                 ErrorCode::PolicyDenied,
                 message,
-                "Choose a supported probe and an operator-enabled build/runtime profile.",
+                "Choose the matching compile/typecheck/runtime mode and build/runtime profile.",
                 false,
             ),
         );
@@ -50,38 +50,15 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
             Ok(v) => v,
             Err(e) => return *e,
         };
-    let image = match opened.release.key.ecosystem {
-        Ecosystem::Rust => &service.config.execution.rust_image,
-        Ecosystem::Python => &service.config.execution.python_image,
-    };
-    let Some(image) = image.as_ref().filter(|s| Runner::valid_image(s)) else {
-        return refused(
-            service,
-            envelope::error(
-                ErrorCode::PolicyDenied,
-                "An admitted immutable producer image is not configured.",
-                "Run the operator execution-image setup, qualify rootless isolation, and configure execution images.",
-                false,
-            ),
-        );
-    };
-    // Configured is not qualified. Without this, `service_status` could report execution
-    // unavailable-because-unqualified while this tool happily ran the unqualified image.
-    let qualification = crate::execution::admission::qualification(
-        &service.config.execution,
-        &service.paths.cache_root,
-    );
-    if !qualification.is_qualified() {
-        return refused(
-            service,
-            envelope::error(
-                ErrorCode::PolicyDenied,
-                "Execution is not qualified on this host.",
-                qualification.detail(),
-                false,
-            ),
-        );
+    let readiness =
+        crate::execution::readiness::assess(service, opened.release.key.ecosystem, request.profile);
+    if !readiness.available {
+        return refused(service, crate::execution::readiness::refusal(&readiness));
     }
+    let image = readiness
+        .image_id
+        .as_ref()
+        .expect("ready route has an image");
     if (opened.release.key.ecosystem == Ecosystem::Rust && request.mode == ProbeMode::Typecheck)
         || (opened.release.key.ecosystem == Ecosystem::Python && request.mode == ProbeMode::Compile)
     {
@@ -118,63 +95,85 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
     );
     let (record, token, new) = match service.jobs.submit(key, request.clone()) {
         Ok(v) => v,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "verification_job"),
     };
     if new {
         let owned = service.clone();
         let id = record.job_id.clone();
         let image = image.clone();
         tokio::spawn(async move {
-            let cancel = match owned.jobs.cancellation(&id) {
-                Ok(v) => v,
-                Err(e) => {
-                    eprintln!("job {id}: {e}");
-                    return;
-                }
-            };
-            let lease = match owned.lsp.execution_lease(&owned.execution, &cancel).await {
-                Ok(Some(lease)) => lease,
-                Ok(None) => {
-                    let result = envelope::error(
-                        ErrorCode::VerificationFailed,
-                        "Cancelled while waiting for execution capacity.",
-                        "Submit a new verification if needed.",
-                        false,
-                    );
-                    if let Err(error) = owned.jobs.finish(&id, JobState::Cancelled, result) {
-                        eprintln!("job {id}: failed to persist cancellation: {error}");
-                    }
-                    return;
-                }
-                Err(error) => {
-                    let result = envelope::error(
-                        ErrorCode::PolicyDenied,
-                        error.to_string(),
-                        "Resolve execution cleanup or restart the daemon.",
-                        false,
-                    );
-                    if let Err(error) = owned.jobs.finish(&id, JobState::Failed, result) {
-                        eprintln!("job {id}: failed to persist admission failure: {error}");
-                    }
-                    return;
-                }
-            };
-            let (state, result) = match owned.jobs.start(&id) {
-                Ok(true) => execute(&owned, &id, &image, &request, &opened, cancel, lease).await,
-                Ok(false) => (
-                    JobState::Cancelled,
-                    envelope::error(
-                        ErrorCode::VerificationFailed,
-                        "Cancelled before execution started.",
-                        "Submit a new verification if needed.",
-                        false,
-                    ),
-                ),
-                Err(e) => (JobState::Failed, common::store_error(&e)),
-            };
-            if let Err(e) = owned.jobs.finish(&id, state, result) {
-                eprintln!("job {id}: failed to persist terminal result: {e}");
-            }
+            owned
+                .repository
+                .runtime
+                .job_operation(
+                    id.clone(),
+                    owned.operation_descriptor("usage.verify", &request),
+                    Duration::from_secs(owned.config.execution.deadline_seconds),
+                    async {
+                        let cancel = match owned.jobs.cancellation(&id) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                eprintln!("job {id}: {e}");
+                                return;
+                            }
+                        };
+                        let lease = match owned.lsp.execution_lease(&owned.execution, &cancel).await
+                        {
+                            Ok(Some(lease)) => lease,
+                            Ok(None) => {
+                                let result = envelope::error(
+                                    ErrorCode::VerificationFailed,
+                                    "Cancelled while waiting for execution capacity.",
+                                    "Submit a new verification if needed.",
+                                    false,
+                                );
+                                if let Err(error) =
+                                    owned.jobs.finish(&id, JobState::Cancelled, result)
+                                {
+                                    eprintln!("job {id}: failed to persist cancellation: {error}");
+                                }
+                                return;
+                            }
+                            Err(error) => {
+                                let result = envelope::error(
+                                    ErrorCode::PolicyDenied,
+                                    error.to_string(),
+                                    "Resolve execution cleanup or restart the daemon.",
+                                    false,
+                                );
+                                if let Err(error) = owned.jobs.finish(&id, JobState::Failed, result)
+                                {
+                                    eprintln!(
+                                        "job {id}: failed to persist admission failure: {error}"
+                                    );
+                                }
+                                return;
+                            }
+                        };
+                        let (state, result) = match owned.jobs.start(&id) {
+                            Ok(true) => {
+                                execute(&owned, &id, &image, &request, &opened, cancel, lease).await
+                            }
+                            Ok(false) => (
+                                JobState::Cancelled,
+                                envelope::error(
+                                    ErrorCode::VerificationFailed,
+                                    "Cancelled before execution started.",
+                                    "Submit a new verification if needed.",
+                                    false,
+                                ),
+                            ),
+                            Err(e) => (
+                                JobState::Failed,
+                                common::operation_error(&e, "verification_job"),
+                            ),
+                        };
+                        if let Err(e) = owned.jobs.finish(&id, state, result) {
+                            eprintln!("job {id}: failed to persist terminal result: {e}");
+                        }
+                    },
+                )
+                .await;
         });
     }
     let latest = wait(
@@ -193,7 +192,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
             )
         }),
         Ok(record) => pending(record.data(Some(token))),
-        Err(e) => common::store_error(&e),
+        Err(e) => common::operation_error(&e, "verification_job"),
     }
 }
 
@@ -225,10 +224,11 @@ async fn execute(
                 failed.artifacts = evidence.artifacts;
             }
             Err(capsule::PreparationError::Process(observation, stage)) => {
-                failed.data.insert(
-                    "failed_stage".into(),
-                    serde_json::to_value(&observation).expect("process observation"),
-                );
+                failed
+                    .error_mut()
+                    .expect("typed cleanup error")
+                    .diagnostic
+                    .stage = stage.clone();
                 let raw = serde_json::to_vec(&observation).expect("process observation");
                 match store(
                     service,
@@ -237,6 +237,16 @@ async fn execute(
                     "application/json",
                 ) {
                     Ok(artifact) => {
+                        failed
+                            .error_mut()
+                            .expect("typed cleanup error")
+                            .diagnostic
+                            .actions
+                            .push(enrichment_core::wire::RecoveryAction::ReadArtifact {
+                                artifact_id: artifact.artifact_id.clone(),
+                                section: None,
+                                cursor: None,
+                            });
                         if let Some(handle) = common::handle_for(&artifact, stage) {
                             failed.artifacts.push(handle);
                         }
@@ -344,9 +354,17 @@ async fn execute(
                     "application/json",
                 ) {
                     Ok(artifact) => {
-                        result.data.insert(
-                            "failed_stage".into(),
-                            serde_json::to_value(&observation).expect("observation"),
+                        let diagnostic = &mut result
+                            .error_mut()
+                            .expect("typed preparation error")
+                            .diagnostic;
+                        diagnostic.stage = "execution_preparation".into();
+                        diagnostic.actions.push(
+                            enrichment_core::wire::RecoveryAction::ReadArtifact {
+                                artifact_id: artifact.artifact_id.clone(),
+                                section: None,
+                                cursor: None,
+                            },
                         );
                         if let Some(handle) = common::handle_for(
                             &artifact,
@@ -520,6 +538,8 @@ async fn execute_inner(
             "The requested isolated consumer probe completed successfully within its recorded scope.",
             payload,
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: format!("{:?} of one supplied consumer snippet", request.mode),
                 indexed: Default::default(),
                 missing: Default::default(),
@@ -531,6 +551,8 @@ async fn execute_inner(
             "The probe completed, but removal of its execution container was not confirmed.",
             payload,
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: format!("{:?} of one supplied consumer snippet", request.mode),
                 indexed: Default::default(),
                 missing: ["confirmed execution container removal".to_owned()]
@@ -758,7 +780,7 @@ async fn publish_completed(
     result.data.clear();
     let (prepare_delivery, delivery) = crate::delivery::prepare_job(
         service.blobs.clone(),
-        move |manifest| {
+        move |manifest, coverage| {
             let mut data = data.clone();
             data.derived_snapshot_id = Some(manifest.snapshot_id.to_string());
             let mut result = result.clone();
@@ -767,17 +789,15 @@ async fn publish_completed(
                 result = envelope::ok(
                     "The isolated consumer probe succeeded; its scoped result is retained in the published snapshot.",
                     payload,
-                    Coverage {
-                        scope: "one exact consumer snippet in the resolved environment".into(),
-                        indexed: ["usage_probes".into()].into(),
-                        missing: Default::default(),
-                        limitations: data.limitations.clone(),
-                    },
+                    coverage.clone(),
                 );
             } else {
                 result.data = payload;
-                result.coverage.indexed.insert("usage_probes".into());
-                result.coverage.limitations = data.limitations;
+                result.coverage = coverage.clone();
+            }
+            result.coverage.limitations.extend(data.limitations);
+            if !result.coverage.complete() {
+                result = result.into_partial();
             }
             result.context_id = Some(context.context_id.to_string());
             result.snapshot_id = Some(manifest.snapshot_id.to_string());
@@ -840,6 +860,9 @@ pub async fn recover(
     blobs: &enrichment_store::BlobStore,
     record: &jobs::JobRecord,
 ) -> std::io::Result<Option<(JobState, Envelope)>> {
+    if matches!(record.specification, jobs::JobSpec::Compare(_)) {
+        return super::compare_job::recover(repository, blobs, record).await;
+    }
     if matches!(record.specification, jobs::JobSpec::Resolve(_)) {
         return super::resolve_job::recover(repository, blobs, record).await;
     }
@@ -993,6 +1016,8 @@ pub async fn control(service: &Service, request: JobRequest) -> Envelope {
                 "Job state read from the durable journal; inspect result for the probe outcome.",
                 data,
                 Coverage {
+                    details: None,
+                    assessments: Vec::new(),
                     scope: "one durable job".into(),
                     indexed: Default::default(),
                     missing: Default::default(),
@@ -1000,7 +1025,7 @@ pub async fn control(service: &Service, request: JobRequest) -> Envelope {
                 },
             )
         }
-        Err(e) => common::store_error(&e),
+        Err(e) => common::job_error(e, &request.job_id),
     }
 }
 pub(super) async fn wait(
@@ -1036,6 +1061,8 @@ pub(super) fn pending(data: JobData) -> Envelope {
             .cloned()
             .expect("object"),
         coverage: Coverage {
+            details: None,
+            assessments: Vec::new(),
             scope: "queued or running execution; no completion claim".into(),
             indexed: Default::default(),
             missing: Default::default(),
@@ -1044,7 +1071,7 @@ pub(super) fn pending(data: JobData) -> Envelope {
         freshness: envelope::unverified_freshness(),
         evidence: vec![],
         artifacts: vec![],
-        pagination: envelope::single_result_pagination(),
+        delivery: enrichment_core::wire::DeliveryDescriptor::default(),
     };
     Envelope::new(body, Outcome::Pending { job })
 }

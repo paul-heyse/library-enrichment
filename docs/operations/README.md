@@ -98,6 +98,13 @@ just execution-qualify          # preview: which images, which probes, which tes
 just execution-qualify --apply  # probe, run the real containment tier, write the receipt
 ```
 
+Qualification defaults to debug binaries. For a release installation, use
+`just execution-qualify --profile release --root /absolute/execution-root --apply`.
+`CARGO_TARGET_DIR` selects the build directory for both compilation and the actual probes.
+The receipt records the build profile, native helper identity, images, root and containment
+configuration. A debug receipt does not qualify a different release helper. Run qualification
+serially with execution clients using that root; separate roots have independent receipts.
+
 `execution-images` builds from `execution-images/{python,rust}/Containerfile` with every input
 pinned by digest in `execution-images/inputs.toml` — both bases by manifest digest, both wheels
 and both rustup channel manifests by sha256, and a fixed `--timestamp`. A tag would be a mutable
@@ -487,13 +494,29 @@ most needs a usable answer, so it is reported rather than raised.
 
 ## Bounded research and revisions
 
-`max_bytes` bounds the complete service envelope (minimum1024 bytes, configured maximum by
-default). MCP transports it once as structured content with a compact text summary and a fixed
-512-byte framing allowance. An oversized answer returns `BUDGET_EXCEEDED` with
-`data.result_artifact_id`; use `read_artifact` and follow its cursor to recover the immutable
-answer. Its per-call request_id is omitted from stored content. A page budget too small for
-artifact metadata returns a typed budget error; increase it before continuing. Cursors bind
-snapshot/query/scope/budget and cannot be reused across changed requests.
+`max_bytes` bounds the complete service envelope (minimum 1024 bytes, configured maximum by
+default). MCP transports it once as structured content with a compact text projection and a
+1024-byte framing allowance. Research/2.0 separates `status` from `delivery.mode`: a successful
+or partial answer too large for inline delivery keeps its outcome and returns an immutable
+artifact descriptor with a complete `delivery.read` action. Use `read_artifact` with that action;
+select an advertised section to reach useful data directly, then follow that section's cursor.
+An actual computation or storage limit remains a typed budget failure. Delivery location alone
+does not mean the research failed. Effective limits accompany the answer.
+
+A pending answer supplies a durable job and interest token. Use `job_control` to wait or inspect
+it. A terminal job supplies `data.result.outcome`, coverage and its result descriptor, without a
+nested full envelope. Read its immutable result to obtain the original operation payload. Failed
+jobs set the MCP error flag and include a small `research-error-preview/1` text projection for
+hosts that hide structured error output. That projection preserves the native diagnostic and
+artifact-read action; it does not replace the canonical structured result. A failed artifact
+write can leave an inline failed result with no artifact to read.
+
+Inspection defaults to bounded signature/documentation evidence and reports available aspects.
+Request independent aspects through `selection`; use their individual pages and cursors for
+observations, relationships, members, children or retained execution evidence. Comparison first
+pages changed keys, then each side's alternatives. Cursors bind snapshot, query and selection;
+reusing them with a different scope fails explicitly. Old depth/aspects arguments and previous
+cursor formats have no translation path.
 
 For development revisions, pass `mode="revision"`, a canonical public GitHub repository URL,
 a full commit SHA in `revision`, and an explicit `package_subdir` for monorepos. Omit `version`.
@@ -502,6 +525,63 @@ identity remains separate from any manifest-declared published version. Static R
 provide source/configuration/docs with compiled API missing; Python revisions use the static
 worker and disclose inferred layout and unmaterialized/generated content. `freshness="offline"`
 reuses only the same source registry/repository/root, commit and declared environment.
+
+Rust revision intake can omit safe unrelated links while retaining useful source evidence.
+Declared Cargo inputs, workspace manifests and local path dependencies participate in native
+omission assessment. An omitted required input prevents a complete claim. Build-script outputs,
+generated files, submodules and LFS content are not inferred to be available; source coverage is
+reported separately from build closure and compiled API availability.
+
+### Installing and activating a research/2.0 generation
+
+Assemble an inactive installation with all three release binaries, the locked Python package,
+schemas, shipped guidance and configuration. Use a non-editable environment outside the working
+repository: `UV_PROJECT_ENVIRONMENT=/absolute/install/.venv uv sync --locked --offline
+--no-editable --no-dev --project /absolute/install`. Generate its launch description using its
+own `scripts/launch_configuration.py`, with absolute fresh state/config paths. Retain the
+source fingerprint, input hashes and binary hashes beside the candidate. Test that installation
+from an unrelated working directory before routing callers to it.
+
+The active formats are research/2.0, state/6, snapshot/projection 6.0, catalog/5, jobs/5 and
+bundle/5. Start a fresh active state root. Preserve the previous root inactive; do not copy its
+journals, cursors or results into the new generation. Previous formats fail closed.
+
+For the single cutover, stop old per-client adapters and the supervised daemon, select the
+qualified installation in the daemon unit and each client launch, then start the new daemon.
+Keep execution policy explicit; installing a release does not enable build/runtime profiles.
+Verify status, exact resolution, default high-fanout inspection, comparison, pending completion
+and direct result reading against the deployed socket. Record actual process executable hashes
+and effective limits, and check that no old-generation adapter remains active. Update the
+operator-invoked companion skill installation to the same candidate's guidance.
+
+Installed client qualification uses `just client-acceptance --installed /absolute/install
+--use-operator-credentials --apply`, or `LIBENR_CLIENT_INSTALLATION=/absolute/install
+LIBENR_CLIENT_USE_OPERATOR_CREDENTIALS=1 just test-client`. It selects the installed daemon,
+adapter and Python worker together while keeping fresh fixture state and isolated client homes.
+Each scenario retains its concrete launch description and independent snapshot/artifact witness.
+
+### Verified workstation activation — 2026-09-15
+
+Plan 13 activated `library-enrichment.service` at **13:49:55 UTC** using the installation
+`/home/paul/.local/opt/library-enrichment/plan13-3ae079f9718a`. The fresh active state is
+`/home/paul/.local/state/library-enrichment-v2`; its configuration is
+`/home/paul/.config/library-enrichment/research-v2-3ae079f9718a.toml`. The daemon, executor,
+native worker and non-editable Python adapter/worker all match the installed manifest.
+
+Both global Codex/Claude registrations select that same adapter launch, and both managed
+companion-skill copies match the shipped files. Reconnect existing interactive clients to load
+the new catalog. The previous daemon and adapters are stopped; old state and `service.toml`
+remain inactive and unchanged. They are retained evidence, not runtime fallback inputs.
+
+Production preserves its existing **static-only** policy. Its actual status reports 32 GiB
+managed Arrow memory, 64 GiB spill, 2 GiB metadata cache and 16 query admission slots. Qualified
+execution was verified separately against matching native artifacts in isolated roots; do not
+infer that an isolated receipt enables an unconfigured production execution profile.
+
+The deployed smoke passed exact DataFusion 55.1.0 resolution, useful default inspection, pending
+comparison completion, direct changes-section retrieval and Python extraction. Final checks
+confirmed old evidence/configuration preservation and no leftover owned workers. Exact hashes,
+receipts and scope limits are in [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
 
 ## Final acceptance commands
 

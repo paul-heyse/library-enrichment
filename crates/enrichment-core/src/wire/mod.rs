@@ -25,16 +25,18 @@ pub mod error;
 pub mod evidence;
 pub mod ids;
 pub mod job;
+pub mod research;
 pub mod schema;
 pub mod status;
 
 pub use envelope::{Envelope, EnvelopeBody, EnvelopeError, Outcome, SchemaVersion, Status};
 pub use error::{ErrorCode, ErrorDetail};
 pub use evidence::{
-    ArtifactHandle, Coverage, Evidence, EvidenceClass, Freshness, SourceVersionMatch,
+    ArtifactHandle, Coverage, Evidence, EvidenceClass, Freshness, ScopeAssessment, ScopeState,
+    SourceVersionMatch,
 };
 pub use ids::{ArtifactUri, ArtifactUriError, RequestId, RequestIdError};
-pub use job::{JobHandle, JobState, Pagination};
+pub use job::{JobHandle, JobState, Page};
 pub use schema::{ENVELOPE_SCHEMA_FILE, envelope_schema, envelope_schema_json};
 pub use status::{
     ComponentStatus, EvidenceCounters, FetchCounters, Health, LspMetrics, Sandbox,
@@ -45,3 +47,17 @@ pub use status::{
 ///
 /// `serde_json::Map` is backed by a `BTreeMap` here, so key order is deterministic.
 pub type JsonObject = serde_json::Map<String, serde_json::Value>;
+
+/// Nullable output fields still have to be present. Serde otherwise silently treats a
+/// missing Option field as null, unlike the emitted serialization contract.
+pub(crate) fn required_option<'de, T: serde::Deserialize<'de>, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<T>, D::Error> {
+    serde::Deserialize::deserialize(deserializer)
+}
+
+pub use research::{
+    AspectOutcome, AspectSelection, AspectState, DeliveryDescriptor, DeliveryLimits, Diagnostic,
+    DiagnosticCause, InspectionAspect, MatchCount, RecoveryAction, ResearchSelection,
+    ResultSection,
+};

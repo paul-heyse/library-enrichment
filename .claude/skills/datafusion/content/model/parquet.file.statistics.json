@@ -1,0 +1,225 @@
+{
+  "module": "parquet::file::statistics",
+  "crate": "parquet",
+  "api": "api/parquet.file.statistics.md",
+  "items": [
+    {
+      "path": "parquet::file::statistics::Statistics",
+      "name": "Statistics",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Statistics",
+      "summary": "Strongly typed statistics for a column chunk within a row group.",
+      "doc": "api/parquet.file.statistics.md#statistics",
+      "variants": [
+        "Boolean",
+        "Int32",
+        "Int64",
+        "Int96",
+        "Float",
+        "Double",
+        "ByteArray",
+        "FixedLenByteArray"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "boolean",
+          "signature": "fn boolean(min: Option<bool>, max: Option<bool>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Boolean` column type."
+        },
+        {
+          "name": "byte_array",
+          "signature": "fn byte_array(min: Option<ByteArray>, max: Option<ByteArray>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `ByteArray` column type."
+        },
+        {
+          "name": "distinct_count_opt",
+          "signature": "fn distinct_count_opt(&self) -> Option<u64>",
+          "summary": "Returns optional value of number of distinct values occurring. When it is `None`, the value should be ignored."
+        },
+        {
+          "name": "double",
+          "signature": "fn double(min: Option<f64>, max: Option<f64>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Double` column type."
+        },
+        {
+          "name": "fixed_len_byte_array",
+          "signature": "fn fixed_len_byte_array(min: Option<FixedLenByteArray>, max: Option<FixedLenByteArray>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `FixedLenByteArray` column type."
+        },
+        {
+          "name": "float",
+          "signature": "fn float(min: Option<f32>, max: Option<f32>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Float` column type."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(t: ValueStatistics<T>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "int32",
+          "signature": "fn int32(min: Option<i32>, max: Option<i32>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Int32` column type."
+        },
+        {
+          "name": "int64",
+          "signature": "fn int64(min: Option<i64>, max: Option<i64>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Int64` column type."
+        },
+        {
+          "name": "int96",
+          "signature": "fn int96(min: Option<Int96>, max: Option<Int96>, distinct: Option<u64>, nulls: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for `Int96` column type."
+        },
+        {
+          "name": "is_min_max_backwards_compatible",
+          "signature": "fn is_min_max_backwards_compatible(&self) -> bool",
+          "summary": "Old versions of parquet stored statistics in `min` and `max` fields, ordered using signed comparison. This resulted in an undefined ordering for unsigned quantities, such as booleans and unsigned integers."
+        },
+        {
+          "name": "is_min_max_deprecated",
+          "signature": "fn is_min_max_deprecated(&self) -> bool",
+          "summary": "Returns `true` if statistics have old `min` and `max` fields set. This means that the column order is likely to be undefined, which, for old files could mean a signed sort order of values."
+        },
+        {
+          "name": "max_bytes_opt",
+          "signature": "fn max_bytes_opt(&self) -> Option<&[u8]>",
+          "summary": "Returns slice of bytes that represent max value, if max value is known."
+        },
+        {
+          "name": "max_is_exact",
+          "signature": "fn max_is_exact(&self) -> bool",
+          "summary": "Returns `true` if the max value is set, and is an exact max value."
+        },
+        {
+          "name": "min_bytes_opt",
+          "signature": "fn min_bytes_opt(&self) -> Option<&[u8]>",
+          "summary": "Returns slice of bytes that represent min value, if min value is known."
+        },
+        {
+          "name": "min_is_exact",
+          "signature": "fn min_is_exact(&self) -> bool",
+          "summary": "Returns `true` if the min value is set, and is an exact min value."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<T: ParquetValueType>(min: Option<T>, max: Option<T>, distinct_count: Option<u64>, null_count: Option<u64>, is_deprecated: bool) -> Self",
+          "summary": "Creates new statistics for a column type"
+        },
+        {
+          "name": "null_count_opt",
+          "signature": "fn null_count_opt(&self) -> Option<u64>",
+          "summary": "Returns number of null values for the column, if known. Note that this includes all nulls when column is part of the complex type."
+        },
+        {
+          "name": "physical_type",
+          "signature": "fn physical_type(&self) -> Type",
+          "summary": "Returns physical type associated with statistics."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::statistics::ValueStatistics",
+      "name": "ValueStatistics",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ValueStatistics<T>",
+      "summary": "Typed statistics for one column chunk",
+      "doc": "api/parquet.file.statistics.md#valuestatistics",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "distinct_count",
+          "signature": "fn distinct_count(&self) -> Option<u64>",
+          "summary": "Returns optional value of number of distinct values occurring."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_min_max_backwards_compatible",
+          "signature": "fn is_min_max_backwards_compatible(&self) -> bool",
+          "summary": "Old versions of parquet stored statistics in `min` and `max` fields, ordered using signed comparison. This resulted in an undefined ordering for unsigned quantities, such as booleans and unsigned integers."
+        },
+        {
+          "name": "max_bytes_opt",
+          "signature": "fn max_bytes_opt(&self) -> Option<&[u8]>",
+          "summary": "Returns max value as bytes of the statistics, if max value is known."
+        },
+        {
+          "name": "max_is_exact",
+          "signature": "fn max_is_exact(&self) -> bool",
+          "summary": "Whether or not max value is set, and is an exact value."
+        },
+        {
+          "name": "max_opt",
+          "signature": "fn max_opt(&self) -> Option<&T>",
+          "summary": "Returns max value of the statistics, if known."
+        },
+        {
+          "name": "min_bytes_opt",
+          "signature": "fn min_bytes_opt(&self) -> Option<&[u8]>",
+          "summary": "Returns min value as bytes of the statistics, if min value is known."
+        },
+        {
+          "name": "min_is_exact",
+          "signature": "fn min_is_exact(&self) -> bool",
+          "summary": "Whether or not min value is set, and is an exact value."
+        },
+        {
+          "name": "min_opt",
+          "signature": "fn min_opt(&self) -> Option<&T>",
+          "summary": "Returns min value of the statistics, if known."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(min: Option<T>, max: Option<T>, distinct_count: Option<u64>, null_count: Option<u64>, is_min_max_deprecated: bool) -> Self",
+          "summary": "Creates new typed statistics."
+        },
+        {
+          "name": "null_count_opt",
+          "signature": "fn null_count_opt(&self) -> Option<u64>",
+          "summary": "Returns null count."
+        },
+        {
+          "name": "with_backwards_compatible_min_max",
+          "signature": "fn with_backwards_compatible_min_max(self, backwards_compatible: bool) -> Self",
+          "summary": "Set whether to write the deprecated `min` and `max` fields for compatibility with older parquet writers"
+        },
+        {
+          "name": "with_max_is_exact",
+          "signature": "fn with_max_is_exact(self, is_max_value_exact: bool) -> Self",
+          "summary": "Set whether the stored `max` field represents the exact maximum, or just a bound on the maximum value."
+        },
+        {
+          "name": "with_min_is_exact",
+          "signature": "fn with_min_is_exact(self, is_min_value_exact: bool) -> Self",
+          "summary": "Set whether the stored `min` field represents the exact minimum, or just a bound on the minimum value."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::statistics::TypedStatistics",
+      "name": "TypedStatistics",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type TypedStatistics<T> = ValueStatistics<<T as DataType>::T>",
+      "summary": "Typed implementation for [`Statistics`].",
+      "doc": "api/parquet.file.statistics.md#typedstatistics"
+    }
+  ]
+}

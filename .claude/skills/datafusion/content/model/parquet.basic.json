@@ -1,0 +1,674 @@
+{
+  "module": "parquet::basic",
+  "crate": "parquet",
+  "api": "api/parquet.basic.md",
+  "items": [
+    {
+      "path": "parquet::basic::BloomFilterAlgorithm",
+      "name": "BloomFilterAlgorithm",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum BloomFilterAlgorithm",
+      "summary": "The algorithm used in Bloom filter.",
+      "doc": "api/parquet.basic.md#bloomfilteralgorithm",
+      "variants": [
+        "BLOCK"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::BloomFilterCompression",
+      "name": "BloomFilterCompression",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum BloomFilterCompression",
+      "summary": "The compression used in the Bloom filter.",
+      "doc": "api/parquet.basic.md#bloomfiltercompression",
+      "variants": [
+        "UNCOMPRESSED"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::BloomFilterHash",
+      "name": "BloomFilterHash",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum BloomFilterHash",
+      "summary": "The hash function used in Bloom filter. This function takes the hash of a column value using plain encoding.",
+      "doc": "api/parquet.basic.md#bloomfilterhash",
+      "variants": [
+        "XXHASH"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::BoundaryOrder",
+      "name": "BoundaryOrder",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum BoundaryOrder",
+      "summary": "Enum to annotate whether lists of min/max elements inside ColumnIndex are ordered and if so, in which direction.",
+      "doc": "api/parquet.basic.md#boundaryorder",
+      "variants": [
+        "UNORDERED",
+        "ASCENDING",
+        "DESCENDING"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::ColumnOrder",
+      "name": "ColumnOrder",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum ColumnOrder",
+      "summary": "Column order that specifies what method was used to aggregate min/max values for statistics.",
+      "doc": "api/parquet.basic.md#columnorder",
+      "variants": [
+        "TYPE_DEFINED_ORDER",
+        "UNDEFINED",
+        "UNKNOWN"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_sort_order",
+          "signature": "fn get_sort_order(logical_type: Option<LogicalType>, converted_type: ConvertedType, physical_type: Type) -> SortOrder",
+          "summary": "Returns sort order for a physical/logical type."
+        },
+        {
+          "name": "sort_order",
+          "signature": "fn sort_order(&self) -> SortOrder",
+          "summary": "Returns sort order associated with this column order."
+        },
+        {
+          "name": "sort_order_for_type",
+          "signature": "fn sort_order_for_type(logical_type: Option<&LogicalType>, converted_type: ConvertedType, physical_type: Type) -> SortOrder",
+          "summary": "Returns sort order for a physical/logical type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::Compression",
+      "name": "Compression",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Compression",
+      "summary": "Supported block compression algorithms.",
+      "doc": "api/parquet.basic.md#compression",
+      "variants": [
+        "UNCOMPRESSED",
+        "SNAPPY",
+        "GZIP",
+        "LZO",
+        "BROTLI",
+        "LZ4",
+        "ZSTD",
+        "LZ4_RAW"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: CompressionCodec) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> std::result::Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::CompressionCodec",
+      "name": "CompressionCodec",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum CompressionCodec",
+      "summary": "Supported compression algorithms.",
+      "doc": "api/parquet.basic.md#compressioncodec",
+      "variants": [
+        "UNCOMPRESSED",
+        "SNAPPY",
+        "GZIP",
+        "LZO",
+        "BROTLI",
+        "LZ4",
+        "ZSTD",
+        "LZ4_RAW"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Compression) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::ConvertedType",
+      "name": "ConvertedType",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum ConvertedType",
+      "summary": "Common types (converted types) used by frameworks when using Parquet.",
+      "doc": "api/parquet.basic.md#convertedtype",
+      "variants": [
+        "NONE",
+        "UTF8",
+        "MAP",
+        "MAP_KEY_VALUE",
+        "LIST",
+        "ENUM",
+        "DECIMAL",
+        "DATE",
+        "TIME_MILLIS",
+        "TIME_MICROS",
+        "TIMESTAMP_MILLIS",
+        "TIMESTAMP_MICROS",
+        "UINT_8",
+        "UINT_16",
+        "UINT_32",
+        "UINT_64",
+        "INT_8",
+        "INT_16",
+        "INT_32",
+        "INT_64",
+        "JSON",
+        "BSON",
+        "INTERVAL"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Option<LogicalType>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::EdgeInterpolationAlgorithm",
+      "name": "EdgeInterpolationAlgorithm",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum EdgeInterpolationAlgorithm",
+      "summary": "Edge interpolation algorithm for [`LogicalType::Geography`]",
+      "doc": "api/parquet.basic.md#edgeinterpolationalgorithm",
+      "variants": [
+        "SPHERICAL",
+        "VINCENTY",
+        "THOMAS",
+        "ANDOYER",
+        "KARNEY",
+        "_Unknown"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: parquet_geospatial::WkbEdges) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "try_as_edges",
+          "signature": "fn try_as_edges(&self) -> Result<parquet_geospatial::WkbEdges>",
+          "summary": "Converts an [`EdgeInterpolationAlgorithm`] into its corresponding algorithm defined by [`parquet_geospatial::WkbEdges`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::Encoding",
+      "name": "Encoding",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Encoding",
+      "summary": "Encodings supported by Parquet.",
+      "doc": "api/parquet.basic.md#encoding",
+      "variants": [
+        "PLAIN",
+        "PLAIN_DICTIONARY",
+        "RLE",
+        "BIT_PACKED",
+        "DELTA_BINARY_PACKED",
+        "DELTA_LENGTH_BYTE_ARRAY",
+        "DELTA_BYTE_ARRAY",
+        "RLE_DICTIONARY",
+        "BYTE_STREAM_SPLIT"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::FieldRepetitionType",
+      "name": "FieldRepetitionType",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum FieldRepetitionType",
+      "summary": "Representation of field types in schema.",
+      "doc": "api/parquet.basic.md#fieldrepetitiontype",
+      "variants": [
+        "REQUIRED",
+        "OPTIONAL",
+        "REPEATED"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::LogicalType",
+      "name": "LogicalType",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum LogicalType",
+      "summary": "Logical types used by version 2.4.0+ of the Parquet format.",
+      "doc": "api/parquet.basic.md#logicaltype",
+      "variants": [
+        "String",
+        "Map",
+        "List",
+        "Enum",
+        "Decimal",
+        "Date",
+        "Time",
+        "Timestamp",
+        "Integer",
+        "Unknown",
+        "Json",
+        "Bson",
+        "Uuid",
+        "Float16",
+        "Variant",
+        "Geometry",
+        "Geography",
+        "_Unknown"
+      ],
+      "implements": [
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "decimal",
+          "signature": "fn decimal(scale: i32, precision: i32) -> Self",
+          "summary": "Create a [`LogicalType::Decimal`] variant with the given `scale` and `precision`"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "geography",
+          "signature": "fn geography(crs: Option<String>, algorithm: Option<EdgeInterpolationAlgorithm>) -> Self",
+          "summary": "Create a [`LogicalType::Geography`] variant with the given `crs` and `algorithm`"
+        },
+        {
+          "name": "geometry",
+          "signature": "fn geometry(crs: Option<String>) -> Self",
+          "summary": "Create a [`LogicalType::Geometry`] variant with the given `crs`"
+        },
+        {
+          "name": "integer",
+          "signature": "fn integer(bit_width: i8, is_signed: bool) -> Self",
+          "summary": "Create a [`LogicalType::Integer`] variant with the given `bit_width` and `is_signed`"
+        },
+        {
+          "name": "time",
+          "signature": "fn time(is_adjusted_to_u_t_c: bool, unit: TimeUnit) -> Self",
+          "summary": "Create a [`LogicalType::Time`] variant with the given `is_adjusted_to_u_t_c` and `unit`"
+        },
+        {
+          "name": "timestamp",
+          "signature": "fn timestamp(is_adjusted_to_u_t_c: bool, unit: TimeUnit) -> Self",
+          "summary": "Create a [`LogicalType::Timestamp`] variant with the given `is_adjusted_to_u_t_c` and `unit`"
+        },
+        {
+          "name": "variant",
+          "signature": "fn variant(specification_version: Option<i8>) -> Self",
+          "summary": "Create a [`LogicalType::Variant`] variant with the given `specification_version`"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::PageType",
+      "name": "PageType",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum PageType",
+      "summary": "Available data pages for Parquet file format. Note that some of the page types may not be supported.",
+      "doc": "api/parquet.basic.md#pagetype",
+      "variants": [
+        "DATA_PAGE",
+        "INDEX_PAGE",
+        "DICTIONARY_PAGE",
+        "DATA_PAGE_V2"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::SortOrder",
+      "name": "SortOrder",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum SortOrder",
+      "summary": "Sort order for page and column statistics.",
+      "doc": "api/parquet.basic.md#sortorder",
+      "variants": [
+        "SIGNED",
+        "UNSIGNED",
+        "UNDEFINED"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_signed",
+          "signature": "fn is_signed(&self) -> bool",
+          "summary": "Returns true if this is [`Self::SIGNED`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::TimeUnit",
+      "name": "TimeUnit",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum TimeUnit",
+      "summary": "Time unit for `Time` and `Timestamp` logical types.",
+      "doc": "api/parquet.basic.md#timeunit",
+      "variants": [
+        "MILLIS",
+        "MICROS",
+        "NANOS"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::Type",
+      "name": "Type",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Type",
+      "summary": "Types supported by Parquet.",
+      "doc": "api/parquet.basic.md#type",
+      "variants": [
+        "BOOLEAN",
+        "INT32",
+        "INT64",
+        "INT96",
+        "FLOAT",
+        "DOUBLE",
+        "BYTE_ARRAY",
+        "FIXED_LEN_BYTE_ARRAY"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::DecimalType",
+      "name": "DecimalType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct DecimalType",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "scale",
+        "precision"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::EncodingMask",
+      "name": "EncodingMask",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct EncodingMask",
+      "summary": "A bitmask representing the [`Encoding`]s employed while encoding a Parquet column chunk.",
+      "doc": "api/parquet.basic.md#encodingmask",
+      "methods": [
+        {
+          "name": "all_set",
+          "signature": "fn all_set<'a>(&self, encodings: impl Iterator<Item = &'a Encoding>) -> bool",
+          "summary": "Test if all [`Encoding`]s in a given set are present in this mask."
+        },
+        {
+          "name": "as_i32",
+          "signature": "fn as_i32(&self) -> i32",
+          "summary": "Return an integer representation of this `EncodingMask`."
+        },
+        {
+          "name": "encodings",
+          "signature": "fn encodings(&self) -> impl Iterator<Item = Encoding>",
+          "summary": "Return an iterator over all [`Encoding`]s present in this mask."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(&mut self, val: Encoding)",
+          "summary": "Mark the given [`Encoding`] as present in this mask."
+        },
+        {
+          "name": "is_only",
+          "signature": "fn is_only(&self, val: Encoding) -> bool",
+          "summary": "Test if this mask has only the bit for the given [`Encoding`] set."
+        },
+        {
+          "name": "is_set",
+          "signature": "fn is_set(&self, val: Encoding) -> bool",
+          "summary": "Test if a given [`Encoding`] is present in this mask."
+        },
+        {
+          "name": "new_from_encodings",
+          "signature": "fn new_from_encodings<'a>(encodings: impl Iterator<Item = &'a Encoding>) -> Self",
+          "summary": "Create a new `EncodingMask` from a collection of [`Encoding`]s."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(val: i32) -> Result<Self>",
+          "summary": "Attempt to create a new `EncodingMask` from an integer."
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::GeographyType",
+      "name": "GeographyType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct GeographyType",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "crs",
+        "algorithm"
+      ],
+      "methods": [
+        {
+          "name": "algorithm",
+          "signature": "fn algorithm(&self) -> Option<EdgeInterpolationAlgorithm>",
+          "summary": "Accessor for the `GeographyType::algorithm` field. If this field is not set, this function returns the default value (currently [`EdgeInterpolationAlgorithm::SPHERICAL`] per the Parquet [specification])."
+        }
+      ]
+    },
+    {
+      "path": "parquet::basic::GeometryType",
+      "name": "GeometryType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct GeometryType",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "crs"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::IntType",
+      "name": "IntType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct IntType",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "bit_width",
+        "is_signed"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::TimestampType",
+      "name": "TimestampType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct TimestampType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "parquet::basic::TimeType"
+      ],
+      "fields": [
+        "is_adjusted_to_u_t_c",
+        "unit"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::VariantType",
+      "name": "VariantType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct VariantType",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "specification_version"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::basic::Repetition",
+      "name": "Repetition",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type Repetition = FieldRepetitionType",
+      "summary": "Type alias for thrift `FieldRepetitionType`",
+      "doc": "api/parquet.basic.md#repetition"
+    }
+  ]
+}

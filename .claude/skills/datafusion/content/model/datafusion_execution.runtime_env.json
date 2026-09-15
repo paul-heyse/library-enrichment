@@ -1,0 +1,168 @@
+{
+  "module": "datafusion_execution::runtime_env",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.runtime_env.md",
+  "items": [
+    {
+      "path": "datafusion_execution::runtime_env::RuntimeEnv",
+      "name": "RuntimeEnv",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct RuntimeEnv",
+      "summary": "Execution runtime environment that manages system resources such as memory, disk, cache and storage.",
+      "doc": "api/datafusion_execution.runtime_env.md#runtimeenv",
+      "fields": [
+        "memory_pool",
+        "disk_manager",
+        "cache_manager",
+        "object_store_registry",
+        "parquet_encryption_factory_registry"
+      ],
+      "methods": [
+        {
+          "name": "config_entries",
+          "signature": "fn config_entries(&self) -> Vec<ConfigEntry>",
+          "summary": "Returns the current runtime configuration entries"
+        },
+        {
+          "name": "deregister_object_store",
+          "signature": "fn deregister_object_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "summary": "Deregisters a custom `ObjectStore` previously registered for a specific url. See [`ObjectStoreRegistry::deregister_store`] for more details."
+        },
+        {
+          "name": "object_store",
+          "signature": "fn object_store(&self, url: impl AsRef<Url>) -> Result<Arc<dyn ObjectStore>>",
+          "summary": "Retrieves a `ObjectStore` instance for a url by consulting the registry. See [`ObjectStoreRegistry::get_store`] for more details."
+        },
+        {
+          "name": "parquet_encryption_factory",
+          "signature": "fn parquet_encryption_factory(&self, id: &str) -> Result<Arc<dyn EncryptionFactory>>",
+          "summary": "Retrieve an [`EncryptionFactory`] by its identifier"
+        },
+        {
+          "name": "register_object_store",
+          "signature": "fn register_object_store(&self, url: &Url, object_store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "summary": "Registers a custom `ObjectStore` to be used with a specific url. This allows DataFusion to create external tables from urls that do not have built in support such as `hdfs://namenode:port/...`."
+        },
+        {
+          "name": "register_parquet_encryption_factory",
+          "signature": "fn register_parquet_encryption_factory(&self, id: &str, encryption_factory: Arc<dyn EncryptionFactory>) -> Option<Arc<dyn EncryptionFactory>>",
+          "summary": "Register an [`EncryptionFactory`] with an associated identifier that can be later used to configure encryption when reading or writing Parquet. If an encryption factory with the same identifier was already registered, it is replaced and re…"
+        },
+        {
+          "name": "spilling_progress",
+          "signature": "fn spilling_progress(&self) -> SpillingProgress",
+          "summary": "Returns the current spilling progress"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::runtime_env::RuntimeEnvBuilder",
+      "name": "RuntimeEnvBuilder",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct RuntimeEnvBuilder",
+      "summary": "Execution runtime configuration builder.",
+      "doc": "api/datafusion_execution.runtime_env.md#runtimeenvbuilder",
+      "fields": [
+        "disk_manager",
+        "disk_manager_builder",
+        "memory_pool",
+        "cache_manager",
+        "object_store_registry",
+        "parquet_encryption_factory_registry"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<RuntimeEnv>",
+          "summary": "Build a RuntimeEnv"
+        },
+        {
+          "name": "build_arc",
+          "signature": "fn build_arc(self) -> Result<Arc<RuntimeEnv>>",
+          "summary": "Convenience method to create a new `Arc<RuntimeEnv>`"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(&self) -> Vec<ConfigEntry>",
+          "summary": "Returns a list of all available runtime configurations with their current values and descriptions"
+        },
+        {
+          "name": "from_runtime_env",
+          "signature": "fn from_runtime_env(runtime_env: &RuntimeEnv) -> Self",
+          "summary": "Create a new RuntimeEnvBuilder from an existing RuntimeEnv"
+        },
+        {
+          "name": "generate_config_markdown",
+          "signature": "fn generate_config_markdown() -> String",
+          "summary": "Generate documentation that can be included in the user guide"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "New with default values"
+        },
+        {
+          "name": "with_cache_manager",
+          "signature": "fn with_cache_manager(self, cache_manager: CacheManagerConfig) -> Self",
+          "summary": "Customize cache policy"
+        },
+        {
+          "name": "with_disk_manager_builder",
+          "signature": "fn with_disk_manager_builder(self, disk_manager: DiskManagerBuilder) -> Self",
+          "summary": "Customize the disk manager builder"
+        },
+        {
+          "name": "with_file_statistics_cache_limit",
+          "signature": "fn with_file_statistics_cache_limit(self, limit: usize) -> Self"
+        },
+        {
+          "name": "with_max_spill_merge_fan_in",
+          "signature": "fn with_max_spill_merge_fan_in(self, fan_in: usize) -> Self",
+          "summary": "Limit the number of spill files opened by one external merge pass."
+        },
+        {
+          "name": "with_max_temp_directory_size",
+          "signature": "fn with_max_temp_directory_size(self, size: u64) -> Self",
+          "summary": "Specify a limit on the size of the temporary file directory in bytes"
+        },
+        {
+          "name": "with_memory_limit",
+          "signature": "fn with_memory_limit(self, max_memory: usize, memory_fraction: f64) -> Self",
+          "summary": "Specify the total memory to use while running the DataFusion plan to `max_memory * memory_fraction` in bytes."
+        },
+        {
+          "name": "with_memory_pool",
+          "signature": "fn with_memory_pool(self, memory_pool: Arc<dyn MemoryPool>) -> Self",
+          "summary": "Customize memory policy"
+        },
+        {
+          "name": "with_metadata_cache_limit",
+          "signature": "fn with_metadata_cache_limit(self, limit: usize) -> Self",
+          "summary": "Specify the limit of the file-embedded metadata cache, in bytes."
+        },
+        {
+          "name": "with_object_list_cache_limit",
+          "signature": "fn with_object_list_cache_limit(self, limit: usize) -> Self",
+          "summary": "Specifies the memory limit for the object list cache, in bytes."
+        },
+        {
+          "name": "with_object_list_cache_ttl",
+          "signature": "fn with_object_list_cache_ttl(self, ttl: Option<Duration>) -> Self",
+          "summary": "Specifies the duration entries in the object list cache will be considered valid."
+        },
+        {
+          "name": "with_object_store_registry",
+          "signature": "fn with_object_store_registry(self, object_store_registry: Arc<dyn ObjectStoreRegistry>) -> Self",
+          "summary": "Customize object store registry"
+        },
+        {
+          "name": "with_temp_file_path",
+          "signature": "fn with_temp_file_path(self, path: impl Into<PathBuf>) -> Self",
+          "summary": "Use the specified path to create any needed temporary files"
+        }
+      ]
+    }
+  ]
+}

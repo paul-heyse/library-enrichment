@@ -7,7 +7,7 @@
 
 use enrichment_core::identity::SnapshotId;
 use enrichment_core::wire::data::ManifestData;
-use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch};
+use enrichment_core::wire::{Envelope, ErrorCode, Freshness, SourceVersionMatch};
 
 use super::common;
 use crate::envelope::{self, Research};
@@ -27,7 +27,7 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
     };
     let catalog = match service.repository.catalog.pin().await {
         Ok(value) => value,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "manifest_read"),
     };
     let reader =
         match enrichment_store::SnapshotReader::open(&service.repository, catalog.clone(), &id)
@@ -42,7 +42,7 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
         .await
     {
         Ok(value) => value.as_ref() == Some(&id),
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "manifest_read"),
     };
     let data = ManifestData {
         manifest: manifest.clone(),
@@ -53,7 +53,7 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
         },
         catalog_generation: catalog.generation(),
     };
-    Research {
+    let research = Research {
         summary: format!(
             "Snapshot {id} of {} {}: {} definitions, {} fragments, published {}.",
             manifest.crate_name,
@@ -66,19 +66,9 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
             manifest.published_at
         ),
         data: common::to_object(&data),
-        coverage: Coverage {
-            scope: format!("the manifest of snapshot {id}"),
-            indexed: manifest
-                .indexed
-                .iter()
-                .map(|k| k.as_str().to_owned())
-                .collect(),
-            missing: manifest
-                .missing
-                .iter()
-                .map(|k| k.as_str().to_owned())
-                .collect(),
-            limitations: Vec::new(),
+        coverage: match reader.assess_acquisition().await {
+            Ok(value) => value,
+            Err(error) => return common::query_error(&error),
         },
         freshness: Freshness {
             registry_checked_at: None,
@@ -89,6 +79,10 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
         snapshot_id: Some(id.to_string()),
         evidence: Vec::new(),
         artifacts: Vec::new(),
+    };
+    if research.coverage.complete() {
+        research.ok()
+    } else {
+        research.partial()
     }
-    .ok()
 }

@@ -1,0 +1,432 @@
+{
+  "module": "datafusion_expr::registry",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.registry.md",
+  "items": [
+    {
+      "path": "datafusion_expr::registry::ExtensionTypeRegistration",
+      "name": "ExtensionTypeRegistration",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ExtensionTypeRegistration",
+      "summary": "The registration of an extension type. Implementations of this trait are responsible for *creating* instances of [`DFExtensionType`] that represent the entire semantics of an extension type.",
+      "doc": "api/datafusion_expr.registry.md#extensiontyperegistration",
+      "methods": [
+        {
+          "name": "create_df_extension_type",
+          "signature": "fn create_df_extension_type(&self, storage_type: &DataType, metadata: Option<&str>) -> Result<DFExtensionTypeRef>",
+          "summary": "Creates an extension type instance from the optional metadata. The name of the extension type is not a parameter as it's already defined by the registration itself."
+        },
+        {
+          "name": "new_arc",
+          "signature": "fn new_arc(name: impl Into<String>, factory: impl Fn(&DataType, Option<&str>) -> Result<DFExtensionTypeRef> + Send + Sync + 'static) -> ExtensionTypeRegistrationRef",
+          "summary": "Creates a new registration for an extension type. The factory is required to validate that the storage [`DataType`] is compatible with the extension type."
+        },
+        {
+          "name": "type_name",
+          "signature": "fn type_name(&self) -> &str",
+          "summary": "The name of the extension type."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::MemoryExtensionTypeRegistry",
+      "name": "MemoryExtensionTypeRegistry",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct MemoryExtensionTypeRegistry",
+      "summary": "An [`ExtensionTypeRegistry`] that uses in memory [`HashMap`]s.",
+      "doc": "api/datafusion_expr.registry.md#memoryextensiontyperegistry",
+      "implements": [
+        "core::convert::From",
+        "datafusion_expr::registry::ExtensionTypeRegistry"
+      ],
+      "methods": [
+        {
+          "name": "add_extension_type_registration",
+          "signature": "fn add_extension_type_registration(&self, extension_type: ExtensionTypeRegistrationRef) -> Result<Option<ExtensionTypeRegistrationRef>>",
+          "via_trait": "datafusion_expr::registry::ExtensionTypeRegistry"
+        },
+        {
+          "name": "all_extension_types",
+          "signature": "fn all_extension_types(&self) -> Vec<ExtensionTypeRegistrationRef>",
+          "summary": "Returns a list of all registered types."
+        },
+        {
+          "name": "extension_type_registration",
+          "signature": "fn extension_type_registration(&self, name: &str) -> Result<ExtensionTypeRegistrationRef>",
+          "via_trait": "datafusion_expr::registry::ExtensionTypeRegistry"
+        },
+        {
+          "name": "extension_type_registrations",
+          "signature": "fn extension_type_registrations(&self) -> Vec<ExtensionTypeRegistrationRef>",
+          "via_trait": "datafusion_expr::registry::ExtensionTypeRegistry"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: HashMap<String, ExtensionTypeRegistrationRef>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty() -> Self",
+          "summary": "Creates an empty [MemoryExtensionTypeRegistry]."
+        },
+        {
+          "name": "new_with_canonical_extension_types",
+          "signature": "fn new_with_canonical_extension_types() -> Self",
+          "summary": "Pre-registers the [canonical extension types](https://arrow.apache.org/docs/format/CanonicalExtensions.html) in the extension type registry."
+        },
+        {
+          "name": "new_with_types",
+          "signature": "fn new_with_types(types: impl IntoIterator<Item = ExtensionTypeRegistrationRef>) -> Result<Self>",
+          "summary": "Creates a new [MemoryExtensionTypeRegistry] with the provided `types`."
+        },
+        {
+          "name": "remove_extension_type_registration",
+          "signature": "fn remove_extension_type_registration(&self, name: &str) -> Result<Option<ExtensionTypeRegistrationRef>>",
+          "via_trait": "datafusion_expr::registry::ExtensionTypeRegistry"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::MemoryFunctionRegistry",
+      "name": "MemoryFunctionRegistry",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct MemoryFunctionRegistry",
+      "summary": "A  [`FunctionRegistry`] that uses in memory [`HashMap`]s",
+      "doc": "api/datafusion_expr.registry.md#memoryfunctionregistry",
+      "aliases": [
+        "datafusion_execution::registry::MemoryFunctionRegistry"
+      ],
+      "implements": [
+        "datafusion_expr::registry::FunctionRegistry"
+      ],
+      "methods": [
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&self) -> Vec<Arc<dyn ExprPlanner>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "higher_order_function",
+          "signature": "fn higher_order_function(&self, name: &str) -> Result<Arc<HigherOrderUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "higher_order_function_names",
+          "signature": "fn higher_order_function_names(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "register_higher_order_function",
+          "signature": "fn register_higher_order_function(&mut self, function: Arc<HigherOrderUDF>) -> Result<Option<Arc<HigherOrderUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udaf",
+          "signature": "fn register_udaf(&mut self, udaf: Arc<AggregateUDF>) -> Result<Option<Arc<AggregateUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udf",
+          "signature": "fn register_udf(&mut self, udf: Arc<ScalarUDF>) -> Result<Option<Arc<ScalarUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udwf",
+          "signature": "fn register_udwf(&mut self, udaf: Arc<WindowUDF>) -> Result<Option<Arc<WindowUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udaf",
+          "signature": "fn udaf(&self, name: &str) -> Result<Arc<AggregateUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udafs",
+          "signature": "fn udafs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udf",
+          "signature": "fn udf(&self, name: &str) -> Result<Arc<ScalarUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udfs",
+          "signature": "fn udfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwf",
+          "signature": "fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwfs",
+          "signature": "fn udwfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::ExtensionTypeRegistry",
+      "name": "ExtensionTypeRegistry",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait ExtensionTypeRegistry: Debug + Send + Sync",
+      "summary": "Manages [`ExtensionTypeRegistration`]s, which allow users to register custom behavior for extension types.",
+      "doc": "api/datafusion_expr.registry.md#extensiontyperegistry",
+      "implementors": [
+        "datafusion_expr::registry::MemoryExtensionTypeRegistry"
+      ],
+      "required_methods": [
+        "add_extension_type_registration",
+        "extension_type_registration",
+        "extension_type_registrations",
+        "remove_extension_type_registration"
+      ],
+      "provided_methods": [
+        "create_extension_type_for_field",
+        "extend"
+      ],
+      "methods": [
+        {
+          "name": "add_extension_type_registration",
+          "signature": "fn add_extension_type_registration(&self, extension_type: ExtensionTypeRegistrationRef) -> Result<Option<ExtensionTypeRegistrationRef>>",
+          "summary": "Registers a new [ExtensionTypeRegistrationRef], returning any previously registered implementation."
+        },
+        {
+          "name": "create_extension_type_for_field",
+          "signature": "fn create_extension_type_for_field(&self, field: &Field) -> Result<Option<DFExtensionTypeRef>>",
+          "summary": "Creates a [`DFExtensionTypeRef`] from the type information in the `field`."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&self, extension_types: &[ExtensionTypeRegistrationRef]) -> Result<()>",
+          "summary": "Extends the registry with the provided extension types."
+        },
+        {
+          "name": "extension_type_registration",
+          "signature": "fn extension_type_registration(&self, name: &str) -> Result<ExtensionTypeRegistrationRef>",
+          "summary": "Returns a reference to registration of an extension type named `name`."
+        },
+        {
+          "name": "extension_type_registrations",
+          "signature": "fn extension_type_registrations(&self) -> Vec<ExtensionTypeRegistrationRef>",
+          "summary": "Returns all registered [ExtensionTypeRegistration]."
+        },
+        {
+          "name": "remove_extension_type_registration",
+          "signature": "fn remove_extension_type_registration(&self, name: &str) -> Result<Option<ExtensionTypeRegistrationRef>>",
+          "summary": "Deregisters an extension type registration with the name `name`, returning the implementation that was deregistered."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::FunctionRegistry",
+      "name": "FunctionRegistry",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait FunctionRegistry",
+      "summary": "A registry knows how to build logical expressions out of user-defined function' names",
+      "doc": "api/datafusion_expr.registry.md#functionregistry",
+      "aliases": [
+        "datafusion::execution::FunctionRegistry",
+        "datafusion_execution::FunctionRegistry",
+        "datafusion_execution::registry::FunctionRegistry"
+      ],
+      "implementors": [
+        "datafusion::execution::context::SessionContext",
+        "datafusion::execution::session_state::SessionState",
+        "datafusion_execution::task::TaskContext",
+        "datafusion_expr::registry::MemoryFunctionRegistry"
+      ],
+      "required_methods": [
+        "expr_planners",
+        "higher_order_function",
+        "higher_order_function_names",
+        "udaf",
+        "udafs",
+        "udf",
+        "udfs",
+        "udwf",
+        "udwfs"
+      ],
+      "provided_methods": [
+        "deregister_higher_order_function",
+        "deregister_udaf",
+        "deregister_udf",
+        "deregister_udwf",
+        "register_expr_planner",
+        "register_function_rewrite",
+        "register_higher_order_function",
+        "register_udaf",
+        "register_udf",
+        "register_udwf"
+      ],
+      "methods": [
+        {
+          "name": "deregister_higher_order_function",
+          "signature": "fn deregister_higher_order_function(&mut self, _name: &str) -> Result<Option<Arc<HigherOrderUDF>>>",
+          "summary": "Deregisters a [`HigherOrderUDF`], returning the implementation that was deregistered."
+        },
+        {
+          "name": "deregister_udaf",
+          "signature": "fn deregister_udaf(&mut self, _name: &str) -> Result<Option<Arc<AggregateUDF>>>",
+          "summary": "Deregisters a [`AggregateUDF`], returning the implementation that was deregistered."
+        },
+        {
+          "name": "deregister_udf",
+          "signature": "fn deregister_udf(&mut self, _name: &str) -> Result<Option<Arc<ScalarUDF>>>",
+          "summary": "Deregisters a [`ScalarUDF`], returning the implementation that was deregistered."
+        },
+        {
+          "name": "deregister_udwf",
+          "signature": "fn deregister_udwf(&mut self, _name: &str) -> Result<Option<Arc<WindowUDF>>>",
+          "summary": "Deregisters a [`WindowUDF`], returning the implementation that was deregistered."
+        },
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&self) -> Vec<Arc<dyn ExprPlanner>>",
+          "summary": "Set of all registered [`ExprPlanner`]s"
+        },
+        {
+          "name": "higher_order_function",
+          "signature": "fn higher_order_function(&self, name: &str) -> Result<Arc<HigherOrderUDF>>",
+          "summary": "Returns a reference to the user defined higher order function named `name`."
+        },
+        {
+          "name": "higher_order_function_names",
+          "signature": "fn higher_order_function_names(&self) -> HashSet<String>",
+          "summary": "Returns names of all available higher order user defined functions."
+        },
+        {
+          "name": "register_expr_planner",
+          "signature": "fn register_expr_planner(&mut self, _expr_planner: Arc<dyn ExprPlanner>) -> Result<()>",
+          "summary": "Registers a new [`ExprPlanner`] with the registry."
+        },
+        {
+          "name": "register_function_rewrite",
+          "signature": "fn register_function_rewrite(&mut self, _rewrite: Arc<dyn FunctionRewrite + Send + Sync>) -> Result<()>",
+          "summary": "Registers a new [`FunctionRewrite`] with the registry."
+        },
+        {
+          "name": "register_higher_order_function",
+          "signature": "fn register_higher_order_function(&mut self, _function: Arc<HigherOrderUDF>) -> Result<Option<Arc<HigherOrderUDF>>>",
+          "summary": "Registers a new [`HigherOrderUDF`], returning any previously registered implementation."
+        },
+        {
+          "name": "register_udaf",
+          "signature": "fn register_udaf(&mut self, _udaf: Arc<AggregateUDF>) -> Result<Option<Arc<AggregateUDF>>>",
+          "summary": "Registers a new [`AggregateUDF`], returning any previously registered implementation."
+        },
+        {
+          "name": "register_udf",
+          "signature": "fn register_udf(&mut self, _udf: Arc<ScalarUDF>) -> Result<Option<Arc<ScalarUDF>>>",
+          "summary": "Registers a new [`ScalarUDF`], returning any previously registered implementation."
+        },
+        {
+          "name": "register_udwf",
+          "signature": "fn register_udwf(&mut self, _udaf: Arc<WindowUDF>) -> Result<Option<Arc<WindowUDF>>>",
+          "summary": "Registers a new [`WindowUDF`], returning any previously registered implementation."
+        },
+        {
+          "name": "udaf",
+          "signature": "fn udaf(&self, name: &str) -> Result<Arc<AggregateUDF>>",
+          "summary": "Returns a reference to the user defined aggregate function (udaf) named `name`."
+        },
+        {
+          "name": "udafs",
+          "signature": "fn udafs(&self) -> HashSet<String>",
+          "summary": "Returns names of all available aggregate user defined functions."
+        },
+        {
+          "name": "udf",
+          "signature": "fn udf(&self, name: &str) -> Result<Arc<ScalarUDF>>",
+          "summary": "Returns a reference to the user defined scalar function (udf) named `name`."
+        },
+        {
+          "name": "udfs",
+          "signature": "fn udfs(&self) -> HashSet<String>",
+          "summary": "Returns names of all available scalar user defined functions."
+        },
+        {
+          "name": "udwf",
+          "signature": "fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>",
+          "summary": "Returns a reference to the user defined window function (udwf) named `name`."
+        },
+        {
+          "name": "udwfs",
+          "signature": "fn udwfs(&self) -> HashSet<String>",
+          "summary": "Returns names of all available window user defined functions."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::SerializerRegistry",
+      "name": "SerializerRegistry",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait SerializerRegistry: Debug + Send + Sync",
+      "summary": "Serializer and deserializer registry for extensions like [UserDefinedLogicalNode].",
+      "doc": "api/datafusion_expr.registry.md#serializerregistry",
+      "aliases": [
+        "datafusion_execution::registry::SerializerRegistry"
+      ],
+      "implementors": [
+        "datafusion::execution::context::EmptySerializerRegistry"
+      ],
+      "required_methods": [
+        "deserialize_logical_plan",
+        "serialize_logical_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "deserialize_logical_plan",
+          "signature": "fn deserialize_logical_plan(&self, name: &str, bytes: &[u8]) -> Result<Arc<dyn UserDefinedLogicalNode>>",
+          "summary": "Deserialize user defined logical plan node ([UserDefinedLogicalNode]) from bytes."
+        },
+        {
+          "name": "serialize_logical_plan",
+          "signature": "fn serialize_logical_plan(&self, node: &dyn UserDefinedLogicalNode) -> Result<Vec<u8>>",
+          "summary": "Serialize this node to a byte array. This serialization should not include input plans."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::registry::ExtensionTypeFactory",
+      "name": "ExtensionTypeFactory",
+      "kind": "type_alias",
+      "crate": "datafusion-expr",
+      "signature": "type ExtensionTypeFactory = dyn Fn(&arrow_schema::DataType, Option<&str>) -> datafusion_common::Result<datafusion_common::types::DFExtensionTypeRef> + Send + Sync",
+      "summary": "A factory that creates instances of extension types from a storage [`DataType`] and the metadata.",
+      "doc": "api/datafusion_expr.registry.md#extensiontypefactory"
+    },
+    {
+      "path": "datafusion_expr::registry::ExtensionTypeRegistrationRef",
+      "name": "ExtensionTypeRegistrationRef",
+      "kind": "type_alias",
+      "crate": "datafusion-expr",
+      "signature": "type ExtensionTypeRegistrationRef = std::sync::Arc<ExtensionTypeRegistration>",
+      "summary": "A cheaply cloneable pointer to an [ExtensionTypeRegistration].",
+      "doc": "api/datafusion_expr.registry.md#extensiontyperegistrationref"
+    },
+    {
+      "path": "datafusion_expr::registry::ExtensionTypeRegistryRef",
+      "name": "ExtensionTypeRegistryRef",
+      "kind": "type_alias",
+      "crate": "datafusion-expr",
+      "signature": "type ExtensionTypeRegistryRef = std::sync::Arc<dyn ExtensionTypeRegistry>",
+      "summary": "A cheaply cloneable pointer to an [ExtensionTypeRegistry].",
+      "doc": "api/datafusion_expr.registry.md#extensiontyperegistryref"
+    }
+  ]
+}

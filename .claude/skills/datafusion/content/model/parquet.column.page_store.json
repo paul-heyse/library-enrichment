@@ -1,0 +1,174 @@
+{
+  "module": "parquet::column::page_store",
+  "crate": "parquet",
+  "api": "api/parquet.column.page_store.md",
+  "items": [
+    {
+      "path": "parquet::column::page_store::InMemoryPageStore",
+      "name": "InMemoryPageStore",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct InMemoryPageStore",
+      "summary": "The default [`PageStore`], holding blobs on the heap in a `Vec<Bytes>`.",
+      "doc": "api/parquet.column.page_store.md#inmemorypagestore",
+      "aliases": [
+        "parquet::arrow::arrow_writer::InMemoryPageStore"
+      ],
+      "implements": [
+        "parquet::column::page_store::PageStore"
+      ],
+      "methods": [
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "via_trait": "parquet::column::page_store::PageStore"
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&mut self, value: Bytes) -> Result<PageKey>",
+          "via_trait": "parquet::column::page_store::PageStore"
+        },
+        {
+          "name": "take",
+          "signature": "fn take(&mut self, key: PageKey) -> Result<Bytes>",
+          "via_trait": "parquet::column::page_store::PageStore"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page_store::InMemoryPageStoreFactory",
+      "name": "InMemoryPageStoreFactory",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct InMemoryPageStoreFactory",
+      "summary": "Factory for [`InMemoryPageStore`] — the default used by [`ArrowWriter`](crate::arrow::arrow_writer::ArrowWriter).",
+      "doc": "api/parquet.column.page_store.md#inmemorypagestorefactory",
+      "aliases": [
+        "parquet::arrow::arrow_writer::InMemoryPageStoreFactory"
+      ],
+      "implements": [
+        "parquet::column::page_store::PageStoreFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, _args: &PageStoreArgs<'_>) -> Result<Box<dyn PageStore>>",
+          "via_trait": "parquet::column::page_store::PageStoreFactory"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page_store::PageKey",
+      "name": "PageKey",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PageKey",
+      "summary": "An opaque, store-allocated handle to a blob held by a [`PageStore`].",
+      "doc": "api/parquet.column.page_store.md#pagekey",
+      "aliases": [
+        "parquet::arrow::arrow_writer::PageKey"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "const fn get(self) -> u64",
+          "summary": "The raw value passed to [`new`](Self::new)."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(raw: u64) -> Self",
+          "summary": "Create a handle wrapping `raw`."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page_store::PageStoreArgs",
+      "name": "PageStoreArgs",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PageStoreArgs<'a>",
+      "summary": "Context for a single [`PageStoreFactory::create`] call.",
+      "doc": "api/parquet.column.page_store.md#pagestoreargs",
+      "aliases": [
+        "parquet::arrow::arrow_writer::PageStoreArgs"
+      ],
+      "methods": [
+        {
+          "name": "column_descriptor",
+          "signature": "fn column_descriptor(&self) -> &ColumnDescriptor",
+          "summary": "Descriptor for the leaf column: physical/logical type, path, and max definition/repetition levels."
+        },
+        {
+          "name": "column_index",
+          "signature": "fn column_index(&self) -> usize",
+          "summary": "Index of the leaf column within the row group."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page_store::PageStore",
+      "name": "PageStore",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait PageStore: Send",
+      "summary": "A pluggable store for completed, serialized page blobs.",
+      "doc": "api/parquet.column.page_store.md#pagestore",
+      "aliases": [
+        "parquet::arrow::arrow_writer::PageStore"
+      ],
+      "implementors": [
+        "parquet::column::page_store::InMemoryPageStore"
+      ],
+      "required_methods": [
+        "put",
+        "take"
+      ],
+      "provided_methods": [
+        "memory_size"
+      ],
+      "methods": [
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "summary": "The number of bytes this store currently holds **in memory** (resident on the heap), used to report the writer's memory footprint."
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&mut self, value: Bytes) -> Result<PageKey>",
+          "summary": "Store `value`, returning a handle that can later be passed to [`take`](Self::take)."
+        },
+        {
+          "name": "take",
+          "signature": "fn take(&mut self, key: PageKey) -> Result<Bytes>",
+          "summary": "Take back the blob previously stored under `key`."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page_store::PageStoreFactory",
+      "name": "PageStoreFactory",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait PageStoreFactory: Send + Sync + Debug",
+      "summary": "Creates a fresh [`PageStore`] for each column chunk.",
+      "doc": "api/parquet.column.page_store.md#pagestorefactory",
+      "aliases": [
+        "parquet::arrow::arrow_writer::PageStoreFactory"
+      ],
+      "implementors": [
+        "parquet::column::page_store::InMemoryPageStoreFactory"
+      ],
+      "required_methods": [
+        "create"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, args: &PageStoreArgs<'_>) -> Result<Box<dyn PageStore>>",
+          "summary": "Create a new, empty [`PageStore`] for the leaf column described by `args`."
+        }
+      ]
+    }
+  ]
+}

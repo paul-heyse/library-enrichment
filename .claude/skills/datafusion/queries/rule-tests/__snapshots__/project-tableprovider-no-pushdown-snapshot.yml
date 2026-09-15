@@ -1,0 +1,37 @@
+id: project-tableprovider-no-pushdown
+snapshots:
+  ? |
+    #[async_trait]
+    impl TableProvider for Other {
+        async fn scan(&self, _s: &dyn Session) -> Result<Arc<dyn ExecutionPlan>> { todo!() }
+    }
+  : labels:
+    - source: |-
+        impl TableProvider for Other {
+            async fn scan(&self, _s: &dyn Session) -> Result<Arc<dyn ExecutionPlan>> { todo!() }
+        }
+      style: primary
+      start: 15
+      end: 136
+    - source: TableProvider
+      style: secondary
+      start: 20
+      end: 33
+  ? |
+    impl TableProvider for MyTable {
+        fn schema(&self) -> SchemaRef { self.schema.clone() }
+        fn table_type(&self) -> TableType { TableType::Base }
+    }
+  : labels:
+    - source: |-
+        impl TableProvider for MyTable {
+            fn schema(&self) -> SchemaRef { self.schema.clone() }
+            fn table_type(&self) -> TableType { TableType::Base }
+        }
+      style: primary
+      start: 0
+      end: 150
+    - source: TableProvider
+      style: secondary
+      start: 5
+      end: 18

@@ -1,0 +1,20 @@
+id: project-execution-plan-no-statistics
+language: rust
+severity: hint
+message: ExecutionPlan does not report statistics; the optimizer plans this node blind.
+note: |
+  Without `partition_statistics` (or the older `statistics`) the optimizer cannot estimate
+  cardinality, so join ordering and repartitioning decisions around this node are guesses.
+  See content/api/datafusion_physical_plan.execution_plan.md#executionplan.
+metadata:
+  record: capability-gap
+  capability: statistics
+rule:
+  kind: impl_item
+  all:
+    - has: { field: trait, regex: '^ExecutionPlan' }
+    - not:
+        has:
+          kind: function_item
+          has: { field: name, regex: '^(partition_statistics|statistics)$' }
+          stopBy: end

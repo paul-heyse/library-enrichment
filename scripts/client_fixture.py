@@ -16,6 +16,7 @@ from launch_configuration import describe
 
 from enrichment_mcp.daemon_client import DaemonClient
 from enrichment_mcp.envelope import validate_document
+from enrichment_mcp.presentation import error_preview
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -36,7 +37,9 @@ def validate_summary(summary: dict, exit_code: int, expected: set[str]) -> None:
 
 
 @contextmanager
-def service(root: Path, enabled: bool) -> Iterator[dict | None]:
+def service(
+    root: Path, enabled: bool, *, installation: Path | None = None
+) -> Iterator[dict | None]:
     """Use the shared HTTP fixtures and production launch description, with no prewarming."""
     if not enabled:
         yield None
@@ -47,6 +50,7 @@ def service(root: Path, enabled: bool) -> Iterator[dict | None]:
     from support import daemon
     from support.fixture_upstream import serve
 
+    runtime_root = installation.resolve() if installation is not None else ROOT
     fixtures = root / "fixtures"
     build_upstream(fixtures, root / "must-not-import")
     runtime = root / "runtime-fixtures"
@@ -68,7 +72,7 @@ def service(root: Path, enabled: bool) -> Iterator[dict | None]:
             f'crates_io_api_url="{rust_api}"\ndocs_rs_url="{rust_docs}"\n'
             f'[producers.python]\npypi_url="{selected.base_url}/pypi"\n'
             f'simple_url="{selected.base_url}/simple"\n'
-            f"worker_python={json.dumps(str(ROOT / '.venv/bin/python'))}\n"
+            f"worker_python={json.dumps(str(runtime_root / '.venv/bin/python'))}\n"
         )
         execution_root = os.environ.get("LIBENR_EXECUTION_TEST_ROOT")
         if execution_root:
@@ -79,8 +83,11 @@ def service(root: Path, enabled: bool) -> Iterator[dict | None]:
                     if image:
                         stream.write(f"{language}_image={json.dumps(image)}\n")
         env = daemon.daemon_env(root / "s", config)
-        launch = describe(root / "s", config, "debug")
-        with daemon.running(env, cwd=root) as running:
+        launch = describe(
+            root / "s", config, "release" if installation else "debug", installation=installation
+        )
+        (root / "launch.json").write_text(json.dumps(launch, indent=2) + "\n")
+        with daemon.running(env, cwd=root, binary=Path(launch["daemon"]["command"])) as running:
             try:
                 yield launch
             finally:
@@ -104,8 +111,25 @@ async def _witness(trace: Trace, socket: Path) -> dict:
     client = DaemonClient(socket, timeout_seconds=30)
     snapshots = {}
     artifacts = {}
+    failures = {}
     for call in trace.calls:
-        if call.server != SERVICE or call.completed is None or call.error:
+        if call.server != SERVICE or call.completed is None:
+            continue
+        preview = call.failure_preview()
+        if preview is not None and preview.get("job_id"):
+            response = (
+                await client.call("job.control", {"job_id": preview["job_id"], "action": "status"})
+            )["result"]
+            valid, reason = validate_document(json.dumps(response))
+            if not valid or response["data"].get("state") != "failed":
+                raise ValueError(f"independent failed-job witness failed: {reason}")
+            expected = error_preview(response, compact=preview.get("details_omitted", False))
+            if {k: v for k, v in preview.items() if k != "request_id"} != {
+                k: v for k, v in expected.items() if k != "request_id"
+            }:
+                raise ValueError("independent failed-job preview differs from native journal")
+            failures[preview["job_id"]] = response
+        if call.error:
             continue
         answer = trace.answer_for(call)
         if answer["status"] not in {"ok", "partial"}:
@@ -128,7 +152,12 @@ async def _witness(trace: Trace, socket: Path) -> dict:
                 "result"
             ]
             valid, reason = validate_document(json.dumps(response))
-            if not valid or response["status"] != "ok" or response["context_id"] != context:
+            if (
+                not valid
+                or response["status"] not in {"ok", "partial"}
+                or response["context_id"] != context
+                or response["snapshot_id"] != snapshot_id
+            ):
                 raise ValueError(f"independent snapshot witness failed: {reason}")
             snapshots[snapshot_id] = response
         if call.tool == "read_artifact":
@@ -142,7 +171,7 @@ async def _witness(trace: Trace, socket: Path) -> dict:
                 "sha256": data["artifact"]["sha256"],
                 "content_digest": data["content_digest"],
             }
-    return {"snapshots": snapshots, "artifacts": artifacts}
+    return {"snapshots": snapshots, "artifacts": artifacts, "failures": failures}
 
 
 def witness(trace: Trace, launch: dict | None) -> dict:
@@ -165,7 +194,7 @@ def assess(gate: str, trace: Trace) -> None:
     if gate in {"A01", "A02"}:
         for tool in ("service_status", "resolve_library", "search_evidence", "read_artifact"):
             require(tool)
-    elif gate == "A03":
+    elif gate == "A03" or gate.startswith("discovery-"):
         breadth = require("library_overview")[0]
         depth = trace.successful("search_evidence") + trace.successful("inspect_symbol")
         completed = trace.usable_at(breadth)
@@ -186,7 +215,13 @@ def assess(gate: str, trace: Trace) -> None:
     elif gate == "A06":
         if any(c.server == SERVICE for c in trace.calls) or not any(
             word in trace.answer.lower()
-            for word in ("unavailable", "not available", "not registered", "not installed")
+            for word in (
+                "unavailable",
+                "not available",
+                "not registered",
+                "not installed",
+                "needs to be registered",
+            )
         ):
             raise ValueError("client did not acknowledge the actually absent service")
     elif gate.startswith("upgrade-"):
@@ -206,20 +241,72 @@ def assess(gate: str, trace: Trace) -> None:
             for o in facts
         ):
             raise ValueError("runtime research lacks a completed runtime object observation")
+    elif gate.startswith("recovery-"):
+        resolved = [trace.answer_for(c) for c in require("resolve_library")]
+        inspected = [trace.answer_for(c) for c in require("inspect_symbol")]
+        attempted = any(
+            c.tool == "resolve_library" and c.arguments.get("version") == "9.9.9"
+            for c in trace.calls
+            if c.server == SERVICE
+        )
+        failures = []
+        for c in trace.calls:
+            if c.server != SERVICE or c.completed is None:
+                continue
+            try:
+                native = c.envelope()
+            except ValueError:
+                preview = c.failure_preview()
+                if preview is not None:
+                    failures.append(preview)
+                continue
+            if native["status"] == "error" or (
+                c.tool == "job_control" and native["data"].get("state") == "failed"
+            ):
+                failures.append(native)
+        recovered = any(
+            r["data"]["release"]["version"] == "0.2.0"
+            and any(i["context_id"] == r["context_id"] for i in inspected)
+            for r in resolved
+        )
+        if not attempted or not failures or not recovered:
+            raise ValueError("recovery lacks the failed request and exact usable replacement")
     if gate not in {"A01", "A02", "A06"}:
         check_citations(trace)
 
 
 def check_citations(trace: Trace) -> None:
     """Cited service identities must occur in the client's completed validated evidence."""
-    pattern = re.compile(r"\b(?:ctx|snap|ev|art|obs|frag|def|bind|run)_[a-f0-9]{16,64}\b")
+    kinds = r"ctx|snap|ev_ent|ev|art|obs|frag|fragment|def|bind|symbol|run|rel|env|exec"
+    pattern = re.compile(rf"\b(?:{kinds})_[a-f0-9]{{16,64}}\b(?!…|\.\.\.)")
     observed: set[str] = set()
+    digests: set[str] = set()
     for call in trace.calls:
         if call.server != SERVICE or call.completed is None or call.error:
             continue
         result = trace.answer_for(call)
         if result["status"] in {"ok", "partial"}:
             observed.update(pattern.findall(json.dumps(result)))
+            digests.update(re.findall(r"\b[a-f0-9]{64}\b", json.dumps(result)))
     cited = set(pattern.findall(trace.answer))
-    if not cited or not cited <= observed:
+    abbreviated = re.findall(
+        rf"\b(?:(?P<kind>{kinds})_)?(?P<head>[a-f0-9]{{8,63}})(?:…|\.\.\.)(?P<tail>[a-f0-9]{{0,63}})",
+        trace.answer,
+    )
+    # A displayed short identity remains a citation only when it selects exactly one
+    # identity in the completed evidence. Ambiguous prefixes never establish support.
+    unique = True
+    for kind, head, tail in abbreviated:
+        choices = {
+            identity.rsplit("_", 1)[1]
+            for identity in observed
+            if not kind or identity.startswith(kind + "_")
+        }
+        if not kind:
+            choices |= digests
+            # A content-addressed artifact's short identity and its full sha256 denote
+            # the same digest prefix. Count its maximal observed digest only once.
+            choices = {v for v in choices if not any(w != v and w.startswith(v) for w in choices)}
+        unique &= sum(v.startswith(head) and v.endswith(tail) for v in choices) == 1
+    if not (cited or abbreviated) or not cited <= observed or not unique:
         raise ValueError("research brief cites no actual evidence or invents service identities")

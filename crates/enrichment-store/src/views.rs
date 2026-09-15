@@ -40,6 +40,10 @@ pub async fn register(session: &SessionContext) -> Result<Vec<&'static str>> {
     }
     for (name, sql) in [
         (
+            "symbol_headers",
+            "SELECT s.*, d.kind, d.definition_path, d.defined_in_package FROM symbols s JOIN definitions d ON s.definition_id = d.definition_id",
+        ),
+        (
             "definition_paths",
             r"
             SELECT definition_id, symbol_id, path_id, ecosystem, components, path, is_reexport

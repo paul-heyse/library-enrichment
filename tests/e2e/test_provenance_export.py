@@ -89,7 +89,7 @@ simple_url="{base}/simple"
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
@@ -141,7 +141,7 @@ async def test_an_exported_bundle_verifies_offline_and_notices_a_damaged_byte(tm
     # bundle could not be related back to the store that produced it.
     assert described["context_id"] == context_id
     assert described["snapshot_id"] == snapshot_id
-    assert described["bundle_version"] == "typed-evidence-bundle/3"
+    assert described["bundle_version"] == "typed-evidence-bundle/5"
     assert described["source_catalog_generation"] > 0
 
     # The snapshot travelled, file for file.

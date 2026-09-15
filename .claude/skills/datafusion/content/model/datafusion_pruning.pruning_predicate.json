@@ -1,0 +1,224 @@
+{
+  "module": "datafusion_pruning::pruning_predicate",
+  "crate": "datafusion-pruning",
+  "api": "api/datafusion_pruning.pruning_predicate.md",
+  "items": [
+    {
+      "path": "datafusion_pruning::pruning_predicate::MAX_IN_LIST_SIZE",
+      "name": "MAX_IN_LIST_SIZE",
+      "kind": "constant",
+      "crate": "datafusion-pruning",
+      "signature": "const MAX_IN_LIST_SIZE: usize = 20",
+      "summary": "Default maximum number of entries in an `IN (...)` list that will be rewritten into a chain of per-value min/max checks by `build_predicate_expression`. Callers threading a [`PredicateRewriter`] can override this via [`PredicateRewriter::w…",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#max_in_list_size",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::MAX_IN_LIST_SIZE",
+        "datafusion_pruning::MAX_IN_LIST_SIZE"
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::build_pruning_predicate",
+      "name": "build_pruning_predicate",
+      "kind": "function",
+      "crate": "datafusion-pruning",
+      "signature": "fn build_pruning_predicate(predicate: std::sync::Arc<dyn PhysicalExpr>, file_schema: &arrow::datatypes::SchemaRef, predicate_creation_errors: &datafusion_physical_plan::metrics::Count) -> Option<std::sync::Arc<PruningPredicate>>",
+      "summary": "Build a pruning predicate from an optional predicate expression. If the predicate is None or the predicate cannot be converted to a pruning predicate, return None. If there is an error creating the pruning predicate it is recorded by incre…",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#build_pruning_predicate",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::build_pruning_predicate",
+        "datafusion_pruning::build_pruning_predicate"
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::PredicateRewriter",
+      "name": "PredicateRewriter",
+      "kind": "struct",
+      "crate": "datafusion-pruning",
+      "signature": "struct PredicateRewriter",
+      "summary": "Rewrite a predicate expression in terms of statistics (min/max/null_counts) for use as a [`PruningPredicate`].",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#predicaterewriter",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::PredicateRewriter",
+        "datafusion_pruning::PredicateRewriter"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new `PredicateRewriter`"
+        },
+        {
+          "name": "rewrite_predicate_to_statistics_predicate",
+          "signature": "fn rewrite_predicate_to_statistics_predicate(&self, expr: &Arc<dyn PhysicalExpr>, schema: &Schema) -> Arc<dyn PhysicalExpr>",
+          "summary": "Translate logical filter expression into pruning predicate expression that will evaluate to FALSE if it can be determined no rows between the min/max values could pass the predicates."
+        },
+        {
+          "name": "with_max_in_list_size",
+          "signature": "fn with_max_in_list_size(self, max_in_list_size: usize) -> Self",
+          "summary": "Set the maximum size of an `IN (...)` list that will be rewritten into a chain of per-value statistics checks. Lists longer than this fall back to the unhandled-predicate hook (typically \"keep the container\"), effectively skipping containe…"
+        },
+        {
+          "name": "with_unhandled_hook",
+          "signature": "fn with_unhandled_hook(self, unhandled_hook: Arc<dyn UnhandledPredicateHook>) -> Self",
+          "summary": "Set the unhandled hook to be used when a predicate can not be rewritten"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::PruningPredicate",
+      "name": "PruningPredicate",
+      "kind": "struct",
+      "crate": "datafusion-pruning",
+      "signature": "struct PruningPredicate",
+      "summary": "Used to prove that arbitrary predicates (boolean expression) can not possibly evaluate to `true` given information about a column provided by [`PruningStatistics`].",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#pruningpredicate",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::PruningPredicate",
+        "datafusion_pruning::PruningPredicate"
+      ],
+      "methods": [
+        {
+          "name": "always_true",
+          "signature": "fn always_true(&self) -> bool",
+          "summary": "Returns true if this pruning predicate can not prune anything."
+        },
+        {
+          "name": "literal_columns",
+          "signature": "fn literal_columns(&self) -> Vec<String>",
+          "summary": "Names of the columns that are known to be / not be in a set of literals (constants). These are the columns the that may be passed to [`PruningStatistics::contained`] during pruning."
+        },
+        {
+          "name": "literal_guarantees",
+          "signature": "fn literal_guarantees(&self) -> &[LiteralGuarantee]",
+          "summary": "Returns a reference to the literal guarantees"
+        },
+        {
+          "name": "orig_expr",
+          "signature": "fn orig_expr(&self) -> &Arc<dyn PhysicalExpr>",
+          "summary": "Returns a reference to the physical expr used to construct this pruning predicate"
+        },
+        {
+          "name": "predicate_expr",
+          "signature": "fn predicate_expr(&self) -> &Arc<dyn PhysicalExpr>",
+          "summary": "Returns a reference to the predicate expr"
+        },
+        {
+          "name": "prune",
+          "signature": "fn prune<S: PruningStatistics + ?Sized>(&self, statistics: &S) -> Result<Vec<bool>>",
+          "summary": "For each set of statistics, evaluates the pruning predicate and returns a `bool` with the following meaning for a all rows whose values match the statistics:"
+        },
+        {
+          "name": "required_columns",
+          "signature": "fn required_columns(&self) -> &RequiredColumns"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Return a reference to the input schema"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(expr: Arc<dyn PhysicalExpr>, schema: SchemaRef) -> Result<Self>",
+          "summary": "Try to create a new instance of [`PruningPredicate`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::PruningPredicateBuilder",
+      "name": "PruningPredicateBuilder",
+      "kind": "struct",
+      "crate": "datafusion-pruning",
+      "signature": "struct PruningPredicateBuilder<'a>",
+      "summary": "Builder for a [`PruningPredicate`]. Groups optional configuration — `IN (...)` rewrite cap, error counter — so future additions do not churn the top-level API.",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#pruningpredicatebuilder",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::PruningPredicateBuilder",
+        "datafusion_pruning::PruningPredicateBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self, predicate: Arc<dyn PhysicalExpr>) -> Option<Arc<PruningPredicate>>",
+          "summary": "Build a [`PruningPredicate`] wrapped in `Some(Arc<..>)` when it can prune, `None` when it is trivially true or when construction fails. If [`Self::with_error_counter`] was set, construction failures are recorded there."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new builder with the default pruning predicate configuration."
+        },
+        {
+          "name": "try_build",
+          "signature": "fn try_build(self, predicate: Arc<dyn PhysicalExpr>) -> Result<PruningPredicate>",
+          "summary": "Build a [`PruningPredicate`], returning the construction error directly. Callers that want the always-true predicate elided or errors folded into a counter should use [`Self::build`] instead."
+        },
+        {
+          "name": "with_error_counter",
+          "signature": "fn with_error_counter(self, error_counter: &'a Count) -> Self",
+          "summary": "Metric counter incremented once per predicate that fails to build. Only consulted by [`Self::build`]; [`Self::try_build`] surfaces the error directly."
+        },
+        {
+          "name": "with_file_schema",
+          "signature": "fn with_file_schema(self, file_schema: SchemaRef) -> Self",
+          "summary": "Set the schema of the container that will be pruned (typically the parquet file schema)."
+        },
+        {
+          "name": "with_max_in_list_size",
+          "signature": "fn with_max_in_list_size(self, max_in_list_size: usize) -> Self",
+          "summary": "Cap on the size of `IN (...)` lists that will be rewritten into per- value min/max statistics checks. Lists longer than this fall back to the unhandled-predicate hook (typically \"keep the container\")."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::RequiredColumns",
+      "name": "RequiredColumns",
+      "kind": "struct",
+      "crate": "datafusion-pruning",
+      "signature": "struct RequiredColumns",
+      "summary": "Describes which columns statistics are necessary to evaluate a [`PruningPredicate`].",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#requiredcolumns",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::RequiredColumns",
+        "datafusion_pruning::RequiredColumns"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(columns: Vec<(phys_expr::Column, StatisticsType, Field)>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "single_column",
+          "signature": "fn single_column(&self) -> Option<&phys_expr::Column>",
+          "summary": "Returns Some(column) if this is a single column predicate."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_pruning::pruning_predicate::UnhandledPredicateHook",
+      "name": "UnhandledPredicateHook",
+      "kind": "trait",
+      "crate": "datafusion-pruning",
+      "signature": "trait UnhandledPredicateHook",
+      "summary": "Rewrites predicates that [`PredicateRewriter`] can not handle, e.g. certain complex expressions or predicates that reference columns that are not in the schema.",
+      "doc": "api/datafusion_pruning.pruning_predicate.md#unhandledpredicatehook",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::UnhandledPredicateHook",
+        "datafusion_pruning::UnhandledPredicateHook"
+      ],
+      "required_methods": [
+        "handle"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "handle",
+          "signature": "fn handle(&self, expr: &Arc<dyn PhysicalExpr>) -> Arc<dyn PhysicalExpr>",
+          "summary": "Called when a predicate can not be rewritten in terms of statistics or references a column that is not in the schema."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "module": "datafusion_physical_expr::aggregate",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.aggregate.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::aggregate::AggregateExprBuilder",
+      "name": "AggregateExprBuilder",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct AggregateExprBuilder",
+      "summary": "Builder for physical [`AggregateFunctionExpr`]",
+      "doc": "api/datafusion_physical_expr.aggregate.md#aggregateexprbuilder",
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(self, alias: impl Into<String>) -> Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<AggregateFunctionExpr>",
+          "summary": "Constructs an `AggregateFunctionExpr` from the builder"
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(self) -> Self"
+        },
+        {
+          "name": "human_display",
+          "signature": "fn human_display(self, name: impl Into<String>) -> Self"
+        },
+        {
+          "name": "ignore_nulls",
+          "signature": "fn ignore_nulls(self) -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(fun: Arc<AggregateUDF>, args: Vec<Arc<dyn PhysicalExpr>>) -> Self"
+        },
+        {
+          "name": "order_by",
+          "signature": "fn order_by(self, order_bys: Vec<PhysicalSortExpr>) -> Self"
+        },
+        {
+          "name": "reversed",
+          "signature": "fn reversed(self) -> Self"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(self, schema: SchemaRef) -> Self"
+        },
+        {
+          "name": "with_distinct",
+          "signature": "fn with_distinct(self, is_distinct: bool) -> Self"
+        },
+        {
+          "name": "with_ignore_nulls",
+          "signature": "fn with_ignore_nulls(self, ignore_nulls: bool) -> Self"
+        },
+        {
+          "name": "with_reversed",
+          "signature": "fn with_reversed(self, is_reversed: bool) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::aggregate::AggregateFunctionExpr",
+      "name": "AggregateFunctionExpr",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct AggregateFunctionExpr",
+      "summary": "Physical aggregate expression of a UDAF.",
+      "doc": "api/datafusion_physical_expr.aggregate.md#aggregatefunctionexpr",
+      "aliases": [
+        "datafusion_physical_plan::udaf::AggregateFunctionExpr"
+      ],
+      "methods": [
+        {
+          "name": "all_expressions",
+          "signature": "fn all_expressions(&self) -> AggregatePhysicalExpressions",
+          "summary": "Returns all expressions used in the [`AggregateFunctionExpr`]. These expressions are  (1)function arguments, (2) order by expressions."
+        },
+        {
+          "name": "create_accumulator",
+          "signature": "fn create_accumulator(&self) -> Result<Box<dyn Accumulator>>",
+          "summary": "the accumulator used to accumulate values from the expressions. the accumulator expects the same number of arguments as `expressions` and must return states with the same description as `state_fields`"
+        },
+        {
+          "name": "create_groups_accumulator",
+          "signature": "fn create_groups_accumulator(&self) -> Result<Box<dyn GroupsAccumulator>>",
+          "summary": "Return a specialized [`GroupsAccumulator`] that manages state for all groups."
+        },
+        {
+          "name": "create_sliding_accumulator",
+          "signature": "fn create_sliding_accumulator(&self) -> Result<Box<dyn Accumulator>>",
+          "summary": "Creates accumulator implementation that supports retract"
+        },
+        {
+          "name": "default_value",
+          "signature": "fn default_value(&self, data_type: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns default value of the function given the input is Null Most of the aggregate function return Null if input is Null, while `count` returns 0 if input is Null"
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "expressions that are passed to the Accumulator. Single-column aggregations such as `sum` return a single value, others (e.g. `cov`) return many."
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self) -> FieldRef",
+          "summary": "the field of the final result of this aggregation."
+        },
+        {
+          "name": "fun",
+          "signature": "fn fun(&self) -> &AggregateUDF",
+          "summary": "Return the `AggregateUDF` used by this `AggregateFunctionExpr`"
+        },
+        {
+          "name": "get_minmax_desc",
+          "signature": "fn get_minmax_desc(&self) -> Option<(FieldRef, bool)>",
+          "summary": "If this function is max, return (output_field, true) if the function is min, return (output_field, false) otherwise return None (the default)"
+        },
+        {
+          "name": "get_result_ordering",
+          "signature": "fn get_result_ordering(&self, aggr_func_idx: usize) -> Option<PhysicalSortExpr>",
+          "summary": "Returns `PhysicalSortExpr` based on the set monotonicity of the function."
+        },
+        {
+          "name": "groups_accumulator_supported",
+          "signature": "fn groups_accumulator_supported(&self) -> bool",
+          "summary": "If the aggregate expression has a specialized [`GroupsAccumulator`] implementation. If this returns true, `[Self::create_groups_accumulator`] will be called."
+        },
+        {
+          "name": "human_display",
+          "signature": "fn human_display(&self) -> Option<&str>",
+          "summary": "Simplified name for `tree` explain."
+        },
+        {
+          "name": "ignore_nulls",
+          "signature": "fn ignore_nulls(&self) -> bool",
+          "summary": "Return if the aggregation ignores nulls"
+        },
+        {
+          "name": "is_distinct",
+          "signature": "fn is_distinct(&self) -> bool",
+          "summary": "Return if the aggregation is distinct"
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool",
+          "summary": "Return if the aggregation is nullable"
+        },
+        {
+          "name": "is_reversed",
+          "signature": "fn is_reversed(&self) -> bool",
+          "summary": "Return if the aggregation is reversed"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Human readable name such as `\"MIN(c2)\"`."
+        },
+        {
+          "name": "order_bys",
+          "signature": "fn order_bys(&self) -> &[PhysicalSortExpr]",
+          "summary": "Returns the ORDER BY expressions for the aggregate function."
+        },
+        {
+          "name": "order_sensitivity",
+          "signature": "fn order_sensitivity(&self) -> AggregateOrderSensitivity",
+          "summary": "Indicates whether aggregator can produce the correct result with any arbitrary input ordering. By default, we assume that aggregate expressions are order insensitive."
+        },
+        {
+          "name": "reverse_expr",
+          "signature": "fn reverse_expr(&self) -> Option<AggregateFunctionExpr>",
+          "summary": "Construct an expression that calculates the aggregate in reverse. Typically the \"reverse\" expression is itself (e.g. SUM, COUNT). For aggregates that do not support calculation in reverse, returns None (which is the default value)."
+        },
+        {
+          "name": "set_monotonicity",
+          "signature": "fn set_monotonicity(&self) -> SetMonotonicity",
+          "summary": "Indicates whether the aggregation function is monotonic as a set function. See [`SetMonotonicity`] for details."
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self) -> Result<Vec<FieldRef>>",
+          "summary": "the field of the final result of this aggregation."
+        },
+        {
+          "name": "with_beneficial_ordering",
+          "signature": "fn with_beneficial_ordering(Arc<self>, beneficial_ordering: bool) -> Result<Option<AggregateFunctionExpr>>",
+          "summary": "Sets the indicator whether ordering requirements of the aggregator is satisfied by its input. If this is not the case, aggregators with order sensitivity `AggregateOrderSensitivity::Beneficial` can still produce the correct result with pos…"
+        },
+        {
+          "name": "with_new_expressions",
+          "signature": "fn with_new_expressions(&self, args: Vec<Arc<dyn PhysicalExpr>>, order_by_exprs: Vec<Arc<dyn PhysicalExpr>>) -> Option<AggregateFunctionExpr>",
+          "summary": "Rewrites [`AggregateFunctionExpr`], with new expressions given. The argument should be consistent with the return value of the [`AggregateFunctionExpr::all_expressions`] method. Returns `Some(Arc<dyn AggregateExpr>)` if re-write is support…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::aggregate::AggregatePhysicalExpressions",
+      "name": "AggregatePhysicalExpressions",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct AggregatePhysicalExpressions",
+      "summary": "Stores the physical expressions used inside the `AggregateExpr`.",
+      "doc": "api/datafusion_physical_expr.aggregate.md#aggregatephysicalexpressions",
+      "fields": [
+        "args",
+        "order_by_exprs"
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::aggregate::LoweredAggregate",
+      "name": "LoweredAggregate",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct LoweredAggregate",
+      "summary": "Result of lowering a logical aggregate expression into physical aggregate planning pieces.",
+      "doc": "api/datafusion_physical_expr.aggregate.md#loweredaggregate",
+      "fields": [
+        "aggregate",
+        "filter",
+        "order_bys"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_expr::aggregate::LoweredAggregateBuilder",
+      "name": "LoweredAggregateBuilder",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct LoweredAggregateBuilder<'a>",
+      "summary": "Builder for converting a logical aggregate [`Expr`] into physical aggregate planning pieces.",
+      "doc": "api/datafusion_physical_expr.aggregate.md#loweredaggregatebuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<LoweredAggregate>",
+          "summary": "Lower the logical aggregate expression into physical aggregate pieces."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: &'a Expr, logical_input_schema: &'a DFSchema, physical_input_schema: &'a Schema, execution_props: &'a ExecutionProps, planning_ctx: &'a PhysicalPlanningContext) -> Self",
+          "summary": "Create a builder for lowering `expr`."
+        },
+        {
+          "name": "with_human_display",
+          "signature": "fn with_human_display(self, human_display: impl Into<String>) -> Self",
+          "summary": "Override the human-readable display text for the aggregate."
+        },
+        {
+          "name": "with_name",
+          "signature": "fn with_name(self, name: impl Into<String>) -> Self",
+          "summary": "Override the output column name for the aggregate."
+        }
+      ]
+    }
+  ]
+}

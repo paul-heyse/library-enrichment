@@ -2,26 +2,32 @@
 //!
 //! Nested Arrow values retain nulls and observational alternatives. Provenance is hydrated
 //! after selecting keys; capture clocks and artifact identities never determine a delta.
-use crate::{SnapshotReader, admission::Relation, projection, runtime::QueryRuntime};
+use crate::{SnapshotReader, admission::Relation, projection};
 use datafusion::{
     dataframe::DataFrame,
     error::{DataFusionError, Result},
-    prelude::{SessionContext, col, lit},
+    prelude::{col, lit},
 };
-use enrichment_core::compare::{self, Change, Scope, page::ComparisonKey};
-use serde_json::Value;
-use std::{
-    collections::BTreeMap,
-    io::{self, Write},
+use enrichment_core::compare::{
+    self, Change, Scope,
+    page::{AlternativeCursor, ComparisonKey},
 };
+use std::collections::BTreeMap;
 
-const GROUP_MEMBERS: usize = 64;
-const RENDER_BYTES: usize = 16 * 1024 * 1024;
+const ALTERNATIVES: usize = 32;
 
 pub struct ComparisonPage {
     pub total: u64,
     pub changes: Vec<(ComparisonKey, Change)>,
     pub has_more: bool,
+}
+
+pub struct Selection<'a> {
+    pub scopes: &'a [Scope],
+    pub after_key: Option<&'a ComparisonKey>,
+    pub limit: usize,
+    pub detail: Option<&'a AlternativeCursor>,
+    pub digest: &'a str,
 }
 
 struct Axis {
@@ -124,13 +130,12 @@ fn axes(scopes: &[Scope]) -> Vec<Axis> {
 pub async fn page(
     before: &SnapshotReader,
     after: &SnapshotReader,
-    scopes: &[Scope],
-    after_key: Option<&ComparisonKey>,
-    limit: usize,
+    blobs: &crate::BlobStore,
+    selection: Selection<'_>,
 ) -> Result<ComparisonPage> {
     tokio::time::timeout(
         before.runtime().deadline(),
-        page_inner(before, after, scopes, after_key, limit),
+        page_inner(before, after, blobs, selection),
     )
     .await
     .map_err(|_| {
@@ -141,10 +146,16 @@ pub async fn page(
 async fn page_inner(
     before: &SnapshotReader,
     after: &SnapshotReader,
-    scopes: &[Scope],
-    after_key: Option<&ComparisonKey>,
-    limit: usize,
+    blobs: &crate::BlobStore,
+    selection: Selection<'_>,
 ) -> Result<ComparisonPage> {
+    let Selection {
+        scopes,
+        after_key,
+        limit,
+        detail,
+        digest: selection_digest,
+    } = selection;
     if limit == 0 || limit > 1000 || scopes.is_empty() {
         return Err(DataFusionError::Plan(
             "comparison needs 1..1000 items and a scope".into(),
@@ -176,41 +187,16 @@ async fn page_inner(
                     .await?
                     .into_view(),
             )?;
-            // Bound the DISTINCT nested accumulator before it can allocate one enormous set.
-            // Each admitted record is independently byte bounded; this is a separate per-key
-            // limit, not a truncation of variants or a final result-page limit.
-            let excessive = runtime.execute(session.sql(&format!("SELECT key FROM {raw} GROUP BY key HAVING count(*) > {GROUP_MEMBERS} LIMIT 1")).await?).await?;
-            if excessive.rows != 0 {
-                return Err(DataFusionError::ResourcesExhausted(format!(
-                    "comparison axis {} exceeds {GROUP_MEMBERS} observations per key",
-                    axis.id
-                )));
-            }
-            session.register_table(
-                format!("{prefix}_set_{}", axis.id),
-                session
-                    .sql(&format!(
-                        r"
-                SELECT key, min(label) AS label,
-                    array_agg(DISTINCT value ORDER BY value ASC NULLS FIRST) AS values
-                FROM {raw} GROUP BY key
-            "
-                    ))
-                    .await?
-                    .into_view(),
-            )?;
         }
-        let joined = session
-            .sql(&format!(
-                r"
-            SELECT coalesce(a.key, b.key) AS key, coalesce(b.label, a.label) AS label,
-                a.values AS before, b.values AS after
-            FROM before_set_{id} a FULL OUTER JOIN after_set_{id} b ON a.key = b.key
-            WHERE a.key IS NULL OR b.key IS NULL OR a.values IS DISTINCT FROM b.values
-        ",
-                id = axis.id
-            ))
-            .await?;
+        // Flat set reconciliation excludes provenance and ordering. No per-key nested
+        // aggregate is needed to prove equality, including null-valued alternatives.
+        let joined = session.sql(&format!(r"
+            WITH removed AS (SELECT key, value FROM before_raw_{id} EXCEPT DISTINCT SELECT key, value FROM after_raw_{id}),
+                 added AS (SELECT key, value FROM after_raw_{id} EXCEPT DISTINCT SELECT key, value FROM before_raw_{id}),
+                 changed AS (SELECT key FROM removed UNION SELECT key FROM added),
+                 labels AS (SELECT key, label FROM before_raw_{id} UNION ALL SELECT key, label FROM after_raw_{id})
+            SELECT c.key, MIN(l.label) AS label FROM changed c JOIN labels l ON c.key = l.key GROUP BY c.key
+        ", id=axis.id)).await?;
         session.register_table(format!("delta_{}", axis.id), joined.clone().into_view())?;
         let index = joined.select(vec![
             lit(u64::from(axis.id)).alias("plan"),
@@ -232,13 +218,25 @@ async fn page_inner(
         });
     }
     let union = union.ok_or_else(|| DataFusionError::Plan("no comparison scope".into()))?;
-    session.register_table("delta_index", union.clone().into_view())?;
+    // Reconciliation is the expensive part. Count and page scan the same operation-owned
+    // changed-key index; alternative values stay in their admitted source relations.
+    session.register_table(
+        "delta_index",
+        crate::operation_index::materialize(
+            runtime,
+            union,
+            crate::preparation::QueryFamily::ComparisonKeys,
+        )
+        .await?,
+    )?;
+    let union = session.table("delta_index").await?;
     let total = projection::comparison::count(
         &runtime
-            .execute(
+            .execute_family(
                 session
                     .sql("SELECT count(*) AS count FROM delta_index")
                     .await?,
+                Some(crate::preparation::QueryFamily::Count),
             )
             .await?
             .batches,
@@ -250,20 +248,28 @@ async fn page_inner(
             has_more: false,
         });
     }
-    let filtered = match after_key {
-        None => union,
-        Some(key) => union.filter(
-            col("plan").gt(lit(u64::from(key.plan))).or(col("plan")
-                .eq(lit(u64::from(key.plan)))
-                .and(
-                    col("label").gt(lit(key.subject.clone())).or(col("label")
-                        .eq(lit(key.subject.clone()))
-                        .and(col("key").gt(lit(key.key.clone())))),
-                )),
-        )?,
+    let filtered = if let Some(detail) = detail {
+        union.filter(
+            col("plan")
+                .eq(lit(u64::from(detail.key.plan)))
+                .and(col("key").eq(lit(detail.key.key.clone()))),
+        )?
+    } else {
+        match after_key {
+            None => union,
+            Some(key) => union.filter(
+                col("plan").gt(lit(u64::from(key.plan))).or(col("plan")
+                    .eq(lit(u64::from(key.plan)))
+                    .and(
+                        col("label").gt(lit(key.subject.clone())).or(col("label")
+                            .eq(lit(key.subject.clone()))
+                            .and(col("key").gt(lit(key.key.clone())))),
+                    )),
+            )?,
+        }
     };
     let output = runtime
-        .execute(
+        .execute_family(
             filtered
                 .sort(vec![
                     col("plan").sort(true, false),
@@ -271,42 +277,156 @@ async fn page_inner(
                     col("key").sort(true, false),
                 ])?
                 .limit(0, Some(limit + 1))?,
+            Some(crate::preparation::QueryFamily::ComparisonKeys),
         )
         .await?;
     let mut keys = projection::comparison::keys(&output.batches)?;
     let has_more = keys.len() > limit;
     keys.truncate(limit);
+    if detail.is_some() && keys.len() != 1 {
+        return Err(DataFusionError::Plan(
+            "alternative cursor does not select a changed key".into(),
+        ));
+    }
+    let snapshots = format!(
+        "{}:{}",
+        before.manifest().snapshot_id,
+        after.manifest().snapshot_id
+    );
+    // Reserve a bounded terminal header/index envelope independently of value artifacts.
+    let mut artifact_bytes = crate::runtime::remaining_artifact_bytes().saturating_sub(1024 * 1024);
     let mut hydrated = BTreeMap::new();
-    for axis in axes {
-        let selected = keys
+    for key in &keys {
+        let axis = axes
             .iter()
-            .filter(|k| k.plan == axis.id)
-            .collect::<Vec<_>>();
-        if selected.is_empty() {
-            continue;
+            .find(|a| a.id == key.plan)
+            .ok_or_else(|| DataFusionError::Plan("unknown comparison axis".into()))?;
+        let mut sides = Vec::new();
+        for is_before in [true, false] {
+            let offset = detail
+                .filter(|d| d.before == is_before)
+                .map_or(0, |d| d.offset);
+            let side = if is_before { "before" } else { "after" };
+            let selected = session
+                .table(format!("{side}_raw_{}", axis.id))
+                .await?
+                .filter(col("key").eq(lit(key.key.clone())))?
+                .select(vec![col("value"), col("source")])?
+                .distinct()?;
+            if detail.is_some_and(|d| d.before != is_before) {
+                // A detail cursor advances only its selected side. Preserve the other side's
+                // observed presence without repeating value hydration or artifact writing.
+                let present = runtime
+                    .execute_family(
+                        selected
+                            .select(vec![lit(1_i64).alias("count")])?
+                            .limit(0, Some(1))?,
+                        Some(crate::preparation::QueryFamily::Count),
+                    )
+                    .await?
+                    .rows
+                    != 0;
+                sides.push((
+                    present.then(Vec::new),
+                    enrichment_core::wire::Page::new(0, None, false, None),
+                ));
+                continue;
+            }
+            let blobs = blobs.clone();
+            let (values, more, observed, remaining) = runtime
+                .fold_blocking(
+                    selected
+                        .sort(vec![
+                            col("value").sort(true, true),
+                            col("source").sort(true, true),
+                        ])?
+                        .limit(offset, Some(ALTERNATIVES + 1))?,
+                    crate::preparation::QueryFamily::ComparisonAlternatives,
+                    ALTERNATIVES + 1,
+                    (Vec::new(), false, false, artifact_bytes),
+                    move |(mut values, mut more, mut observed, mut remaining), batch| {
+                        if more { return Ok((values, more, observed, remaining)); }
+                        let sources = projection::comparison::alternative_sources(
+                            std::slice::from_ref(batch),
+                        )?;
+                        let array = batch.column_by_name("value").ok_or_else(|| {
+                            DataFusionError::Internal("missing comparison value".into())
+                        })?;
+                        for (row, source) in sources.into_iter().enumerate() {
+                            observed = true;
+                            if values.len() == ALTERNATIVES {
+                                more = true;
+                                break;
+                            }
+                            let value = projection::comparison_value::deliver(array.as_ref(), row, &blobs, remaining)?;
+                            let Some(value) = value else {
+                                if values.is_empty() {
+                                    return Err(DataFusionError::ResourcesExhausted(format!("remaining comparison artifact capacity ({remaining} bytes) cannot hold a nonempty side page; reduce changed keys per request or follow an existing alternative cursor")));
+                                }
+                                more = true;
+                                break;
+                            };
+                            if let compare::AlternativeValue::Artifact { size_bytes, .. } = &value {
+                                remaining = remaining.saturating_sub(*size_bytes as usize);
+                            }
+                            values.push(compare::Alternative { value, source });
+                        }
+                        Ok((values, more, observed, remaining))
+                    },
+                )
+                .await?;
+            artifact_bytes = remaining;
+            if offset > 0 && !observed {
+                return Err(DataFusionError::Plan(
+                    "alternative cursor exceeds retained rows".into(),
+                ));
+            }
+            let cursor = if more {
+                Some(
+                    AlternativeCursor::encode(
+                        key.clone(),
+                        is_before,
+                        offset + values.len(),
+                        &snapshots,
+                        selection_digest,
+                    )
+                    .map_err(|e| DataFusionError::Execution(e.to_string()))?,
+                )
+            } else {
+                None
+            };
+            let page = enrichment_core::wire::Page::new(values.len() as u64, None, more, cursor);
+            sides.push((observed.then_some(values), page));
         }
-        let frame = session.table(format!("delta_{}", axis.id)).await?.filter(
-            col("key").in_list(selected.iter().map(|k| lit(k.key.clone())).collect(), false),
-        )?;
-        let batches = runtime.execute(frame).await?.batches;
-        for row in render(&batches)? {
-            let key = row.get("key").and_then(Value::as_str).ok_or_else(|| {
-                DataFusionError::Execution("comparison key was not rendered".into())
-            })?;
-            let subject = row.get("label").and_then(Value::as_str).ok_or_else(|| {
-                DataFusionError::Execution("comparison subject was not rendered".into())
-            })?;
-            let mut change = compare::change(
-                axis.scope,
-                key,
-                subject,
-                row.get("before").filter(|v| !v.is_null()).cloned(),
-                row.get("after").filter(|v| !v.is_null()).cloned(),
-            );
-            change.before_sources = sources(&session, runtime, "before", axis.id, key).await?;
-            change.after_sources = sources(&session, runtime, "after", axis.id, key).await?;
-            hydrated.insert((axis.id, key.to_owned()), change);
+        let (after_values, after_page) = sides.pop().expect("two comparison sides");
+        let (before_values, before_page) = sides.pop().expect("two comparison sides");
+        let mut change = compare::change(
+            axis.scope,
+            &key.key,
+            &key.subject,
+            before_values,
+            after_values,
+        );
+        // Identity is the immutable pair and changed key, independent of this detail page.
+        change.change_id = format!(
+            "change_{}",
+            enrichment_core::canonical::digest_hex(&serde_json::json!([
+                "comparison-change/2",
+                snapshots,
+                key.plan,
+                key.key
+            ]))
+        );
+        if let Some(detail) = detail {
+            change.interpretation.push_str(if detail.before {
+                " This reply projects the requested before alternative page; the opposite side's count remains unknown."
+            } else {
+                " This reply projects the requested after alternative page; the opposite side's count remains unknown."
+            });
         }
+        change.before_page = before_page;
+        change.after_page = after_page;
+        hydrated.insert((axis.id, key.key.clone()), change);
     }
     let changes = keys
         .into_iter()
@@ -324,49 +444,4 @@ async fn page_inner(
         changes,
         has_more,
     })
-}
-
-async fn sources(
-    session: &SessionContext,
-    runtime: &QueryRuntime,
-    side: &str,
-    axis: u32,
-    key: &str,
-) -> Result<Vec<enrichment_core::evidence::relational::FactSource>> {
-    let frame = session
-        .table(format!("{side}_raw_{axis}"))
-        .await?
-        .filter(col("key").eq(lit(key)))?
-        .select(vec![col("source")])?
-        .distinct()?;
-    Ok(projection::comparison::sources(
-        &runtime.execute(frame).await?.batches,
-    )?)
-}
-
-struct BoundedJson(Vec<u8>);
-impl Write for BoundedJson {
-    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if bytes.len() > RENDER_BYTES.saturating_sub(self.0.len()) {
-            return Err(io::Error::other("comparison JSON byte budget exceeded"));
-        }
-        self.0.extend_from_slice(bytes);
-        Ok(bytes.len())
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-
-fn render(
-    batches: &[arrow::record_batch::RecordBatch],
-) -> Result<Vec<serde_json::Map<String, Value>>> {
-    // This is the final wire boundary, after native filtering, comparison, sort and limit.
-    let mut writer = arrow::json::WriterBuilder::new()
-        .with_explicit_nulls(true)
-        .build::<_, arrow::json::writer::JsonArray>(BoundedJson(Vec::new()));
-    writer.write_batches(&batches.iter().collect::<Vec<_>>())?;
-    writer.finish()?;
-    serde_json::from_slice(&writer.into_inner().0)
-        .map_err(|e| DataFusionError::Execution(e.to_string()))
 }

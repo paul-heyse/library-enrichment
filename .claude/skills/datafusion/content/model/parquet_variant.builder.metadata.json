@@ -1,0 +1,170 @@
+{
+  "module": "parquet_variant::builder::metadata",
+  "crate": "parquet-variant",
+  "api": "api/parquet_variant.builder.metadata.md",
+  "items": [
+    {
+      "path": "parquet_variant::builder::metadata::ReadOnlyMetadataBuilder",
+      "name": "ReadOnlyMetadataBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ReadOnlyMetadataBuilder<'m>",
+      "summary": "A metadata builder that cannot register new field names, and merely returns the field id associated with a known field name. This is useful for variant unshredding operations, where the metadata column is fixed and -- per variant shredding…",
+      "doc": "api/parquet_variant.builder.metadata.md#readonlymetadatabuilder",
+      "implements": [
+        "parquet_variant::builder::metadata::MetadataBuilder"
+      ],
+      "methods": [
+        {
+          "name": "field_name",
+          "signature": "fn field_name(&self, field_id: usize) -> &str",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> usize",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(metadata: &'m VariantMetadata<'m>) -> Self",
+          "summary": "Creates a new read-only metadata builder from the given metadata dictionary."
+        },
+        {
+          "name": "num_field_names",
+          "signature": "fn num_field_names(&self) -> usize",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "truncate_field_names",
+          "signature": "fn truncate_field_names(&mut self, new_size: usize)",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "try_upsert_field_name",
+          "signature": "fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::metadata::WritableMetadataBuilder",
+      "name": "WritableMetadataBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct WritableMetadataBuilder",
+      "summary": "Builder for constructing metadata for [`Variant`] values.",
+      "doc": "api/parquet_variant.builder.metadata.md#writablemetadatabuilder",
+      "implements": [
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "parquet_variant::builder::metadata::MetadataBuilder"
+      ],
+      "methods": [
+        {
+          "name": "extend",
+          "signature": "fn extend<T: IntoIterator<Item = S>>(&mut self, iter: T)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "field_name",
+          "signature": "fn field_name(&self, field_id: usize) -> &str",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> usize",
+          "summary": "Finalizes the metadata dictionary and appends its serialized bytes to the underlying buffer, returning the resulting [`Self::offset`]. The builder state is reset and ready to start building a new metadata dictionary."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> usize",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = S>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Vec<u8>",
+          "summary": "Returns the inner buffer, consuming self without finalizing any in progress metadata."
+        },
+        {
+          "name": "num_field_names",
+          "signature": "fn num_field_names(&self) -> usize",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "summary": "The current length of the underlying metadata buffer"
+        },
+        {
+          "name": "truncate_field_names",
+          "signature": "fn truncate_field_names(&mut self, new_size: usize)",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "try_upsert_field_name",
+          "signature": "fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>",
+          "via_trait": "parquet_variant::builder::metadata::MetadataBuilder"
+        },
+        {
+          "name": "upsert_field_name",
+          "signature": "fn upsert_field_name(&mut self, field_name: &str) -> u32",
+          "summary": "Upsert field name to dictionary, return its ID"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::metadata::MetadataBuilder",
+      "name": "MetadataBuilder",
+      "kind": "trait",
+      "crate": "parquet-variant",
+      "signature": "trait MetadataBuilder: std::fmt::Debug",
+      "summary": "A trait for building variant metadata dictionaries, to be used in conjunction with a [`ValueBuilder`]. The trait provides methods for managing field names and their IDs, as well as rolling back a failed builder operation that might have cr…",
+      "doc": "api/parquet_variant.builder.metadata.md#metadatabuilder",
+      "implementors": [
+        "parquet_variant::builder::metadata::ReadOnlyMetadataBuilder",
+        "parquet_variant::builder::metadata::WritableMetadataBuilder"
+      ],
+      "required_methods": [
+        "field_name",
+        "finish",
+        "num_field_names",
+        "truncate_field_names",
+        "try_upsert_field_name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "field_name",
+          "signature": "fn field_name(&self, field_id: usize) -> &str",
+          "summary": "Retrieves the field name for a given field id, which must be less than [`Self::num_field_names`]. Panics if the field id is out of bounds."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> usize",
+          "summary": "Finishes the current metadata dictionary, returning the new size of the underlying buffer."
+        },
+        {
+          "name": "num_field_names",
+          "signature": "fn num_field_names(&self) -> usize",
+          "summary": "Returns the number of field names stored in this metadata builder. Any number less than this is a valid field id. The builder can be reverted back to this size later on (discarding any newer/higher field ids) by calling [`Self::truncate_fi…"
+        },
+        {
+          "name": "truncate_field_names",
+          "signature": "fn truncate_field_names(&mut self, new_size: usize)",
+          "summary": "Reverts the field names to a previous size, discarding any newly out of bounds field ids."
+        },
+        {
+          "name": "try_upsert_field_name",
+          "signature": "fn try_upsert_field_name(&mut self, field_name: &str) -> Result<u32, ArrowError>",
+          "summary": "Attempts to register a field name, returning the corresponding (possibly newly-created) field id on success. Attempting to register the same field name twice will _generally_ produce the same field id both times, but the variant spec does…"
+        }
+      ]
+    }
+  ]
+}

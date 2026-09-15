@@ -104,7 +104,7 @@ def config_for(path, base):
 
 async def call(client, tool, **arguments):
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, arguments)).structured_content
+        client, (await client.call_tool(tool, arguments, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
@@ -155,13 +155,19 @@ async def test_same_path_definitions_can_be_selected_without_merging_kinds(tmp_p
                         "inspect_symbol",
                         **selected,
                         definition_id=candidate["definition_id"],
-                        depth="source",
+                        selection={
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name}
+                                for name in ("signature", "availability", "documentation", "source")
+                            ],
+                        },
                     )
                     symbol = answer["data"]["symbol"]
                     assert symbol["definition_id"] == candidate["definition_id"]
                     assert symbol["kind"] == candidate["kind"]
                     expected_origin = "source" if candidate["kind"] == "class" else "stub"
-                    assert {o["origin"] for o in symbol["python"]["observations"]} == {
+                    assert {o["origin"] for o in answer["data"]["observations"]} == {
                         expected_origin
                     }
                     assert answer["data"]["source"] is not None
@@ -221,17 +227,39 @@ async def test_python_distribution_mapping_conflicts_namespaces_and_offline(tmp_
                     context_id=context,
                     snapshot_id=snapshot,
                     symbol_path="different.api.Thing.convert",
-                    depth="source",
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [
+                            {"aspect": name}
+                            for name in ("signature", "availability", "documentation", "source")
+                        ],
+                    },
                 )
                 assert inspected["status"] != "error", inspected
-                symbol = inspected["data"]["symbol"]
-                assert symbol["python"]["signature_conflict"]
-                assert symbol["python"]["observations"][0]["publicness"]["exported"] is None
-                assert not symbol["python"]["observations"][0]["publicness"]["underscore"]
-                observations = symbol["python"]["observations"]
+                observations = inspected["data"]["observations"]
+                assert len({o["payload"]["signature"] for o in observations}) > 1
+                assert observations[0]["payload"]["python"]["publicness"]["exported"] is None
+                assert not observations[0]["payload"]["python"]["publicness"]["underscore"]
                 assert {o["origin"] for o in observations} == {"source", "stub"}
-                assert len(next(o for o in observations if o["origin"] == "stub")["overloads"]) == 2
-                assert inspected["data"]["source"]["text"]
+                assert (
+                    len(
+                        next(o for o in observations if o["origin"] == "stub")["payload"]["python"][
+                            "overloads"
+                        ]
+                    )
+                    == 2
+                )
+                assert {o["source"]["locator"]["file"] for o in observations} == {
+                    "different/api.py",
+                    "different/api.pyi",
+                }
+                assert inspected["data"]["source"] is None
+                assert (
+                    next(
+                        a for a in inspected["data"]["aspect_outcomes"] if a["aspect"] == "source"
+                    )["state"]
+                    == "unavailable"
+                )
                 alias = await call(
                     client,
                     "inspect_symbol",
@@ -239,18 +267,21 @@ async def test_python_distribution_mapping_conflicts_namespaces_and_offline(tmp_
                     symbol_path="different.PublicThing",
                 )
                 assert alias["data"]["symbol"]["definition_path"] == "different.api.Thing"
-                assert next(
-                    o
-                    for o in alias["data"]["symbol"]["python"]["observations"]
-                    if o["path"] == "different.PublicThing"
-                )["publicness"]["exported"]
+                assert any(
+                    o["subject"].get("symbol_id") == alias["data"]["symbol"]["symbol_id"]
+                    and o["payload"]["python"]["publicness"]["exported"] is True
+                    for o in alias["data"]["observations"]
+                )
                 conflict_alias = await call(
                     client, "inspect_symbol", context_id=context, symbol_path="different.coerce"
                 )
                 alias_symbol = conflict_alias["data"]["symbol"]
                 assert alias_symbol["signature"] is None
-                assert alias_symbol["python"]["signature_conflict"]
-                assert {o["origin"] for o in alias_symbol["python"]["observations"]} == {
+                assert (
+                    len({o["payload"]["signature"] for o in conflict_alias["data"]["observations"]})
+                    > 1
+                )
+                assert {o["origin"] for o in conflict_alias["data"]["observations"]} == {
                     "source",
                     "stub",
                 }
@@ -306,7 +337,13 @@ async def test_python_distribution_mapping_conflicts_namespaces_and_offline(tmp_
                 context_id=context,
                 snapshot_id=snapshot,
                 symbol_path="different.api.Thing.convert",
-                depth="source",
+                selection={
+                    "mode": "explicit",
+                    "aspects": [
+                        {"aspect": name}
+                        for name in ("signature", "availability", "documentation", "source")
+                    ],
+                },
             )
             assert again["data"] == inspected["data"]
     assert not canary.exists()
@@ -415,14 +452,21 @@ async def test_extension_only_package_returns_stubs_and_explicit_runtime_gaps(tm
                     symbol_path="native_only.ping",
                 )
                 assert inspected["status"] == "partial"
-                assert "runtime_api" in inspected["coverage"]["missing"]
-                assert any(
-                    "source" in note and "signatures" in note
-                    for note in inspected["coverage"]["limitations"]
+                runtime_scope = await call(
+                    client,
+                    "inspect_symbol",
+                    context_id=resolved["context_id"],
+                    symbol_path="native_only.ping",
+                    selection={"mode": "explicit", "aspects": [{"aspect": "runtime"}]},
                 )
+                assert "runtime_api" in runtime_scope["coverage"]["missing"]
+                assert not runtime_scope["data"]["execution_observations"]
                 assert "ping" in inspected["data"]["symbol"]["signature"]
-                assert "Native ping declaration" in inspected["data"]["symbol"]["docs"]
-                assert inspected["data"]["symbol"]["python"]["observations"][0]["origin"] == "stub"
+                assert any(
+                    "Native ping declaration" in item["fragment"]["text"]
+                    for item in inspected["data"]["fragments"]
+                )
+                assert inspected["data"]["observations"][0]["origin"] == "stub"
                 assert not any(
                     e["evidence_class"] == "runtime_observed" for e in inspected["evidence"]
                 )
@@ -465,7 +509,7 @@ async def test_added_python_function_is_discovered_independently_of_break_checks
                     "comparable"
                 ]  # unknown target/dependency graph remains unknown
                 changes = result["data"]["changes"]
-                while result["pagination"]["next_cursor"]:
+                while result["data"]["page"]["next_cursor"]:
                     result = await call(
                         client,
                         "compare_releases",
@@ -473,13 +517,15 @@ async def test_added_python_function_is_discovered_independently_of_break_checks
                         after_context_id=sides[1]["context_id"],
                         scopes=["api"],
                         max_items=1,
-                        cursor=result["pagination"]["next_cursor"],
+                        cursor=result["data"]["page"]["next_cursor"],
                     )
                     changes.extend(result["data"]["changes"])
                 addition = next(c for c in changes if c["subject"] == "different.new_api.batch")
                 assert addition["kind"] == "added"
-                assert "Additive" in addition["interpretation"]
-                assert addition["after_sources"][0]["artifact_id"]
+                assert addition["before"] is None
+                assert "observed only on the after side" in addition["interpretation"]
+                assert "confirm coverage" in addition["interpretation"]
+                assert addition["after"][0]["source"]["artifact_id"]
                 assert all(c["kind"] == "added" for c in changes)
                 invalid = await call(
                     client,
@@ -649,10 +695,10 @@ async def test_namespace_search_and_cursor_scope_remain_deterministic(tmp_path):
                 first = await call(client, "search_evidence", **args)
                 again = await call(client, "search_evidence", **args)
                 assert first["data"] == again["data"]
-                assert first["pagination"] == again["pagination"]
+                assert first["data"]["page"] == again["data"]["page"]
                 assert first["data"]["area"] == "different"
                 assert all(h["path"].startswith("different.") for h in first["data"]["hits"])
-                cursor = first["pagination"]["next_cursor"]
+                cursor = first["data"]["page"]["next_cursor"]
                 assert cursor
                 bad = await call(
                     client, "search_evidence", **{**args, "area": "shared"}, cursor=cursor
@@ -702,14 +748,14 @@ async def test_mcp_budget_overflow_artifact_recovers_exact_escaped_query(tmp_pat
                 query = 'missing_"\\漢字🙂' * 1000
                 args = dict(context_id=resolved["context_id"], query=query, max_bytes=4096)
                 bounded = (await client.call_tool("search_evidence", args)).structured_content
-                assert bounded["error"]["code"] == "BUDGET_EXCEEDED", bounded["error"]
-                assert bounded["pagination"]["truncated"]
+                assert bounded["status"] in {"ok", "partial"}, bounded
+                assert bounded["delivery"]["mode"] == "artifact"
                 assert (
                     len(json.dumps(bounded, ensure_ascii=False, separators=(",", ":")).encode())
                     <= 4096
                 )
                 again = (await client.call_tool("search_evidence", args)).structured_content
-                assert again["data"]["result_artifact_id"] == bounded["data"]["result_artifact_id"]
+                assert again["delivery"]["artifact_id"] == bounded["delivery"]["artifact_id"]
                 complete = await daemon.read_complete_answer(client, bounded)
                 assert complete["data"]["query"] == query
                 assert complete["data"]["hits"] == []
@@ -731,6 +777,7 @@ async def test_search_complexity_is_bounded_before_query_planning(tmp_path):
                             "context_id": "irrelevant",
                             "query": " ".join(f"term{i}" for i in range(1000)),
                         },
+                        raise_on_error=False,
                     )
                 ).structured_content
                 assert result["error"]["code"] == "UNSUPPORTED_FORMAT"
@@ -874,14 +921,33 @@ async def test_complete_stdio_frames_have_one_envelope_and_measured_allowance(tm
                     )
                     assert size <= budget, (budget, size)
                     assert len(frame) <= budget + MCP_FRAME_ALLOWANCE_BYTES, (budget, len(frame))
-                    assert len(result["content"]) == 1
+                    assert 1 <= len(result["content"]) <= 2
+                    assert all(item["type"] == "resource_link" for item in result["content"][1:])
                     assert result["content"][0]["type"] == "text"
-                    assert (
-                        len(json.dumps(result["content"][0]["text"], ensure_ascii=False).encode())
-                        <= 160
-                    )
-                    assert structured["error"]["code"] == "BUDGET_EXCEEDED"
-                    assert structured["data"]["result_artifact_id"]
+                    if structured["status"] == "error":
+                        preview = json.loads(result["content"][0]["text"])
+                        assert preview["format"] == "research-error-preview/1"
+                        assert preview["code"] == structured["error"]["code"]
+                        assert preview["next_action"] == structured["error"]["next_action"]
+                        assert budget < 4096
+                        assert structured["error"]["code"] == "BUDGET_EXCEEDED"
+                        diagnostic = structured["error"]["diagnostic"]
+                        assert diagnostic["allowed"] == budget
+                        assert diagnostic["observed"] > budget
+                        assert not structured["error"]["retryable"]
+                        assert result["isError"]
+                    else:
+                        assert (
+                            len(
+                                json.dumps(
+                                    result["content"][0]["text"], ensure_ascii=False
+                                ).encode()
+                            )
+                            <= 160
+                        )
+                        assert structured["status"] in {"ok", "partial"}
+                        assert structured["delivery"]["artifact_id"]
+                        assert not result.get("isError", False)
                     assert "schema_version" not in result["content"][0]["text"]
             finally:
                 stdin.close()
@@ -890,3 +956,66 @@ async def test_complete_stdio_frames_have_one_envelope_and_measured_allowance(tm
                 except TimeoutError:
                     process.kill()
                     await process.wait()
+
+
+async def test_binary_artifact_pages_reconstruct_exact_bytes_under_encoded_cap(tmp_path):
+    import base64
+
+    root = tmp_path / "upstream"
+    build_upstream(root, tmp_path / "must-not-import")
+    wheel = root / "static/evidence_demo-1.0-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "a") as archive:
+        archive.writestr(
+            "evidence_demo-1.0.dist-info/binary-fixture.bin",
+            bytes(range(256)) * 128,
+            compress_type=zipfile.ZIP_STORED,
+        )
+    expected = wheel.read_bytes()
+    digest = hashlib.sha256(expected).hexdigest()
+    metadata_path = root / "pypi/evidence-demo/1.0.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata["urls"][0]["digests"]["sha256"] = digest
+    metadata_path.write_text(json.dumps(metadata))
+    config = tmp_path / "service.toml"
+    with serve(root) as upstream:
+        config_for(config, upstream.base_url)
+        env = daemon.daemon_env(tmp_path / "state", config)
+        with daemon.running(env):
+            async with Client(daemon.transport(env)) as client:
+                result = await call(
+                    client,
+                    "resolve_library",
+                    ecosystem="python",
+                    name="evidence-demo",
+                    version="1.0",
+                )
+                assert result["status"] in {"ok", "partial"}, result
+                artifact = next(a for a in result["data"]["artifacts"] if a["sha256"] == digest)
+                cursor = None
+                chunks = []
+                for _ in range(100):
+                    page = await call(
+                        client,
+                        "read_artifact",
+                        artifact_id=artifact["artifact_id"],
+                        cursor=cursor,
+                        max_bytes=4096,
+                    )
+                    assert page["status"] == "ok", page
+                    assert page["data"]["encoding"] == "base64"
+                    size = len(json.dumps(page, ensure_ascii=False, separators=(",", ":")).encode())
+                    assert size <= 4096
+                    chunk = base64.b64decode(page["data"]["content"], validate=True)
+                    assert chunk
+                    assert hashlib.sha256(chunk).hexdigest() == page["data"]["content_digest"]
+                    chunks.append(chunk)
+                    following = page["data"]["page"]["next_cursor"]
+                    if following is None:
+                        break
+                    assert following != cursor
+                    assert size >= 4080
+                    cursor = following
+                else:
+                    raise AssertionError("binary traversal did not finish")
+                assert len(chunks) > 2
+                assert b"".join(chunks) == expected

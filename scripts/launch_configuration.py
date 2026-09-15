@@ -14,7 +14,14 @@ from cli import say, warn
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def describe(state: Path, config: Path, profile: str, resources: str = "workstation") -> dict:
+def describe(
+    state: Path,
+    config: Path,
+    profile: str,
+    resources: str = "workstation",
+    *,
+    installation: Path | None = None,
+) -> dict:
     """Resolve one explicit service state/configuration and the complete executable set."""
     if profile not in {"debug", "release"}:
         raise ValueError("build profile must be debug or release")
@@ -23,12 +30,13 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
     if not state.is_absolute() or not config.is_absolute():
         raise ValueError("state and configuration paths must be absolute")
     state, config = state.resolve(), config.resolve()
-    python = ROOT / ".venv/bin/python"
+    root = installation.resolve() if installation is not None else ROOT
+    python = root / ".venv/bin/python"
     uv = shutil.which("uv")
     if not uv:
         raise ValueError("uv is required to launch the locked service environment")
     binaries = {
-        name: ROOT / "target" / profile / name
+        name: root / "target" / profile / name
         for name in (
             "library-enrichmentd",
             "library-enrichment-executor",
@@ -47,7 +55,7 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
         "LIBENR_DATA_HOME": str(state / "data"),
         "LIBENR_SOCKET": str(socket),
         "LIBENR_CONFIG": str(config),
-        "UV_PROJECT_ENVIRONMENT": str(ROOT / ".venv"),
+        "UV_PROJECT_ENVIRONMENT": str(root / ".venv"),
         "UV_NO_SYNC": "1",
     }
     adapter = {
@@ -57,7 +65,7 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
             "--frozen",
             "--no-sync",
             "--project",
-            str(ROOT),
+            str(root),
             "--python",
             str(python),
             "python",
@@ -69,7 +77,7 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
         "env": environment,
     }
     base = (
-        (ROOT / "config/service.workstation.toml").read_text()
+        (root / "config/service.workstation.toml").read_text()
         if resources == "workstation"
         else 'config_version = "1.0"\n\n[policy]\nenabled_profiles = ["static"]\n'
     )
@@ -77,8 +85,8 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
     identities = {}
     for name, path in {
         **binaries,
-        "Cargo.lock": ROOT / "Cargo.lock",
-        "uv.lock": ROOT / "uv.lock",
+        "Cargo.lock": root / "Cargo.lock",
+        "uv.lock": root / "uv.lock",
     }.items():
         with path.open("rb") as stream:
             identities[name] = hashlib.file_digest(stream, "sha256").hexdigest()
@@ -86,7 +94,7 @@ def describe(state: Path, config: Path, profile: str, resources: str = "workstat
         "format": "library-enrichment-launch/1",
         "profile": profile,
         "resources": resources,
-        "repository": str(ROOT),
+        "repository": str(root),
         "configuration_path": str(config),
         "configuration_toml": config_text,
         "configuration_sha256": hashlib.sha256(config_text.encode()).hexdigest(),

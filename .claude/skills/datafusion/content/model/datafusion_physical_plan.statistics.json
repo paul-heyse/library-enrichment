@@ -1,0 +1,90 @@
+{
+  "module": "datafusion_physical_plan::statistics",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.statistics.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::statistics::ChildStats",
+      "name": "ChildStats",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum ChildStats",
+      "summary": "Directive returned by [`ExecutionPlan::child_stats_requests`] describing how the [`StatisticsContext`] should obtain each child's statistics.",
+      "doc": "api/datafusion_physical_plan.statistics.md#childstats",
+      "aliases": [
+        "datafusion::physical_plan::ChildStats",
+        "datafusion_physical_plan::ChildStats"
+      ],
+      "variants": [
+        "At",
+        "Skip"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::statistics::StatisticsArgs",
+      "name": "StatisticsArgs",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct StatisticsArgs",
+      "summary": "Arguments passed to [`ExecutionPlan::statistics_from_inputs`] carrying external information that operators can use when computing their statistics.",
+      "doc": "api/datafusion_physical_plan.statistics.md#statisticsargs",
+      "aliases": [
+        "datafusion::physical_plan::StatisticsArgs",
+        "datafusion_physical_plan::StatisticsArgs"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates new statistics arguments."
+        },
+        {
+          "name": "partition",
+          "signature": "fn partition(&self) -> Option<usize>",
+          "summary": "Return the partition to compute statistics"
+        },
+        {
+          "name": "set_partition",
+          "signature": "fn set_partition(&mut self, partition: Option<usize>)",
+          "summary": "Set the partition to compute statistics"
+        },
+        {
+          "name": "with_partition",
+          "signature": "fn with_partition(self, partition: Option<usize>) -> Self",
+          "summary": "Builder Style API for [`Self::set_partition`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::statistics::StatisticsContext",
+      "name": "StatisticsContext",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct StatisticsContext",
+      "summary": "Owns the bottom-up traversal and per-walk memoization cache for statistics computation. Call [`StatisticsContext::compute`] to walk a plan tree.",
+      "doc": "api/datafusion_physical_plan.statistics.md#statisticscontext",
+      "aliases": [
+        "datafusion::physical_plan::StatisticsContext",
+        "datafusion_physical_plan::StatisticsContext"
+      ],
+      "methods": [
+        {
+          "name": "compute",
+          "signature": "fn compute(&self, plan: &dyn ExecutionPlan, args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "summary": "Computes statistics for `plan`, resolving children first and passing the results to [`ExecutionPlan::statistics_from_inputs`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a context with an empty cache."
+        },
+        {
+          "name": "reset_cache",
+          "signature": "fn reset_cache(&self)",
+          "summary": "Clears the memoization cache."
+        }
+      ]
+    }
+  ]
+}

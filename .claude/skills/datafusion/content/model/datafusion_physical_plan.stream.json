@@ -1,0 +1,153 @@
+{
+  "module": "datafusion_physical_plan::stream",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.stream.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::stream::BatchSplitStream",
+      "name": "BatchSplitStream",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BatchSplitStream",
+      "summary": "Stream wrapper that splits large [`RecordBatch`]es into smaller batches.",
+      "doc": "api/datafusion_physical_plan.stream.md#batchsplitstream",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(input: SendableRecordBatchStream, batch_size: usize, metrics: SplitMetrics) -> Self",
+          "summary": "Create a new [`BatchSplitStream`]"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::stream::EmptyRecordBatchStream",
+      "name": "EmptyRecordBatchStream",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct EmptyRecordBatchStream",
+      "summary": "`EmptyRecordBatchStream` can be used to create a [`RecordBatchStream`] that will produce no results",
+      "doc": "api/datafusion_physical_plan.stream.md#emptyrecordbatchstream",
+      "aliases": [
+        "datafusion::physical_plan::EmptyRecordBatchStream",
+        "datafusion_physical_plan::EmptyRecordBatchStream",
+        "datafusion_physical_plan::execution_plan::EmptyRecordBatchStream"
+      ],
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef) -> Self",
+          "summary": "Create an empty RecordBatchStream"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::stream::RecordBatchReceiverStreamBuilder",
+      "name": "RecordBatchReceiverStreamBuilder",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct RecordBatchReceiverStreamBuilder",
+      "summary": "Builder for `RecordBatchReceiverStream` that propagates errors and panic's correctly.",
+      "doc": "api/datafusion_physical_plan.stream.md#recordbatchreceiverstreambuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> SendableRecordBatchStream",
+          "summary": "Create a stream of all [`RecordBatch`] written to `tx`"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, capacity: usize) -> Self",
+          "summary": "Create new channels with the specified buffer size"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&mut self, task: F) where F: Future<Output = Result<()>> + Send + 'static",
+          "summary": "Spawn task that will be aborted if this builder (or the stream built from it) are dropped"
+        },
+        {
+          "name": "spawn_blocking",
+          "signature": "fn spawn_blocking<F>(&mut self, f: F) where F: FnOnce() -> Result<()> + Send + 'static",
+          "summary": "Spawn a blocking task tied to the builder and stream."
+        },
+        {
+          "name": "spawn_blocking_on",
+          "signature": "fn spawn_blocking_on<F>(&mut self, f: F, handle: &Handle) where F: FnOnce() -> Result<()> + Send + 'static",
+          "summary": "Same as [`Self::spawn_blocking`] but it spawns the blocking task on the provided runtime."
+        },
+        {
+          "name": "spawn_on",
+          "signature": "fn spawn_on<F>(&mut self, task: F, handle: &Handle) where F: Future<Output = Result<()>> + Send + 'static",
+          "summary": "Same as [`Self::spawn`] but it spawns the task on the provided runtime."
+        },
+        {
+          "name": "tx",
+          "signature": "fn tx(&self) -> Sender<Result<RecordBatch>>",
+          "summary": "Get a handle for sending [`RecordBatch`] to the output"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::stream::RecordBatchStreamAdapter",
+      "name": "RecordBatchStreamAdapter",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct RecordBatchStreamAdapter<S>",
+      "summary": "Combines a [`Stream`] with a [`SchemaRef`] implementing [`SendableRecordBatchStream`] for the combination",
+      "doc": "api/datafusion_physical_plan.stream.md#recordbatchstreamadapter",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, stream: S) -> Self",
+          "summary": "Creates a new [`RecordBatchStreamAdapter`] from the provided schema and stream."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "futures_core::stream::Stream"
+        }
+      ]
+    }
+  ]
+}

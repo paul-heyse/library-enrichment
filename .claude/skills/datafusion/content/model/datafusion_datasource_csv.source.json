@@ -1,0 +1,196 @@
+{
+  "module": "datafusion_datasource_csv::source",
+  "crate": "datafusion-datasource-csv",
+  "api": "api/datafusion_datasource_csv.source.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_csv::source::plan_to_csv",
+      "name": "plan_to_csv",
+      "kind": "function",
+      "crate": "datafusion-datasource-csv",
+      "signature": "async fn plan_to_csv(task_ctx: std::sync::Arc<datafusion_execution::TaskContext>, plan: std::sync::Arc<dyn ExecutionPlan>, path: impl AsRef<str>) -> datafusion_common::Result<()>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::datasource::physical_plan::csv::plan_to_csv"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::source::CsvOpener",
+      "name": "CsvOpener",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvOpener",
+      "summary": "A [`FileOpener`] that opens a CSV file and yields a [`FileOpenFuture`]",
+      "doc": "api/datafusion_datasource_csv.source.md#csvopener",
+      "aliases": [
+        "datafusion::datasource::physical_plan::CsvOpener",
+        "datafusion::datasource::physical_plan::csv::CsvOpener"
+      ],
+      "implements": [
+        "datafusion_datasource::file_stream::FileOpener"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(config: Arc<CsvSource>, file_compression_type: FileCompressionType, object_store: Arc<dyn ObjectStore>) -> Self",
+          "summary": "Returns a [`CsvOpener`]"
+        },
+        {
+          "name": "open",
+          "signature": "fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>",
+          "via_trait": "datafusion_datasource::file_stream::FileOpener",
+          "summary": "Open a partitioned CSV file."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::source::CsvSource",
+      "name": "CsvSource",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvSource",
+      "summary": "A Config for [`CsvOpener`]",
+      "doc": "api/datafusion_datasource_csv.source.md#csvsource",
+      "aliases": [
+        "datafusion::datasource::physical_plan::CsvSource",
+        "datafusion::datasource::physical_plan::csv::CsvSource"
+      ],
+      "implements": [
+        "datafusion_datasource::file::FileSource"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn datafusion_physical_plan::PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "comment",
+          "signature": "fn comment(&self) -> Option<u8>",
+          "summary": "Lines beginning with this byte are ignored."
+        },
+        {
+          "name": "create_file_opener",
+          "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition_index: usize) -> Result<Arc<dyn FileOpener>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "delimiter",
+          "signature": "fn delimiter(&self) -> u8",
+          "summary": "A column delimiter"
+        },
+        {
+          "name": "escape",
+          "signature": "fn escape(&self) -> Option<u8>",
+          "summary": "The escape character"
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> &str",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "fmt_extra",
+          "signature": "fn fmt_extra(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "has_header",
+          "signature": "fn has_header(&self) -> bool",
+          "summary": "true if the first line of each file is a header"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(table_schema: impl Into<TableSchema>) -> Self",
+          "summary": "Returns a [`CsvSource`]"
+        },
+        {
+          "name": "newlines_in_values",
+          "signature": "fn newlines_in_values(&self) -> bool",
+          "summary": "Whether values may contain newline characters"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "quote",
+          "signature": "fn quote(&self) -> u8",
+          "summary": "The quote character"
+        },
+        {
+          "name": "supports_repartitioning",
+          "signature": "fn supports_repartitioning(&self) -> bool",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> &TableSchema",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "terminator",
+          "signature": "fn terminator(&self) -> Option<u8>",
+          "summary": "The line terminator"
+        },
+        {
+          "name": "truncate_rows",
+          "signature": "fn truncate_rows(&self) -> bool"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstructs a `DataSourceExec` from a protobuf `CsvScan`."
+        },
+        {
+          "name": "try_pushdown_projection",
+          "signature": "fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::file::FileSource",
+          "summary": "Emit a `CsvScan` node wrapping the shared base config and CSV options."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "with_comment",
+          "signature": "fn with_comment(&self, comment: Option<u8>) -> Self",
+          "summary": "Initialize a CsvSource with comment"
+        },
+        {
+          "name": "with_csv_options",
+          "signature": "fn with_csv_options(self, options: CsvOptions) -> Self",
+          "summary": "Sets the CSV options"
+        },
+        {
+          "name": "with_escape",
+          "signature": "fn with_escape(&self, escape: Option<u8>) -> Self",
+          "summary": "Initialize a CsvSource with escape"
+        },
+        {
+          "name": "with_terminator",
+          "signature": "fn with_terminator(&self, terminator: Option<u8>) -> Self",
+          "summary": "Initialize a CsvSource with terminator"
+        },
+        {
+          "name": "with_truncate_rows",
+          "signature": "fn with_truncate_rows(&self, truncate_rows: bool) -> Self",
+          "summary": "Whether to support truncate rows when read csv file"
+        }
+      ]
+    }
+  ]
+}

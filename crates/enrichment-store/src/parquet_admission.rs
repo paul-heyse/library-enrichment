@@ -115,7 +115,8 @@ pub(crate) async fn run_blocking<T: Send + 'static>(
 ) -> Result<T> {
     let flag = Arc::new(AtomicBool::new(false));
     let _cancel = CancelOnDrop(Arc::clone(&flag));
-    tokio::task::spawn_blocking(move || work(flag))
+    let operation = crate::runtime::capture_operation();
+    tokio::task::spawn_blocking(move || operation.run(|| work(flag)))
         .await
         .map_err(|e| invalid(e.to_string()))?
 }

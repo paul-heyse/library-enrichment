@@ -33,10 +33,11 @@ from jsonschema.protocols import Validator
 from enrichment_mcp._generated.research_envelope_schema import (
     Code,
     Coverage,
+    DeliveryDescriptor,
+    Diagnostic,
     Error,
     Freshness,
     LibraryEnrichmentResponseEnvelope,
-    Pagination,
     SchemaVersion,
     SourceVersionMatch,
     Status,
@@ -53,9 +54,7 @@ __all__ = [
 ]
 
 #: The schema emitted from the Rust wire types by `just schemas-generate`.
-SCHEMA_PATH = (
-    Path(__file__).resolve().parents[2] / "schemas/generated/research-envelope.schema.json"
-)
+SCHEMA_PATH = Path(__file__).with_name("_schemas") / "research-envelope.schema.json"
 
 
 #: The per-tool `data` payload schema, emitted alongside the envelope schema.
@@ -135,8 +134,11 @@ def new_request_id() -> str:
     return f"req_{uuid.uuid4().hex}"
 
 
-def _empty_pagination() -> Pagination:
-    return Pagination(returned=0, total_matches=None, truncated=False, next_cursor=None)
+def _inline_delivery() -> DeliveryDescriptor:
+    return DeliveryDescriptor.model_validate_json(
+        '{"mode":"inline","limits":{"requested_max_bytes":null,"effective_max_bytes":null}}',
+        strict=True,
+    )
 
 
 def _unverified_freshness() -> Freshness:
@@ -193,7 +195,7 @@ def _envelope(
             status, error_detail = Status.error, detail
 
     envelope = LibraryEnrichmentResponseEnvelope(
-        schema_version=SchemaVersion.field_1_0,
+        schema_version=SchemaVersion.field_2_0,
         request_id=new_request_id(),
         status=status,
         summary=summary,
@@ -204,7 +206,7 @@ def _envelope(
         freshness=_unverified_freshness(),
         evidence=[],
         artifacts=[],
-        pagination=_empty_pagination(),
+        delivery=_inline_delivery(),
         job=None,
         error=error_detail,
     )
@@ -234,6 +236,7 @@ def error(
     *,
     retryable: bool = False,
     summary: str | None = None,
+    diagnostic: Diagnostic | None = None,
 ) -> dict[str, Any]:
     """A typed failure carrying a concrete next action.
 
@@ -246,14 +249,42 @@ def error(
                 message=message,
                 retryable=retryable,
                 next_action=next_action,
+                diagnostic=diagnostic
+                or boundary_diagnostic(
+                    "invalid_input" if code is Code.UNSUPPORTED_FORMAT else "internal",
+                    "adapter",
+                    "change_request" if code is Code.UNSUPPORTED_FORMAT else "report_defect",
+                    next_action,
+                ),
             )
         ),
         summary=summary or message,
         data={},
         coverage=Coverage(
+            details=None,
+            assessments=[],
             scope="no evidence was produced for this request",
             indexed=[],
             missing=[],
             limitations=[message],
         ),
+    )
+
+
+def boundary_diagnostic(cause: str, stage: str, action: str, reason: str) -> Diagnostic:
+    """Describe an adapter-observed boundary failure, without inferring core readiness."""
+    return Diagnostic.model_validate_json(
+        json.dumps(
+            {
+                "cause": cause,
+                "stage": stage,
+                "affected_ids": [],
+                "rule": None,
+                "observed": None,
+                "allowed": None,
+                "correlation_id": new_request_id(),
+                "actions": [{"kind": action, "reason": reason}],
+            }
+        ),
+        strict=True,
     )

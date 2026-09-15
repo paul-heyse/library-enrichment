@@ -1,0 +1,81 @@
+{
+  "module": "datafusion_ffi::catalog_provider",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.catalog_provider.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::catalog_provider::FFI_CatalogProvider",
+      "name": "FFI_CatalogProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_CatalogProvider",
+      "summary": "A stable struct for sharing [`CatalogProvider`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.catalog_provider.md#ffi_catalogprovider",
+      "fields": [
+        "schema_names",
+        "schema",
+        "register_schema",
+        "deregister_schema",
+        "logical_codec",
+        "clone",
+        "release",
+        "version",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(provider: Arc<dyn CatalogProvider>, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Option<Arc<dyn LogicalExtensionCodec>>) -> Self",
+          "summary": "Creates a new [`FFI_CatalogProvider`]."
+        },
+        {
+          "name": "new_with_ffi_codec",
+          "signature": "fn new_with_ffi_codec(provider: Arc<dyn CatalogProvider>, runtime: Option<Handle>, logical_codec: FFI_LogicalExtensionCodec) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::catalog_provider::ForeignCatalogProvider",
+      "name": "ForeignCatalogProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignCatalogProvider",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ca…",
+      "doc": "api/datafusion_ffi.catalog_provider.md#foreigncatalogprovider",
+      "implements": [
+        "datafusion_session::catalog::CatalogProvider"
+      ],
+      "methods": [
+        {
+          "name": "deregister_schema",
+          "signature": "fn deregister_schema(&self, name: &str, cascade: bool) -> Result<Option<Arc<dyn SchemaProvider>>>",
+          "via_trait": "datafusion_session::catalog::CatalogProvider"
+        },
+        {
+          "name": "register_schema",
+          "signature": "fn register_schema(&self, name: &str, schema: Arc<dyn SchemaProvider>) -> Result<Option<Arc<dyn SchemaProvider>>>",
+          "via_trait": "datafusion_session::catalog::CatalogProvider"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>",
+          "via_trait": "datafusion_session::catalog::CatalogProvider"
+        },
+        {
+          "name": "schema_names",
+          "signature": "fn schema_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::catalog::CatalogProvider"
+        }
+      ]
+    }
+  ]
+}

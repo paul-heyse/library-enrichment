@@ -19,6 +19,10 @@ fi
 
 echo "==> JSON Schemas from Rust wire types"
 cargo run --locked --quiet -p enrichment-core --bin emit-schemas -- --out schemas/generated
+mkdir -p python/enrichment_mcp/_schemas
+cp schemas/generated/*.json python/enrichment_mcp/_schemas/
+mkdir -p python/enrichment_mcp/_guidance
+cp skills/library-research/references/tool-contract.md python/enrichment_mcp/_guidance/tool-contract.md
 
 echo "==> Pydantic boundary DTOs from those schemas"
 uv run --frozen datamodel-codegen \

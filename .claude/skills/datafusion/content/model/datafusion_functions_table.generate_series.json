@@ -1,0 +1,306 @@
+{
+  "module": "datafusion_functions_table::generate_series",
+  "crate": "datafusion-functions-table",
+  "api": "api/datafusion_functions_table.generate_series.md",
+  "items": [
+    {
+      "path": "datafusion_functions_table::generate_series::GenSeriesArgs",
+      "name": "GenSeriesArgs",
+      "kind": "enum",
+      "crate": "datafusion-functions-table",
+      "signature": "enum GenSeriesArgs",
+      "summary": "Indicates the arguments used for generating a series.",
+      "doc": "api/datafusion_functions_table.generate_series.md#genseriesargs",
+      "variants": [
+        "ContainsNull",
+        "Int64Args",
+        "TimestampArgs",
+        "DateArgs"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::Empty",
+      "name": "Empty",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct Empty",
+      "summary": "Empty generator that produces no rows - used when series arguments contain null values",
+      "doc": "api/datafusion_functions_table.generate_series.md#empty",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_physical_plan::memory::LazyBatchGenerator"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "generate_next_batch",
+          "signature": "fn generate_next_batch(&mut self) -> Result<Option<RecordBatch>>",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str"
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(&self) -> Arc<RwLock<dyn LazyBatchGenerator>>",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::GenerateSeriesFunc",
+      "name": "GenerateSeriesFunc",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct GenerateSeriesFunc",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_session::table::TableFunctionImpl"
+      ],
+      "methods": [
+        {
+          "name": "call_with_args",
+          "signature": "fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>",
+          "via_trait": "datafusion_session::table::TableFunctionImpl"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::GenerateSeriesTable",
+      "name": "GenerateSeriesTable",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct GenerateSeriesTable",
+      "summary": "Table that generates a series of integers/timestamps from `start`(inclusive) to `end`, incrementing by step",
+      "doc": "api/datafusion_functions_table.generate_series.md#generateseriestable",
+      "implements": [
+        "datafusion_session::table::TableProvider"
+      ],
+      "methods": [
+        {
+          "name": "as_generator",
+          "signature": "fn as_generator(&self, batch_size: usize) -> Result<Arc<RwLock<dyn LazyBatchGenerator>>>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, args: GenSeriesArgs) -> Self"
+        },
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, _filters: &[Expr], _limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "table_type",
+          "signature": "fn table_type(&self) -> TableType",
+          "via_trait": "datafusion_session::table::TableProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::GenericSeriesState",
+      "name": "GenericSeriesState",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct GenericSeriesState<T: SeriesValue>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_physical_plan::memory::LazyBatchGenerator"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        },
+        {
+          "name": "batch_size",
+          "signature": "fn batch_size(&self) -> usize"
+        },
+        {
+          "name": "current",
+          "signature": "fn current(&self) -> &T"
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> &T"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "generate_next_batch",
+          "signature": "fn generate_next_batch(&mut self) -> Result<Option<RecordBatch>>",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        },
+        {
+          "name": "include_end",
+          "signature": "fn include_end(&self) -> bool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str"
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(&self) -> Arc<RwLock<dyn LazyBatchGenerator>>",
+          "via_trait": "datafusion_physical_plan::memory::LazyBatchGenerator"
+        },
+        {
+          "name": "start",
+          "signature": "fn start(&self) -> &T"
+        },
+        {
+          "name": "step",
+          "signature": "fn step(&self) -> &T::StepType"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::RangeFunc",
+      "name": "RangeFunc",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct RangeFunc",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_session::table::TableFunctionImpl"
+      ],
+      "methods": [
+        {
+          "name": "call_with_args",
+          "signature": "fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>",
+          "via_trait": "datafusion_session::table::TableFunctionImpl"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::TimestampValue",
+      "name": "TimestampValue",
+      "kind": "struct",
+      "crate": "datafusion-functions-table",
+      "signature": "struct TimestampValue",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_functions_table::generate_series::SeriesValue"
+      ],
+      "methods": [
+        {
+          "name": "advance",
+          "signature": "fn advance(&mut self, step: &Self::StepType) -> Result<()>",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "advance_with_end",
+          "signature": "fn advance_with_end(&mut self, end: &mut Self, step: &Self::StepType) -> Result<()>",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "create_array",
+          "signature": "fn create_array(&self, values: Vec<Self::ValueType>) -> Result<ArrayRef>",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "display_value",
+          "signature": "fn display_value(&self) -> String",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "should_stop",
+          "signature": "fn should_stop(&self, end: Self, step: &Self::StepType, include_end: bool) -> bool",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "to_value_type",
+          "signature": "fn to_value_type(&self) -> Self::ValueType",
+          "via_trait": "datafusion_functions_table::generate_series::SeriesValue"
+        },
+        {
+          "name": "tz_str",
+          "signature": "fn tz_str(&self) -> Option<&Arc<str>>"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> i64"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_table::generate_series::SeriesValue",
+      "name": "SeriesValue",
+      "kind": "trait",
+      "crate": "datafusion-functions-table",
+      "signature": "trait SeriesValue: fmt::Debug + Clone + Send + Sync + 'static",
+      "summary": "Trait for values that can be generated in a series",
+      "doc": "api/datafusion_functions_table.generate_series.md#seriesvalue",
+      "implementors": [
+        "datafusion_functions_table::generate_series::TimestampValue"
+      ],
+      "required_methods": [
+        "advance",
+        "create_array",
+        "display_value",
+        "should_stop",
+        "to_value_type"
+      ],
+      "provided_methods": [
+        "advance_with_end"
+      ],
+      "methods": [
+        {
+          "name": "advance",
+          "signature": "fn advance(&mut self, step: &Self::StepType) -> Result<()>",
+          "summary": "Advance to the next value in the series."
+        },
+        {
+          "name": "advance_with_end",
+          "signature": "fn advance_with_end(&mut self, _end: &mut Self, step: &Self::StepType) -> Result<()>",
+          "summary": "Advance to the next value, adjusting the end of the series if needed."
+        },
+        {
+          "name": "create_array",
+          "signature": "fn create_array(&self, values: Vec<Self::ValueType>) -> Result<ArrayRef>",
+          "summary": "Create an Arrow array from a vector of values"
+        },
+        {
+          "name": "display_value",
+          "signature": "fn display_value(&self) -> String",
+          "summary": "Display the value for debugging"
+        },
+        {
+          "name": "should_stop",
+          "signature": "fn should_stop(&self, end: Self, step: &Self::StepType, include_end: bool) -> bool",
+          "summary": "Check if we've reached the end of the series"
+        },
+        {
+          "name": "to_value_type",
+          "signature": "fn to_value_type(&self) -> Self::ValueType",
+          "summary": "Convert self to ValueType for array creation"
+        }
+      ]
+    }
+  ]
+}

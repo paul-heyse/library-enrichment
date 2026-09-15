@@ -1,0 +1,116 @@
+{
+  "module": "parquet::arrow::async_writer",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.async_writer.md",
+  "items": [
+    {
+      "path": "parquet::arrow::async_writer::AsyncArrowWriter",
+      "name": "AsyncArrowWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct AsyncArrowWriter<W>",
+      "summary": "Encodes [`RecordBatch`] to parquet, outputting to an [`AsyncFileWriter`]",
+      "doc": "api/parquet.arrow.async_writer.md#asyncarrowwriter",
+      "aliases": [
+        "parquet::arrow::AsyncArrowWriter"
+      ],
+      "methods": [
+        {
+          "name": "append_key_value_metadata",
+          "signature": "fn append_key_value_metadata(&mut self, kv_metadata: KeyValue)",
+          "summary": "Append [`KeyValue`] metadata in addition to those in [`WriterProperties`]"
+        },
+        {
+          "name": "bytes_written",
+          "signature": "fn bytes_written(&self) -> usize",
+          "summary": "Returns the number of bytes written by this instance"
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(self) -> Result<ParquetMetaData>",
+          "summary": "Close and finalize the writer."
+        },
+        {
+          "name": "finish",
+          "signature": "async fn finish(&mut self) -> Result<ParquetMetaData>",
+          "summary": "Close and finalize the writer."
+        },
+        {
+          "name": "flush",
+          "signature": "async fn flush(&mut self) -> Result<()>",
+          "summary": "Flushes all buffered rows into a new row group"
+        },
+        {
+          "name": "flushed_row_groups",
+          "signature": "fn flushed_row_groups(&self) -> &[RowGroupMetaData]",
+          "summary": "Returns metadata for any flushed row groups"
+        },
+        {
+          "name": "in_progress_rows",
+          "signature": "fn in_progress_rows(&self) -> usize",
+          "summary": "Returns the number of rows buffered in the in progress row group"
+        },
+        {
+          "name": "in_progress_size",
+          "signature": "fn in_progress_size(&self) -> usize",
+          "summary": "Anticipated encoded size of the in progress row group."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Consumes the [`AsyncArrowWriter`] and returns the underlying [`AsyncFileWriter`]"
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "summary": "Estimated memory usage, in bytes, of this `ArrowWriter`"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(writer: W, arrow_schema: SchemaRef, props: Option<WriterProperties>) -> Result<Self>",
+          "summary": "Try to create a new Async Arrow Writer"
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(writer: W, arrow_schema: SchemaRef, options: ArrowWriterOptions) -> Result<Self>",
+          "summary": "Try to create a new Async Arrow Writer with [`ArrowWriterOptions`]"
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, batch: &RecordBatch) -> Result<()>",
+          "summary": "Enqueues the provided `RecordBatch` to be written"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::async_writer::AsyncFileWriter",
+      "name": "AsyncFileWriter",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait AsyncFileWriter: Send",
+      "summary": "The asynchronous interface used by [`AsyncArrowWriter`] to write parquet files.",
+      "doc": "api/parquet.arrow.async_writer.md#asyncfilewriter",
+      "implementors": [
+        "alloc::boxed::Box",
+        "parquet::arrow::async_writer::store::ParquetObjectWriter"
+      ],
+      "required_methods": [
+        "complete",
+        "write"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "complete",
+          "signature": "fn complete(&mut self) -> BoxFuture<'_, Result<()>>",
+          "summary": "Flush any buffered data to the underlying writer and finish writing process."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, bs: Bytes) -> BoxFuture<'_, Result<()>>",
+          "summary": "Write the provided bytes to the underlying writer"
+        }
+      ]
+    }
+  ]
+}

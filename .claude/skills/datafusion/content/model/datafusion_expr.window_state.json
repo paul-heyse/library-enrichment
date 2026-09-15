@@ -1,0 +1,122 @@
+{
+  "module": "datafusion_expr::window_state",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.window_state.md",
+  "items": [
+    {
+      "path": "datafusion_expr::window_state::WindowFrameContext",
+      "name": "WindowFrameContext",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum WindowFrameContext",
+      "summary": "This object stores the window frame state for use in incremental calculations.",
+      "doc": "api/datafusion_expr.window_state.md#windowframecontext",
+      "variants": [
+        "Rows",
+        "Range",
+        "Groups"
+      ],
+      "methods": [
+        {
+          "name": "calculate_range",
+          "signature": "fn calculate_range(&mut self, range_columns: &[ArrayRef], last_range: &Range<usize>, length: usize, idx: usize) -> Result<Range<usize>>",
+          "summary": "This function calculates beginning/ending indices for the frame of the current row."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(window_frame: Arc<WindowFrame>, sort_options: Vec<SortOptions>) -> Self",
+          "summary": "Create a new state object for the given window frame."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::window_state::PartitionBatchState",
+      "name": "PartitionBatchState",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct PartitionBatchState",
+      "summary": "State for each unique partition determined according to PARTITION BY column(s)",
+      "doc": "api/datafusion_expr.window_state.md#partitionbatchstate",
+      "fields": [
+        "record_batch",
+        "is_end",
+        "n_out_row"
+      ],
+      "methods": [
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, batch: &RecordBatch) -> Result<()>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef) -> Self"
+        },
+        {
+          "name": "new_with_batch",
+          "signature": "fn new_with_batch(batch: RecordBatch) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::window_state::WindowAggState",
+      "name": "WindowAggState",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowAggState",
+      "summary": "Holds the state of evaluating a window function",
+      "doc": "api/datafusion_expr.window_state.md#windowaggstate",
+      "fields": [
+        "window_frame_range",
+        "window_frame_ctx",
+        "last_calculated_index",
+        "offset_pruned_rows",
+        "out_col",
+        "n_row_result_missing",
+        "is_end"
+      ],
+      "methods": [
+        {
+          "name": "is_up_to_date_with",
+          "signature": "fn is_up_to_date_with(&self, partition_batch_state: &PartitionBatchState) -> bool",
+          "summary": "Returns true when this state is fully up to date with the partition's buffered batch, meaning another evaluation pass over the partition could not produce any new results or change any state:"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(out_type: &DataType) -> Result<Self>"
+        },
+        {
+          "name": "prune_state",
+          "signature": "fn prune_state(&mut self, n_prune: usize)"
+        },
+        {
+          "name": "update",
+          "signature": "fn update(&mut self, out_col: &ArrayRef, partition_batch_state: &PartitionBatchState) -> Result<()>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::window_state::WindowFrameStateGroups",
+      "name": "WindowFrameStateGroups",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowFrameStateGroups",
+      "summary": "This structure encapsulates all the state information we require as we scan groups of data while processing window frames.",
+      "doc": "api/datafusion_expr.window_state.md#windowframestategroups",
+      "fields": [
+        "group_end_indices",
+        "current_group_idx"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::window_state::WindowFrameStateRange",
+      "name": "WindowFrameStateRange",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowFrameStateRange",
+      "summary": "This structure encapsulates all the state information we require as we scan ranges of data while processing RANGE frames. Attribute `sort_options` stores the column ordering specified by the ORDER BY clause. This information is used to cal…",
+      "doc": "api/datafusion_expr.window_state.md#windowframestaterange",
+      "methods": []
+    }
+  ]
+}

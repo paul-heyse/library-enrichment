@@ -1,0 +1,194 @@
+{
+  "module": "arrow_avro::writer",
+  "crate": "arrow-avro",
+  "api": "api/arrow_avro.writer.md",
+  "items": [
+    {
+      "path": "arrow_avro::writer::EncodedRows",
+      "name": "EncodedRows",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct EncodedRows",
+      "summary": "A contiguous set of Avro encoded rows.",
+      "doc": "api/arrow_avro.writer.md#encodedrows",
+      "methods": [
+        {
+          "name": "bytes",
+          "signature": "fn bytes(&self) -> &Bytes",
+          "summary": "Returns a reference to the single contiguous backing buffer."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns `true` if this container holds no encoded rows."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl ExactSizeIterator<Item = Bytes> + '_",
+          "summary": "Iterate over rows as zero-copy `Bytes` slices."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of encoded rows stored in this container."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: Bytes, offsets: Vec<usize>) -> Self",
+          "summary": "Create a new `EncodedRows` from a backing buffer and row boundary offsets."
+        },
+        {
+          "name": "offsets",
+          "signature": "fn offsets(&self) -> &[usize]",
+          "summary": "Returns the row boundary offsets."
+        },
+        {
+          "name": "row",
+          "signature": "fn row(&self, n: usize) -> Result<Bytes, AvroError>",
+          "summary": "Return the `n`th row as a zero-copy `Bytes` slice."
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::Encoder",
+      "name": "Encoder",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct Encoder",
+      "summary": "A row-by-row encoder for Avro *stream/message* formats (SOE / registry wire formats / raw binary).",
+      "doc": "api/arrow_avro.writer.md#encoder",
+      "methods": [
+        {
+          "name": "buffered_len",
+          "signature": "fn buffered_len(&self) -> usize",
+          "summary": "Returns the number of encoded rows currently buffered."
+        },
+        {
+          "name": "encode",
+          "signature": "fn encode(&mut self, batch: &RecordBatch) -> Result<(), AvroError>",
+          "summary": "Serialize one [`RecordBatch`] into the internal buffer."
+        },
+        {
+          "name": "encode_batches",
+          "signature": "fn encode_batches(&mut self, batches: &[RecordBatch]) -> Result<(), AvroError>",
+          "summary": "A convenience method to write a slice of [`RecordBatch`] values."
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> EncodedRows",
+          "summary": "Drain and return all currently buffered encoded rows."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the Arrow schema used by this encoder."
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::Writer",
+      "name": "Writer",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct Writer<W: Write, F: AvroFormat>",
+      "summary": "Generic Avro writer.",
+      "doc": "api/arrow_avro.writer.md#writer",
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<(), AvroError>",
+          "summary": "Flush remaining buffered data and (for OCF) ensure the header is present."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Consume the writer, returning the underlying output object."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(writer: W, schema: Schema) -> Result<Self, AvroError>",
+          "summary": "Convenience constructor – same as [`WriterBuilder::build`] with `AvroOcfFormat`."
+        },
+        {
+          "name": "sync_marker",
+          "signature": "fn sync_marker(&self) -> Option<&[u8; 16]>",
+          "summary": "Return a reference to the 16‑byte sync marker generated for this file."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), AvroError>",
+          "summary": "Serialize one [`RecordBatch`] to the output."
+        },
+        {
+          "name": "write_batches",
+          "signature": "fn write_batches(&mut self, batches: &[&RecordBatch]) -> Result<(), AvroError>",
+          "summary": "A convenience method to write a slice of [`RecordBatch`]."
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::WriterBuilder",
+      "name": "WriterBuilder",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct WriterBuilder",
+      "summary": "Builder to configure and create a `Writer`.",
+      "doc": "api/arrow_avro.writer.md#writerbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<W, F>(self, writer: W) -> Result<Writer<W, F>, AvroError> where W: Write, F: AvroFormat",
+          "summary": "Build a new [`Writer`] with the specified [`AvroFormat`] and builder options."
+        },
+        {
+          "name": "build_encoder",
+          "signature": "fn build_encoder<F: AvroFormat>(self) -> Result<Encoder, AvroError>",
+          "summary": "Build a new [`Encoder`] for the given [`AvroFormat`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: Schema) -> Self",
+          "summary": "Create a new builder with default settings."
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(self, capacity: usize) -> Self",
+          "summary": "Sets the expected capacity (in bytes) for internal buffers."
+        },
+        {
+          "name": "with_compression",
+          "signature": "fn with_compression(self, codec: Option<CompressionCodec>) -> Self",
+          "summary": "Change the compression codec."
+        },
+        {
+          "name": "with_fingerprint_strategy",
+          "signature": "fn with_fingerprint_strategy(self, strategy: FingerprintStrategy) -> Self",
+          "summary": "Set the fingerprinting strategy for the stream writer. This determines the per-record prefix format."
+        },
+        {
+          "name": "with_row_capacity",
+          "signature": "fn with_row_capacity(self, capacity: usize) -> Self",
+          "summary": "Sets the expected byte size for each encoded row."
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::AvroStreamWriter",
+      "name": "AvroStreamWriter",
+      "kind": "type_alias",
+      "crate": "arrow-avro",
+      "signature": "type AvroStreamWriter<W> = Writer<W, writer::format::AvroSoeFormat>",
+      "summary": "Alias for an Avro **Single Object Encoding** stream writer.",
+      "doc": "api/arrow_avro.writer.md#avrostreamwriter"
+    },
+    {
+      "path": "arrow_avro::writer::AvroWriter",
+      "name": "AvroWriter",
+      "kind": "type_alias",
+      "crate": "arrow-avro",
+      "signature": "type AvroWriter<W> = Writer<W, writer::format::AvroOcfFormat>",
+      "summary": "Alias for an Avro **Object Container File** writer.",
+      "doc": "api/arrow_avro.writer.md#avrowriter"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "module": "datafusion_session::planner",
+  "crate": "datafusion-session",
+  "api": "api/datafusion_session.planner.md",
+  "items": [
+    {
+      "path": "datafusion_session::planner::UnsupportedQueryPlanner",
+      "name": "UnsupportedQueryPlanner",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct UnsupportedQueryPlanner",
+      "summary": "A query planner that reports that planning is not implemented.",
+      "doc": "api/datafusion_session.planner.md#unsupportedqueryplanner",
+      "aliases": [
+        "datafusion::execution::context::UnsupportedQueryPlanner",
+        "datafusion_session::UnsupportedQueryPlanner"
+      ],
+      "implements": [
+        "datafusion_session::planner::QueryPlanner"
+      ],
+      "methods": [
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, _logical_plan: &LogicalPlan, _session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::planner::QueryPlanner"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::planner::ExtensionPlanner",
+      "name": "ExtensionPlanner",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait ExtensionPlanner",
+      "summary": "This trait exposes the ability to plan an [`ExecutionPlan`] out of a [`LogicalPlan`].",
+      "doc": "api/datafusion_session.planner.md#extensionplanner",
+      "aliases": [
+        "datafusion::physical_planner::ExtensionPlanner",
+        "datafusion_session::ExtensionPlanner"
+      ],
+      "required_methods": [
+        "plan_extension"
+      ],
+      "provided_methods": [
+        "plan_table_scan"
+      ],
+      "methods": [
+        {
+          "name": "plan_extension",
+          "signature": "async fn plan_extension(&self, planner: &dyn PhysicalPlanner, node: &dyn UserDefinedLogicalNode, logical_inputs: &[&LogicalPlan], physical_inputs: &[Arc<dyn ExecutionPlan>], session: &dyn Session, planning_ctx: &PhysicalPlanningContext) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "summary": "Create a physical plan for a [`UserDefinedLogicalNode`]."
+        },
+        {
+          "name": "plan_table_scan",
+          "signature": "async fn plan_table_scan(&self, _planner: &dyn PhysicalPlanner, _scan: &TableScan, _session: &dyn Session, _planning_ctx: &PhysicalPlanningContext) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "summary": "Create a physical plan for a [`LogicalPlan::TableScan`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::planner::PhysicalPlanner",
+      "name": "PhysicalPlanner",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait PhysicalPlanner: Send + Sync",
+      "summary": "Physical query planner that converts a [`LogicalPlan`] to an [`ExecutionPlan`] suitable for execution.",
+      "doc": "api/datafusion_session.planner.md#physicalplanner",
+      "aliases": [
+        "datafusion::physical_planner::PhysicalPlanner",
+        "datafusion_session::PhysicalPlanner"
+      ],
+      "implementors": [
+        "datafusion::physical_planner::DefaultPhysicalPlanner"
+      ],
+      "required_methods": [
+        "create_physical_expr",
+        "create_physical_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: &Expr, input_dfschema: &DFSchema, session: &dyn Session, planning_ctx: &PhysicalPlanningContext) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Create a physical expression from a logical expression suitable for evaluation"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Create a physical plan from a logical plan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::planner::QueryPlanner",
+      "name": "QueryPlanner",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait QueryPlanner: Any + Debug",
+      "summary": "A planner that creates a physical plan for a query.",
+      "doc": "api/datafusion_session.planner.md#queryplanner",
+      "aliases": [
+        "datafusion::execution::context::QueryPlanner",
+        "datafusion_session::QueryPlanner"
+      ],
+      "implementors": [
+        "datafusion_ffi::query_planner::ForeignQueryPlanner",
+        "datafusion_session::planner::UnsupportedQueryPlanner"
+      ],
+      "required_methods": [
+        "create_physical_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Given a [`LogicalPlan`], create an [`ExecutionPlan`] suitable for execution"
+        }
+      ]
+    }
+  ]
+}

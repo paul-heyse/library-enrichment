@@ -1,0 +1,148 @@
+{
+  "module": "datafusion_expr::window_frame",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.window_frame.md",
+  "items": [
+    {
+      "path": "datafusion_expr::window_frame::WindowFrameBound",
+      "name": "WindowFrameBound",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum WindowFrameBound",
+      "summary": "There are five ways to describe starting and ending frame boundaries:",
+      "doc": "api/datafusion_expr.window_frame.md#windowframebound",
+      "aliases": [
+        "datafusion::logical_expr::WindowFrameBound",
+        "datafusion_expr::WindowFrameBound"
+      ],
+      "variants": [
+        "Preceding",
+        "CurrentRow",
+        "Following"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_unbounded",
+          "signature": "fn is_unbounded(&self) -> bool"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(bound: protobuf::WindowFrameBound) -> Result<Self, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::window_frame::WindowFrameUnits",
+      "name": "WindowFrameUnits",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum WindowFrameUnits",
+      "summary": "There are three frame types: ROWS, GROUPS, and RANGE. The frame type determines how the starting and ending boundaries of the frame are measured.",
+      "doc": "api/datafusion_expr.window_frame.md#windowframeunits",
+      "aliases": [
+        "datafusion::logical_expr::WindowFrameUnits",
+        "datafusion_expr::WindowFrameUnits"
+      ],
+      "variants": [
+        "Rows",
+        "Range",
+        "Groups"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ast::WindowFrameUnits) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::window_frame::WindowFrame",
+      "name": "WindowFrame",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowFrame",
+      "summary": "The frame specification determines which output rows are read by an aggregate window function. The ending frame boundary can be omitted if the `BETWEEN` and `AND` keywords that surround the starting frame boundary are also omitted, in whic…",
+      "doc": "api/datafusion_expr.window_frame.md#windowframe",
+      "aliases": [
+        "datafusion::logical_expr::WindowFrame",
+        "datafusion_expr::WindowFrame"
+      ],
+      "fields": [
+        "units",
+        "start_bound",
+        "end_bound"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "can_accept_multi_orderby",
+          "signature": "fn can_accept_multi_orderby(&self) -> bool",
+          "summary": "Returns whether the window frame can accept multiple ORDER BY expressions."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_causal",
+          "signature": "fn is_causal(&self) -> bool",
+          "summary": "Get whether window frame is causal"
+        },
+        {
+          "name": "is_ever_expanding",
+          "signature": "fn is_ever_expanding(&self) -> bool",
+          "summary": "Is the window frame ever-expanding (it always grows in the superset sense). Useful when understanding if set-monotonicity properties of functions can be exploited."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(order_by: Option<bool>) -> Self",
+          "summary": "Creates a new, default window frame (with the meaning of default depending on whether the frame contains an `ORDER BY` clause and this ordering is strict (i.e. no ties)."
+        },
+        {
+          "name": "new_bounds",
+          "signature": "fn new_bounds(units: WindowFrameUnits, start_bound: WindowFrameBound, end_bound: WindowFrameBound) -> Self",
+          "summary": "Initializes window frame from units (type), start bound and end bound."
+        },
+        {
+          "name": "regularize_order_bys",
+          "signature": "fn regularize_order_bys(&self, order_by: &mut Vec<Sort>) -> Result<()>",
+          "summary": "Regularizes the ORDER BY clause of the window frame."
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&self) -> Self",
+          "summary": "Get reversed window frame. For example `3 ROWS PRECEDING AND 2 ROWS FOLLOWING` --> `2 ROWS PRECEDING AND 3 ROWS FOLLOWING`"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: ast::WindowFrame) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    }
+  ]
+}

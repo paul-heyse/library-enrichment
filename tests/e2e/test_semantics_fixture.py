@@ -143,7 +143,7 @@ simple_url="{base}/simple"
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
@@ -187,7 +187,7 @@ async def semantic(client, context, symbol, intent="execute_on_miss", **options)
         "inspect_symbol",
         context_id=context,
         symbol_path=f"lsp_demo.{symbol}",
-        aspects=["semantics"],
+        selection={"mode": "explicit", "aspects": [{"aspect": name} for name in ["semantics"]]},
         execution={"intent": intent, "profile": "build", "methods": ["implementation"], **options},
     )
     return await daemon.wait_for_answer(client, result)
@@ -277,7 +277,7 @@ async def test_a_signature_read_starts_no_server_and_two_semantic_reads_share_on
                     "inspect_symbol",
                     context_id=context,
                     symbol_path="lsp_demo.Base",
-                    depth="signature",
+                    selection={"mode": "explicit", "aspects": [{"aspect": "signature"}]},
                 )
                 assert signature["data"]["symbol"]["name"] == "Base"
                 assert signature["data"]["execution_observations"] == []
@@ -286,7 +286,10 @@ async def test_a_signature_read_starts_no_server_and_two_semantic_reads_share_on
                     "inspect_symbol",
                     context_id=context,
                     symbol_path="lsp_demo.Base",
-                    aspects=["semantics"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["semantics"]],
+                    },
                 )
                 assert not missing["data"]["execution_observations"]
                 assert (await lsp_metrics(client))["started"] == 0

@@ -462,10 +462,15 @@ impl AdmissionCache {
                 .table(relation.name())
                 .await?
                 .filter(col("environment_id").not_eq(lit(&scope.environment_id)))?
+                .select(vec![col(relation.key())])?
                 .limit(0, Some(1))?;
-            if self.runtime.execute(outside_environment).await?.rows != 0 {
-                return Err(invalid("observation environment disagrees with snapshot"));
-            }
+            self.runtime
+                .require_empty(
+                    outside_environment,
+                    "observation environment disagrees with snapshot",
+                    "relation_admission",
+                )
+                .await?;
         }
         let metadata = session
             .table("release_metadata")
@@ -478,10 +483,15 @@ impl AdmissionCache {
                         Ecosystem::Python => "python_distribution",
                     }))),
             )?
+            .select(vec![col("metadata_id")])?
             .limit(0, Some(1))?;
-        if self.runtime.execute(metadata).await?.rows != 0 {
-            return Err(invalid("release metadata disagrees with snapshot scope"));
-        }
+        self.runtime
+            .require_empty(
+                metadata,
+                "release metadata disagrees with snapshot scope",
+                "relation_admission",
+            )
+            .await?;
         self.require_empty(&session, "SELECT m.metadata_id FROM release_metadata m LEFT ANTI JOIN input_artifacts i ON m.python_distribution.worker_artifact_id = i.artifact_id AND m.source.producer_binding_id = i.producer_binding_id WHERE m.kind = 'python_distribution' AND m.python_distribution.worker_artifact_id IS NOT NULL LIMIT 1", "metadata worker artifact outside producer input closure").await?;
         for relation in [
             Relation::Relationships,
@@ -499,10 +509,15 @@ impl AdmissionCache {
                             .not_eq(lit(&scope.release_id)),
                     ),
                 )?
+                .select(vec![col(relation.key())])?
                 .limit(0, Some(1))?;
-            if self.runtime.execute(outside_release).await?.rows != 0 {
-                return Err(invalid("library subject disagrees with snapshot release"));
-            }
+            self.runtime
+                .require_empty(
+                    outside_release,
+                    "library subject disagrees with snapshot release",
+                    "relation_admission",
+                )
+                .await?;
         }
         self.require_empty(&session, "SELECT o.observation_id FROM api_observations o LEFT ANTI JOIN symbols s ON o.subject.symbol_id = s.symbol_id WHERE o.subject.kind = 'symbol' LIMIT 1", "dangling observation symbol").await?;
         self.require_empty(&session, "SELECT o.observation_id FROM api_observations o LEFT ANTI JOIN definitions d ON o.subject.definition_id = d.definition_id WHERE o.subject.kind = 'definition' LIMIT 1", "dangling observation definition").await?;
@@ -644,10 +659,9 @@ impl AdmissionCache {
         sql: &str,
         violation: &str,
     ) -> Result<()> {
-        if self.runtime.execute(session.sql(sql).await?).await?.rows != 0 {
-            return Err(invalid(violation));
-        }
-        Ok(())
+        self.runtime
+            .require_empty(session.sql(sql).await?, violation, "relation_admission")
+            .await
     }
 }
 
@@ -665,8 +679,10 @@ fn validate_file(
     let witness = FileWitness::read(&file.path)?;
     let (digest, bytes) = canonical::sha256_reader(File::open(&file.path)?, limits.file_bytes)?;
     if bytes != file.bytes || digest != file.sha256 {
-        return Err(invalid(
+        return Err(crate::preparation::InvariantFailure::error(
             "evidence file digest or size disagrees with manifest",
+            "relation_admission",
+            vec![file.sha256.clone()],
         ));
     }
     crate::parquet_admission::validate_cancellable(
@@ -681,7 +697,11 @@ fn validate_file(
         cancelled,
     )?;
     if FileWitness::read(&file.path)? != witness {
-        return Err(invalid("file changed during admission"));
+        return Err(crate::preparation::InvariantFailure::error(
+            "file changed during admission",
+            "relation_admission",
+            vec![file.sha256.clone()],
+        ));
     }
     let schema = file.relation.schema()?;
     Ok((schema, witness))

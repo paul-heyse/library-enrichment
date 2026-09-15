@@ -1,0 +1,472 @@
+{
+  "module": "datafusion_expr_common::signature",
+  "crate": "datafusion-expr-common",
+  "api": "api/datafusion_expr_common.signature.md",
+  "items": [
+    {
+      "path": "datafusion_expr_common::signature::FIXED_SIZE_LIST_WILDCARD",
+      "name": "FIXED_SIZE_LIST_WILDCARD",
+      "kind": "constant",
+      "crate": "datafusion-expr-common",
+      "signature": "const FIXED_SIZE_LIST_WILDCARD: i32 = i32::MIN",
+      "summary": "Constant that is used as a placeholder for any valid fixed size list. This is used where a function can accept a fixed size list type with any valid length. It exists to avoid the need to enumerate all possible fixed size list lengths.",
+      "doc": "api/datafusion_expr_common.signature.md#fixed_size_list_wildcard"
+    },
+    {
+      "path": "datafusion_expr_common::signature::TIMEZONE_WILDCARD",
+      "name": "TIMEZONE_WILDCARD",
+      "kind": "constant",
+      "crate": "datafusion-expr-common",
+      "signature": "const TIMEZONE_WILDCARD: &str = \"+TZ\"",
+      "summary": "Constant that is used as a placeholder for any valid timezone. This is used where a function can accept a timestamp type with any valid timezone, it exists to avoid the need to enumerate all possible timezones. See [`TypeSignature`] for mo…",
+      "doc": "api/datafusion_expr_common.signature.md#timezone_wildcard",
+      "aliases": [
+        "datafusion::logical_expr::TIMEZONE_WILDCARD",
+        "datafusion_expr::TIMEZONE_WILDCARD"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::Arity",
+      "name": "Arity",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum Arity",
+      "summary": "Represents the arity (number of arguments) of a function signature",
+      "doc": "api/datafusion_expr_common.signature.md#arity",
+      "variants": [
+        "Fixed",
+        "Variable"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr_common::signature::ArrayFunctionArgument",
+      "name": "ArrayFunctionArgument",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum ArrayFunctionArgument",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::logical_expr::ArrayFunctionArgument",
+        "datafusion_expr::ArrayFunctionArgument"
+      ],
+      "variants": [
+        "Element",
+        "Index",
+        "Array",
+        "String"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::ArrayFunctionSignature",
+      "name": "ArrayFunctionSignature",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum ArrayFunctionSignature",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::logical_expr::ArrayFunctionSignature",
+        "datafusion_expr::ArrayFunctionSignature"
+      ],
+      "variants": [
+        "Array",
+        "RecursiveArray",
+        "MapArray"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::Coercion",
+      "name": "Coercion",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum Coercion",
+      "summary": "Represents type coercion rules for function arguments, specifying both the desired type and optional implicit coercion rules for source types.",
+      "doc": "api/datafusion_expr_common.signature.md#coercion",
+      "aliases": [
+        "datafusion::logical_expr::Coercion",
+        "datafusion_expr::Coercion"
+      ],
+      "variants": [
+        "Exact",
+        "Implicit"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "allowed_source_types",
+          "signature": "fn allowed_source_types(&self) -> &[TypeSignatureClass]"
+        },
+        {
+          "name": "default_casted_type",
+          "signature": "fn default_casted_type(&self) -> Option<&NativeType>"
+        },
+        {
+          "name": "desired_type",
+          "signature": "fn desired_type(&self) -> &TypeSignatureClass"
+        },
+        {
+          "name": "encoding_preservation",
+          "signature": "fn encoding_preservation(&self) -> EncodingPreservation"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "implicit_coercion",
+          "signature": "fn implicit_coercion(&self) -> Option<&ImplicitCoercion>"
+        },
+        {
+          "name": "new_exact",
+          "signature": "fn new_exact(desired_type: TypeSignatureClass) -> Self"
+        },
+        {
+          "name": "new_implicit",
+          "signature": "fn new_implicit(desired_type: TypeSignatureClass, allowed_source_types: Vec<TypeSignatureClass>, default_casted_type: NativeType) -> Self",
+          "summary": "Create a new coercion with implicit coercion rules."
+        },
+        {
+          "name": "with_encoding_preservation",
+          "signature": "fn with_encoding_preservation(self, encoding_preservation: EncodingPreservation) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::TypeSignature",
+      "name": "TypeSignature",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum TypeSignature",
+      "summary": "The types of arguments for which a function has implementations.",
+      "doc": "api/datafusion_expr_common.signature.md#typesignature",
+      "aliases": [
+        "datafusion::logical_expr::TypeSignature",
+        "datafusion_expr::TypeSignature"
+      ],
+      "variants": [
+        "Variadic",
+        "UserDefined",
+        "VariadicAny",
+        "Uniform",
+        "Exact",
+        "Coercible",
+        "Comparable",
+        "Any",
+        "OneOf",
+        "ArraySignature",
+        "Numeric",
+        "String",
+        "Nullary"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "arity",
+          "signature": "fn arity(&self) -> Arity",
+          "summary": "Returns the arity (expected number of arguments) for this type signature."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_example_types",
+          "signature": "fn get_example_types(&self) -> Vec<Vec<DataType>>",
+          "summary": "Return example acceptable types for this `TypeSignature`'"
+        },
+        {
+          "name": "is_one_of",
+          "signature": "fn is_one_of(&self) -> bool"
+        },
+        {
+          "name": "join_types",
+          "signature": "fn join_types<T: Display>(types: &[T], delimiter: &str) -> String",
+          "summary": "Helper function to join types with specified delimiter."
+        },
+        {
+          "name": "supports_zero_argument",
+          "signature": "fn supports_zero_argument(&self) -> bool",
+          "summary": "Check whether 0 input argument is valid for given `TypeSignature`"
+        },
+        {
+          "name": "to_string_repr",
+          "signature": "fn to_string_repr(&self) -> Vec<String>"
+        },
+        {
+          "name": "to_string_repr_with_names",
+          "signature": "fn to_string_repr_with_names(&self, parameter_names: Option<&[String]>) -> Vec<String>",
+          "summary": "Return string representation of the function signature with parameter names."
+        },
+        {
+          "name": "used_to_support_zero_arguments",
+          "signature": "fn used_to_support_zero_arguments(&self) -> bool",
+          "summary": "Returns true if the signature currently supports or used to supported 0 input arguments in a previous version of DataFusion."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::TypeSignatureClass",
+      "name": "TypeSignatureClass",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum TypeSignatureClass",
+      "summary": "Represents the class of types that can be used in a function signature.",
+      "doc": "api/datafusion_expr_common.signature.md#typesignatureclass",
+      "aliases": [
+        "datafusion::logical_expr::TypeSignatureClass",
+        "datafusion_expr::TypeSignatureClass"
+      ],
+      "variants": [
+        "Any",
+        "Timestamp",
+        "Time",
+        "Interval",
+        "Duration",
+        "Native",
+        "Integer",
+        "Float",
+        "Decimal",
+        "Numeric",
+        "Binary"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "default_casted_type",
+          "signature": "fn default_casted_type(&self, native_type: &NativeType, origin_type: &DataType) -> Result<DataType>",
+          "summary": "What type would `origin_type` be casted to when casting to the specified native type?"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "matches_native_type",
+          "signature": "fn matches_native_type(&self, logical_type: &NativeType) -> bool",
+          "summary": "Does the specified `NativeType` match this type signature class?"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::Volatility",
+      "name": "Volatility",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum Volatility",
+      "summary": "How a function's output changes with respect to a fixed input",
+      "doc": "api/datafusion_expr_common.signature.md#volatility",
+      "aliases": [
+        "datafusion::logical_expr::Volatility",
+        "datafusion_expr::Volatility"
+      ],
+      "variants": [
+        "Immutable",
+        "Stable",
+        "Volatile"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr_common::signature::EncodingPreservation",
+      "name": "EncodingPreservation",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct EncodingPreservation",
+      "summary": "Controls whether a [`Coercion`] preserves an argument's physical encoding (e.g. dictionary) instead of materializing it to the coerced value type.",
+      "doc": "api/datafusion_expr_common.signature.md#encodingpreservation",
+      "aliases": [
+        "datafusion::logical_expr::EncodingPreservation",
+        "datafusion_expr::EncodingPreservation"
+      ],
+      "methods": [
+        {
+          "name": "dictionary",
+          "signature": "const fn dictionary() -> Self",
+          "summary": "Preserve dictionary encoding and coerce only the dictionary values."
+        },
+        {
+          "name": "preserve_dictionary",
+          "signature": "const fn preserve_dictionary(self) -> bool",
+          "summary": "Returns whether dictionary encoding should be preserved."
+        },
+        {
+          "name": "with_dictionary",
+          "signature": "const fn with_dictionary(self) -> Self",
+          "summary": "Preserve dictionary encoding and coerce only the dictionary values."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::ImplicitCoercion",
+      "name": "ImplicitCoercion",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct ImplicitCoercion",
+      "summary": "Defines rules for implicit type coercion, specifying which source types can be coerced and the default type to use when coercing.",
+      "doc": "api/datafusion_expr_common.signature.md#implicitcoercion",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::signature::Signature",
+      "name": "Signature",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct Signature",
+      "summary": "Provides  information necessary for calling a function.",
+      "doc": "api/datafusion_expr_common.signature.md#signature",
+      "aliases": [
+        "datafusion::logical_expr::Signature",
+        "datafusion_expr::Signature"
+      ],
+      "fields": [
+        "type_signature",
+        "volatility",
+        "parameter_names"
+      ],
+      "methods": [
+        {
+          "name": "any",
+          "signature": "fn any(arg_count: usize, volatility: Volatility) -> Self",
+          "summary": "A specified number of arguments of any type"
+        },
+        {
+          "name": "array",
+          "signature": "fn array(volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for ArrayEmpty and similar functions."
+        },
+        {
+          "name": "array_and_element",
+          "signature": "fn array_and_element(volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for ArrayAppend and similar functions."
+        },
+        {
+          "name": "array_and_element_and_optional_index",
+          "signature": "fn array_and_element_and_optional_index(volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for Array functions with an optional index."
+        },
+        {
+          "name": "array_and_index",
+          "signature": "fn array_and_index(volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for ArrayElement and similar functions."
+        },
+        {
+          "name": "arrays",
+          "signature": "fn arrays(n: usize, coercion: Option<ListCoercion>, volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for functions that take a fixed number of arrays."
+        },
+        {
+          "name": "coercible",
+          "signature": "fn coercible(target_types: Vec<Coercion>, volatility: Volatility) -> Self",
+          "summary": "Target coerce types in order"
+        },
+        {
+          "name": "comparable",
+          "signature": "fn comparable(arg_count: usize, volatility: Volatility) -> Self",
+          "summary": "Used for function that expects comparable data types, it will try to coerced all the types into single final one."
+        },
+        {
+          "name": "element_and_array",
+          "signature": "fn element_and_array(volatility: Volatility) -> Self",
+          "summary": "Specialized [Signature] for ArrayPrepend and similar functions."
+        },
+        {
+          "name": "exact",
+          "signature": "fn exact(exact_types: Vec<DataType>, volatility: Volatility) -> Self",
+          "summary": "Exactly matches the types in `exact_types`, in order."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(type_signature: TypeSignature, volatility: Volatility) -> Self",
+          "summary": "Creates a new Signature from a given type signature and volatility."
+        },
+        {
+          "name": "nullary",
+          "signature": "fn nullary(volatility: Volatility) -> Self"
+        },
+        {
+          "name": "numeric",
+          "signature": "fn numeric(arg_count: usize, volatility: Volatility) -> Self",
+          "summary": "A specified number of numeric arguments"
+        },
+        {
+          "name": "one_of",
+          "signature": "fn one_of(type_signatures: Vec<TypeSignature>, volatility: Volatility) -> Self",
+          "summary": "Any one of a list of [TypeSignature]s."
+        },
+        {
+          "name": "string",
+          "signature": "fn string(arg_count: usize, volatility: Volatility) -> Self",
+          "summary": "A specified number of string arguments"
+        },
+        {
+          "name": "uniform",
+          "signature": "fn uniform(arg_count: usize, valid_types: Vec<DataType>, volatility: Volatility) -> Self",
+          "summary": "A fixed number of arguments of the same type, from those listed in `valid_types`."
+        },
+        {
+          "name": "user_defined",
+          "signature": "fn user_defined(volatility: Volatility) -> Self",
+          "summary": "User-defined coercion rules for the function."
+        },
+        {
+          "name": "variadic",
+          "signature": "fn variadic(common_types: Vec<DataType>, volatility: Volatility) -> Self",
+          "summary": "An arbitrary number of arguments with the same type, from those listed in `common_types`."
+        },
+        {
+          "name": "variadic_any",
+          "signature": "fn variadic_any(volatility: Volatility) -> Self",
+          "summary": "An arbitrary number of arguments of any type."
+        },
+        {
+          "name": "with_parameter_names",
+          "signature": "fn with_parameter_names(self, names: Vec<impl Into<String>>) -> Result<Self>",
+          "summary": "Add parameter names to this signature, enabling named argument notation."
+        }
+      ]
+    }
+  ]
+}

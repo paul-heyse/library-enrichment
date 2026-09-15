@@ -13,7 +13,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-const FORMAT: &str = "concrete-jobs/4";
+const FORMAT: &str = "concrete-jobs/5";
 const MAX_RECORD_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_TERMINAL_CACHE: usize = 8;
 const MAX_INTERESTS: usize = 256;
@@ -132,7 +132,7 @@ impl JobRecord {
             active_interests: self.interests.len(),
             submitted_at: self.submitted_at.clone(),
             updated_at: self.updated_at.clone(),
-            result: self.result.clone(),
+            result: self.result.as_ref().map(Into::into),
         }
     }
     fn transition(&mut self, state: JobState, stage: &str) {
@@ -548,18 +548,13 @@ fn settle_failure(root: &Path, entry: &mut Entry, error: &io::Error) {
 }
 
 /// Journal size is independent of library size. Large delivery DTOs use the same immutable
-/// overflow-artifact contract as tool replies. The facts remain in the native catalog; this
-/// derived delivery artifact can be reconstructed after a crash without repeating a producer.
+/// indexed-artifact contract as tool replies. Committed recovery reads these bytes directly;
+/// it never regenerates a missing result.
 fn bound_delivery(root: &Path, result: Envelope) -> io::Result<Envelope> {
     let data = root
         .parent()
         .ok_or_else(|| io::Error::other("job data root missing"))?;
-    crate::delivery::encode(
-        &enrichment_store::BlobStore::open(data)?,
-        result,
-        crate::delivery::JOURNAL_BYTES,
-        false,
-    )
+    crate::delivery::terminal(&enrichment_store::BlobStore::open(data)?, result)
 }
 
 fn validate_id(id: &str) -> io::Result<()> {
@@ -578,7 +573,10 @@ fn validate_id(id: &str) -> io::Result<()> {
 fn open_record(path: &Path) -> io::Result<std::io::Take<std::fs::File>> {
     let metadata = std::fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.len() > MAX_RECORD_BYTES {
-        return Err(io::Error::other("invalid or oversized job journal"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "invalid or oversized job journal",
+        ));
     }
     Ok(std::fs::File::open(path)?.take(MAX_RECORD_BYTES))
 }
@@ -594,11 +592,17 @@ fn read_record(root: &Path, id: &str) -> io::Result<JobRecord> {
         Err(e) => return Err(e),
     };
     let record: JobRecord = serde_json::from_reader(std::io::BufReader::new(open_record(&path)?))?;
-    record.specification.validate()?;
+    record
+        .specification
+        .validate()
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
     if let Some(stage) = &record.resolution {
-        stage.validate()?;
+        stage
+            .validate()
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
         if !matches!(record.specification, JobSpec::Resolve(_)) {
-            return Err(io::Error::other(
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
                 "non-resolution job contains an exact resolution stage",
             ));
         }
@@ -607,7 +611,8 @@ fn read_record(root: &Path, id: &str) -> io::Result<JobRecord> {
         || record.job_id != id
         || record.interests.len() + record.detached_interests.len() > MAX_INTERESTS
     {
-        return Err(io::Error::other(
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
             "job journal identity or subscriber bound mismatch",
         ));
     }
@@ -789,6 +794,8 @@ mod tests {
             "large native result",
             crate::ops::common::to_object(&serde_json::json!({"payload":payload})),
             enrichment_core::wire::Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: "large delivery".into(),
                 indexed: Default::default(),
                 missing: Default::default(),
@@ -799,14 +806,19 @@ mod tests {
             .unwrap();
         let record = jobs.get(&job.job_id).unwrap();
         let envelope = record.result.unwrap();
-        let id = envelope.data["result_artifact_id"].as_str().unwrap();
+        let enrichment_core::wire::DeliveryDescriptor::Artifact {
+            artifact_id: id, ..
+        } = &envelope.delivery
+        else {
+            panic!("large result requires artifact delivery");
+        };
         let blobs = enrichment_store::BlobStore::open(dir.path()).unwrap();
         let artifact = blobs.find(id).unwrap().unwrap();
         let saved: serde_json::Value =
             serde_json::from_slice(&blobs.read(&artifact.sha256).unwrap()).unwrap();
-        assert_eq!(saved["status"], "ok");
-        assert_eq!(saved["data"]["payload"], payload);
-        assert!(saved.get("request_id").is_none());
+        assert_eq!(saved["result"]["status"], "ok");
+        assert_eq!(saved["result"]["data"]["payload"], payload);
+        assert_eq!(saved["result"]["request_id"], "req_retained");
         assert!(
             std::fs::metadata(
                 dir.path()
@@ -889,6 +901,8 @@ mod tests {
             "committed result",
             Default::default(),
             enrichment_core::wire::Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: "fixture".into(),
                 indexed: Default::default(),
                 missing: Default::default(),
@@ -901,7 +915,14 @@ mod tests {
             Ok(Some((JobState::Succeeded, result.clone())))
         })
         .unwrap();
-        assert_eq!(jobs.get(&job.job_id).unwrap().result, Some(result));
+        let recovered = jobs.get(&job.job_id).unwrap().result.unwrap();
+        assert_eq!(recovered.outcome(), result.outcome());
+        assert_eq!(recovered.coverage, result.coverage);
+        assert_eq!(recovered.summary, result.summary);
+        assert!(matches!(
+            recovered.delivery,
+            enrichment_core::wire::DeliveryDescriptor::Artifact { .. }
+        ));
         assert_eq!(
             jobs.cancel(&job.job_id, &token).unwrap().state,
             JobState::Succeeded

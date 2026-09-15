@@ -1,0 +1,149 @@
+{
+  "module": "parquet_variant::builder::object",
+  "crate": "parquet-variant",
+  "api": "api/parquet_variant.builder.object.md",
+  "items": [
+    {
+      "path": "parquet_variant::builder::object::ObjectBuilder",
+      "name": "ObjectBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ObjectBuilder<'a, S: BuilderSpecificState>",
+      "summary": "A builder for creating [`Variant::Object`] values.",
+      "doc": "api/parquet_variant.builder.object.md#objectbuilder",
+      "implements": [
+        "core::iter::traits::collect::Extend"
+      ],
+      "methods": [
+        {
+          "name": "extend",
+          "signature": "fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self)",
+          "summary": "Finalizes this object and appends it to its parent, which otherwise remains unmodified."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, key: &str, value: T)",
+          "summary": "Add a field with key and value to the object"
+        },
+        {
+          "name": "insert_bytes",
+          "signature": "fn insert_bytes<'m, 'd>(&mut self, key: &str, value: impl Into<Variant<'m, 'd>>)",
+          "summary": "Add a field with key and value to the object by copying raw bytes when possible."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(parent_state: ParentState<'a, S>, validate_unique_fields: bool) -> Self",
+          "summary": "Creates a new object builder, nested on top of the given parent state."
+        },
+        {
+          "name": "new_list",
+          "signature": "fn new_list<'b>(&'b mut self, key: &str) -> ListBuilder<'b, ObjectState<'b>>",
+          "summary": "Returns a list builder that can be used to append a new (nested) list to this object."
+        },
+        {
+          "name": "new_object",
+          "signature": "fn new_object<'b>(&'b mut self, key: &'b str) -> ObjectBuilder<'b, ObjectState<'b>>",
+          "summary": "Returns an object builder that can be used to append a new (nested) object to this object."
+        },
+        {
+          "name": "try_insert",
+          "signature": "fn try_insert<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, key: &str, value: T) -> Result<(), ArrowError>",
+          "summary": "Add a field with key and value to the object"
+        },
+        {
+          "name": "try_insert_bytes",
+          "signature": "fn try_insert_bytes<'m, 'd>(&mut self, key: &str, value: impl Into<Variant<'m, 'd>>) -> Result<(), ArrowError>",
+          "summary": "Add a field with key and value to the object by copying raw bytes when possible."
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list<'b>(&'b mut self, key: &str) -> Result<ListBuilder<'b, ObjectState<'b>>, ArrowError>",
+          "summary": "Returns a list builder that can be used to append a new (nested) list to this object."
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object<'b>(&'b mut self, key: &str) -> Result<ObjectBuilder<'b, ObjectState<'b>>, ArrowError>",
+          "summary": "Returns an object builder that can be used to append a new (nested) object to this object."
+        },
+        {
+          "name": "try_with_field",
+          "signature": "fn try_with_field<'m, 'd, T: Into<Variant<'m, 'd>>>(self, key: &str, value: T) -> Result<Self, ArrowError>",
+          "summary": "Builder style API for adding a field with key and value to the object"
+        },
+        {
+          "name": "with_field",
+          "signature": "fn with_field<'m, 'd, T: Into<Variant<'m, 'd>>>(self, key: &str, value: T) -> Self",
+          "summary": "Builder style API for adding a field with key and value to the object"
+        },
+        {
+          "name": "with_validate_unique_fields",
+          "signature": "fn with_validate_unique_fields(self, validate_unique_fields: bool) -> Self",
+          "summary": "Enables validation for unique field keys when inserting into this object."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::object::ObjectFieldBuilder",
+      "name": "ObjectFieldBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ObjectFieldBuilder<'o, 'v, 's, S: BuilderSpecificState>",
+      "summary": "A [`VariantBuilderExt`] that inserts a new field into a variant object.",
+      "doc": "api/parquet_variant.builder.object.md#objectfieldbuilder",
+      "implements": [
+        "parquet_variant::builder::VariantBuilderExt"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt",
+          "summary": "A NULL object field is interpreted as missing, so nothing gets inserted at all."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(key: &'s str, builder: &'o mut ObjectBuilder<'v, S>) -> Self"
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::object::ObjectState",
+      "name": "ObjectState",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ObjectState<'a>",
+      "summary": "Internal state for object building",
+      "doc": "api/parquet_variant.builder.object.md#objectstate",
+      "implements": [
+        "parquet_variant::builder::BuilderSpecificState"
+      ],
+      "methods": [
+        {
+          "name": "rollback",
+          "signature": "fn rollback(&mut self)",
+          "via_trait": "parquet_variant::builder::BuilderSpecificState"
+        }
+      ]
+    }
+  ]
+}

@@ -65,6 +65,24 @@ impl ScalarUDFImpl for ScoreUdf {
         Ok(projection::score::result(&[])?.data_type().clone())
     }
 
+    fn return_field_from_args(
+        &self,
+        _args: datafusion::logical_expr::ReturnFieldArgs,
+    ) -> Result<arrow::datatypes::FieldRef> {
+        Ok(std::sync::Arc::new(
+            arrow::datatypes::Field::new(self.name(), self.return_type(&[])?, true).with_metadata(
+                std::collections::HashMap::from([(
+                    "enrichment.function".into(),
+                    format!(
+                        "{}:{}",
+                        self.name(),
+                        enrichment_core::canonical::digest_hex(&serde_json::json!(self.spec))
+                    ),
+                )]),
+            ),
+        ))
+    }
+
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let arrays = args
             .args

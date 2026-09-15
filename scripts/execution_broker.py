@@ -36,11 +36,22 @@ def execution_root(explicit: str | None) -> Path:
     return Path(cache).resolve() / "podman"
 
 
-def description(root: Path) -> dict:
+def daemon_binary(profile: str = "debug") -> Path:
+    """Select the same Cargo output directory and profile used by qualification builds."""
+    if profile not in {"debug", "release"}:
+        raise ValueError("qualification profile must be debug or release")
+    project = Path(__file__).resolve().parent.parent
+    target = Path(os.environ.get("CARGO_TARGET_DIR", project / "target"))
+    if not target.is_absolute():
+        target = project / target
+    return target / profile / "library-enrichmentd"
+
+
+def description(root: Path, *, profile: str = "debug") -> dict:
     """Read the current Rust-owned setup/runtime contract; never reconstruct its flags."""
     import json
 
-    daemon = Path(__file__).resolve().parent.parent / "target/debug/library-enrichmentd"
+    daemon = daemon_binary(profile)
     result = subprocess.run(
         [str(daemon), "execution-describe", str(root)],
         capture_output=True,
@@ -64,11 +75,11 @@ def subdirectories(root: Path) -> list[str]:
     return description(root)["subdirectories"]
 
 
-def probe(root: Path, ecosystem: str, image: str) -> dict:
+def probe(root: Path, ecosystem: str, image: str, *, profile: str = "debug") -> dict:
     """Execute the Rust-owned producer probes through the production capsule protocol."""
     import json
 
-    daemon = Path(__file__).resolve().parent.parent / "target/debug/library-enrichmentd"
+    daemon = daemon_binary(profile)
     result = subprocess.run(
         [str(daemon), "execution-probe", str(root), ecosystem, image],
         capture_output=True,

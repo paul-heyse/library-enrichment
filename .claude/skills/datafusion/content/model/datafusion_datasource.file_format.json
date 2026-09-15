@@ -1,0 +1,236 @@
+{
+  "module": "datafusion_datasource::file_format",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_format.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_format::DEFAULT_SCHEMA_INFER_MAX_RECORD",
+      "name": "DEFAULT_SCHEMA_INFER_MAX_RECORD",
+      "kind": "constant",
+      "crate": "datafusion-datasource",
+      "signature": "const DEFAULT_SCHEMA_INFER_MAX_RECORD: usize = 1000",
+      "summary": "Default max records to scan to infer the schema",
+      "doc": "api/datafusion_datasource.file_format.md#default_schema_infer_max_record",
+      "aliases": [
+        "datafusion::datasource::file_format::DEFAULT_SCHEMA_INFER_MAX_RECORD"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::file_type_to_format",
+      "name": "file_type_to_format",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn file_type_to_format(file_type: &std::sync::Arc<dyn FileType>) -> datafusion_common::Result<std::sync::Arc<dyn FileFormatFactory>>",
+      "summary": "Converts a [FileType] to a [FileFormatFactory]. Returns an error if the [FileType] cannot be downcasted to a [DefaultFileType].",
+      "doc": "api/datafusion_datasource.file_format.md#file_type_to_format",
+      "aliases": [
+        "datafusion::datasource::file_format::file_type_to_format"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::format_as_file_type",
+      "name": "format_as_file_type",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn format_as_file_type(file_format_factory: std::sync::Arc<dyn FileFormatFactory>) -> std::sync::Arc<dyn FileType>",
+      "summary": "Converts a [FileFormatFactory] to a [FileType]",
+      "doc": "api/datafusion_datasource.file_format.md#format_as_file_type",
+      "aliases": [
+        "datafusion::datasource::file_format::format_as_file_type"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::DefaultFileType",
+      "name": "DefaultFileType",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct DefaultFileType",
+      "summary": "A container of [FileFormatFactory] which also implements [FileType]. This enables converting a dyn FileFormat to a dyn FileType. The former trait is a superset of the latter trait, which includes execution time relevant methods. [FileType]…",
+      "doc": "api/datafusion_datasource.file_format.md#defaultfiletype",
+      "aliases": [
+        "datafusion::datasource::file_format::DefaultFileType"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_common::file_options::file_type::FileType",
+        "datafusion_common::file_options::file_type::GetExt"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_common::file_options::file_type::FileType"
+        },
+        {
+          "name": "as_format_factory",
+          "signature": "fn as_format_factory(&self) -> &Arc<dyn FileFormatFactory>",
+          "summary": "get a reference to the inner [FileFormatFactory] struct"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_common::file_options::file_type::GetExt"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(file_format_factory: Arc<dyn FileFormatFactory>) -> Self",
+          "summary": "Constructs a [DefaultFileType] wrapper from a [FileFormatFactory]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::FileMeta",
+      "name": "FileMeta",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileMeta",
+      "summary": "Metadata fetched from a file, including statistics and ordering.",
+      "doc": "api/datafusion_datasource.file_format.md#filemeta",
+      "aliases": [
+        "datafusion::datasource::file_format::FileMeta"
+      ],
+      "fields": [
+        "statistics",
+        "ordering"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(statistics: Statistics) -> Self",
+          "summary": "Creates a new `FileMeta` with the given statistics and no ordering."
+        },
+        {
+          "name": "with_ordering",
+          "signature": "fn with_ordering(self, ordering: Option<LexOrdering>) -> Self",
+          "summary": "Sets the ordering for this file metadata."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::FileFormat",
+      "name": "FileFormat",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileFormat: Any + Send + Sync + fmt::Debug",
+      "summary": "This trait abstracts all the file format specific implementations from the [`TableProvider`]. This helps code re-utilization across providers that support the same file formats.",
+      "doc": "api/datafusion_datasource.file_format.md#fileformat",
+      "aliases": [
+        "datafusion::datasource::file_format::FileFormat"
+      ],
+      "implementors": [
+        "datafusion_datasource_arrow::file_format::ArrowFormat",
+        "datafusion_datasource_avro::file_format::AvroFormat",
+        "datafusion_datasource_csv::file_format::CsvFormat",
+        "datafusion_datasource_json::file_format::JsonFormat",
+        "datafusion_datasource_parquet::file_format::ParquetFormat"
+      ],
+      "required_methods": [
+        "compression_type",
+        "create_physical_plan",
+        "file_source",
+        "get_ext",
+        "get_ext_with_compression",
+        "infer_schema",
+        "infer_stats"
+      ],
+      "provided_methods": [
+        "create_writer_physical_plan",
+        "infer_ordering",
+        "infer_stats_and_ordering"
+      ],
+      "methods": [
+        {
+          "name": "compression_type",
+          "signature": "fn compression_type(&self) -> Option<FileCompressionType>",
+          "summary": "Returns whether this instance uses compression if applicable"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, state: &dyn Session, conf: FileScanConfig) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Take a list of files and convert it to the appropriate executor according to this file format."
+        },
+        {
+          "name": "create_writer_physical_plan",
+          "signature": "async fn create_writer_physical_plan(&self, _input: Arc<dyn ExecutionPlan>, _state: &dyn Session, _conf: FileSinkConfig, _order_requirements: Option<LexRequirement>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Take a list of files and the configuration to convert it to the appropriate writer executor according to this file format."
+        },
+        {
+          "name": "file_source",
+          "signature": "fn file_source(&self, table_schema: TableSchema) -> Arc<dyn FileSource>",
+          "summary": "Return the related FileSource such as `CsvSource`, `JsonSource`, etc."
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "summary": "Returns the extension for this FileFormat, e.g. \"file.csv\" -> csv"
+        },
+        {
+          "name": "get_ext_with_compression",
+          "signature": "fn get_ext_with_compression(&self, _file_compression_type: &FileCompressionType) -> Result<String>",
+          "summary": "Returns the extension for this FileFormat when compressed, e.g. \"file.csv.gz\" -> csv"
+        },
+        {
+          "name": "infer_ordering",
+          "signature": "async fn infer_ordering(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, _table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Option<LexOrdering>>",
+          "summary": "Infer the ordering (sort order) for the provided object from file metadata."
+        },
+        {
+          "name": "infer_schema",
+          "signature": "async fn infer_schema(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, objects: &[ObjectMeta]) -> Result<SchemaRef>",
+          "summary": "Infer the common schema of the provided objects. The objects will usually be analysed up to a given number of records or files (as specified in the format config) then give the estimated common schema. This might fail if the files have sch…"
+        },
+        {
+          "name": "infer_stats",
+          "signature": "async fn infer_stats(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<Statistics>",
+          "summary": "Infer the statistics for the provided object. The cost and accuracy of the estimated statistics might vary greatly between file formats."
+        },
+        {
+          "name": "infer_stats_and_ordering",
+          "signature": "async fn infer_stats_and_ordering(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<FileMeta>",
+          "summary": "Infer both statistics and ordering from a single metadata read."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_format::FileFormatFactory",
+      "name": "FileFormatFactory",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileFormatFactory: Any + Sync + Send + GetExt + fmt::Debug",
+      "summary": "Factory for creating [`FileFormat`] instances based on session and command level options",
+      "doc": "api/datafusion_datasource.file_format.md#fileformatfactory",
+      "aliases": [
+        "datafusion::datasource::file_format::FileFormatFactory"
+      ],
+      "implementors": [
+        "datafusion_datasource_arrow::file_format::ArrowFormatFactory",
+        "datafusion_datasource_avro::file_format::AvroFormatFactory",
+        "datafusion_datasource_csv::file_format::CsvFormatFactory",
+        "datafusion_datasource_json::file_format::JsonFormatFactory",
+        "datafusion_datasource_parquet::file_format::ParquetFormatFactory"
+      ],
+      "required_methods": [
+        "create",
+        "default"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) -> Result<Arc<dyn FileFormat>>",
+          "summary": "Initialize a [FileFormat] and configure based on session and command level options"
+        },
+        {
+          "name": "default",
+          "signature": "fn default(&self) -> Arc<dyn FileFormat>",
+          "summary": "Initialize a [FileFormat] with all options set to default values"
+        }
+      ]
+    }
+  ]
+}

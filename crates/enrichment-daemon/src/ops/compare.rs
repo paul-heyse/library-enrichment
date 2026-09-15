@@ -2,11 +2,14 @@
 use std::collections::BTreeSet;
 
 use enrichment_core::canonical;
-use enrichment_core::compare::{Scope, page::ComparisonCursor};
-use enrichment_core::evidence::{EvidenceKind, relational::CoverageOutcome};
+use enrichment_core::compare::{
+    Scope,
+    page::{AlternativeCursor, ComparisonCursor},
+};
+use enrichment_core::evidence::EvidenceKind;
 use enrichment_core::request::CompareRequest;
 use enrichment_core::wire::data::{CompareData, ComparisonSide, ConfigurationDifference};
-use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Pagination};
+use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Page};
 use serde_json::json;
 
 use super::common::{self, Opened};
@@ -21,8 +24,9 @@ fn invalid(message: &str) -> Envelope {
         false,
     )
 }
-fn side(opened: &Opened) -> ComparisonSide {
+fn side(opened: &Opened, coverage: Coverage) -> ComparisonSide {
     ComparisonSide {
+        coverage,
         context_id: opened.context.context_id.to_string(),
         snapshot_id: opened.snapshot_id.to_string(),
         release: opened.release.clone(),
@@ -50,13 +54,30 @@ pub async fn compare(service: &Service, request: CompareRequest) -> Envelope {
 }
 
 pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope {
+    read_inner(service, request, None).await
+}
+
+pub(super) async fn read_job(
+    service: &Service,
+    request: CompareRequest,
+    id: &str,
+    digest: &str,
+) -> Envelope {
+    read_inner(service, request, Some((id, digest))).await
+}
+
+async fn read_inner(
+    service: &Service,
+    request: CompareRequest,
+    job: Option<(&str, &str)>,
+) -> Envelope {
     let (Some(before_id), Some(after_id)) = (&request.before_context_id, &request.after_context_id)
     else {
         return invalid("Both context IDs are required");
     };
     let catalog = match service.repository.catalog.pin().await {
         Ok(value) => value,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "comparison_projection"),
     };
     let before = match common::open_context_at(
         service,
@@ -149,26 +170,44 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
     if !configuration_differences.is_empty() {
         confounders.push("Environment or observed configuration differs; do not attribute every difference to the release".into());
     }
-    let mut api_complete = a.normalizer_version == b.normalizer_version;
-    for reader in [&before.reader, &after.reader] {
-        let coverage = match reader.coverage().await {
-            Ok(value) => value,
+    let kinds: BTreeSet<_> = scopes
+        .iter()
+        .map(|scope| match scope {
+            Scope::Api | Scope::Relationships => EvidenceKind::PublicApi,
+            Scope::Docs => EvidenceKind::Documentation,
+            Scope::Configuration => EvidenceKind::RegistryMetadata,
+            Scope::ReleaseNotes => EvidenceKind::ReleaseNotes,
+            Scope::Examples => EvidenceKind::Examples,
+        })
+        .collect();
+    let mut assessments = Vec::new();
+    for (label, reader) in [("before", &before.reader), ("after", &after.reader)] {
+        match reader
+            .assess(
+                &kinds.iter().copied().collect::<Vec<_>>(),
+                None,
+                format!("{label} requested comparison scopes"),
+            )
+            .await
+        {
+            Ok(coverage) => assessments.push(coverage),
             Err(e) => return common::query_error(&e),
-        };
-        let api: Vec<_> = coverage
-            .iter()
-            .filter(|c| c.kind == EvidenceKind::PublicApi)
-            .collect();
-        api_complete &= api.iter().any(|c| {
-            matches!(&c.subject,
-            enrichment_core::evidence::relational::SubjectRef::Library { release_id }
-            if release_id == reader.manifest().release_id.as_str())
-        }) && api
-            .iter()
-            .all(|c| c.outcome == CoverageOutcome::Indexed && c.gaps.is_empty());
+        }
     }
-    if want_api && !api_complete {
-        confounders.push("API coverage or normalizer compatibility is incomplete; an empty API delta does not establish unchanged API".into());
+    let after_coverage = assessments.pop().expect("two assessed sides");
+    let before_coverage = assessments.pop().expect("two assessed sides");
+    let scope_complete = before_coverage.complete() && after_coverage.complete();
+    let api_complete = kinds.contains(&EvidenceKind::PublicApi)
+        && a.normalizer_version == b.normalizer_version
+        && [&before_coverage, &after_coverage]
+            .iter()
+            .all(|coverage| coverage.indexed.contains(EvidenceKind::PublicApi.as_str()));
+    if !scope_complete {
+        confounders.push("Requested evidence scopes are incomplete; an empty delta does not establish unchanged evidence in those scopes".into());
+    }
+    if a.normalizer_version != b.normalizer_version {
+        confounders
+            .push("Normalizer versions differ; normalization may explain differences".into());
     }
     let same_release = before.release.key.version == after.release.key.version;
     if same_release && before.release.key.artifact_digest != after.release.key.artifact_digest {
@@ -177,7 +216,7 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
     let scope = format!("{}:{}", before.snapshot_id, after.snapshot_id);
     let budget = common::byte_budget(service, request.max_bytes);
     let digest = canonical::digest_hex(&json!([
-        "typed-comparison/1",
+        "typed-comparison/2",
         scopes,
         budget,
         request.max_items
@@ -198,14 +237,38 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
             );
         }
     };
+    if cursor.is_some() && request.alternative_cursor.is_some() {
+        return invalid("Changed-key and alternative cursors are independent; pass one at a time");
+    }
+    let detail = match request
+        .alternative_cursor
+        .as_deref()
+        .map(|text| AlternativeCursor::decode(text, &scope, &digest))
+        .transpose()
+    {
+        Ok(value) => value,
+        Err(e) => {
+            return envelope::error(
+                ErrorCode::InvalidCursor,
+                e.to_string(),
+                "Restart the comparison for this snapshot pair and selection.",
+                false,
+            );
+        }
+    };
     let offset = cursor.as_ref().map_or(0, |c| c.returned_before);
     let limit = service.config.limits.search_results.clamp(1, 1000);
     let page = match enrichment_store::comparison::page(
         &before.reader,
         &after.reader,
-        &scopes,
-        cursor.as_ref().map(|c| &c.after),
-        request.max_items.map_or(limit, |n| n.clamp(1, limit)),
+        &service.blobs,
+        enrichment_store::comparison::Selection {
+            scopes: &scopes,
+            after_key: cursor.as_ref().map(|c| &c.after),
+            limit: request.max_items.map_or(limit, |n| n.clamp(1, limit)),
+            detail: detail.as_ref(),
+            digest: &digest,
+        },
     )
     .await
     {
@@ -216,11 +279,27 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
     if offset > total {
         return invalid("Comparison cursor exceeds the pinned result count");
     }
-    let (keys, selected): (Vec<_>, Vec<_>) = page.changes.into_iter().unzip();
+    let (keys, mut selected): (Vec<_>, Vec<_>) = page.changes.into_iter().unzip();
+    for change in &mut selected {
+        let kind = match change.scope {
+            Scope::Api | Scope::Relationships => EvidenceKind::PublicApi,
+            Scope::Docs => EvidenceKind::Documentation,
+            Scope::Configuration => EvidenceKind::RegistryMetadata,
+            Scope::ReleaseNotes => EvidenceKind::ReleaseNotes,
+            Scope::Examples => EvidenceKind::Examples,
+        };
+        if ![&before_coverage, &after_coverage]
+            .iter()
+            .all(|coverage| coverage.indexed.contains(kind.as_str()))
+        {
+            change.interpretation.push_str(" Coverage is incomplete on at least one side for this scope; an unobserved alternative does not establish absence.");
+        }
+    }
     let returned = selected.len() as u64;
     let mut data = CompareData {
-        before: side(&before),
-        after: side(&after),
+        page: Page::default(),
+        before: side(&before, before_coverage.clone()),
+        after: side(&after, after_coverage.clone()),
         comparable: confounders.is_empty(),
         same_release,
         configuration_differences,
@@ -232,12 +311,29 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
         offset,
     };
     let mut coverage = Coverage {
+        details: None,
+        assessments: before_coverage
+            .assessments
+            .into_iter()
+            .chain(after_coverage.assessments)
+            .collect(),
         scope: "Normalized differences between the two pinned snapshots".into(),
-        indexed: BTreeSet::from(["comparison".into()]),
-        missing: BTreeSet::new(),
+        indexed: before_coverage
+            .indexed
+            .intersection(&after_coverage.indexed)
+            .cloned()
+            .collect(),
+        missing: before_coverage
+            .missing
+            .union(&after_coverage.missing)
+            .cloned()
+            .collect(),
         limitations: confounders,
     };
     coverage.limitations.push("A clean API comparison does not imply unchanged behavior; dependency, runtime and project compatibility require exact-environment verification.".into());
+    if want_api {
+        coverage.limitations.push("Signature deltas compare retained producer representations. Compiler rendering can differ, including Infallible and never-type (!) representations; a rendered difference alone does not establish a breaking source-level change.".into());
+    }
     if want_api && !api_complete {
         coverage.missing.insert("complete_api_comparison".into());
     }
@@ -251,15 +347,10 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
         evidence: Vec::new(),
         artifacts: Vec::new(),
     };
-    let mut result = result.ok_with_pagination(Pagination {
-        returned,
-        total_matches: Some(total),
-        truncated: false,
-        next_cursor: None,
-    });
+    let mut result = result.ok_with_page(Page::new(returned, Some(total), false, None));
     loop {
         let returned = data.changes.len() as u64;
-        let more = page.has_more || offset + returned < total;
+        let more = detail.is_none() && (page.has_more || offset + returned < total);
         let next_cursor = if more && let Some(key) = keys.get(data.changes.len().saturating_sub(1))
         {
             match ComparisonCursor::new(
@@ -271,29 +362,79 @@ pub(super) async fn read(service: &Service, request: CompareRequest) -> Envelope
             .encode()
             {
                 Ok(value) => Some(value),
-                Err(e) => return common::store_error(&e),
+                Err(e) => return common::operation_error(&e, "comparison_projection"),
             }
         } else {
             None
         };
-        result.data = common::to_object(&data);
         result.summary = format!(
             "{total} evidence change(s); returning {returned}, with {offset} already returned"
         );
-        result.pagination = Pagination {
+        data.page = Page::new(
             returned,
-            total_matches: Some(total),
-            truncated: more,
+            Some(if detail.is_some() { returned } else { total }),
+            more,
             next_cursor,
-        };
+        );
+        result.data = common::to_object(&data);
+        result.artifacts = value_artifacts(&data.changes);
         if common::json_size(&result) <= budget || data.changes.len() <= 1 {
             break;
         }
         data.changes.pop();
     }
-    if !data.comparable || (want_api && !api_complete) {
-        use crate::envelope::IntoPartial;
+    if !data.comparable || !scope_complete || (want_api && !api_complete) {
         result = result.into_partial();
     }
+    if let Some((job_id, request_digest)) = job {
+        let state = if result.status() == enrichment_core::wire::Status::Ok {
+            enrichment_core::wire::JobState::Succeeded
+        } else {
+            enrichment_core::wire::JobState::Partial
+        };
+        let blobs = service.blobs.clone();
+        let prepared = service
+            .repository
+            .runtime
+            .blocking(move || crate::delivery::prepare_comparison(&blobs, result))
+            .await;
+        let (delivery, bounded) = match prepared {
+            Ok(Ok(value)) => value,
+            Ok(Err(error)) => return common::operation_error(&error, "comparison_delivery"),
+            Err(error) => return common::operation_error(&error, "comparison_delivery"),
+        };
+        let publication = enrichment_core::evidence::catalog::ComparisonPublication {
+            job_id: job_id.into(),
+            request_digest: request_digest.into(),
+            before_context_id: before.context.context_id.clone(),
+            before_snapshot_id: before.snapshot_id.clone(),
+            after_context_id: after.context.context_id.clone(),
+            after_snapshot_id: after.snapshot_id.clone(),
+            state,
+            delivery,
+        };
+        if let Err(error) = service.repository.publish_comparison(publication).await {
+            return common::operation_error(&error, "comparison_publication");
+        }
+        return bounded;
+    }
     common::enforce_budget(service, result, request.max_bytes)
+}
+
+/// Include exactly the value artifacts reachable from the final fitted page.
+fn value_artifacts(
+    changes: &[enrichment_core::compare::Change],
+) -> Vec<enrichment_core::wire::ArtifactHandle> {
+    let mut artifacts = std::collections::BTreeMap::new();
+    for alternative in changes
+        .iter()
+        .flat_map(|change| change.before.iter().chain(&change.after).flatten())
+    {
+        if let enrichment_core::compare::AlternativeValue::Artifact { artifact, .. } =
+            &alternative.value
+        {
+            artifacts.insert(artifact.artifact_id.clone(), artifact.clone());
+        }
+    }
+    artifacts.into_values().collect()
 }

@@ -1,0 +1,148 @@
+{
+  "module": "parquet::column::writer",
+  "crate": "parquet",
+  "api": "api/parquet.column.writer.md",
+  "items": [
+    {
+      "path": "parquet::column::writer::ColumnWriter",
+      "name": "ColumnWriter",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum ColumnWriter<'a>",
+      "summary": "Column writer for a Parquet type.",
+      "doc": "api/parquet.column.writer.md#columnwriter",
+      "variants": [
+        "BoolColumnWriter",
+        "Int32ColumnWriter",
+        "Int64ColumnWriter",
+        "Int96ColumnWriter",
+        "FloatColumnWriter",
+        "DoubleColumnWriter",
+        "ByteArrayColumnWriter",
+        "FixedLenByteArrayColumnWriter"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<ColumnCloseResult>",
+          "summary": "Close this [`ColumnWriter`], returning the metadata for the column chunk."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::writer::get_column_writer",
+      "name": "get_column_writer",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn get_column_writer<'a>(descr: schema::types::ColumnDescPtr, props: file::properties::WriterPropertiesPtr, page_writer: Box<dyn PageWriter + 'a>) -> ColumnWriter<'a>",
+      "summary": "Create a specific column writer corresponding to column descriptor `descr`.",
+      "doc": "api/parquet.column.writer.md#get_column_writer"
+    },
+    {
+      "path": "parquet::column::writer::get_typed_column_writer",
+      "name": "get_typed_column_writer",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn get_typed_column_writer<T: DataType>(col_writer: ColumnWriter<'_>) -> ColumnWriterImpl<'_, T>",
+      "summary": "Gets a typed column writer for the specific type `T`, by \"up-casting\" `col_writer` of non-generic type to a generic column writer type `ColumnWriterImpl`.",
+      "doc": "api/parquet.column.writer.md#get_typed_column_writer"
+    },
+    {
+      "path": "parquet::column::writer::get_typed_column_writer_mut",
+      "name": "get_typed_column_writer_mut",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn get_typed_column_writer_mut<'a, 'b: 'a, T: DataType>(col_writer: &'a mut ColumnWriter<'b>) -> &'a mut ColumnWriterImpl<'b, T>",
+      "summary": "Similar to `get_typed_column_writer` but returns a reference.",
+      "doc": "api/parquet.column.writer.md#get_typed_column_writer_mut"
+    },
+    {
+      "path": "parquet::column::writer::get_typed_column_writer_ref",
+      "name": "get_typed_column_writer_ref",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn get_typed_column_writer_ref<'a, 'b: 'a, T: DataType>(col_writer: &'b ColumnWriter<'a>) -> &'b ColumnWriterImpl<'a, T>",
+      "summary": "Similar to `get_typed_column_writer` but returns a reference.",
+      "doc": "api/parquet.column.writer.md#get_typed_column_writer_ref"
+    },
+    {
+      "path": "parquet::column::writer::ColumnCloseResult",
+      "name": "ColumnCloseResult",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ColumnCloseResult",
+      "summary": "Metadata for a column chunk of a Parquet file.",
+      "doc": "api/parquet.column.writer.md#columncloseresult",
+      "fields": [
+        "bytes_written",
+        "rows_written",
+        "metadata",
+        "bloom_filter",
+        "column_index",
+        "offset_index"
+      ],
+      "methods": [
+        {
+          "name": "update_dictionary_location",
+          "signature": "fn update_dictionary_location(self, dictionary_len: usize) -> Result<Self>",
+          "summary": "Rewrite the page offsets for a dictionary-first on-disk layout."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::writer::GenericColumnWriter",
+      "name": "GenericColumnWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct GenericColumnWriter<'a, E: ColumnValueEncoder>",
+      "summary": "Generic column writer for a primitive Parquet column",
+      "doc": "api/parquet.column.writer.md#genericcolumnwriter",
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<ColumnCloseResult>",
+          "summary": "Finalizes writes and closes the column writer. Returns total bytes written, total rows written and column chunk metadata."
+        },
+        {
+          "name": "get_descriptor",
+          "signature": "fn get_descriptor(&self) -> &ColumnDescPtr",
+          "summary": "Returns a reference to a [`ColumnDescPtr`]"
+        },
+        {
+          "name": "get_total_bytes_written",
+          "signature": "fn get_total_bytes_written(&self) -> u64",
+          "summary": "Returns total number of bytes written by this column writer so far. This value is also returned when column writer is closed."
+        },
+        {
+          "name": "get_total_rows_written",
+          "signature": "fn get_total_rows_written(&self) -> u64",
+          "summary": "Returns total number of rows written by this column writer so far. This value is also returned when column writer is closed."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(descr: ColumnDescPtr, props: WriterPropertiesPtr, page_writer: Box<dyn PageWriter + 'a>) -> Self",
+          "summary": "Returns a new instance of [`GenericColumnWriter`]."
+        },
+        {
+          "name": "write_batch",
+          "signature": "fn write_batch(&mut self, values: &E::Values, def_levels: Option<&[i16]>, rep_levels: Option<&[i16]>) -> Result<usize>",
+          "summary": "Writes batch of values, definition levels and repetition levels. Returns number of values processed (written)."
+        },
+        {
+          "name": "write_batch_with_statistics",
+          "signature": "fn write_batch_with_statistics(&mut self, values: &E::Values, def_levels: Option<&[i16]>, rep_levels: Option<&[i16]>, min: Option<&E::T>, max: Option<&E::T>, distinct_count: Option<u64>) -> Result<usize>",
+          "summary": "Writer may optionally provide pre-calculated statistics for use when computing chunk-level statistics"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::writer::ColumnWriterImpl",
+      "name": "ColumnWriterImpl",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type ColumnWriterImpl<'a, T> = GenericColumnWriter<'a, column::writer::encoder::ColumnValueEncoderImpl<T>>",
+      "summary": "Typed column writer for a primitive column.",
+      "doc": "api/parquet.column.writer.md#columnwriterimpl"
+    }
+  ]
+}

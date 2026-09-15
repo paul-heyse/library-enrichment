@@ -19,15 +19,38 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
         .submit(key, jobs::JobSpec::Compare(request.clone()))
     {
         Ok(value) => value,
-        Err(error) => return common::store_error(&error),
+        Err(error) => return common::operation_error(&error, "comparison_job"),
     };
     if new {
         let owned = service.clone();
         let id = record.job_id.clone();
         tokio::spawn(async move {
-            if let Err(error) = run(&owned, &id, request).await {
+            if let Err(error) = owned
+                .repository
+                .runtime
+                .job_operation(
+                    id.clone(),
+                    owned.operation_descriptor("library.compare", &request),
+                    std::time::Duration::from_secs(
+                        owned.config.network.acquisition_timeout_seconds,
+                    ),
+                    run(&owned, &id, request),
+                )
+                .await
+            {
                 eprintln!("comparison job {id}: {error}");
-                if let Err(recovery) = owned.jobs.fail_unfinished(&id, &error) {
+                let recovery = async {
+                    let record = owned.jobs.get(&id)?;
+                    if let Some((state, result)) =
+                        recover(&owned.repository, &owned.blobs, &record).await?
+                    {
+                        owned.jobs.finish(&id, state, result)
+                    } else {
+                        owned.jobs.fail_unfinished(&id, &error)
+                    }
+                }
+                .await;
+                if let Err(recovery) = recovery {
                     eprintln!("comparison job {id} terminal recovery: {recovery}");
                 }
             }
@@ -44,7 +67,7 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
             .result
             .unwrap_or_else(|| failure("terminal comparison lacks a result")),
         Ok(record) => verify::pending(record.data(Some(token))),
-        Err(error) => common::store_error(&error),
+        Err(error) => common::operation_error(&error, "comparison_job"),
     }
 }
 
@@ -57,7 +80,14 @@ async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result
             failure("comparison cancelled before acquisition"),
         );
     }
-    let mut result = execute(service, request, &cancel).await;
+    let digest = canonical::digest_hex(&serde_json::json!(["comparison-request/1", request]));
+    let mut result = execute(service, request, &cancel, id, &digest).await;
+    // Catalog visibility wins a cancellation racing the commit. Reuse admitted bytes.
+    if let Some((state, committed)) =
+        recover(&service.repository, &service.blobs, &service.jobs.get(id)?).await?
+    {
+        return service.jobs.finish(id, state, committed);
+    }
     let state = if cancel.load(Ordering::Acquire) {
         result = failure("comparison cancelled before terminal delivery");
         JobState::Cancelled
@@ -71,7 +101,13 @@ async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result
     service.jobs.finish(id, state, result)
 }
 
-async fn execute(service: &Service, mut request: CompareRequest, cancel: &AtomicBool) -> Envelope {
+async fn execute(
+    service: &Service,
+    mut request: CompareRequest,
+    cancel: &AtomicBool,
+    id: &str,
+    digest: &str,
+) -> Envelope {
     let prerequisites = match request.resolutions() {
         Ok(value) => value,
         Err(error) => return failure(error),
@@ -98,12 +134,12 @@ async fn execute(service: &Service, mut request: CompareRequest, cancel: &Atomic
         } else {
             let (child, token, _) = match resolve_job::subscribe(service, prerequisite) {
                 Ok(value) => value,
-                Err(error) => return common::store_error(&error),
+                Err(error) => return common::operation_error(&error, "comparison_job"),
             };
             match child_context(service, &child.job_id, &token, cancel).await {
                 Ok(Ok(context)) => context,
                 Ok(Err(result)) => return *result,
-                Err(error) => return common::store_error(&error),
+                Err(error) => return common::operation_error(&error, "comparison_job"),
             }
         };
         contexts.push(context);
@@ -119,9 +155,58 @@ async fn execute(service: &Service, mut request: CompareRequest, cancel: &Atomic
     request.to_version = None;
     // The read pins one catalog generation only after both acquisitions are complete.
     tokio::select! {
-        result = compare::read(service, request) => result,
+        result = compare::read_job(service, request, id, digest) => result,
         () = resolve_job::cancelled(cancel) => failure("comparison cancelled during native query"),
     }
+}
+
+/// A restart verifies both input snapshots and indexed result bytes, without rerunning a query.
+pub(super) async fn recover(
+    repository: &enrichment_store::repository::EvidenceRepository,
+    blobs: &enrichment_store::BlobStore,
+    record: &jobs::JobRecord,
+) -> io::Result<Option<(JobState, Envelope)>> {
+    let jobs::JobSpec::Compare(request) = &record.specification else {
+        return Err(io::Error::other(
+            "comparison publication has a different journal kind",
+        ));
+    };
+    let fail = |error| io::Error::other(error);
+    let catalog = repository.catalog.pin().await.map_err(fail)?;
+    let Some(publication) = catalog
+        .comparison_publication(&repository.runtime, &record.job_id)
+        .await
+        .map_err(fail)?
+    else {
+        return Ok(None);
+    };
+    let digest = canonical::digest_hex(&serde_json::json!(["comparison-request/1", request]));
+    if publication.request_digest != digest {
+        return Err(io::Error::other(
+            "comparison publication request differs from journal",
+        ));
+    }
+    let before = repository
+        .open_snapshot(catalog.clone(), &publication.before_snapshot_id)
+        .await
+        .map_err(fail)?;
+    let after = repository
+        .open_snapshot(catalog, &publication.after_snapshot_id)
+        .await
+        .map_err(fail)?;
+    if before.manifest.context_id != publication.before_context_id
+        || after.manifest.context_id != publication.after_context_id
+    {
+        return Err(io::Error::other(
+            "comparison publication input ownership differs",
+        ));
+    }
+    repository
+        .validate_comparison_delivery(&publication)
+        .await
+        .map_err(fail)?;
+    let result = crate::delivery::recover_result(blobs, &publication.delivery)?;
+    Ok(Some((publication.state, result)))
 }
 
 async fn child_context(
@@ -246,6 +331,8 @@ mod tests {
             "resolved",
             common::to_object(&serde_json::json!({"text":"\\🌎".repeat(200_000)})),
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: "test exact acquisition".into(),
                 indexed: Default::default(),
                 missing: Default::default(),
@@ -261,7 +348,7 @@ mod tests {
         let record = service.jobs.get(&child.job_id).unwrap();
         assert!(matches!(
             record.result.unwrap().outcome(),
-            Some(Outcome::Error { .. })
+            Some(Outcome::Ok { .. })
         ));
         assert_eq!(
             child_context(&service, &child.job_id, &token, &AtomicBool::new(false))

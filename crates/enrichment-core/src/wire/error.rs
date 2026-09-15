@@ -34,6 +34,8 @@ pub enum ErrorCode {
     VerificationFailed,
     BudgetExceeded,
     InvalidCursor,
+    QueryFailed,
+    InternalError,
 }
 
 /// A typed failure with a concrete next action.
@@ -53,4 +55,6 @@ pub struct ErrorDetail {
     pub retryable: bool,
     /// What the caller should do instead. Blueprint §7.2 requires this, not just a code.
     pub next_action: String,
+    /// Structured origin and recovery evidence.
+    pub diagnostic: super::research::Diagnostic,
 }

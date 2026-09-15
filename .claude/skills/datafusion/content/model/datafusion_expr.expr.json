@@ -1,0 +1,1408 @@
+{
+  "module": "datafusion_expr::expr",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.expr.md",
+  "items": [
+    {
+      "path": "datafusion_expr::expr::OUTER_REFERENCE_COLUMN_PREFIX",
+      "name": "OUTER_REFERENCE_COLUMN_PREFIX",
+      "kind": "constant",
+      "crate": "datafusion-expr",
+      "signature": "const OUTER_REFERENCE_COLUMN_PREFIX: &str = \"outer_ref\"",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_expr::expr::UNNEST_COLUMN_PREFIX",
+      "name": "UNNEST_COLUMN_PREFIX",
+      "kind": "constant",
+      "crate": "datafusion-expr",
+      "signature": "const UNNEST_COLUMN_PREFIX: &str = \"UNNEST\"",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_expr::expr::Expr",
+      "name": "Expr",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum Expr",
+      "summary": "Represents logical expressions such as `A + 1`, or `CAST(c1 AS int)`.",
+      "doc": "api/datafusion_expr.expr.md#expr",
+      "aliases": [
+        "datafusion::logical_expr::Expr",
+        "datafusion::prelude::Expr",
+        "datafusion_expr::Expr"
+      ],
+      "variants": [
+        "Alias",
+        "Column",
+        "ScalarVariable",
+        "Literal",
+        "BinaryExpr",
+        "Like",
+        "SimilarTo",
+        "Not",
+        "IsNotNull",
+        "IsNull",
+        "IsTrue",
+        "IsFalse",
+        "IsUnknown",
+        "IsNotTrue",
+        "IsNotFalse",
+        "IsNotUnknown",
+        "Negative",
+        "Between",
+        "Case",
+        "Cast",
+        "TryCast",
+        "ScalarFunction",
+        "AggregateFunction",
+        "WindowFunction",
+        "InList",
+        "Exists",
+        "InSubquery",
+        "SetComparison",
+        "ScalarSubquery",
+        "Wildcard",
+        "GroupingSet",
+        "Placeholder",
+        "OuterReferenceColumn",
+        "Unnest",
+        "HigherOrderFunction",
+        "Lambda",
+        "LambdaVariable"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::ops::arith::Add",
+        "core::ops::arith::Div",
+        "core::ops::arith::Mul",
+        "core::ops::arith::Neg",
+        "core::ops::arith::Rem",
+        "core::ops::arith::Sub",
+        "core::ops::bit::BitAnd",
+        "core::ops::bit::BitOr",
+        "core::ops::bit::BitXor",
+        "core::ops::bit::Not",
+        "core::ops::bit::Shl",
+        "core::ops::bit::Shr",
+        "datafusion_common::cse::HashNode",
+        "datafusion_common::cse::NormalizeEq",
+        "datafusion_common::cse::Normalizeable",
+        "datafusion_common::tree_node::TreeNode",
+        "datafusion_common::tree_node::TreeNodeContainer",
+        "datafusion_expr::expr_fn::ExprFunctionExt",
+        "datafusion_expr::expr_schema::ExprSchemable",
+        "datafusion_functions::core::expr_ext::FieldAccessor",
+        "datafusion_functions_nested::expr_ext::IndexAccessor",
+        "datafusion_functions_nested::expr_ext::SliceAccessor",
+        "datafusion_proto::bytes::Serializeable"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::arith::Add"
+        },
+        {
+          "name": "add_column_ref_counts",
+          "signature": "fn add_column_ref_counts<'a>(&'a self, map: &mut HashMap<&'a Column, usize>)",
+          "summary": "Adds references to all columns and their occurrence counts in the expression to the map."
+        },
+        {
+          "name": "add_column_refs",
+          "signature": "fn add_column_refs<'a>(&'a self, set: &mut HashSet<&'a Column>)",
+          "summary": "Adds references to all columns in this expression to the set"
+        },
+        {
+          "name": "alias",
+          "signature": "fn alias(self, name: impl Into<String>) -> Expr",
+          "summary": "Return `self AS name` alias expression"
+        },
+        {
+          "name": "alias_if_changed",
+          "signature": "fn alias_if_changed(self, original_name: String) -> Result<Expr>",
+          "summary": "Ensure `expr` has the name as `original_name` by adding an alias if necessary."
+        },
+        {
+          "name": "alias_qualified",
+          "signature": "fn alias_qualified(self, relation: Option<impl Into<TableReference>>, name: impl Into<String>) -> Expr",
+          "summary": "Return `self AS name` alias expression with a specific qualifier"
+        },
+        {
+          "name": "alias_qualified_with_metadata",
+          "signature": "fn alias_qualified_with_metadata(self, relation: Option<impl Into<TableReference>>, name: impl Into<String>, metadata: Option<FieldMetadata>) -> Expr",
+          "summary": "Return `self AS name` alias expression with a specific qualifier and metadata"
+        },
+        {
+          "name": "alias_with_metadata",
+          "signature": "fn alias_with_metadata(self, name: impl Into<String>, metadata: Option<FieldMetadata>) -> Expr",
+          "summary": "Return `self AS name` alias expression with metadata"
+        },
+        {
+          "name": "and",
+          "signature": "fn and(self, other: Expr) -> Expr",
+          "summary": "Return `self && other`"
+        },
+        {
+          "name": "any_column_refs",
+          "signature": "fn any_column_refs(&self) -> bool",
+          "summary": "Returns true if there are any column references in this Expr"
+        },
+        {
+          "name": "apply_children",
+          "signature": "fn apply_children<'n, F: FnMut(&'n Self) -> Result<TreeNodeRecursion>>(&'n self, f: F) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TreeNode",
+          "summary": "Applies a function `f` to each child expression of `self`."
+        },
+        {
+          "name": "apply_elements",
+          "signature": "fn apply_elements<F: FnMut(&'a Self) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "as_literal",
+          "signature": "fn as_literal(&self) -> Option<&ScalarValue>",
+          "summary": "Check if the Expr is literal and get the literal value if it is."
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &Expr",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "between",
+          "signature": "fn between(self, low: Expr, high: Expr) -> Expr",
+          "summary": "return `self BETWEEN low AND high`"
+        },
+        {
+          "name": "bitand",
+          "signature": "fn bitand(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::bit::BitAnd"
+        },
+        {
+          "name": "bitor",
+          "signature": "fn bitor(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::bit::BitOr"
+        },
+        {
+          "name": "bitxor",
+          "signature": "fn bitxor(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::bit::BitXor"
+        },
+        {
+          "name": "can_normalize",
+          "signature": "fn can_normalize(&self) -> bool",
+          "via_trait": "datafusion_common::cse::Normalizeable"
+        },
+        {
+          "name": "cast_to",
+          "signature": "fn cast_to(self, cast_to_type: &DataType, schema: &dyn ExprSchema) -> Result<Expr>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable",
+          "summary": "Wraps this expression in a cast to a target [arrow::datatypes::DataType]."
+        },
+        {
+          "name": "column_refs",
+          "signature": "fn column_refs(&self) -> HashSet<&Column>",
+          "summary": "Return all references to columns in this expression."
+        },
+        {
+          "name": "column_refs_counts",
+          "signature": "fn column_refs_counts(&self) -> HashMap<&Column, usize>",
+          "summary": "Return all references to columns and their occurrence counts in the expression."
+        },
+        {
+          "name": "contains_outer",
+          "signature": "fn contains_outer(&self) -> bool",
+          "summary": "Return true if the expression contains out reference(correlated) expressions."
+        },
+        {
+          "name": "contains_scalar_subquery",
+          "signature": "fn contains_scalar_subquery(&self) -> bool",
+          "summary": "Returns true if the expression contains a scalar subquery."
+        },
+        {
+          "name": "data_type_and_nullable",
+          "signature": "fn data_type_and_nullable(&self, schema: &dyn ExprSchema) -> Result<(DataType, bool)>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable",
+          "summary": "Returns the datatype and nullability of the expression based on [ExprSchema]."
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(self) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        },
+        {
+          "name": "div",
+          "signature": "fn div(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::arith::Div"
+        },
+        {
+          "name": "eq",
+          "signature": "fn eq(self, other: Expr) -> Expr",
+          "summary": "Return `self == other`"
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(self, filter: Expr) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: (Option<&'a TableReference>, &'a FieldRef)) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_as_join_column",
+          "signature": "fn get_as_join_column(&self) -> Option<&Column>",
+          "summary": "Returns the inner `Column` if any. This is a specialized version of [`Self::try_as_col`] that take Cast expressions into account when the expression is as on condition for joins."
+        },
+        {
+          "name": "get_type",
+          "signature": "fn get_type(&self, schema: &dyn ExprSchema) -> Result<DataType>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable",
+          "summary": "Returns the [arrow::datatypes::DataType] of the expression based on [ExprSchema]"
+        },
+        {
+          "name": "gt",
+          "signature": "fn gt(self, other: Expr) -> Expr",
+          "summary": "Return `self > other`"
+        },
+        {
+          "name": "gt_eq",
+          "signature": "fn gt_eq(self, other: Expr) -> Expr",
+          "summary": "Return `self >= other`"
+        },
+        {
+          "name": "hash_node",
+          "signature": "fn hash_node<H: Hasher>(&self, state: &mut H)",
+          "via_trait": "datafusion_common::cse::HashNode",
+          "summary": "As it is pretty easy to forget changing this method when `Expr` changes the implementation doesn't use wildcard patterns (`..`, `_`) to catch changes compile time."
+        },
+        {
+          "name": "human_display",
+          "signature": "fn human_display(&self) -> impl Display + '_",
+          "summary": "Human readable display formatting for this expression."
+        },
+        {
+          "name": "ilike",
+          "signature": "fn ilike(self, other: Expr) -> Expr",
+          "summary": "Return `self ILIKE other`"
+        },
+        {
+          "name": "in_list",
+          "signature": "fn in_list(self, list: Vec<Expr>, negated: bool) -> Expr",
+          "summary": "Return `self IN <list>` if `negated` is false, otherwise return `self NOT IN <list>`.a"
+        },
+        {
+          "name": "infer_placeholder_types",
+          "signature": "fn infer_placeholder_types(self, schema: &DFSchema) -> Result<(Expr, bool)>",
+          "summary": "Recursively find all [`Expr::Placeholder`] expressions, and to infer their [`DataType`] from the context of their use."
+        },
+        {
+          "name": "is_false",
+          "signature": "fn is_false(self) -> Expr",
+          "summary": "Return `IsFalse(Box(self))`"
+        },
+        {
+          "name": "is_not_false",
+          "signature": "fn is_not_false(self) -> Expr",
+          "summary": "Return `IsNotFalse(Box(self))`"
+        },
+        {
+          "name": "is_not_null",
+          "signature": "fn is_not_null(self) -> Expr",
+          "summary": "Return `IsNotNull(Box(self))"
+        },
+        {
+          "name": "is_not_true",
+          "signature": "fn is_not_true(self) -> Expr",
+          "summary": "Return `IsNotTrue(Box(self))`"
+        },
+        {
+          "name": "is_not_unknown",
+          "signature": "fn is_not_unknown(self) -> Expr",
+          "summary": "Return `IsNotUnknown(Box(self))`"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(self) -> Expr",
+          "summary": "Return `IsNull(Box(self))"
+        },
+        {
+          "name": "is_true",
+          "signature": "fn is_true(self) -> Expr",
+          "summary": "Return `IsTrue(Box(self))`"
+        },
+        {
+          "name": "is_unknown",
+          "signature": "fn is_unknown(self) -> Expr",
+          "summary": "Return `IsUnknown(Box(self))`"
+        },
+        {
+          "name": "is_volatile",
+          "signature": "fn is_volatile(&self) -> bool",
+          "summary": "Returns true if the expression is volatile, i.e. whether it can return different results when evaluated multiple times with the same input."
+        },
+        {
+          "name": "is_volatile_node",
+          "signature": "fn is_volatile_node(&self) -> bool",
+          "summary": "Returns true if the expression node is volatile, i.e. whether it can return different results when evaluated multiple times with the same input. Note: unlike [`Self::is_volatile`], this function does not consider inputs: - `rand()` returns…"
+        },
+        {
+          "name": "like",
+          "signature": "fn like(self, other: Expr) -> Expr",
+          "summary": "Return `self LIKE other`"
+        },
+        {
+          "name": "lt",
+          "signature": "fn lt(self, other: Expr) -> Expr",
+          "summary": "Return `self < other`"
+        },
+        {
+          "name": "lt_eq",
+          "signature": "fn lt_eq(self, other: Expr) -> Expr",
+          "summary": "Return `self <= other`"
+        },
+        {
+          "name": "map_children",
+          "signature": "fn map_children<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "via_trait": "datafusion_common::tree_node::TreeNode",
+          "summary": "Maps each child of `self` using the provided closure `f`."
+        },
+        {
+          "name": "map_elements",
+          "signature": "fn map_elements<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self, schema: &dyn ExprSchema) -> Result<FieldMetadata>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable"
+        },
+        {
+          "name": "mul",
+          "signature": "fn mul(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::arith::Mul"
+        },
+        {
+          "name": "name_for_alias",
+          "signature": "fn name_for_alias(&self) -> Result<String>",
+          "summary": "Return the name to use for the specific Expr"
+        },
+        {
+          "name": "neg",
+          "signature": "fn neg(self) -> Self::Output",
+          "via_trait": "core::ops::arith::Neg"
+        },
+        {
+          "name": "normalize_eq",
+          "signature": "fn normalize_eq(&self, other: &Self) -> bool",
+          "via_trait": "datafusion_common::cse::NormalizeEq"
+        },
+        {
+          "name": "not",
+          "signature": "fn not(self) -> Self::Output",
+          "via_trait": "core::ops::bit::Not"
+        },
+        {
+          "name": "not_between",
+          "signature": "fn not_between(self, low: Expr, high: Expr) -> Expr",
+          "summary": "Return `self NOT BETWEEN low AND high`"
+        },
+        {
+          "name": "not_eq",
+          "signature": "fn not_eq(self, other: Expr) -> Expr",
+          "summary": "Return `self != other`"
+        },
+        {
+          "name": "not_ilike",
+          "signature": "fn not_ilike(self, other: Expr) -> Expr",
+          "summary": "Return `self NOT ILIKE other`"
+        },
+        {
+          "name": "not_like",
+          "signature": "fn not_like(self, other: Expr) -> Expr",
+          "summary": "Return `self NOT LIKE other`"
+        },
+        {
+          "name": "null_treatment",
+          "signature": "fn null_treatment(self, null_treatment: impl Into<Option<NullTreatment>>) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self, input_schema: &dyn ExprSchema) -> Result<bool>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable",
+          "summary": "Returns the nullability of the expression based on [ExprSchema]."
+        },
+        {
+          "name": "or",
+          "signature": "fn or(self, other: Expr) -> Expr",
+          "summary": "Return `self || other`"
+        },
+        {
+          "name": "order_by",
+          "signature": "fn order_by(self, order_by: Vec<Sort>) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        },
+        {
+          "name": "partition_by",
+          "signature": "fn partition_by(self, partition_by: Vec<Expr>) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        },
+        {
+          "name": "placement",
+          "signature": "fn placement(&self) -> ExpressionPlacement",
+          "summary": "Returns placement information for this expression."
+        },
+        {
+          "name": "qualified_name",
+          "signature": "fn qualified_name(&self) -> (Option<TableReference>, String)",
+          "summary": "Returns the qualifier and the schema name of this expression."
+        },
+        {
+          "name": "rem",
+          "signature": "fn rem(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::arith::Rem"
+        },
+        {
+          "name": "resolve_lambda_variables",
+          "signature": "fn resolve_lambda_variables(self, schema: &DFSchema) -> Result<Transformed<Expr>>",
+          "summary": "Return a `Expr` with all [`LambdaVariable`] resolved only if all of them are contained in the subtree of the [`HigherOrderFunction`] it originates from, otherwise returns an error"
+        },
+        {
+          "name": "schema_name",
+          "signature": "fn schema_name(&self) -> impl Display + '_",
+          "summary": "The name of the column (field) that this `Expr` will produce."
+        },
+        {
+          "name": "shl",
+          "signature": "fn shl(self, rhs: Self) -> Self::Output",
+          "via_trait": "core::ops::bit::Shl"
+        },
+        {
+          "name": "short_circuits",
+          "signature": "fn short_circuits(&self) -> bool",
+          "summary": "Returns true if some of this `exprs` subexpressions may not be evaluated and thus any side effects (like divide by zero) may not be encountered"
+        },
+        {
+          "name": "shr",
+          "signature": "fn shr(self, rhs: Self) -> Self::Output",
+          "via_trait": "core::ops::bit::Shr"
+        },
+        {
+          "name": "sort",
+          "signature": "fn sort(self, asc: bool, nulls_first: bool) -> Sort",
+          "summary": "Create a sort configuration from an existing expression."
+        },
+        {
+          "name": "spans",
+          "signature": "fn spans(&self) -> Option<&Spans>",
+          "summary": "Returns a reference to the set of locations in the SQL query where this expression appears, if known. [`None`] is returned if the expression type doesn't support tracking locations yet."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(self, rhs: Self) -> Self",
+          "via_trait": "core::ops::arith::Sub"
+        },
+        {
+          "name": "to_field",
+          "signature": "fn to_field(&self, schema: &dyn ExprSchema) -> Result<(Option<TableReference>, Arc<Field>)>",
+          "via_trait": "datafusion_expr::expr_schema::ExprSchemable",
+          "summary": "Returns a [arrow::datatypes::Field] compatible with this expression."
+        },
+        {
+          "name": "try_as_col",
+          "signature": "fn try_as_col(&self) -> Option<&Column>",
+          "summary": "Return a reference to the inner `Column` if any"
+        },
+        {
+          "name": "unalias",
+          "signature": "fn unalias(self) -> Expr",
+          "summary": "Remove an alias from an expression if one exists."
+        },
+        {
+          "name": "unalias_nested",
+          "signature": "fn unalias_nested(self) -> Transformed<Expr>",
+          "summary": "Recursively removed potentially multiple aliases from an expression."
+        },
+        {
+          "name": "variant_name",
+          "signature": "fn variant_name(&self) -> &str",
+          "summary": "Return String representation of the variant represented by `self` Useful for non-rust based bindings"
+        },
+        {
+          "name": "window_frame",
+          "signature": "fn window_frame(self, window_frame: WindowFrame) -> ExprFuncBuilder",
+          "via_trait": "datafusion_expr::expr_fn::ExprFunctionExt"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::GetFieldAccess",
+      "name": "GetFieldAccess",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum GetFieldAccess",
+      "summary": "Access a sub field of a nested type, such as `Field` or `List`",
+      "doc": "api/datafusion_expr.expr.md#getfieldaccess",
+      "aliases": [
+        "datafusion::logical_expr::GetFieldAccess",
+        "datafusion_expr::GetFieldAccess"
+      ],
+      "variants": [
+        "NamedStructField",
+        "ListIndex",
+        "ListRange"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::expr::GroupingSet",
+      "name": "GroupingSet",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum GroupingSet",
+      "summary": "Grouping sets",
+      "doc": "api/datafusion_expr.expr.md#groupingset",
+      "aliases": [
+        "datafusion::logical_expr::GroupingSet",
+        "datafusion_expr::GroupingSet"
+      ],
+      "variants": [
+        "Rollup",
+        "Cube",
+        "GroupingSets"
+      ],
+      "methods": [
+        {
+          "name": "distinct_expr",
+          "signature": "fn distinct_expr(&self) -> Vec<&Expr>",
+          "summary": "Return all distinct exprs in the grouping set. For `CUBE` and `ROLLUP` this is just the underlying list of exprs. For `GROUPING SET` we need to deduplicate the exprs in the underlying sets."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::NullTreatment",
+      "name": "NullTreatment",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum NullTreatment",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "IgnoreNulls",
+        "RespectNulls"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: sqlparser::ast::NullTreatment) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::SetQuantifier",
+      "name": "SetQuantifier",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum SetQuantifier",
+      "summary": "Whether the set comparison uses `ANY`/`SOME` or `ALL`",
+      "doc": "api/datafusion_expr.expr.md#setquantifier",
+      "variants": [
+        "Any",
+        "All"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::WindowFunctionDefinition",
+      "name": "WindowFunctionDefinition",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum WindowFunctionDefinition",
+      "summary": "A function used as a SQL window function",
+      "doc": "api/datafusion_expr.expr.md#windowfunctiondefinition",
+      "aliases": [
+        "datafusion::logical_expr::WindowFunctionDefinition",
+        "datafusion_expr::WindowFunctionDefinition"
+      ],
+      "variants": [
+        "AggregateUDF",
+        "WindowUDF"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Arc<WindowUDF>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Function's name for display"
+        },
+        {
+          "name": "return_field",
+          "signature": "fn return_field(&self, input_expr_fields: &[FieldRef], display_name: &str) -> Result<FieldRef>",
+          "summary": "Returns the datatype of the window function"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> Signature",
+          "summary": "The signatures supported by the function `fun`."
+        },
+        {
+          "name": "simplify",
+          "signature": "fn simplify(&self) -> Option<WindowFunctionSimplification>",
+          "summary": "Returns this window function's simplification hook, if any."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::display_comma_separated",
+      "name": "display_comma_separated",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn display_comma_separated<T>(slice: &[T]) -> String where T: Display",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_expr::expr::intersect_metadata_for_union",
+      "name": "intersect_metadata_for_union",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn intersect_metadata_for_union<'a>(metadatas: impl IntoIterator<Item = &'a SchemaFieldMetadata>) -> SchemaFieldMetadata",
+      "summary": "Intersects multiple metadata instances for UNION operations.",
+      "doc": "api/datafusion_expr.expr.md#intersect_metadata_for_union"
+    },
+    {
+      "path": "datafusion_expr::expr::physical_name",
+      "name": "physical_name",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn physical_name(expr: &Expr) -> datafusion_common::Result<String>",
+      "summary": "The name of the column (field) that this `Expr` will produce in the physical plan. The difference from [Expr::schema_name] is that top-level columns are unqualified.",
+      "doc": "api/datafusion_expr.expr.md#physical_name"
+    },
+    {
+      "path": "datafusion_expr::expr::schema_name_from_exprs",
+      "name": "schema_name_from_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn schema_name_from_exprs(exprs: &[Expr]) -> datafusion_common::Result<String, fmt::Error>",
+      "summary": "Get schema_name for Vector of expressions",
+      "doc": "api/datafusion_expr.expr.md#schema_name_from_exprs"
+    },
+    {
+      "path": "datafusion_expr::expr::schema_name_from_sorts",
+      "name": "schema_name_from_sorts",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn schema_name_from_sorts(sorts: &[Sort]) -> datafusion_common::Result<String, fmt::Error>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_expr::expr::AggregateFunction",
+      "name": "AggregateFunction",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct AggregateFunction",
+      "summary": "Aggregate function",
+      "doc": "api/datafusion_expr.expr.md#aggregatefunction",
+      "fields": [
+        "func",
+        "params"
+      ],
+      "methods": [
+        {
+          "name": "new_udf",
+          "signature": "fn new_udf(func: Arc<AggregateUDF>, args: Vec<Expr>, distinct: bool, filter: Option<Box<Expr>>, order_by: Vec<Sort>, null_treatment: Option<NullTreatment>) -> Self",
+          "summary": "Create a new AggregateFunction expression with a user-defined function (UDF)"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::AggregateFunctionParams",
+      "name": "AggregateFunctionParams",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct AggregateFunctionParams",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "args",
+        "distinct",
+        "filter",
+        "order_by",
+        "null_treatment"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::expr::Alias",
+      "name": "Alias",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Alias",
+      "summary": "Alias expression",
+      "doc": "api/datafusion_expr.expr.md#alias",
+      "fields": [
+        "expr",
+        "relation",
+        "name",
+        "metadata"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Expr, relation: Option<impl Into<TableReference>>, name: impl Into<String>) -> Self",
+          "summary": "Create an alias with an optional schema/field qualifier."
+        },
+        {
+          "name": "with_metadata",
+          "signature": "fn with_metadata(self, metadata: Option<FieldMetadata>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Between",
+      "name": "Between",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Between",
+      "summary": "BETWEEN expression",
+      "doc": "api/datafusion_expr.expr.md#between",
+      "aliases": [
+        "datafusion::logical_expr::Between",
+        "datafusion_expr::Between"
+      ],
+      "fields": [
+        "expr",
+        "negated",
+        "low",
+        "high"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, negated: bool, low: Box<Expr>, high: Box<Expr>) -> Self",
+          "summary": "Create a new Between expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::BinaryExpr",
+      "name": "BinaryExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct BinaryExpr",
+      "summary": "Binary expression for [`Expr::BinaryExpr`]",
+      "doc": "api/datafusion_expr.expr.md#binaryexpr",
+      "aliases": [
+        "datafusion::logical_expr::BinaryExpr",
+        "datafusion_expr::BinaryExpr"
+      ],
+      "fields": [
+        "left",
+        "op",
+        "right"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(left: Box<Expr>, op: Operator, right: Box<Expr>) -> Self",
+          "summary": "Create a new binary expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Case",
+      "name": "Case",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Case",
+      "summary": "CASE expression",
+      "doc": "api/datafusion_expr.expr.md#case",
+      "aliases": [
+        "datafusion::logical_expr::Case",
+        "datafusion_expr::Case"
+      ],
+      "fields": [
+        "expr",
+        "when_then_expr",
+        "else_expr"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Option<Box<Expr>>, when_then_expr: Vec<(Box<Expr>, Box<Expr>)>, else_expr: Option<Box<Expr>>) -> Self",
+          "summary": "Create a new Case expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Cast",
+      "name": "Cast",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Cast",
+      "summary": "Cast expression",
+      "doc": "api/datafusion_expr.expr.md#cast",
+      "aliases": [
+        "datafusion::logical_expr::Cast",
+        "datafusion_expr::Cast"
+      ],
+      "fields": [
+        "expr",
+        "field"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, data_type: DataType) -> Self",
+          "summary": "Create a new Cast expression"
+        },
+        {
+          "name": "new_from_field",
+          "signature": "fn new_from_field(expr: Box<Expr>, field: FieldRef) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Exists",
+      "name": "Exists",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Exists",
+      "summary": "EXISTS expression",
+      "doc": "api/datafusion_expr.expr.md#exists",
+      "fields": [
+        "subquery",
+        "negated"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(subquery: Subquery, negated: bool) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::ExprListDisplay",
+      "name": "ExprListDisplay",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ExprListDisplay<'a>",
+      "summary": "Formats a list of `&Expr` with a custom separator using SQL display format",
+      "doc": "api/datafusion_expr.expr.md#exprlistdisplay",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "comma_separated",
+          "signature": "fn comma_separated(exprs: &'a [Expr]) -> Self",
+          "summary": "Create a new display struct with comma-space separator"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(exprs: &'a [Expr], sep: &'a str) -> Self",
+          "summary": "Create a new display struct with the given expressions and separator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::HigherOrderFunction",
+      "name": "HigherOrderFunction",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct HigherOrderFunction",
+      "summary": "Invoke a [`HigherOrderUDF`] with a set of arguments",
+      "doc": "api/datafusion_expr.expr.md#higherorderfunction",
+      "fields": [
+        "func",
+        "args"
+      ],
+      "methods": [
+        {
+          "name": "lambda_parameters",
+          "signature": "fn lambda_parameters(&self, schema: &dyn ExprSchema) -> Result<Vec<Vec<FieldRef>>>",
+          "summary": "Invokes the inner function [`crate::HigherOrderUDFImpl::lambda_parameters`] using the arguments of this invocation. This expression lambda variables must be already resolved either by coming from the default sql planner or by calling [Expr…"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(func: Arc<HigherOrderUDF>, args: Vec<Expr>) -> Self",
+          "summary": "Create a new `HigherOrderFunction` from a [`HigherOrderUDF`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::InList",
+      "name": "InList",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct InList",
+      "summary": "InList expression",
+      "doc": "api/datafusion_expr.expr.md#inlist",
+      "fields": [
+        "expr",
+        "list",
+        "negated"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, list: Vec<Expr>, negated: bool) -> Self",
+          "summary": "Create a new InList expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::InSubquery",
+      "name": "InSubquery",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct InSubquery",
+      "summary": "IN subquery",
+      "doc": "api/datafusion_expr.expr.md#insubquery",
+      "fields": [
+        "expr",
+        "subquery",
+        "negated"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, subquery: Subquery, negated: bool) -> Self",
+          "summary": "Create a new InSubquery expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Lambda",
+      "name": "Lambda",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Lambda",
+      "summary": "A Lambda expression with a set of parameters names and a body",
+      "doc": "api/datafusion_expr.expr.md#lambda",
+      "fields": [
+        "params",
+        "body"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(params: Vec<String>, body: Expr) -> Self",
+          "summary": "Create a new lambda expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::LambdaVariable",
+      "name": "LambdaVariable",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct LambdaVariable",
+      "summary": "A named reference to a lambda parameter which includes it's own [`FieldRef`], which is used to implement [`ExprSchemable`], for example. It is an option only to make easier for `expr_api` users to construct lambda variables, but any expres…",
+      "doc": "api/datafusion_expr.expr.md#lambdavariable",
+      "fields": [
+        "name",
+        "field",
+        "spans"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(name: String, field: Option<FieldRef>) -> Self",
+          "summary": "Create a lambda variable from a name and an optional field. If the field is none, the expression tree or LogicalPlan which owns this variable must be resolved before usage with either [`Expr::resolve_lambda_variables`] or [`LogicalPlan::re…"
+        },
+        {
+          "name": "spans_mut",
+          "signature": "fn spans_mut(&mut self) -> &mut Spans"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Like",
+      "name": "Like",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Like",
+      "summary": "LIKE expression",
+      "doc": "api/datafusion_expr.expr.md#like",
+      "aliases": [
+        "datafusion::logical_expr::Like",
+        "datafusion_expr::Like"
+      ],
+      "fields": [
+        "negated",
+        "expr",
+        "pattern",
+        "escape_char",
+        "case_insensitive"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(negated: bool, expr: Box<Expr>, pattern: Box<Expr>, escape_char: Option<char>, case_insensitive: bool) -> Self",
+          "summary": "Create a new Like expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Placeholder",
+      "name": "Placeholder",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Placeholder",
+      "summary": "Placeholder, representing bind parameter values such as `$1` or `$name`.",
+      "doc": "api/datafusion_expr.expr.md#placeholder",
+      "fields": [
+        "id",
+        "field"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(id: String, data_type: Option<DataType>) -> Self",
+          "summary": "Create a new Placeholder expression"
+        },
+        {
+          "name": "new_with_field",
+          "signature": "fn new_with_field(id: String, field: Option<FieldRef>) -> Self",
+          "summary": "Create a new Placeholder expression from a Field"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::PlannedReplaceSelectItem",
+      "name": "PlannedReplaceSelectItem",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct PlannedReplaceSelectItem",
+      "summary": "The planned expressions for `REPLACE`",
+      "doc": "api/datafusion_expr.expr.md#plannedreplaceselectitem",
+      "fields": [
+        "items",
+        "planned_expressions"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> &[Expr]"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "items",
+          "signature": "fn items(&self) -> &[ReplaceSelectElement]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::ScalarFunction",
+      "name": "ScalarFunction",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ScalarFunction",
+      "summary": "Invoke a [`ScalarUDF`] with a set of arguments",
+      "doc": "api/datafusion_expr.expr.md#scalarfunction",
+      "fields": [
+        "func",
+        "args"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str"
+        },
+        {
+          "name": "new_udf",
+          "signature": "fn new_udf(udf: Arc<ScalarUDF>, args: Vec<Expr>) -> Self",
+          "summary": "Create a new `ScalarFunction` from a [`ScalarUDF`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::SetComparison",
+      "name": "SetComparison",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct SetComparison",
+      "summary": "Set comparison subquery (e.g. `= ANY`, `> ALL`)",
+      "doc": "api/datafusion_expr.expr.md#setcomparison",
+      "fields": [
+        "expr",
+        "subquery",
+        "op",
+        "quantifier"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, subquery: Subquery, op: Operator, quantifier: SetQuantifier) -> Self",
+          "summary": "Create a new set comparison expression"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Sort",
+      "name": "Sort",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Sort",
+      "summary": "SORT expression",
+      "doc": "api/datafusion_expr.expr.md#sort",
+      "aliases": [
+        "datafusion::logical_expr::Sort",
+        "datafusion_expr::SortExpr"
+      ],
+      "fields": [
+        "expr",
+        "asc",
+        "nulls_first"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_common::tree_node::TreeNodeContainer"
+      ],
+      "methods": [
+        {
+          "name": "apply_elements",
+          "signature": "fn apply_elements<F: FnMut(&'a Expr) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "map_elements",
+          "signature": "fn map_elements<F: FnMut(Expr) -> Result<Transformed<Expr>>>(self, f: F) -> Result<Transformed<Self>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: Expr, asc: bool, nulls_first: bool) -> Self",
+          "summary": "Create a new Sort expression"
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&self) -> Self",
+          "summary": "Create a new Sort expression with the opposite sort direction"
+        },
+        {
+          "name": "with_expr",
+          "signature": "fn with_expr(&self, expr: Expr) -> Self",
+          "summary": "Replaces the Sort expressions with `expr`"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::TryCast",
+      "name": "TryCast",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct TryCast",
+      "summary": "TryCast Expression",
+      "doc": "api/datafusion_expr.expr.md#trycast",
+      "aliases": [
+        "datafusion::logical_expr::TryCast",
+        "datafusion_expr::TryCast"
+      ],
+      "fields": [
+        "expr",
+        "field"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Box<Expr>, data_type: DataType) -> Self",
+          "summary": "Create a new TryCast expression"
+        },
+        {
+          "name": "new_from_field",
+          "signature": "fn new_from_field(expr: Box<Expr>, field: FieldRef) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::Unnest",
+      "name": "Unnest",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Unnest",
+      "summary": "UNNEST expression.",
+      "doc": "api/datafusion_expr.expr.md#unnest",
+      "fields": [
+        "expr",
+        "outer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(expr: Expr) -> Self",
+          "summary": "Create a new Unnest expression with default (non-outer) semantics."
+        },
+        {
+          "name": "new_boxed",
+          "signature": "fn new_boxed(boxed: Box<Expr>) -> Self",
+          "summary": "Create a new Unnest expression with default (non-outer) semantics."
+        },
+        {
+          "name": "new_outer",
+          "signature": "fn new_outer(expr: Expr) -> Self",
+          "summary": "Create a new Unnest expression with outer-unnest semantics: `NULL` and empty input lists each produce a single `NULL` output row."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::WildcardOptions",
+      "name": "WildcardOptions",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WildcardOptions",
+      "summary": "Additional options for wildcards, e.g. Snowflake `EXCLUDE`/`RENAME` and Bigquery `EXCEPT`.",
+      "doc": "api/datafusion_expr.expr.md#wildcardoptions",
+      "fields": [
+        "ilike",
+        "exclude",
+        "except",
+        "replace",
+        "rename"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "with_replace",
+          "signature": "fn with_replace(self, replace: PlannedReplaceSelectItem) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::WindowFunction",
+      "name": "WindowFunction",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowFunction",
+      "summary": "Window function",
+      "doc": "api/datafusion_expr.expr.md#windowfunction",
+      "fields": [
+        "fun",
+        "params"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(fun: impl Into<WindowFunctionDefinition>, args: Vec<Expr>) -> Self",
+          "summary": "Create a new Window expression with the specified argument an empty `OVER` clause"
+        },
+        {
+          "name": "simplify",
+          "signature": "fn simplify(&self) -> Option<WindowFunctionSimplification>",
+          "summary": "Returns this window function's simplification hook, if any."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::expr::WindowFunctionParams",
+      "name": "WindowFunctionParams",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct WindowFunctionParams",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "args",
+        "partition_by",
+        "order_by",
+        "window_frame",
+        "filter",
+        "null_treatment",
+        "distinct"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::expr::SchemaFieldMetadata",
+      "name": "SchemaFieldMetadata",
+      "kind": "type_alias",
+      "crate": "datafusion-expr",
+      "signature": "type SchemaFieldMetadata = std::collections::HashMap<String, String>",
+      "summary": "The metadata used in [`Field::metadata`].",
+      "doc": "api/datafusion_expr.expr.md#schemafieldmetadata"
+    }
+  ]
+}

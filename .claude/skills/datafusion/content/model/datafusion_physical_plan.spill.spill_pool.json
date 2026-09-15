@@ -1,0 +1,105 @@
+{
+  "module": "datafusion_physical_plan::spill::spill_pool",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.spill.spill_pool.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::channel",
+      "name": "channel",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolWriter, datafusion_execution::SendableRecordBatchStream)",
+      "summary": "Alias for [`mpsc_channel`].",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#channel",
+      "deprecated": "Use mpsc_channel instead"
+    },
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::mpsc_channel",
+      "name": "mpsc_channel",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn mpsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolWriter, datafusion_execution::SendableRecordBatchStream)",
+      "summary": "Creates a paired writer and reader for a spill pool with MPSC (multi-producer, single-consumer) semantics. See [`spsc_channel`] for the general architecture description of the spill pool.",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#mpsc_channel"
+    },
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::spsc_channel",
+      "name": "spsc_channel",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn spsc_channel(max_file_size_bytes: usize, spill_manager: std::sync::Arc<super::spill_manager::SpillManager>) -> (SpillPoolSink, datafusion_execution::SendableRecordBatchStream)",
+      "summary": "Creates a paired writer and reader for a spill pool with SPSC (single-producer, single-consumer) semantics and strict FIFO ordering.",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#spsc_channel"
+    },
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::SpillPoolReader",
+      "name": "SpillPoolReader",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct SpillPoolReader",
+      "summary": "A stream that reads from a SpillPool. The reader guarantees FIFO order if a single writer is used.",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#spillpoolreader",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(std::pin::Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::SpillPoolSink",
+      "name": "SpillPoolSink",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct SpillPoolSink",
+      "summary": "Single writer for a spill pool that cannot be cloned.",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#spillpoolsink",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "push_batch",
+          "signature": "fn push_batch(&self, batch: &RecordBatch) -> Result<()>",
+          "summary": "Spills a batch to the pool, rotating files when necessary."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::spill::spill_pool::SpillPoolWriter",
+      "name": "SpillPoolWriter",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct SpillPoolWriter",
+      "summary": "Writer for a spill pool that can be cloned to produce additional writers.",
+      "doc": "api/datafusion_physical_plan.spill.spill_pool.md#spillpoolwriter",
+      "methods": [
+        {
+          "name": "new_sink",
+          "signature": "fn new_sink(&self) -> SpillPoolSink",
+          "summary": "Returns a new sink that can be used to spill batches to the pool."
+        },
+        {
+          "name": "push_batch",
+          "signature": "fn push_batch(&self, batch: &RecordBatch) -> Result<()>",
+          "summary": "Spills a batch to the pool, rotating files when necessary."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "module": "datafusion_common::hash_utils",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.hash_utils.md",
+  "items": [
+    {
+      "path": "datafusion_common::hash_utils::HLL_RANDOM_STATE",
+      "name": "HLL_RANDOM_STATE",
+      "kind": "constant",
+      "crate": "datafusion-common",
+      "signature": "const HLL_RANDOM_STATE: QualityRandomState = _",
+      "summary": "Fixed quality hash state used by HyperLogLog sketches.",
+      "doc": "api/datafusion_common.hash_utils.md#hll_random_state",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::HLL_RANDOM_STATE",
+        "datafusion_physical_plan::hash_utils::HLL_RANDOM_STATE"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::combine_hashes",
+      "name": "combine_hashes",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn combine_hashes(l: u64, r: u64) -> u64",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::combine_hashes",
+        "datafusion_physical_plan::hash_utils::combine_hashes"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::create_hashes",
+      "name": "create_hashes",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn create_hashes<'a, I, T>(arrays: I, random_state: &impl HashState, hashes_buffer: &'a mut [u64]) -> error::Result<&'a mut [u64]> where I: IntoIterator<Item = T>, T: AsDynArray",
+      "summary": "Creates hash values for every row, based on the values in the columns.",
+      "doc": "api/datafusion_common.hash_utils.md#create_hashes",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::create_hashes",
+        "datafusion_physical_plan::hash_utils::create_hashes"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::create_hashes_with_hasher",
+      "name": "create_hashes_with_hasher",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn create_hashes_with_hasher<'a, I, T, S>(arrays: I, hash_builder: &S, hashes_buffer: &'a mut [u64]) -> error::Result<&'a mut [u64]> where I: IntoIterator<Item = T>, T: AsDynArray, S: BuildHasher",
+      "summary": "Creates hash values for every row using a caller-provided hash builder.",
+      "doc": "api/datafusion_common.hash_utils.md#create_hashes_with_hasher",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::create_hashes_with_hasher",
+        "datafusion_physical_plan::hash_utils::create_hashes_with_hasher"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::with_hashes",
+      "name": "with_hashes",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn with_hashes<I, T, F, R>(arrays: I, random_state: &impl HashState, callback: F) -> error::Result<R> where I: IntoIterator<Item = T>, T: AsDynArray, F: FnOnce(&[u64]) -> error::Result<R>",
+      "summary": "Creates hashes for the given arrays using a thread-local buffer, then calls the provided callback with an immutable reference to the computed hashes.",
+      "doc": "api/datafusion_common.hash_utils.md#with_hashes",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::with_hashes",
+        "datafusion_physical_plan::hash_utils::with_hashes"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::with_hashes_with_hasher",
+      "name": "with_hashes_with_hasher",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn with_hashes_with_hasher<I, T, F, R, S>(arrays: I, hash_builder: &S, callback: F) -> error::Result<R> where I: IntoIterator<Item = T>, T: AsDynArray, F: FnOnce(&[u64]) -> error::Result<R>, S: BuildHasher",
+      "summary": "Creates hashes for the given arrays using a thread-local buffer and a custom hash builder, then calls the provided callback with the computed hashes.",
+      "doc": "api/datafusion_common.hash_utils.md#with_hashes_with_hasher",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::with_hashes_with_hasher",
+        "datafusion_physical_plan::hash_utils::with_hashes_with_hasher"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::AsDynArray",
+      "name": "AsDynArray",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait AsDynArray",
+      "summary": "Something that can be returned as a `&dyn Array`.",
+      "doc": "api/datafusion_common.hash_utils.md#asdynarray",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::AsDynArray",
+        "datafusion_physical_plan::hash_utils::AsDynArray"
+      ],
+      "implementors": [
+        "arrow_array::array::ArrayRef"
+      ],
+      "required_methods": [
+        "as_dyn_array"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_dyn_array",
+          "signature": "fn as_dyn_array(&self) -> &dyn Array"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::HashState",
+      "name": "HashState",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait HashState: BuildHasher",
+      "summary": "Hash state used by [`create_hashes`].",
+      "doc": "api/datafusion_common.hash_utils.md#hashstate",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::HashState",
+        "datafusion_physical_plan::hash_utils::HashState"
+      ],
+      "implementors": [
+        "foldhash::fast::FixedState",
+        "foldhash::quality::FixedState"
+      ],
+      "required_methods": [
+        "seeded_state"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "seeded_state",
+          "signature": "fn seeded_state(&self, seed: u64) -> Self::SeededState"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::HashValue",
+      "name": "HashValue",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait HashValue",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::HashValue",
+        "datafusion_physical_plan::hash_utils::HashValue"
+      ],
+      "implementors": [
+        "arrow_buffer::bigint::i256",
+        "arrow_buffer::interval::IntervalDayTime",
+        "arrow_buffer::interval::IntervalMonthDayNano",
+        "half::binary16::f16"
+      ],
+      "required_methods": [
+        "hash_one",
+        "hash_write"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "hash_one",
+          "signature": "fn hash_one<S: BuildHasher>(&self, state: &S) -> u64"
+        },
+        {
+          "name": "hash_write",
+          "signature": "fn hash_write(&self, hasher: &mut impl Hasher)",
+          "summary": "Write this value into an existing hasher (same data as `hash_one`)."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::QualityRandomState",
+      "name": "QualityRandomState",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type QualityRandomState = foldhash::quality::FixedState",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::QualityRandomState",
+        "datafusion_physical_plan::hash_utils::QualityRandomState"
+      ]
+    },
+    {
+      "path": "datafusion_common::hash_utils::RandomState",
+      "name": "RandomState",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type RandomState = foldhash::fast::FixedState",
+      "summary": "[`RandomState`] is optimized for speed and suitable for hash tables and bloom filters. [`QualityRandomState`] is optimized for statistical quality and suitable for algorithms such as HyperLogLog. The tradeoff is that the fast variant gives…",
+      "doc": "api/datafusion_common.hash_utils.md#randomstate",
+      "aliases": [
+        "datafusion_physical_plan::execution_plan::hash_utils::RandomState",
+        "datafusion_physical_plan::hash_utils::RandomState"
+      ]
+    }
+  ]
+}

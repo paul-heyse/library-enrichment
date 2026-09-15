@@ -1,0 +1,638 @@
+{
+  "module": "arrow_array::array::primitive_array",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.array.primitive_array.md",
+  "items": [
+    {
+      "path": "arrow_array::array::primitive_array::NativeAdapter",
+      "name": "NativeAdapter",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct NativeAdapter<T: ArrowPrimitiveType>",
+      "summary": "An optional primitive value",
+      "doc": "api/arrow_array.array.primitive_array.md#nativeadapter",
+      "fields": [
+        "native"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: u64) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::primitive_array::PrimitiveArray",
+      "name": "PrimitiveArray",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct PrimitiveArray<T: ArrowPrimitiveType>",
+      "summary": "An array of primitive values, of type [`ArrowPrimitiveType`]",
+      "doc": "api/arrow_array.array.primitive_array.md#primitivearray",
+      "implements": [
+        "arrow_array::array::Array",
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(capacity: usize) -> PrimitiveBuilder<T>",
+          "summary": "Returns a new primitive array builder"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(data: Vec<Option<<UInt8Type as ArrowPrimitiveType>::Native>>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = Ptr>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_iter_values",
+          "signature": "fn from_iter_values<I: IntoIterator<Item = T::Native>>(iter: I) -> Self",
+          "summary": "Creates a PrimitiveArray based on an iterator of values without nulls"
+        },
+        {
+          "name": "from_iter_values_with_nulls",
+          "signature": "fn from_iter_values_with_nulls<I: IntoIterator<Item = T::Native>>(iter: I, nulls: Option<NullBuffer>) -> Self",
+          "summary": "Creates a PrimitiveArray based on an iterator of values with provided nulls"
+        },
+        {
+          "name": "from_trusted_len_iter",
+          "signature": "unsafe fn from_trusted_len_iter<I, P>(iter: I) -> Self where P: std::borrow::Borrow<Option<<T as ArrowPrimitiveType>::Native>>, I: IntoIterator<Item = P>",
+          "summary": "Creates a [`PrimitiveArray`] from an iterator of trusted length. # Safety The iterator must be [`TrustedLen`](https://doc.rust-lang.org/std/iter/trait.TrustedLen.html). I.e. that `size_hint().1` correctly reports its length."
+        },
+        {
+          "name": "from_unary",
+          "signature": "fn from_unary<U: ArrayAccessor, F>(left: U, op: F) -> Self where F: FnMut(U::Item) -> T::Native",
+          "summary": "Applies a unary infallible function to each value in an array, producing a new primitive array."
+        },
+        {
+          "name": "from_value",
+          "signature": "fn from_value(value: T::Native, count: usize) -> Self",
+          "summary": "Creates a PrimitiveArray based on a constant value with `count` elements"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_builder",
+          "signature": "fn into_builder(self) -> Result<PrimitiveBuilder<T>, Self>",
+          "summary": "Returns a `PrimitiveBuilder` for this array, suitable for mutating values in place."
+        },
+        {
+          "name": "into_data",
+          "signature": "fn into_data(self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (DataType, ScalarBuffer<T::Native>, Option<NullBuffer>)",
+          "summary": "Deconstruct this array into its constituent parts"
+        },
+        {
+          "name": "is_compatible",
+          "signature": "fn is_compatible(data_type: &DataType) -> bool",
+          "summary": "Returns if this [`PrimitiveArray`] is compatible with the provided [`DataType`]"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns whether this array is empty."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&'a self) -> PrimitiveIter<'a, T>",
+          "summary": "constructs a new iterator"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the length of this array."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_null_count",
+          "signature": "fn logical_null_count(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(values: ScalarBuffer<T::Native>, nulls: Option<NullBuffer>) -> Self",
+          "summary": "Create a new [`PrimitiveArray`] from the provided values and nulls"
+        },
+        {
+          "name": "new_null",
+          "signature": "fn new_null(length: usize) -> Self",
+          "summary": "Create a new [`PrimitiveArray`] of the given length where all values are null"
+        },
+        {
+          "name": "new_scalar",
+          "signature": "fn new_scalar(value: T::Native) -> Scalar<Self>",
+          "summary": "Create a new [`Scalar`] from `value`"
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "unsafe fn new_unchecked(values: ScalarBuffer<T::Native>, nulls: Option<NullBuffer>) -> Self",
+          "summary": "Create a new [`PrimitiveArray`] from the provided values and nulls without validation."
+        },
+        {
+          "name": "null_if_overflow_precision",
+          "signature": "fn null_if_overflow_precision(&self, precision: u8) -> Self",
+          "summary": "Validates the Decimal Array, if the value of slot is overflow for the specified precision, and will be casted to Null"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "precision",
+          "signature": "fn precision(&self) -> u8",
+          "summary": "Returns the decimal precision of this array"
+        },
+        {
+          "name": "reinterpret_cast",
+          "signature": "fn reinterpret_cast<K>(&self) -> PrimitiveArray<K> where K: ArrowPrimitiveType<Native = T::Native>",
+          "summary": "Reinterprets this array's contents as a different data type without copying"
+        },
+        {
+          "name": "scale",
+          "signature": "fn scale(&self) -> i8",
+          "summary": "Returns the decimal scale of this array"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> Self",
+          "summary": "Returns a zero-copy slice of this array with the indicated offset and length."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "take_iter",
+          "signature": "fn take_iter<'a>(&'a self, indexes: impl Iterator<Item = Option<usize>> + 'a) -> impl Iterator<Item = Option<T::Native>> + 'a",
+          "summary": "Returns an iterator that returns the values of `array.value(i)` for an iterator with each element `i`"
+        },
+        {
+          "name": "take_iter_unchecked",
+          "signature": "unsafe fn take_iter_unchecked<'a>(&'a self, indexes: impl Iterator<Item = Option<usize>> + 'a) -> impl Iterator<Item = Option<T::Native>> + 'a",
+          "summary": "Returns an iterator that returns the values of `array.value(i)` for an iterator with each element `i` # Safety"
+        },
+        {
+          "name": "timezone",
+          "signature": "fn timezone(&self) -> Option<&str>",
+          "summary": "Returns the timezone of this array if any"
+        },
+        {
+          "name": "to_data",
+          "signature": "fn to_data(&self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(values: ScalarBuffer<T::Native>, nulls: Option<NullBuffer>) -> Result<Self, ArrowError>",
+          "summary": "Create a new [`PrimitiveArray`] from the provided values and nulls"
+        },
+        {
+          "name": "try_unary",
+          "signature": "fn try_unary<F, O, E>(&self, op: F) -> Result<PrimitiveArray<O>, E> where O: ArrowPrimitiveType, F: Fn(T::Native) -> Result<O::Native, E>",
+          "summary": "Applies a unary fallible function to all valid values in a primitive array, producing a new array of potentially different type."
+        },
+        {
+          "name": "try_unary_mut",
+          "signature": "fn try_unary_mut<F, E>(self, op: F) -> Result<Result<PrimitiveArray<T>, E>, PrimitiveArray<T>> where F: Fn(T::Native) -> Result<T::Native, E>",
+          "summary": "Applies a unary fallible function to all valid values in a mutable primitive array."
+        },
+        {
+          "name": "unary",
+          "signature": "fn unary<F, O>(&self, op: F) -> PrimitiveArray<O> where O: ArrowPrimitiveType, F: Fn(T::Native) -> O::Native",
+          "summary": "Applies a unary infallible function to a primitive array, producing a new array of potentially different type."
+        },
+        {
+          "name": "unary_mut",
+          "signature": "fn unary_mut<F>(self, op: F) -> Result<PrimitiveArray<T>, PrimitiveArray<T>> where F: Fn(T::Native) -> T::Native",
+          "summary": "Applies a unary and infallible function to the array in place if possible."
+        },
+        {
+          "name": "unary_opt",
+          "signature": "fn unary_opt<F, O>(&self, op: F) -> PrimitiveArray<O> where O: ArrowPrimitiveType, F: Fn(T::Native) -> Option<O::Native>",
+          "summary": "Applies a unary and nullable function to all valid values in a primitive array"
+        },
+        {
+          "name": "validate_decimal_precision",
+          "signature": "fn validate_decimal_precision(&self, precision: u8) -> Result<(), ArrowError>",
+          "summary": "Validates values in this array can be properly interpreted with the specified precision."
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self, i: usize) -> T::Native",
+          "summary": "Returns the primitive value at index `i`."
+        },
+        {
+          "name": "value_as_date",
+          "signature": "fn value_as_date(&self, i: usize) -> Option<NaiveDate>",
+          "summary": "Returns value as a chrono `NaiveDate` by using `Self::datetime()`"
+        },
+        {
+          "name": "value_as_datetime",
+          "signature": "fn value_as_datetime(&self, i: usize) -> Option<NaiveDateTime>",
+          "summary": "Returns value as a chrono `NaiveDateTime`, handling time resolution"
+        },
+        {
+          "name": "value_as_datetime_with_tz",
+          "signature": "fn value_as_datetime_with_tz(&self, i: usize, tz: Tz) -> Option<DateTime<Tz>>",
+          "summary": "Returns value as a chrono `NaiveDateTime`, handling time resolution with the provided tz"
+        },
+        {
+          "name": "value_as_duration",
+          "signature": "fn value_as_duration(&self, i: usize) -> Option<Duration>",
+          "summary": "Returns a value as a chrono `Duration`"
+        },
+        {
+          "name": "value_as_string",
+          "signature": "fn value_as_string(&self, row: usize) -> String",
+          "summary": "Returns [`Self::value`] formatted as a string"
+        },
+        {
+          "name": "value_as_time",
+          "signature": "fn value_as_time(&self, i: usize) -> Option<NaiveTime>",
+          "summary": "Returns a value as a chrono `NaiveTime`"
+        },
+        {
+          "name": "value_unchecked",
+          "signature": "unsafe fn value_unchecked(&self, i: usize) -> T::Native",
+          "summary": "Returns the primitive value at index `i`."
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &ScalarBuffer<T::Native>",
+          "summary": "Returns the values of this array"
+        },
+        {
+          "name": "with_data_type",
+          "signature": "fn with_data_type(self, data_type: DataType) -> Self",
+          "summary": "Overrides the [`DataType`] of this [`PrimitiveArray`]"
+        },
+        {
+          "name": "with_precision_and_scale",
+          "signature": "fn with_precision_and_scale(self, precision: u8, scale: i8) -> Result<Self, ArrowError>",
+          "summary": "Returns a Decimal array with the same data as self, with the specified precision and scale."
+        },
+        {
+          "name": "with_timezone",
+          "signature": "fn with_timezone(self, timezone: impl Into<Arc<str>>) -> Self",
+          "summary": "Construct a timestamp array with new timezone"
+        },
+        {
+          "name": "with_timezone_opt",
+          "signature": "fn with_timezone_opt<S: Into<Arc<str>>>(self, timezone: Option<S>) -> Self",
+          "summary": "Construct a timestamp array with an optional timezone"
+        },
+        {
+          "name": "with_timezone_utc",
+          "signature": "fn with_timezone_utc(self) -> Self",
+          "summary": "Construct a timestamp array with UTC"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Date32Array",
+      "name": "Date32Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Date32Array = PrimitiveArray<Date32Type>",
+      "summary": "A [`PrimitiveArray`] of days since UNIX epoch stored as `i32`",
+      "doc": "api/arrow_array.array.primitive_array.md#date32array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Date64Array",
+      "name": "Date64Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Date64Array = PrimitiveArray<Date64Type>",
+      "summary": "A [`PrimitiveArray`] of milliseconds since UNIX epoch stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#date64array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Decimal128Array",
+      "name": "Decimal128Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Decimal128Array = PrimitiveArray<Decimal128Type>",
+      "summary": "A [`PrimitiveArray`] of 128-bit fixed point decimals",
+      "doc": "api/arrow_array.array.primitive_array.md#decimal128array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Decimal256Array",
+      "name": "Decimal256Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Decimal256Array = PrimitiveArray<Decimal256Type>",
+      "summary": "A [`PrimitiveArray`] of 256-bit fixed point decimals",
+      "doc": "api/arrow_array.array.primitive_array.md#decimal256array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Decimal32Array",
+      "name": "Decimal32Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Decimal32Array = PrimitiveArray<Decimal32Type>",
+      "summary": "A [`PrimitiveArray`] of 32-bit fixed point decimals",
+      "doc": "api/arrow_array.array.primitive_array.md#decimal32array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Decimal64Array",
+      "name": "Decimal64Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Decimal64Array = PrimitiveArray<Decimal64Type>",
+      "summary": "A [`PrimitiveArray`] of 64-bit fixed point decimals",
+      "doc": "api/arrow_array.array.primitive_array.md#decimal64array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::DurationMicrosecondArray",
+      "name": "DurationMicrosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type DurationMicrosecondArray = PrimitiveArray<DurationMicrosecondType>",
+      "summary": "A [`PrimitiveArray`] of elapsed durations in microseconds",
+      "doc": "api/arrow_array.array.primitive_array.md#durationmicrosecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::DurationMillisecondArray",
+      "name": "DurationMillisecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type DurationMillisecondArray = PrimitiveArray<DurationMillisecondType>",
+      "summary": "A [`PrimitiveArray`] of elapsed durations in milliseconds",
+      "doc": "api/arrow_array.array.primitive_array.md#durationmillisecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::DurationNanosecondArray",
+      "name": "DurationNanosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type DurationNanosecondArray = PrimitiveArray<DurationNanosecondType>",
+      "summary": "A [`PrimitiveArray`] of elapsed durations in nanoseconds",
+      "doc": "api/arrow_array.array.primitive_array.md#durationnanosecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::DurationSecondArray",
+      "name": "DurationSecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type DurationSecondArray = PrimitiveArray<DurationSecondType>",
+      "summary": "A [`PrimitiveArray`] of elapsed durations in seconds",
+      "doc": "api/arrow_array.array.primitive_array.md#durationsecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Float16Array",
+      "name": "Float16Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Float16Array = PrimitiveArray<Float16Type>",
+      "summary": "A [`PrimitiveArray`] of `f16`",
+      "doc": "api/arrow_array.array.primitive_array.md#float16array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Float32Array",
+      "name": "Float32Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Float32Array = PrimitiveArray<Float32Type>",
+      "summary": "A [`PrimitiveArray`] of `f32`",
+      "doc": "api/arrow_array.array.primitive_array.md#float32array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Float64Array",
+      "name": "Float64Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Float64Array = PrimitiveArray<Float64Type>",
+      "summary": "A [`PrimitiveArray`] of `f64`",
+      "doc": "api/arrow_array.array.primitive_array.md#float64array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Int16Array",
+      "name": "Int16Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int16Array = PrimitiveArray<Int16Type>",
+      "summary": "A [`PrimitiveArray`] of `i16`",
+      "doc": "api/arrow_array.array.primitive_array.md#int16array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Int32Array",
+      "name": "Int32Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int32Array = PrimitiveArray<Int32Type>",
+      "summary": "A [`PrimitiveArray`] of `i32`",
+      "doc": "api/arrow_array.array.primitive_array.md#int32array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Int64Array",
+      "name": "Int64Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int64Array = PrimitiveArray<Int64Type>",
+      "summary": "A [`PrimitiveArray`] of `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#int64array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Int8Array",
+      "name": "Int8Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int8Array = PrimitiveArray<Int8Type>",
+      "summary": "A [`PrimitiveArray`] of `i8`",
+      "doc": "api/arrow_array.array.primitive_array.md#int8array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::IntervalDayTimeArray",
+      "name": "IntervalDayTimeArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type IntervalDayTimeArray = PrimitiveArray<IntervalDayTimeType>",
+      "summary": "A [`PrimitiveArray`] of “calendar” intervals in days and milliseconds",
+      "doc": "api/arrow_array.array.primitive_array.md#intervaldaytimearray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::IntervalMonthDayNanoArray",
+      "name": "IntervalMonthDayNanoArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type IntervalMonthDayNanoArray = PrimitiveArray<IntervalMonthDayNanoType>",
+      "summary": "A [`PrimitiveArray`] of “calendar” intervals in  months, days, and nanoseconds.",
+      "doc": "api/arrow_array.array.primitive_array.md#intervalmonthdaynanoarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::IntervalYearMonthArray",
+      "name": "IntervalYearMonthArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type IntervalYearMonthArray = PrimitiveArray<IntervalYearMonthType>",
+      "summary": "A [`PrimitiveArray`] of “calendar” intervals in whole months",
+      "doc": "api/arrow_array.array.primitive_array.md#intervalyearmontharray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Time32MillisecondArray",
+      "name": "Time32MillisecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Time32MillisecondArray = PrimitiveArray<Time32MillisecondType>",
+      "summary": "A [`PrimitiveArray`] of milliseconds since midnight stored as `i32`",
+      "doc": "api/arrow_array.array.primitive_array.md#time32millisecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Time32SecondArray",
+      "name": "Time32SecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Time32SecondArray = PrimitiveArray<Time32SecondType>",
+      "summary": "A [`PrimitiveArray`] of seconds since midnight stored as `i32`",
+      "doc": "api/arrow_array.array.primitive_array.md#time32secondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Time64MicrosecondArray",
+      "name": "Time64MicrosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Time64MicrosecondArray = PrimitiveArray<Time64MicrosecondType>",
+      "summary": "A [`PrimitiveArray`] of microseconds since midnight stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#time64microsecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::Time64NanosecondArray",
+      "name": "Time64NanosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Time64NanosecondArray = PrimitiveArray<Time64NanosecondType>",
+      "summary": "A [`PrimitiveArray`] of nanoseconds since midnight stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#time64nanosecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::TimestampMicrosecondArray",
+      "name": "TimestampMicrosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type TimestampMicrosecondArray = PrimitiveArray<TimestampMicrosecondType>",
+      "summary": "A [`PrimitiveArray`] of microseconds since UNIX epoch stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#timestampmicrosecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::TimestampMillisecondArray",
+      "name": "TimestampMillisecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type TimestampMillisecondArray = PrimitiveArray<TimestampMillisecondType>",
+      "summary": "A [`PrimitiveArray`] of milliseconds since UNIX epoch stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#timestampmillisecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::TimestampNanosecondArray",
+      "name": "TimestampNanosecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type TimestampNanosecondArray = PrimitiveArray<TimestampNanosecondType>",
+      "summary": "A [`PrimitiveArray`] of nanoseconds since UNIX epoch stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#timestampnanosecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::TimestampSecondArray",
+      "name": "TimestampSecondArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type TimestampSecondArray = PrimitiveArray<TimestampSecondType>",
+      "summary": "A [`PrimitiveArray`] of seconds since UNIX epoch stored as `i64`",
+      "doc": "api/arrow_array.array.primitive_array.md#timestampsecondarray"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::UInt16Array",
+      "name": "UInt16Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt16Array = PrimitiveArray<UInt16Type>",
+      "summary": "A [`PrimitiveArray`] of `u16`",
+      "doc": "api/arrow_array.array.primitive_array.md#uint16array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::UInt32Array",
+      "name": "UInt32Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt32Array = PrimitiveArray<UInt32Type>",
+      "summary": "A [`PrimitiveArray`] of `u32`",
+      "doc": "api/arrow_array.array.primitive_array.md#uint32array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::UInt64Array",
+      "name": "UInt64Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt64Array = PrimitiveArray<UInt64Type>",
+      "summary": "A [`PrimitiveArray`] of `u64`",
+      "doc": "api/arrow_array.array.primitive_array.md#uint64array"
+    },
+    {
+      "path": "arrow_array::array::primitive_array::UInt8Array",
+      "name": "UInt8Array",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt8Array = PrimitiveArray<UInt8Type>",
+      "summary": "A [`PrimitiveArray`] of `u8`",
+      "doc": "api/arrow_array.array.primitive_array.md#uint8array"
+    }
+  ]
+}

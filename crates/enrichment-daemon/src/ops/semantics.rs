@@ -66,15 +66,12 @@ pub async fn produce(
     let symbol_id = symbol.symbol_id.clone();
     // A direct base-free class is nominal. Other declarations may inherit a protocol
     // through an unresolved base, so their implementation results remain conservative.
-    let structural_scope = symbol.python.as_ref().is_none_or(|p| {
-        p.observations.is_empty()
-            || p.observations.iter().any(|o| {
-                o.kind != "class"
-                    || o.bases
-                        .iter()
-                        .any(|b| !matches!(b.as_str(), "object" | "builtins.object"))
-            })
-    });
+    let structural_scope = opened.release.key.ecosystem == Ecosystem::Python
+        && !opened
+            .reader
+            .is_nominal_python_class(&symbol.symbol_id)
+            .await
+            .map_err(io::Error::other)?;
     let selected_methods = inspect_execution::methods(options);
     let query_service = service.clone();
     let query_release = opened.release.clone();

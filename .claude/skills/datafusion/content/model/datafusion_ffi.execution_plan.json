@@ -1,0 +1,142 @@
+{
+  "module": "datafusion_ffi::execution_plan",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.execution_plan.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::execution_plan::ExecutionPlanPrivateData",
+      "name": "ExecutionPlanPrivateData",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ExecutionPlanPrivateData",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "plan",
+        "runtime"
+      ]
+    },
+    {
+      "path": "datafusion_ffi::execution_plan::FFI_ExecutionPlan",
+      "name": "FFI_ExecutionPlan",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_ExecutionPlan",
+      "summary": "A stable struct for sharing a [`ExecutionPlan`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.execution_plan.md#ffi_executionplan",
+      "fields": [
+        "properties",
+        "children",
+        "apply_expressions",
+        "dynamic_expressions_produced",
+        "with_new_children",
+        "name",
+        "execute",
+        "repartitioned",
+        "metrics",
+        "partition_statistics",
+        "clone",
+        "release",
+        "version",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(plan: Arc<dyn ExecutionPlan>, runtime: Option<Handle>) -> Self",
+          "summary": "This function is called on the provider's side."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::execution_plan::ForeignExecutionPlan",
+      "name": "ForeignExecutionPlan",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignExecutionPlan",
+      "summary": "This struct is used to access an execution plan provided by a foreign library across a FFI boundary.",
+      "doc": "api/datafusion_ffi.execution_plan.md#foreignexecutionplan",
+      "implements": [
+        "core::convert::TryFrom",
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn datafusion_physical_plan::PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn datafusion_physical_plan::PhysicalExpr>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "partition_statistics",
+          "signature": "fn partition_statistics(&self, partition: Option<usize>) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, config: &ConfigOptions) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(plan: FFI_ExecutionPlan) -> Result<Self, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    }
+  ]
+}

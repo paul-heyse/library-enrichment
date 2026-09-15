@@ -1,0 +1,250 @@
+{
+  "module": "arrow_csv::reader",
+  "crate": "arrow-csv",
+  "api": "api/arrow_csv.reader.md",
+  "items": [
+    {
+      "path": "arrow_csv::reader::infer_schema_from_files",
+      "name": "infer_schema_from_files",
+      "kind": "function",
+      "crate": "arrow-csv",
+      "signature": "fn infer_schema_from_files(files: &[String], delimiter: u8, max_read_records: Option<usize>, has_header: bool) -> Result<Schema, ArrowError>",
+      "summary": "Infer schema from a list of CSV files by reading through first n records with `max_read_records` controlling the maximum number of records to read.",
+      "doc": "api/arrow_csv.reader.md#infer_schema_from_files",
+      "aliases": [
+        "arrow::csv::infer_schema_from_files",
+        "arrow_csv::infer_schema_from_files"
+      ]
+    },
+    {
+      "path": "arrow_csv::reader::BufReader",
+      "name": "BufReader",
+      "kind": "struct",
+      "crate": "arrow-csv",
+      "signature": "struct BufReader<R>",
+      "summary": "CSV file reader implementation. See [`Reader`] for usage",
+      "doc": "api/arrow_csv.reader.md#bufreader",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the schema of the reader, useful for getting the schema without reading record batches"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        }
+      ]
+    },
+    {
+      "path": "arrow_csv::reader::Decoder",
+      "name": "Decoder",
+      "kind": "struct",
+      "crate": "arrow-csv",
+      "signature": "struct Decoder",
+      "summary": "A push-based interface for decoding CSV data from an arbitrary byte stream",
+      "doc": "api/arrow_csv.reader.md#decoder",
+      "methods": [
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "summary": "Returns the number of records that can be read before requiring a call to [`Self::flush`]"
+        },
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+          "summary": "Decode records from `buf` returning the number of bytes read"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+          "summary": "Flushes the currently buffered data to a [`RecordBatch`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_csv::reader::Format",
+      "name": "Format",
+      "kind": "struct",
+      "crate": "arrow-csv",
+      "signature": "struct Format",
+      "summary": "The format specification for the CSV file",
+      "doc": "api/arrow_csv.reader.md#format",
+      "methods": [
+        {
+          "name": "infer_schema",
+          "signature": "fn infer_schema<R: Read>(&self, reader: R, max_records: Option<usize>) -> Result<(Schema, usize), ArrowError>",
+          "summary": "Infer schema of CSV records from the provided `reader`"
+        },
+        {
+          "name": "with_comment",
+          "signature": "fn with_comment(self, comment: u8) -> Self",
+          "summary": "Specify a comment character, defaults to `None`"
+        },
+        {
+          "name": "with_delimiter",
+          "signature": "fn with_delimiter(self, delimiter: u8) -> Self",
+          "summary": "Specify a custom delimiter character, defaults to comma `','`"
+        },
+        {
+          "name": "with_escape",
+          "signature": "fn with_escape(self, escape: u8) -> Self",
+          "summary": "Specify an escape character, defaults to `None`"
+        },
+        {
+          "name": "with_header",
+          "signature": "fn with_header(self, has_header: bool) -> Self",
+          "summary": "Specify whether the CSV file has a header, defaults to `false`"
+        },
+        {
+          "name": "with_header_validation",
+          "signature": "fn with_header_validation(self, validate_header: bool) -> Self",
+          "summary": "Specify whether to validate the CSV header against the schema, defaults to `false`"
+        },
+        {
+          "name": "with_null_regex",
+          "signature": "fn with_null_regex(self, null_regex: Regex) -> Self",
+          "summary": "Provide a regex to match null values, defaults to `^$`"
+        },
+        {
+          "name": "with_quote",
+          "signature": "fn with_quote(self, quote: u8) -> Self",
+          "summary": "Specify a custom quote character, defaults to double quote `'\"'`"
+        },
+        {
+          "name": "with_terminator",
+          "signature": "fn with_terminator(self, terminator: u8) -> Self",
+          "summary": "Specify a custom terminator character, defaults to CRLF"
+        },
+        {
+          "name": "with_truncated_rows",
+          "signature": "fn with_truncated_rows(self, allow: bool) -> Self",
+          "summary": "Whether to allow truncated rows when parsing."
+        }
+      ]
+    },
+    {
+      "path": "arrow_csv::reader::ReaderBuilder",
+      "name": "ReaderBuilder",
+      "kind": "struct",
+      "crate": "arrow-csv",
+      "signature": "struct ReaderBuilder",
+      "summary": "Builder for CSV [`Reader`]s",
+      "doc": "api/arrow_csv.reader.md#readerbuilder",
+      "aliases": [
+        "arrow::csv::ReaderBuilder",
+        "arrow_csv::ReaderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<R: Read>(self, reader: R) -> Result<Reader<R>, ArrowError>",
+          "summary": "Create a new `Reader` from a non-buffered reader"
+        },
+        {
+          "name": "build_buffered",
+          "signature": "fn build_buffered<R: BufRead>(self, reader: R) -> Result<BufReader<R>, ArrowError>",
+          "summary": "Create a new `BufReader` from a buffered reader"
+        },
+        {
+          "name": "build_decoder",
+          "signature": "fn build_decoder(self) -> Decoder",
+          "summary": "Builds a decoder that can be used to decode CSV from an arbitrary byte stream"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef) -> ReaderBuilder",
+          "summary": "Create a new builder for configuring [`Reader`] CSV parsing options."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Set the batch size (number of records to load at one time)"
+        },
+        {
+          "name": "with_bounds",
+          "signature": "fn with_bounds(self, start: usize, end: usize) -> Self",
+          "summary": "Set the bounds over which to scan the reader. `start` and `end` are line numbers."
+        },
+        {
+          "name": "with_comment",
+          "signature": "fn with_comment(self, comment: u8) -> Self",
+          "summary": "Provide a comment character, lines starting with this character will be ignored"
+        },
+        {
+          "name": "with_delimiter",
+          "signature": "fn with_delimiter(self, delimiter: u8) -> Self",
+          "summary": "Set the CSV file's column delimiter as a byte character"
+        },
+        {
+          "name": "with_escape",
+          "signature": "fn with_escape(self, escape: u8) -> Self",
+          "summary": "Set the given character as the CSV file's escape character"
+        },
+        {
+          "name": "with_format",
+          "signature": "fn with_format(self, format: Format) -> Self",
+          "summary": "Overrides the [Format] of this [ReaderBuilder]"
+        },
+        {
+          "name": "with_header",
+          "signature": "fn with_header(self, has_header: bool) -> Self",
+          "summary": "Set whether the CSV file has a header"
+        },
+        {
+          "name": "with_header_validation",
+          "signature": "fn with_header_validation(self, validate_header: bool) -> Self",
+          "summary": "Set whether to validate the CSV header against the schema"
+        },
+        {
+          "name": "with_null_regex",
+          "signature": "fn with_null_regex(self, null_regex: Regex) -> Self",
+          "summary": "Provide a regex to match null values, defaults to `^$`"
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Vec<usize>) -> Self",
+          "summary": "Set the reader's column projection"
+        },
+        {
+          "name": "with_quote",
+          "signature": "fn with_quote(self, quote: u8) -> Self",
+          "summary": "Set the given character as the CSV file's quote character, by default it is double quote"
+        },
+        {
+          "name": "with_terminator",
+          "signature": "fn with_terminator(self, terminator: u8) -> Self",
+          "summary": "Provide a custom terminator character, defaults to CRLF"
+        },
+        {
+          "name": "with_truncated_rows",
+          "signature": "fn with_truncated_rows(self, allow: bool) -> Self",
+          "summary": "Whether to allow truncated rows when parsing."
+        }
+      ]
+    },
+    {
+      "path": "arrow_csv::reader::Reader",
+      "name": "Reader",
+      "kind": "type_alias",
+      "crate": "arrow-csv",
+      "signature": "type Reader<R> = BufReader<std::io::BufReader<R>>",
+      "summary": "CSV file reader using [`std::io::BufReader`]",
+      "doc": "api/arrow_csv.reader.md#reader",
+      "aliases": [
+        "arrow::csv::Reader",
+        "arrow_csv::Reader"
+      ]
+    }
+  ]
+}

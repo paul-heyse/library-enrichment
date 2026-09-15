@@ -96,7 +96,7 @@ simple_url="{base}/simple"
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
@@ -199,7 +199,10 @@ async def test_one_caller_cancelling_leaves_another_callers_work_alone(
                         dict(
                             context_id=context,
                             symbol_path="ops_demo.twice",
-                            aspects=["semantics"],
+                            selection={
+                                "mode": "explicit",
+                                "aspects": [{"aspect": name} for name in ["semantics"]],
+                            },
                             execution={
                                 "intent": "execute_on_miss",
                                 "profile": "build",
@@ -542,7 +545,7 @@ async def test_sigkill_at_each_publication_boundary_recovers_without_repeating_p
             async with Client(daemon.transport(env)) as client:
                 recovered = await call(client, "job_control", job_id=job_id, action="status")
                 assert recovered["status"] == "ok", recovered
-                result = recovered["data"]["result"]
+                result = await daemon.read_terminal_answer(client, recovered)
                 if committed:
                     assert recovered["data"]["state"] in {"succeeded", "partial"}
                     assert result["context_id"] == journal["resolution"]["context_id"]

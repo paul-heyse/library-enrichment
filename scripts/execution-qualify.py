@@ -72,6 +72,7 @@ def main() -> int:
     parser.add_argument("--root", help="service-owned Podman root (default: <cache>/podman)")
     parser.add_argument("--python-image", help="qualify this Python image instead of the built one")
     parser.add_argument("--rust-image", help="qualify this Rust image instead of the built one")
+    parser.add_argument("--profile", choices=("debug", "release"), default="debug")
     args = parser.parse_args()
 
     root = execution_root(args.root)
@@ -93,16 +94,16 @@ def main() -> int:
                 os.fsync(root_fd)
             finally:
                 os.close(root_fd)
-            return apply_qualification(root, configured_images(root, args), receipt)
+            return apply_qualification(root, configured_images(root, args), receipt, args.profile)
 
     images = configured_images(root, args)
     say(f"execution root   {root}")
     say(f"receipt          {receipt}")
     for name, image in sorted(images.items()):
         say(f"{name:<16} {image}")
-        for item in description(root)["probes"][name]:
+        for item in description(root, profile=args.profile)["probes"][name]:
             say(f"  probe {item['tool']:<12} expecting {item['expected']!r}")
-    say(f"containment      {' '.join(CONTAINMENT)}")
+    say(f"containment      {' '.join(containment_command(args.profile))}")
 
     say(
         "\nPreview only; nothing was probed, run or recorded."
@@ -112,7 +113,13 @@ def main() -> int:
     return 0
 
 
-def apply_qualification(root: Path, images: dict[str, str], receipt: Path) -> int:
+def containment_command(profile: str) -> list[str]:
+    return CONTAINMENT[:2] + (["--release"] if profile == "release" else []) + CONTAINMENT[2:]
+
+
+def apply_qualification(
+    root: Path, images: dict[str, str], receipt: Path, profile: str = "debug"
+) -> int:
     # Invalidate readiness before any attempted build/probe. A failed requalification
     # cannot leave an older receipt claiming that this attempt succeeded.
     built = subprocess.run(
@@ -125,35 +132,40 @@ def apply_qualification(root: Path, images: dict[str, str], receipt: Path) -> in
             "-p",
             "enrichment-core",
             "--bins",
-        ],
+        ]
+        + (["--release"] if profile == "release" else []),
         cwd=ROOT,
         check=False,
     )
     if built.returncode:
         sys.exit("the daemon/helper did not build; no qualification receipt remains")
-    contract = description(root)
+    contract = description(root, profile=profile)
     if not contract["containment_identity"]:
         sys.exit(contract["qualification_unavailable"])
 
     observed = {}
     for name, image in sorted(images.items()):
         say(f"\nprobing {name} {image}")
-        observed[name] = probe(root, name, image)
+        observed[name] = probe(root, name, image, profile=profile)
 
-    say(f"\nrunning the real containment tier\n    $ {' '.join(CONTAINMENT)}")
+    command = containment_command(profile)
+    say(f"\nrunning the real containment tier\n    $ {' '.join(command)}")
     env = dict(os.environ)
     env["LIBENR_EXECUTION_TEST_ROOT"] = str(root)
     if "python" in images:
         env["LIBENR_EXECUTION_TEST_PYTHON"] = images["python"]
     if "rust" in images:
         env["LIBENR_EXECUTION_TEST_RUST"] = images["rust"]
-    result = subprocess.run(CONTAINMENT, env=env, cwd=ROOT, check=False)
+    result = subprocess.run(command, env=env, cwd=ROOT, check=False)
     if result.returncode != 0:
         warn("\nthe containment tier failed; no admission receipt was written")
         warn("an image that cannot be contained is not qualified, however well it was built")
         return 1
 
-    if description(root)["containment_identity"] != contract["containment_identity"]:
+    if (
+        description(root, profile=profile)["containment_identity"]
+        != contract["containment_identity"]
+    ):
         sys.exit("execution contract changed during qualification; no receipt written")
     receipt.parent.mkdir(parents=True, exist_ok=True)
     import tempfile
@@ -175,7 +187,8 @@ def apply_qualification(root: Path, images: dict[str, str], receipt: Path) -> in
                     "resources": {name: probes["resources"] for name, probes in observed.items()},
                     "observations": observed,
                     "containment_identity": contract["containment_identity"],
-                    "containment_command": CONTAINMENT,
+                    "containment_command": command,
+                    "build_profile": profile,
                     "broker": contract["broker"]["program"],
                     "configuration": contract["configuration"],
                     "note": (

@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 
 /// Everything the daemon reads out of its configuration file.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
     /// Daemon-wide Arrow query and storage admission budgets (ADR-0024).
@@ -38,7 +38,7 @@ pub struct Config {
     pub source: Source,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct ArrowConfig {
     pub memory_bytes: usize,
@@ -112,7 +112,7 @@ impl Source {
 ///
 /// Defaults match `config/service.example.toml` exactly. That file is frozen and digest-checked,
 /// so the two cannot drift without `just provenance-check` noticing.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Limits {
     /// Largest inline result body before an artifact handle is used instead.
@@ -158,7 +158,7 @@ impl Default for Limits {
 }
 
 /// Execution-profile policy (§10).
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Policy {
     /// Profiles a caller may select from.
@@ -223,7 +223,7 @@ impl Policy {
 
 /// Freshness policy (§3.3): mutable lookups get finite TTLs; immutable artifacts are reused by
 /// digest.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct FreshnessConfig {
     /// How long a registry answer is trusted under `cache_ok`.
@@ -249,7 +249,7 @@ impl Default for FreshnessConfig {
 }
 
 /// Per-ecosystem producer settings.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Producers {
     /// GitHub REST base for public immutable source acquisition.
@@ -271,7 +271,7 @@ impl Default for Producers {
 }
 
 /// Python producers. The worker executable belongs to the service installation.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct PythonProducers {
     /// PyPI JSON API base, including /pypi.
@@ -295,7 +295,7 @@ impl Default for PythonProducers {
 }
 
 /// Rust producer settings (`[producers.rust]`).
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct RustProducers {
     /// Download hosted rustdoc JSON before any local compilation (§4.1).
@@ -332,7 +332,7 @@ impl Default for RustProducers {
 }
 
 /// Outbound network limits (§10). Not in the frozen example; added for Phase 1.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Network {
     /// Largest response body accepted before decompression.

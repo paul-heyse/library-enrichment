@@ -1,0 +1,346 @@
+{
+  "module": "datafusion_datasource::file_scan_config",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_scan_config.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_scan_config::output_partitioning_from_partition_fields",
+      "name": "output_partitioning_from_partition_fields",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn output_partitioning_from_partition_fields(schema: &arrow::datatypes::Schema, partition_cols: &arrow::datatypes::Fields, partition_count: usize) -> Option<datafusion_physical_expr::Partitioning>",
+      "summary": "Builds output partitioning over `partition_cols` (resolved to their indices in `schema`) with `partition_count` partitions. Returns `None` when there are no partition columns. Callers use this to declare the output partitioning of a scan w…",
+      "doc": "api/datafusion_datasource.file_scan_config.md#output_partitioning_from_partition_fields"
+    },
+    {
+      "path": "datafusion_datasource::file_scan_config::wrap_partition_type_in_dict",
+      "name": "wrap_partition_type_in_dict",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn wrap_partition_type_in_dict(val_type: arrow::datatypes::DataType) -> arrow::datatypes::DataType",
+      "summary": "Convert type to a type suitable for use as a `ListingTable` partition column. Returns `Dictionary(UInt16, val_type)`, which is a reasonable trade off between a reasonable number of partition values and space efficiency.",
+      "doc": "api/datafusion_datasource.file_scan_config.md#wrap_partition_type_in_dict",
+      "aliases": [
+        "datafusion::datasource::physical_plan::wrap_partition_type_in_dict"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_scan_config::wrap_partition_value_in_dict",
+      "name": "wrap_partition_value_in_dict",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn wrap_partition_value_in_dict(val: datafusion_common::ScalarValue) -> datafusion_common::ScalarValue",
+      "summary": "Convert a [`ScalarValue`] of partition columns to a type, as described in the documentation of [`wrap_partition_type_in_dict`], which can wrap the types.",
+      "doc": "api/datafusion_datasource.file_scan_config.md#wrap_partition_value_in_dict",
+      "aliases": [
+        "datafusion::datasource::physical_plan::wrap_partition_value_in_dict"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_scan_config::FileScanConfig",
+      "name": "FileScanConfig",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileScanConfig",
+      "summary": "[`FileScanConfig`] represents scanning data from a group of files",
+      "doc": "api/datafusion_datasource.file_scan_config.md#filescanconfig",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileScanConfig"
+      ],
+      "fields": [
+        "object_store_url",
+        "file_groups",
+        "constraints",
+        "limit",
+        "preserve_order",
+        "output_ordering",
+        "file_compression_type",
+        "file_source",
+        "batch_size",
+        "expr_adapter_factory",
+        "output_partitioning"
+      ],
+      "implements": [
+        "datafusion_datasource::source::DataSource",
+        "datafusion_physical_plan::display::DisplayAs"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "create_sibling_state",
+          "signature": "fn create_sibling_state(&self, config: &ConfigOptions) -> Option<Arc<dyn Any + Send + Sync>>",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "Create any shared state that should be passed between sibling streams during one execution."
+        },
+        {
+          "name": "eq_properties",
+          "signature": "fn eq_properties(&self) -> EquivalenceProperties",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "Computes the effective equivalence properties of this file scan, taking into account the file schema, any projections or filters applied by the file source, and the output ordering."
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "file_column_projection_indices",
+          "signature": "fn file_column_projection_indices(&self) -> Option<Vec<usize>>"
+        },
+        {
+          "name": "file_schema",
+          "signature": "fn file_schema(&self) -> &SchemaRef",
+          "summary": "Get the file schema (schema of the files without partition columns)"
+        },
+        {
+          "name": "file_source",
+          "signature": "fn file_source(&self) -> &Arc<dyn FileSource>",
+          "summary": "Returns the file_source"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> FmtResult",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> FmtResult",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> ExecutionPlanMetricsSet",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "newlines_in_values",
+          "signature": "fn newlines_in_values(&self) -> bool",
+          "summary": "Returns whether newlines in values are supported."
+        },
+        {
+          "name": "open",
+          "signature": "fn open(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "open_with_args",
+          "signature": "fn open_with_args(&self, args: OpenArgs) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "output_partitioning",
+          "signature": "fn output_partitioning(&self) -> Partitioning",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "Returns the output partitioning for this file scan."
+        },
+        {
+          "name": "parse_table_schema_from_proto",
+          "signature": "fn parse_table_schema_from_proto(conf: &protobuf::FileScanExecConf) -> Result<TableSchema>",
+          "summary": "Parse a [`TableSchema`] (file schema + partition columns) from a [`protobuf::FileScanExecConf`]. File sources use this to rebuild their concrete source before calling [`FileScanConfig::try_from_proto`]."
+        },
+        {
+          "name": "partition_statistics",
+          "signature": "fn partition_statistics(&self, partition: Option<usize>) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "projected_constraints",
+          "signature": "fn projected_constraints(&self) -> Constraints"
+        },
+        {
+          "name": "projected_schema",
+          "signature": "fn projected_schema(&self) -> Result<Arc<Schema>>"
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, repartition_file_min_size: usize, output_ordering: Option<LexOrdering>) -> Result<Option<Arc<dyn DataSource>>>",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "If supported by the underlying [`FileSource`], redistribute files across partitions according to their size."
+        },
+        {
+          "name": "scheduling_type",
+          "signature": "fn scheduling_type(&self) -> SchedulingType",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "split_groups_by_statistics",
+          "signature": "fn split_groups_by_statistics(table_schema: &SchemaRef, file_groups: &[FileGroup], sort_order: &LexOrdering) -> Result<Vec<FileGroup>>",
+          "summary": "Attempts to do a bin-packing on files into file groups, such that any two files in a file group are ordered and non-overlapping with respect to their statistics. It will produce the smallest number of file groups possible."
+        },
+        {
+          "name": "split_groups_by_statistics_with_target_partitions",
+          "signature": "fn split_groups_by_statistics_with_target_partitions(table_schema: &SchemaRef, file_groups: &[FileGroup], sort_order: &LexOrdering, target_partitions: usize) -> Result<Vec<FileGroup>>",
+          "summary": "Splits file groups into new groups based on statistics to enable efficient parallel processing."
+        },
+        {
+          "name": "statistics",
+          "signature": "fn statistics(&self) -> Statistics",
+          "summary": "Returns the unprojected table statistics, marking them as inexact if filters are present."
+        },
+        {
+          "name": "table_partition_cols",
+          "signature": "fn table_partition_cols(&self) -> &Fields",
+          "summary": "Get the table partition columns"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(conf: &protobuf::FileScanExecConf, ctx: &ExecutionPlanDecodeCtx<'_>, file_source: Arc<dyn FileSource>) -> Result<FileScanConfig>",
+          "summary": "Reconstruct a [`FileScanConfig`] from a [`protobuf::FileScanExecConf`] and a `file_source` the caller has already rebuilt (typically from the table schema via [`FileScanConfig::parse_table_schema_from_proto`])."
+        },
+        {
+          "name": "try_pushdown_filters",
+          "signature": "fn try_pushdown_filters(&self, filters: Vec<Arc<dyn PhysicalExpr>>, config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn DataSource>>>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn DataSource>>>",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "Push sort requirements into file-based data sources."
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExprs) -> Result<Option<Arc<dyn DataSource>>>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &ExecutionPlanEncodeCtx<'_>) -> Result<protobuf::FileScanExecConf>",
+          "summary": "Serialize the shared, format-agnostic part of a file scan into a [`protobuf::FileScanExecConf`]."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::source::DataSource",
+          "summary": "Serialize this file scan by delegating to the concrete [`FileSource`]'s [`try_to_proto`](crate::file::FileSource::try_to_proto) hook, passing `self` as the shared spine it needs to emit the base config."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn DataSource>>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn DataSource>>",
+          "via_trait": "datafusion_datasource::source::DataSource"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_scan_config::FileScanConfigBuilder",
+      "name": "FileScanConfigBuilder",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileScanConfigBuilder",
+      "summary": "A builder for [`FileScanConfig`]'s.",
+      "doc": "api/datafusion_datasource.file_scan_config.md#filescanconfigbuilder",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileScanConfigBuilder"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> FileScanConfig",
+          "summary": "Build the final [`FileScanConfig`] with all the configured settings."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(config: FileScanConfig) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(object_store_url: ObjectStoreUrl, file_source: Arc<dyn FileSource>) -> Self",
+          "summary": "Create a new [`FileScanConfigBuilder`] with default settings for scanning files."
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> &SchemaRef",
+          "summary": "Return the table schema"
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: Option<usize>) -> Self",
+          "summary": "Set the batch_size property"
+        },
+        {
+          "name": "with_constraints",
+          "signature": "fn with_constraints(self, constraints: Constraints) -> Self",
+          "summary": "Set the table constraints"
+        },
+        {
+          "name": "with_expr_adapter",
+          "signature": "fn with_expr_adapter(self, expr_adapter: Option<Arc<dyn PhysicalExprAdapterFactory>>) -> Self",
+          "summary": "Register an expression adapter used to adapt filters and projections that are pushed down into the scan from the logical schema to the physical schema of the file. This can include things like: - Column ordering changes - Handling of missi…"
+        },
+        {
+          "name": "with_file",
+          "signature": "fn with_file(self, partitioned_file: PartitionedFile) -> Self",
+          "summary": "Add a file as a single group"
+        },
+        {
+          "name": "with_file_compression_type",
+          "signature": "fn with_file_compression_type(self, file_compression_type: FileCompressionType) -> Self",
+          "summary": "Set the file compression type"
+        },
+        {
+          "name": "with_file_group",
+          "signature": "fn with_file_group(self, file_group: FileGroup) -> Self",
+          "summary": "Add a new file group"
+        },
+        {
+          "name": "with_file_groups",
+          "signature": "fn with_file_groups(self, file_groups: Vec<FileGroup>) -> Self",
+          "summary": "Set the list of files to be processed, grouped into partitions."
+        },
+        {
+          "name": "with_limit",
+          "signature": "fn with_limit(self, limit: Option<usize>) -> Self",
+          "summary": "Set the maximum number of records to read from this plan."
+        },
+        {
+          "name": "with_output_ordering",
+          "signature": "fn with_output_ordering(self, output_ordering: Vec<LexOrdering>) -> Self",
+          "summary": "Set the output ordering of the files"
+        },
+        {
+          "name": "with_output_partitioning",
+          "signature": "fn with_output_partitioning(self, output_partitioning: Option<Partitioning>) -> Self",
+          "summary": "Set declared physical output partitioning for this scan."
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(self, order_sensitive: bool) -> Self",
+          "summary": "Set whether the limit should be order-sensitive."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, indices: Option<Vec<usize>>) -> Self",
+          "summary": "Set the columns on which to project the data. Indexes that are higher than the number of columns of `file_schema` refer to `table_partition_cols`."
+        },
+        {
+          "name": "with_projection_indices",
+          "signature": "fn with_projection_indices(self, indices: Option<Vec<usize>>) -> Result<Self>",
+          "summary": "Set the columns on which to project the data using column indices."
+        },
+        {
+          "name": "with_source",
+          "signature": "fn with_source(self, file_source: Arc<dyn FileSource>) -> Self",
+          "summary": "Set the file source for scanning files."
+        },
+        {
+          "name": "with_statistics",
+          "signature": "fn with_statistics(self, statistics: Statistics) -> Self",
+          "summary": "Set the statistics of the files, including partition columns. Defaults to [`Statistics::new_unknown`]."
+        }
+      ]
+    }
+  ]
+}

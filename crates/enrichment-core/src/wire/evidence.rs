@@ -16,6 +16,12 @@ use super::ids::ArtifactUri;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Coverage {
+    /// When present, additional limitation text is retained in the exact coverage section.
+    /// Scope, assessments, indexed and missing remain the authoritative inline assessment.
+    #[serde(default)]
+    pub details: Option<super::research::RecoveryAction>,
+    /// Requested evidence scopes assessed against qualified native facts.
+    pub assessments: Vec<ScopeAssessment>,
     /// What the result claims to cover, in prose.
     pub scope: String,
     /// Evidence kinds that were successfully indexed.
@@ -24,6 +30,65 @@ pub struct Coverage {
     pub missing: BTreeSet<String>,
     /// Known reasons this result may not generalize.
     pub limitations: Vec<String>,
+}
+
+/// Unknown means no qualified coverage fact exists; it is distinct from a declared gap.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ScopeState {
+    Indexed,
+    Partial,
+    Missing,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ScopeAssessment {
+    pub snapshot_id: String,
+    pub subject: crate::evidence::relational::SubjectRef,
+    pub kind: crate::evidence::EvidenceKind,
+    pub state: ScopeState,
+    /// A qualified fact establishing the selected state. Historical attempts remain retained.
+    pub witness_id: Option<String>,
+}
+
+impl Coverage {
+    /// No assessment has established any evidence kind yet.
+    #[must_use]
+    pub fn unassessed(scope: impl Into<String>) -> Self {
+        Self {
+            details: None,
+            assessments: Vec::new(),
+            scope: scope.into(),
+            indexed: BTreeSet::new(),
+            missing: BTreeSet::new(),
+            limitations: Vec::new(),
+        }
+    }
+
+    /// Project the already evaluated scope states; do not infer coverage from payload rows.
+    pub fn refresh_kinds(&mut self) {
+        self.indexed.clear();
+        self.missing.clear();
+        for assessment in &self.assessments {
+            if assessment.state == ScopeState::Indexed {
+                self.indexed.insert(assessment.kind.as_str().into());
+            } else {
+                self.missing.insert(assessment.kind.as_str().into());
+            }
+        }
+        self.indexed.retain(|kind| !self.missing.contains(kind));
+    }
+
+    #[must_use]
+    pub fn complete(&self) -> bool {
+        !self.assessments.is_empty()
+            && self
+                .assessments
+                .iter()
+                .all(|item| item.state == ScopeState::Indexed)
+    }
 }
 
 /// How well the evidence's source version matches the version that was asked about.

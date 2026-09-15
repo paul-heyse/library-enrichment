@@ -1,0 +1,238 @@
+{
+  "module": "parquet::column::page",
+  "crate": "parquet",
+  "api": "api/parquet.column.page.md",
+  "items": [
+    {
+      "path": "parquet::column::page::Page",
+      "name": "Page",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Page",
+      "summary": "Parquet Page definition.",
+      "doc": "api/parquet.column.page.md#page",
+      "variants": [
+        "DataPage",
+        "DataPageV2",
+        "DictionaryPage"
+      ],
+      "methods": [
+        {
+          "name": "buffer",
+          "signature": "fn buffer(&self) -> &Bytes",
+          "summary": "Returns internal byte buffer reference for this page."
+        },
+        {
+          "name": "encoding",
+          "signature": "fn encoding(&self) -> Encoding",
+          "summary": "Returns this page [`Encoding`]."
+        },
+        {
+          "name": "is_data_page",
+          "signature": "fn is_data_page(&self) -> bool",
+          "summary": "Returns whether this page is any version of a data page"
+        },
+        {
+          "name": "is_dictionary_page",
+          "signature": "fn is_dictionary_page(&self) -> bool",
+          "summary": "Returns whether this page is a dictionary page"
+        },
+        {
+          "name": "num_values",
+          "signature": "fn num_values(&self) -> u32",
+          "summary": "Returns number of values in this page."
+        },
+        {
+          "name": "page_type",
+          "signature": "fn page_type(&self) -> PageType",
+          "summary": "Returns [`PageType`] for this page."
+        },
+        {
+          "name": "statistics",
+          "signature": "fn statistics(&self) -> Option<&Statistics>",
+          "summary": "Returns optional [`Statistics`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page::CompressedPage",
+      "name": "CompressedPage",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct CompressedPage",
+      "summary": "Helper struct to represent pages with potentially compressed buffer (data page v1) or compressed and concatenated buffer (def levels + rep levels + compressed values for data page v2).",
+      "doc": "api/parquet.column.page.md#compressedpage",
+      "methods": [
+        {
+          "name": "compressed_page",
+          "signature": "fn compressed_page(&self) -> &Page",
+          "summary": "Returns underlying page with potentially compressed buffer."
+        },
+        {
+          "name": "compressed_size",
+          "signature": "fn compressed_size(&self) -> usize",
+          "summary": "Returns compressed size in bytes."
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &[u8]",
+          "summary": "Returns slice of compressed buffer in the page."
+        },
+        {
+          "name": "encoding",
+          "signature": "fn encoding(&self) -> Encoding",
+          "summary": "Returns encoding for values in page."
+        },
+        {
+          "name": "memory_usage",
+          "signature": "fn memory_usage(&self) -> usize",
+          "summary": "Returns the number of heap bytes this page currently holds."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(compressed_page: Page, uncompressed_size: usize) -> Self",
+          "summary": "Creates `CompressedPage` from a page with potentially compressed buffer and uncompressed size."
+        },
+        {
+          "name": "num_values",
+          "signature": "fn num_values(&self) -> u32",
+          "summary": "Number of values in page."
+        },
+        {
+          "name": "page_type",
+          "signature": "fn page_type(&self) -> PageType",
+          "summary": "Returns page type."
+        },
+        {
+          "name": "uncompressed_size",
+          "signature": "fn uncompressed_size(&self) -> usize",
+          "summary": "Returns uncompressed size in bytes."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page::PageMetadata",
+      "name": "PageMetadata",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PageMetadata",
+      "summary": "Contains metadata for a page",
+      "doc": "api/parquet.column.page.md#pagemetadata",
+      "fields": [
+        "num_rows",
+        "num_levels",
+        "is_dict"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::column::page::PageWriteSpec",
+      "name": "PageWriteSpec",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PageWriteSpec",
+      "summary": "Contains page write metrics.",
+      "doc": "api/parquet.column.page.md#pagewritespec",
+      "fields": [
+        "page_type",
+        "uncompressed_size",
+        "compressed_size",
+        "num_values",
+        "offset",
+        "bytes_written"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates new spec with default page write metrics."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page::PageIterator",
+      "name": "PageIterator",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait PageIterator: Iterator<Item = errors::Result<Box<dyn PageReader>>> + Send",
+      "summary": "An iterator over pages of one specific column in a parquet file.",
+      "doc": "api/parquet.column.page.md#pageiterator",
+      "implementors": [
+        "parquet::file::reader::FilePageIterator"
+      ],
+      "required_methods": [],
+      "provided_methods": []
+    },
+    {
+      "path": "parquet::column::page::PageReader",
+      "name": "PageReader",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait PageReader: Iterator<Item = errors::Result<Page>> + Send",
+      "summary": "API for reading pages from a column chunk. This offers a iterator like API to get the next page.",
+      "doc": "api/parquet.column.page.md#pagereader",
+      "implementors": [
+        "parquet::file::serialized_reader::SerializedPageReader"
+      ],
+      "required_methods": [
+        "get_next_page",
+        "peek_next_page",
+        "skip_next_page"
+      ],
+      "provided_methods": [
+        "at_record_boundary"
+      ],
+      "methods": [
+        {
+          "name": "at_record_boundary",
+          "signature": "fn at_record_boundary(&mut self) -> Result<bool>",
+          "summary": "Returns `true` if the next page can be assumed to contain the start of a new record"
+        },
+        {
+          "name": "get_next_page",
+          "signature": "fn get_next_page(&mut self) -> Result<Option<Page>>",
+          "summary": "Gets the next page in the column chunk associated with this reader. Returns `None` if there are no pages left."
+        },
+        {
+          "name": "peek_next_page",
+          "signature": "fn peek_next_page(&mut self) -> Result<Option<PageMetadata>>",
+          "summary": "Gets metadata about the next page, returns an error if no column index information"
+        },
+        {
+          "name": "skip_next_page",
+          "signature": "fn skip_next_page(&mut self) -> Result<()>",
+          "summary": "Skips reading the next page, returns an error if no column index information"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::page::PageWriter",
+      "name": "PageWriter",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait PageWriter: Send",
+      "summary": "API for writing pages in a column chunk.",
+      "doc": "api/parquet.column.page.md#pagewriter",
+      "implementors": [
+        "parquet::file::writer::SerializedPageWriter"
+      ],
+      "required_methods": [
+        "close",
+        "write_page"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(&mut self) -> Result<()>",
+          "summary": "Closes resources and flushes underlying sink. Page writer should not be used after this method is called."
+        },
+        {
+          "name": "write_page",
+          "signature": "fn write_page(&mut self, page: CompressedPage) -> Result<PageWriteSpec>",
+          "summary": "Writes a page into the output stream/sink. Returns `PageWriteSpec` that contains information about written page metrics, including number of bytes, size, number of values, offset, etc."
+        }
+      ]
+    }
+  ]
+}

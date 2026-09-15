@@ -1,0 +1,130 @@
+{
+  "module": "datafusion_datasource_arrow::source",
+  "crate": "datafusion-datasource-arrow",
+  "api": "api/datafusion_datasource_arrow.source.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_arrow::source::ArrowOpener",
+      "name": "ArrowOpener",
+      "kind": "struct",
+      "crate": "datafusion-datasource-arrow",
+      "signature": "struct ArrowOpener",
+      "summary": "`FileOpener` wrapper for both Arrow IPC file and stream formats",
+      "doc": "api/datafusion_datasource_arrow.source.md#arrowopener",
+      "aliases": [
+        "datafusion::datasource::physical_plan::ArrowOpener",
+        "datafusion::datasource::physical_plan::arrow::ArrowOpener"
+      ],
+      "fields": [
+        "inner"
+      ],
+      "implements": [
+        "datafusion_datasource::file_stream::FileOpener"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn FileOpener>) -> Self",
+          "summary": "Creates a new [`ArrowOpener`]"
+        },
+        {
+          "name": "new_file_opener",
+          "signature": "fn new_file_opener(object_store: Arc<dyn ObjectStore>, projection: Option<Vec<usize>>) -> Self"
+        },
+        {
+          "name": "new_stream_file_opener",
+          "signature": "fn new_stream_file_opener(object_store: Arc<dyn ObjectStore>, projection: Option<Vec<usize>>) -> Self"
+        },
+        {
+          "name": "open",
+          "signature": "fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>",
+          "via_trait": "datafusion_datasource::file_stream::FileOpener"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_arrow::source::ArrowSource",
+      "name": "ArrowSource",
+      "kind": "struct",
+      "crate": "datafusion-datasource-arrow",
+      "signature": "struct ArrowSource",
+      "summary": "`FileSource` for both Arrow IPC file and stream formats",
+      "doc": "api/datafusion_datasource_arrow.source.md#arrowsource",
+      "aliases": [
+        "datafusion::datasource::physical_plan::ArrowSource",
+        "datafusion::datasource::physical_plan::arrow::ArrowSource"
+      ],
+      "implements": [
+        "datafusion_datasource::file::FileSource"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn datafusion_physical_plan::PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "create_file_opener",
+          "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, _base_config: &FileScanConfig, _partition: usize) -> Result<Arc<dyn FileOpener>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> &str",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "new_file_source",
+          "signature": "fn new_file_source(table_schema: impl Into<TableSchema>) -> Self",
+          "summary": "Creates an [`ArrowSource`] for file format"
+        },
+        {
+          "name": "new_stream_file_source",
+          "signature": "fn new_stream_file_source(table_schema: impl Into<TableSchema>) -> Self",
+          "summary": "Creates an [`ArrowSource`] for stream format"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, repartition_file_min_size: usize, output_ordering: Option<LexOrdering>, config: &FileScanConfig) -> Result<Option<FileScanConfig>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> &TableSchema",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn datafusion_physical_plan::ExecutionPlan>>",
+          "summary": "Reconstructs a `DataSourceExec` from a protobuf `ArrowScan`."
+        },
+        {
+          "name": "try_pushdown_projection",
+          "signature": "fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::file::FileSource",
+          "summary": "Emit an `ArrowScan` node wrapping the shared base config."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(&self, _batch_size: usize) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        }
+      ]
+    }
+  ]
+}

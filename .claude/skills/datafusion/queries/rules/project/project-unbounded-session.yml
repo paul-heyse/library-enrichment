@@ -1,0 +1,17 @@
+id: project-unbounded-session
+language: rust
+severity: hint
+message: SessionContext built without a bounded RuntimeEnv; a large query can exhaust memory.
+note: |
+  `SessionContext::new` and `new_with_config` take the default RuntimeEnv, which has no memory
+  limit and no spill path: an aggregation or sort larger than RAM aborts the process rather than
+  spilling. `RuntimeEnvBuilder` supplies `with_memory_pool`, `with_temp_file_path` and
+  `with_max_temp_directory_size`; pass the result to `SessionContext::new_with_config_rt`.
+  See content/api/datafusion_execution.runtime_env.md#runtimeenvbuilder.
+metadata:
+  record: capability-gap
+  capability: memory-limits
+rule:
+  any:
+    - pattern: SessionContext::new()
+    - pattern: SessionContext::new_with_config($_)

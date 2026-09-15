@@ -1,0 +1,227 @@
+{
+  "module": "datafusion_execution::memory_pool",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.memory_pool.md",
+  "items": [
+    {
+      "path": "datafusion_execution::memory_pool::MemoryLimit",
+      "name": "MemoryLimit",
+      "kind": "enum",
+      "crate": "datafusion-execution",
+      "signature": "enum MemoryLimit",
+      "summary": "Memory limit of `MemoryPool`",
+      "doc": "api/datafusion_execution.memory_pool.md#memorylimit",
+      "variants": [
+        "Infinite",
+        "Finite",
+        "Unknown"
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::MemoryConsumer",
+      "name": "MemoryConsumer",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct MemoryConsumer",
+      "summary": "A memory consumer is a named allocation traced by a particular [`MemoryReservation`] in a [`MemoryPool`]. All allocations are registered to a particular `MemoryConsumer`;",
+      "doc": "api/datafusion_execution.memory_pool.md#memoryconsumer",
+      "methods": [
+        {
+          "name": "can_spill",
+          "signature": "fn can_spill(&self) -> bool",
+          "summary": "Returns true if this allocation can spill to disk"
+        },
+        {
+          "name": "clone_with_new_id",
+          "signature": "fn clone_with_new_id(&self) -> Self",
+          "summary": "Returns a clone of this [`MemoryConsumer`] with a new unique id, which can be registered with a [`MemoryPool`], This new consumer is separate from the original."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> usize",
+          "summary": "Return the unique id of this [`MemoryConsumer`]"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns the name associated with this allocation"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: impl Into<String>) -> Self",
+          "summary": "Create a new empty [`MemoryConsumer`] that can be grown using [`MemoryReservation`]"
+        },
+        {
+          "name": "register",
+          "signature": "fn register(self, pool: &Arc<dyn MemoryPool>) -> MemoryReservation",
+          "summary": "Registers this [`MemoryConsumer`] with the provided [`MemoryPool`] returning a [`MemoryReservation`] that can be used to grow or shrink the memory reservation"
+        },
+        {
+          "name": "with_can_spill",
+          "signature": "fn with_can_spill(self, can_spill: bool) -> Self",
+          "summary": "Set whether this allocation can be spilled to disk"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::MemoryReservation",
+      "name": "MemoryReservation",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct MemoryReservation",
+      "summary": "A [`MemoryReservation`] tracks an individual reservation of a number of bytes of memory in a [`MemoryPool`] that is freed back to the pool on drop.",
+      "doc": "api/datafusion_execution.memory_pool.md#memoryreservation",
+      "implements": [
+        "arrow_buffer::pool::MemoryReservation",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "consumer",
+          "signature": "fn consumer(&self) -> &MemoryConsumer",
+          "summary": "Returns [MemoryConsumer] for this [MemoryReservation]"
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "free",
+          "signature": "fn free(&self) -> usize",
+          "summary": "Frees all bytes from this reservation back to the underlying pool, returning the number of bytes freed."
+        },
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, capacity: usize)",
+          "summary": "Increase the size of this reservation by `capacity` bytes"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty(&self) -> Self",
+          "summary": "Returns a new empty [`MemoryReservation`] with the same [`MemoryConsumer`]"
+        },
+        {
+          "name": "resize",
+          "signature": "fn resize(&self, capacity: usize)",
+          "summary": "Sets the size of this reservation to `capacity`"
+        },
+        {
+          "name": "resize",
+          "signature": "fn resize(&mut self, new_size: usize)",
+          "via_trait": "arrow_buffer::pool::MemoryReservation"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, capacity: usize)",
+          "summary": "Frees `capacity` bytes from this reservation"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the size of this reservation in bytes"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "arrow_buffer::pool::MemoryReservation"
+        },
+        {
+          "name": "split",
+          "signature": "fn split(&self, capacity: usize) -> MemoryReservation",
+          "summary": "Splits off `capacity` bytes from this [`MemoryReservation`] into a new [`MemoryReservation`] with the same [`MemoryConsumer`]."
+        },
+        {
+          "name": "take",
+          "signature": "fn take(&mut self) -> MemoryReservation",
+          "summary": "Splits off all the bytes from this [`MemoryReservation`] into a new [`MemoryReservation`] with the same [`MemoryConsumer`]"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, capacity: usize) -> Result<()>",
+          "summary": "Try to increase the size of this reservation by `capacity` bytes, returning error if there is insufficient capacity left in the pool."
+        },
+        {
+          "name": "try_resize",
+          "signature": "fn try_resize(&self, capacity: usize) -> Result<()>",
+          "summary": "Try to set the size of this reservation to `capacity`"
+        },
+        {
+          "name": "try_shrink",
+          "signature": "fn try_shrink(&self, capacity: usize) -> Result<usize>",
+          "summary": "Tries to free `capacity` bytes from this reservation if `capacity` does not exceed [`Self::size`]. Returns new reservation size, or error if shrinking capacity is more than allocated size."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::MemoryPool",
+      "name": "MemoryPool",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait MemoryPool: Any + Send + Sync + std::fmt::Debug + Display",
+      "summary": "Tracks and potentially limits memory use across operators during execution.",
+      "doc": "api/datafusion_execution.memory_pool.md#memorypool",
+      "implementors": [
+        "datafusion_execution::memory_pool::peak_recording::PeakRecordingPool",
+        "datafusion_execution::memory_pool::pool::FairSpillPool",
+        "datafusion_execution::memory_pool::pool::GreedyMemoryPool",
+        "datafusion_execution::memory_pool::pool::TrackConsumersPool",
+        "datafusion_execution::memory_pool::pool::UnboundedMemoryPool"
+      ],
+      "required_methods": [
+        "grow",
+        "name",
+        "reserved",
+        "shrink",
+        "try_grow"
+      ],
+      "provided_methods": [
+        "memory_limit",
+        "register",
+        "unregister"
+      ],
+      "methods": [
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, reservation: &MemoryReservation, additional: usize)",
+          "summary": "Infallibly grow the provided `reservation` by `additional` bytes"
+        },
+        {
+          "name": "memory_limit",
+          "signature": "fn memory_limit(&self) -> MemoryLimit",
+          "summary": "Return the memory limit of the pool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Return pool name"
+        },
+        {
+          "name": "register",
+          "signature": "fn register(&self, _consumer: &MemoryConsumer)",
+          "summary": "Registers a new [`MemoryConsumer`]"
+        },
+        {
+          "name": "reserved",
+          "signature": "fn reserved(&self) -> usize",
+          "summary": "Return the total amount of memory reserved"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, reservation: &MemoryReservation, shrink: usize)",
+          "summary": "Infallibly shrink the provided `reservation` by `shrink` bytes"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+          "summary": "Attempt to grow the provided `reservation` by `additional` bytes"
+        },
+        {
+          "name": "unregister",
+          "signature": "fn unregister(&self, _consumer: &MemoryConsumer)",
+          "summary": "Records the destruction of a [`MemoryReservation`] with [`MemoryConsumer`]"
+        }
+      ]
+    }
+  ]
+}

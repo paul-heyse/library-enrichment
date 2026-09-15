@@ -1,0 +1,103 @@
+{
+  "module": "datafusion_execution::spill_file",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.spill_file.md",
+  "items": [
+    {
+      "path": "datafusion_execution::spill_file::SpillFile",
+      "name": "SpillFile",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait SpillFile: Send + Sync",
+      "summary": "Abstraction over a spill file backend. Implementations handle their own quota enforcement and blocking concerns.",
+      "doc": "api/datafusion_execution.spill_file.md#spillfile",
+      "aliases": [
+        "datafusion::execution::SpillFile",
+        "datafusion_execution::SpillFile"
+      ],
+      "implementors": [
+        "datafusion_execution::disk_manager::RefCountedTempFile"
+      ],
+      "required_methods": [
+        "open_writer",
+        "read_stream",
+        "size"
+      ],
+      "provided_methods": [
+        "path"
+      ],
+      "methods": [
+        {
+          "name": "open_writer",
+          "signature": "fn open_writer(&self) -> Result<Box<dyn SpillWriter>>",
+          "summary": "Opens a writer for appending data to this file."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> Option<&Path>",
+          "summary": "Returns the OS path if this is a local file, None otherwise."
+        },
+        {
+          "name": "read_stream",
+          "signature": "fn read_stream(&self) -> Result<Pin<Box<dyn Stream<Item = Result<Bytes>> + Send>>>",
+          "summary": "Returns file contents as an async stream of byte chunks."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> Option<u64>",
+          "summary": "Returns current size in bytes if cheaply available."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::spill_file::SpillWriter",
+      "name": "SpillWriter",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait SpillWriter: std::io::Write + Send",
+      "summary": "Writer for spill file backends.",
+      "doc": "api/datafusion_execution.spill_file.md#spillwriter",
+      "aliases": [
+        "datafusion::execution::SpillWriter",
+        "datafusion_execution::SpillWriter"
+      ],
+      "implementors": [
+        "datafusion_execution::disk_manager::FileSpillWriter"
+      ],
+      "required_methods": [
+        "finish"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<()>",
+          "summary": "Intended for close/sync/commit operations."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::spill_file::TempFileFactory",
+      "name": "TempFileFactory",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait TempFileFactory: Send + Sync",
+      "summary": "Factory for creating spill files.",
+      "doc": "api/datafusion_execution.spill_file.md#tempfilefactory",
+      "aliases": [
+        "datafusion::execution::TempFileFactory",
+        "datafusion_execution::TempFileFactory"
+      ],
+      "required_methods": [
+        "create_temp_file"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_temp_file",
+          "signature": "fn create_temp_file(&self, description: &str) -> Result<Arc<dyn SpillFile>>"
+        }
+      ]
+    }
+  ]
+}

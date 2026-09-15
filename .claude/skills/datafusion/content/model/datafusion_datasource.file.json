@@ -1,0 +1,164 @@
+{
+  "module": "datafusion_datasource::file",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file::as_file_source",
+      "name": "as_file_source",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn as_file_source<T: FileSource + 'static>(source: T) -> std::sync::Arc<dyn FileSource>",
+      "summary": "Helper function to convert any type implementing [`FileSource`] to `Arc<dyn FileSource>`",
+      "doc": "api/datafusion_datasource.file.md#as_file_source",
+      "aliases": [
+        "datafusion_datasource::as_file_source"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file::FileSource",
+      "name": "FileSource",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileSource: Any + Send + Sync",
+      "summary": "File format specific behaviors for [`DataSource`]",
+      "doc": "api/datafusion_datasource.file.md#filesource",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileSource"
+      ],
+      "implementors": [
+        "datafusion_datasource_arrow::source::ArrowSource",
+        "datafusion_datasource_avro::source::AvroSource",
+        "datafusion_datasource_csv::source::CsvSource",
+        "datafusion_datasource_json::source::JsonSource",
+        "datafusion_datasource_parquet::source::ParquetSource"
+      ],
+      "required_methods": [
+        "apply_expressions",
+        "create_file_opener",
+        "file_type",
+        "metrics",
+        "table_schema",
+        "with_batch_size"
+      ],
+      "provided_methods": [
+        "create_morselizer",
+        "filter",
+        "fmt_extra",
+        "projection",
+        "reorder_files",
+        "repartitioned",
+        "schema_adapter_factory",
+        "supports_repartitioning",
+        "try_pushdown_filters",
+        "try_pushdown_projection",
+        "try_pushdown_sort",
+        "try_reverse_output",
+        "try_to_proto",
+        "with_schema_adapter_factory"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "summary": "Apply a function to all physical expressions used by this file source."
+        },
+        {
+          "name": "create_file_opener",
+          "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition: usize) -> Result<Arc<dyn FileOpener>>",
+          "summary": "Creates a `dyn FileOpener` based on given parameters."
+        },
+        {
+          "name": "create_morselizer",
+          "signature": "fn create_morselizer(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, partition: usize) -> Result<Box<dyn Morselizer>>",
+          "summary": "Creates a `dyn Morselizer` based on given parameters."
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> &str",
+          "summary": "String representation of file source such as \"csv\", \"json\", \"parquet\""
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(&self) -> Option<Arc<dyn PhysicalExpr>>",
+          "summary": "Returns the filter expression that will be applied *during* the file scan."
+        },
+        {
+          "name": "fmt_extra",
+          "signature": "fn fmt_extra(&self, _t: DisplayFormatType, _f: &mut Formatter<'_>) -> fmt::Result",
+          "summary": "Format FileType specific information"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+          "summary": "Return execution plan metrics"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+          "summary": "Return the projection that will be applied to the output stream on top of [`Self::table_schema`]."
+        },
+        {
+          "name": "reorder_files",
+          "signature": "fn reorder_files(&self, files: Vec<PartitionedFile>) -> Vec<PartitionedFile>",
+          "summary": "Reorder files in the shared work queue to optimize query performance."
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, repartition_file_min_size: usize, output_ordering: Option<LexOrdering>, config: &FileScanConfig) -> Result<Option<FileScanConfig>>",
+          "summary": "If supported by the [`FileSource`], redistribute files across partitions according to their size. Allows custom file formats to implement their own repartitioning logic."
+        },
+        {
+          "name": "schema_adapter_factory",
+          "signature": "fn schema_adapter_factory(&self) -> Option<Arc<dyn SchemaAdapterFactory>>",
+          "summary": "Deprecated: Returns the current schema adapter factory if set."
+        },
+        {
+          "name": "supports_repartitioning",
+          "signature": "fn supports_repartitioning(&self) -> bool",
+          "summary": "Returns whether this file source supports repartitioning files by byte ranges."
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> &table_schema::TableSchema",
+          "summary": "Returns the table schema for the overall table (including partition columns, if any)"
+        },
+        {
+          "name": "try_pushdown_filters",
+          "signature": "fn try_pushdown_filters(&self, filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn FileSource>>>",
+          "summary": "Try to push down filters into this FileSource."
+        },
+        {
+          "name": "try_pushdown_projection",
+          "signature": "fn try_pushdown_projection(&self, _projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+          "summary": "Try to push down a projection into this FileSource."
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr], eq_properties: &EquivalenceProperties) -> Result<SortOrderPushdownResult<Arc<dyn FileSource>>>",
+          "summary": "Try to create a new FileSource that can produce data in the specified sort order."
+        },
+        {
+          "name": "try_reverse_output",
+          "signature": "fn try_reverse_output(&self, _order: &[PhysicalSortExpr], _eq_properties: &EquivalenceProperties) -> Result<SortOrderPushdownResult<Arc<dyn FileSource>>>",
+          "summary": "Deprecated: Renamed to [`Self::try_pushdown_sort`]."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, _base: &FileScanConfig, _ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "summary": "Serialize this file source into a full [`PhysicalPlanNode`] (a `DataSourceExec` wrapping the `FileScanConfig`), if it knows how."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+          "summary": "Initialize new type with batch size configuration"
+        },
+        {
+          "name": "with_schema_adapter_factory",
+          "signature": "fn with_schema_adapter_factory(&self, _factory: Arc<dyn SchemaAdapterFactory>) -> Result<Arc<dyn FileSource>>",
+          "summary": "Deprecated: Set optional schema adapter factory."
+        }
+      ]
+    }
+  ]
+}

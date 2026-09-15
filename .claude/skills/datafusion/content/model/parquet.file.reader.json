@@ -1,0 +1,186 @@
+{
+  "module": "parquet::file::reader",
+  "crate": "parquet",
+  "api": "api/parquet.file.reader.md",
+  "items": [
+    {
+      "path": "parquet::file::reader::FilePageIterator",
+      "name": "FilePageIterator",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct FilePageIterator",
+      "summary": "Implementation of page iterator for parquet file.",
+      "doc": "api/parquet.file.reader.md#filepageiterator",
+      "implements": [
+        "core::iter::traits::iterator::Iterator",
+        "parquet::column::page::PageIterator"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(column_index: usize, file_reader: Arc<dyn FileReader>) -> Result<Self>",
+          "summary": "Creates a page iterator for all row groups in file."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Box<dyn PageReader>>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "with_row_groups",
+          "signature": "fn with_row_groups(column_index: usize, row_group_indices: Box<dyn Iterator<Item = usize> + Send>, file_reader: Arc<dyn FileReader>) -> Result<Self>",
+          "summary": "Create page iterator from parquet file reader with only some row groups."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::reader::ChunkReader",
+      "name": "ChunkReader",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ChunkReader: Length + Send + Sync",
+      "summary": "Generates [`Read`]ers to read chunks of a Parquet data source.",
+      "doc": "api/parquet.file.reader.md#chunkreader",
+      "implementors": [
+        "bytes::bytes::Bytes",
+        "std::fs::File"
+      ],
+      "required_methods": [
+        "get_bytes",
+        "get_read"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self, start: u64, length: usize) -> Result<Bytes>",
+          "summary": "Get a range of data in memory as [`Bytes`]"
+        },
+        {
+          "name": "get_read",
+          "signature": "fn get_read(&self, start: u64) -> Result<Self::T>",
+          "summary": "Get a [`Read`] instance starting at the provided file offset"
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::reader::FileReader",
+      "name": "FileReader",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait FileReader: Send + Sync",
+      "summary": "Parquet file reader API. With this, user can get metadata information about the Parquet file, can get reader for each row group, and access record iterator.",
+      "doc": "api/parquet.file.reader.md#filereader",
+      "implementors": [
+        "parquet::file::serialized_reader::SerializedFileReader"
+      ],
+      "required_methods": [
+        "get_row_group",
+        "get_row_iter",
+        "metadata",
+        "num_row_groups"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_row_group",
+          "signature": "fn get_row_group(&self, i: usize) -> Result<Box<dyn RowGroupReader + '_>>",
+          "summary": "Get the `i`th row group reader. Note this doesn't do bound check."
+        },
+        {
+          "name": "get_row_iter",
+          "signature": "fn get_row_iter(&self, projection: Option<SchemaType>) -> Result<RowIter<'_>>",
+          "summary": "Get an iterator over the row in this file, see [`RowIter`] for caveats."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &ParquetMetaData",
+          "summary": "Get metadata information about this file."
+        },
+        {
+          "name": "num_row_groups",
+          "signature": "fn num_row_groups(&self) -> usize",
+          "summary": "Get the total number of row groups for this file."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::reader::Length",
+      "name": "Length",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait Length",
+      "summary": "Length should return the total number of bytes in the input source. It's mainly used to read the metadata, which is at the end of the source.",
+      "doc": "api/parquet.file.reader.md#length",
+      "implementors": [
+        "bytes::bytes::Bytes",
+        "std::fs::File"
+      ],
+      "required_methods": [
+        "len"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> u64",
+          "summary": "Returns the amount of bytes of the inner source."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::reader::RowGroupReader",
+      "name": "RowGroupReader",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait RowGroupReader: Send + Sync",
+      "summary": "Parquet row group reader API. With this, user can get metadata information about the row group, as well as readers for each individual column chunk.",
+      "doc": "api/parquet.file.reader.md#rowgroupreader",
+      "implementors": [
+        "parquet::file::serialized_reader::SerializedRowGroupReader"
+      ],
+      "required_methods": [
+        "get_column_bloom_filter",
+        "get_column_page_reader",
+        "get_row_iter",
+        "metadata",
+        "num_columns"
+      ],
+      "provided_methods": [
+        "get_column_reader"
+      ],
+      "methods": [
+        {
+          "name": "get_column_bloom_filter",
+          "signature": "fn get_column_bloom_filter(&self, i: usize) -> Option<&Sbbf>",
+          "summary": "Get bloom filter for the `i`th column chunk, if present and the reader was configured to read bloom filters."
+        },
+        {
+          "name": "get_column_page_reader",
+          "signature": "fn get_column_page_reader(&self, i: usize) -> Result<Box<dyn PageReader>>",
+          "summary": "Get page reader for the `i`th column chunk."
+        },
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(&self, i: usize) -> Result<ColumnReader>",
+          "summary": "Get value reader for the `i`th column chunk."
+        },
+        {
+          "name": "get_row_iter",
+          "signature": "fn get_row_iter(&self, projection: Option<SchemaType>) -> Result<RowIter<'_>>",
+          "summary": "Get an iterator over the row in this file, see [`RowIter`] for caveats."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &RowGroupMetaData",
+          "summary": "Get metadata information about this row group."
+        },
+        {
+          "name": "num_columns",
+          "signature": "fn num_columns(&self) -> usize",
+          "summary": "Get the total number of column chunks in this row group."
+        }
+      ]
+    }
+  ]
+}

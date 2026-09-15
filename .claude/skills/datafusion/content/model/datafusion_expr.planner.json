@@ -1,0 +1,461 @@
+{
+  "module": "datafusion_expr::planner",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.planner.md",
+  "items": [
+    {
+      "path": "datafusion_expr::planner::PlannerResult",
+      "name": "PlannerResult",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum PlannerResult<T>",
+      "summary": "Result of planning a raw expr with [`ExprPlanner`]",
+      "doc": "api/datafusion_expr.planner.md#plannerresult",
+      "variants": [
+        "Planned",
+        "Original"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::RelationPlanning",
+      "name": "RelationPlanning",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum RelationPlanning",
+      "summary": "Result of attempting to plan a relation with extension planners",
+      "doc": "api/datafusion_expr.planner.md#relationplanning",
+      "variants": [
+        "Planned",
+        "Original"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::PlannedRelation",
+      "name": "PlannedRelation",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct PlannedRelation",
+      "summary": "Result of planning a relation with [`RelationPlanner`]",
+      "doc": "api/datafusion_expr.planner.md#plannedrelation",
+      "fields": [
+        "plan",
+        "alias"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(plan: LogicalPlan, alias: Option<TableAlias>) -> Self",
+          "summary": "Create a new `PlannedRelation` with the given plan and alias"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::planner::RawAggregateExpr",
+      "name": "RawAggregateExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RawAggregateExpr",
+      "summary": "This structure is used by `AggregateFunctionPlanner` to plan operators with custom expressions.",
+      "doc": "api/datafusion_expr.planner.md#rawaggregateexpr",
+      "fields": [
+        "func",
+        "args",
+        "distinct",
+        "filter",
+        "order_by",
+        "null_treatment"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::RawBinaryExpr",
+      "name": "RawBinaryExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RawBinaryExpr",
+      "summary": "An operator with two arguments to plan",
+      "doc": "api/datafusion_expr.planner.md#rawbinaryexpr",
+      "fields": [
+        "op",
+        "left",
+        "right"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::RawDictionaryExpr",
+      "name": "RawDictionaryExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RawDictionaryExpr",
+      "summary": "A Dictionary literal expression `{ key: value, ...}`",
+      "doc": "api/datafusion_expr.planner.md#rawdictionaryexpr",
+      "fields": [
+        "keys",
+        "values"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::RawFieldAccessExpr",
+      "name": "RawFieldAccessExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RawFieldAccessExpr",
+      "summary": "An expression with GetFieldAccess to plan",
+      "doc": "api/datafusion_expr.planner.md#rawfieldaccessexpr",
+      "fields": [
+        "field_access",
+        "expr"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::RawWindowExpr",
+      "name": "RawWindowExpr",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RawWindowExpr",
+      "summary": "This structure is used by `WindowFunctionPlanner` to plan operators with custom expressions.",
+      "doc": "api/datafusion_expr.planner.md#rawwindowexpr",
+      "fields": [
+        "func_def",
+        "args",
+        "partition_by",
+        "order_by",
+        "window_frame",
+        "filter",
+        "null_treatment",
+        "distinct"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::planner::ContextProvider",
+      "name": "ContextProvider",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait ContextProvider",
+      "summary": "Provides the `SQL` query planner meta-data about tables and functions referenced in SQL statements, without a direct dependency on the `datafusion` Catalog structures such as [`TableProvider`]",
+      "doc": "api/datafusion_expr.planner.md#contextprovider",
+      "aliases": [
+        "datafusion_sql::planner::ContextProvider"
+      ],
+      "required_methods": [
+        "get_aggregate_meta",
+        "get_function_meta",
+        "get_higher_order_meta",
+        "get_table_source",
+        "get_variable_type",
+        "get_window_meta",
+        "higher_order_function_names",
+        "options",
+        "udaf_names",
+        "udf_names",
+        "udwf_names"
+      ],
+      "provided_methods": [
+        "create_cte_work_table",
+        "get_expr_planners",
+        "get_file_type",
+        "get_relation_planners",
+        "get_table_function_source",
+        "get_type_planner",
+        "get_variable_field"
+      ],
+      "methods": [
+        {
+          "name": "create_cte_work_table",
+          "signature": "fn create_cte_work_table(&self, _name: &str, _schema: SchemaRef) -> Result<Arc<dyn TableSource>>",
+          "summary": "Provides an intermediate table that is used to expose a recursive CTE self-reference during planning and execution."
+        },
+        {
+          "name": "get_aggregate_meta",
+          "signature": "fn get_aggregate_meta(&self, name: &str) -> Option<Arc<AggregateUDF>>",
+          "summary": "Return the aggregate function with a given name, if any"
+        },
+        {
+          "name": "get_expr_planners",
+          "signature": "fn get_expr_planners(&self) -> &[Arc<dyn ExprPlanner>]",
+          "summary": "Return [`ExprPlanner`] extensions for planning expressions"
+        },
+        {
+          "name": "get_file_type",
+          "signature": "fn get_file_type(&self, _ext: &str) -> Result<Arc<dyn FileType>>",
+          "summary": "Return the type of a file based on its extension (e.g. `.parquet`)"
+        },
+        {
+          "name": "get_function_meta",
+          "signature": "fn get_function_meta(&self, name: &str) -> Option<Arc<ScalarUDF>>",
+          "summary": "Return the scalar function with a given name, if any"
+        },
+        {
+          "name": "get_higher_order_meta",
+          "signature": "fn get_higher_order_meta(&self, name: &str) -> Option<Arc<HigherOrderUDF>>",
+          "summary": "Return the higher order function with a given name, if any"
+        },
+        {
+          "name": "get_relation_planners",
+          "signature": "fn get_relation_planners(&self) -> &[Arc<dyn RelationPlanner>]",
+          "summary": "Return [`RelationPlanner`] extensions for planning table factors"
+        },
+        {
+          "name": "get_table_function_source",
+          "signature": "fn get_table_function_source(&self, _name: &str, _args: Vec<Expr>) -> Result<Arc<dyn TableSource>>",
+          "summary": "Getter for a table function"
+        },
+        {
+          "name": "get_table_source",
+          "signature": "fn get_table_source(&self, name: TableReference) -> Result<Arc<dyn TableSource>>",
+          "summary": "Returns a table by reference, if it exists"
+        },
+        {
+          "name": "get_type_planner",
+          "signature": "fn get_type_planner(&self) -> Option<Arc<dyn TypePlanner>>",
+          "summary": "Return [`TypePlanner`] extensions for planning data types"
+        },
+        {
+          "name": "get_variable_field",
+          "signature": "fn get_variable_field(&self, variable_names: &[String]) -> Option<FieldRef>",
+          "summary": "Return metadata about a system/user-defined variable, if any."
+        },
+        {
+          "name": "get_variable_type",
+          "signature": "fn get_variable_type(&self, variable_names: &[String]) -> Option<DataType>",
+          "summary": "Return the system/user-defined variable type, if any"
+        },
+        {
+          "name": "get_window_meta",
+          "signature": "fn get_window_meta(&self, name: &str) -> Option<Arc<WindowUDF>>",
+          "summary": "Return the window function with a given name, if any"
+        },
+        {
+          "name": "higher_order_function_names",
+          "signature": "fn higher_order_function_names(&self) -> Vec<String>",
+          "summary": "Return all higher order function names"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &ConfigOptions",
+          "summary": "Return overall configuration options"
+        },
+        {
+          "name": "udaf_names",
+          "signature": "fn udaf_names(&self) -> Vec<String>",
+          "summary": "Return all aggregate function names"
+        },
+        {
+          "name": "udf_names",
+          "signature": "fn udf_names(&self) -> Vec<String>",
+          "summary": "Return all scalar function names"
+        },
+        {
+          "name": "udwf_names",
+          "signature": "fn udwf_names(&self) -> Vec<String>",
+          "summary": "Return all window function names"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::planner::ExprPlanner",
+      "name": "ExprPlanner",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait ExprPlanner: Debug + Send + Sync",
+      "summary": "Customize planning of SQL AST expressions to [`Expr`]s",
+      "doc": "api/datafusion_expr.planner.md#exprplanner",
+      "implementors": [
+        "datafusion_functions::core::planner::CoreFunctionPlanner",
+        "datafusion_functions::datetime::planner::DatetimeFunctionPlanner",
+        "datafusion_functions::planner::UserDefinedFunctionPlanner",
+        "datafusion_functions::unicode::planner::UnicodeFunctionPlanner",
+        "datafusion_functions_aggregate::planner::AggregateFunctionPlanner",
+        "datafusion_functions_nested::planner::FieldAccessPlanner",
+        "datafusion_functions_nested::planner::NestedFunctionPlanner",
+        "datafusion_functions_window::planner::WindowFunctionPlanner",
+        "datafusion_spark::planner::SparkFunctionPlanner"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "plan_aggregate",
+        "plan_array_literal",
+        "plan_binary_op",
+        "plan_compound_identifier",
+        "plan_dictionary_literal",
+        "plan_extract",
+        "plan_field_access",
+        "plan_make_map",
+        "plan_overlay",
+        "plan_position",
+        "plan_struct_literal",
+        "plan_substring",
+        "plan_window"
+      ],
+      "methods": [
+        {
+          "name": "plan_aggregate",
+          "signature": "fn plan_aggregate(&self, expr: RawAggregateExpr) -> Result<PlannerResult<RawAggregateExpr>>",
+          "summary": "Plans aggregate functions, such as `COUNT(<expr>)`"
+        },
+        {
+          "name": "plan_array_literal",
+          "signature": "fn plan_array_literal(&self, exprs: Vec<Expr>, _schema: &DFSchema) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plan an array literal, such as `[1, 2, 3]`"
+        },
+        {
+          "name": "plan_binary_op",
+          "signature": "fn plan_binary_op(&self, expr: RawBinaryExpr, _schema: &DFSchema) -> Result<PlannerResult<RawBinaryExpr>>",
+          "summary": "Plan the binary operation between two expressions, returns original BinaryExpr if not possible"
+        },
+        {
+          "name": "plan_compound_identifier",
+          "signature": "fn plan_compound_identifier(&self, _field: &Field, _qualifier: Option<&TableReference>, _nested_names: &[String]) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plans compound identifier such as `db.schema.table` for non-empty nested names"
+        },
+        {
+          "name": "plan_dictionary_literal",
+          "signature": "fn plan_dictionary_literal(&self, expr: RawDictionaryExpr, _schema: &DFSchema) -> Result<PlannerResult<RawDictionaryExpr>>",
+          "summary": "Plan a dictionary literal, such as `{ key: value, ...}`"
+        },
+        {
+          "name": "plan_extract",
+          "signature": "fn plan_extract(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plan an extract expression, such as`EXTRACT(month FROM foo)`"
+        },
+        {
+          "name": "plan_field_access",
+          "signature": "fn plan_field_access(&self, expr: RawFieldAccessExpr, _schema: &DFSchema) -> Result<PlannerResult<RawFieldAccessExpr>>",
+          "summary": "Plan the field access expression, such as `foo.bar`"
+        },
+        {
+          "name": "plan_make_map",
+          "signature": "fn plan_make_map(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plans a `make_map` expression, such as `make_map(key1, value1, key2, value2, ...)`"
+        },
+        {
+          "name": "plan_overlay",
+          "signature": "fn plan_overlay(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plans an overlay expression, such as `overlay(str PLACING substr FROM pos [FOR count])`"
+        },
+        {
+          "name": "plan_position",
+          "signature": "fn plan_position(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plan a `POSITION` expression, such as `POSITION(<expr> in <expr>)`"
+        },
+        {
+          "name": "plan_struct_literal",
+          "signature": "fn plan_struct_literal(&self, args: Vec<Expr>, _is_named_struct: bool) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plans a struct literal, such as  `{'field1' : expr1, 'field2' : expr2, ...}`"
+        },
+        {
+          "name": "plan_substring",
+          "signature": "fn plan_substring(&self, args: Vec<Expr>) -> Result<PlannerResult<Vec<Expr>>>",
+          "summary": "Plan an substring expression, such as `SUBSTRING(<expr> [FROM <expr>] [FOR <expr>])`"
+        },
+        {
+          "name": "plan_window",
+          "signature": "fn plan_window(&self, expr: RawWindowExpr) -> Result<PlannerResult<RawWindowExpr>>",
+          "summary": "Plans window functions, such as `COUNT(<expr>)`"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::planner::RelationPlanner",
+      "name": "RelationPlanner",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait RelationPlanner: Debug + Send + Sync",
+      "summary": "Customize planning SQL table factors to [`LogicalPlan`]s. For more background, please also see the [Extending SQL in DataFusion: from ->> to TABLESAMPLE blog]",
+      "doc": "api/datafusion_expr.planner.md#relationplanner",
+      "required_methods": [
+        "plan_relation"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "plan_relation",
+          "signature": "fn plan_relation(&self, relation: TableFactor, context: &mut dyn RelationPlannerContext) -> Result<RelationPlanning>",
+          "summary": "Plan a table factor into a [`LogicalPlan`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::planner::RelationPlannerContext",
+      "name": "RelationPlannerContext",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait RelationPlannerContext",
+      "summary": "Provides utilities for relation planners to interact with DataFusion's SQL planner.",
+      "doc": "api/datafusion_expr.planner.md#relationplannercontext",
+      "required_methods": [
+        "context_provider",
+        "normalize_ident",
+        "object_name_to_table_reference",
+        "plan",
+        "sql_expr_to_logical_expr",
+        "sql_to_expr"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "context_provider",
+          "signature": "fn context_provider(&self) -> &dyn ContextProvider",
+          "summary": "Provides access to the underlying context provider for reading session configuration, accessing tables, functions, and other metadata."
+        },
+        {
+          "name": "normalize_ident",
+          "signature": "fn normalize_ident(&self, ident: Ident) -> String",
+          "summary": "Normalizes an identifier according to session settings."
+        },
+        {
+          "name": "object_name_to_table_reference",
+          "signature": "fn object_name_to_table_reference(&self, name: ObjectName) -> Result<TableReference>",
+          "summary": "Normalizes a SQL object name into a [`TableReference`]."
+        },
+        {
+          "name": "plan",
+          "signature": "fn plan(&mut self, relation: TableFactor) -> Result<LogicalPlan>",
+          "summary": "Plans the specified relation through the full planner pipeline, starting from the first registered relation planner."
+        },
+        {
+          "name": "sql_expr_to_logical_expr",
+          "signature": "fn sql_expr_to_logical_expr(&mut self, expr: SQLExpr, schema: &DFSchema) -> Result<Expr>",
+          "summary": "Converts a SQL expression into a logical expression without DataFusion rewrites."
+        },
+        {
+          "name": "sql_to_expr",
+          "signature": "fn sql_to_expr(&mut self, expr: SQLExpr, schema: &DFSchema) -> Result<Expr>",
+          "summary": "Converts a SQL expression into a logical expression using the current planner context."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::planner::TypePlanner",
+      "name": "TypePlanner",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait TypePlanner: Debug + Send + Sync",
+      "summary": "Customize planning SQL types to DataFusion (Arrow) types. For more background, please also see the [Extending SQL in DataFusion: from ->> to TABLESAMPLE blog]",
+      "doc": "api/datafusion_expr.planner.md#typeplanner",
+      "required_methods": [],
+      "provided_methods": [
+        "plan_type",
+        "plan_type_field"
+      ],
+      "methods": [
+        {
+          "name": "plan_type",
+          "signature": "fn plan_type(&self, _sql_type: &sqlparser::ast::DataType) -> Result<Option<DataType>>",
+          "summary": "Plan SQL [`sqlparser::ast::DataType`] to DataFusion [`DataType`]"
+        },
+        {
+          "name": "plan_type_field",
+          "signature": "fn plan_type_field(&self, sql_type: &sqlparser::ast::DataType) -> Result<Option<FieldRef>>",
+          "summary": "Plan SQL [`sqlparser::ast::DataType`] to DataFusion [`FieldRef`]"
+        }
+      ]
+    }
+  ]
+}

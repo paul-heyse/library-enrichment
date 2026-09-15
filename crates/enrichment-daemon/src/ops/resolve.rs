@@ -15,6 +15,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::common;
+
 use enrichment_core::clock;
 use enrichment_core::config::Config;
 use enrichment_core::evidence::{
@@ -267,11 +269,9 @@ pub(super) async fn render_retained(
         producer_runs,
         answered_from_cache: true,
     };
-    let coverage = Coverage {
-        scope: format!("retained evidence for {} {} and its exact environment", release.key.package, release.key.version),
-        indexed: manifest.indexed.iter().map(|k| k.as_str().into()).collect(), missing: manifest.missing.iter().map(|k| k.as_str().into()).collect(),
-        limitations: vec!["Exact validated evidence is retained without age-based expiry. This call did not consult the mutable registry; freshness=revalidate checks it.".into()],
-    };
+    let mut coverage = reader.assess_acquisition().await?;
+    let complete = coverage.complete();
+    coverage.limitations.push("Exact validated evidence is retained without age-based expiry. This call did not consult the mutable registry; freshness=revalidate checks it.".into());
     let result = Research {
         summary: format!(
             "{} {}: retained evidence from {}",
@@ -299,7 +299,7 @@ pub(super) async fn render_retained(
             .filter_map(|a| super::common::handle_for(a, "Retained acquisition evidence".into()))
             .collect(),
     };
-    Ok(if data.gaps.is_empty() {
+    Ok(if complete {
         result.ok()
     } else {
         result.partial()
@@ -320,7 +320,7 @@ pub(super) async fn replay_selected(
     }
     let catalog = match service.repository.catalog.pin().await {
         Ok(value) => value,
-        Err(e) => return Some(super::common::store_error(&e)),
+        Err(e) => return Some(super::common::operation_error(&e, "acquisition_storage")),
     };
     let recorded = match catalog
         .find_release(
@@ -334,7 +334,7 @@ pub(super) async fn replay_selected(
     {
         Ok(Some(value)) => value,
         Ok(None) => return None,
-        Err(e) => return Some(super::common::store_error(&e)),
+        Err(e) => return Some(super::common::operation_error(&e, "acquisition_storage")),
     };
     if recorded.release_id != selected.release_id {
         return None;
@@ -409,15 +409,23 @@ pub(super) async fn replay_selected(
         .await
         {
             Ok(manifest) => manifest,
-            Err(e) => return Some(super::common::store_error(&std::io::Error::other(e))),
+            Err(e) => {
+                return Some(super::common::operation_error(
+                    &std::io::Error::other(e),
+                    "acquisition_storage",
+                ));
+            }
         };
         let work = acquisition.work?;
         return Some(match work.committed.get() {
             Some((_, snapshot, result)) if snapshot == manifest.snapshot_id.as_str() => {
                 result.clone()
             }
-            _ => super::common::store_error(
-                &"selected resolution has no prepared committed delivery",
+            _ => envelope::error(
+                ErrorCode::InternalError,
+                "Selected resolution has no prepared committed delivery",
+                "Report the request correlation and missing committed delivery; retry is not a demonstrated repair.",
+                false,
             ),
         });
     }
@@ -946,7 +954,7 @@ pub(super) async fn acquire(
         &index_url,
     ) {
         Ok(a) => a,
-        Err(err) => return store_error(&err),
+        Err(err) => return common::operation_error(&err, "acquisition_storage"),
     };
     let line_no = entries
         .iter()
@@ -1101,7 +1109,7 @@ pub(super) async fn acquire(
                                 }),
                             }
                         }
-                        Err(err) => return store_error(&err),
+                        Err(err) => return common::operation_error(&err, "acquisition_storage"),
                     }
                 }
             }
@@ -1232,7 +1240,9 @@ pub(super) async fn acquire(
                                 }
                                 (HostedJsonState::Available, Some(format_version))
                             }
-                            Err(err) => return store_error(&err),
+                            Err(err) => {
+                                return common::operation_error(&err, "acquisition_storage");
+                            }
                         }
                     }
                     Ok(HostedJson::Unsupported {
@@ -1328,13 +1338,15 @@ pub(super) async fn acquire(
                             None,
                         ) {
                             Ok(value) => value,
-                            Err(e) => return store_error(&e),
+                            Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
                         let provenance = match serde_json::to_vec(
                             &serde_json::json!({"environment":built.environment,"rustc":built.rustc_identity,"producer": "local-rustdoc/2", "format_version":built.format_version,"image_id":built.image_id,"containment_identity":built.containment_identity}),
                         ) {
                             Ok(value) => value,
-                            Err(e) => return super::common::store_error(&e),
+                            Err(e) => {
+                                return super::common::operation_error(&e, "acquisition_storage");
+                            }
                         };
                         let configuration = match acq.store_bytes(
                             &provenance,
@@ -1344,12 +1356,14 @@ pub(super) async fn acquire(
                             None,
                         ) {
                             Ok(value) => value,
-                            Err(e) => return store_error(&e),
+                            Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
                         let attempt_id = uuid::Uuid::new_v4().to_string();
                         let receipt_bytes = match serde_json::to_vec(&built.observations) {
                             Ok(value) => value,
-                            Err(e) => return super::common::store_error(&e),
+                            Err(e) => {
+                                return super::common::operation_error(&e, "acquisition_storage");
+                            }
                         };
                         let receipt = match acq.store_bytes(
                             &receipt_bytes,
@@ -1359,7 +1373,7 @@ pub(super) async fn acquire(
                             None,
                         ) {
                             Ok(value) => value,
-                            Err(e) => return store_error(&e),
+                            Err(e) => return common::operation_error(&e, "acquisition_storage"),
                         };
                         acq.receipt_ids.insert(receipt.artifact_id.clone());
                         acq.runs.push(ProducerRun {
@@ -1459,6 +1473,8 @@ pub(super) async fn acquire(
     }
     let summary = summarize(&release, &upstream, hosted_state.0, None);
     let coverage = Coverage {
+        details: None,
+        assessments: Vec::new(),
         scope: format!(
             "release identity, registry metadata, crate source, hosted documentation and the \
              normalized public API of {} {}",
@@ -1931,15 +1947,6 @@ fn selection_error(err: SelectionError) -> Envelope {
         _ => "Check the crate name and version on crates.io.".to_owned(),
     };
     envelope::error(ErrorCode::VersionNotFound, err.to_string(), next, false)
-}
-
-fn store_error(err: &std::io::Error) -> Envelope {
-    envelope::error(
-        ErrorCode::ArtifactUnavailable,
-        format!("service state could not be written: {err}"),
-        "Check that the service data directory is writable; see `library-enrichmentd status`.",
-        true,
-    )
 }
 
 /// Extract the tarball under the cache root and read its manifest.

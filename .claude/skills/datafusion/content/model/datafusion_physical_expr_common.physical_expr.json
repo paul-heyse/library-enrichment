@@ -1,0 +1,256 @@
+{
+  "module": "datafusion_physical_expr_common::physical_expr",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.physical_expr.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::fmt_sql",
+      "name": "fmt_sql",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn fmt_sql(expr: &dyn PhysicalExpr) -> impl Display + '_",
+      "summary": "Prints a [`PhysicalExpr`] in a SQL-like format",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#fmt_sql"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::format_physical_expr_list",
+      "name": "format_physical_expr_list",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn format_physical_expr_list<T>(exprs: T) -> impl Display where T: IntoIterator, T::Item: Display, T::IntoIter: Clone",
+      "summary": "Returns [`Display`] able a list of [`PhysicalExpr`]",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#format_physical_expr_list"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::is_dynamic_physical_expr",
+      "name": "is_dynamic_physical_expr",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn is_dynamic_physical_expr(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool",
+      "summary": "Check if the given `PhysicalExpr` is dynamic. Internally this calls [`snapshot_generation`] to check if the generation is non-zero, any dynamic `PhysicalExpr` should have a non-zero generation.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#is_dynamic_physical_expr",
+      "deprecated": "since 55.0.0: Downcast to `DynamicFilterPhysicalExpr`, or use `DynamicFilterTracking::classify(expr).contains_dynamic_filter()` from `datafusion_physical_expr`"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::is_volatile",
+      "name": "is_volatile",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn is_volatile(expr: &std::sync::Arc<dyn PhysicalExpr>) -> bool",
+      "summary": "Returns true if the expression is volatile, i.e. whether it can return different results when evaluated multiple times with the same input.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#is_volatile"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::snapshot_generation",
+      "name": "snapshot_generation",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn snapshot_generation(expr: &std::sync::Arc<dyn PhysicalExpr>) -> u64",
+      "summary": "Check the generation of this `PhysicalExpr`. Dynamic `PhysicalExpr`s may have a generation that is incremented every time the state of the `PhysicalExpr` changes. If the generation changes that means this `PhysicalExpr` or one of its child…",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#snapshot_generation"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::snapshot_physical_expr",
+      "name": "snapshot_physical_expr",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn snapshot_physical_expr(expr: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>",
+      "summary": "Take a snapshot of the given `PhysicalExpr` if it is dynamic.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#snapshot_physical_expr"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::snapshot_physical_expr_opt",
+      "name": "snapshot_physical_expr_opt",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn snapshot_physical_expr_opt(expr: std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn PhysicalExpr>>>",
+      "summary": "Take a snapshot of the given `PhysicalExpr` if it is dynamic.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#snapshot_physical_expr_opt"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::with_new_children_if_necessary",
+      "name": "with_new_children_if_necessary",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn with_new_children_if_necessary(expr: std::sync::Arc<dyn PhysicalExpr>, children: Vec<std::sync::Arc<dyn PhysicalExpr>>) -> datafusion_common::Result<std::sync::Arc<dyn PhysicalExpr>>",
+      "summary": "Returns a copy of this expr if we change any child according to the pointer comparison. The size of `children` must be equal to the size of `PhysicalExpr::children()`.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#with_new_children_if_necessary"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::PhysicalExpr",
+      "name": "PhysicalExpr",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "trait PhysicalExpr: Any + Send + Sync + Display + Debug + DynEq + DynHash",
+      "summary": "[`PhysicalExpr`]s represent expressions such as `A + 1` or `CAST(c1 AS int)`.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#physicalexpr",
+      "aliases": [
+        "datafusion::physical_expr::PhysicalExpr",
+        "datafusion::physical_plan::PhysicalExpr",
+        "datafusion_physical_expr::PhysicalExpr",
+        "datafusion_physical_plan::PhysicalExpr",
+        "datafusion_physical_plan::execution_plan::PhysicalExpr"
+      ],
+      "implementors": [
+        "datafusion_ffi::physical_expr::ForeignPhysicalExpr",
+        "datafusion_physical_expr::async_scalar_function::AsyncFuncExpr",
+        "datafusion_physical_expr::expressions::binary::BinaryExpr",
+        "datafusion_physical_expr::expressions::case::CaseExpr",
+        "datafusion_physical_expr::expressions::cast::CastExpr",
+        "datafusion_physical_expr::expressions::column::Column",
+        "datafusion_physical_expr::expressions::dynamic_filters::DynamicFilterPhysicalExpr",
+        "datafusion_physical_expr::expressions::in_list::InListExpr",
+        "datafusion_physical_expr::expressions::is_not_null::IsNotNullExpr",
+        "datafusion_physical_expr::expressions::is_null::IsNullExpr",
+        "datafusion_physical_expr::expressions::lambda::LambdaExpr",
+        "datafusion_physical_expr::expressions::lambda_variable::LambdaVariable",
+        "datafusion_physical_expr::expressions::like::LikeExpr",
+        "datafusion_physical_expr::expressions::literal::Literal",
+        "datafusion_physical_expr::expressions::negative::NegativeExpr",
+        "datafusion_physical_expr::expressions::no_op::NoOp",
+        "datafusion_physical_expr::expressions::not::NotExpr",
+        "datafusion_physical_expr::expressions::try_cast::TryCastExpr",
+        "datafusion_physical_expr::expressions::unknown_column::UnKnownColumn",
+        "datafusion_physical_expr::higher_order_function::HigherOrderFunctionExpr",
+        "datafusion_physical_expr::scalar_function::ScalarFunctionExpr",
+        "datafusion_physical_expr::scalar_subquery::ScalarSubqueryExpr",
+        "datafusion_physical_plan::joins::hash_join::partitioned_hash_eval::HashExpr",
+        "datafusion_physical_plan::joins::hash_join::partitioned_hash_eval::HashTableLookupExpr",
+        "datafusion_physical_plan::repartition::RangeExpr"
+      ],
+      "required_methods": [
+        "children",
+        "evaluate",
+        "fmt_sql",
+        "with_new_children"
+      ],
+      "provided_methods": [
+        "data_type",
+        "evaluate_bounds",
+        "evaluate_selection",
+        "evaluate_statistics",
+        "expression_id",
+        "get_properties",
+        "is_volatile_node",
+        "nullable",
+        "placement",
+        "propagate_constraints",
+        "propagate_statistics",
+        "return_field",
+        "snapshot",
+        "snapshot_generation",
+        "try_to_proto"
+      ],
+      "methods": [
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn PhysicalExpr>>",
+          "summary": "Get a list of child PhysicalExpr that provide the input for this expr."
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self, input_schema: &Schema) -> Result<DataType>",
+          "summary": "Get the data type of this expression, given the schema of the input. Returns an error if the data type cannot be determined, ex. if the schema is missing a required field."
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &RecordBatch) -> Result<ColumnarValue>",
+          "summary": "Evaluate an expression against a RecordBatch"
+        },
+        {
+          "name": "evaluate_bounds",
+          "signature": "fn evaluate_bounds(&self, _children: &[&Interval]) -> Result<Interval>",
+          "summary": "Computes the output interval for the expression, given the input intervals."
+        },
+        {
+          "name": "evaluate_selection",
+          "signature": "fn evaluate_selection(&self, batch: &RecordBatch, selection: &BooleanArray) -> Result<ColumnarValue>",
+          "summary": "Evaluate an expression against a RecordBatch after first applying a validity array"
+        },
+        {
+          "name": "evaluate_statistics",
+          "signature": "fn evaluate_statistics(&self, children: &[&Distribution]) -> Result<Distribution>",
+          "summary": "Computes the output statistics for the expression, given the input statistics."
+        },
+        {
+          "name": "expression_id",
+          "signature": "fn expression_id(&self) -> Option<u64>",
+          "summary": "Return a stable, globally-unique identifier for this [`PhysicalExpr`], if it has one."
+        },
+        {
+          "name": "fmt_sql",
+          "signature": "fn fmt_sql(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "summary": "Format this `PhysicalExpr` in nice human readable \"SQL\" format"
+        },
+        {
+          "name": "get_properties",
+          "signature": "fn get_properties(&self, _children: &[ExprProperties]) -> Result<ExprProperties>",
+          "summary": "Calculates the properties of this [`PhysicalExpr`] based on its children's properties (i.e. order and range), recursively aggregating the information from its children. In cases where the [`PhysicalExpr`] has no children (e.g., `Literal` o…"
+        },
+        {
+          "name": "is_volatile_node",
+          "signature": "fn is_volatile_node(&self) -> bool",
+          "summary": "Returns true if the expression node is volatile, i.e. whether it can return different results when evaluated multiple times with the same input."
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self, input_schema: &Schema) -> Result<bool>",
+          "summary": "Determine whether this expression is nullable, given the schema of the input"
+        },
+        {
+          "name": "placement",
+          "signature": "fn placement(&self) -> ExpressionPlacement",
+          "summary": "Returns placement information for this expression."
+        },
+        {
+          "name": "propagate_constraints",
+          "signature": "fn propagate_constraints(&self, _interval: &Interval, _children: &[&Interval]) -> Result<Option<Vec<Interval>>>",
+          "summary": "Updates bounds for child expressions, given a known interval for this expression."
+        },
+        {
+          "name": "propagate_statistics",
+          "signature": "fn propagate_statistics(&self, parent: &Distribution, children: &[&Distribution]) -> Result<Option<Vec<Distribution>>>",
+          "summary": "Updates children statistics using the given parent statistic for this expression."
+        },
+        {
+          "name": "return_field",
+          "signature": "fn return_field(&self, input_schema: &Schema) -> Result<FieldRef>",
+          "summary": "The output field associated with this expression"
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> Result<Option<Arc<dyn PhysicalExpr>>>",
+          "summary": "Take a snapshot of this `PhysicalExpr`, if it is dynamic."
+        },
+        {
+          "name": "snapshot_generation",
+          "signature": "fn snapshot_generation(&self) -> u64",
+          "summary": "Returns the generation of this `PhysicalExpr` for snapshotting purposes. The generation is an arbitrary u64 that can be used to track changes in the state of the `PhysicalExpr` over time without having to do an exhaustive comparison. This…"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, _ctx: &proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalExprNode>>",
+          "summary": "Serialize this expression to a [`PhysicalExprNode`] proto message."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Returns a new PhysicalExpr where all children were replaced by new exprs."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::PhysicalExprRef",
+      "name": "PhysicalExprRef",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "type PhysicalExprRef = std::sync::Arc<dyn PhysicalExpr>",
+      "summary": "Shared [`PhysicalExpr`].",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.md#physicalexprref",
+      "aliases": [
+        "datafusion::physical_expr::PhysicalExprRef",
+        "datafusion_physical_expr::PhysicalExprRef"
+      ]
+    }
+  ]
+}

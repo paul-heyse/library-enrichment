@@ -1,0 +1,210 @@
+{
+  "module": "arrow_json::writer::encoder",
+  "crate": "arrow-json",
+  "api": "api/arrow_json.writer.encoder.md",
+  "items": [
+    {
+      "path": "arrow_json::writer::encoder::make_encoder",
+      "name": "make_encoder",
+      "kind": "function",
+      "crate": "arrow-json",
+      "signature": "fn make_encoder<'a>(field: &'a arrow_schema::FieldRef, array: &'a dyn Array, options: &'a EncoderOptions) -> Result<NullableEncoder<'a>, arrow_schema::ArrowError>",
+      "summary": "Creates an encoder for the given array and field.",
+      "doc": "api/arrow_json.writer.encoder.md#make_encoder",
+      "aliases": [
+        "arrow_json::writer::make_encoder"
+      ]
+    },
+    {
+      "path": "arrow_json::writer::encoder::EncoderOptions",
+      "name": "EncoderOptions",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct EncoderOptions",
+      "summary": "Configuration options for the JSON encoder.",
+      "doc": "api/arrow_json.writer.encoder.md#encoderoptions",
+      "aliases": [
+        "arrow::json::EncoderOptions",
+        "arrow_json::EncoderOptions",
+        "arrow_json::writer::EncoderOptions"
+      ],
+      "methods": [
+        {
+          "name": "date_format",
+          "signature": "fn date_format(&self) -> Option<&str>",
+          "summary": "Get the JSON file's date format if set, defaults to RFC3339"
+        },
+        {
+          "name": "datetime_format",
+          "signature": "fn datetime_format(&self) -> Option<&str>",
+          "summary": "Get the JSON file's datetime format if set, defaults to RFC3339"
+        },
+        {
+          "name": "encoder_factory",
+          "signature": "fn encoder_factory(&self) -> Option<&Arc<dyn EncoderFactory>>",
+          "summary": "Get the optional hook for customizing encoding behavior."
+        },
+        {
+          "name": "explicit_nulls",
+          "signature": "fn explicit_nulls(&self) -> bool",
+          "summary": "Get whether to include nulls in the output or elide them."
+        },
+        {
+          "name": "struct_mode",
+          "signature": "fn struct_mode(&self) -> StructMode",
+          "summary": "Get whether to encode structs as JSON objects or JSON arrays of their values."
+        },
+        {
+          "name": "time_format",
+          "signature": "fn time_format(&self) -> Option<&str>",
+          "summary": "Get the JSON file's datetime time if set, defaults to RFC3339"
+        },
+        {
+          "name": "timestamp_format",
+          "signature": "fn timestamp_format(&self) -> Option<&str>",
+          "summary": "Get the JSON file's timestamp format if set, defaults to RFC3339"
+        },
+        {
+          "name": "timestamp_tz_format",
+          "signature": "fn timestamp_tz_format(&self) -> Option<&str>",
+          "summary": "Get the JSON file's timestamp tz format if set, defaults to RFC3339"
+        },
+        {
+          "name": "with_date_format",
+          "signature": "fn with_date_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's date format"
+        },
+        {
+          "name": "with_datetime_format",
+          "signature": "fn with_datetime_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's datetime format"
+        },
+        {
+          "name": "with_encoder_factory",
+          "signature": "fn with_encoder_factory(self, encoder_factory: Arc<dyn EncoderFactory>) -> Self",
+          "summary": "Set an optional hook for customizing encoding behavior."
+        },
+        {
+          "name": "with_explicit_nulls",
+          "signature": "fn with_explicit_nulls(self, explicit_nulls: bool) -> Self",
+          "summary": "Set whether to include nulls in the output or elide them."
+        },
+        {
+          "name": "with_struct_mode",
+          "signature": "fn with_struct_mode(self, struct_mode: StructMode) -> Self",
+          "summary": "Set whether to encode structs as JSON objects or JSON arrays of their values."
+        },
+        {
+          "name": "with_time_format",
+          "signature": "fn with_time_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's time format"
+        },
+        {
+          "name": "with_timestamp_format",
+          "signature": "fn with_timestamp_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's timestamp format"
+        },
+        {
+          "name": "with_timestamp_tz_format",
+          "signature": "fn with_timestamp_tz_format(self, tz_format: String) -> Self",
+          "summary": "Set the JSON file's timestamp tz format"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::encoder::NullableEncoder",
+      "name": "NullableEncoder",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct NullableEncoder<'a>",
+      "summary": "An encoder + a null buffer. This is packaged together into a wrapper struct to minimize dynamic dispatch for null checks.",
+      "doc": "api/arrow_json.writer.encoder.md#nullableencoder",
+      "aliases": [
+        "arrow_json::writer::NullableEncoder"
+      ],
+      "implements": [
+        "arrow_json::writer::encoder::Encoder"
+      ],
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&mut self, idx: usize, out: &mut Vec<u8>)",
+          "summary": "Encode the value at index `idx` to `out`."
+        },
+        {
+          "name": "encode",
+          "signature": "fn encode(&mut self, idx: usize, out: &mut Vec<u8>)",
+          "via_trait": "arrow_json::writer::encoder::Encoder"
+        },
+        {
+          "name": "has_nulls",
+          "signature": "fn has_nulls(&self) -> bool",
+          "summary": "Returns whether the encoder has any nulls."
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, idx: usize) -> bool",
+          "summary": "Returns whether the value at index `idx` is null."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(encoder: Box<dyn Encoder + 'a>, nulls: Option<NullBuffer>) -> Self",
+          "summary": "Create a new encoder with a null buffer."
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::encoder::Encoder",
+      "name": "Encoder",
+      "kind": "trait",
+      "crate": "arrow-json",
+      "signature": "trait Encoder",
+      "summary": "A trait to format array values as JSON values",
+      "doc": "api/arrow_json.writer.encoder.md#encoder",
+      "aliases": [
+        "arrow::json::Encoder",
+        "arrow_json::Encoder",
+        "arrow_json::writer::Encoder"
+      ],
+      "implementors": [
+        "arrow_json::writer::encoder::NullableEncoder"
+      ],
+      "required_methods": [
+        "encode"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&mut self, idx: usize, out: &mut Vec<u8>)",
+          "summary": "Encode the non-null value at index `idx` to `out`."
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::encoder::EncoderFactory",
+      "name": "EncoderFactory",
+      "kind": "trait",
+      "crate": "arrow-json",
+      "signature": "trait EncoderFactory: std::fmt::Debug + Send + Sync",
+      "summary": "A trait to create custom encoders for specific data types.",
+      "doc": "api/arrow_json.writer.encoder.md#encoderfactory",
+      "aliases": [
+        "arrow::json::EncoderFactory",
+        "arrow_json::EncoderFactory",
+        "arrow_json::writer::EncoderFactory"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "make_default_encoder"
+      ],
+      "methods": [
+        {
+          "name": "make_default_encoder",
+          "signature": "fn make_default_encoder<'a>(&self, _field: &'a FieldRef, _array: &'a dyn Array, _options: &'a EncoderOptions) -> Result<Option<NullableEncoder<'a>>, ArrowError>",
+          "summary": "Make an encoder that overrides the default encoder for a specific field and array or provides an encoder for a custom data type. This can be used to override how e.g. binary data is encoded so that it is an encoded string or an array of in…"
+        }
+      ]
+    }
+  ]
+}

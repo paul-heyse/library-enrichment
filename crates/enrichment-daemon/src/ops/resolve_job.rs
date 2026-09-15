@@ -51,7 +51,7 @@ pub(super) async fn cancelled(cancel: &AtomicBool) {
 pub(super) async fn submit(service: &Service, request: ResolveRequest) -> Envelope {
     let (record, token, new) = match subscribe(service, request) {
         Ok(v) => v,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "resolve_job"),
     };
     delivery(service, record, token, new).await
 }
@@ -71,7 +71,19 @@ pub(super) fn subscribe(
         let service = service.clone();
         let id = record.job_id.clone();
         tokio::spawn(async move {
-            if let Err(e) = run(&service, &id, request).await {
+            if let Err(e) = service
+                .repository
+                .runtime
+                .job_operation(
+                    id.clone(),
+                    service.operation_descriptor("library.resolve", &request),
+                    std::time::Duration::from_secs(
+                        service.config.network.acquisition_timeout_seconds,
+                    ),
+                    run(&service, &id, request),
+                )
+                .await
+            {
                 // Journal errors and unresolved cleanup remain visible; never report completion.
                 eprintln!("acquisition job {id}: {e}");
             }
@@ -95,9 +107,10 @@ async fn delivery(
     {
         Ok(record) if jobs::terminal(record.state) => {
             let Some(mut result) = record.result else {
-                return common::store_error(&io::Error::other(
-                    "terminal acquisition lacks its result",
-                ));
+                return common::operation_error(
+                    &io::Error::other("terminal acquisition lacks its result"),
+                    "resolve_job",
+                );
             };
             if !new {
                 result
@@ -117,7 +130,7 @@ async fn delivery(
             }
             result
         }
-        Err(e) => common::store_error(&e),
+        Err(e) => common::operation_error(&e, "resolve_job"),
     }
 }
 async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result<()> {
@@ -286,7 +299,7 @@ pub(super) fn prepare(
         result_artifact_id: result.artifact_id.clone(),
     };
     let receipt = Receipt {
-        format: "resolution-attempt/1".into(),
+        format: "resolution-attempt/2".into(),
         job_id: work.id.clone(),
         request: work.request.clone(),
         stage: stage.clone(),
@@ -301,7 +314,7 @@ pub(super) fn prepare(
             &bytes,
             ArtifactKind::Other,
             "application/json",
-            "producer:resolution-attempt/1",
+            "producer:resolution-attempt/2",
             None,
         )
         .map_err(|e| e.to_string())?;
@@ -376,7 +389,7 @@ pub(super) fn prepare(
         .map_err(|e| e.to_string())?;
     let (prepare_delivery, delivery) = crate::delivery::prepare_job(
         acq.service.blobs.clone(),
-        move |manifest| {
+        move |manifest, coverage| {
             let mut result = template.clone();
             result.context_id = Some(manifest.context_id.to_string());
             result.snapshot_id = Some(manifest.snapshot_id.to_string());
@@ -400,14 +413,10 @@ pub(super) fn prepare(
                     published_at: manifest.published_at.clone(),
                 })?,
             );
-            result
-                .coverage
-                .indexed
-                .extend(manifest.indexed.iter().map(|kind| kind.as_str().to_owned()));
-            result
-                .coverage
-                .missing
-                .extend(manifest.missing.iter().map(|kind| kind.as_str().to_owned()));
+            let mut coverage = coverage.clone();
+            coverage.limitations.extend(result.coverage.limitations);
+            let complete = coverage.complete();
+            result.coverage = coverage;
             Ok(Envelope::new(
                 enrichment_core::wire::EnvelopeBody {
                     request_id: result.request_id,
@@ -419,9 +428,9 @@ pub(super) fn prepare(
                     freshness: result.freshness,
                     evidence: result.evidence,
                     artifacts: result.artifacts,
-                    pagination: result.pagination,
+                    delivery: result.delivery,
                 },
-                if state == JobState::Partial {
+                if !complete {
                     Outcome::Partial { job: None }
                 } else {
                     Outcome::Ok { job: None }
@@ -505,7 +514,7 @@ pub(super) async fn recover(
     let receipt: Receipt = blobs.read_json(log, 1024 * 1024)?;
     let mut expected_run = attempt.run.clone();
     expected_run.log = None;
-    if receipt.format != "resolution-attempt/1"
+    if receipt.format != "resolution-attempt/2"
         || receipt.job_id != record.job_id
         || receipt.request != *request
         || receipt.stage != *stage

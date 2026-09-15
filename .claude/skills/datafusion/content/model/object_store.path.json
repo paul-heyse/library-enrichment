@@ -1,0 +1,181 @@
+{
+  "module": "object_store::path",
+  "crate": "object_store",
+  "api": "api/object_store.path.md",
+  "items": [
+    {
+      "path": "object_store::path::DELIMITER",
+      "name": "DELIMITER",
+      "kind": "constant",
+      "crate": "object_store",
+      "signature": "const DELIMITER: &str = \"/\"",
+      "summary": "The delimiter to separate object namespaces, creating a directory structure.",
+      "doc": "api/object_store.path.md#delimiter"
+    },
+    {
+      "path": "object_store::path::DELIMITER_BYTE",
+      "name": "DELIMITER_BYTE",
+      "kind": "constant",
+      "crate": "object_store",
+      "signature": "const DELIMITER_BYTE: u8 = _",
+      "summary": "The path delimiter as a single byte",
+      "doc": "api/object_store.path.md#delimiter_byte"
+    },
+    {
+      "path": "object_store::path::DELIMITER_CHAR",
+      "name": "DELIMITER_CHAR",
+      "kind": "constant",
+      "crate": "object_store",
+      "signature": "const DELIMITER_CHAR: char = _",
+      "summary": "The path delimiter as a single char",
+      "doc": "api/object_store.path.md#delimiter_char"
+    },
+    {
+      "path": "object_store::path::Error",
+      "name": "Error",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum Error",
+      "summary": "Error returned by [`Path::parse`]",
+      "doc": "api/object_store.path.md#error",
+      "variants": [
+        "EmptySegment",
+        "BadSegment",
+        "Canonicalize",
+        "InvalidPath",
+        "NonUnicode",
+        "PrefixMismatch"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "object_store::path::Path",
+      "name": "Path",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct Path",
+      "summary": "A parsed path representation that can be safely written to object storage",
+      "doc": "api/object_store.path.md#path",
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "datafusion_execution::cache::CacheKey"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "child",
+          "signature": "fn child<'a>(&self, child: impl Into<PathPart<'a>>) -> Self",
+          "summary": "Creates a new child of this [`Path`]"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<T: IntoIterator<Item = I>>(&mut self, iter: T)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "extension",
+          "signature": "fn extension(&self) -> Option<&str>",
+          "summary": "Returns the extension of the file stored in this [`Path`], if any"
+        },
+        {
+          "name": "filename",
+          "signature": "fn filename(&self) -> Option<&str>",
+          "summary": "Returns the last path segment containing the filename stored in this [`Path`]"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(path: String) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_absolute_path",
+          "signature": "fn from_absolute_path(path: impl AsRef<std::path::Path>) -> Result<Self, Error>",
+          "summary": "Convert an absolute filesystem path to a [`Path`] relative to the filesystem root"
+        },
+        {
+          "name": "from_filesystem_path",
+          "signature": "fn from_filesystem_path(path: impl AsRef<std::path::Path>) -> Result<Self, Error>",
+          "summary": "Convert a filesystem path to a [`Path`] relative to the filesystem root"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_url_path",
+          "signature": "fn from_url_path(path: impl AsRef<str>) -> Result<Self, Error>",
+          "summary": "Parse a url encoded string as a [`Path`], returning a [`Error`] if invalid"
+        },
+        {
+          "name": "is_root",
+          "signature": "fn is_root(&self) -> bool",
+          "summary": "True if this [`Path`] points to the root of the store, equivalent to `Path::from(\"/\")`."
+        },
+        {
+          "name": "join",
+          "signature": "fn join<'a>(self, child: impl Into<PathPart<'a>>) -> Self",
+          "summary": "Appends a single path segment to this [`Path`]"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<Self>",
+          "summary": "Returns a copy of this [`Path`] with the last path segment removed"
+        },
+        {
+          "name": "parse",
+          "signature": "fn parse(path: impl AsRef<str>) -> Result<Self, Error>",
+          "summary": "Parse a string as a [`Path`], returning a [`Error`] if invalid, as defined on the docstring for [`Path`]"
+        },
+        {
+          "name": "parts",
+          "signature": "fn parts(&self) -> PathParts<'_>",
+          "summary": "Returns the [`PathPart`]s of this [`Path`]"
+        },
+        {
+          "name": "parts_count",
+          "signature": "fn parts_count(&self) -> usize",
+          "summary": "Returns the number of [`PathPart`]s in this [`Path`]"
+        },
+        {
+          "name": "prefix_match",
+          "signature": "fn prefix_match(&self, prefix: &Self) -> Option<impl Iterator<Item = PathPart<'_>> + '_>",
+          "summary": "Returns an iterator of the [`PathPart`] of this [`Path`] after `prefix`"
+        },
+        {
+          "name": "prefix_matches",
+          "signature": "fn prefix_matches(&self, prefix: &Self) -> bool",
+          "summary": "Returns true if this [`Path`] starts with `prefix`"
+        }
+      ]
+    }
+  ]
+}

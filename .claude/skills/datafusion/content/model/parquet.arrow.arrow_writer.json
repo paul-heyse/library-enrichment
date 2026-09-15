@@ -1,0 +1,287 @@
+{
+  "module": "parquet::arrow::arrow_writer",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.arrow_writer.md",
+  "items": [
+    {
+      "path": "parquet::arrow::arrow_writer::compute_leaves",
+      "name": "compute_leaves",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn compute_leaves(field: &arrow_schema::Field, array: &arrow_array::ArrayRef) -> errors::Result<Vec<ArrowLeafColumn>>",
+      "summary": "Computes the [`ArrowLeafColumn`] for a potentially nested [`ArrayRef`]",
+      "doc": "api/parquet.arrow.arrow_writer.md#compute_leaves"
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::get_column_writers",
+      "name": "get_column_writers",
+      "kind": "function",
+      "crate": "parquet",
+      "signature": "fn get_column_writers(parquet: &schema::types::SchemaDescriptor, props: &file::properties::WriterPropertiesPtr, arrow: &arrow_schema::SchemaRef) -> errors::Result<Vec<ArrowColumnWriter>>",
+      "summary": "Returns [`ArrowColumnWriter`]s for each column in a given schema",
+      "doc": "api/parquet.arrow.arrow_writer.md#get_column_writers",
+      "deprecated": "since 57.0.0: Use `ArrowRowGroupWriterFactory` instead"
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowColumnChunk",
+      "name": "ArrowColumnChunk",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowColumnChunk",
+      "summary": "The data for a single column chunk, see [`ArrowColumnWriter`]",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowcolumnchunk",
+      "methods": [
+        {
+          "name": "append_to_row_group",
+          "signature": "fn append_to_row_group<W: Write + Send>(self, writer: &mut SerializedRowGroupWriter<'_, W>) -> Result<()>",
+          "summary": "Splices this column's buffered pages into the row group, streaming them back out of the [`PageStore`] one page at a time."
+        },
+        {
+          "name": "close",
+          "signature": "fn close(&self) -> &ColumnCloseResult",
+          "summary": "Returns the [`ColumnCloseResult`] produced when the chunk was closed."
+        },
+        {
+          "name": "close_mut",
+          "signature": "fn close_mut(&mut self) -> &mut ColumnCloseResult",
+          "summary": "Returns a mutable reference to the [`ColumnCloseResult`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowColumnWriter",
+      "name": "ArrowColumnWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowColumnWriter",
+      "summary": "Encodes [`ArrowLeafColumn`] to [`ArrowColumnChunk`]",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowcolumnwriter",
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<ArrowColumnChunk>",
+          "summary": "Close this column returning the written [`ArrowColumnChunk`]"
+        },
+        {
+          "name": "get_estimated_total_bytes",
+          "signature": "fn get_estimated_total_bytes(&self) -> usize",
+          "summary": "Returns the estimated total encoded bytes for this column writer."
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "summary": "Returns the estimated total memory usage by the writer."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, col: &ArrowLeafColumn) -> Result<()>",
+          "summary": "Write an [`ArrowLeafColumn`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowLeafColumn",
+      "name": "ArrowLeafColumn",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowLeafColumn",
+      "summary": "A leaf column that can be encoded by [`ArrowColumnWriter`]",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowleafcolumn",
+      "methods": []
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowRowGroupWriterFactory",
+      "name": "ArrowRowGroupWriterFactory",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowRowGroupWriterFactory",
+      "summary": "Factory that creates new column writers for each row group in the Parquet file.",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowrowgroupwriterfactory",
+      "methods": [
+        {
+          "name": "create_column_writers",
+          "signature": "fn create_column_writers(&self, row_group_index: usize) -> Result<Vec<ArrowColumnWriter>>",
+          "summary": "Create column writers for a new row group, with the given row group index"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<W: Write + Send>(file_writer: &SerializedFileWriter<W>, arrow_schema: SchemaRef) -> Self",
+          "summary": "Create a new [`ArrowRowGroupWriterFactory`] for the provided file writer and Arrow schema"
+        },
+        {
+          "name": "with_page_store_factory",
+          "signature": "fn with_page_store_factory(self, page_store_factory: Arc<dyn PageStoreFactory>) -> Self",
+          "summary": "Set the [`PageStoreFactory`] used to allocate the buffer for each column chunk, e.g. to spill completed pages to a temp file or object storage instead of the heap. Defaults to [`InMemoryPageStoreFactory`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowWriter",
+      "name": "ArrowWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowWriter<W: Write>",
+      "summary": "Encodes [`RecordBatch`] to parquet",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowwriter",
+      "aliases": [
+        "parquet::arrow::ArrowWriter"
+      ],
+      "implements": [
+        "arrow_array::record_batch::RecordBatchWriter"
+      ],
+      "methods": [
+        {
+          "name": "append_key_value_metadata",
+          "signature": "fn append_key_value_metadata(&mut self, kv_metadata: KeyValue)",
+          "summary": "Additional [`KeyValue`] metadata to be written in addition to those from [`WriterProperties`]"
+        },
+        {
+          "name": "append_row_group",
+          "signature": "fn append_row_group(&mut self, chunks: Vec<ArrowColumnChunk>) -> Result<()>",
+          "summary": "Append the given column chunks to the file as a new row group."
+        },
+        {
+          "name": "bytes_written",
+          "signature": "fn bytes_written(&self) -> usize",
+          "summary": "Returns the number of bytes written by this instance"
+        },
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<ParquetMetaData>",
+          "summary": "Close and finalize the underlying Parquet writer"
+        },
+        {
+          "name": "close",
+          "signature": "fn close(self) -> std::result::Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<ParquetMetaData>",
+          "summary": "Close and finalize the underlying Parquet writer"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<()>",
+          "summary": "Flushes all buffered rows into a new row group"
+        },
+        {
+          "name": "flushed_row_groups",
+          "signature": "fn flushed_row_groups(&self) -> &[RowGroupMetaData]",
+          "summary": "Returns metadata for any flushed row groups"
+        },
+        {
+          "name": "get_column_writers",
+          "signature": "fn get_column_writers(&mut self) -> Result<Vec<ArrowColumnWriter>>",
+          "summary": "Create a new row group writer and return its column writers."
+        },
+        {
+          "name": "in_progress_rows",
+          "signature": "fn in_progress_rows(&self) -> usize",
+          "summary": "Returns the number of rows buffered in the in progress row group"
+        },
+        {
+          "name": "in_progress_size",
+          "signature": "fn in_progress_size(&self) -> usize",
+          "summary": "Anticipated encoded size of the in progress row group."
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &W",
+          "summary": "Returns a reference to the underlying writer."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut W",
+          "summary": "Returns a mutable reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Result<W>",
+          "summary": "Flushes any outstanding data and returns the underlying writer."
+        },
+        {
+          "name": "into_serialized_writer",
+          "signature": "fn into_serialized_writer(self) -> Result<(SerializedFileWriter<W>, ArrowRowGroupWriterFactory)>",
+          "summary": "Converts this writer into a lower-level [`SerializedFileWriter`] and [`ArrowRowGroupWriterFactory`]."
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "summary": "Estimated memory usage, in bytes, of this `ArrowWriter`"
+        },
+        {
+          "name": "sync",
+          "signature": "fn sync(&mut self) -> std::io::Result<()>",
+          "summary": "Flushes underlying writer"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(writer: W, arrow_schema: SchemaRef, props: Option<WriterProperties>) -> Result<Self>",
+          "summary": "Try to create a new Arrow writer"
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(writer: W, arrow_schema: SchemaRef, options: ArrowWriterOptions) -> Result<Self>",
+          "summary": "Try to create a new Arrow writer with [`ArrowWriterOptions`]."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<()>",
+          "summary": "Encodes the provided [`RecordBatch`]"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>",
+          "summary": "Writes the given buf bytes to the internal buffer."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_writer::ArrowWriterOptions",
+      "name": "ArrowWriterOptions",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowWriterOptions",
+      "summary": "Arrow-specific configuration settings for writing parquet files.",
+      "doc": "api/parquet.arrow.arrow_writer.md#arrowwriteroptions",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new [`ArrowWriterOptions`] with the default settings."
+        },
+        {
+          "name": "with_page_store_factory",
+          "signature": "fn with_page_store_factory(self, page_store_factory: Arc<dyn PageStoreFactory>) -> Self",
+          "summary": "Sets the [`PageStoreFactory`] used to buffer completed pages while a row group is being written."
+        },
+        {
+          "name": "with_parquet_schema",
+          "signature": "fn with_parquet_schema(self, schema_descr: SchemaDescriptor) -> Self",
+          "summary": "Explicitly specify the Parquet schema to be used"
+        },
+        {
+          "name": "with_properties",
+          "signature": "fn with_properties(self, properties: WriterProperties) -> Self",
+          "summary": "Sets the [`WriterProperties`] for writing parquet files."
+        },
+        {
+          "name": "with_schema_root",
+          "signature": "fn with_schema_root(self, schema_root: String) -> Self",
+          "summary": "Set the name of the root parquet schema element (defaults to `\"arrow_schema\"`)"
+        },
+        {
+          "name": "with_skip_arrow_metadata",
+          "signature": "fn with_skip_arrow_metadata(self, skip_arrow_metadata: bool) -> Self",
+          "summary": "Skip encoding the embedded arrow metadata (defaults to `false`)"
+        }
+      ]
+    }
+  ]
+}

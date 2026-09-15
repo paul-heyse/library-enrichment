@@ -9,10 +9,10 @@
 
 /// The wire schema version carried by every tool response.
 ///
-/// Pinned to the frozen contract in `contracts/research-envelope.schema.json`, which is the
+/// Pinned to the frozen contract in `contracts/research-v2/research-envelope.schema.json`, which is the
 /// Phase-0 acceptance target. `just schema-conformance` asserts that generated schemas accept
 /// and reject exactly the documents the frozen schema does.
-pub const SCHEMA_VERSION: &str = "1.0";
+pub const SCHEMA_VERSION: &str = "2.0";
 
 /// Canonical snapshot storage, independent of the frozen response envelope.
 pub const SNAPSHOT_SCHEMA_VERSION: &str = evidence::snapshot::FORMAT;
@@ -36,13 +36,13 @@ pub mod wire;
 mod tests {
     use super::*;
 
-    /// The frozen contract pins `schema_version` to the literal "1.0". If this constant and the
+    /// The frozen contract pins `schema_version` to the literal "2.0". If this constant and the
     /// frozen schema disagree, every emitted envelope fails validation.
     #[test]
     fn schema_version_matches_the_frozen_contract() {
-        let frozen = include_str!("../../../contracts/research-envelope.schema.json");
+        let frozen = include_str!("../../../contracts/research-v2/research-envelope.schema.json");
         let v: serde_json::Value = serde_json::from_str(frozen).expect("frozen schema parses");
-        let pinned = v["properties"]["schema_version"]["const"]
+        let pinned = v["properties"]["schema_version"]["enum"][0]
             .as_str()
             .expect("frozen schema pins schema_version to a const");
         assert_eq!(

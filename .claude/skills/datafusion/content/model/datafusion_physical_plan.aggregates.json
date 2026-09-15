@@ -1,0 +1,489 @@
+{
+  "module": "datafusion_physical_plan::aggregates",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.aggregates.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::aggregates::AggregateInputMode",
+      "name": "AggregateInputMode",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum AggregateInputMode",
+      "summary": "Whether an aggregate stage consumes raw input data or intermediate accumulator state from a previous aggregation stage.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#aggregateinputmode",
+      "variants": [
+        "Raw",
+        "Partial"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::AggregateMode",
+      "name": "AggregateMode",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum AggregateMode",
+      "summary": "Aggregation modes",
+      "doc": "api/datafusion_physical_plan.aggregates.md#aggregatemode",
+      "variants": [
+        "Partial",
+        "Final",
+        "FinalPartitioned",
+        "Single",
+        "SinglePartitioned",
+        "PartialReduce"
+      ],
+      "methods": [
+        {
+          "name": "input_mode",
+          "signature": "fn input_mode(&self) -> AggregateInputMode",
+          "summary": "Returns the [`AggregateInputMode`] for this mode: whether this stage consumes raw input data or intermediate accumulator state."
+        },
+        {
+          "name": "output_mode",
+          "signature": "fn output_mode(&self) -> AggregateOutputMode",
+          "summary": "Returns the [`AggregateOutputMode`] for this mode: whether this stage produces intermediate accumulator state or final output values."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::AggregateOutputMode",
+      "name": "AggregateOutputMode",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum AggregateOutputMode",
+      "summary": "Whether an aggregate stage produces intermediate accumulator state or final output values.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#aggregateoutputmode",
+      "variants": [
+        "Partial",
+        "Final"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::aggregate_expressions",
+      "name": "aggregate_expressions",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn aggregate_expressions(aggr_expr: &[std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>], mode: &AggregateMode, col_idx_base: usize) -> datafusion_common::Result<Vec<Vec<std::sync::Arc<dyn PhysicalExpr>>>>",
+      "summary": "Returns physical expressions for arguments to evaluate against a batch.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#aggregate_expressions"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::concat_slices",
+      "name": "concat_slices",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn concat_slices<T: Clone>(lhs: &[T], rhs: &[T]) -> Vec<T>",
+      "summary": "Concatenates the given slices.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#concat_slices"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::create_accumulators",
+      "name": "create_accumulators",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn create_accumulators(aggr_expr: &[std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>]) -> datafusion_common::Result<Vec<AccumulatorItem>>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::evaluate_group_by",
+      "name": "evaluate_group_by",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn evaluate_group_by(group_by: &PhysicalGroupBy, batch: &arrow::record_batch::RecordBatch) -> datafusion_common::Result<Vec<Vec<arrow::array::ArrayRef>>>",
+      "summary": "Evaluate a group by expression against a `RecordBatch`",
+      "doc": "api/datafusion_physical_plan.aggregates.md#evaluate_group_by"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::evaluate_many",
+      "name": "evaluate_many",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn evaluate_many(expr: &[Vec<std::sync::Arc<dyn PhysicalExpr>>], batch: &arrow::record_batch::RecordBatch) -> datafusion_common::Result<Vec<Vec<arrow::array::ArrayRef>>>",
+      "summary": "Evaluates groups of expressions against a record batch.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#evaluate_many"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::finalize_aggregation",
+      "name": "finalize_aggregation",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn finalize_aggregation(accumulators: &mut [AccumulatorItem], mode: &AggregateMode) -> datafusion_common::Result<Vec<arrow::array::ArrayRef>>",
+      "summary": "returns a vector of ArrayRefs, where each entry corresponds to either the final value (mode = Final, FinalPartitioned and Single) or states (mode = Partial)",
+      "doc": "api/datafusion_physical_plan.aggregates.md#finalize_aggregation"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::get_finer_aggregate_exprs_requirement",
+      "name": "get_finer_aggregate_exprs_requirement",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn get_finer_aggregate_exprs_requirement(aggr_exprs: &mut [std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>], group_by: &PhysicalGroupBy, eq_properties: &datafusion_physical_expr::EquivalenceProperties, agg_mode: &AggregateMode) -> datafusion_common::Result<Vec<datafusion_physical_expr_common::sort_expr::PhysicalSortRequirement>>",
+      "summary": "Gets the common requirement that satisfies all the aggregate expressions. When possible, chooses the requirement that is already satisfied by the equivalence properties.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#get_finer_aggregate_exprs_requirement"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::topk_types_supported",
+      "name": "topk_types_supported",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn topk_types_supported(key_type: &arrow::datatypes::DataType, value_type: &arrow::datatypes::DataType) -> bool",
+      "summary": "Returns true if TopK aggregation data structures support the provided key and value types.",
+      "doc": "api/datafusion_physical_plan.aggregates.md#topk_types_supported"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::AggregateExec",
+      "name": "AggregateExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct AggregateExec",
+      "summary": "Hash aggregate execution plan",
+      "doc": "api/datafusion_physical_plan.aggregates.md#aggregateexec",
+      "fields": [
+        "input",
+        "input_schema"
+      ],
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "aggr_expr",
+          "signature": "fn aggr_expr(&self) -> &[Arc<AggregateFunctionExpr>]",
+          "summary": "Aggregate expressions"
+        },
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cache",
+          "signature": "fn cache(&self) -> &PlanProperties"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "compute_properties",
+          "signature": "fn compute_properties(input: &Arc<dyn ExecutionPlan>, schema: SchemaRef, group_expr_mapping: &ProjectionMapping, is_true_no_grouping: bool, mode: &AggregateMode, input_order_mode: &InputOrderMode, aggr_exprs: &[Arc<AggregateFunctionExpr>]) -> Result<PlanProperties>",
+          "summary": "This function creates the cache object that stores the plan properties such as schema, equivalence properties, ordering, partitioning, etc."
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "dynamic_filter_expr",
+          "signature": "fn dynamic_filter_expr(&self) -> Option<&Arc<DynamicFilterPhysicalExpr>>",
+          "summary": "Returns the dynamic filter expression for this aggregate, if set."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "filter_expr",
+          "signature": "fn filter_expr(&self) -> &[Option<Arc<dyn PhysicalExpr>>]",
+          "summary": "FILTER (WHERE clause) expression for each aggregate expression"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, config: &ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Push down parent filters when possible (see implementation comment for details), and also pushdown self dynamic filters (see `AggrDynFilter` for details)"
+        },
+        {
+          "name": "get_minmax_desc",
+          "signature": "fn get_minmax_desc(&self) -> Option<(FieldRef, bool)>",
+          "summary": "Finds the DataType and SortDirection for this Aggregate, if there is one"
+        },
+        {
+          "name": "group_expr",
+          "signature": "fn group_expr(&self) -> &PhysicalGroupBy",
+          "summary": "Grouping expressions"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "If child accepts self's dynamic filter, keep `self.dynamic_filter` with Some, otherwise clear it to None."
+        },
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "Input plan"
+        },
+        {
+          "name": "input_distribution_requirements",
+          "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input_order_mode",
+          "signature": "fn input_order_mode(&self) -> &InputOrderMode"
+        },
+        {
+          "name": "input_schema",
+          "signature": "fn input_schema(&self) -> SchemaRef",
+          "summary": "Get the input schema before any aggregates are applied"
+        },
+        {
+          "name": "is_unordered_unfiltered_group_by_distinct",
+          "signature": "fn is_unordered_unfiltered_group_by_distinct(&self) -> bool",
+          "summary": "true, if this Aggregate has a group-by with no required or explicit ordering, no filtering and no aggregate expressions This method qualifies the use of the LimitedDistinctAggregation rewrite rule on an AggregateExec."
+        },
+        {
+          "name": "limit_options",
+          "signature": "fn limit_options(&self) -> Option<LimitOptions>",
+          "summary": "Get the limit options (if set)"
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "The output ordering of [`AggregateExec`] is determined by its `group_by` columns. Although this method is not explicitly used by any optimizer rules yet, overriding the default implementation ensures that it accurately reflects the actual…"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "mode",
+          "signature": "fn mode(&self) -> &AggregateMode",
+          "summary": "Aggregation mode (full, partial)"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "output_group_expr",
+          "signature": "fn output_group_expr(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Grouping expressions as they occur in the output schema"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Return a reference to Any that can be used for down-casting"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "required_input_distribution",
+          "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "required_input_ordering",
+          "signature": "fn required_input_ordering(&self) -> Vec<Option<OrderingRequirements>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstruct an [`AggregateExec`] from its protobuf representation."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(mode: AggregateMode, group_by: impl Into<Arc<PhysicalGroupBy>>, aggr_expr: Vec<Arc<AggregateFunctionExpr>>, filter_expr: Vec<Option<Arc<dyn PhysicalExpr>>>, input: Arc<dyn ExecutionPlan>, input_schema: SchemaRef) -> Result<Self>",
+          "summary": "Create a new hash aggregate execution plan"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_dynamic_filter_expr",
+          "signature": "fn with_dynamic_filter_expr(self, filter: Arc<DynamicFilterPhysicalExpr>) -> Result<Self>",
+          "summary": "Replace the dynamic filter expression. This method errors if the aggregate does not support dynamic filtering or if the filter expression is incompatible with this [`AggregateExec`]."
+        },
+        {
+          "name": "with_limit_options",
+          "signature": "fn with_limit_options(self, limit_options: Option<LimitOptions>) -> Self",
+          "summary": "Set the limit options for this AggExec"
+        },
+        {
+          "name": "with_new_aggr_exprs",
+          "signature": "fn with_new_aggr_exprs(&self, aggr_expr: impl Into<Arc<[Arc<AggregateFunctionExpr>]>>) -> Self",
+          "summary": "Function used in `OptimizeAggregateOrder` optimizer rule, where we need parts of the new value, others cloned from the old one Rewrites aggregate exec with new aggregate expressions."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_limit_options",
+          "signature": "fn with_new_limit_options(&self, limit_options: Option<LimitOptions>) -> Self",
+          "summary": "Clone this exec, overriding only the limit hint."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::LimitOptions",
+      "name": "LimitOptions",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct LimitOptions",
+      "summary": "Configuration for limit-based optimizations in aggregation",
+      "doc": "api/datafusion_physical_plan.aggregates.md#limitoptions",
+      "fields": [
+        "limit",
+        "descending"
+      ],
+      "methods": [
+        {
+          "name": "descending",
+          "signature": "fn descending(&self) -> Option<bool>"
+        },
+        {
+          "name": "limit",
+          "signature": "fn limit(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(limit: usize) -> Self",
+          "summary": "Create a new LimitOptions with a limit and no specific ordering"
+        },
+        {
+          "name": "new_with_order",
+          "signature": "fn new_with_order(limit: usize, descending: bool) -> Self",
+          "summary": "Create a new LimitOptions with a limit and ordering direction"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::PhysicalGroupBy",
+      "name": "PhysicalGroupBy",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct PhysicalGroupBy",
+      "summary": "Represents `GROUP BY` clause in the plan (including the more general GROUPING SET) In the case of a simple `GROUP BY a, b` clause, this will contain the expression [a, b] and a single group [false, false]. In the case of `GROUP BY GROUPING…",
+      "doc": "api/datafusion_physical_plan.aggregates.md#physicalgroupby",
+      "methods": [
+        {
+          "name": "as_final",
+          "signature": "fn as_final(&self) -> PhysicalGroupBy",
+          "summary": "Returns the `PhysicalGroupBy` for a final aggregation if `self` is used for a partial aggregation."
+        },
+        {
+          "name": "expr",
+          "signature": "fn expr(&self) -> &[(Arc<dyn PhysicalExpr>, String)]",
+          "summary": "Returns the group expressions"
+        },
+        {
+          "name": "exprs_nullable",
+          "signature": "fn exprs_nullable(&self) -> Vec<bool>",
+          "summary": "Calculate GROUP BY expressions nullable"
+        },
+        {
+          "name": "group_schema",
+          "signature": "fn group_schema(&self, schema: &Schema) -> Result<SchemaRef>"
+        },
+        {
+          "name": "groups",
+          "signature": "fn groups(&self) -> &[Vec<bool>]",
+          "summary": "Returns the group null masks"
+        },
+        {
+          "name": "has_grouping_set",
+          "signature": "fn has_grouping_set(&self) -> bool",
+          "summary": "Returns true if this grouping uses GROUPING SETS, CUBE or ROLLUP."
+        },
+        {
+          "name": "input_exprs",
+          "signature": "fn input_exprs(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Calculate GROUP BY expressions according to input schema."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if this `PhysicalGroupBy` has no group expressions"
+        },
+        {
+          "name": "is_single",
+          "signature": "fn is_single(&self) -> bool",
+          "summary": "Returns true if this is a \"simple\" GROUP BY (not using GROUPING SETS/CUBE/ROLLUP). This determines whether the `__grouping_id` column is included in the output schema."
+        },
+        {
+          "name": "is_true_no_grouping",
+          "signature": "fn is_true_no_grouping(&self) -> bool",
+          "summary": "Returns true if this has no grouping at all (including no GROUPING SETS)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: Vec<(Arc<dyn PhysicalExpr>, String)>, null_expr: Vec<(Arc<dyn PhysicalExpr>, String)>, groups: Vec<Vec<bool>>, has_grouping_set: bool) -> Self",
+          "summary": "Create a new `PhysicalGroupBy`"
+        },
+        {
+          "name": "new_single",
+          "signature": "fn new_single(expr: Vec<(Arc<dyn PhysicalExpr>, String)>) -> Self",
+          "summary": "Create a GROUPING SET with only a single group. This is the \"standard\" case when building a plan from an expression such as `GROUP BY a,b,c`"
+        },
+        {
+          "name": "null_expr",
+          "signature": "fn null_expr(&self) -> &[(Arc<dyn PhysicalExpr>, String)]",
+          "summary": "Returns the null expressions"
+        },
+        {
+          "name": "num_group_exprs",
+          "signature": "fn num_group_exprs(&self) -> usize",
+          "summary": "Returns the number expression as grouping keys."
+        },
+        {
+          "name": "output_exprs",
+          "signature": "fn output_exprs(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Return grouping expressions as they occur in the output schema."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::AccumulatorItem",
+      "name": "AccumulatorItem",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-plan",
+      "signature": "type AccumulatorItem = Box<dyn Accumulator>",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

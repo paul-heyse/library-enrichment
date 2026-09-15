@@ -561,7 +561,7 @@ pub(super) async fn produce(
         gaps: acq.gaps.clone(),
         answered_from_cache: false,
     };
-    let coverage=Coverage{scope:format!("Static contents of {} {} ({})",request.name,release.key.version,file.filename),indexed:acq.indexed.iter().map(|k|k.as_str().into()).collect(),missing:acq.gaps.iter().map(|g|g.kind.as_str().into()).collect(),limitations:vec!["Static source/stub declarations are not executed or typechecker observations; dependencies and namespace contributions are not complete environments.".into()]};
+    let coverage=Coverage{details:None,assessments: Vec::new(),scope:format!("Static contents of {} {} ({})",request.name,release.key.version,file.filename),indexed:acq.indexed.iter().map(|k|k.as_str().into()).collect(),missing:acq.gaps.iter().map(|g|g.kind.as_str().into()).collect(),limitations:vec!["Static source/stub declarations are not executed or typechecker observations; dependencies and namespace contributions are not complete environments.".into()]};
     let freshness = Freshness {
         registry_checked_at: Some(clock::now_rfc3339()),
         source_version_match: SourceVersionMatch::Exact,

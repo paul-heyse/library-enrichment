@@ -1,0 +1,370 @@
+{
+  "module": "arrow_data::data",
+  "crate": "arrow-data",
+  "api": "api/arrow_data.data.md",
+  "items": [
+    {
+      "path": "arrow_data::data::BufferSpec",
+      "name": "BufferSpec",
+      "kind": "enum",
+      "crate": "arrow-data",
+      "signature": "enum BufferSpec",
+      "summary": "Layout specification for a single data type buffer",
+      "doc": "api/arrow_data.data.md#bufferspec",
+      "aliases": [
+        "arrow::array::BufferSpec"
+      ],
+      "variants": [
+        "FixedWidth",
+        "VariableWidth",
+        "BitMap",
+        "AlwaysNull"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_data::data::layout",
+      "name": "layout",
+      "kind": "function",
+      "crate": "arrow-data",
+      "signature": "fn layout(data_type: &arrow_schema::DataType) -> DataTypeLayout",
+      "summary": "Return the expected [`DataTypeLayout`] Arrays of this data type are expected to have",
+      "doc": "api/arrow_data.data.md#layout",
+      "aliases": [
+        "arrow::array::layout"
+      ]
+    },
+    {
+      "path": "arrow_data::data::ArrayData",
+      "name": "ArrayData",
+      "kind": "struct",
+      "crate": "arrow-data",
+      "signature": "struct ArrayData",
+      "summary": "A generic representation of Arrow array data which encapsulates common attributes and operations for Arrow array.",
+      "doc": "api/arrow_data.data.md#arraydata",
+      "aliases": [
+        "arrow::array::ArrayData"
+      ],
+      "implements": [
+        "arrow_pyarrow::FromPyArrow",
+        "arrow_pyarrow::ToPyArrow",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "align_buffers",
+          "signature": "fn align_buffers(&mut self)",
+          "summary": "Verifies that the buffers meet the minimum alignment requirements for the data type"
+        },
+        {
+          "name": "buffer",
+          "signature": "fn buffer<T: ArrowNativeType>(&self, buffer: usize) -> &[T]",
+          "summary": "Returns the `buffer` as a slice of type `T` starting at self.offset"
+        },
+        {
+          "name": "buffers",
+          "signature": "fn buffers(&self) -> &[Buffer]",
+          "summary": "Returns the [`Buffer`] storing data for this [`ArrayData`]"
+        },
+        {
+          "name": "builder",
+          "signature": "const fn builder(data_type: DataType) -> ArrayDataBuilder",
+          "summary": "Returns a builder to construct a [`ArrayData`] instance of the same [`DataType`]"
+        },
+        {
+          "name": "child_data",
+          "signature": "fn child_data(&self) -> &[ArrayData]",
+          "summary": "Returns a slice of children [`ArrayData`]. This will be non empty for type such as lists and structs."
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "summary": "Claim memory used by this ArrayData in the provided memory pool."
+        },
+        {
+          "name": "data_type",
+          "signature": "const fn data_type(&self) -> &DataType",
+          "summary": "Returns a reference to the [`DataType`] of this [`ArrayData`]"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "summary": "Returns the total number of bytes of memory occupied physically by this [`ArrayData`] and all its [`Buffer`]s and children. (See also diagram on [`ArrayData`])."
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "summary": "Returns the total number of bytes of memory occupied by the buffers owned by this [`ArrayData`] and all of its children. (See also diagram on [`ArrayData`])."
+        },
+        {
+          "name": "get_slice_memory_size",
+          "signature": "fn get_slice_memory_size(&self) -> Result<usize, ArrowError>",
+          "summary": "Returns the total number of the bytes of memory occupied by the buffers by this slice of [`ArrayData`] (See also diagram on [`ArrayData`])."
+        },
+        {
+          "name": "into_builder",
+          "signature": "fn into_builder(self) -> ArrayDataBuilder",
+          "summary": "Converts this [`ArrayData`] into an [`ArrayDataBuilder`]"
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (DataType, usize, Option<NullBuffer>, usize, Vec<Buffer>, Vec<ArrayData>)",
+          "summary": "Return the constituent parts of this ArrayData"
+        },
+        {
+          "name": "is_empty",
+          "signature": "const fn is_empty(&self) -> bool",
+          "summary": "Returns whether this [`ArrayData`] is empty"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, i: usize) -> bool",
+          "summary": "Returns whether the element at index `i` is null"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, i: usize) -> bool",
+          "summary": "Returns whether the element at index `i` is not null"
+        },
+        {
+          "name": "len",
+          "signature": "const fn len(&self) -> usize",
+          "summary": "Returns the length (i.e., number of elements) of this [`ArrayData`]."
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty(data_type: &DataType) -> Self",
+          "summary": "Returns a new empty [ArrayData] valid for `data_type`."
+        },
+        {
+          "name": "new_null",
+          "signature": "fn new_null(data_type: &DataType, len: usize) -> Self",
+          "summary": "Returns a new [`ArrayData`] valid for `data_type` containing `len` null values"
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "unsafe fn new_unchecked(data_type: DataType, len: usize, null_count: Option<usize>, null_bit_buffer: Option<Buffer>, offset: usize, buffers: Vec<Buffer>, child_data: Vec<ArrayData>) -> Self",
+          "summary": "Create a new ArrayData instance;"
+        },
+        {
+          "name": "null_count",
+          "signature": "fn null_count(&self) -> usize",
+          "summary": "Returns the total number of nulls in this array"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "summary": "Returns a reference to the null buffer of this [`ArrayData`] if any"
+        },
+        {
+          "name": "offset",
+          "signature": "const fn offset(&self) -> usize",
+          "summary": "Returns the offset of this [`ArrayData`]"
+        },
+        {
+          "name": "ptr_eq",
+          "signature": "fn ptr_eq(&self, other: &Self) -> bool",
+          "summary": "Returns true if this `ArrayData` is equal to `other`, using pointer comparisons to determine buffer equality. This is cheaper than `PartialEq::eq` but may return false when the arrays are logically equal"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayData",
+          "summary": "Creates a zero-copy slice of itself. This creates a new [`ArrayData`] pointing at the same underlying [`Buffer`]s with a different offset and len"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(data_type: DataType, len: usize, null_bit_buffer: Option<Buffer>, offset: usize, buffers: Vec<Buffer>, child_data: Vec<ArrayData>) -> Result<Self, ArrowError>",
+          "summary": "Create a new ArrayData, validating that the provided buffers form a valid Arrow array of the specified data type."
+        },
+        {
+          "name": "validate",
+          "signature": "fn validate(&self) -> Result<(), ArrowError>",
+          "summary": "\"cheap\" validation of an `ArrayData`. Ensures buffers are sufficiently sized to store `len` + `offset` total elements of `data_type` and performs other inexpensive consistency checks."
+        },
+        {
+          "name": "validate_data",
+          "signature": "fn validate_data(&self) -> Result<(), ArrowError>",
+          "summary": "Validate that the data contained within this [`ArrayData`] is valid"
+        },
+        {
+          "name": "validate_full",
+          "signature": "fn validate_full(&self) -> Result<(), ArrowError>",
+          "summary": "Performs a full recursive validation of this [`ArrayData`] and all its children"
+        },
+        {
+          "name": "validate_nulls",
+          "signature": "fn validate_nulls(&self) -> Result<(), ArrowError>",
+          "summary": "Validates the values stored within this [`ArrayData`] are valid without recursing into child [`ArrayData`]"
+        },
+        {
+          "name": "validate_values",
+          "signature": "fn validate_values(&self) -> Result<(), ArrowError>",
+          "summary": "Validates the values stored within this [`ArrayData`] are valid without recursing into child [`ArrayData`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_data::data::ArrayDataBuilder",
+      "name": "ArrayDataBuilder",
+      "kind": "struct",
+      "crate": "arrow-data",
+      "signature": "struct ArrayDataBuilder",
+      "summary": "Builder for [`ArrayData`] type",
+      "doc": "api/arrow_data.data.md#arraydatabuilder",
+      "aliases": [
+        "arrow::array::ArrayDataBuilder"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "add_buffer",
+          "signature": "fn add_buffer(self, b: Buffer) -> Self",
+          "summary": "Adds a single buffer to the [ArrayData]'s buffers"
+        },
+        {
+          "name": "add_buffers",
+          "signature": "fn add_buffers<I: IntoIterator<Item = Buffer>>(self, bs: I) -> Self",
+          "summary": "Adds multiple buffers to the [ArrayData]'s buffers"
+        },
+        {
+          "name": "add_child_data",
+          "signature": "fn add_child_data(self, r: ArrayData) -> Self",
+          "summary": "Adds a single child data to the [ArrayData]'s child data"
+        },
+        {
+          "name": "align_buffers",
+          "signature": "fn align_buffers(self, align_buffers: bool) -> Self",
+          "summary": "Ensure that all buffers are aligned, copying data if necessary"
+        },
+        {
+          "name": "buffers",
+          "signature": "fn buffers(self, v: Vec<Buffer>) -> Self",
+          "summary": "Sets the buffers of the [ArrayData]"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<ArrayData, ArrowError>",
+          "summary": "Creates an `ArrayData`, consuming `self`"
+        },
+        {
+          "name": "build_unchecked",
+          "signature": "unsafe fn build_unchecked(self) -> ArrayData",
+          "summary": "Creates an array data, without any validation"
+        },
+        {
+          "name": "child_data",
+          "signature": "fn child_data(self, v: Vec<ArrayData>) -> Self",
+          "summary": "Sets the child data of the [ArrayData]"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(self, data_type: DataType) -> Self",
+          "summary": "Creates a new array data builder from an existing one, changing the data type"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(d: ArrayData) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "len",
+          "signature": "const fn len(self, n: usize) -> Self",
+          "summary": "Sets the length of the [ArrayData]"
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(data_type: DataType) -> Self",
+          "summary": "Creates a new array data builder"
+        },
+        {
+          "name": "null_bit_buffer",
+          "signature": "fn null_bit_buffer(self, buf: Option<Buffer>) -> Self",
+          "summary": "Sets the `null_bit_buffer` of the [ArrayData]"
+        },
+        {
+          "name": "null_count",
+          "signature": "fn null_count(self, null_count: usize) -> Self",
+          "summary": "Sets the null count of the [ArrayData]"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(self, nulls: Option<NullBuffer>) -> Self",
+          "summary": "Sets the null buffer of the [ArrayData]"
+        },
+        {
+          "name": "offset",
+          "signature": "const fn offset(self, n: usize) -> Self",
+          "summary": "Sets the offset of the [ArrayData]"
+        },
+        {
+          "name": "skip_validation",
+          "signature": "unsafe fn skip_validation(self, skip_validation: bool) -> Self",
+          "summary": "Skips validation of the data."
+        }
+      ]
+    },
+    {
+      "path": "arrow_data::data::DataTypeLayout",
+      "name": "DataTypeLayout",
+      "kind": "struct",
+      "crate": "arrow-data",
+      "signature": "struct DataTypeLayout",
+      "summary": "Layout specification for a data type",
+      "doc": "api/arrow_data.data.md#datatypelayout",
+      "aliases": [
+        "arrow::array::DataTypeLayout"
+      ],
+      "fields": [
+        "buffers",
+        "can_contain_null_mask",
+        "variadic"
+      ],
+      "methods": [
+        {
+          "name": "new_binary",
+          "signature": "fn new_binary<T>() -> Self",
+          "summary": "Describes a basic numeric array where each element has a fixed with offset buffer of type `T`, followed by a variable width data buffer"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty() -> Self",
+          "summary": "Describes arrays which have no data of their own (e.g. RunEndEncoded)."
+        },
+        {
+          "name": "new_fixed_width",
+          "signature": "fn new_fixed_width<T>() -> Self",
+          "summary": "Describes a basic numeric array where each element has type `T`"
+        },
+        {
+          "name": "new_list_view",
+          "signature": "fn new_list_view<T>() -> Self",
+          "summary": "Describes a list view type"
+        },
+        {
+          "name": "new_nullable_empty",
+          "signature": "fn new_nullable_empty() -> Self",
+          "summary": "Describes arrays which have no data of their own but may still have a Null Bitmap (e.g. FixedSizeList)"
+        },
+        {
+          "name": "new_view",
+          "signature": "fn new_view() -> Self",
+          "summary": "Describes a view type"
+        }
+      ]
+    },
+    {
+      "path": "arrow_data::data::ArrayDataRef",
+      "name": "ArrayDataRef",
+      "kind": "type_alias",
+      "crate": "arrow-data",
+      "signature": "type ArrayDataRef = std::sync::Arc<ArrayData>",
+      "summary": "A thread-safe, shared reference to the Arrow array data.",
+      "doc": "api/arrow_data.data.md#arraydataref",
+      "aliases": [
+        "arrow::array::ArrayDataRef"
+      ]
+    }
+  ]
+}

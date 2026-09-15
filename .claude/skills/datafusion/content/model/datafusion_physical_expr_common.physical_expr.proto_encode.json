@@ -1,0 +1,56 @@
+{
+  "module": "datafusion_physical_expr_common::physical_expr::proto_encode",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.physical_expr.proto_encode.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx",
+      "name": "PhysicalExprEncodeCtx",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct PhysicalExprEncodeCtx<'a>",
+      "summary": "Encoder context handed to [`super::PhysicalExpr::try_to_proto`].",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.proto_encode.md#physicalexprencodectx",
+      "methods": [
+        {
+          "name": "encode_child",
+          "signature": "fn encode_child(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>",
+          "summary": "Encode a child expression. Routes through the configured encoder so dedup-aware encoding is preserved."
+        },
+        {
+          "name": "encode_children_expressions",
+          "signature": "fn encode_children_expressions<'b, I>(&self, exprs: I) -> Result<Vec<PhysicalExprNode>> where I: IntoIterator<Item = &'b Arc<dyn PhysicalExpr>>",
+          "summary": "Encode a sequence of child expressions, preserving order."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(encoder: &'a dyn PhysicalExprEncode) -> Self",
+          "summary": "Construct a new encode context. Typically called by `datafusion-proto`; expression authors receive `&PhysicalExprEncodeCtx`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncode",
+      "name": "PhysicalExprEncode",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "trait PhysicalExprEncode",
+      "summary": "Internal dispatch trait. Implementors live in `datafusion-proto` and wrap the existing `PhysicalExtensionCodec` + `PhysicalProtoConverterExtension` plumbing. Expression authors should use [`PhysicalExprEncodeCtx`] instead of calling this d…",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.proto_encode.md#physicalexprencode",
+      "implementors": [
+        "datafusion_physical_plan::proto::ExecutionPlanEncodeCtx"
+      ],
+      "required_methods": [
+        "encode"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&self, expr: &Arc<dyn PhysicalExpr>) -> Result<PhysicalExprNode>",
+          "summary": "Encode an expression to a protobuf node."
+        }
+      ]
+    }
+  ]
+}

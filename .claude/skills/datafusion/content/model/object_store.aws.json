@@ -1,0 +1,115 @@
+{
+  "module": "object_store::aws",
+  "crate": "object_store",
+  "api": "api/object_store.aws.md",
+  "items": [
+    {
+      "path": "object_store::aws::AmazonS3",
+      "name": "AmazonS3",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct AmazonS3",
+      "summary": "Interface for [Amazon S3](https://aws.amazon.com/s3/).",
+      "doc": "api/object_store.aws.md#amazons3",
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore",
+        "object_store::list::PaginatedListStore",
+        "object_store::multipart::MultipartStore",
+        "object_store::signer::Signer"
+      ],
+      "methods": [
+        {
+          "name": "abort_multipart",
+          "signature": "async fn abort_multipart(&self, path: &Path, id: &MultipartId) -> Result<()>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "complete_multipart",
+          "signature": "async fn complete_multipart(&self, path: &Path, id: &MultipartId, parts: Vec<PartId>) -> Result<PutResult>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "create_multipart",
+          "signature": "async fn create_multipart(&self, path: &Path) -> Result<MultipartId>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "credentials",
+          "signature": "fn credentials(&self) -> &AwsCredentialProvider",
+          "summary": "Returns the [`AwsCredentialProvider`] used by [`AmazonS3`]"
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_paginated",
+          "signature": "async fn list_paginated(&self, prefix: Option<&str>, opts: PaginatedListOptions) -> Result<PaginatedListResult>",
+          "via_trait": "object_store::list::PaginatedListStore"
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_part",
+          "signature": "async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, data: PutPayload) -> Result<PartId>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "signed_url",
+          "signature": "async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) -> Result<Url>",
+          "via_trait": "object_store::signer::Signer",
+          "summary": "Create a URL containing the relevant [AWS SigV4] query parameters that authorize a request via `method` to the resource at `path` valid for the duration specified in `expires_in`."
+        }
+      ]
+    },
+    {
+      "path": "object_store::aws::AwsCredentialProvider",
+      "name": "AwsCredentialProvider",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type AwsCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = AwsCredential>>",
+      "summary": "[`CredentialProvider`] for [`AmazonS3`]",
+      "doc": "api/object_store.aws.md#awscredentialprovider"
+    }
+  ]
+}

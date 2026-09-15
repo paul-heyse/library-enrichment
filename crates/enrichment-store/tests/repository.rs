@@ -79,6 +79,561 @@ fn repository(root: &std::path::Path, store_blob: bool) -> EvidenceRepository {
 }
 
 #[tokio::test]
+async fn comparison_publication_exports_both_inputs_and_verified_result_closure() {
+    use enrichment_core::{
+        evidence::catalog::ComparisonPublication,
+        wire::{ArtifactHandle, Envelope, JobState},
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let repository = repository(dir.path(), true);
+    let paths = StatePaths {
+        data_root: dir.path().join("data"),
+        cache_root: dir.path().join("cache"),
+    };
+    let before_metadata = metadata();
+    let before = repository
+        .publish(before_metadata.clone(), evidence(&before_metadata), None)
+        .await
+        .unwrap();
+    let mut after_metadata = before_metadata.clone();
+    let mut release = after_metadata.release.key.clone();
+    release.version = "0.2.0".into();
+    after_metadata.release = Release::new(release);
+    after_metadata.context = Context::new(
+        after_metadata.release.release_id.clone(),
+        after_metadata.environment.environment_id.clone(),
+        ResearchMode::Upstream,
+    );
+    after_metadata.crate_version = Some("0.2.0".into());
+    let after = repository
+        .publish(after_metadata.clone(), evidence(&after_metadata), None)
+        .await
+        .unwrap();
+    let blobs = BlobStore::open(&paths.data_root).unwrap();
+    let bytes = br#"{"complete":"indivisible comparison value"}"#;
+    let dependency = blobs
+        .put(bytes, |_| {
+            Artifact::describe(
+                bytes,
+                ArtifactKind::Other,
+                "application/json",
+                "service:comparison-value/2",
+                "2026-09-15T00:00:00Z",
+            )
+        })
+        .unwrap()
+        .acquired;
+    let mut result: Envelope = serde_json::from_str(include_str!(
+        "../../../contracts/research-v2/examples/ok.fixture.json"
+    ))
+    .unwrap();
+    result.context_id = Some(after.context_id.to_string());
+    result.snapshot_id = Some(after.snapshot_id.to_string());
+    result.data = serde_json::from_value(serde_json::json!({
+        "before": {"context_id": before.context_id, "snapshot_id": before.snapshot_id},
+        "after": {"context_id": after.context_id, "snapshot_id": after.snapshot_id},
+        "changes": [{"value": {"artifact_id": dependency.artifact_id}}],
+    }))
+    .unwrap();
+    result.artifacts = vec![ArtifactHandle {
+        artifact_id: dependency.artifact_id.clone(),
+        uri: format!("library-evidence://artifacts/{}", dependency.artifact_id)
+            .try_into()
+            .unwrap(),
+        media_type: dependency.media_type.clone(),
+        description: "Complete comparison value".into(),
+    }];
+    let delivery =
+        enrichment_store::result::store(&blobs, &result, enrichment_store::result::JOB_URI)
+            .unwrap()
+            .0;
+    let publication = ComparisonPublication {
+        job_id: format!("job_{}", "c".repeat(32)),
+        request_digest: "d".repeat(64),
+        before_context_id: before.context_id.clone(),
+        before_snapshot_id: before.snapshot_id.clone(),
+        after_context_id: after.context_id.clone(),
+        after_snapshot_id: after.snapshot_id.clone(),
+        state: JobState::Succeeded,
+        delivery: delivery.clone(),
+    };
+    let initial = repository.catalog.pin().await.unwrap();
+    let mut invalid = publication.clone();
+    invalid.before_context_id = after.context_id.clone();
+    assert!(
+        repository
+            .publish_comparison(invalid.clone())
+            .await
+            .is_err()
+    );
+    assert!(
+        repository
+            .catalog
+            .commit(enrichment_store::catalog_generation::CatalogDelta {
+                comparison: Some(invalid),
+                ..Default::default()
+            })
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        repository.catalog.pin().await.unwrap().generation(),
+        initial.generation()
+    );
+    repository
+        .publish_comparison(publication.clone())
+        .await
+        .unwrap();
+    let pin = repository.catalog.pin().await.unwrap();
+    assert_eq!(
+        pin.current(&repository.runtime, &after.context_id)
+            .await
+            .unwrap(),
+        Some(after.snapshot_id.clone())
+    );
+    assert_eq!(
+        pin.comparison_closure(&repository.runtime, &after.snapshot_id)
+            .await
+            .unwrap(),
+        [before.snapshot_id.clone(), after.snapshot_id.clone()].into()
+    );
+    let exported = dir.path().join("bundle");
+    enrichment_store::bundle::export(&paths, after.context_id.as_str(), &exported)
+        .await
+        .unwrap();
+    assert!(
+        enrichment_store::bundle::verify(&exported)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        exported
+            .join("data/snapshots")
+            .join(before.snapshot_id.as_str())
+            .is_dir()
+    );
+    let offline = BlobStore::read_only(&exported.join("data")).unwrap();
+    assert_eq!(
+        offline.result_dependencies(&delivery).unwrap().as_slice(),
+        std::slice::from_ref(&dependency)
+    );
+    let (_, fields) = offline
+        .read_result_sections(&delivery, &["data.changes"], 1024 * 1024)
+        .unwrap();
+    assert_eq!(fields["data.changes"], result.data["changes"]);
+    std::fs::remove_file(offline.path_for(&dependency.sha256)).unwrap();
+    assert!(offline.result_dependencies(&delivery).is_err());
+    assert!(
+        !enrichment_store::bundle::verify(&exported)
+            .await
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[tokio::test]
+async fn native_navigation_and_text_projection_preserve_retained_identities() {
+    use enrichment_core::evidence::{
+        FragmentKind, RelationKind,
+        relational::{SubjectRef, TargetRef},
+    };
+    use std::collections::BTreeSet;
+    let dir = tempfile::tempdir().unwrap();
+    let repository = repository(dir.path(), true);
+    let metadata = metadata();
+    let facts = evidence(&metadata);
+    let manifest = repository
+        .publish(metadata, facts.clone(), None)
+        .await
+        .unwrap();
+    let reader = enrichment_store::SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.unwrap(),
+        &manifest.snapshot_id,
+    )
+    .await
+    .unwrap();
+    let owner = reader
+        .symbols_at("enr_fixture::inner::Widget", None)
+        .await
+        .unwrap()
+        .remove(0);
+    let expected: BTreeSet<_> = facts
+        .symbols
+        .iter()
+        .filter(|symbol| {
+            facts.relationships.iter().any(|r| {
+                r.relation == RelationKind::MemberOf
+                    && match &r.target {
+                        TargetRef::Symbol { symbol_id } => symbol_id == &owner.symbol_id,
+                        TargetRef::Definition { definition_id } => {
+                            definition_id == &owner.definition_id
+                        }
+                        _ => false,
+                    }
+                    && match &r.subject {
+                        SubjectRef::Symbol { symbol_id } => symbol_id == &symbol.symbol_id,
+                        SubjectRef::Definition { definition_id } => {
+                            definition_id == &symbol.definition_id
+                        }
+                        _ => false,
+                    }
+            })
+        })
+        .map(|s| s.symbol_id.clone())
+        .collect();
+    assert!(!expected.is_empty());
+    let mut members = BTreeSet::new();
+    let mut after = None;
+    loop {
+        let page = reader
+            .navigation_page(&owner.symbol_id, true, 2, after.as_deref())
+            .await
+            .unwrap();
+        for item in page.items {
+            assert!(members.insert(item.symbol_id));
+        }
+        if !page.has_more {
+            break;
+        }
+        after = page.next_key;
+    }
+    assert_eq!(members, expected);
+    let children = reader
+        .navigation_page(&owner.symbol_id, false, 100, None)
+        .await
+        .unwrap();
+    assert!(
+        children
+            .items
+            .iter()
+            .all(|child| child.path.rsplit_once("::").unwrap().0 == owner.path)
+    );
+    assert!(children.items.iter().any(|child| child.name == "new"));
+    let full = reader
+        .fragment_page(&owner.symbol_id, &[FragmentKind::DocText], 32, None, None)
+        .await
+        .unwrap();
+    let preview = reader
+        .fragment_page(
+            &owner.symbol_id,
+            &[FragmentKind::DocText],
+            32,
+            None,
+            Some(4),
+        )
+        .await
+        .unwrap();
+    assert!(!full.items.is_empty());
+    assert_eq!(full.items.len(), preview.items.len());
+    for ((full, complete), (preview, preview_complete)) in full.items.iter().zip(&preview.items) {
+        assert!(*complete);
+        assert_eq!(full.fragment_id, preview.fragment_id);
+        assert_eq!(preview.text, full.text.chars().take(4).collect::<String>());
+        assert_eq!(*preview_complete, full.text.chars().count() <= 4);
+        assert_eq!(preview.locator, full.locator);
+        assert_eq!(preview.artifact_id, full.artifact_id);
+    }
+}
+
+#[tokio::test]
+async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison() {
+    use enrichment_core::{
+        compare::{Scope, page::AlternativeCursor},
+        evidence::relational::ApiObservation,
+    };
+    use enrichment_store::{SnapshotReader, comparison};
+    let dir = tempfile::tempdir().expect("directory");
+    let repository = repository(dir.path(), true);
+    let metadata = metadata();
+    let original = evidence(&metadata);
+    let mut changed = original.clone();
+    let base = original.api_observations[0].clone();
+    let mut expected = std::collections::BTreeSet::new();
+    expected.insert(base.payload.signature.clone());
+    for n in (0..96).rev() {
+        let mut payload = base.payload.clone();
+        payload.signature = Some(format!("fn variant_{n}(value: i64) -> i64"));
+        expected.insert(payload.signature.clone());
+        let observation = ApiObservation::new(
+            base.subject.clone(),
+            base.origin,
+            base.environment_id.clone(),
+            payload,
+            base.source.clone(),
+        )
+        .expect("alternative");
+        changed.api_observations.push(observation.clone());
+        if n % 10 == 0 {
+            changed.api_observations.push(observation);
+        }
+    }
+    let before = repository
+        .publish(metadata.clone(), original, None)
+        .await
+        .expect("before");
+    let after = repository
+        .publish(metadata, changed, Some(before.snapshot_id.clone()))
+        .await
+        .expect("after");
+    let catalog = repository.catalog.pin().await.expect("catalog");
+    let before = SnapshotReader::open(&repository, catalog.clone(), &before.snapshot_id)
+        .await
+        .expect("before reader");
+    let after = SnapshotReader::open(&repository, catalog, &after.snapshot_id)
+        .await
+        .expect("after reader");
+    let equal = comparison::page(
+        &after,
+        &after,
+        &BlobStore::open(&dir.path().join("data")).unwrap(),
+        comparison::Selection {
+            scopes: &[Scope::Api],
+            after_key: None,
+            limit: 10,
+            detail: None,
+            digest: "large",
+        },
+    )
+    .await
+    .expect("large self comparison");
+    assert_eq!(equal.total, 0);
+    let initial = comparison::page(
+        &before,
+        &after,
+        &BlobStore::open(&dir.path().join("data")).unwrap(),
+        comparison::Selection {
+            scopes: &[Scope::Api],
+            after_key: None,
+            limit: 10,
+            detail: None,
+            digest: "large",
+        },
+    )
+    .await
+    .expect("first changed keys");
+    let (key, change) = initial.changes.into_iter().next().expect("changed key");
+    let symbol = after
+        .symbols_at(&key.subject, None)
+        .await
+        .expect("identity selection")
+        .remove(0);
+    let mut after_key = None;
+    let mut observations = std::collections::BTreeMap::new();
+    loop {
+        let page = after
+            .observation_page(&symbol.symbol_id, false, 7, after_key.as_deref())
+            .await
+            .expect("observation page");
+        assert!(page.items.len() <= 7);
+        for item in page.items {
+            assert!(
+                observations
+                    .insert(item.observation_id, item.payload.signature)
+                    .is_none(),
+                "duplicate observation across pages"
+            );
+        }
+        after_key = page.next_key;
+        if !page.has_more {
+            break;
+        }
+    }
+    assert_eq!(
+        observations
+            .into_values()
+            .collect::<std::collections::BTreeSet<_>>(),
+        expected
+    );
+    let snapshots = format!(
+        "{}:{}",
+        before.manifest().snapshot_id,
+        after.manifest().snapshot_id
+    );
+    let id = change.change_id.clone();
+    let mut result = change;
+    let mut values = std::collections::BTreeSet::new();
+    loop {
+        for alternative in result.after.as_ref().expect("after alternatives") {
+            assert!(alternative.source.is_some());
+            let enrichment_core::compare::AlternativeValue::Inline { value } = &alternative.value
+            else {
+                panic!("native inline value")
+            };
+            let signature = value["observation"]["signature"]
+                .as_str()
+                .map(str::to_owned);
+            assert!(
+                values.insert(signature),
+                "duplicate alternative across pages"
+            );
+        }
+        let Some(cursor) = &result.after_page.next_cursor else {
+            break;
+        };
+        let detail = AlternativeCursor::decode(cursor, &snapshots, "large").expect("cursor");
+        assert!(AlternativeCursor::decode(cursor, &snapshots, "different selection").is_err());
+        result = comparison::page(
+            &before,
+            &after,
+            &BlobStore::open(&dir.path().join("data")).unwrap(),
+            comparison::Selection {
+                scopes: &[Scope::Api],
+                after_key: None,
+                limit: 10,
+                detail: Some(&detail),
+                digest: "large",
+            },
+        )
+        .await
+        .expect("alternative page")
+        .changes
+        .remove(0)
+        .1;
+        assert!(
+            result.before.as_ref().unwrap().is_empty(),
+            "a detail page must not hydrate the unselected side again"
+        );
+        assert!(result.before_page.next_cursor.is_none());
+        assert_eq!(
+            result.before_page.count,
+            enrichment_core::wire::research::MatchCount::Unknown
+        );
+        assert_eq!(
+            result.change_id, id,
+            "change identity is independent of detail page"
+        );
+    }
+    assert_eq!(values, expected);
+}
+
+#[tokio::test]
+async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_scopes() {
+    use enrichment_core::{
+        evidence::{
+            EvidenceKind, Gap, GapReason,
+            relational::{CoverageFact, CoverageOutcome, SubjectRef},
+        },
+        wire::ScopeState,
+    };
+    let dir = tempfile::tempdir().expect("directory");
+    let repository = repository(dir.path(), true);
+    let metadata = metadata();
+    let mut evidence = evidence(&metadata);
+    let binding = evidence.coverage[0].producer_binding_id.clone();
+    let library = SubjectRef::Library {
+        release_id: metadata.release.release_id.to_string(),
+    };
+    let symbol = evidence.symbols[0].symbol_id.clone();
+    for (kind, outcome, subject) in [
+        (
+            EvidenceKind::Documentation,
+            CoverageOutcome::Missing,
+            library.clone(),
+        ),
+        (
+            EvidenceKind::ReleaseNotes,
+            CoverageOutcome::Missing,
+            library.clone(),
+        ),
+        (EvidenceKind::Examples, CoverageOutcome::Partial, library),
+    ] {
+        evidence.coverage.push(
+            CoverageFact::new(
+                binding.clone(),
+                subject,
+                kind,
+                outcome,
+                vec![Gap {
+                    kind,
+                    reason: GapReason::NotAttempted,
+                    detail: "earlier attempt".into(),
+                    planned_fallback: None,
+                }],
+            )
+            .expect("gap coverage"),
+        );
+    }
+    evidence.coverage.push(
+        CoverageFact::new(
+            binding,
+            SubjectRef::Symbol {
+                symbol_id: symbol.clone(),
+            },
+            EvidenceKind::RuntimeApi,
+            CoverageOutcome::Indexed,
+            vec![],
+        )
+        .expect("symbol coverage"),
+    );
+    let manifest = repository
+        .publish(metadata, evidence, None)
+        .await
+        .expect("publish");
+    let reader = enrichment_store::SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.expect("catalog"),
+        &manifest.snapshot_id,
+    )
+    .await
+    .expect("reader");
+    let coverage = reader
+        .assess(
+            &[
+                EvidenceKind::Documentation,
+                EvidenceKind::ReleaseNotes,
+                EvidenceKind::Examples,
+                EvidenceKind::RuntimeApi,
+                EvidenceKind::UsageProbes,
+            ],
+            None,
+            "selected library scopes".into(),
+        )
+        .await
+        .expect("assessment");
+    let states: std::collections::BTreeMap<_, _> = coverage
+        .assessments
+        .iter()
+        .map(|item| (item.kind, item.state))
+        .collect();
+    assert_eq!(states[&EvidenceKind::Documentation], ScopeState::Indexed);
+    assert_eq!(states[&EvidenceKind::ReleaseNotes], ScopeState::Missing);
+    assert_eq!(states[&EvidenceKind::Examples], ScopeState::Partial);
+    assert_eq!(states[&EvidenceKind::RuntimeApi], ScopeState::Unknown);
+    assert_eq!(states[&EvidenceKind::UsageProbes], ScopeState::Unknown);
+    assert!(!coverage.complete());
+    let symbol_scope = reader
+        .assess(
+            &[EvidenceKind::PublicApi, EvidenceKind::RuntimeApi],
+            Some(&symbol),
+            "symbol scopes".into(),
+        )
+        .await
+        .expect("symbol assessment");
+    assert!(symbol_scope.complete());
+    assert!(
+        symbol_scope
+            .assessments
+            .iter()
+            .all(|row| row.witness_id.is_some())
+    );
+    let docs_only = reader
+        .assess(
+            &[EvidenceKind::Documentation],
+            None,
+            "documentation only".into(),
+        )
+        .await
+        .expect("documentation assessment");
+    assert!(
+        docs_only.complete(),
+        "unrequested gaps must not taint requested coverage"
+    );
+    assert!(docs_only.missing.is_empty());
+}
+
+#[tokio::test]
 async fn cleanup_is_excluded_until_catalog_plan_and_exhausted_stream_are_dropped() {
     use enrichment_store::{SnapshotReader, leases};
     use futures::StreamExt;
@@ -176,6 +731,7 @@ async fn cold_open_rejects_missing_or_unrelated_catalog_attempts() {
         catalog
             .commit(CatalogDelta {
                 publication: None,
+                comparison: None,
                 releases: vec![metadata.release],
                 environments: vec![metadata.environment],
                 contexts: vec![metadata.context.clone()],
@@ -332,31 +888,68 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
         Scope::Examples,
         Scope::Relationships,
     ];
-    let equal = comparison::page(&before, &before, &scopes, None, 10)
-        .await
-        .expect("same snapshot");
+    let equal = comparison::page(
+        &before,
+        &before,
+        &BlobStore::open(&dir.path().join("data")).unwrap(),
+        comparison::Selection {
+            scopes: &scopes,
+            after_key: None,
+            limit: 10,
+            detail: None,
+            digest: "fixture",
+        },
+    )
+    .await
+    .expect("same snapshot");
     assert_eq!(equal.total, 0);
     assert!(equal.changes.is_empty());
-    let all = comparison::page(&before, &after, &scopes, None, 100)
-        .await
-        .expect("native comparison");
+    let all = comparison::page(
+        &before,
+        &after,
+        &BlobStore::open(&dir.path().join("data")).unwrap(),
+        comparison::Selection {
+            scopes: &scopes,
+            after_key: None,
+            limit: 100,
+            detail: None,
+            digest: "fixture",
+        },
+    )
+    .await
+    .expect("native comparison");
     assert!(all.total > 0);
-    assert!(all.changes.iter().all(|(_, c)| c.scope == Scope::Api
-        && !c.before_sources.is_empty()
-        && !c.after_sources.is_empty()));
+    assert!(all.changes.iter().all(|(_, c)| {
+        c.scope == Scope::Api
+            && c.before
+                .as_ref()
+                .is_some_and(|values| values.iter().any(|a| a.source.is_some()))
+            && c.after
+                .as_ref()
+                .is_some_and(|values| values.iter().any(|a| a.source.is_some()))
+    }));
     assert!(all.changes.iter().any(|(_, c)| {
-        c.after
-            .as_ref()
+        serde_json::to_string(&c.after)
             .expect("after")
-            .to_string()
             .contains("fn changed")
     }));
     let mut cursor = None;
     let mut seen = Vec::new();
     loop {
-        let page = comparison::page(&before, &after, &[Scope::Api], cursor.as_ref(), 1)
-            .await
-            .expect("page");
+        let page = comparison::page(
+            &before,
+            &after,
+            &BlobStore::open(&dir.path().join("data")).unwrap(),
+            comparison::Selection {
+                scopes: &[Scope::Api],
+                after_key: cursor.as_ref(),
+                limit: 1,
+                detail: None,
+                digest: "fixture",
+            },
+        )
+        .await
+        .expect("page");
         assert_eq!(page.total, all.total);
         cursor = page.changes.last().map(|(k, _)| k.clone());
         seen.extend(page.changes.into_iter().map(|(k, c)| (k, c.change_id)));
@@ -457,9 +1050,20 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
         let after = SnapshotReader::open(&repository, catalog, &after.snapshot_id)
             .await
             .expect("after");
-        let delta = comparison::page(&before, &after, &[Scope::Relationships], None, 10)
-            .await
-            .expect("compare endpoints");
+        let delta = comparison::page(
+            &before,
+            &after,
+            &BlobStore::open(&dir.path().join("data")).unwrap(),
+            comparison::Selection {
+                scopes: &[Scope::Relationships],
+                after_key: None,
+                limit: 10,
+                detail: None,
+                digest: "fixture",
+            },
+        )
+        .await
+        .expect("compare endpoints");
         assert_eq!(delta.total, expected_changes);
     }
 }
@@ -564,7 +1168,7 @@ async fn actual_rustdoc_publishes_and_reopens_only_through_catalog_membership() 
         .publish(metadata, evidence, None)
         .await
         .expect("publication");
-    assert_eq!(manifest.schema_version, "5.0");
+    assert_eq!(manifest.schema_version, "6.0");
     assert_eq!(manifest.tables.len(), 10);
     assert!(
         repository
@@ -812,7 +1416,7 @@ async fn missing_input_bytes_cannot_be_published_as_valid_evidence() {
 }
 
 #[tokio::test]
-async fn overview_refuses_to_overwrite_conflicting_feature_definitions() {
+async fn overview_pages_conflicting_feature_definitions_without_overwriting_sources() {
     use enrichment_core::evidence::{
         FragmentKind,
         relational::{SubjectRef, TextFragment},
@@ -844,14 +1448,29 @@ async fn overview_refuses_to_overwrite_conflicting_feature_definitions() {
     )
     .await
     .unwrap();
-    let error = match reader.overview(None, 8).await {
-        Ok(_) => panic!("conflicting values cannot become a single feature fact"),
-        Err(error) => error,
-    };
-    assert!(error.is_budget(), "{error}");
-    assert!(
-        error
-            .to_string()
-            .contains("conflicting qualified definitions")
+    reader.overview(None, 8).await.unwrap();
+    let first = reader
+        .discovery_page(FragmentKind::FeatureDefinition, 1, None, None)
+        .await
+        .unwrap();
+    assert!(first.has_more);
+    let second = reader
+        .discovery_page(
+            FragmentKind::FeatureDefinition,
+            1,
+            first.next_key.as_deref(),
+            None,
+        )
+        .await
+        .unwrap();
+    assert!(!second.has_more);
+    let rows = [first.items[0].0.clone(), second.items[0].0.clone()];
+    assert_ne!(rows[0].fragment_id, rows[1].fragment_id);
+    assert_eq!(
+        rows.iter()
+            .map(|row| row.text.as_str())
+            .collect::<std::collections::BTreeSet<_>>(),
+        ["a", "b"].into()
     );
+    assert!(rows.iter().all(|row| row.artifact_id == source.artifact_id));
 }

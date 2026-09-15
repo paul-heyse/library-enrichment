@@ -1,0 +1,106 @@
+{
+  "module": "datafusion_physical_expr_common::binary_view_map",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.binary_view_map.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::binary_view_map::ArrowBytesViewMap",
+      "name": "ArrowBytesViewMap",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct ArrowBytesViewMap<V> where V: Debug + PartialEq + Eq + Clone + Copy + Default",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "insert_if_new",
+          "signature": "fn insert_if_new<MP, OP>(&mut self, values: &ArrayRef, make_payload_fn: MP, observe_payload_fn: OP) where MP: FnMut(Option<&[u8]>) -> V, OP: FnMut(V)",
+          "summary": "Inserts each value from `values` into the map, invoking `payload_fn` for each value if *not* already present, deferring the allocation of the payload until it is needed."
+        },
+        {
+          "name": "into_state",
+          "signature": "fn into_state(self) -> ArrayRef",
+          "summary": "Converts this set into a `StringViewArray`, or `BinaryViewArray`, containing each distinct value that was inserted. This is done without copying the values."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Is the set empty?"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Total number of entries (including null, if present)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(output_type: OutputType) -> Self"
+        },
+        {
+          "name": "non_null_len",
+          "signature": "fn non_null_len(&self) -> usize",
+          "summary": "Number of non null entries"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Return the total size, in bytes, of memory used to store the data in this set, not including `self`"
+        },
+        {
+          "name": "take",
+          "signature": "fn take(&mut self) -> Self",
+          "summary": "Return the contents of this map and replace it with a new empty map with the same output type"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::binary_view_map::ArrowBytesViewSet",
+      "name": "ArrowBytesViewSet",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct ArrowBytesViewSet",
+      "summary": "HashSet optimized for storing string or binary values that can produce that the final set as a `GenericBinaryViewArray` with minimal copies.",
+      "doc": "api/datafusion_physical_expr_common.binary_view_map.md#arrowbytesviewset",
+      "methods": [
+        {
+          "name": "insert",
+          "signature": "fn insert(&mut self, values: &ArrayRef)",
+          "summary": "Inserts each value from `values` into the set"
+        },
+        {
+          "name": "into_state",
+          "signature": "fn into_state(self) -> ArrayRef",
+          "summary": "Converts this set into a `StringViewArray` or `BinaryViewArray` containing each distinct value that was interned. This is done without copying the values."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the total number of distinct values (including nulls) seen so far"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(output_type: OutputType) -> Self"
+        },
+        {
+          "name": "non_null_len",
+          "signature": "fn non_null_len(&self) -> usize",
+          "summary": "returns the total number of distinct values (not including nulls) seen so far"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Return the total size, in bytes, of memory used to store the data in this set, not including `self`"
+        },
+        {
+          "name": "take",
+          "signature": "fn take(&mut self) -> Self",
+          "summary": "Return the contents of this map and replace it with a new empty map with the same output type"
+        }
+      ]
+    }
+  ]
+}

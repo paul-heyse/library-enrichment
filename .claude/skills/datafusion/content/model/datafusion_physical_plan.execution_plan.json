@@ -1,0 +1,766 @@
+{
+  "module": "datafusion_physical_plan::execution_plan",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.execution_plan.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::execution_plan::Boundedness",
+      "name": "Boundedness",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum Boundedness",
+      "summary": "Represents whether a stream of data **generated** by an operator is bounded (finite) or unbounded (infinite).",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#boundedness",
+      "variants": [
+        "Bounded",
+        "Unbounded"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "is_unbounded",
+          "signature": "fn is_unbounded(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::CardinalityEffect",
+      "name": "CardinalityEffect",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum CardinalityEffect",
+      "summary": "Indicates the effect an execution plan operator will have on the cardinality of its input stream",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#cardinalityeffect",
+      "variants": [
+        "Unknown",
+        "Equal",
+        "LowerEqual",
+        "GreaterEqual"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::ChildrenPropertiesMode",
+      "name": "ChildrenPropertiesMode",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum ChildrenPropertiesMode",
+      "summary": "Indicates whether the plan properties of the new children must be recomputed.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#childrenpropertiesmode",
+      "aliases": [
+        "datafusion::physical_plan::ChildrenPropertiesMode",
+        "datafusion_physical_plan::ChildrenPropertiesMode"
+      ],
+      "variants": [
+        "Keep",
+        "Recompute"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::EmissionType",
+      "name": "EmissionType",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum EmissionType",
+      "summary": "Represents how an operator emits its output records.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#emissiontype",
+      "variants": [
+        "Incremental",
+        "Final",
+        "Both"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::EvaluationType",
+      "name": "EvaluationType",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum EvaluationType",
+      "summary": "Represents how an operator's stream drives [`RecordBatch`] production relative to downstream demand.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#evaluationtype",
+      "variants": [
+        "Lazy",
+        "Eager"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::InvariantLevel",
+      "name": "InvariantLevel",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum InvariantLevel",
+      "summary": "[`ExecutionPlan`] Invariant Level",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#invariantlevel",
+      "variants": [
+        "Always",
+        "Executable"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::SchedulingType",
+      "name": "SchedulingType",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum SchedulingType",
+      "summary": "Represents whether an operator's `Stream` has been implemented to actively cooperate with the Tokio scheduler or not. Please refer to the [`coop`](crate::coop) module for more details.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#schedulingtype",
+      "variants": [
+        "NonCooperative",
+        "Cooperative"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::apply_expression_roots",
+      "name": "apply_expression_roots",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn apply_expression_roots<I>(roots: I, f: &mut dyn FnMut(&std::sync::Arc<dyn PhysicalExpr>) -> datafusion_common::Result<datafusion_common::tree_node::TreeNodeRecursion>) -> datafusion_common::Result<datafusion_common::tree_node::TreeNodeRecursion> where I: IntoIterator, I::Item: AsPhysicalExprRef",
+      "summary": "Applies `f` to a shallow sequence of physical expression roots.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#apply_expression_roots",
+      "aliases": [
+        "datafusion::physical_plan::apply_expression_roots",
+        "datafusion_physical_plan::apply_expression_roots"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::check_default_invariants",
+      "name": "check_default_invariants",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn check_default_invariants<P: ExecutionPlan + ?Sized>(plan: &P, check: InvariantLevel) -> datafusion_common::Result<(), datafusion_common::DataFusionError>",
+      "summary": "Checks a set of invariants that apply to all ExecutionPlan implementations. Returns an error if the given node does not conform.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#check_default_invariants"
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::check_not_null_constraints",
+      "name": "check_not_null_constraints",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn check_not_null_constraints(batch: arrow::array::RecordBatch, column_indices: &Vec<usize>) -> datafusion_common::Result<arrow::array::RecordBatch>",
+      "summary": "Checks a `RecordBatch` for `not null` constraints on specified columns.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#check_not_null_constraints"
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::collect",
+      "name": "collect",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "async fn collect(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<arrow::array::RecordBatch>>",
+      "summary": "Execute the [ExecutionPlan] and collect the results in memory",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#collect",
+      "aliases": [
+        "datafusion::physical_plan::collect",
+        "datafusion_physical_plan::collect"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::collect_partitioned",
+      "name": "collect_partitioned",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "async fn collect_partitioned(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<Vec<arrow::array::RecordBatch>>>",
+      "summary": "Execute the [ExecutionPlan] and collect the results in memory",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#collect_partitioned",
+      "aliases": [
+        "datafusion::physical_plan::collect_partitioned",
+        "datafusion_physical_plan::collect_partitioned"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::displayable",
+      "name": "displayable",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn displayable(plan: &dyn ExecutionPlan) -> display::DisplayableExecutionPlan<'_>",
+      "summary": "Return a [`DisplayableExecutionPlan`] wrapper around an [`ExecutionPlan`] which can be displayed in various easier to understand ways.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#displayable",
+      "aliases": [
+        "datafusion::physical_plan::displayable",
+        "datafusion_physical_plan::displayable"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::execute_input_stream",
+      "name": "execute_input_stream",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn execute_input_stream(input: std::sync::Arc<dyn ExecutionPlan>, sink_schema: arrow::datatypes::SchemaRef, partition: usize, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<SendableRecordBatchStream>",
+      "summary": "Executes an input stream and ensures that the resulting stream adheres to the `not null` constraints specified in the `sink_schema`.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#execute_input_stream",
+      "aliases": [
+        "datafusion::physical_plan::execute_input_stream",
+        "datafusion_physical_plan::execute_input_stream"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::execute_stream",
+      "name": "execute_stream",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn execute_stream(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<SendableRecordBatchStream>",
+      "summary": "Execute the [ExecutionPlan] and return a single stream of `RecordBatch`es.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#execute_stream",
+      "aliases": [
+        "datafusion::physical_plan::execute_stream",
+        "datafusion_physical_plan::execute_stream"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::execute_stream_partitioned",
+      "name": "execute_stream_partitioned",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn execute_stream_partitioned(plan: std::sync::Arc<dyn ExecutionPlan>, context: std::sync::Arc<datafusion_execution::TaskContext>) -> datafusion_common::Result<Vec<SendableRecordBatchStream>>",
+      "summary": "Execute the [ExecutionPlan] and return a vec with one stream per output partition",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#execute_stream_partitioned",
+      "aliases": [
+        "datafusion::physical_plan::execute_stream_partitioned",
+        "datafusion_physical_plan::execute_stream_partitioned"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::get_plan_string",
+      "name": "get_plan_string",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn get_plan_string(plan: &std::sync::Arc<dyn ExecutionPlan>) -> Vec<String>",
+      "summary": "Utility function yielding a string representation of the given [`ExecutionPlan`].",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#get_plan_string",
+      "aliases": [
+        "datafusion::physical_plan::get_plan_string",
+        "datafusion_physical_plan::get_plan_string"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::has_same_children_properties",
+      "name": "has_same_children_properties",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn has_same_children_properties(plan: &dyn ExecutionPlan, children: &[std::sync::Arc<dyn ExecutionPlan>]) -> datafusion_common::Result<bool>",
+      "summary": "Check if the `plan` children has the same properties as passed `children`. In this case plan can avoid self properties re-computation when its children replace is requested. The size of `children` must be equal to the size of `ExecutionPla…",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#has_same_children_properties"
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::need_data_exchange",
+      "name": "need_data_exchange",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn need_data_exchange(plan: std::sync::Arc<dyn ExecutionPlan>) -> bool",
+      "summary": "Indicate whether a data exchange is needed for the input of `plan`.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#need_data_exchange"
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::replace_children_if_necessary",
+      "name": "replace_children_if_necessary",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn replace_children_if_necessary(plan: std::sync::Arc<dyn ExecutionPlan>, children: Vec<std::sync::Arc<dyn ExecutionPlan>>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>",
+      "summary": "Returns a plan with the given children, skipping as much work as possible.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#replace_children_if_necessary",
+      "aliases": [
+        "datafusion::physical_plan::replace_children_if_necessary",
+        "datafusion_physical_plan::replace_children_if_necessary"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::reset_plan_states",
+      "name": "reset_plan_states",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn reset_plan_states(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>",
+      "summary": "Make plan ready to be re-executed returning its clone with state reset for all nodes.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#reset_plan_states"
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::with_new_children_if_necessary",
+      "name": "with_new_children_if_necessary",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn with_new_children_if_necessary(plan: std::sync::Arc<dyn ExecutionPlan>, children: Vec<std::sync::Arc<dyn ExecutionPlan>>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>",
+      "summary": "",
+      "doc": null,
+      "deprecated": "since 55.0.0: Use `replace_children_if_necessary`",
+      "aliases": [
+        "datafusion::physical_plan::with_new_children_if_necessary",
+        "datafusion_physical_plan::with_new_children_if_necessary"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::PlanProperties",
+      "name": "PlanProperties",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct PlanProperties",
+      "summary": "Stores plan properties used in query optimization.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#planproperties",
+      "aliases": [
+        "datafusion::physical_plan::PlanProperties",
+        "datafusion_physical_plan::PlanProperties"
+      ],
+      "fields": [
+        "eq_properties",
+        "partitioning",
+        "emission_type",
+        "boundedness",
+        "evaluation_type",
+        "scheduling_type"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "equivalence_properties",
+          "signature": "fn equivalence_properties(&self) -> &EquivalenceProperties"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(eq_properties: EquivalenceProperties, partitioning: Partitioning, emission_type: EmissionType, boundedness: Boundedness) -> Self",
+          "summary": "Construct a new `PlanPropertiesCache` from the"
+        },
+        {
+          "name": "output_ordering",
+          "signature": "fn output_ordering(&self) -> Option<&LexOrdering>"
+        },
+        {
+          "name": "output_partitioning",
+          "signature": "fn output_partitioning(&self) -> &Partitioning"
+        },
+        {
+          "name": "set_constraints",
+          "signature": "fn set_constraints(&mut self, constraints: Constraints)",
+          "summary": "Set constraints having mut reference."
+        },
+        {
+          "name": "set_eq_properties",
+          "signature": "fn set_eq_properties(&mut self, eq_properties: EquivalenceProperties)",
+          "summary": "Set equivalence properties having mut reference."
+        },
+        {
+          "name": "with_boundedness",
+          "signature": "fn with_boundedness(self, boundedness: Boundedness) -> Self",
+          "summary": "Overwrite boundedness with its new value."
+        },
+        {
+          "name": "with_constraints",
+          "signature": "fn with_constraints(self, constraints: Constraints) -> Self",
+          "summary": "Overwrite constraints with its new value."
+        },
+        {
+          "name": "with_emission_type",
+          "signature": "fn with_emission_type(self, emission_type: EmissionType) -> Self",
+          "summary": "Overwrite emission type with its new value."
+        },
+        {
+          "name": "with_eq_properties",
+          "signature": "fn with_eq_properties(self, eq_properties: EquivalenceProperties) -> Self",
+          "summary": "Overwrite equivalence properties with its new value."
+        },
+        {
+          "name": "with_evaluation_type",
+          "signature": "fn with_evaluation_type(self, drive_type: EvaluationType) -> Self",
+          "summary": "Set the [`EvaluationType`]."
+        },
+        {
+          "name": "with_partitioning",
+          "signature": "fn with_partitioning(self, partitioning: Partitioning) -> Self",
+          "summary": "Overwrite output partitioning with its new value."
+        },
+        {
+          "name": "with_scheduling_type",
+          "signature": "fn with_scheduling_type(self, scheduling_type: SchedulingType) -> Self",
+          "summary": "Set the [`SchedulingType`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::ReplaceChildrenOptions",
+      "name": "ReplaceChildrenOptions",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ReplaceChildrenOptions",
+      "summary": "Options for [`ExecutionPlan::replace_children`]",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#replacechildrenoptions",
+      "aliases": [
+        "datafusion::physical_plan::ReplaceChildrenOptions",
+        "datafusion_physical_plan::ReplaceChildrenOptions"
+      ],
+      "fields": [
+        "children_properties"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "const fn new(children_properties: ChildrenPropertiesMode) -> Self",
+          "summary": "Create new options for [`ExecutionPlan::replace_children`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::AsPhysicalExprRef",
+      "name": "AsPhysicalExprRef",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait AsPhysicalExprRef",
+      "summary": "Allows a type to be treated as a reference to an [`Arc<dyn PhysicalExpr>`].",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#asphysicalexprref",
+      "aliases": [
+        "datafusion::physical_plan::AsPhysicalExprRef",
+        "datafusion_physical_plan::AsPhysicalExprRef"
+      ],
+      "implementors": [
+        "alloc::sync::Arc",
+        "datafusion_physical_expr::projection::ProjectionExpr"
+      ],
+      "required_methods": [
+        "as_physical_expr_ref"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_physical_expr_ref",
+          "signature": "fn as_physical_expr_ref(&self) -> &Arc<dyn PhysicalExpr>",
+          "summary": "Returns the referenced physical expression."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+      "name": "ExecutionPlan",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait ExecutionPlan: Any + Debug + DisplayAs + Send + Sync",
+      "summary": "Represent nodes in the DataFusion Physical Plan.",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#executionplan",
+      "aliases": [
+        "datafusion::physical_plan::ExecutionPlan",
+        "datafusion_physical_plan::ExecutionPlan"
+      ],
+      "implementors": [
+        "datafusion_datasource::sink::DataSinkExec",
+        "datafusion_datasource::source::DataSourceExec",
+        "datafusion_ffi::execution_plan::ForeignExecutionPlan",
+        "datafusion_ffi::execution_plan::tests::EmptyExec",
+        "datafusion_physical_optimizer::output_requirements::OutputRequirementExec",
+        "datafusion_physical_plan::aggregates::AggregateExec",
+        "datafusion_physical_plan::analyze::AnalyzeExec",
+        "datafusion_physical_plan::async_func::AsyncFuncExec",
+        "datafusion_physical_plan::buffer::BufferExec",
+        "datafusion_physical_plan::coalesce_batches::CoalesceBatchesExec",
+        "datafusion_physical_plan::coalesce_partitions::CoalescePartitionsExec",
+        "datafusion_physical_plan::coop::CooperativeExec",
+        "datafusion_physical_plan::empty::EmptyExec",
+        "datafusion_physical_plan::explain::ExplainExec",
+        "datafusion_physical_plan::filter::FilterExec",
+        "datafusion_physical_plan::joins::cross_join::CrossJoinExec",
+        "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec",
+        "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+        "datafusion_physical_plan::joins::piecewise_merge_join::exec::PiecewiseMergeJoinExec",
+        "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+        "datafusion_physical_plan::joins::symmetric_hash_join::SymmetricHashJoinExec",
+        "datafusion_physical_plan::limit::GlobalLimitExec",
+        "datafusion_physical_plan::limit::LocalLimitExec",
+        "datafusion_physical_plan::memory::LazyMemoryExec",
+        "datafusion_physical_plan::placeholder_row::PlaceholderRowExec",
+        "datafusion_physical_plan::projection::ProjectionExec",
+        "datafusion_physical_plan::recursive_query::RecursiveQueryExec",
+        "datafusion_physical_plan::repartition::RepartitionExec",
+        "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+        "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+        "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+        "datafusion_physical_plan::sorts::sort::SortExec",
+        "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+        "datafusion_physical_plan::streaming::StreamingTableExec",
+        "datafusion_physical_plan::test::TestMemoryExec",
+        "datafusion_physical_plan::test::exec::BarrierExec",
+        "datafusion_physical_plan::test::exec::BlockingExec",
+        "datafusion_physical_plan::test::exec::ErrorExec",
+        "datafusion_physical_plan::test::exec::MockExec",
+        "datafusion_physical_plan::test::exec::PanicExec",
+        "datafusion_physical_plan::test::exec::StatisticsExec",
+        "datafusion_physical_plan::union::InterleaveExec",
+        "datafusion_physical_plan::union::UnionExec",
+        "datafusion_physical_plan::unnest::UnnestExec",
+        "datafusion_physical_plan::windows::bounded_window_agg_exec::BoundedWindowAggExec",
+        "datafusion_physical_plan::windows::window_agg_exec::WindowAggExec",
+        "datafusion_physical_plan::work_table::WorkTableExec"
+      ],
+      "required_methods": [
+        "apply_expressions",
+        "children",
+        "execute",
+        "name",
+        "properties",
+        "with_new_children"
+      ],
+      "provided_methods": [
+        "benefits_from_input_partitioning",
+        "cardinality_effect",
+        "check_invariants",
+        "child_stats_requests",
+        "downcast_delegate",
+        "dynamic_expressions_produced",
+        "fetch",
+        "gather_filters_for_pushdown",
+        "handle_child_pushdown_result",
+        "input_distribution_requirements",
+        "maintains_input_order",
+        "metrics",
+        "partition_statistics",
+        "repartitioned",
+        "replace_children",
+        "required_input_distribution",
+        "required_input_ordering",
+        "reset_state",
+        "schema",
+        "static_name",
+        "statistics_from_inputs",
+        "supports_limit_pushdown",
+        "try_pushdown_sort",
+        "try_swapping_with_projection",
+        "try_to_proto",
+        "with_fetch",
+        "with_new_children_and_same_properties",
+        "with_new_state",
+        "with_preserve_order"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "summary": "Apply a closure `f` to each root expression that this node owns and uses during execution, either by evaluating it or updating it dynamically."
+        },
+        {
+          "name": "benefits_from_input_partitioning",
+          "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+          "summary": "Specifies whether the `ExecutionPlan` benefits from increased parallelization at its input for each child."
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "summary": "Gets the effect on cardinality, if known"
+        },
+        {
+          "name": "check_invariants",
+          "signature": "fn check_invariants(&self, check: InvariantLevel) -> Result<()>",
+          "summary": "Returns an error if this individual node does not conform to its invariants. These invariants are typically only checked in debug mode."
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, _partition: Option<usize>) -> Vec<ChildStats>",
+          "summary": "Returns, per child, which statistics the [`StatisticsContext`] should resolve before calling [`Self::statistics_from_inputs`]."
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "summary": "Get a list of children `ExecutionPlan`s that act as inputs to this plan. The returned list will be empty for leaf nodes such as scans, will contain a single value for unary nodes, or two values for binary nodes (such as joins)."
+        },
+        {
+          "name": "downcast_delegate",
+          "signature": "fn downcast_delegate(&self) -> Option<&dyn ExecutionPlan>",
+          "summary": "Returns the plan that provides this plan's public [`ExecutionPlan`] downcast identity."
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Returns the dynamic expressions produced by this plan node."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "summary": "Begin execution of `partition`, returning a [`Stream`] of [`RecordBatch`]es."
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "summary": "Gets the fetch count for the operator, `None` means there is no fetch."
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+          "summary": "Collect filters that this node can push down to its children. Filters that are being pushed down from parents are passed in, and the node may generate additional filters to push down. For example, given the plan FilterExec -> HashJoinExec…"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "summary": "Handle the result of a child pushdown."
+        },
+        {
+          "name": "input_distribution_requirements",
+          "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+          "summary": "Specifies the input distribution requirements for this plan."
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "summary": "Returns `false` if this `ExecutionPlan`'s implementation may reorder rows within or between partitions."
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "summary": "Return a snapshot of the set of [`Metric`]s for this [`ExecutionPlan`]. If no `Metric`s are available, return None."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Short name for the ExecutionPlan, such as 'DataSourceExec'."
+        },
+        {
+          "name": "partition_statistics",
+          "signature": "fn partition_statistics(&self, partition: Option<usize>) -> Result<Arc<Statistics>>",
+          "summary": "Returns statistics for a specific partition of this `ExecutionPlan` node."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "summary": "Return properties of the output of the `ExecutionPlan`, such as output ordering(s), partitioning information etc."
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, _target_partitions: usize, _config: &ConfigOptions) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "summary": "If supported, attempt to increase the partitioning of this `ExecutionPlan` to produce `target_partitions` partitions."
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Returns a clone of the existing plan with the children replaced, skipping recomputation of plan properties when the options indicate the new children's properties are unchanged."
+        },
+        {
+          "name": "required_input_distribution",
+          "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+          "summary": "Specifies simple per-child input distribution requirements."
+        },
+        {
+          "name": "required_input_ordering",
+          "signature": "fn required_input_ordering(&self) -> Vec<Option<OrderingRequirements>>",
+          "summary": "Specifies the ordering required for all of the children of this `ExecutionPlan`."
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(Arc<self>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reset any internal state within this [`ExecutionPlan`]."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Get the schema for this execution plan"
+        },
+        {
+          "name": "static_name",
+          "signature": "fn static_name() -> &'static str where Self: Sized",
+          "summary": "Short name for the ExecutionPlan, such as 'DataSourceExec'. Like [`name`](ExecutionPlan::name) but can be called without an instance."
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "summary": "Returns statistics for a specific partition of this `ExecutionPlan` node, given pre-computed child statistics."
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "summary": "Returns `true` if a limit can be safely pushed down through this `ExecutionPlan` node."
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, _order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+          "summary": "Try to push down sort ordering requirements to this node."
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, _projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "summary": "Attempts to push down the given projection into the input of this `ExecutionPlan`."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, _ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "summary": "Serialize this plan to its protobuf representation, if it knows how."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, _limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>",
+          "summary": "Returns a fetching variant of this `ExecutionPlan` node, if it supports fetch limits. Returns `None` otherwise."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Deprecated."
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Deprecated. Implement [`ExecutionPlan::replace_children`] instead."
+        },
+        {
+          "name": "with_new_state",
+          "signature": "fn with_new_state(&self, _state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn ExecutionPlan>>",
+          "summary": "Injects arbitrary run-time state into this execution plan, returning a new plan instance that incorporates that state *if* it is relevant to the concrete node implementation."
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(&self, _preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>",
+          "summary": "Returns a variant of this `ExecutionPlan` that is aware of order-sensitivity."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::execution_plan::ExecutionPlanProperties",
+      "name": "ExecutionPlanProperties",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait ExecutionPlanProperties",
+      "summary": "Extension trait provides an easy API to fetch various properties of [`ExecutionPlan`] objects based on [`ExecutionPlan::properties`].",
+      "doc": "api/datafusion_physical_plan.execution_plan.md#executionplanproperties",
+      "aliases": [
+        "datafusion::physical_plan::ExecutionPlanProperties",
+        "datafusion_physical_plan::ExecutionPlanProperties"
+      ],
+      "implementors": [
+        "alloc::sync::Arc"
+      ],
+      "required_methods": [
+        "boundedness",
+        "equivalence_properties",
+        "output_ordering",
+        "output_partitioning",
+        "pipeline_behavior"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "boundedness",
+          "signature": "fn boundedness(&self) -> Boundedness",
+          "summary": "Boundedness information of the stream corresponding to this `ExecutionPlan`. For more details, see [`Boundedness`]."
+        },
+        {
+          "name": "equivalence_properties",
+          "signature": "fn equivalence_properties(&self) -> &EquivalenceProperties",
+          "summary": "Get the [`EquivalenceProperties`] within the plan."
+        },
+        {
+          "name": "output_ordering",
+          "signature": "fn output_ordering(&self) -> Option<&LexOrdering>",
+          "summary": "If the output of this `ExecutionPlan` within each partition is sorted, returns `Some(keys)` describing the ordering. A `None` return value indicates no assumptions should be made on the output ordering."
+        },
+        {
+          "name": "output_partitioning",
+          "signature": "fn output_partitioning(&self) -> &Partitioning",
+          "summary": "Specifies how the output of this `ExecutionPlan` is split into partitions."
+        },
+        {
+          "name": "pipeline_behavior",
+          "signature": "fn pipeline_behavior(&self) -> EmissionType",
+          "summary": "Indicates how the stream of this `ExecutionPlan` emits its results. For more details, see [`EmissionType`]."
+        }
+      ]
+    }
+  ]
+}

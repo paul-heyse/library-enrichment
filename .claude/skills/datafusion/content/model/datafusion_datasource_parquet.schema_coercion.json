@@ -1,0 +1,100 @@
+{
+  "module": "datafusion_datasource_parquet::schema_coercion",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.schema_coercion.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::schema_coercion::apply_file_schema_type_coercions",
+      "name": "apply_file_schema_type_coercions",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn apply_file_schema_type_coercions(table_schema: &arrow::datatypes::Schema, file_schema: &arrow::datatypes::Schema) -> Option<arrow::datatypes::Schema>",
+      "summary": "Apply necessary schema type coercions to make file schema match table schema.",
+      "doc": "api/datafusion_datasource_parquet.schema_coercion.md#apply_file_schema_type_coercions",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::apply_file_schema_type_coercions",
+        "datafusion::datasource::physical_plan::parquet::apply_file_schema_type_coercions",
+        "datafusion_datasource_parquet::apply_file_schema_type_coercions",
+        "datafusion_datasource_parquet::file_format::apply_file_schema_type_coercions"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::schema_coercion::coerce_int96_to_resolution",
+      "name": "coerce_int96_to_resolution",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn coerce_int96_to_resolution(parquet_schema: &parquet::schema::types::SchemaDescriptor, file_schema: &arrow::datatypes::Schema, time_unit: &arrow::datatypes::TimeUnit) -> Option<arrow::datatypes::Schema>",
+      "summary": "Coerces the file schema's Timestamps to the provided TimeUnit if the Parquet schema contains INT96.",
+      "doc": "api/datafusion_datasource_parquet.schema_coercion.md#coerce_int96_to_resolution",
+      "deprecated": "since 53.2.0: use `Int96Coercer` instead",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::coerce_int96_to_resolution",
+        "datafusion::datasource::physical_plan::parquet::coerce_int96_to_resolution",
+        "datafusion_datasource_parquet::coerce_int96_to_resolution",
+        "datafusion_datasource_parquet::file_format::coerce_int96_to_resolution"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::schema_coercion::transform_binary_to_string",
+      "name": "transform_binary_to_string",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn transform_binary_to_string(schema: &arrow::datatypes::Schema) -> arrow::datatypes::Schema",
+      "summary": "Transform a schema so that any binary types are strings",
+      "doc": "api/datafusion_datasource_parquet.schema_coercion.md#transform_binary_to_string",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::transform_binary_to_string",
+        "datafusion::datasource::physical_plan::parquet::transform_binary_to_string",
+        "datafusion_datasource_parquet::file_format::transform_binary_to_string",
+        "datafusion_datasource_parquet::transform_binary_to_string"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::schema_coercion::transform_schema_to_view",
+      "name": "transform_schema_to_view",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn transform_schema_to_view(schema: &arrow::datatypes::Schema) -> arrow::datatypes::Schema",
+      "summary": "Transform a schema to use view types for Utf8 and Binary",
+      "doc": "api/datafusion_datasource_parquet.schema_coercion.md#transform_schema_to_view",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::transform_schema_to_view",
+        "datafusion::datasource::physical_plan::parquet::transform_schema_to_view",
+        "datafusion_datasource_parquet::file_format::transform_schema_to_view",
+        "datafusion_datasource_parquet::transform_schema_to_view"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::schema_coercion::Int96Coercer",
+      "name": "Int96Coercer",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct Int96Coercer<'a>",
+      "summary": "Builder for coercing INT96-originated Timestamp columns in `file_schema` to a specific [`TimeUnit`], optionally attaching a timezone.",
+      "doc": "api/datafusion_datasource_parquet.schema_coercion.md#int96coercer",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::Int96Coercer",
+        "datafusion::datasource::physical_plan::parquet::Int96Coercer",
+        "datafusion_datasource_parquet::Int96Coercer",
+        "datafusion_datasource_parquet::file_format::Int96Coercer"
+      ],
+      "methods": [
+        {
+          "name": "coerce",
+          "signature": "fn coerce(self) -> Option<Schema>",
+          "summary": "Run the coercion, returning the rewritten schema or `None` if `file_schema` contains no INT96-derived columns."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(parquet_schema: &'a SchemaDescriptor, file_schema: &'a Schema, time_unit: &'a TimeUnit) -> Self",
+          "summary": "Create a new builder. INT96-derived columns will coerce to `Timestamp(time_unit, None)` unless [`Self::with_timezone`] is set."
+        },
+        {
+          "name": "with_timezone",
+          "signature": "fn with_timezone(self, timezone: Option<Arc<str>>) -> Self",
+          "summary": "Attach a timezone to INT96-derived columns. When `Some`, INT96-derived columns coerce to `Timestamp(time_unit, Some(timezone))` instead of the default `Timestamp(time_unit, None)`. Spark and other systems write INT96 as UTC-adjusted instan…"
+        }
+      ]
+    }
+  ]
+}

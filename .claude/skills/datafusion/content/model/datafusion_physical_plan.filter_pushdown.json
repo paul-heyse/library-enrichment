@@ -1,0 +1,244 @@
+{
+  "module": "datafusion_physical_plan::filter_pushdown",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.filter_pushdown.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::FilterPushdownPhase",
+      "name": "FilterPushdownPhase",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum FilterPushdownPhase",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Pre",
+        "Post"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::PushedDown",
+      "name": "PushedDown",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum PushedDown",
+      "summary": "Discriminant for the result of pushing down a filter into a child node.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#pusheddown",
+      "variants": [
+        "Yes",
+        "No"
+      ],
+      "methods": [
+        {
+          "name": "and",
+          "signature": "fn and(self, other: PushedDown) -> PushedDown",
+          "summary": "Logical AND operation: returns `Yes` only if both operands are `Yes`."
+        },
+        {
+          "name": "or",
+          "signature": "fn or(self, other: PushedDown) -> PushedDown",
+          "summary": "Logical OR operation: returns `Yes` if either operand is `Yes`."
+        },
+        {
+          "name": "wrap_expression",
+          "signature": "fn wrap_expression(self, expr: Arc<dyn PhysicalExpr>) -> PushedDownPredicate",
+          "summary": "Wrap a [`PhysicalExpr`] with this pushdown result."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::ChildFilterDescription",
+      "name": "ChildFilterDescription",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ChildFilterDescription",
+      "summary": "Describes filter pushdown for a single child node.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#childfilterdescription",
+      "methods": [
+        {
+          "name": "all_unsupported",
+          "signature": "fn all_unsupported(parent_filters: &[Arc<dyn PhysicalExpr>]) -> Self",
+          "summary": "Mark all parent filters as unsupported for this child."
+        },
+        {
+          "name": "from_child",
+          "signature": "fn from_child(parent_filters: &[Arc<dyn PhysicalExpr>], child: &Arc<dyn ExecutionPlan>) -> Result<Self>",
+          "summary": "Build a child filter description by analyzing which parent filters can be pushed to a specific child."
+        },
+        {
+          "name": "from_child_with_allowed_indices",
+          "signature": "fn from_child_with_allowed_indices(parent_filters: &[Arc<dyn PhysicalExpr>], allowed_indices: HashSet<usize>, child: &Arc<dyn ExecutionPlan>) -> Result<Self>",
+          "summary": "Like [`Self::from_child`], but restricts which parent-level columns are considered reachable through this child."
+        },
+        {
+          "name": "with_self_filter",
+          "signature": "fn with_self_filter(self, filter: Arc<dyn PhysicalExpr>) -> Self",
+          "summary": "Add a self filter (from the current node) to be pushed down to this child."
+        },
+        {
+          "name": "with_self_filters",
+          "signature": "fn with_self_filters(self, filters: Vec<Arc<dyn PhysicalExpr>>) -> Self",
+          "summary": "Add multiple self filters."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::ChildFilterPushdownResult",
+      "name": "ChildFilterPushdownResult",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ChildFilterPushdownResult",
+      "summary": "The result of pushing down a single parent filter into all children.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#childfilterpushdownresult",
+      "fields": [
+        "filter",
+        "child_results"
+      ],
+      "methods": [
+        {
+          "name": "all",
+          "signature": "fn all(&self) -> PushedDown",
+          "summary": "Combine all child results using AND logic. Returns `Yes` if **all** children support the filter. Returns `No` if **any** child rejects the filter or if there are no children."
+        },
+        {
+          "name": "any",
+          "signature": "fn any(&self) -> PushedDown",
+          "summary": "Combine all child results using OR logic. Returns `Yes` if **any** child supports the filter. Returns `No` if **all** children reject the filter or if there are no children."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::ChildPushdownResult",
+      "name": "ChildPushdownResult",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ChildPushdownResult",
+      "summary": "The result of pushing down filters into a child node.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#childpushdownresult",
+      "fields": [
+        "parent_filters",
+        "self_filters"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::FilterDescription",
+      "name": "FilterDescription",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct FilterDescription",
+      "summary": "Describes how filters should be pushed down to children.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#filterdescription",
+      "methods": [
+        {
+          "name": "all_unsupported",
+          "signature": "fn all_unsupported(parent_filters: &[Arc<dyn PhysicalExpr>], children: &[&Arc<dyn ExecutionPlan>]) -> Self",
+          "summary": "Mark all parent filters as unsupported for all children."
+        },
+        {
+          "name": "from_children",
+          "signature": "fn from_children(parent_filters: Vec<Arc<dyn PhysicalExpr>>, children: &[&Arc<dyn ExecutionPlan>]) -> Result<Self>",
+          "summary": "Build a filter description by analyzing which parent filters can be pushed to each child. This method automatically determines filter routing based on column analysis: - If all columns referenced by a filter exist in a child's schema, it c…"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new empty FilterDescription"
+        },
+        {
+          "name": "parent_filters",
+          "signature": "fn parent_filters(&self) -> Vec<Vec<PushedDownPredicate>>"
+        },
+        {
+          "name": "self_filters",
+          "signature": "fn self_filters(&self) -> Vec<Vec<Arc<dyn PhysicalExpr>>>"
+        },
+        {
+          "name": "with_child",
+          "signature": "fn with_child(self, child: ChildFilterDescription) -> Self",
+          "summary": "Add a child filter description"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::FilterPushdownPropagation",
+      "name": "FilterPushdownPropagation",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct FilterPushdownPropagation<T>",
+      "summary": "The result of pushing down filters into a node.",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#filterpushdownpropagation",
+      "fields": [
+        "filters",
+        "updated_node"
+      ],
+      "methods": [
+        {
+          "name": "all_unsupported",
+          "signature": "fn all_unsupported(child_pushdown_result: ChildPushdownResult) -> Self",
+          "summary": "Create a new [`FilterPushdownPropagation`] that tells the parent node that no filters were pushed down regardless of the child results."
+        },
+        {
+          "name": "if_all",
+          "signature": "fn if_all(child_pushdown_result: ChildPushdownResult) -> Self",
+          "summary": "Create a new [`FilterPushdownPropagation`] that tells the parent node that each parent filter is supported if it was supported by *all* children."
+        },
+        {
+          "name": "if_any",
+          "signature": "fn if_any(child_pushdown_result: ChildPushdownResult) -> Self",
+          "summary": "Create a new [`FilterPushdownPropagation`] that tells the parent node that each parent filter is supported if it was supported by *any* child."
+        },
+        {
+          "name": "with_parent_pushdown_result",
+          "signature": "fn with_parent_pushdown_result(filters: Vec<PushedDown>) -> Self",
+          "summary": "Create a new [`FilterPushdownPropagation`] with the specified filter support. This transmits up to our parent node what the result of pushing down the filters into our node and possibly our subtree was."
+        },
+        {
+          "name": "with_updated_node",
+          "signature": "fn with_updated_node(self, updated_node: T) -> Self",
+          "summary": "Bind an updated node to the [`FilterPushdownPropagation`]. Use this when the current node wants to update itself in the tree or replace itself with a new node (e.g. one of it's children). You do not need to call this if one of the children…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::filter_pushdown::PushedDownPredicate",
+      "name": "PushedDownPredicate",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct PushedDownPredicate",
+      "summary": "The result of a plan for pushing down a filter into a child node. This contains references to filters so that nodes can mutate a filter before pushing it down to a child node (e.g. to adjust a projection) or can directly take ownership of…",
+      "doc": "api/datafusion_physical_plan.filter_pushdown.md#pusheddownpredicate",
+      "fields": [
+        "discriminant",
+        "predicate"
+      ],
+      "methods": [
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Arc<dyn PhysicalExpr>",
+          "summary": "Return the wrapped [`PhysicalExpr`], discarding whether it is supported or unsupported."
+        },
+        {
+          "name": "supported",
+          "signature": "fn supported(predicate: Arc<dyn PhysicalExpr>) -> Self",
+          "summary": "Create a new [`PushedDownPredicate`] with supported pushdown."
+        },
+        {
+          "name": "unsupported",
+          "signature": "fn unsupported(predicate: Arc<dyn PhysicalExpr>) -> Self",
+          "summary": "Create a new [`PushedDownPredicate`] with unsupported pushdown."
+        }
+      ]
+    }
+  ]
+}

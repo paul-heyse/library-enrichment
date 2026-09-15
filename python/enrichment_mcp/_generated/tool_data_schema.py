@@ -2,7 +2,7 @@
 #   filename:  tool-data.schema.json
 
 from enum import Enum, StrEnum
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 from typing import Any, Literal
 
 
@@ -44,6 +44,14 @@ class DefinitionsByKind(RootModel[int]):
 class Encoding(StrEnum):
     utf8 = "utf8"
     base64 = "base64"
+
+
+class AlternativeValue1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    mode: Literal["inline"]
+    value: Any
 
 
 class ApiOrigin(StrEnum):
@@ -133,16 +141,20 @@ class ArtifactHandle(BaseModel):
     )
 
 
-class ArtifactSliceData(BaseModel):
-    artifact: Artifact = Field(..., description="The artifact record.")
-    content: str = Field(..., description="The slice.")
-    content_digest: str = Field(..., description="SHA-256 of the slice bytes.")
-    encoding: Encoding = Field(..., description="How `content` is encoded.")
-    end: int = Field(..., description="One past the last byte offset of the slice.", ge=0)
-    remaining: int = Field(..., description="Bytes after `end`.", ge=0)
-    section: str | None = Field(..., description="The section that was selected, when one was.")
-    start: int = Field(..., description="First byte offset of the slice.", ge=0)
-    total: int = Field(..., description="Total artifact size.", ge=0)
+class ArtifactSection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    heading: str
+    kind: Literal["markdown"]
+
+
+class AspectState(StrEnum):
+    available = "available"
+    absent = "absent"
+    unavailable = "unavailable"
+    omitted = "omitted"
+    failed = "failed"
 
 
 class Status(StrEnum):
@@ -169,6 +181,9 @@ class ComponentStatus(BaseModel):
 
 
 class ConfigurationDifference(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     after: Any
     before: Any
     field: str
@@ -199,19 +214,40 @@ class Context(BaseModel):
     )
 
 
-class Coverage(BaseModel):
+class DeliveryLimits(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    indexed: list[str] = Field(..., description="Evidence kinds that were successfully indexed.")
-    limitations: list[str] = Field(..., description="Known reasons this result may not generalize.")
-    missing: list[str] = Field(..., description="Evidence kinds that were expected but are absent.")
-    scope: str = Field(..., description="What the result claims to cover, in prose.")
+    effective_max_bytes: int | None = Field(..., ge=0)
+    requested_max_bytes: int | None = Field(..., ge=0)
 
 
 class Deprecated(BaseModel):
     note: str | None = Field(..., description="The note, if given.")
     since: str | None = Field(..., description="The `since` value, if given.")
+
+
+class DiagnosticCause(StrEnum):
+    invalid_input = "invalid_input"
+    not_found = "not_found"
+    permission_denied = "permission_denied"
+    corrupt_state = "corrupt_state"
+    io = "io"
+    capacity = "capacity"
+    deadline = "deadline"
+    invalid_plan = "invalid_plan"
+    policy_denied = "policy_denied"
+    unsupported = "unsupported"
+    upstream = "upstream"
+    transport = "transport"
+    internal = "internal"
+
+
+class DiscoveryKind(StrEnum):
+    features = "features"
+    documentation = "documentation"
+    release_notes = "release_notes"
+    examples = "examples"
 
 
 class DocsRsMetadata(BaseModel):
@@ -287,55 +323,8 @@ class Code(StrEnum):
     VERIFICATION_FAILED = "VERIFICATION_FAILED"
     BUDGET_EXCEEDED = "BUDGET_EXCEEDED"
     INVALID_CURSOR = "INVALID_CURSOR"
-
-
-class Error(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    code: Code = Field(..., description="The stable code a caller can branch on.")
-    message: str = Field(..., description="Human-readable explanation. Not a stable interface.")
-    next_action: str = Field(
-        ...,
-        description="What the caller should do instead. Blueprint §7.2 requires this, not just a code.",
-    )
-    retryable: bool = Field(
-        ..., description="Whether retrying the identical request could succeed."
-    )
-
-
-class SourceVersionMatch(StrEnum):
-    exact = "exact"
-    compatible_claimed = "compatible_claimed"
-    mismatched = "mismatched"
-    unknown = "unknown"
-
-
-class Evidence(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    artifact_id: str = Field(..., description="The artifact this was read out of.")
-    evidence_class: EvidenceClass = Field(
-        ..., description="Which epistemic class this fact belongs to."
-    )
-    evidence_id: str = Field(..., description="Stable handle for citation.")
-    excerpt: str = Field(..., description="A compact supporting quote.")
-    locator: dict[str, Any] = Field(
-        ...,
-        description="Position within the artifact. Specialized as a discriminated union per producer.",
-    )
-    producer: str = Field(..., description="Which producer emitted this.")
-    producer_version: str = Field(
-        ..., description="The exact producer version, for reproducibility."
-    )
-    source_uri: AnyUrl = Field(..., description="Where the artifact came from.")
-    source_version_match: SourceVersionMatch = Field(
-        ..., description="How the source's version relates to the requested one."
-    )
-    subject: str = Field(
-        ..., description="What the fact is about -- a symbol path, a setting, a release."
-    )
+    QUERY_FAILED = "QUERY_FAILED"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
 class EvidenceCounters(BaseModel):
@@ -356,7 +345,7 @@ class EvidenceCounters(BaseModel):
     )
 
 
-class Kind1(StrEnum):
+class Kind2(StrEnum):
     api_signature = "api_signature"
     doc_text = "doc_text"
     feature_definition = "feature_definition"
@@ -366,7 +355,7 @@ class Kind1(StrEnum):
     source_excerpt = "source_excerpt"
 
 
-class SourceVersionMatch3(Enum):
+class SourceVersionMatch(Enum):
     exact = "exact"
     compatible_claimed = "compatible_claimed"
     mismatched = "mismatched"
@@ -378,7 +367,7 @@ class EvidenceFragment(BaseModel):
     artifact_id: str = Field(..., description="The artifact it was read from.")
     evidence_class: EvidenceClass = Field(..., description="Which epistemic class it belongs to.")
     fragment_id: str = Field(..., description="Content-derived identity.")
-    kind: Kind1 = Field(..., description="What kind of text this is.")
+    kind: Kind2 = Field(..., description="What kind of text this is.")
     locator: dict[str, Any] = Field(
         ..., description="Position within the artifact, as a JSON object."
     )
@@ -388,7 +377,7 @@ class EvidenceFragment(BaseModel):
         ...,
         description="This fragment's acquisition locator, not the blob's first retrieval locator.",
     )
-    source_version_match: SourceVersionMatch3 | None = Field(
+    source_version_match: SourceVersionMatch | None = Field(
         ...,
         description="Source-specific version match, overriding the release default for mutable docs.",
     )
@@ -444,6 +433,18 @@ class ExecutionOutcome(StrEnum):
     cancelled = "cancelled"
 
 
+class ExecutionPrerequisite(StrEnum):
+    enabled_profile = "enabled_profile"
+    immutable_image = "immutable_image"
+    qualification = "qualification"
+    cleanup = "cleanup"
+
+
+class Ecosystem(StrEnum):
+    rust = "rust"
+    python = "python"
+
+
 class ExecutionTarget2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -462,7 +463,7 @@ class ExecutionTarget3(BaseModel):
     limitation: str
 
 
-class SourceVersionMatch4(StrEnum):
+class SourceVersionMatch3(StrEnum):
     exact = "exact"
     compatible_claimed = "compatible_claimed"
     mismatched = "mismatched"
@@ -487,24 +488,7 @@ class FetchCounters(BaseModel):
     )
 
 
-class Freshness(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    latest_verified: bool = Field(
-        ...,
-        description='Whether "this is the latest release" was actually revalidated. A cache hit alone is not\nevidence that a release is still latest.',
-    )
-    registry_checked_at: AwareDatetime | None = Field(
-        ...,
-        description="When the registry was last consulted, or `null` if it was not consulted at all.",
-    )
-    source_version_match: SourceVersionMatch4 = Field(
-        ..., description="How the evidence's source version relates to the requested one."
-    )
-
-
-class Kind2(StrEnum):
+class Kind3(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -543,6 +527,9 @@ class SupportedFormat(RootModel[int]):
 
 
 class HostedJsonReport(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     declared_crate_version: str | None = Field(
         ..., description="`crate_version` as the JSON itself declares it, when available."
     )
@@ -557,7 +544,20 @@ class HostedJsonReport(BaseModel):
     url: str = Field(..., description="The URL that was asked.")
 
 
-class Kind3(StrEnum):
+class InspectionAspect(StrEnum):
+    signature = "signature"
+    availability = "availability"
+    relationships = "relationships"
+    documentation = "documentation"
+    examples = "examples"
+    source = "source"
+    semantics = "semantics"
+    runtime = "runtime"
+    children = "children"
+    members = "members"
+
+
+class Kind4(StrEnum):
     module = "module"
     struct = "struct"
     class_ = "class"
@@ -583,8 +583,11 @@ class Kind3(StrEnum):
 
 
 class InspectionCandidate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     definition_id: str
-    kind: Kind3 = Field(
+    kind: Kind4 = Field(
         ...,
         description="What kind of item a symbol is.\n\nThe values are, in order: `module`, `struct`, `union`, `enum`, `variant`, `struct_field`,\n`trait`, `trait_alias`, `type_alias`, `function`, `method`, `constant`, `static`, `macro`,\n`proc_macro`, `assoc_type`, `assoc_const`, `primitive`, `extern_crate`, `import`.",
     )
@@ -602,28 +605,7 @@ class State3(StrEnum):
     cancelled = "cancelled"
 
 
-class JobHandle(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    job_id: str = Field(
-        ...,
-        description="Durable core job identity. Distinct from the request ID: jobs are shared and reusable.",
-    )
-    poll_after_ms: int = Field(
-        ..., description="Advisory next-poll delay. Not a completion-time guarantee.", ge=0
-    )
-    stage: str = Field(
-        ..., description="Which stage is executing, for a caller to report progress."
-    )
-    state: State3 = Field(..., description="Where the job is now.")
-
-
-class SchemaVersion(StrEnum):
-    field_1_0 = "1.0"
-
-
-class Status2(StrEnum):
+class Outcome(StrEnum):
     ok = "ok"
     partial = "partial"
     pending = "pending"
@@ -817,6 +799,35 @@ class LspMetrics(BaseModel):
     warm: int = Field(..., description="Sessions warm right now.", ge=0)
 
 
+class MatchCount1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["exact"]
+    value: int = Field(..., ge=0)
+
+
+class MatchCount2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["lower_bound"]
+    value: int = Field(..., ge=0)
+
+
+class MatchCount3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["unknown"]
+
+
+class MatchCount(RootModel[MatchCount1 | MatchCount2 | MatchCount3]):
+    root: MatchCount1 | MatchCount2 | MatchCount3 = Field(
+        ..., description="Count meaning is explicit; absence is never silently represented as zero."
+    )
+
+
 class CountsByKind(RootModel[int]):
     root: int = Field(..., ge=0)
 
@@ -873,27 +884,33 @@ class ObservedConfiguration(BaseModel):
 
 
 class OverviewChild(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     deprecated: bool = Field(..., description="Whether deprecated.")
     doc_summary: str | None = Field(..., description="Summary, when documented.")
     is_reexport: bool = Field(
         ..., description="Whether this path re-exports a definition elsewhere."
     )
-    kind: Kind3 = Field(..., description="Kind.")
+    kind: Kind4 = Field(..., description="Kind.")
     path: str = Field(..., description="Public path.")
 
 
-class Pagination(BaseModel):
+class Page(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
+    )
+    count: MatchCount = Field(
+        ...,
+        description="Explicit exact, lower-bound or unknown count; never infer absence from a page.",
+    )
+    has_more: bool = Field(
+        ..., description="Whether another nonempty page can be requested with next_cursor."
     )
     next_cursor: str | None = Field(
         ..., description="Opaque cursor for the next page, or `null` at the end."
     )
     returned: int = Field(..., description="How many entries this page carries.", ge=0)
-    total_matches: int | None = Field(
-        ..., description='Total matches when known. `null` means "not counted", never "zero".', ge=0
-    )
-    truncated: bool = Field(..., description="Whether output was cut short by a budget.")
 
 
 class PhysicalTable(BaseModel):
@@ -933,7 +950,7 @@ class ProcessObservation(BaseModel):
     stdout: str
 
 
-class Outcome(StrEnum):
+class Outcome1(StrEnum):
     succeeded = "succeeded"
     partial = "partial"
     failed = "failed"
@@ -967,6 +984,47 @@ class PythonDetails(BaseModel):
     publicness: Publicness
 
 
+class RecoveryAction7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    arguments: dict[str, Any]
+    kind: Literal["call_tool"]
+    tool: str
+
+
+class RecoveryAction9(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["retry_after"]
+    milliseconds: int = Field(..., ge=0)
+
+
+class RecoveryAction10(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["change_request"]
+    reason: str
+
+
+class RecoveryAction11(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["operator_setup"]
+    reason: str
+
+
+class RecoveryAction12(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["report_defect"]
+    reason: str
+
+
 class Relation(StrEnum):
     reexports = "reexports"
     implements = "implements"
@@ -975,11 +1033,6 @@ class Relation(StrEnum):
     documents = "documents"
     returns = "returns"
     accepts = "accepts"
-
-
-class Ecosystem(StrEnum):
-    rust = "rust"
-    python = "python"
 
 
 class ReleaseLinks(BaseModel):
@@ -998,6 +1051,14 @@ class RequestedConfiguration(BaseModel):
     target: str | None = Field(..., description="The project's target, when declared.")
 
 
+class ResultSectionName(StrEnum):
+    coverage = "coverage"
+    signature = "signature"
+    changes = "changes"
+    aspects = "aspects"
+    data = "data"
+
+
 class RuntimeObject(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -1011,32 +1072,6 @@ class RuntimeObject(BaseModel):
     signature: str | None
     type_name: str | None = Field(
         ..., description="The actual Python type's qualified name; not a static SymbolKind claim."
-    )
-
-
-class Sandbox(BaseModel):
-    admitted_images: dict[str, str] = Field(
-        ..., description="The image IDs a qualification receipt covers. Empty when there is none."
-    )
-    available_runtimes: list[str] = Field(
-        ...,
-        description="Container/isolation runtimes detected on this host.\n\nDetection only. A runtime being present is not the same as a profile being enabled, and\nthis never enables one.",
-    )
-    enabled_profiles: list[str] = Field(
-        ...,
-        description="Profiles configuration has enabled.\n\nRead from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are\nbuilt-in defaults. A caller selects from this list and never grants itself permission.",
-    )
-    enabled_profiles_source: str = Field(
-        ...,
-        description="Where `enabled_profiles` came from, so a caller is never misled about policy.",
-    )
-    execution_qualified: bool = Field(
-        ...,
-        description="Whether an actual containment run has qualified the configured execution images.\n\nThree different facts live next to each other here on purpose: a profile can be\n*enabled*, a runtime can be *present*, and images can be *configured*, and none of the\nthree means the service can contain anything. Only `execution_qualified` says that, and\nit is set only by a receipt from `just execution-qualify`.",
-    )
-    execution_readiness: str = Field(
-        ...,
-        description="When qualification happened and against which images, or the missing prerequisite.",
     )
 
 
@@ -1054,7 +1089,35 @@ class Scope(StrEnum):
     relationships = "relationships"
 
 
+class Kind6(StrEnum):
+    registry_metadata = "registry_metadata"
+    crate_source = "crate_source"
+    documentation_build_config = "documentation_build_config"
+    hosted_rustdoc_json = "hosted_rustdoc_json"
+    public_api = "public_api"
+    documentation = "documentation"
+    examples = "examples"
+    release_notes = "release_notes"
+    source_excerpts = "source_excerpts"
+    distribution_source = "distribution_source"
+    stubs = "stubs"
+    inventory = "inventory"
+    runtime_api = "runtime_api"
+    semantic_queries = "semantic_queries"
+    usage_probes = "usage_probes"
+
+
+class ScopeState(StrEnum):
+    indexed = "indexed"
+    partial = "partial"
+    missing = "missing"
+    unknown = "unknown"
+
+
 class ScoreFactor(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     name: str = Field(..., description="Factor name.")
     points: int = Field(..., description="Points contributed.", ge=0)
 
@@ -1102,6 +1165,9 @@ class SymbolKind(Enum):
 
 
 class SearchHit(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     also_at: list[str] = Field(..., description="Other public paths to the same definition.")
     deprecated: bool = Field(..., description="Whether the symbol is deprecated.")
     evidence_id: str = Field(..., description="The evidence entry this hit is cited by.")
@@ -1187,21 +1253,20 @@ class SnapshotDescriptor(BaseModel):
 
 
 class SnapshotSummary(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     counts: SnapshotCounts = Field(..., description="Counts.")
     normalizer_version: str = Field(..., description="Normalizer version that produced it.")
     published_at: str = Field(..., description="Publication time.")
     snapshot_id: str = Field(..., description="The snapshot identity.")
 
 
-class SourceExcerpt(BaseModel):
-    end_line: int = Field(..., description="Last line included, 1-based.", ge=0)
-    path: str = Field(..., description="The file, relative to the crate root.")
-    start_line: int = Field(..., description="First line included, 1-based.", ge=0)
-    text: str = Field(..., description="The text.")
-    truncated: bool = Field(..., description="Whether the file had more lines after `end_line`.")
+class SourceWindowKind(StrEnum):
+    recorded_line_window = "recorded_line_window"
 
 
-class SubjectRef1(BaseModel):
+class SubjectRef7(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1209,7 +1274,7 @@ class SubjectRef1(BaseModel):
     symbol_id: str
 
 
-class SubjectRef2(BaseModel):
+class SubjectRef8(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1217,7 +1282,7 @@ class SubjectRef2(BaseModel):
     kind: Literal["definition"]
 
 
-class SubjectRef3(BaseModel):
+class SubjectRef9(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1225,7 +1290,7 @@ class SubjectRef3(BaseModel):
     release_id: str
 
 
-class SubjectRef4(BaseModel):
+class SubjectRef10(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1233,7 +1298,7 @@ class SubjectRef4(BaseModel):
     name: str
 
 
-class SubjectRef5(BaseModel):
+class SubjectRef11(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1242,7 +1307,7 @@ class SubjectRef5(BaseModel):
     kind: Literal["document"]
 
 
-class SubjectRef6(BaseModel):
+class SubjectRef12(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -1252,12 +1317,39 @@ class SubjectRef6(BaseModel):
 
 
 class SubjectRef(
-    RootModel[SubjectRef1 | SubjectRef2 | SubjectRef3 | SubjectRef4 | SubjectRef5 | SubjectRef6]
+    RootModel[SubjectRef7 | SubjectRef8 | SubjectRef9 | SubjectRef10 | SubjectRef11 | SubjectRef12]
 ):
-    root: SubjectRef1 | SubjectRef2 | SubjectRef3 | SubjectRef4 | SubjectRef5 | SubjectRef6 = Field(
-        ...,
-        description="A reference carries its indexing domain. External paths never masquerade as local keys.",
+    root: SubjectRef7 | SubjectRef8 | SubjectRef9 | SubjectRef10 | SubjectRef11 | SubjectRef12 = (
+        Field(
+            ...,
+            description="A reference carries its indexing domain. External paths never masquerade as local keys.",
+        )
     )
+
+
+class Kind7(StrEnum):
+    module = "module"
+    struct = "struct"
+    class_ = "class"
+    attribute = "attribute"
+    union = "union"
+    enum = "enum"
+    variant = "variant"
+    struct_field = "struct_field"
+    trait = "trait"
+    trait_alias = "trait_alias"
+    type_alias = "type_alias"
+    function = "function"
+    method = "method"
+    constant = "constant"
+    static = "static"
+    macro = "macro"
+    proc_macro = "proc_macro"
+    assoc_type = "assoc_type"
+    assoc_const = "assoc_const"
+    primitive = "primitive"
+    extern_crate = "extern_crate"
+    import_ = "import"
 
 
 class TargetRef1(BaseModel):
@@ -1373,12 +1465,18 @@ class WorkerFile(BaseModel):
 
 
 class LibraryEnrichmentToolData6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     area: str | None = Field(
         ..., description="Namespace subtree that was searched, when requested."
     )
     hits: list[SearchHit] = Field(..., description="The hits on this page.")
     kinds: list[str] = Field(..., description="The evidence families searched.")
     offset: int = Field(..., description="Page offset.", ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
     query: str = Field(..., description="The query as asked.")
     scoring: list[ScoreFactor] = Field(..., description="The scoring legend, in rank order.")
     searched: list[str] = Field(..., description="Which sources were searched.")
@@ -1387,16 +1485,39 @@ class LibraryEnrichmentToolData6(BaseModel):
 
 
 class LibraryEnrichmentToolData8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     artifact: Artifact = Field(..., description="The artifact record.")
     content: str = Field(..., description="The slice.")
     content_digest: str = Field(..., description="SHA-256 of the slice bytes.")
     encoding: Encoding = Field(..., description="How `content` is encoded.")
     end: int = Field(..., description="One past the last byte offset of the slice.", ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
     remaining: int = Field(..., description="Bytes after `end`.", ge=0)
     section: str | None = Field(..., description="The section that was selected, when one was.")
     start: int = Field(..., description="First byte offset of the slice.", ge=0)
-    total: int = Field(..., description="Total artifact size.", ge=0)
     tool: Literal["read_artifact"]
+    total: int = Field(..., description="Total artifact size.", ge=0)
+
+
+class AlternativeValue2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact: ArtifactHandle
+    mode: Literal["artifact"]
+    sha256: str
+    size_bytes: int = Field(..., ge=0)
+
+
+class AlternativeValue(RootModel[AlternativeValue1 | AlternativeValue2]):
+    root: AlternativeValue1 | AlternativeValue2 = Field(
+        ...,
+        description="Complete value delivery, independent of the alternative's fact provenance.",
+    )
 
 
 class ApiPayload(BaseModel):
@@ -1415,6 +1536,38 @@ class ApiPayload(BaseModel):
     signature: str | None
 
 
+class ArtifactSection8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["result"]
+    name: ResultSectionName
+
+
+class ArtifactSection6(RootModel[ArtifactSection | ArtifactSection8]):
+    root: ArtifactSection | ArtifactSection8 = Field(
+        ..., description="A result projection is distinct from a Markdown heading selection."
+    )
+
+
+class ArtifactSliceData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact: Artifact = Field(..., description="The artifact record.")
+    content: str = Field(..., description="The slice.")
+    content_digest: str = Field(..., description="SHA-256 of the slice bytes.")
+    encoding: Encoding = Field(..., description="How `content` is encoded.")
+    end: int = Field(..., description="One past the last byte offset of the slice.", ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
+    remaining: int = Field(..., description="Bytes after `end`.", ge=0)
+    section: str | None = Field(..., description="The section that was selected, when one was.")
+    start: int = Field(..., description="First byte offset of the slice.", ge=0)
+    total: int = Field(..., description="Total artifact size.", ge=0)
+
+
 class Availability(BaseModel):
     notes: list[str] = Field(..., description="Why the status is what it is, in prose.")
     observed_configuration: ObservedConfiguration = Field(
@@ -1424,6 +1577,14 @@ class Availability(BaseModel):
         ..., description="The caller's declared configuration."
     )
     status: Status = Field(..., description="The strongest honest claim.")
+
+
+class DeliveryDescriptor(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    limits: DeliveryLimits
+    mode: Literal["inline"]
 
 
 class Distribution(BaseModel):
@@ -1537,7 +1698,7 @@ class FactSource(BaseModel):
     locator: Locator
     producer_binding_id: str
     source_uri: str | None
-    source_version_match: SourceVersionMatch4 = Field(
+    source_version_match: SourceVersionMatch3 = Field(
         ...,
         description="How well the evidence's source version matches the version that was asked about.\n\nThe values are, in order: `exact`, `compatible_claimed`, `mismatched`, `unknown`.\n`compatible_claimed` is a claim by the source, not a verified fact.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
     )
@@ -1547,7 +1708,7 @@ class Gap(BaseModel):
     detail: str = Field(
         ..., description="Human-readable detail, e.g. the format version that was refused."
     )
-    kind: Kind2 = Field(..., description="What is missing.")
+    kind: Kind3 = Field(..., description="What is missing.")
     planned_fallback: PlannedFallback | None = Field(
         ..., description="The producer and profile that would supply it, when one exists."
     )
@@ -1587,32 +1748,10 @@ class Health(BaseModel):
     verification: VerificationCounters = Field(..., description="How verification probes finished.")
 
 
-class LibraryEnrichmentResponseEnvelope(BaseModel):
+class NamespaceFacet(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    artifacts: list[ArtifactHandle] = Field(
-        ..., description="Bounded artifacts available for reading."
-    )
-    context_id: str | None = Field(..., description="The research context, or `null`.")
-    coverage: Coverage = Field(..., description="What was looked at, and what was not.")
-    data: dict[str, Any] = Field(..., description="Tool-specific payload.")
-    error: Error | None
-    evidence: list[Evidence] = Field(..., description="Supporting facts with provenance.")
-    freshness: Freshness = Field(..., description="Registry freshness.")
-    job: JobHandle | None
-    pagination: Pagination = Field(..., description="Result-bounding accounting.")
-    request_id: str = Field(..., description="Opaque per-request identifier.", min_length=1)
-    schema_version: SchemaVersion = Field(..., description="Always `1.0` for this contract.")
-    snapshot_id: str | None = Field(..., description="The snapshot read, or `null`.")
-    status: Status2 = Field(
-        ...,
-        description="The four result statuses (blueprint §7.2).\n\nThe values are, in order: `ok`, `partial`, `pending`, `error`. `ok` means successful within\nthe declared coverage, not complete knowledge; `partial` carries usable evidence *and* gaps.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-    )
-    summary: str = Field(..., description="One-line account of what this result establishes.")
-
-
-class NamespaceFacet(BaseModel):
     children: list[OverviewChild] = Field(
         ..., description="A bounded sample of direct children, definitions counted once."
     )
@@ -1645,35 +1784,6 @@ class Observation(BaseModel):
     signature: str | None = Field(..., description="Rendered signature or annotation.")
 
 
-class OverviewData(BaseModel):
-    area: str | None = Field(..., description="The subtree the overview was narrowed to, when any.")
-    crate_name: str = Field(..., description="The crate's root module name.")
-    crate_version: str | None = Field(
-        ..., description="The crate version the documentation declares."
-    )
-    definitions_by_kind: dict[str, DefinitionsByKind] = Field(
-        ..., description="Distinct definitions by kind across the area."
-    )
-    documentation_headings: list[str] = Field(..., description="README headings, in order.")
-    examples: list[str] = Field(..., description="Example names.")
-    features: dict[str, str] = Field(
-        ..., description="Feature definitions: name and what it enables."
-    )
-    namespaces: list[NamespaceFacet] = Field(..., description="Namespaces, root first.")
-    observed_configuration: ObservedConfiguration | None = Field(
-        ..., description="The documentation build's configuration."
-    )
-    reexports: int = Field(
-        ..., description="Paths that re-export a definition reachable elsewhere.", ge=0
-    )
-    release_note_headings: list[str] = Field(..., description="Changelog headings, in order.")
-    snapshot: SnapshotSummary = Field(..., description="The snapshot read.")
-    truncated_namespaces: int = Field(..., description="Namespaces beyond the returned set.", ge=0)
-    unresolved_reexports: int = Field(
-        ..., description="Re-exports whose target is outside this crate.", ge=0
-    )
-
-
 class ProducerRun(BaseModel):
     attempt_id: str = Field(
         ...,
@@ -1688,7 +1798,7 @@ class ProducerRun(BaseModel):
     )
     inputs: dict[str, str] = Field(..., description="Input artifact digests by role.")
     log: str | None = Field(..., description="Bounded log text, when any was kept.")
-    outcome: Outcome = Field(..., description="How it ended.")
+    outcome: Outcome1 = Field(..., description="How it ended.")
     producer: str = Field(..., description="Producer name.")
     producer_version: str = Field(..., description="Exact producer version.")
     profile: Profile = Field(..., description="The execution profile the run was performed under.")
@@ -1702,6 +1812,38 @@ class PythonSymbol(BaseModel):
     signature_conflict: bool = Field(
         ...,
         description="Distinct nonempty signatures disagree; neither is promoted to runtime truth.",
+    )
+
+
+class RecoveryAction8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    cursor: str | None
+    kind: Literal["read_artifact"]
+    section: ArtifactSection6 | None
+
+
+class RecoveryAction(
+    RootModel[
+        RecoveryAction7
+        | RecoveryAction8
+        | RecoveryAction9
+        | RecoveryAction10
+        | RecoveryAction11
+        | RecoveryAction12
+    ]
+):
+    root: (
+        RecoveryAction7
+        | RecoveryAction8
+        | RecoveryAction9
+        | RecoveryAction10
+        | RecoveryAction11
+        | RecoveryAction12
+    ) = Field(
+        ..., description="An actionable follow-up, never an instruction to execute automatically."
     )
 
 
@@ -1756,6 +1898,9 @@ class Release(BaseModel):
 
 
 class ResolveData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     answered_from_cache: bool = Field(
         ...,
         description="Whether this answer was replayed from a recorded resolution rather than fetched.",
@@ -1798,13 +1943,44 @@ class ResolveData(BaseModel):
     )
 
 
+class ResultSection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    name: ResultSectionName
+
+
+class ScopeAssessment(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Kind6 = Field(
+        ...,
+        description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
+    )
+    snapshot_id: str
+    state: ScopeState
+    subject: SubjectRef
+    witness_id: str | None = Field(
+        ...,
+        description="A qualified fact establishing the selected state. Historical attempts remain retained.",
+    )
+
+
 class SearchData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     area: str | None = Field(
         ..., description="Namespace subtree that was searched, when requested."
     )
     hits: list[SearchHit] = Field(..., description="The hits on this page.")
     kinds: list[str] = Field(..., description="The evidence families searched.")
     offset: int = Field(..., description="Page offset.", ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
     query: str = Field(..., description="The query as asked.")
     scoring: list[ScoreFactor] = Field(..., description="The scoring legend, in rank order.")
     searched: list[str] = Field(..., description="Which sources were searched.")
@@ -1827,22 +2003,13 @@ class SemanticQuery(BaseModel):
     server: str
 
 
-class StatusData(BaseModel):
-    features: list[ComponentStatus] = Field(
-        ..., description="Optional capabilities and whether each is supported."
-    )
-    health: Health = Field(..., description="Job queue and cache health.")
-    producers: list[ComponentStatus] = Field(
-        ..., description="Evidence producers and whether each is installed."
-    )
-    sandbox: Sandbox = Field(..., description="Which execution profiles are actually usable here.")
-    schema_compatibility: SchemaCompatibility = Field(
-        ..., description="Which wire schema versions this daemon can speak."
-    )
-    snapshot_compatibility: SchemaCompatibility = Field(
-        ..., description="On-disk storage compatibility; independent of the MCP response envelope."
-    )
-    versions: Versions = Field(..., description="Component versions.")
+class SourceExcerpt(BaseModel):
+    end_line: int = Field(..., description="Last line included, 1-based.", ge=0)
+    path: str = Field(..., description="The file, relative to the crate root.")
+    start_line: int = Field(..., description="First line included, 1-based.", ge=0)
+    text: str = Field(..., description="The text.")
+    truncated: bool = Field(..., description="Whether the file had more lines after `end_line`.")
+    window_kind: SourceWindowKind
 
 
 class Symbol(BaseModel):
@@ -1861,7 +2028,7 @@ class Symbol(BaseModel):
     is_reexport: bool = Field(
         ..., description="Whether this path is a re-export of a definition elsewhere."
     )
-    kind: Kind3 = Field(..., description="What kind of item this is.")
+    kind: Kind7 = Field(..., description="What kind of item this is.")
     name: str = Field(..., description="The last path segment.")
     parent_path: str | None = Field(..., description="The containing path, when any.")
     path: str = Field(..., description="Canonical public path, e.g. `enr_fixture::inner::Widget`.")
@@ -1891,6 +2058,9 @@ class Symbol(BaseModel):
 
 
 class VerificationData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     derived_context: Context | None
     derived_snapshot_id: str | None
     environment: Environment | None
@@ -1916,6 +2086,9 @@ class VerificationData(BaseModel):
 
 
 class LibraryEnrichmentToolData1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     derived_context: Context | None
     derived_snapshot_id: str | None
     environment: Environment | None
@@ -1941,22 +2114,10 @@ class LibraryEnrichmentToolData1(BaseModel):
     tool: Literal["verify_usage"]
 
 
-class LibraryEnrichmentToolData2(BaseModel):
-    active_interests: int = Field(..., ge=0)
-    interest_token: str | None
-    job_id: str
-    result: LibraryEnrichmentResponseEnvelope | None
-    stage: str
-    state: State = Field(
-        ...,
-        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-    )
-    submitted_at: str
-    updated_at: str
-    tool: Literal["job_control"]
-
-
 class LibraryEnrichmentToolData4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     answered_from_cache: bool = Field(
         ...,
         description="Whether this answer was replayed from a recorded resolution rather than fetched.",
@@ -1993,44 +2154,17 @@ class LibraryEnrichmentToolData4(BaseModel):
         ...,
         description="The snapshot published from this resolution, when normalization succeeded.",
     )
+    tool: Literal["resolve_library"]
     upstream: UpstreamCheck | None = Field(
         ...,
         description="What the registry said about newer releases, kept apart from the resolution.",
     )
-    tool: Literal["resolve_library"]
-
-
-class LibraryEnrichmentToolData5(BaseModel):
-    area: str | None = Field(..., description="The subtree the overview was narrowed to, when any.")
-    crate_name: str = Field(..., description="The crate's root module name.")
-    crate_version: str | None = Field(
-        ..., description="The crate version the documentation declares."
-    )
-    definitions_by_kind: dict[str, DefinitionsByKind] = Field(
-        ..., description="Distinct definitions by kind across the area."
-    )
-    documentation_headings: list[str] = Field(..., description="README headings, in order.")
-    examples: list[str] = Field(..., description="Example names.")
-    features: dict[str, str] = Field(
-        ..., description="Feature definitions: name and what it enables."
-    )
-    namespaces: list[NamespaceFacet] = Field(..., description="Namespaces, root first.")
-    observed_configuration: ObservedConfiguration | None = Field(
-        ..., description="The documentation build's configuration."
-    )
-    reexports: int = Field(
-        ..., description="Paths that re-export a definition reachable elsewhere.", ge=0
-    )
-    release_note_headings: list[str] = Field(..., description="Changelog headings, in order.")
-    snapshot: SnapshotSummary = Field(..., description="The snapshot read.")
-    truncated_namespaces: int = Field(..., description="Namespaces beyond the returned set.", ge=0)
-    unresolved_reexports: int = Field(
-        ..., description="Re-exports whose target is outside this crate.", ge=0
-    )
-    tool: Literal["library_overview"]
 
 
 class LibraryEnrichmentToolData9(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     catalog_generation: int = Field(..., ge=0)
     is_current: bool = Field(..., description="Whether this snapshot is the context's current one.")
     manifest: EvidenceManifest = Field(..., description="The immutable manifest as published.")
@@ -2039,6 +2173,242 @@ class LibraryEnrichmentToolData9(BaseModel):
         description="Operational attribution from the catalog generation pinned by this request.",
     )
     tool: Literal["snapshot_manifest"]
+
+
+class Alternative(BaseModel):
+    source: FactSource | None
+    value: AlternativeValue
+
+
+class ApiObservationProjection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    docs_included: bool = Field(
+        ...,
+        description="False means docs were omitted by projection; it does not assert absent documentation.",
+    )
+    environment_id: str
+    observation_id: str = Field(
+        ...,
+        description="Identity of the complete admitted fact, not a hash of this query projection.",
+    )
+    origin: ApiOrigin
+    payload: ApiPayload
+    source: FactSource
+    subject: SubjectRef
+
+
+class Change(BaseModel):
+    after: list[Alternative] | None
+    after_page: Page
+    before: list[Alternative] | None
+    before_page: Page = Field(
+        ..., description="Values and their source references share this bounded alternative order."
+    )
+    change_id: str
+    interpretation: str
+    kind: ChangeKind
+    scope: Scope
+    subject: str
+
+
+class Coverage(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    assessments: list[ScopeAssessment] = Field(
+        ..., description="Requested evidence scopes assessed against qualified native facts."
+    )
+    details: RecoveryAction | None = Field(
+        ...,
+        description="When present, additional limitation text is retained in the exact coverage section.\nScope, assessments, indexed and missing remain the authoritative inline assessment.",
+    )
+    indexed: list[str] = Field(..., description="Evidence kinds that were successfully indexed.")
+    limitations: list[str] = Field(..., description="Known reasons this result may not generalize.")
+    missing: list[str] = Field(..., description="Evidence kinds that were expected but are absent.")
+    scope: str = Field(..., description="What the result claims to cover, in prose.")
+
+
+class DeliveryDescriptor5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    limits: DeliveryLimits
+    mode: Literal["artifact"]
+    read: RecoveryAction
+    sections: list[ResultSection]
+
+
+class DeliveryDescriptor3(RootModel[DeliveryDescriptor | DeliveryDescriptor5]):
+    root: DeliveryDescriptor | DeliveryDescriptor5 = Field(
+        ...,
+        description="Delivery changes representation, never the original research status or coverage.",
+    )
+
+
+class Diagnostic(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    actions: list[RecoveryAction]
+    affected_ids: list[str]
+    allowed: int | None = Field(..., ge=0)
+    cause: DiagnosticCause
+    correlation_id: str | None
+    observed: int | None = Field(..., ge=0)
+    rule: str | None
+    stage: str
+
+
+class Error(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    code: Code = Field(..., description="The stable code a caller can branch on.")
+    diagnostic: Diagnostic = Field(..., description="Structured origin and recovery evidence.")
+    message: str = Field(..., description="Human-readable explanation. Not a stable interface.")
+    next_action: str = Field(
+        ...,
+        description="What the caller should do instead. Blueprint §7.2 requires this, not just a code.",
+    )
+    retryable: bool = Field(
+        ..., description="Whether retrying the identical request could succeed."
+    )
+
+
+class ExecutionPayload1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["semantic_query"]
+    value: SemanticQuery
+
+
+class ExecutionPayload(RootModel[ExecutionPayload1 | ExecutionPayload2 | ExecutionPayload3]):
+    root: ExecutionPayload1 | ExecutionPayload2 | ExecutionPayload3
+
+
+class ExecutionReadiness(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    actions: list[RecoveryAction]
+    available: bool
+    ecosystem: Ecosystem = Field(
+        ...,
+        description="Which package ecosystem a release belongs to.\n\nThe values are, in order: `rust`, `python`. No variant carries a doc comment -- see the\nmodule docs in [`crate::wire`].",
+    )
+    image_id: str | None
+    prerequisites: list[ExecutionPrerequisite]
+    profile: Profile = Field(
+        ...,
+        description="The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
+    )
+
+
+class FragmentProjection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    complete: RecoveryAction | None = Field(
+        ..., description="A complete-text request for this selection when text was projected."
+    )
+    fragment: EvidenceFragment
+    text_complete: bool
+
+
+class JobResult(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    outcome: Outcome | None = None
+    context_id: str | None
+    coverage: Coverage
+    delivery: DeliveryDescriptor3
+    error: Error | None
+    snapshot_id: str | None
+    summary: str
+
+
+class ManifestData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    catalog_generation: int = Field(..., ge=0)
+    is_current: bool = Field(..., description="Whether this snapshot is the context's current one.")
+    manifest: EvidenceManifest = Field(..., description="The immutable manifest as published.")
+    producer_runs: list[ProducerRun] = Field(
+        ...,
+        description="Operational attribution from the catalog generation pinned by this request.",
+    )
+
+
+class Sandbox(BaseModel):
+    admitted_images: dict[str, str] = Field(
+        ..., description="The image IDs a qualification receipt covers. Empty when there is none."
+    )
+    available_runtimes: list[str] = Field(
+        ...,
+        description="Container/isolation runtimes detected on this host.\n\nDetection only. A runtime being present is not the same as a profile being enabled, and\nthis never enables one.",
+    )
+    enabled_profiles: list[str] = Field(
+        ...,
+        description="Profiles configuration has enabled.\n\nRead from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are\nbuilt-in defaults. A caller selects from this list and never grants itself permission.",
+    )
+    enabled_profiles_source: str = Field(
+        ...,
+        description="Where `enabled_profiles` came from, so a caller is never misled about policy.",
+    )
+    execution_qualified: bool = Field(
+        ...,
+        description="Whether an actual containment run has qualified the configured execution images.\n\nThree different facts live next to each other here on purpose: a profile can be\n*enabled*, a runtime can be *present*, and images can be *configured*, and none of the\nthree means the service can contain anything. Only `execution_qualified` says that, and\nit is set only by a receipt from `just execution-qualify`.",
+    )
+    execution_readiness: str = Field(
+        ...,
+        description="When qualification happened and against which images, or the missing prerequisite.",
+    )
+    execution_routes: list[ExecutionReadiness] = Field(
+        ...,
+        description="Implemented execution routes assessed by the same admission logic used by tools.\nEmpty when no running service is available to assess qualification and cleanup.",
+    )
+
+
+class StatusData(BaseModel):
+    features: list[ComponentStatus] = Field(
+        ..., description="Optional capabilities and whether each is supported."
+    )
+    health: Health = Field(..., description="Job queue and cache health.")
+    producers: list[ComponentStatus] = Field(
+        ..., description="Evidence producers and whether each is installed."
+    )
+    sandbox: Sandbox = Field(..., description="Which execution profiles are actually usable here.")
+    schema_compatibility: SchemaCompatibility = Field(
+        ..., description="Which wire schema versions this daemon can speak."
+    )
+    snapshot_compatibility: SchemaCompatibility = Field(
+        ..., description="On-disk storage compatibility; independent of the MCP response envelope."
+    )
+    versions: Versions = Field(..., description="Component versions.")
+
+
+class LibraryEnrichmentToolData2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    active_interests: int = Field(..., ge=0)
+    interest_token: str | None
+    job_id: str
+    result: JobResult | None
+    stage: str
+    state: State = Field(
+        ...,
+        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
+    )
+    submitted_at: str
+    tool: Literal["job_control"]
+    updated_at: str
 
 
 class LibraryEnrichmentToolData10(BaseModel):
@@ -2060,104 +2430,38 @@ class LibraryEnrichmentToolData10(BaseModel):
     tool: Literal["service_status"]
 
 
-class ApiObservationProjection(BaseModel):
-    docs_included: bool = Field(
-        ...,
-        description="False means docs were omitted by projection; it does not assert absent documentation.",
+class AspectOutcome(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    environment_id: str
-    observation_id: str = Field(
-        ...,
-        description="Identity of the complete admitted fact, not a hash of this query projection.",
-    )
-    origin: ApiOrigin
-    payload: ApiPayload
-    source: FactSource
-    subject: SubjectRef
-
-
-class Change(BaseModel):
-    after: Any
-    after_sources: list[FactSource]
-    before: Any
-    before_sources: list[FactSource]
-    change_id: str
-    interpretation: str
-    kind: ChangeKind
-    scope: Scope
-    subject: str
+    aspect: InspectionAspect
+    diagnostic: Diagnostic | None
+    page: Page | None
+    reason: str | None
+    state: AspectState
 
 
 class ComparisonSide(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     context_id: str
+    coverage: Coverage
     environment: Environment
     release: Release
     snapshot_id: str
 
 
-class ExecutionPayload1(BaseModel):
+class DiscoveryFacet(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    kind: Literal["semantic_query"]
-    value: SemanticQuery
-
-
-class ExecutionPayload(RootModel[ExecutionPayload1 | ExecutionPayload2 | ExecutionPayload3]):
-    root: ExecutionPayload1 | ExecutionPayload2 | ExecutionPayload3
-
-
-class JobData(BaseModel):
-    active_interests: int = Field(..., ge=0)
-    interest_token: str | None
-    job_id: str
-    result: LibraryEnrichmentResponseEnvelope | None
-    stage: str
-    state: State3 = Field(
-        ...,
-        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
-    )
-    submitted_at: str
-    updated_at: str
-
-
-class ManifestData(BaseModel):
-    catalog_generation: int = Field(..., ge=0)
-    is_current: bool = Field(..., description="Whether this snapshot is the context's current one.")
-    manifest: EvidenceManifest = Field(..., description="The immutable manifest as published.")
-    producer_runs: list[ProducerRun] = Field(
-        ...,
-        description="Operational attribution from the catalog generation pinned by this request.",
-    )
-
-
-class LibraryEnrichmentToolData3(BaseModel):
-    after: ComparisonSide
-    api_complete: bool
-    before: ComparisonSide
-    changes: list[Change]
-    comparable: bool
-    configuration_differences: list[ConfigurationDifference]
-    confounders: list[str]
-    offset: int = Field(..., ge=0)
-    same_release: bool
-    scopes: list[Scope]
-    total_changes: int = Field(..., ge=0)
-    tool: Literal["compare_releases"]
-
-
-class CompareData(BaseModel):
-    after: ComparisonSide
-    api_complete: bool
-    before: ComparisonSide
-    changes: list[Change]
-    comparable: bool
-    configuration_differences: list[ConfigurationDifference]
-    confounders: list[str]
-    offset: int = Field(..., ge=0)
-    same_release: bool
-    scopes: list[Scope]
-    total_changes: int = Field(..., ge=0)
+    diagnostic: Diagnostic | None
+    items: list[FragmentProjection]
+    kind: DiscoveryKind
+    page: Page | None
+    reason: str | None
+    state: AspectState
 
 
 class ExecutionObservation(BaseModel):
@@ -2174,7 +2478,13 @@ class ExecutionObservation(BaseModel):
 
 
 class InspectData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     also_at: list[str] = Field(..., description="Other public paths to the same definition.")
+    aspect_outcomes: list[AspectOutcome] = Field(
+        ..., description="Independent aspect states and continuations."
+    )
     aspects: list[str] = Field(..., description="The aspects actually returned.")
     availability: Availability | None = Field(
         ..., description="What can and cannot be said about availability."
@@ -2183,13 +2493,21 @@ class InspectData(BaseModel):
         ...,
         description="Distinct selectable definitions; public paths alone may collide across kinds.",
     )
+    children: list[InspectionCandidate] = Field(
+        ...,
+        description="Lexical direct children, independently paged; this does not establish typed membership.",
+    )
     docs_truncated: bool = Field(..., description="Whether `docs` was cut to fit.")
     execution_observations: list[ExecutionObservation] = Field(
         ...,
         description="Retained execution facts selected natively by symbol/document and exact scope.",
     )
-    fragments: list[EvidenceFragment] = Field(
+    fragments: list[FragmentProjection] = Field(
         ..., description="Fragments about the symbol, bounded."
+    )
+    members: list[InspectionCandidate] = Field(
+        ...,
+        description="Bindings reached by qualified member_of relationships, independently paged.",
     )
     observations: list[ApiObservationProjection] = Field(
         ...,
@@ -2207,8 +2525,113 @@ class InspectData(BaseModel):
     )
 
 
+class JobData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    active_interests: int = Field(..., ge=0)
+    interest_token: str | None
+    job_id: str
+    result: JobResult | None
+    stage: str
+    state: State3 = Field(
+        ...,
+        description="The persisted job states (blueprint §8.3).\n\nThe values are, in order: `queued`, `running`, `succeeded`, `partial`, `failed`,\n`cancel_requested`, `cancelled`. `cancel_requested` is distinct from `cancelled` because\ncancelling one caller's interest must not kill work another caller still needs.\n\nNo variant carries a doc comment -- see the module docs in [`super`](crate::wire).",
+    )
+    submitted_at: str
+    updated_at: str
+
+
+class OverviewData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    area: str | None = Field(..., description="The subtree the overview was narrowed to, when any.")
+    crate_name: str = Field(..., description="The crate's root module name.")
+    crate_version: str | None = Field(
+        ..., description="The crate version the documentation declares."
+    )
+    definitions_by_kind: dict[str, DefinitionsByKind] = Field(
+        ..., description="Distinct definitions by kind across the area."
+    )
+    discovery: list[DiscoveryFacet] = Field(
+        ...,
+        description="Library-level retained fragments, preserving independently sourced alternatives.",
+    )
+    namespaces: list[NamespaceFacet] = Field(..., description="Namespaces, root first.")
+    observed_configuration: ObservedConfiguration | None = Field(
+        ..., description="The documentation build's configuration."
+    )
+    reexports: int = Field(
+        ..., description="Paths that re-export a definition reachable elsewhere.", ge=0
+    )
+    snapshot: SnapshotSummary = Field(..., description="The snapshot read.")
+    truncated_namespaces: int = Field(..., description="Namespaces beyond the returned set.", ge=0)
+    unresolved_reexports: int = Field(
+        ..., description="Re-exports whose target is outside this crate.", ge=0
+    )
+
+
+class LibraryEnrichmentToolData3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    after: ComparisonSide
+    api_complete: bool
+    before: ComparisonSide
+    changes: list[Change]
+    comparable: bool
+    configuration_differences: list[ConfigurationDifference]
+    confounders: list[str]
+    offset: int = Field(..., ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
+    same_release: bool
+    scopes: list[Scope]
+    tool: Literal["compare_releases"]
+    total_changes: int = Field(..., ge=0)
+
+
+class LibraryEnrichmentToolData5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    area: str | None = Field(..., description="The subtree the overview was narrowed to, when any.")
+    crate_name: str = Field(..., description="The crate's root module name.")
+    crate_version: str | None = Field(
+        ..., description="The crate version the documentation declares."
+    )
+    definitions_by_kind: dict[str, DefinitionsByKind] = Field(
+        ..., description="Distinct definitions by kind across the area."
+    )
+    discovery: list[DiscoveryFacet] = Field(
+        ...,
+        description="Library-level retained fragments, preserving independently sourced alternatives.",
+    )
+    namespaces: list[NamespaceFacet] = Field(..., description="Namespaces, root first.")
+    observed_configuration: ObservedConfiguration | None = Field(
+        ..., description="The documentation build's configuration."
+    )
+    reexports: int = Field(
+        ..., description="Paths that re-export a definition reachable elsewhere.", ge=0
+    )
+    snapshot: SnapshotSummary = Field(..., description="The snapshot read.")
+    tool: Literal["library_overview"]
+    truncated_namespaces: int = Field(..., description="Namespaces beyond the returned set.", ge=0)
+    unresolved_reexports: int = Field(
+        ..., description="Re-exports whose target is outside this crate.", ge=0
+    )
+
+
 class LibraryEnrichmentToolData7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     also_at: list[str] = Field(..., description="Other public paths to the same definition.")
+    aspect_outcomes: list[AspectOutcome] = Field(
+        ..., description="Independent aspect states and continuations."
+    )
     aspects: list[str] = Field(..., description="The aspects actually returned.")
     availability: Availability | None = Field(
         ..., description="What can and cannot be said about availability."
@@ -2217,13 +2640,21 @@ class LibraryEnrichmentToolData7(BaseModel):
         ...,
         description="Distinct selectable definitions; public paths alone may collide across kinds.",
     )
+    children: list[InspectionCandidate] = Field(
+        ...,
+        description="Lexical direct children, independently paged; this does not establish typed membership.",
+    )
     docs_truncated: bool = Field(..., description="Whether `docs` was cut to fit.")
     execution_observations: list[ExecutionObservation] = Field(
         ...,
         description="Retained execution facts selected natively by symbol/document and exact scope.",
     )
-    fragments: list[EvidenceFragment] = Field(
+    fragments: list[FragmentProjection] = Field(
         ..., description="Fragments about the symbol, bounded."
+    )
+    members: list[InspectionCandidate] = Field(
+        ...,
+        description="Bindings reached by qualified member_of relationships, independently paged.",
     )
     observations: list[ApiObservationProjection] = Field(
         ...,
@@ -2272,3 +2703,23 @@ class LibraryEnrichmentToolData(
         description="Every tool payload, for schema emission. Never sent on the wire as a union.",
         title="LibraryEnrichmentToolData",
     )
+
+
+class CompareData(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    after: ComparisonSide
+    api_complete: bool
+    before: ComparisonSide
+    changes: list[Change]
+    comparable: bool
+    configuration_differences: list[ConfigurationDifference]
+    confounders: list[str]
+    offset: int = Field(..., ge=0)
+    page: Page = Field(
+        ..., description="Bounded page over this payload, not over the whole research envelope."
+    )
+    same_release: bool
+    scopes: list[Scope]
+    total_changes: int = Field(..., ge=0)

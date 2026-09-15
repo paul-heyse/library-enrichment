@@ -158,34 +158,8 @@ impl ExactParquet {
     /// prunes the omitted leaf before filters, joins and repartitioning. This is neither another
     /// stored relation nor an admission bypass: only the complete relation can establish trust.
     pub(crate) fn inspection_projection(&self) -> Result<Self> {
-        use arrow_schema::{DataType, Schema};
-        let mut fields = self.schema.fields().to_vec();
-        let index = self.schema.index_of("payload")?;
-        let DataType::Struct(payload) = fields[index].data_type() else {
-            return Err(DataFusionError::Plan("API payload is not a struct".into()));
-        };
-        let narrow = payload
-            .iter()
-            .filter(|f| f.name() != "docs")
-            .cloned()
-            .collect();
-        fields[index] = Arc::new(
-            fields[index]
-                .as_ref()
-                .clone()
-                .with_data_type(DataType::Struct(narrow)),
-        );
-        let mut metadata = self.schema.metadata().clone();
-        metadata.insert(
-            "enrichment.relation".into(),
-            "inspection_observations".into(),
-        );
-        metadata.insert(
-            "enrichment.projection".into(),
-            "api_without_documentation".into(),
-        );
         Ok(Self {
-            schema: Arc::new(Schema::new_with_metadata(fields, metadata)),
+            schema: crate::projection::inspection_schema(&self.schema)?,
             ..self.clone()
         })
     }
@@ -199,7 +173,7 @@ impl ExactParquet {
 
     pub(crate) fn unchanged(&self) -> Result<()> {
         for (path, witness) in &self.files {
-            if FileWitness::read(path)? != *witness {
+            if admitted_witness(path)? != *witness {
                 return Err(changed(path));
             }
         }
@@ -221,7 +195,7 @@ impl ExactParquet {
     ) -> Result<Self> {
         let mut partitions = Vec::with_capacity(files.len());
         for (path, witness) in &files {
-            if FileWitness::read(path)? != *witness {
+            if admitted_witness(path)? != *witness {
                 return Err(changed(path));
             }
             let location = object_store::path::Path::from_filesystem_path(path)
@@ -241,10 +215,27 @@ impl ExactParquet {
 }
 
 fn changed(path: &Path) -> DataFusionError {
-    DataFusionError::Execution(format!(
-        "admitted evidence file changed: {}",
-        path.display()
-    ))
+    crate::preparation::InvariantFailure::error(
+        "admitted evidence file changed",
+        "provider_scan",
+        vec![
+            path.file_name()
+                .map_or_else(String::new, |name| name.to_string_lossy().into_owned()),
+        ],
+    )
+}
+
+fn admitted_witness(path: &Path) -> Result<FileWitness> {
+    FileWitness::read(path).map_err(|error| {
+        if matches!(
+            error.kind(),
+            std::io::ErrorKind::NotFound | std::io::ErrorKind::InvalidData
+        ) {
+            changed(path)
+        } else {
+            error.into()
+        }
+    })
 }
 
 #[async_trait]

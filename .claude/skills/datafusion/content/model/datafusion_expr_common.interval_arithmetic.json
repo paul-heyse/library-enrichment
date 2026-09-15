@@ -1,0 +1,351 @@
+{
+  "module": "datafusion_expr_common::interval_arithmetic",
+  "crate": "datafusion-expr-common",
+  "api": "api/datafusion_expr_common.interval_arithmetic.md",
+  "items": [
+    {
+      "path": "datafusion_expr_common::interval_arithmetic::NullableInterval",
+      "name": "NullableInterval",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum NullableInterval",
+      "summary": "An [Interval] that also tracks null status using a boolean interval.",
+      "doc": "api/datafusion_expr_common.interval_arithmetic.md#nullableinterval",
+      "aliases": [
+        "datafusion_expr::interval_arithmetic::NullableInterval"
+      ],
+      "variants": [
+        "Null",
+        "MaybeNull",
+        "NotNull"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "and",
+          "signature": "fn and<T: Borrow<Self>>(&self, rhs: T) -> Result<Self>",
+          "summary": "Returns an interval representing the set of possible values after applying SQL three-valued logical AND on each combination of possible values from `self` and `other`."
+        },
+        {
+          "name": "apply_operator",
+          "signature": "fn apply_operator(&self, op: &Operator, rhs: &Self) -> Result<Self>",
+          "summary": "Apply the given operator to this interval and the given interval."
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is a superset of, overlaps with, or disjoint with `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "contains_value",
+          "signature": "fn contains_value<T: Borrow<ScalarValue>>(&self, value: T) -> Result<bool>",
+          "summary": "Determines if this interval contains a [`ScalarValue`] or not."
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType",
+          "summary": "Get the data type"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ScalarValue) -> Self",
+          "via_trait": "core::convert::From",
+          "summary": "Create an interval that represents a single value."
+        },
+        {
+          "name": "is_certainly_false",
+          "signature": "fn is_certainly_false(&self) -> bool",
+          "summary": "Return true if the value is definitely false (and not null)."
+        },
+        {
+          "name": "is_certainly_true",
+          "signature": "fn is_certainly_true(&self) -> bool",
+          "summary": "Return true if the value is definitely true (and not null)."
+        },
+        {
+          "name": "is_certainly_unknown",
+          "signature": "fn is_certainly_unknown(&self) -> bool",
+          "summary": "Return true if the value is definitely null (and not true or false)."
+        },
+        {
+          "name": "is_false",
+          "signature": "fn is_false(&self) -> Result<Self>",
+          "summary": "Returns the set of possible values after applying the `is false` test on all values in this set. The resulting set can only contain 'TRUE' and/or 'FALSE', never 'UNKNOWN'."
+        },
+        {
+          "name": "is_true",
+          "signature": "fn is_true(&self) -> Result<Self>",
+          "summary": "Returns the set of possible values after applying the `is true` test on all values in this set. The resulting set can only contain 'TRUE' and/or 'FALSE', never 'UNKNOWN'."
+        },
+        {
+          "name": "is_unknown",
+          "signature": "fn is_unknown(&self) -> Result<Self>",
+          "summary": "Returns the set of possible values after applying the `is unknown` test on all values in this set. The resulting set can only contain 'TRUE' and/or 'FALSE', never 'UNKNOWN'."
+        },
+        {
+          "name": "not",
+          "signature": "fn not(&self) -> Result<Self>",
+          "summary": "Returns an interval representing the set of possible values after applying SQL three-valued logical NOT on possible value in this interval."
+        },
+        {
+          "name": "or",
+          "signature": "fn or<T: Borrow<Self>>(&self, rhs: T) -> Result<Self>",
+          "summary": "Returns an interval representing the set of possible values after applying SQL three-valued logical OR on each combination of possible values from `self` and `other`."
+        },
+        {
+          "name": "single_value",
+          "signature": "fn single_value(&self) -> Option<ScalarValue>",
+          "summary": "If the interval has collapsed to a single value, return that value. Otherwise, returns `None`."
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> Option<&Interval>",
+          "summary": "Get the values interval, or None if this interval is definitely null."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::interval_arithmetic::apply_operator",
+      "name": "apply_operator",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn apply_operator(op: &operator::Operator, lhs: &Interval, rhs: &Interval) -> datafusion_common::Result<Interval>",
+      "summary": "Applies the given binary operator the `lhs` and `rhs` arguments.",
+      "doc": "api/datafusion_expr_common.interval_arithmetic.md#apply_operator",
+      "aliases": [
+        "datafusion_expr::interval_arithmetic::apply_operator"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::interval_arithmetic::cardinality_ratio",
+      "name": "cardinality_ratio",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn cardinality_ratio(initial_interval: &Interval, final_interval: &Interval) -> f64",
+      "summary": "This function computes the selectivity of an operation by computing the cardinality ratio of the given input/output intervals. If this can not be calculated for some reason, it returns `1.0` meaning fully selective (no filtering).",
+      "doc": "api/datafusion_expr_common.interval_arithmetic.md#cardinality_ratio",
+      "aliases": [
+        "datafusion_expr::interval_arithmetic::cardinality_ratio"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::interval_arithmetic::satisfy_greater",
+      "name": "satisfy_greater",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn satisfy_greater(left: &Interval, right: &Interval, strict: bool) -> datafusion_common::Result<Option<(Interval, Interval)>>",
+      "summary": "This function updates the given intervals by enforcing (i.e. propagating) the inequality `left > right` (or the `left >= right` inequality, if `strict` is `true`).",
+      "doc": "api/datafusion_expr_common.interval_arithmetic.md#satisfy_greater",
+      "aliases": [
+        "datafusion_expr::interval_arithmetic::satisfy_greater"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::interval_arithmetic::Interval",
+      "name": "Interval",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct Interval",
+      "summary": "The `Interval` type represents a closed interval used for computing reliable bounds for mathematical expressions.",
+      "doc": "api/datafusion_expr_common.interval_arithmetic.md#interval",
+      "aliases": [
+        "datafusion_expr::interval_arithmetic::Interval"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Add the given interval (`other`) to this interval. Say we have intervals `[a1, b1]` and `[a2, b2]`, then their sum is `[a1 + a2, b1 + b2]`. Note that this represents all possible values the sum can take if one can choose single values arbi…"
+        },
+        {
+          "name": "and",
+          "signature": "fn and<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Compute the logical conjunction of this (boolean) interval with the given boolean interval."
+        },
+        {
+          "name": "arithmetic_negate",
+          "signature": "fn arithmetic_negate(&self) -> Result<Self>",
+          "summary": "Reflects an [`Interval`] around the point zero."
+        },
+        {
+          "name": "cardinality",
+          "signature": "fn cardinality(&self) -> Option<u64>",
+          "summary": "Returns the cardinality of this interval, which is the number of all distinct points inside it. This function returns `None` if: - The interval is unbounded from either side, or - Cardinality calculations for the datatype in question is no…"
+        },
+        {
+          "name": "cast_to",
+          "signature": "fn cast_to(&self, data_type: &DataType, cast_options: &CastOptions<'_>) -> Result<Self>",
+          "summary": "Casts this interval to `data_type` using `cast_options`."
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is a superset of, overlaps with, or disjoint with `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "contains_value",
+          "signature": "fn contains_value<T: Borrow<ScalarValue>>(&self, other: T) -> Result<bool>",
+          "summary": "Decide if this interval contains a [`ScalarValue`] (`other`) by returning `true` or `false`."
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType",
+          "summary": "This function returns the data type of this interval."
+        },
+        {
+          "name": "div",
+          "signature": "fn div<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Divide this interval by the given interval (`other`). Say we have intervals `[a1, b1]` and `[a2, b2]`, then their division is `[a1, b1] * [1 / b2, 1 / a2]` if `0 ∉ [a2, b2]` and `[NEG_INF, INF]` otherwise. Note that this represents all pos…"
+        },
+        {
+          "name": "equal",
+          "signature": "fn equal<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is certainly equal to, possibly equal to, or can't be equal to `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: &ScalarValue) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "gt",
+          "signature": "fn gt<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is certainly greater than, possibly greater than, or can't be greater than `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "gt_eq",
+          "signature": "fn gt_eq<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is certainly greater than or equal to, possibly greater than or equal to, or can't be greater than or equal to `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "intersect",
+          "signature": "fn intersect<T: Borrow<Self>>(&self, other: T) -> Result<Option<Self>>",
+          "summary": "Compute the intersection of this interval with the given interval. If the intersection is empty, return `None`."
+        },
+        {
+          "name": "into_bounds",
+          "signature": "fn into_bounds(self) -> (ScalarValue, ScalarValue)",
+          "summary": "Converts this `Interval` into its boundary scalar values. It's useful when you need to work with the individual bounds directly."
+        },
+        {
+          "name": "is_superset",
+          "signature": "fn is_superset(&self, other: &Interval, strict: bool) -> Result<bool>",
+          "summary": "Decide if this interval is a superset of `other`. If argument `strict` is `true`, only returns `true` if this interval is a strict superset."
+        },
+        {
+          "name": "is_unbounded",
+          "signature": "fn is_unbounded(&self) -> bool",
+          "summary": "Checks if the interval is unbounded (on either side)."
+        },
+        {
+          "name": "lower",
+          "signature": "fn lower(&self) -> &ScalarValue",
+          "summary": "Returns a reference to the lower bound."
+        },
+        {
+          "name": "lt",
+          "signature": "fn lt<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is certainly less than, possibly less than, or can't be less than `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "lt_eq",
+          "signature": "fn lt_eq<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Decide if this interval is certainly less than or equal to, possibly less than or equal to, or can't be less than or equal to `other` by returning `[true, true]`, `[false, true]` or `[false, false]` respectively."
+        },
+        {
+          "name": "make",
+          "signature": "fn make<T>(lower: Option<T>, upper: Option<T>) -> Result<Self> where ScalarValue: From<Option<T>>",
+          "summary": "Convenience function to create a new `Interval` from the given (optional) bounds, for use in tests only. Absence of either endpoint indicates unboundedness on that side. See [`Interval::try_new`] for more information."
+        },
+        {
+          "name": "make_non_negative_infinity_interval",
+          "signature": "fn make_non_negative_infinity_interval(data_type: &DataType) -> Result<Self>",
+          "summary": "Create an interval from 0 to infinity."
+        },
+        {
+          "name": "make_symmetric_half_pi_interval",
+          "signature": "fn make_symmetric_half_pi_interval(data_type: &DataType) -> Result<Self>",
+          "summary": "Create an interval from -π/2 to π/2."
+        },
+        {
+          "name": "make_symmetric_pi_interval",
+          "signature": "fn make_symmetric_pi_interval(data_type: &DataType) -> Result<Self>",
+          "summary": "Create an interval from -π to π."
+        },
+        {
+          "name": "make_symmetric_unit_interval",
+          "signature": "fn make_symmetric_unit_interval(data_type: &DataType) -> Result<Self>",
+          "summary": "Creates an interval between -1 to 1."
+        },
+        {
+          "name": "make_unbounded",
+          "signature": "fn make_unbounded(data_type: &DataType) -> Result<Self>",
+          "summary": "Creates an unbounded interval from both sides if the datatype supported."
+        },
+        {
+          "name": "make_zero",
+          "signature": "fn make_zero(data_type: &DataType) -> Result<Self>",
+          "summary": "Creates a singleton zero interval if the datatype supported."
+        },
+        {
+          "name": "mul",
+          "signature": "fn mul<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Multiply the given interval (`other`) with this interval. Say we have intervals `[a1, b1]` and `[a2, b2]`, then their product is `[min(a1 * a2, a1 * b2, b1 * a2, b1 * b2), max(a1 * a2, a1 * b2, b1 * a2, b1 * b2)]`. Note that this represent…"
+        },
+        {
+          "name": "not",
+          "signature": "fn not(&self) -> Result<Self>",
+          "summary": "Compute the logical negation of this (boolean) interval."
+        },
+        {
+          "name": "or",
+          "signature": "fn or<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Compute the logical disjunction of this boolean interval with the given boolean interval."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub<T: Borrow<Interval>>(&self, other: T) -> Result<Self>",
+          "summary": "Subtract the given interval (`other`) from this interval. Say we have intervals `[a1, b1]` and `[a2, b2]`, then their difference is `[a1 - b2, b1 - a2]`. Note that this represents all possible values the difference can take if one can choo…"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(lower: ScalarValue, upper: ScalarValue) -> Result<Self>",
+          "summary": "Attempts to create a new `Interval` from the given lower and upper bounds."
+        },
+        {
+          "name": "union",
+          "signature": "fn union<T: Borrow<Self>>(&self, other: T) -> Result<Self>",
+          "summary": "Compute the union of this interval with the given interval."
+        },
+        {
+          "name": "upper",
+          "signature": "fn upper(&self) -> &ScalarValue",
+          "summary": "Returns a reference to the upper bound."
+        },
+        {
+          "name": "width",
+          "signature": "fn width(&self) -> Result<ScalarValue>",
+          "summary": "Computes the width of this interval; i.e. the difference between its bounds. For unbounded intervals, this function will return a `NULL` `ScalarValue` If the underlying data type doesn't support subtraction, this function will return an er…"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "module": "datafusion_ffi::query_planner",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.query_planner.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::query_planner::FFI_QueryPlanner",
+      "name": "FFI_QueryPlanner",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_QueryPlanner",
+      "summary": "An ABI-stable handle to a [`QueryPlanner`] owned by another library.",
+      "doc": "api/datafusion_ffi.query_planner.md#ffi_queryplanner",
+      "fields": [
+        "version",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "create_physical_plan_with_session_runtime",
+          "signature": "async fn create_physical_plan_with_session_runtime(&self, logical_plan: &LogicalPlan, session: &dyn Session, session_runtime: Option<Handle>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Creates a physical plan through this planner's FFI interface."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(planner: Arc<dyn QueryPlanner + Send + Sync>, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Arc<dyn LogicalExtensionCodec>, physical_codec: Arc<dyn PhysicalExtensionCodec>) -> Self",
+          "summary": "Creates an [`FFI_QueryPlanner`] with native extension codecs."
+        },
+        {
+          "name": "new_with_ffi_codecs",
+          "signature": "fn new_with_ffi_codecs(planner: Arc<dyn QueryPlanner + Send + Sync>, logical_codec: FFI_LogicalExtensionCodec, physical_codec: FFI_PhysicalExtensionCodec) -> Self",
+          "summary": "Creates an [`FFI_QueryPlanner`] using prebuilt FFI extension codecs."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::query_planner::ForeignQueryPlanner",
+      "name": "ForeignQueryPlanner",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignQueryPlanner",
+      "summary": "Consumer-side [`QueryPlanner`] adapter for an [`FFI_QueryPlanner`].",
+      "doc": "api/datafusion_ffi.query_planner.md#foreignqueryplanner",
+      "implements": [
+        "datafusion_session::planner::QueryPlanner"
+      ],
+      "methods": [
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::planner::QueryPlanner"
+        }
+      ]
+    }
+  ]
+}

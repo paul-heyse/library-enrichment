@@ -18,17 +18,18 @@ use super::JsonObject;
 use super::error::ErrorDetail;
 use super::evidence::{ArtifactHandle, Coverage, Evidence, Freshness};
 use super::ids::RequestId;
-use super::job::{JobHandle, Pagination};
+use super::job::JobHandle;
+use super::research::DeliveryDescriptor;
 
-/// The wire schema version. Currently only `1.0`.
+/// The wire schema version. Currently only `2.0`.
 ///
 /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[schemars(inline)]
 pub enum SchemaVersion {
     #[default]
-    #[serde(rename = "1.0")]
-    V1_0,
+    #[serde(rename = "2.0")]
+    V2_0,
 }
 
 /// The four result statuses (blueprint §7.2).
@@ -124,7 +125,7 @@ pub struct EnvelopeBody {
     /// Bounded artifacts available for reading.
     pub artifacts: Vec<ArtifactHandle>,
     /// Result-bounding accounting.
-    pub pagination: Pagination,
+    pub delivery: DeliveryDescriptor,
 }
 
 /// The response envelope every tool returns.
@@ -140,7 +141,7 @@ pub struct EnvelopeBody {
     transform = status_conditionals
 )]
 pub struct Envelope {
-    /// Always `1.0` for this contract.
+    /// Always `2.0` for this contract.
     pub schema_version: SchemaVersion,
     /// Opaque per-request identifier.
     pub request_id: RequestId,
@@ -162,7 +163,7 @@ pub struct Envelope {
     /// Bounded artifacts available for reading.
     pub artifacts: Vec<ArtifactHandle>,
     /// Result-bounding accounting.
-    pub pagination: Pagination,
+    pub delivery: DeliveryDescriptor,
     job: Option<JobHandle>,
     error: Option<ErrorDetail>,
 }
@@ -178,7 +179,7 @@ impl Envelope {
             Outcome::Error { job, error } => (job, Some(error)),
         };
         Self {
-            schema_version: SchemaVersion::V1_0,
+            schema_version: SchemaVersion::V2_0,
             request_id: body.request_id,
             status,
             summary: body.summary,
@@ -189,9 +190,35 @@ impl Envelope {
             freshness: body.freshness,
             evidence: body.evidence,
             artifacts: body.artifacts,
-            pagination: body.pagination,
+            delivery: body.delivery,
             job,
             error,
+        }
+    }
+
+    /// Change only a successful outcome to partial; preserve every typed field and identity.
+    #[must_use]
+    pub fn into_partial(mut self) -> Self {
+        if self.status == Status::Ok {
+            self.status = Status::Partial;
+        }
+        self
+    }
+
+    /// Consume the result without JSON conversion or fallback defaults.
+    #[must_use]
+    pub fn into_body(self) -> EnvelopeBody {
+        EnvelopeBody {
+            request_id: self.request_id,
+            summary: self.summary,
+            context_id: self.context_id,
+            snapshot_id: self.snapshot_id,
+            data: self.data,
+            coverage: self.coverage,
+            freshness: self.freshness,
+            evidence: self.evidence,
+            artifacts: self.artifacts,
+            delivery: self.delivery,
         }
     }
 
@@ -211,6 +238,11 @@ impl Envelope {
     #[must_use]
     pub fn error(&self) -> Option<&ErrorDetail> {
         self.error.as_ref()
+    }
+
+    /// Refine origin diagnostics without changing the outcome/error presence invariant.
+    pub fn error_mut(&mut self) -> Option<&mut ErrorDetail> {
+        self.error.as_mut()
     }
 
     /// The status/job/error triple as a single structured value.
@@ -259,15 +291,19 @@ struct RawEnvelope {
     request_id: RequestId,
     status: Status,
     summary: String,
+    #[serde(deserialize_with = "super::required_option")]
     context_id: Option<String>,
+    #[serde(deserialize_with = "super::required_option")]
     snapshot_id: Option<String>,
     data: JsonObject,
     coverage: Coverage,
     freshness: Freshness,
     evidence: Vec<Evidence>,
     artifacts: Vec<ArtifactHandle>,
-    pagination: Pagination,
+    delivery: DeliveryDescriptor,
+    #[serde(deserialize_with = "super::required_option")]
     job: Option<JobHandle>,
+    #[serde(deserialize_with = "super::required_option")]
     error: Option<ErrorDetail>,
 }
 
@@ -285,11 +321,17 @@ pub enum EnvelopeError {
     ErrorStatusWithoutError,
     /// `status: "ok"` or `"partial"` carrying an error object.
     NonErrorStatusWithError,
+    /// Artifact delivery carries a descriptor and no inline payload.
+    ArtifactWithData,
+    /// A pending operation cannot advertise a completed retained result.
+    PendingArtifact,
 }
 
 impl std::fmt::Display for EnvelopeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg = match self {
+            Self::ArtifactWithData => "artifact delivery requires empty inline data",
+            Self::PendingArtifact => "pending operations require inline job receipts",
             Self::PendingWithoutJob => "status `pending` requires a job handle",
             Self::PendingWithError => "status `pending` must not carry an error object",
             Self::ErrorStatusWithoutError => "status `error` requires an error object",
@@ -311,7 +353,15 @@ impl TryFrom<RawEnvelope> for Envelope {
         // deserializing anything but "1.0" already fails. This irrefutable pattern consumes it
         // and doubles as a tripwire -- adding a second variant makes this line stop compiling,
         // forcing a deliberate decision about accepting an older document.
-        let SchemaVersion::V1_0 = raw.schema_version;
+        let SchemaVersion::V2_0 = raw.schema_version;
+        if matches!(raw.delivery, DeliveryDescriptor::Artifact { .. }) {
+            if !raw.data.is_empty() {
+                return Err(EnvelopeError::ArtifactWithData);
+            }
+            if raw.status == Status::Pending {
+                return Err(EnvelopeError::PendingArtifact);
+            }
+        }
 
         // Exhaustive with no wildcard arm: adding a `Status` variant becomes a compile error
         // rather than a silently accepted document.
@@ -338,7 +388,7 @@ impl TryFrom<RawEnvelope> for Envelope {
                 freshness: raw.freshness,
                 evidence: raw.evidence,
                 artifacts: raw.artifacts,
-                pagination: raw.pagination,
+                delivery: raw.delivery,
             },
             outcome,
         ))
@@ -364,7 +414,8 @@ pub fn status_conditionals(schema: &mut Schema) {
                 "then": {
                     "properties": {
                         "job": { "$ref": "#/$defs/JobHandle" },
-                        "error": { "type": "null" }
+                        "error": { "type": "null" },
+                        "delivery": {"properties": {"mode": {"const": "inline"}}}
                     }
                 }
             },
@@ -375,6 +426,10 @@ pub fn status_conditionals(schema: &mut Schema) {
             {
                 "if": { "properties": { "status": { "enum": ["ok", "partial"] } } },
                 "then": { "properties": { "error": { "type": "null" } } }
+            },
+            {
+                "if": {"properties": {"delivery": {"properties": {"mode": {"const": "artifact"}}}}},
+                "then": {"properties": {"data": {"maxProperties": 0}}}
             }
         ]),
     );
@@ -472,7 +527,7 @@ mod tests {
 
     fn raw_envelope(status: Status, has_job: bool, has_error: bool) -> RawEnvelope {
         RawEnvelope {
-            schema_version: SchemaVersion::V1_0,
+            schema_version: SchemaVersion::V2_0,
             request_id: RequestId::try_from("req_matrix".to_owned()).expect("non-empty"),
             status,
             summary: String::new(),
@@ -480,6 +535,8 @@ mod tests {
             snapshot_id: None,
             data: JsonObject::new(),
             coverage: Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: String::new(),
                 indexed: std::collections::BTreeSet::new(),
                 missing: std::collections::BTreeSet::new(),
@@ -492,12 +549,7 @@ mod tests {
             },
             evidence: Vec::new(),
             artifacts: Vec::new(),
-            pagination: Pagination {
-                returned: 0,
-                total_matches: None,
-                truncated: false,
-                next_cursor: None,
-            },
+            delivery: DeliveryDescriptor::default(),
             job: has_job.then(|| JobHandle {
                 job_id: "job_matrix".to_owned(),
                 state: super::super::job::JobState::Queued,
@@ -509,6 +561,10 @@ mod tests {
                 message: String::new(),
                 retryable: false,
                 next_action: String::new(),
+                diagnostic: super::super::research::Diagnostic::for_error(
+                    super::super::error::ErrorCode::PolicyDenied,
+                    String::new(),
+                ),
             }),
         }
     }

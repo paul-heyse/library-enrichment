@@ -1,0 +1,105 @@
+{
+  "module": "arrow_flight::encode",
+  "crate": "arrow-flight",
+  "api": "api/arrow_flight.encode.md",
+  "items": [
+    {
+      "path": "arrow_flight::encode::GRPC_TARGET_MAX_FLIGHT_SIZE_BYTES",
+      "name": "GRPC_TARGET_MAX_FLIGHT_SIZE_BYTES",
+      "kind": "constant",
+      "crate": "arrow-flight",
+      "signature": "const GRPC_TARGET_MAX_FLIGHT_SIZE_BYTES: usize = 2097152",
+      "summary": "Default target size for encoded [`FlightData`].",
+      "doc": "api/arrow_flight.encode.md#grpc_target_max_flight_size_bytes"
+    },
+    {
+      "path": "arrow_flight::encode::DictionaryHandling",
+      "name": "DictionaryHandling",
+      "kind": "enum",
+      "crate": "arrow-flight",
+      "signature": "enum DictionaryHandling",
+      "summary": "Defines how a [`FlightDataEncoder`] encodes [`DictionaryArray`]s",
+      "doc": "api/arrow_flight.encode.md#dictionaryhandling",
+      "variants": [
+        "Hydrate",
+        "Resend"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_flight::encode::FlightDataEncoder",
+      "name": "FlightDataEncoder",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightDataEncoder",
+      "summary": "Stream that encodes a stream of record batches to flight data.",
+      "doc": "api/arrow_flight.encode.md#flightdataencoder",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "known_schema",
+          "signature": "fn known_schema(&self) -> Option<SchemaRef>",
+          "summary": "Report the schema of the encoded data when known. A schema is known when provided via the [`FlightDataEncoderBuilder::with_schema`] method."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::encode::FlightDataEncoderBuilder",
+      "name": "FlightDataEncoderBuilder",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightDataEncoderBuilder",
+      "summary": "Creates a [`Stream`] of [`FlightData`]s from a `Stream` of [`Result`]<[`RecordBatch`], [`FlightError`]>.",
+      "doc": "api/arrow_flight.encode.md#flightdataencoderbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<S>(self, input: S) -> FlightDataEncoder where S: Stream<Item = Result<RecordBatch>> + Send + 'static",
+          "summary": "Takes a [`Stream`] of [`Result<RecordBatch>`] and returns a [`Stream`] of [`FlightData`], consuming self."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`FlightDataEncoderBuilder`]."
+        },
+        {
+          "name": "with_dictionary_handling",
+          "signature": "fn with_dictionary_handling(self, dictionary_handling: DictionaryHandling) -> Self",
+          "summary": "Set [`DictionaryHandling`] for encoder"
+        },
+        {
+          "name": "with_flight_descriptor",
+          "signature": "fn with_flight_descriptor(self, descriptor: Option<FlightDescriptor>) -> Self",
+          "summary": "Specify a flight descriptor in the first FlightData message."
+        },
+        {
+          "name": "with_max_flight_data_size",
+          "signature": "fn with_max_flight_data_size(self, max_flight_data_size: usize) -> Self",
+          "summary": "Set the (approximate) maximum size, in bytes, of the [`FlightData`] produced by this encoder. Defaults to 2MB."
+        },
+        {
+          "name": "with_metadata",
+          "signature": "fn with_metadata(self, app_metadata: Bytes) -> Self",
+          "summary": "Specify application specific metadata included in the [`FlightData::app_metadata`] field of the the first Schema message"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: IpcWriteOptions) -> Self",
+          "summary": "Set the [`IpcWriteOptions`] used to encode the [`RecordBatch`]es for transport."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Specify a schema for the RecordBatches being sent. If a schema is not specified, an encoded Schema message will be sent when the first [`RecordBatch`], if any, is encoded. Some clients expect a Schema message even if there is no data sent."
+        }
+      ]
+    }
+  ]
+}

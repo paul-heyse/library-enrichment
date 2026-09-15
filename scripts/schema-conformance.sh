@@ -21,6 +21,15 @@ else
   echo "schema-conformance: NOTE -- no emit-schemas binary yet; generation check is not_run (phase 0)."
 fi
 
+if ! diff -ru schemas/generated python/enrichment_mcp/_schemas; then
+  echo "schema-conformance: FAILED -- packaged native schemas are stale" >&2
+  exit 1
+fi
+if ! cmp -s skills/library-research/references/tool-contract.md python/enrichment_mcp/_guidance/tool-contract.md; then
+  echo "schema-conformance: FAILED -- packaged workflow guidance is stale" >&2
+  exit 1
+fi
+
 # Generate boundary models into staging too: validating only JSON cannot detect stale DTOs.
 model_check="$(mktemp -d)"
 trap 'rm -rf "${generated_check:-}" "$model_check"' EXIT

@@ -47,7 +47,7 @@ async def test_real_rust_crate_cold_then_offline(tmp_path):
                 )
             ).structured_content
             search = await daemon.read_complete_answer(client, search)
-            assert search["pagination"]["returned"] > 0
+            assert search["data"]["page"]["returned"] > 0
             inspected = (
                 await client.call_tool(
                     "inspect_symbol",
@@ -55,7 +55,13 @@ async def test_real_rust_crate_cold_then_offline(tmp_path):
                         "context_id": context,
                         "snapshot_id": snapshot,
                         "symbol_path": "itoa::Buffer",
-                        "depth": "source",
+                        "selection": {
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name}
+                                for name in ("signature", "availability", "documentation", "source")
+                            ],
+                        },
                     },
                 )
             ).structured_content
@@ -97,7 +103,13 @@ async def test_real_rust_crate_cold_then_offline(tmp_path):
                         "context_id": context,
                         "snapshot_id": snapshot,
                         "symbol_path": "itoa::Buffer",
-                        "depth": "source",
+                        "selection": {
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name}
+                                for name in ("signature", "availability", "documentation", "source")
+                            ],
+                        },
                     },
                 )
             ).structured_content

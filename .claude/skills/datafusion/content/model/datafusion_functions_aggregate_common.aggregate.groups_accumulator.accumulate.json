@@ -1,0 +1,87 @@
+{
+  "module": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate",
+  "crate": "datafusion-functions-aggregate-common",
+  "api": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md",
+  "items": [
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::SeenValues",
+      "name": "SeenValues",
+      "kind": "enum",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "enum SeenValues",
+      "summary": "If the input has nulls, then the accumulator must potentially handle each input null value specially (e.g. for `SUM` to mark the corresponding sum as null)",
+      "doc": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md#seenvalues",
+      "variants": [
+        "All",
+        "Some"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::accumulate",
+      "name": "accumulate",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "fn accumulate<T, F>(group_indices: &[usize], values: &arrow::array::PrimitiveArray<T>, opt_filter: Option<&arrow::array::BooleanArray>, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, T::Native) + Send",
+      "summary": "Invokes `value_fn(group_index, value)` for each non null, non filtered value of `value`,",
+      "doc": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md#accumulate"
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::accumulate_indices",
+      "name": "accumulate_indices",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "fn accumulate_indices<F>(group_indices: &[usize], nulls: Option<&arrow::buffer::NullBuffer>, opt_filter: Option<&arrow::array::BooleanArray>, index_fn: F) where F: FnMut(usize) + Send",
+      "summary": "This function is called to update the accumulator state per row when the value is not needed (e.g. COUNT)",
+      "doc": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md#accumulate_indices"
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::accumulate_multiple",
+      "name": "accumulate_multiple",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "fn accumulate_multiple<T, F>(group_indices: &[usize], value_columns: &[&arrow::array::PrimitiveArray<T>], opt_filter: Option<&arrow::array::BooleanArray>, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, usize, &[&arrow::array::PrimitiveArray<T>]) + Send",
+      "summary": "Accumulates with multiple accumulate(value) columns. (e.g. `corr(c1, c2)`)",
+      "doc": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md#accumulate_multiple"
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::aggregate::groups_accumulator::accumulate::NullState",
+      "name": "NullState",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "struct NullState",
+      "summary": "Track the accumulator null state per row: if any values for that group were null and if any values have been seen at all for that group.",
+      "doc": "api/datafusion_functions_aggregate_common.aggregate.groups_accumulator.accumulate.md#nullstate",
+      "aliases": [
+        "datafusion::physical_expr::NullState",
+        "datafusion_physical_expr::NullState"
+      ],
+      "methods": [
+        {
+          "name": "accumulate",
+          "signature": "fn accumulate<T, F>(&mut self, group_indices: &[usize], values: &PrimitiveArray<T>, opt_filter: Option<&BooleanArray>, total_num_groups: usize, value_fn: F) where T: ArrowPrimitiveType + Send, F: FnMut(usize, T::Native) + Send",
+          "summary": "Invokes `value_fn(group_index, value)` for each non null, non filtered value of `value`, while tracking which groups have seen null inputs and which groups have seen any inputs if necessary # Arguments:"
+        },
+        {
+          "name": "accumulate_boolean",
+          "signature": "fn accumulate_boolean<F>(&mut self, group_indices: &[usize], values: &BooleanArray, opt_filter: Option<&BooleanArray>, total_num_groups: usize, value_fn: F) where F: FnMut(usize, bool) + Send",
+          "summary": "Invokes `value_fn(group_index, value)` for each non null, non filtered value in `values`, while tracking which groups have seen null inputs and which groups have seen any inputs, for [`BooleanArray`]s."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&mut self, emit_to: EmitTo) -> Option<NullBuffer>",
+          "summary": "Creates the a [`NullBuffer`] representing which group_indices should have null values (because they never saw any values) for the `emit_to` rows."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "return the size of all buffers allocated by this null state, not including self"
+        }
+      ]
+    }
+  ]
+}

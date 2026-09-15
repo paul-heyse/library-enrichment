@@ -124,7 +124,7 @@ async def test_service_status_traverses_mcp_rpc_and_daemon(
     # The daemon answered, so this is a full result rather than the adapter-local fallback.
     assert payload["status"] == "ok"
     assert payload["error"] is None
-    assert payload["data"]["versions"]["schema"] == "1.0"
+    assert payload["data"]["versions"]["schema"] == "2.0"
 
     # And it is still truthful about what is not installed: with an open store the phase-1
     # static producers are available; every other producer names why it is not.
@@ -163,6 +163,7 @@ async def test_the_end_to_end_envelope_conforms_to_the_generated_schema(
         offline = await client.call_tool(
             "resolve_library",
             {"ecosystem": "rust", "name": "serde", "version": "1.0.219", "freshness": "offline"},
+            raise_on_error=False,
         )
 
     assert isinstance(offline.structured_content, dict)
@@ -351,4 +352,4 @@ def test_the_daemon_cli_reports_status_and_stops(running_daemon: dict[str, str])
     reported = json.loads(result.stdout)
     # The daemon answers with a full wire envelope, so the status payload sits under `data`.
     assert reported["result"]["status"] == "ok"
-    assert reported["result"]["data"]["versions"]["schema"] == "1.0"
+    assert reported["result"]["data"]["versions"]["schema"] == "2.0"

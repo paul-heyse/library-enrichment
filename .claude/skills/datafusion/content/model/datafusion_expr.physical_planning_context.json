@@ -1,0 +1,100 @@
+{
+  "module": "datafusion_expr::physical_planning_context",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.physical_planning_context.md",
+  "items": [
+    {
+      "path": "datafusion_expr::physical_planning_context::PhysicalPlanningContext",
+      "name": "PhysicalPlanningContext",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct PhysicalPlanningContext",
+      "summary": "Context used while converting a logical plan subtree into a physical plan.",
+      "doc": "api/datafusion_expr.physical_planning_context.md#physicalplanningcontext",
+      "methods": [
+        {
+          "name": "index_of",
+          "signature": "fn index_of(&self, subquery: &logical_plan::Subquery) -> Option<SubqueryIndex>",
+          "summary": "Returns the slot index assigned to `subquery`, if any."
+        },
+        {
+          "name": "lambda_variable_qualifier",
+          "signature": "fn lambda_variable_qualifier(&self, name: &str) -> Option<&TableReference>",
+          "summary": "Returns the qualifier of the lambda variable `name`, if it is in scope."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(indexes: HashMap<logical_plan::Subquery, SubqueryIndex>, results: ScalarSubqueryResults) -> Self",
+          "summary": "Create a [`PhysicalPlanningContext`] from an index map and a shared results container. The index map must use the same indices as slots in `results`."
+        },
+        {
+          "name": "results",
+          "signature": "fn results(&self) -> &ScalarSubqueryResults",
+          "summary": "Returns the shared results container."
+        },
+        {
+          "name": "with_qualified_lambda_variables",
+          "signature": "fn with_qualified_lambda_variables(self, qualifier: &TableReference, variables: &[String]) -> Self",
+          "summary": "Adds a mapping for each variable to the given qualifier. Existing variables with conflicting names are shadowed."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::physical_planning_context::ScalarSubqueryResults",
+      "name": "ScalarSubqueryResults",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ScalarSubqueryResults",
+      "summary": "Shared results container for uncorrelated scalar subqueries.",
+      "doc": "api/datafusion_expr.physical_planning_context.md#scalarsubqueryresults",
+      "methods": [
+        {
+          "name": "clear",
+          "signature": "fn clear(&self)",
+          "summary": "Clears all populated results so the container can be reused."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, index: SubqueryIndex) -> Option<ScalarValue>",
+          "summary": "Returns the scalar value stored at `index`, if it has been populated."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(n: usize) -> Self",
+          "summary": "Creates a new shared results container with `n` empty slots."
+        },
+        {
+          "name": "ptr_eq",
+          "signature": "fn ptr_eq(this: &Self, other: &Self) -> bool",
+          "summary": "Returns true if `this` and `other` point to the same shared container."
+        },
+        {
+          "name": "set",
+          "signature": "fn set(&self, index: SubqueryIndex, value: ScalarValue) -> Result<()>",
+          "summary": "Stores `value` in the slot at `index`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::physical_planning_context::SubqueryIndex",
+      "name": "SubqueryIndex",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct SubqueryIndex",
+      "summary": "Index of a scalar subquery within a [`ScalarSubqueryResults`] container.",
+      "doc": "api/datafusion_expr.physical_planning_context.md#subqueryindex",
+      "methods": [
+        {
+          "name": "as_usize",
+          "signature": "const fn as_usize(self) -> usize",
+          "summary": "Returns the underlying slot index."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(index: usize) -> Self",
+          "summary": "Creates a new subquery index."
+        }
+      ]
+    }
+  ]
+}

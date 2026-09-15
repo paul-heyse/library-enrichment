@@ -1,0 +1,54 @@
+{
+  "module": "datafusion_ffi::table_provider_factory",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.table_provider_factory.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::table_provider_factory::FFI_TableProviderFactory",
+      "name": "FFI_TableProviderFactory",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_TableProviderFactory",
+      "summary": "A stable struct for sharing [`TableProviderFactory`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.table_provider_factory.md#ffi_tableproviderfactory",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(factory: Arc<dyn TableProviderFactory + Send>, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Option<Arc<dyn LogicalExtensionCodec>>) -> Self",
+          "summary": "Creates a new [`FFI_TableProvider`]."
+        },
+        {
+          "name": "new_with_ffi_codec",
+          "signature": "fn new_with_ffi_codec(factory: Arc<dyn TableProviderFactory + Send>, runtime: Option<Handle>, logical_codec: FFI_LogicalExtensionCodec) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::table_provider_factory::ForeignTableProviderFactory",
+      "name": "ForeignTableProviderFactory",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignTableProviderFactory",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ta…",
+      "doc": "api/datafusion_ffi.table_provider_factory.md#foreigntableproviderfactory",
+      "implements": [
+        "datafusion_session::table::TableProviderFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "async fn create(&self, session: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>",
+          "via_trait": "datafusion_session::table::TableProviderFactory"
+        }
+      ]
+    }
+  ]
+}

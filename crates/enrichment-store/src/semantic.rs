@@ -33,6 +33,19 @@ impl ScalarUDFImpl for RecordKey {
     fn return_type(&self, _: &[DataType]) -> Result<DataType> {
         Ok(DataType::Utf8)
     }
+    fn return_field_from_args(
+        &self,
+        _args: datafusion::logical_expr::ReturnFieldArgs,
+    ) -> Result<arrow::datatypes::FieldRef> {
+        Ok(Arc::new(
+            arrow::datatypes::Field::new(self.name(), DataType::Utf8, false).with_metadata(
+                std::collections::HashMap::from([(
+                    "enrichment.function".into(),
+                    self.name().into(),
+                )]),
+            ),
+        ))
+    }
     fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
         let relation = if self.symbols {
             Relation::Symbols

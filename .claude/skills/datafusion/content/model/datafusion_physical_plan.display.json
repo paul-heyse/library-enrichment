@@ -1,0 +1,273 @@
+{
+  "module": "datafusion_physical_plan::display",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.display.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::display::DisplayFormatType",
+      "name": "DisplayFormatType",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum DisplayFormatType",
+      "summary": "Options for controlling how each [`ExecutionPlan`] should format itself",
+      "doc": "api/datafusion_physical_plan.display.md#displayformattype",
+      "aliases": [
+        "datafusion::physical_plan::DisplayFormatType",
+        "datafusion_physical_plan::DisplayFormatType",
+        "datafusion_physical_plan::execution_plan::DisplayFormatType"
+      ],
+      "variants": [
+        "Default",
+        "Verbose",
+        "TreeRender"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::display::display_orderings",
+      "name": "display_orderings",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn display_orderings(f: &mut std::fmt::Formatter<'_>, orderings: &[datafusion_physical_expr::LexOrdering]) -> fmt::Result",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_physical_plan::display::DefaultDisplay",
+      "name": "DefaultDisplay",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct DefaultDisplay<T>",
+      "summary": "A new type wrapper to display `T` implementing`DisplayAs` using the `Default` mode",
+      "doc": "api/datafusion_physical_plan.display.md#defaultdisplay",
+      "aliases": [
+        "datafusion::physical_plan::DefaultDisplay",
+        "datafusion_physical_plan::DefaultDisplay",
+        "datafusion_physical_plan::execution_plan::DefaultDisplay"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::display::DisplayableExecutionPlan",
+      "name": "DisplayableExecutionPlan",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct DisplayableExecutionPlan<'a>",
+      "summary": "Wraps an `ExecutionPlan` with various methods for formatting",
+      "doc": "api/datafusion_physical_plan.display.md#displayableexecutionplan",
+      "methods": [
+        {
+          "name": "graphviz",
+          "signature": "fn graphviz(&self) -> impl fmt::Display + 'a",
+          "summary": "Returns a `format`able structure that produces graphviz format for execution plan, which can be directly visualized [here](https://dreampuf.github.io/GraphvizOnline)."
+        },
+        {
+          "name": "indent",
+          "signature": "fn indent(&self, verbose: bool) -> impl fmt::Display + 'a",
+          "summary": "Return a `format`able structure that produces a single line per node."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: &'a dyn ExecutionPlan) -> Self",
+          "summary": "Create a wrapper around an [`ExecutionPlan`] which can be pretty printed in a variety of ways"
+        },
+        {
+          "name": "one_line",
+          "signature": "fn one_line(&self) -> impl fmt::Display + 'a",
+          "summary": "Return a single-line summary of the root of the plan Example: `ProjectionExec: expr=[a@0 as a]`."
+        },
+        {
+          "name": "pgjson",
+          "signature": "fn pgjson(&self, verbose: bool) -> impl fmt::Display + 'a",
+          "summary": "Returns a `format`able structure that produces PostgreSQL-style JSON output, mirroring the logical-plan pgjson format."
+        },
+        {
+          "name": "set_metric_categories",
+          "signature": "fn set_metric_categories(self, metric_categories: Option<Vec<MetricCategory>>) -> Self",
+          "summary": "Specify which metric categories to include."
+        },
+        {
+          "name": "set_metric_names",
+          "signature": "fn set_metric_names(self, metric_names: Vec<String>) -> Self",
+          "summary": "Specify which metric names to include."
+        },
+        {
+          "name": "set_metric_types",
+          "signature": "fn set_metric_types(self, metric_types: Vec<MetricType>) -> Self",
+          "summary": "Specify which metric types should be rendered alongside the plan"
+        },
+        {
+          "name": "set_show_schema",
+          "signature": "fn set_show_schema(self, show_schema: bool) -> Self",
+          "summary": "Enable display of schema"
+        },
+        {
+          "name": "set_show_statistics",
+          "signature": "fn set_show_statistics(self, show_statistics: bool) -> Self",
+          "summary": "Enable display of statistics"
+        },
+        {
+          "name": "set_summary",
+          "signature": "fn set_summary(self, total_rows: Option<usize>, duration: Option<Duration>) -> Self",
+          "summary": "Attach an `EXPLAIN ANALYZE` summary (total output rows and duration) to the rendered output. Currently only used by [`Self::pgjson`], which serializes the summary alongside the root plan object."
+        },
+        {
+          "name": "set_tree_maximum_render_width",
+          "signature": "fn set_tree_maximum_render_width(self, width: usize) -> Self",
+          "summary": "Set the maximum render width for the tree format"
+        },
+        {
+          "name": "to_stringified",
+          "signature": "fn to_stringified(&self, verbose: bool, plan_type: PlanType, explain_format: DisplayFormatType) -> StringifiedPlan"
+        },
+        {
+          "name": "tree_render",
+          "signature": "fn tree_render(&self) -> impl fmt::Display + 'a",
+          "summary": "Formats the plan using a ASCII art like tree"
+        },
+        {
+          "name": "with_full_metrics",
+          "signature": "fn with_full_metrics(inner: &'a dyn ExecutionPlan) -> Self",
+          "summary": "Create a wrapper around an [`ExecutionPlan`] which can be pretty printed in a variety of ways that also shows all low level metrics"
+        },
+        {
+          "name": "with_metrics",
+          "signature": "fn with_metrics(inner: &'a dyn ExecutionPlan) -> Self",
+          "summary": "Create a wrapper around an [`ExecutionPlan`] which can be pretty printed in a variety of ways that also shows aggregated metrics"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::display::ProjectSchemaDisplay",
+      "name": "ProjectSchemaDisplay",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ProjectSchemaDisplay<'a>",
+      "summary": "A wrapper to customize partitioned file display",
+      "doc": "api/datafusion_physical_plan.display.md#projectschemadisplay",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::display::VerboseDisplay",
+      "name": "VerboseDisplay",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct VerboseDisplay<T>",
+      "summary": "A new type wrapper to display `T` implementing `DisplayAs` using the `Verbose` mode",
+      "doc": "api/datafusion_physical_plan.display.md#verbosedisplay",
+      "aliases": [
+        "datafusion::physical_plan::VerboseDisplay",
+        "datafusion_physical_plan::VerboseDisplay",
+        "datafusion_physical_plan::execution_plan::VerboseDisplay"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::display::DisplayAs",
+      "name": "DisplayAs",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait DisplayAs",
+      "summary": "Trait for types which could have additional details when formatted in `Verbose` mode",
+      "doc": "api/datafusion_physical_plan.display.md#displayas",
+      "aliases": [
+        "datafusion::physical_plan::DisplayAs",
+        "datafusion_physical_plan::DisplayAs",
+        "datafusion_physical_plan::execution_plan::DisplayAs"
+      ],
+      "implementors": [
+        "datafusion_datasource::display::FileGroupDisplay",
+        "datafusion_datasource::file_scan_config::FileScanConfig",
+        "datafusion_datasource::memory::MemSink",
+        "datafusion_datasource::sink::DataSinkExec",
+        "datafusion_datasource::source::DataSourceExec",
+        "datafusion_datasource_csv::file_format::CsvSink",
+        "datafusion_datasource_json::file_format::JsonSink",
+        "datafusion_datasource_parquet::sink::ParquetSink",
+        "datafusion_ffi::execution_plan::ForeignExecutionPlan",
+        "datafusion_ffi::execution_plan::tests::EmptyExec",
+        "datafusion_physical_optimizer::output_requirements::OutputRequirementExec",
+        "datafusion_physical_plan::aggregates::AggregateExec",
+        "datafusion_physical_plan::analyze::AnalyzeExec",
+        "datafusion_physical_plan::async_func::AsyncFuncExec",
+        "datafusion_physical_plan::buffer::BufferExec",
+        "datafusion_physical_plan::coalesce_batches::CoalesceBatchesExec",
+        "datafusion_physical_plan::coalesce_partitions::CoalescePartitionsExec",
+        "datafusion_physical_plan::coop::CooperativeExec",
+        "datafusion_physical_plan::empty::EmptyExec",
+        "datafusion_physical_plan::explain::ExplainExec",
+        "datafusion_physical_plan::filter::FilterExec",
+        "datafusion_physical_plan::joins::cross_join::CrossJoinExec",
+        "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec",
+        "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec",
+        "datafusion_physical_plan::joins::piecewise_merge_join::exec::PiecewiseMergeJoinExec",
+        "datafusion_physical_plan::joins::sort_merge_join::exec::SortMergeJoinExec",
+        "datafusion_physical_plan::joins::symmetric_hash_join::SymmetricHashJoinExec",
+        "datafusion_physical_plan::limit::GlobalLimitExec",
+        "datafusion_physical_plan::limit::LocalLimitExec",
+        "datafusion_physical_plan::memory::LazyMemoryExec",
+        "datafusion_physical_plan::placeholder_row::PlaceholderRowExec",
+        "datafusion_physical_plan::projection::ProjectionExec",
+        "datafusion_physical_plan::recursive_query::RecursiveQueryExec",
+        "datafusion_physical_plan::repartition::RepartitionExec",
+        "datafusion_physical_plan::scalar_subquery::ScalarSubqueryExec",
+        "datafusion_physical_plan::sorts::partial_sort::PartialSortExec",
+        "datafusion_physical_plan::sorts::partitioned_topk::PartitionedTopKExec",
+        "datafusion_physical_plan::sorts::sort::SortExec",
+        "datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec",
+        "datafusion_physical_plan::streaming::StreamingTableExec",
+        "datafusion_physical_plan::test::TestMemoryExec",
+        "datafusion_physical_plan::test::exec::BarrierExec",
+        "datafusion_physical_plan::test::exec::BlockingExec",
+        "datafusion_physical_plan::test::exec::ErrorExec",
+        "datafusion_physical_plan::test::exec::MockExec",
+        "datafusion_physical_plan::test::exec::PanicExec",
+        "datafusion_physical_plan::test::exec::StatisticsExec",
+        "datafusion_physical_plan::union::InterleaveExec",
+        "datafusion_physical_plan::union::UnionExec",
+        "datafusion_physical_plan::unnest::UnnestExec",
+        "datafusion_physical_plan::windows::bounded_window_agg_exec::BoundedWindowAggExec",
+        "datafusion_physical_plan::windows::window_agg_exec::WindowAggExec",
+        "datafusion_physical_plan::work_table::WorkTableExec"
+      ],
+      "required_methods": [
+        "fmt_as"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> fmt::Result",
+          "summary": "Format according to `DisplayFormatType`, used when verbose representation looks different from the default one"
+        }
+      ]
+    }
+  ]
+}

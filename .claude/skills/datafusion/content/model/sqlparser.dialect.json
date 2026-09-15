@@ -1,0 +1,1045 @@
+{
+  "module": "sqlparser::dialect",
+  "crate": "sqlparser",
+  "api": "api/sqlparser.dialect.md",
+  "items": [
+    {
+      "path": "sqlparser::dialect::Precedence",
+      "name": "Precedence",
+      "kind": "enum",
+      "crate": "sqlparser",
+      "signature": "enum Precedence",
+      "summary": "Operators for which precedence must be defined.",
+      "doc": "api/sqlparser.dialect.md#precedence",
+      "variants": [
+        "Period",
+        "DoubleColon",
+        "AtTz",
+        "MulDivModOp",
+        "PlusMinus",
+        "Xor",
+        "Ampersand",
+        "Caret",
+        "Pipe",
+        "Colon",
+        "Between",
+        "Eq",
+        "Like",
+        "Is",
+        "PgOther",
+        "UnaryNot",
+        "And",
+        "Or"
+      ],
+      "methods": []
+    },
+    {
+      "path": "sqlparser::dialect::dialect_from_str",
+      "name": "dialect_from_str",
+      "kind": "function",
+      "crate": "sqlparser",
+      "signature": "fn dialect_from_str(dialect_name: impl AsRef<str>) -> Option<Box<dyn Dialect>>",
+      "summary": "Returns the built in [`Dialect`] corresponding to `dialect_name`.",
+      "doc": "api/sqlparser.dialect.md#dialect_from_str"
+    },
+    {
+      "path": "sqlparser::dialect::Dialect",
+      "name": "Dialect",
+      "kind": "trait",
+      "crate": "sqlparser",
+      "signature": "trait Dialect: Debug + Any",
+      "summary": "Encapsulates the differences between SQL implementations.",
+      "doc": "api/sqlparser.dialect.md#dialect",
+      "implementors": [
+        "sqlparser::dialect::ansi::AnsiDialect",
+        "sqlparser::dialect::bigquery::BigQueryDialect",
+        "sqlparser::dialect::clickhouse::ClickHouseDialect",
+        "sqlparser::dialect::databricks::DatabricksDialect",
+        "sqlparser::dialect::duckdb::DuckDbDialect",
+        "sqlparser::dialect::generic::GenericDialect",
+        "sqlparser::dialect::hive::HiveDialect",
+        "sqlparser::dialect::mssql::MsSqlDialect",
+        "sqlparser::dialect::mysql::MySqlDialect",
+        "sqlparser::dialect::oracle::OracleDialect",
+        "sqlparser::dialect::postgresql::PostgreSqlDialect",
+        "sqlparser::dialect::redshift::RedshiftSqlDialect",
+        "sqlparser::dialect::snowflake::SnowflakeDialect",
+        "sqlparser::dialect::spark::SparkSqlDialect",
+        "sqlparser::dialect::sqlite::SQLiteDialect",
+        "sqlparser::dialect::teradata::TeradataDialect"
+      ],
+      "required_methods": [
+        "is_identifier_part",
+        "is_identifier_start"
+      ],
+      "provided_methods": [
+        "allow_extract_custom",
+        "allow_extract_single_quotes",
+        "convert_type_before_value",
+        "describe_requires_table_keyword",
+        "dialect",
+        "get_next_precedence",
+        "get_next_precedence_default",
+        "get_reserved_grantees_types",
+        "get_reserved_keywords_for_select_item_operator",
+        "identifier_quote_style",
+        "ignores_wildcard_escapes",
+        "is_column_alias",
+        "is_custom_operator_part",
+        "is_delimited_identifier_start",
+        "is_identifier_generating_function_name",
+        "is_nested_delimited_identifier_start",
+        "is_reserved_for_identifier",
+        "is_select_item_alias",
+        "is_table_alias",
+        "is_table_factor",
+        "is_table_factor_alias",
+        "parse_column_option",
+        "parse_infix",
+        "parse_prefix",
+        "parse_statement",
+        "peek_nested_delimited_identifier_quotes",
+        "prec_unknown",
+        "prec_value",
+        "require_interval_qualifier",
+        "requires_single_line_comment_whitespace",
+        "support_map_literal_syntax",
+        "supports_alter_column_type_using",
+        "supports_array_join_syntax",
+        "supports_array_typedef_with_brackets",
+        "supports_array_typedef_without_element_type",
+        "supports_asc_desc_in_column_definition",
+        "supports_bang_not_operator",
+        "supports_binary_kw_as_cast",
+        "supports_bitwise_shift_operators",
+        "supports_boolean_literals",
+        "supports_column_definition_trailing_commas",
+        "supports_comma_separated_drop_column_list",
+        "supports_comma_separated_set_assignments",
+        "supports_comma_separated_trim",
+        "supports_comment_on",
+        "supports_comment_optimizer_hint",
+        "supports_connect_by",
+        "supports_constraint_keyword_without_name",
+        "supports_create_index_with_clause",
+        "supports_create_table_like_parenthesized",
+        "supports_create_table_multi_schema_info_sources",
+        "supports_create_table_select",
+        "supports_create_table_using",
+        "supports_create_view_comment_syntax",
+        "supports_cross_join_constraint",
+        "supports_cte_without_as",
+        "supports_data_type_signed_suffix",
+        "supports_detach",
+        "supports_dictionary_syntax",
+        "supports_dollar_as_money_prefix",
+        "supports_dollar_placeholder",
+        "supports_double_ampersand_operator",
+        "supports_empty_projections",
+        "supports_end_transaction_modifier",
+        "supports_eq_alias_assignment",
+        "supports_execute_immediate",
+        "supports_explain_with_utility_options",
+        "supports_extract_comma_syntax",
+        "supports_factorial_operator",
+        "supports_filter_during_aggregation",
+        "supports_from_first_insert",
+        "supports_from_first_select",
+        "supports_from_trailing_commas",
+        "supports_geometric_types",
+        "supports_group_by_expr",
+        "supports_group_by_with_modifier",
+        "supports_in_empty_list",
+        "supports_insert_format",
+        "supports_insert_set",
+        "supports_insert_table_alias",
+        "supports_insert_table_function",
+        "supports_insert_table_query",
+        "supports_install",
+        "supports_interpolate",
+        "supports_interval_options",
+        "supports_key_column_option",
+        "supports_lambda_functions",
+        "supports_left_associative_joins_without_parens",
+        "supports_limit_by",
+        "supports_limit_comma",
+        "supports_listen_notify",
+        "supports_load_data",
+        "supports_load_extension",
+        "supports_long_type_as_bigint",
+        "supports_map_literal_with_angle_brackets",
+        "supports_match_against",
+        "supports_match_recognize",
+        "supports_multiline_comment_hints",
+        "supports_named_fn_args_with_assignment_operator",
+        "supports_named_fn_args_with_colon_operator",
+        "supports_named_fn_args_with_eq_operator",
+        "supports_named_fn_args_with_expr_name",
+        "supports_named_fn_args_with_rarrow_operator",
+        "supports_nested_comments",
+        "supports_notnull_operator",
+        "supports_numeric_literal_underscores",
+        "supports_numeric_prefix",
+        "supports_object_name_double_dot_notation",
+        "supports_optimize_table",
+        "supports_order_by_all",
+        "supports_outer_join_operator",
+        "supports_parens_around_table_factor",
+        "supports_parenthesized_set_variables",
+        "supports_partiql",
+        "supports_partition_by_after_order_by",
+        "supports_pipe_operator",
+        "supports_prewhere",
+        "supports_projection_trailing_commas",
+        "supports_quote_delimited_string",
+        "supports_select_exclude",
+        "supports_select_expr_star",
+        "supports_select_format",
+        "supports_select_item_multi_column_alias",
+        "supports_select_modifiers",
+        "supports_select_wildcard_except",
+        "supports_select_wildcard_exclude",
+        "supports_select_wildcard_ilike",
+        "supports_select_wildcard_rename",
+        "supports_select_wildcard_replace",
+        "supports_select_wildcard_with_alias",
+        "supports_semantic_view_table_factor",
+        "supports_set_names",
+        "supports_set_stmt_without_operator",
+        "supports_settings",
+        "supports_show_like_before_in",
+        "supports_space_separated_column_options",
+        "supports_start_transaction_modifier",
+        "supports_string_escape_constant",
+        "supports_string_literal_backslash_escape",
+        "supports_string_literal_concatenation",
+        "supports_string_literal_concatenation_with_newline",
+        "supports_struct_literal",
+        "supports_subquery_as_function_arg",
+        "supports_table_hints",
+        "supports_table_sample_before_alias",
+        "supports_table_versioning",
+        "supports_top_before_distinct",
+        "supports_trailing_commas",
+        "supports_triple_quoted_string",
+        "supports_try_convert",
+        "supports_unicode_string_literal",
+        "supports_update_order_by",
+        "supports_user_host_grantee",
+        "supports_values_as_table_factor",
+        "supports_window_clause_named_window_reference",
+        "supports_window_function_null_treatment_arg",
+        "supports_with_fill",
+        "supports_within_after_array_aggregation",
+        "supports_xml_expressions"
+      ],
+      "methods": [
+        {
+          "name": "allow_extract_custom",
+          "signature": "fn allow_extract_custom(&self) -> bool",
+          "summary": "Returns true if this dialect allows the `EXTRACT` function to words other than [`Keyword`]."
+        },
+        {
+          "name": "allow_extract_single_quotes",
+          "signature": "fn allow_extract_single_quotes(&self) -> bool",
+          "summary": "Returns true if this dialect allows the `EXTRACT` function to use single quotes in the part being extracted."
+        },
+        {
+          "name": "convert_type_before_value",
+          "signature": "fn convert_type_before_value(&self) -> bool",
+          "summary": "Returns true if the dialect has a CONVERT function which accepts a type first and an expression second, e.g. `CONVERT(varchar, 1)`"
+        },
+        {
+          "name": "describe_requires_table_keyword",
+          "signature": "fn describe_requires_table_keyword(&self) -> bool",
+          "summary": "Returns true if this dialect requires the `TABLE` keyword after `DESCRIBE`"
+        },
+        {
+          "name": "dialect",
+          "signature": "fn dialect(&self) -> TypeId",
+          "summary": "Determine the [`TypeId`] of this dialect."
+        },
+        {
+          "name": "get_next_precedence",
+          "signature": "fn get_next_precedence(&self, _parser: &Parser<'_>) -> Option<Result<u8, ParserError>>",
+          "summary": "Dialect-specific precedence override"
+        },
+        {
+          "name": "get_next_precedence_default",
+          "signature": "fn get_next_precedence_default(&self, parser: &Parser<'_>) -> Result<u8, ParserError>",
+          "summary": "Get the precedence of the next token, looking at the full token stream."
+        },
+        {
+          "name": "get_reserved_grantees_types",
+          "signature": "fn get_reserved_grantees_types(&self) -> &[GranteesType]",
+          "summary": "Returns grantee types that should be treated as identifiers"
+        },
+        {
+          "name": "get_reserved_keywords_for_select_item_operator",
+          "signature": "fn get_reserved_keywords_for_select_item_operator(&self) -> &[Keyword]",
+          "summary": "Returns reserved keywords that may prefix a select item expression e.g. `SELECT CONNECT_BY_ROOT name FROM Tbl2` (Snowflake)"
+        },
+        {
+          "name": "identifier_quote_style",
+          "signature": "fn identifier_quote_style(&self, _identifier: &str) -> Option<char>",
+          "summary": "Return the character used to quote identifiers."
+        },
+        {
+          "name": "ignores_wildcard_escapes",
+          "signature": "fn ignores_wildcard_escapes(&self) -> bool",
+          "summary": "Determine whether the dialect strips the backslash when escaping LIKE wildcards (%, _)."
+        },
+        {
+          "name": "is_column_alias",
+          "signature": "fn is_column_alias(&self, kw: &Keyword, _parser: &mut Parser<'_>) -> bool",
+          "summary": "Returns true if the specified keyword should be parsed as a column identifier. See [keywords::RESERVED_FOR_COLUMN_ALIAS]"
+        },
+        {
+          "name": "is_custom_operator_part",
+          "signature": "fn is_custom_operator_part(&self, _ch: char) -> bool",
+          "summary": "Most dialects do not have custom operators. Override this method to provide custom operators."
+        },
+        {
+          "name": "is_delimited_identifier_start",
+          "signature": "fn is_delimited_identifier_start(&self, ch: char) -> bool",
+          "summary": "Determine if a character starts a quoted identifier. The default implementation, accepting \"double quoted\" ids is both ANSI-compliant and appropriate for most dialects (with the notable exception of MySQL, MS SQL, and sqlite). You can acce…"
+        },
+        {
+          "name": "is_identifier_generating_function_name",
+          "signature": "fn is_identifier_generating_function_name(&self, _ident: &Ident, _name_parts: &[ObjectNamePart]) -> bool",
+          "summary": "Returns true if the dialect considers the specified ident as a function that returns an identifier. Typically used to generate identifiers programmatically."
+        },
+        {
+          "name": "is_identifier_part",
+          "signature": "fn is_identifier_part(&self, ch: char) -> bool",
+          "summary": "Determine if a character is a valid unquoted identifier character"
+        },
+        {
+          "name": "is_identifier_start",
+          "signature": "fn is_identifier_start(&self, ch: char) -> bool",
+          "summary": "Determine if a character is a valid start character for an unquoted identifier"
+        },
+        {
+          "name": "is_nested_delimited_identifier_start",
+          "signature": "fn is_nested_delimited_identifier_start(&self, _ch: char) -> bool",
+          "summary": "Determine if a character starts a potential nested quoted identifier. Example: RedShift supports the following quote styles to all mean the same thing: ```sql SELECT 1 AS foo; SELECT 1 AS \"foo\"; SELECT 1 AS [foo]; SELECT 1 AS [\"foo\"]; ```"
+        },
+        {
+          "name": "is_reserved_for_identifier",
+          "signature": "fn is_reserved_for_identifier(&self, kw: Keyword) -> bool",
+          "summary": "Returns true if the specified keyword is reserved and cannot be used as an identifier without special handling like quoting."
+        },
+        {
+          "name": "is_select_item_alias",
+          "signature": "fn is_select_item_alias(&self, explicit: bool, kw: &Keyword, parser: &mut Parser<'_>) -> bool",
+          "summary": "Returns true if the specified keyword should be parsed as a select item alias. When explicit is true, the keyword is preceded by an `AS` word. Parser is provided to enable looking ahead if needed."
+        },
+        {
+          "name": "is_table_alias",
+          "signature": "fn is_table_alias(&self, kw: &Keyword, _parser: &mut Parser<'_>) -> bool",
+          "summary": "Returns true if the specified keyword should be parsed as a table factor alias. See [keywords::RESERVED_FOR_TABLE_ALIAS]"
+        },
+        {
+          "name": "is_table_factor",
+          "signature": "fn is_table_factor(&self, kw: &Keyword, _parser: &mut Parser<'_>) -> bool",
+          "summary": "Returns true if the specified keyword should be parsed as a table factor identifier. See [keywords::RESERVED_FOR_TABLE_FACTOR]"
+        },
+        {
+          "name": "is_table_factor_alias",
+          "signature": "fn is_table_factor_alias(&self, explicit: bool, kw: &Keyword, parser: &mut Parser<'_>) -> bool",
+          "summary": "Returns true if the specified keyword should be parsed as a table factor alias. When explicit is true, the keyword is preceded by an `AS` word. Parser is provided to enable looking ahead if needed."
+        },
+        {
+          "name": "parse_column_option",
+          "signature": "fn parse_column_option(&self, _parser: &mut Parser<'_>) -> Result<Option<Result<Option<ColumnOption>, ParserError>>, ParserError>",
+          "summary": "Dialect-specific column option parser override"
+        },
+        {
+          "name": "parse_infix",
+          "signature": "fn parse_infix(&self, _parser: &mut Parser<'_>, _expr: &Expr, _precedence: u8) -> Option<Result<Expr, ParserError>>",
+          "summary": "Dialect-specific infix parser override"
+        },
+        {
+          "name": "parse_prefix",
+          "signature": "fn parse_prefix(&self, _parser: &mut Parser<'_>) -> Option<Result<Expr, ParserError>>",
+          "summary": "Dialect-specific prefix parser override"
+        },
+        {
+          "name": "parse_statement",
+          "signature": "fn parse_statement(&self, _parser: &mut Parser<'_>) -> Option<Result<Statement, ParserError>>",
+          "summary": "Dialect-specific statement parser override"
+        },
+        {
+          "name": "peek_nested_delimited_identifier_quotes",
+          "signature": "fn peek_nested_delimited_identifier_quotes(&self, _chars: Peekable<Chars<'_>>) -> Option<(char, Option<char>)>",
+          "summary": "Only applicable whenever [`Self::is_nested_delimited_identifier_start`] returns true If the next sequence of tokens potentially represent a nested identifier, then this method returns a tuple containing the outer quote style, and if presen…"
+        },
+        {
+          "name": "prec_unknown",
+          "signature": "fn prec_unknown(&self) -> u8",
+          "summary": "Returns the precedence when the precedence is otherwise unknown"
+        },
+        {
+          "name": "prec_value",
+          "signature": "fn prec_value(&self, prec: Precedence) -> u8",
+          "summary": "Decide the lexical Precedence of operators."
+        },
+        {
+          "name": "require_interval_qualifier",
+          "signature": "fn require_interval_qualifier(&self) -> bool",
+          "summary": "Whether `INTERVAL` expressions require units (called \"qualifiers\" in the ANSI SQL spec) to be specified, e.g. `INTERVAL 1 DAY` vs `INTERVAL 1`."
+        },
+        {
+          "name": "requires_single_line_comment_whitespace",
+          "signature": "fn requires_single_line_comment_whitespace(&self) -> bool",
+          "summary": "Returns true if this dialect requires a whitespace character after `--` to start a single line comment."
+        },
+        {
+          "name": "support_map_literal_syntax",
+          "signature": "fn support_map_literal_syntax(&self) -> bool",
+          "summary": "Returns true if the dialect supports defining object using the syntax like `Map {1: 10, 2: 20}`."
+        },
+        {
+          "name": "supports_alter_column_type_using",
+          "signature": "fn supports_alter_column_type_using(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `USING` clause in an `ALTER COLUMN` statement. Example:  ```sql  ALTER TABLE tbl ALTER COLUMN col SET DATA TYPE <type> USING <exp>` ```"
+        },
+        {
+          "name": "supports_array_join_syntax",
+          "signature": "fn supports_array_join_syntax(&self) -> bool",
+          "summary": "Returns true if the dialect supports ClickHouse-style `ARRAY JOIN` / `LEFT ARRAY JOIN` / `INNER ARRAY JOIN` syntax for unnesting arrays inline."
+        },
+        {
+          "name": "supports_array_typedef_with_brackets",
+          "signature": "fn supports_array_typedef_with_brackets(&self) -> bool",
+          "summary": "Returns true if the dialect supports array type definition with brackets with an optional size. For example: ```CREATE TABLE my_table (arr1 INT[], arr2 INT[3])``` ```SELECT x::INT[]```"
+        },
+        {
+          "name": "supports_array_typedef_without_element_type",
+          "signature": "fn supports_array_typedef_without_element_type(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `ARRAY` type without specifying an element type."
+        },
+        {
+          "name": "supports_asc_desc_in_column_definition",
+          "signature": "fn supports_asc_desc_in_column_definition(&self) -> bool",
+          "summary": "Returns true if the dialect supports `ASC` and `DESC` in column definitions e.g. `CREATE TABLE t (a INT ASC, b INT DESC);`"
+        },
+        {
+          "name": "supports_bang_not_operator",
+          "signature": "fn supports_bang_not_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports `!a` syntax for boolean `NOT` expressions."
+        },
+        {
+          "name": "supports_binary_kw_as_cast",
+          "signature": "fn supports_binary_kw_as_cast(&self) -> bool",
+          "summary": "Returns true if the dialect supports casting an expression to a binary type using the `BINARY <expr>` syntax."
+        },
+        {
+          "name": "supports_bitwise_shift_operators",
+          "signature": "fn supports_bitwise_shift_operators(&self) -> bool",
+          "summary": "Returns true if the dialect supports `<<` and `>>` shift operators."
+        },
+        {
+          "name": "supports_boolean_literals",
+          "signature": "fn supports_boolean_literals(&self) -> bool",
+          "summary": "Returns true if the dialect supports boolean literals (`true` and `false`). For example, in MSSQL these are treated as identifiers rather than boolean literals."
+        },
+        {
+          "name": "supports_column_definition_trailing_commas",
+          "signature": "fn supports_column_definition_trailing_commas(&self) -> bool",
+          "summary": "Returns true if the dialect supports trailing commas in the column definitions list of a `CREATE` statement. Example: `CREATE TABLE T (x INT, y TEXT,)`"
+        },
+        {
+          "name": "supports_comma_separated_drop_column_list",
+          "signature": "fn supports_comma_separated_drop_column_list(&self) -> bool",
+          "summary": "Returns true if the dialect supports `ALTER TABLE tbl DROP COLUMN c1, ..., cn`"
+        },
+        {
+          "name": "supports_comma_separated_set_assignments",
+          "signature": "fn supports_comma_separated_set_assignments(&self) -> bool",
+          "summary": "Returns true if the dialect supports multiple `SET` statements in a single statement."
+        },
+        {
+          "name": "supports_comma_separated_trim",
+          "signature": "fn supports_comma_separated_trim(&self) -> bool",
+          "summary": "Returns true if the dialect supports the two-argument comma-separated form of the `TRIM` function: `TRIM(expr, characters)`."
+        },
+        {
+          "name": "supports_comment_on",
+          "signature": "fn supports_comment_on(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `COMMENT` statement"
+        },
+        {
+          "name": "supports_comment_optimizer_hint",
+          "signature": "fn supports_comment_optimizer_hint(&self) -> bool",
+          "summary": "Returns `true` if the dialect supports query optimizer hints in the format of single and multi line comments immediately following a `SELECT`, `INSERT`, `REPLACE`, `DELETE`, or `MERGE` keyword."
+        },
+        {
+          "name": "supports_connect_by",
+          "signature": "fn supports_connect_by(&self) -> bool",
+          "summary": "Returns true if the dialect supports CONNECT BY."
+        },
+        {
+          "name": "supports_constraint_keyword_without_name",
+          "signature": "fn supports_constraint_keyword_without_name(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `CONSTRAINT` keyword without a name in table constraint definitions."
+        },
+        {
+          "name": "supports_create_index_with_clause",
+          "signature": "fn supports_create_index_with_clause(&self) -> bool",
+          "summary": "Does the dialect support with clause in create index statement? e.g. `CREATE INDEX idx ON t WITH (key = value, key2)`"
+        },
+        {
+          "name": "supports_create_table_like_parenthesized",
+          "signature": "fn supports_create_table_like_parenthesized(&self) -> bool",
+          "summary": "Returns true if the dialect supports specifying which table to copy the schema from inside parenthesis."
+        },
+        {
+          "name": "supports_create_table_multi_schema_info_sources",
+          "signature": "fn supports_create_table_multi_schema_info_sources(&self) -> bool",
+          "summary": "Returns true if the dialect supports specifying multiple options in a `CREATE TABLE` statement for the structure of the new table. For example: `CREATE TABLE t (a INT, b INT) AS SELECT 1 AS b, 2 AS a`"
+        },
+        {
+          "name": "supports_create_table_select",
+          "signature": "fn supports_create_table_select(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `CREATE TABLE SELECT` statement"
+        },
+        {
+          "name": "supports_create_table_using",
+          "signature": "fn supports_create_table_using(&self) -> bool",
+          "summary": "Returns true if the dialect supports `USING <format>` in `CREATE TABLE`."
+        },
+        {
+          "name": "supports_create_view_comment_syntax",
+          "signature": "fn supports_create_view_comment_syntax(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `COMMENT` clause in `CREATE VIEW` statements using the `COMMENT = 'comment'` syntax."
+        },
+        {
+          "name": "supports_cross_join_constraint",
+          "signature": "fn supports_cross_join_constraint(&self) -> bool",
+          "summary": "Returns true if the dialect supports a join specification on CROSS JOIN."
+        },
+        {
+          "name": "supports_cte_without_as",
+          "signature": "fn supports_cte_without_as(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `AS` keyword being optional in a CTE definition. For example: ```sql WITH cte_name (SELECT ...) ```"
+        },
+        {
+          "name": "supports_data_type_signed_suffix",
+          "signature": "fn supports_data_type_signed_suffix(&self) -> bool",
+          "summary": "Returns true if this dialect allows an optional `SIGNED` suffix after integer data types."
+        },
+        {
+          "name": "supports_detach",
+          "signature": "fn supports_detach(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `DETACH` statement."
+        },
+        {
+          "name": "supports_dictionary_syntax",
+          "signature": "fn supports_dictionary_syntax(&self) -> bool",
+          "summary": "Returns true if the dialect supports defining structs or objects using a syntax like `{'x': 1, 'y': 2, 'z': 3}`."
+        },
+        {
+          "name": "supports_dollar_as_money_prefix",
+          "signature": "fn supports_dollar_as_money_prefix(&self) -> bool",
+          "summary": "Returns true if this dialect supports `$` as a prefix for money literals e.g. `SELECT $123.45` (SQL Server)"
+        },
+        {
+          "name": "supports_dollar_placeholder",
+          "signature": "fn supports_dollar_placeholder(&self) -> bool",
+          "summary": "Returns true if this dialect allows dollar placeholders e.g. `SELECT $var` (SQLite)"
+        },
+        {
+          "name": "supports_double_ampersand_operator",
+          "signature": "fn supports_double_ampersand_operator(&self) -> bool",
+          "summary": "Returns true if the dialect considers the `&&` operator as a boolean AND operator."
+        },
+        {
+          "name": "supports_empty_projections",
+          "signature": "fn supports_empty_projections(&self) -> bool",
+          "summary": "Return true if the dialect supports empty projections in SELECT statements"
+        },
+        {
+          "name": "supports_end_transaction_modifier",
+          "signature": "fn supports_end_transaction_modifier(&self) -> bool",
+          "summary": "Returns true if the dialect supports `END {TRY | CATCH}` statements"
+        },
+        {
+          "name": "supports_eq_alias_assignment",
+          "signature": "fn supports_eq_alias_assignment(&self) -> bool",
+          "summary": "Returns true if this dialect supports treating the equals operator `=` within a `SelectItem` as an alias assignment operator, rather than a boolean expression. For example: the following statements are equivalent for such a dialect: ```sql…"
+        },
+        {
+          "name": "supports_execute_immediate",
+          "signature": "fn supports_execute_immediate(&self) -> bool",
+          "summary": "Returns true if the dialect supports `EXECUTE IMMEDIATE` statements."
+        },
+        {
+          "name": "supports_explain_with_utility_options",
+          "signature": "fn supports_explain_with_utility_options(&self) -> bool",
+          "summary": "Returns true if the dialect supports `EXPLAIN` statements with utility options e.g. `EXPLAIN (ANALYZE TRUE, BUFFERS TRUE) SELECT * FROM tbl;`"
+        },
+        {
+          "name": "supports_extract_comma_syntax",
+          "signature": "fn supports_extract_comma_syntax(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `EXTRACT` function with a comma separator instead of `FROM`."
+        },
+        {
+          "name": "supports_factorial_operator",
+          "signature": "fn supports_factorial_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports `a!` expressions"
+        },
+        {
+          "name": "supports_filter_during_aggregation",
+          "signature": "fn supports_filter_during_aggregation(&self) -> bool",
+          "summary": "Does the dialect support `FILTER (WHERE expr)` for aggregate queries?"
+        },
+        {
+          "name": "supports_from_first_insert",
+          "signature": "fn supports_from_first_insert(&self) -> bool",
+          "summary": "Return true if the dialect supports \"FROM-first\" inserts."
+        },
+        {
+          "name": "supports_from_first_select",
+          "signature": "fn supports_from_first_select(&self) -> bool",
+          "summary": "Return true if the dialect supports \"FROM-first\" selects."
+        },
+        {
+          "name": "supports_from_trailing_commas",
+          "signature": "fn supports_from_trailing_commas(&self) -> bool",
+          "summary": "Returns true if the dialect supports trailing commas in the `FROM` clause of a `SELECT` statement. Example: `SELECT 1 FROM T, U, LIMIT 1`"
+        },
+        {
+          "name": "supports_geometric_types",
+          "signature": "fn supports_geometric_types(&self) -> bool",
+          "summary": "Returns true if the dialect supports geometric types."
+        },
+        {
+          "name": "supports_group_by_expr",
+          "signature": "fn supports_group_by_expr(&self) -> bool",
+          "summary": "Returns true if the dialects supports `group sets, roll up, or cube` expressions."
+        },
+        {
+          "name": "supports_group_by_with_modifier",
+          "signature": "fn supports_group_by_with_modifier(&self) -> bool",
+          "summary": "Returns true if the dialects supports `GROUP BY` modifiers prefixed by a `WITH` keyword. Example: `GROUP BY value WITH ROLLUP`."
+        },
+        {
+          "name": "supports_in_empty_list",
+          "signature": "fn supports_in_empty_list(&self) -> bool",
+          "summary": "Returns true if the dialect supports `(NOT) IN ()` expressions"
+        },
+        {
+          "name": "supports_insert_format",
+          "signature": "fn supports_insert_format(&self) -> bool",
+          "summary": "Does the dialect support insert formats, e.g. `INSERT INTO ... FORMAT <format>`"
+        },
+        {
+          "name": "supports_insert_set",
+          "signature": "fn supports_insert_set(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `INSERT INTO ... SET col1 = 1, ...` syntax."
+        },
+        {
+          "name": "supports_insert_table_alias",
+          "signature": "fn supports_insert_table_alias(&self) -> bool",
+          "summary": "Returns true if this dialect supports `INSERT INTO t [[AS] alias] ...`."
+        },
+        {
+          "name": "supports_insert_table_function",
+          "signature": "fn supports_insert_table_function(&self) -> bool",
+          "summary": "Does the dialect support table function in insertion?"
+        },
+        {
+          "name": "supports_insert_table_query",
+          "signature": "fn supports_insert_table_query(&self) -> bool",
+          "summary": "Does the dialect support table queries in insertion?"
+        },
+        {
+          "name": "supports_install",
+          "signature": "fn supports_install(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `INSTALL` statement."
+        },
+        {
+          "name": "supports_interpolate",
+          "signature": "fn supports_interpolate(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `INTERPOLATE` clause in `ORDER BY` expressions."
+        },
+        {
+          "name": "supports_interval_options",
+          "signature": "fn supports_interval_options(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `INTERVAL` data type with [Postgres]-style options."
+        },
+        {
+          "name": "supports_key_column_option",
+          "signature": "fn supports_key_column_option(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `KEY` keyword as part of column-level constraints in a `CREATE TABLE` statement."
+        },
+        {
+          "name": "supports_lambda_functions",
+          "signature": "fn supports_lambda_functions(&self) -> bool",
+          "summary": "Returns true if the dialect supports lambda functions, for example:"
+        },
+        {
+          "name": "supports_left_associative_joins_without_parens",
+          "signature": "fn supports_left_associative_joins_without_parens(&self) -> bool",
+          "summary": "Indicates whether the dialect supports left-associative join parsing by default when parentheses are omitted in nested joins."
+        },
+        {
+          "name": "supports_limit_by",
+          "signature": "fn supports_limit_by(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `LIMIT BY` clause."
+        },
+        {
+          "name": "supports_limit_comma",
+          "signature": "fn supports_limit_comma(&self) -> bool",
+          "summary": "Does the dialect support parsing `LIMIT 1, 2` as `LIMIT 2 OFFSET 1`?"
+        },
+        {
+          "name": "supports_listen_notify",
+          "signature": "fn supports_listen_notify(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `LISTEN`, `UNLISTEN` and `NOTIFY` statements"
+        },
+        {
+          "name": "supports_load_data",
+          "signature": "fn supports_load_data(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `LOAD DATA` statement"
+        },
+        {
+          "name": "supports_load_extension",
+          "signature": "fn supports_load_extension(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `LOAD extension` statement"
+        },
+        {
+          "name": "supports_long_type_as_bigint",
+          "signature": "fn supports_long_type_as_bigint(&self) -> bool",
+          "summary": "Returns true if the dialect treats `LONG` as an alias for `BIGINT`."
+        },
+        {
+          "name": "supports_map_literal_with_angle_brackets",
+          "signature": "fn supports_map_literal_with_angle_brackets(&self) -> bool",
+          "summary": "Returns true if the dialect supports `MAP<K, V>` angle-bracket syntax for the MAP data type."
+        },
+        {
+          "name": "supports_match_against",
+          "signature": "fn supports_match_against(&self) -> bool",
+          "summary": "Does the dialect support the `MATCH() AGAINST()` syntax?"
+        },
+        {
+          "name": "supports_match_recognize",
+          "signature": "fn supports_match_recognize(&self) -> bool",
+          "summary": "Returns true if the dialect supports the MATCH_RECOGNIZE operation."
+        },
+        {
+          "name": "supports_multiline_comment_hints",
+          "signature": "fn supports_multiline_comment_hints(&self) -> bool",
+          "summary": "Returns true if the dialect supports optimizer hints in multiline comments e.g. `/*!50110 KEY_BLOCK_SIZE = 1024*/`"
+        },
+        {
+          "name": "supports_named_fn_args_with_assignment_operator",
+          "signature": "fn supports_named_fn_args_with_assignment_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports named arguments of the form `FUN(a := '1', b := '2')`."
+        },
+        {
+          "name": "supports_named_fn_args_with_colon_operator",
+          "signature": "fn supports_named_fn_args_with_colon_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports named arguments of the form `FUN(a : '1', b : '2')`."
+        },
+        {
+          "name": "supports_named_fn_args_with_eq_operator",
+          "signature": "fn supports_named_fn_args_with_eq_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports named arguments of the form `FUN(a = '1', b = '2')`."
+        },
+        {
+          "name": "supports_named_fn_args_with_expr_name",
+          "signature": "fn supports_named_fn_args_with_expr_name(&self) -> bool",
+          "summary": "Returns true if dialect supports argument name as arbitrary expression. e.g. `FUN(LOWER('a'):'1',  b:'2')` Such function arguments are represented in the AST by the `FunctionArg::ExprNamed` variant, otherwise use the `FunctionArg::Named` v…"
+        },
+        {
+          "name": "supports_named_fn_args_with_rarrow_operator",
+          "signature": "fn supports_named_fn_args_with_rarrow_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports named arguments of the form `FUN(a => '1', b => '2')`."
+        },
+        {
+          "name": "supports_nested_comments",
+          "signature": "fn supports_nested_comments(&self) -> bool",
+          "summary": "Returns true if the dialect supports nested comments e.g. `/* /* nested */ */`"
+        },
+        {
+          "name": "supports_notnull_operator",
+          "signature": "fn supports_notnull_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `x NOTNULL` operator expression."
+        },
+        {
+          "name": "supports_numeric_literal_underscores",
+          "signature": "fn supports_numeric_literal_underscores(&self) -> bool",
+          "summary": "Returns true if the dialect supports numbers containing underscores, e.g. `10_000_000`"
+        },
+        {
+          "name": "supports_numeric_prefix",
+          "signature": "fn supports_numeric_prefix(&self) -> bool",
+          "summary": "Returns true if the dialect supports identifiers starting with a numeric prefix such as tables named `59901_user_login`"
+        },
+        {
+          "name": "supports_object_name_double_dot_notation",
+          "signature": "fn supports_object_name_double_dot_notation(&self) -> bool",
+          "summary": "Returns true if the dialect supports double dot notation for object names"
+        },
+        {
+          "name": "supports_optimize_table",
+          "signature": "fn supports_optimize_table(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `OPTIMIZE TABLE` statement."
+        },
+        {
+          "name": "supports_order_by_all",
+          "signature": "fn supports_order_by_all(&self) -> bool",
+          "summary": "Returns true if the dialect supports `ORDER BY ALL`. `ALL` which means all columns of the SELECT clause."
+        },
+        {
+          "name": "supports_outer_join_operator",
+          "signature": "fn supports_outer_join_operator(&self) -> bool",
+          "summary": "Returns true if the dialect supports the `(+)` syntax for OUTER JOIN."
+        },
+        {
+          "name": "supports_parens_around_table_factor",
+          "signature": "fn supports_parens_around_table_factor(&self) -> bool",
+          "summary": "Returns true if this dialect supports extra parentheses around lone table names or derived tables in the `FROM` clause."
+        },
+        {
+          "name": "supports_parenthesized_set_variables",
+          "signature": "fn supports_parenthesized_set_variables(&self) -> bool",
+          "summary": "Returns true if the dialect supports multiple variable assignment using parentheses in a `SET` variable declaration."
+        },
+        {
+          "name": "supports_partiql",
+          "signature": "fn supports_partiql(&self) -> bool",
+          "summary": "Returns true if the dialect supports PartiQL for querying semi-structured data <https://partiql.org/index.html>"
+        },
+        {
+          "name": "supports_partition_by_after_order_by",
+          "signature": "fn supports_partition_by_after_order_by(&self) -> bool",
+          "summary": "Returns true if the dialect supports `PARTITION BY` appearing after `ORDER BY` in a `CREATE TABLE` statement (in addition to the standard placement before `ORDER BY`)."
+        },
+        {
+          "name": "supports_pipe_operator",
+          "signature": "fn supports_pipe_operator(&self) -> bool",
+          "summary": "Return true if the dialect supports pipe operator."
+        },
+        {
+          "name": "supports_prewhere",
+          "signature": "fn supports_prewhere(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `PREWHERE` clause in `SELECT` statements."
+        },
+        {
+          "name": "supports_projection_trailing_commas",
+          "signature": "fn supports_projection_trailing_commas(&self) -> bool",
+          "summary": "Does the dialect support trailing commas in the projection list?"
+        },
+        {
+          "name": "supports_quote_delimited_string",
+          "signature": "fn supports_quote_delimited_string(&self) -> bool",
+          "summary": "Support quote delimited string literals, e.g. `Q'{...}'`"
+        },
+        {
+          "name": "supports_select_exclude",
+          "signature": "fn supports_select_exclude(&self) -> bool",
+          "summary": "Returns true if the dialect supports an exclude option as the last item in the projection section, not necessarily after a wildcard. For example: `SELECT *, c1, c2 EXCLUDE c3 FROM tbl`"
+        },
+        {
+          "name": "supports_select_expr_star",
+          "signature": "fn supports_select_expr_star(&self) -> bool",
+          "summary": "Return true if the dialect supports wildcard expansion on arbitrary expressions in projections."
+        },
+        {
+          "name": "supports_select_format",
+          "signature": "fn supports_select_format(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `FORMAT` clause in `SELECT` statements."
+        },
+        {
+          "name": "supports_select_item_multi_column_alias",
+          "signature": "fn supports_select_item_multi_column_alias(&self) -> bool",
+          "summary": "Returns true if the dialect supports parenthesized multi-column aliases in SELECT items. For example: ```sql SELECT stack(2, 'a', 'b') AS (col1, col2) ```"
+        },
+        {
+          "name": "supports_select_modifiers",
+          "signature": "fn supports_select_modifiers(&self) -> bool",
+          "summary": "Returns true if the dialect supports MySQL-specific SELECT modifiers like `HIGH_PRIORITY`, `STRAIGHT_JOIN`, `SQL_SMALL_RESULT`, etc."
+        },
+        {
+          "name": "supports_select_wildcard_except",
+          "signature": "fn supports_select_wildcard_except(&self) -> bool",
+          "summary": "Returns true if the dialect supports an `EXCEPT` clause following a wildcard in a select list."
+        },
+        {
+          "name": "supports_select_wildcard_exclude",
+          "signature": "fn supports_select_wildcard_exclude(&self) -> bool",
+          "summary": "Returns true if the dialect supports an exclude option following a wildcard in the projection section. For example: `SELECT * EXCLUDE col1 FROM tbl`."
+        },
+        {
+          "name": "supports_select_wildcard_ilike",
+          "signature": "fn supports_select_wildcard_ilike(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `ILIKE` option in a `SELECT *` wildcard expression."
+        },
+        {
+          "name": "supports_select_wildcard_rename",
+          "signature": "fn supports_select_wildcard_rename(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `RENAME` option in a `SELECT *` wildcard expression."
+        },
+        {
+          "name": "supports_select_wildcard_replace",
+          "signature": "fn supports_select_wildcard_replace(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `REPLACE` option in a `SELECT *` wildcard expression."
+        },
+        {
+          "name": "supports_select_wildcard_with_alias",
+          "signature": "fn supports_select_wildcard_with_alias(&self) -> bool",
+          "summary": "Returns true if this dialect supports aliasing a wildcard select item."
+        },
+        {
+          "name": "supports_semantic_view_table_factor",
+          "signature": "fn supports_semantic_view_table_factor(&self) -> bool",
+          "summary": "Returns true if the dialect supports `SEMANTIC_VIEW()` table functions."
+        },
+        {
+          "name": "supports_set_names",
+          "signature": "fn supports_set_names(&self) -> bool",
+          "summary": "Returns true if the dialect supports `SET NAMES <charset_name> [COLLATE <collation_name>]`."
+        },
+        {
+          "name": "supports_set_stmt_without_operator",
+          "signature": "fn supports_set_stmt_without_operator(&self) -> bool",
+          "summary": "Returns true if this dialect supports `SET` statements without an explicit assignment operator such as `=`. For example: `SET SHOWPLAN_XML ON`."
+        },
+        {
+          "name": "supports_settings",
+          "signature": "fn supports_settings(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `SETTINGS` clause."
+        },
+        {
+          "name": "supports_show_like_before_in",
+          "signature": "fn supports_show_like_before_in(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `LIKE 'pattern'` option in a `SHOW` statement before the `IN` option"
+        },
+        {
+          "name": "supports_space_separated_column_options",
+          "signature": "fn supports_space_separated_column_options(&self) -> bool",
+          "summary": "Returns true if the dialect supports space-separated column options in a `CREATE TABLE` statement. For example: ```sql CREATE TABLE tbl (     col INT NOT NULL DEFAULT 0 ); ```"
+        },
+        {
+          "name": "supports_start_transaction_modifier",
+          "signature": "fn supports_start_transaction_modifier(&self) -> bool",
+          "summary": "Returns true if the dialect supports `BEGIN {DEFERRED | IMMEDIATE | EXCLUSIVE | TRY | CATCH} [TRANSACTION]` statements"
+        },
+        {
+          "name": "supports_string_escape_constant",
+          "signature": "fn supports_string_escape_constant(&self) -> bool",
+          "summary": "Returns true if this dialect supports the E'...' syntax for string literals"
+        },
+        {
+          "name": "supports_string_literal_backslash_escape",
+          "signature": "fn supports_string_literal_backslash_escape(&self) -> bool",
+          "summary": "Determine if the dialect supports escaping characters via '\\' in string literals."
+        },
+        {
+          "name": "supports_string_literal_concatenation",
+          "signature": "fn supports_string_literal_concatenation(&self) -> bool",
+          "summary": "Returns true if the dialect supports concatenating of string literal Example: `SELECT 'Hello ' \"world\" => SELECT 'Hello world'`"
+        },
+        {
+          "name": "supports_string_literal_concatenation_with_newline",
+          "signature": "fn supports_string_literal_concatenation_with_newline(&self) -> bool",
+          "summary": "Returns true if the dialect supports concatenating string literals with a newline. For example, the following statement would return `true`: ```sql SELECT 'abc' in (   'a'   'b'   'c' ); ```"
+        },
+        {
+          "name": "supports_struct_literal",
+          "signature": "fn supports_struct_literal(&self) -> bool",
+          "summary": "Return true if the dialect supports the STRUCT literal"
+        },
+        {
+          "name": "supports_subquery_as_function_arg",
+          "signature": "fn supports_subquery_as_function_arg(&self) -> bool",
+          "summary": "Returns true if this dialect supports a subquery passed to a function as the only argument without enclosing parentheses."
+        },
+        {
+          "name": "supports_table_hints",
+          "signature": "fn supports_table_hints(&self) -> bool",
+          "summary": "Returns true if the dialect supports the table hints in the `FROM` clause."
+        },
+        {
+          "name": "supports_table_sample_before_alias",
+          "signature": "fn supports_table_sample_before_alias(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `TABLESAMPLE` option before the table alias option. For example:"
+        },
+        {
+          "name": "supports_table_versioning",
+          "signature": "fn supports_table_versioning(&self) -> bool",
+          "summary": "Returns true if this dialect supports querying historical table data by specifying which version of the data to query."
+        },
+        {
+          "name": "supports_top_before_distinct",
+          "signature": "fn supports_top_before_distinct(&self) -> bool",
+          "summary": "Returns true if this dialect expects the `TOP` option before the `ALL`/`DISTINCT` options in a `SELECT` statement."
+        },
+        {
+          "name": "supports_trailing_commas",
+          "signature": "fn supports_trailing_commas(&self) -> bool",
+          "summary": "Does the dialect support trailing commas around the query?"
+        },
+        {
+          "name": "supports_triple_quoted_string",
+          "signature": "fn supports_triple_quoted_string(&self) -> bool",
+          "summary": "Returns true if the dialect supports triple quoted string e.g. `\"\"\"abc\"\"\"`"
+        },
+        {
+          "name": "supports_try_convert",
+          "signature": "fn supports_try_convert(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `TRY_CONVERT` function"
+        },
+        {
+          "name": "supports_unicode_string_literal",
+          "signature": "fn supports_unicode_string_literal(&self) -> bool",
+          "summary": "Determine if the dialect supports string literals with `U&` prefix. This is used to specify Unicode code points in string literals. For example, in PostgreSQL, the following is a valid string literal: ```sql SELECT U&'\\0061\\0062\\0063'; ```…"
+        },
+        {
+          "name": "supports_update_order_by",
+          "signature": "fn supports_update_order_by(&self) -> bool",
+          "summary": "Returns true if the dialect supports `ORDER BY` in `UPDATE` statements."
+        },
+        {
+          "name": "supports_user_host_grantee",
+          "signature": "fn supports_user_host_grantee(&self) -> bool",
+          "summary": "Does the dialect support MySQL-style `'user'@'host'` grantee syntax?"
+        },
+        {
+          "name": "supports_values_as_table_factor",
+          "signature": "fn supports_values_as_table_factor(&self) -> bool",
+          "summary": "Returns true if this dialect supports `VALUES` as a table factor without requiring parentheses around the entire clause."
+        },
+        {
+          "name": "supports_window_clause_named_window_reference",
+          "signature": "fn supports_window_clause_named_window_reference(&self) -> bool",
+          "summary": "Returns true if the dialect supports referencing another named window within a window clause declaration."
+        },
+        {
+          "name": "supports_window_function_null_treatment_arg",
+          "signature": "fn supports_window_function_null_treatment_arg(&self) -> bool",
+          "summary": "Returns true if the dialects supports specifying null treatment as part of a window function's parameter list as opposed to after the parameter list."
+        },
+        {
+          "name": "supports_with_fill",
+          "signature": "fn supports_with_fill(&self) -> bool",
+          "summary": "Returns true if this dialect supports the `WITH FILL` clause in `ORDER BY` expressions."
+        },
+        {
+          "name": "supports_within_after_array_aggregation",
+          "signature": "fn supports_within_after_array_aggregation(&self) -> bool",
+          "summary": "Returns true if the dialect supports `ARRAY_AGG() [WITHIN GROUP (ORDER BY)]` expressions. Otherwise, the dialect should expect an `ORDER BY` without the `WITHIN GROUP` clause, e.g. [`ANSI`]"
+        },
+        {
+          "name": "supports_xml_expressions",
+          "signature": "fn supports_xml_expressions(&self) -> bool",
+          "summary": "Returns true if the dialect supports XML-related expressions such as `xml '<foo/>'` typed strings, XML functions like `XMLCONCAT`, `XMLELEMENT`, etc."
+        }
+      ]
+    }
+  ]
+}

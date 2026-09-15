@@ -1,0 +1,54 @@
+{
+  "module": "datafusion_execution::parquet_encryption",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.parquet_encryption.md",
+  "items": [
+    {
+      "path": "datafusion_execution::parquet_encryption::EncryptionFactoryRegistry",
+      "name": "EncryptionFactoryRegistry",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct EncryptionFactoryRegistry",
+      "summary": "Stores [`EncryptionFactory`] implementations that can be retrieved by a unique string identifier",
+      "doc": "api/datafusion_execution.parquet_encryption.md#encryptionfactoryregistry",
+      "methods": [
+        {
+          "name": "get_factory",
+          "signature": "fn get_factory(&self, id: &str) -> Result<Arc<dyn EncryptionFactory>>",
+          "summary": "Retrieve an [`EncryptionFactory`] by its identifier"
+        },
+        {
+          "name": "register_factory",
+          "signature": "fn register_factory(&self, id: &str, factory: Arc<dyn EncryptionFactory>) -> Option<Arc<dyn EncryptionFactory>>",
+          "summary": "Register an [`EncryptionFactory`] with an associated identifier that can be later used to configure encryption when reading or writing Parquet. If an encryption factory with the same identifier was already registered, it is replaced and re…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::parquet_encryption::EncryptionFactory",
+      "name": "EncryptionFactory",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait EncryptionFactory: Send + Sync + std::fmt::Debug + 'static",
+      "summary": "Trait for types that generate file encryption and decryption properties to write and read encrypted Parquet files. This allows flexibility in how encryption keys are managed, for example, to integrate with a user's key management service (…",
+      "doc": "api/datafusion_execution.parquet_encryption.md#encryptionfactory",
+      "required_methods": [
+        "get_file_decryption_properties",
+        "get_file_encryption_properties"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_file_decryption_properties",
+          "signature": "async fn get_file_decryption_properties(&self, config: &EncryptionFactoryOptions, file_path: &Path) -> Result<Option<Arc<FileDecryptionProperties>>>",
+          "summary": "Generate file decryption properties to use when reading a Parquet file."
+        },
+        {
+          "name": "get_file_encryption_properties",
+          "signature": "async fn get_file_encryption_properties(&self, config: &EncryptionFactoryOptions, schema: &SchemaRef, file_path: &Path) -> Result<Option<Arc<FileEncryptionProperties>>>",
+          "summary": "Generate file encryption properties to use when writing a Parquet file."
+        }
+      ]
+    }
+  ]
+}

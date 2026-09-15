@@ -1,0 +1,161 @@
+{
+  "module": "datafusion_common::cse",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.cse.md",
+  "items": [
+    {
+      "path": "datafusion_common::cse::FoundCommonNodes",
+      "name": "FoundCommonNodes",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum FoundCommonNodes<N>",
+      "summary": "The result of potentially rewriting a list of [`TreeNode`]s to eliminate common subtrees.",
+      "doc": "api/datafusion_common.cse.md#foundcommonnodes",
+      "variants": [
+        "No",
+        "Yes"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_common::cse::CSE",
+      "name": "CSE",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct CSE<N, C: CSEController<Node = N>>",
+      "summary": "The main entry point of Common Subexpression Elimination.",
+      "doc": "api/datafusion_common.cse.md#cse",
+      "methods": [
+        {
+          "name": "extract_common_nodes",
+          "signature": "fn extract_common_nodes(&mut self, nodes_list: Vec<Vec<N>>) -> Result<FoundCommonNodes<N>>",
+          "summary": "Extracts common [`TreeNode`]s and rewrites `nodes_list`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(controller: C) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::cse::CSEController",
+      "name": "CSEController",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait CSEController",
+      "summary": "The [`TreeNode`] specific definition of elimination.",
+      "doc": "api/datafusion_common.cse.md#csecontroller",
+      "required_methods": [
+        "conditional_children",
+        "generate_alias",
+        "is_ignored",
+        "is_valid",
+        "rewrite"
+      ],
+      "provided_methods": [
+        "rewrite_f_down",
+        "rewrite_f_up"
+      ],
+      "methods": [
+        {
+          "name": "conditional_children",
+          "signature": "fn conditional_children(node: &Self::Node) -> Option<(Vec<&Self::Node>, Vec<&Self::Node>)>",
+          "summary": "Splits the children to normal and conditionally evaluated ones or returns `None` if all are always evaluated."
+        },
+        {
+          "name": "generate_alias",
+          "signature": "fn generate_alias(&self) -> String"
+        },
+        {
+          "name": "is_ignored",
+          "signature": "fn is_ignored(&self, node: &Self::Node) -> bool"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(node: &Self::Node) -> bool"
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite(&mut self, node: &Self::Node, alias: &str) -> Self::Node"
+        },
+        {
+          "name": "rewrite_f_down",
+          "signature": "fn rewrite_f_down(&mut self, _node: &Self::Node)"
+        },
+        {
+          "name": "rewrite_f_up",
+          "signature": "fn rewrite_f_up(&mut self, _node: &Self::Node)"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::cse::HashNode",
+      "name": "HashNode",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait HashNode",
+      "summary": "Hashes the direct content of an [`TreeNode`] without recursing into its children.",
+      "doc": "api/datafusion_common.cse.md#hashnode",
+      "implementors": [
+        "alloc::sync::Arc",
+        "datafusion_expr::expr::Expr"
+      ],
+      "required_methods": [
+        "hash_node"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "hash_node",
+          "signature": "fn hash_node<H: Hasher>(&self, state: &mut H)"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::cse::NormalizeEq",
+      "name": "NormalizeEq",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait NormalizeEq: Eq + Normalizeable",
+      "summary": "The `NormalizeEq` trait extends `Eq` and `Normalizeable` to provide a method for comparing normalized nodes in optimizations like Common Subexpression Elimination (CSE).",
+      "doc": "api/datafusion_common.cse.md#normalizeeq",
+      "implementors": [
+        "datafusion_expr::expr::Expr",
+        "datafusion_expr::logical_plan::plan::Subquery"
+      ],
+      "required_methods": [
+        "normalize_eq"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "normalize_eq",
+          "signature": "fn normalize_eq(&self, other: &Self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::cse::Normalizeable",
+      "name": "Normalizeable",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait Normalizeable",
+      "summary": "The `Normalizeable` trait defines a method to determine whether a node can be normalized.",
+      "doc": "api/datafusion_common.cse.md#normalizeable",
+      "implementors": [
+        "datafusion_expr::expr::Expr",
+        "datafusion_expr::logical_plan::plan::Subquery"
+      ],
+      "required_methods": [
+        "can_normalize"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "can_normalize",
+          "signature": "fn can_normalize(&self) -> bool"
+        }
+      ]
+    }
+  ]
+}

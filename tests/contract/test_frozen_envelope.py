@@ -1,7 +1,7 @@
 """The frozen response envelope accepts and rejects exactly what it is specified to.
 
-contracts/research-envelope.schema.json is the Phase-0 acceptance target. Generated schemas
-need not match it byte-for-byte, but they must agree on which documents validate -- so this
+contracts/research-v2/research-envelope.schema.json is the candidate hard-pivot contract.
+Generated schemas must agree on which documents validate -- so this
 corpus is the oracle `just schema-conformance` uses, and it is also the Python-side half of
 acceptance gate C19 (schema violations rejected consistently across boundaries).
 """
@@ -15,8 +15,8 @@ import pytest
 from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA = json.loads((ROOT / "contracts/research-envelope.schema.json").read_text())
-EXAMPLES = ROOT / "contracts/examples"
+SCHEMA = json.loads((ROOT / "contracts/research-v2/research-envelope.schema.json").read_text())
+EXAMPLES = ROOT / "contracts/research-v2/examples"
 VALIDATOR = Draft202012Validator(SCHEMA)
 
 
@@ -52,12 +52,12 @@ def test_unknown_root_field_is_rejected() -> None:
 
 
 def test_structural_extract_matches_the_frozen_schema() -> None:
-    """schemas/frozen/enums.json is what generated schemas are compared against.
+    """contracts/research-v2/enums.json is what generated schemas are compared against.
 
     If it drifts from the contract it was extracted from, every downstream conformance check is
     measuring the wrong thing.
     """
-    frozen = json.loads((ROOT / "schemas/frozen/enums.json").read_text())
+    frozen = json.loads((ROOT / "contracts/research-v2/enums.json").read_text())
     defs = SCHEMA["$defs"]
 
     assert frozen["root_required"] == sorted(SCHEMA["required"])
@@ -85,5 +85,7 @@ def test_error_codes_are_complete() -> None:
         "VERIFICATION_FAILED",
         "BUDGET_EXCEEDED",
         "INVALID_CURSOR",
+        "QUERY_FAILED",
+        "INTERNAL_ERROR",
     }
     assert set(SCHEMA["$defs"]["Error"]["properties"]["code"]["enum"]) == required

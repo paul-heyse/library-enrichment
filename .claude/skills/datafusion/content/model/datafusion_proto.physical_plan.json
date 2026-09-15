@@ -1,0 +1,415 @@
+{
+  "module": "datafusion_proto::physical_plan",
+  "crate": "datafusion-proto",
+  "api": "api/datafusion_proto.physical_plan.md",
+  "items": [
+    {
+      "path": "datafusion_proto::physical_plan::ComposedPhysicalExtensionCodec",
+      "name": "ComposedPhysicalExtensionCodec",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct ComposedPhysicalExtensionCodec",
+      "summary": "A PhysicalExtensionCodec that tries one of multiple inner codecs until one works",
+      "doc": "api/datafusion_proto.physical_plan.md#composedphysicalextensioncodec",
+      "implements": [
+        "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(codecs: Vec<Arc<dyn PhysicalExtensionCodec>>) -> Self"
+        },
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, buf: &[u8], inputs: &[Arc<dyn ExecutionPlan>], ctx: &TaskContext, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_udaf",
+          "signature": "fn try_decode_udaf(&self, name: &str, buf: &[u8]) -> Result<Arc<AggregateUDF>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_udf",
+          "signature": "fn try_decode_udf(&self, name: &str, buf: &[u8]) -> Result<Arc<ScalarUDF>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, node: Arc<dyn ExecutionPlan>, buf: &mut Vec<u8>, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_udaf",
+          "signature": "fn try_encode_udaf(&self, node: &AggregateUDF, buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_udf",
+          "signature": "fn try_encode_udf(&self, node: &ScalarUDF, buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::DeduplicatingProtoConverter",
+      "name": "DeduplicatingProtoConverter",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct DeduplicatingProtoConverter",
+      "summary": "A proto converter that deduplicates [`PhysicalExpr`] by [`PhysicalExpr::expression_id`]. This helps preserve referential integrity when deserializing [`ExecutionPlan`]s which may contain multiple occurrences of the same [`PhysicalExpr`] (e…",
+      "doc": "api/datafusion_proto.physical_plan.md#deduplicatingprotoconverter",
+      "implements": [
+        "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+      ],
+      "methods": [
+        {
+          "name": "execution_plan_to_proto",
+          "signature": "fn execution_plan_to_proto(&self, plan: &Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalPlanNode> where Self: Sized",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "physical_expr_to_proto",
+          "signature": "fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalExprNode>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "proto_to_execution_plan",
+          "signature": "fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "proto_to_physical_expr",
+          "signature": "fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>> where Self: Sized",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::DefaultPhysicalExtensionCodec",
+      "name": "DefaultPhysicalExtensionCodec",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct DefaultPhysicalExtensionCodec",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+      ],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, _buf: &[u8], _inputs: &[Arc<dyn ExecutionPlan>], _ctx: &TaskContext, _proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, _node: Arc<dyn ExecutionPlan>, _buf: &mut Vec<u8>, _proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::DefaultPhysicalProtoConverter",
+      "name": "DefaultPhysicalProtoConverter",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct DefaultPhysicalProtoConverter",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+      ],
+      "methods": [
+        {
+          "name": "execution_plan_to_proto",
+          "signature": "fn execution_plan_to_proto(&self, plan: &Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalPlanNode> where Self: Sized",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "physical_expr_to_proto",
+          "signature": "fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalExprNode>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "proto_to_execution_plan",
+          "signature": "fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        },
+        {
+          "name": "proto_to_physical_expr",
+          "signature": "fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>> where Self: Sized",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::PhysicalPlanDecodeContext",
+      "name": "PhysicalPlanDecodeContext",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct PhysicalPlanDecodeContext<'a>",
+      "summary": "Context threaded through physical-plan deserialization.",
+      "doc": "api/datafusion_proto.physical_plan.md#physicalplandecodecontext",
+      "methods": [
+        {
+          "name": "codec",
+          "signature": "fn codec(&self) -> &'a dyn PhysicalExtensionCodec",
+          "summary": "Returns the physical extension codec used for deserialization."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(task_ctx: &'a TaskContext, codec: &'a dyn PhysicalExtensionCodec) -> Self",
+          "summary": "Creates a new root decode context."
+        },
+        {
+          "name": "scalar_subquery_results",
+          "signature": "fn scalar_subquery_results(&self) -> Option<&ScalarSubqueryResults>",
+          "summary": "Returns the scalar subquery results container for the current scope, if one is active."
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> &'a TaskContext",
+          "summary": "Returns the task context used for deserialization."
+        },
+        {
+          "name": "with_scalar_subquery_results",
+          "signature": "fn with_scalar_subquery_results(&self, scalar_subquery_results: ScalarSubqueryResults) -> Self",
+          "summary": "Returns a child context with a different scalar subquery results container."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::AsExecutionPlan",
+      "name": "AsExecutionPlan",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait AsExecutionPlan: Debug + Send + Sync + Clone",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+      ],
+      "required_methods": [
+        "try_decode",
+        "try_encode",
+        "try_from_physical_plan",
+        "try_into_physical_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(buf: &[u8]) -> Result<Self> where Self: Sized"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode<B>(&self, buf: &mut B) -> Result<()> where B: BufMut, Self: Sized"
+        },
+        {
+          "name": "try_from_physical_plan",
+          "signature": "fn try_from_physical_plan(plan: Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec) -> Result<Self> where Self: Sized"
+        },
+        {
+          "name": "try_into_physical_plan",
+          "signature": "fn try_into_physical_plan(&self, ctx: &TaskContext, codec: &dyn PhysicalExtensionCodec) -> Result<Arc<dyn ExecutionPlan>>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::PhysicalExtensionCodec",
+      "name": "PhysicalExtensionCodec",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait PhysicalExtensionCodec: Debug + Send + Sync + Any",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "datafusion_ffi::proto::physical_extension_codec::ForeignPhysicalExtensionCodec",
+        "datafusion_proto::physical_plan::ComposedPhysicalExtensionCodec",
+        "datafusion_proto::physical_plan::DefaultPhysicalExtensionCodec"
+      ],
+      "required_methods": [
+        "try_decode",
+        "try_encode"
+      ],
+      "provided_methods": [
+        "try_decode_expr",
+        "try_decode_higher_order_function",
+        "try_decode_udaf",
+        "try_decode_udf",
+        "try_decode_udwf",
+        "try_encode_expr",
+        "try_encode_higher_order_function",
+        "try_encode_udaf",
+        "try_encode_udf",
+        "try_encode_udwf"
+      ],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, buf: &[u8], inputs: &[Arc<dyn ExecutionPlan>], ctx: &TaskContext, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "try_decode_expr",
+          "signature": "fn try_decode_expr(&self, _buf: &[u8], _inputs: &[Arc<dyn PhysicalExpr>], _ctx: &PhysicalExprDecodeCtx<'_>) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Decode a custom extension expression from `buf`."
+        },
+        {
+          "name": "try_decode_higher_order_function",
+          "signature": "fn try_decode_higher_order_function(&self, name: &str, _buf: &[u8]) -> Result<Arc<HigherOrderUDF>>"
+        },
+        {
+          "name": "try_decode_udaf",
+          "signature": "fn try_decode_udaf(&self, name: &str, _buf: &[u8]) -> Result<Arc<AggregateUDF>>"
+        },
+        {
+          "name": "try_decode_udf",
+          "signature": "fn try_decode_udf(&self, name: &str, _buf: &[u8]) -> Result<Arc<ScalarUDF>>"
+        },
+        {
+          "name": "try_decode_udwf",
+          "signature": "fn try_decode_udwf(&self, name: &str, _buf: &[u8]) -> Result<Arc<WindowUDF>>"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, node: Arc<dyn ExecutionPlan>, buf: &mut Vec<u8>, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<()>"
+        },
+        {
+          "name": "try_encode_expr",
+          "signature": "fn try_encode_expr(&self, _node: &Arc<dyn PhysicalExpr>, _buf: &mut Vec<u8>, _ctx: &PhysicalExprEncodeCtx<'_>) -> Result<()>",
+          "summary": "Encode a custom extension expression into `buf`."
+        },
+        {
+          "name": "try_encode_higher_order_function",
+          "signature": "fn try_encode_higher_order_function(&self, _node: &HigherOrderUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udaf",
+          "signature": "fn try_encode_udaf(&self, _node: &AggregateUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udf",
+          "signature": "fn try_encode_udf(&self, _node: &ScalarUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udwf",
+          "signature": "fn try_encode_udwf(&self, _node: &WindowUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::PhysicalPlanNodeExt",
+      "name": "PhysicalPlanNodeExt",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait PhysicalPlanNodeExt: Sized",
+      "summary": "Extension methods on [`protobuf::PhysicalPlanNode`].",
+      "doc": "api/datafusion_proto.physical_plan.md#physicalplannodeext",
+      "implementors": [
+        "datafusion_proto_models::generated::datafusion::PhysicalPlanNode"
+      ],
+      "required_methods": [
+        "node"
+      ],
+      "provided_methods": [
+        "generate_series_name_to_str",
+        "str_to_generate_series_name",
+        "try_from_lazy_memory_exec",
+        "try_from_physical_plan_with_converter",
+        "try_into_extension_physical_plan",
+        "try_into_generate_series_physical_plan",
+        "try_into_physical_plan_with_context",
+        "try_into_physical_plan_with_converter"
+      ],
+      "methods": [
+        {
+          "name": "generate_series_name_to_str",
+          "signature": "fn generate_series_name_to_str(name: protobuf::GenerateSeriesName) -> &'static str"
+        },
+        {
+          "name": "node",
+          "signature": "fn node(&self) -> &protobuf::PhysicalPlanNode",
+          "summary": "Returns a reference to the underlying [`protobuf::PhysicalPlanNode`]."
+        },
+        {
+          "name": "str_to_generate_series_name",
+          "signature": "fn str_to_generate_series_name(name: &str) -> Result<protobuf::GenerateSeriesName>"
+        },
+        {
+          "name": "try_from_lazy_memory_exec",
+          "signature": "fn try_from_lazy_memory_exec(exec: &LazyMemoryExec) -> Result<Option<protobuf::PhysicalPlanNode>>"
+        },
+        {
+          "name": "try_from_physical_plan_with_converter",
+          "signature": "fn try_from_physical_plan_with_converter(plan: Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<protobuf::PhysicalPlanNode>"
+        },
+        {
+          "name": "try_into_extension_physical_plan",
+          "signature": "fn try_into_extension_physical_plan(&self, extension: &protobuf::PhysicalExtensionNode, ctx: &PhysicalPlanDecodeContext<'_>, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "try_into_generate_series_physical_plan",
+          "signature": "fn try_into_generate_series_physical_plan(&self, generate_series: &protobuf::GenerateSeriesNode) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "try_into_physical_plan_with_context",
+          "signature": "fn try_into_physical_plan_with_context(&self, ctx: &PhysicalPlanDecodeContext<'_>, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "try_into_physical_plan_with_converter",
+          "signature": "fn try_into_physical_plan_with_converter(&self, ctx: &TaskContext, codec: &dyn PhysicalExtensionCodec, proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::physical_plan::PhysicalProtoConverterExtension",
+      "name": "PhysicalProtoConverterExtension",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait PhysicalProtoConverterExtension",
+      "summary": "Controls the conversion of physical plans and expressions to and from their Protobuf variants. Using this trait, users can perform optimizations on the conversion process or collect performance metrics.",
+      "doc": "api/datafusion_proto.physical_plan.md#physicalprotoconverterextension",
+      "implementors": [
+        "datafusion_proto::physical_plan::DeduplicatingProtoConverter",
+        "datafusion_proto::physical_plan::DefaultPhysicalProtoConverter"
+      ],
+      "required_methods": [
+        "execution_plan_to_proto",
+        "physical_expr_to_proto",
+        "proto_to_execution_plan",
+        "proto_to_physical_expr"
+      ],
+      "provided_methods": [
+        "default_proto_to_execution_plan",
+        "default_proto_to_physical_expr"
+      ],
+      "methods": [
+        {
+          "name": "default_proto_to_execution_plan",
+          "signature": "fn default_proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>> where Self: Sized"
+        },
+        {
+          "name": "default_proto_to_physical_expr",
+          "signature": "fn default_proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>> where Self: Sized"
+        },
+        {
+          "name": "execution_plan_to_proto",
+          "signature": "fn execution_plan_to_proto(&self, plan: &Arc<dyn ExecutionPlan>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalPlanNode>"
+        },
+        {
+          "name": "physical_expr_to_proto",
+          "signature": "fn physical_expr_to_proto(&self, expr: &Arc<dyn PhysicalExpr>, codec: &dyn PhysicalExtensionCodec) -> Result<protobuf::PhysicalExprNode>"
+        },
+        {
+          "name": "proto_to_execution_plan",
+          "signature": "fn proto_to_execution_plan(&self, proto: &protobuf::PhysicalPlanNode, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "proto_to_physical_expr",
+          "signature": "fn proto_to_physical_expr(&self, proto: &protobuf::PhysicalExprNode, input_schema: &Schema, ctx: &PhysicalPlanDecodeContext<'_>) -> Result<Arc<dyn PhysicalExpr>>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assert generated wire schemas match the frozen Phase-0 contract.
 
-Byte equality with contracts/research-envelope.schema.json is the WRONG target: $id, $defs
+Behavioral validation of the research-v2 contract permits differences in $id, $defs
 ordering and serde-derived naming will legitimately differ. The frozen artifact defines what
 must validate and what must be rejected. Three checks:
 
@@ -9,7 +9,7 @@ must validate and what must be rejected. Three checks:
   2. Corpus (the real oracle) -- the four fixtures validate and the three negative cases from
      VALIDATION_REPORT.md are rejected, under the generated schema exactly as under the frozen
      one. This is also acceptance gate C19.
-  3. Structural -- schemas/frozen/enums.json must equal the generated equivalents.
+  3. Structural -- contracts/research-v2/enums.json must equal the generated equivalents.
 
 Absent generated output is `not_run`, not a pass and not a hard failure (phase 0).
 """
@@ -23,10 +23,10 @@ from pathlib import Path
 from cli import say, warn
 
 ROOT = Path(__file__).resolve().parent.parent
-FROZEN = ROOT / "contracts/research-envelope.schema.json"
-ENUMS = ROOT / "schemas/frozen/enums.json"
+FROZEN = ROOT / "contracts/research-v2/research-envelope.schema.json"
+ENUMS = ROOT / "contracts/research-v2/enums.json"
 GENERATED = ROOT / "schemas/generated/research-envelope.schema.json"
-EXAMPLES = ROOT / "contracts/examples"
+EXAMPLES = ROOT / "contracts/research-v2/examples"
 
 failures: list[str] = []
 notes: list[str] = []

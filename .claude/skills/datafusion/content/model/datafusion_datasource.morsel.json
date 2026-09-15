@@ -1,0 +1,152 @@
+{
+  "module": "datafusion_datasource::morsel",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.morsel.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::morsel::MorselPlan",
+      "name": "MorselPlan",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct MorselPlan",
+      "summary": "Return result of [`MorselPlanner::plan`].",
+      "doc": "api/datafusion_datasource.morsel.md#morselplan",
+      "methods": [
+        {
+          "name": "has_io_future",
+          "signature": "fn has_io_future(&self) -> bool",
+          "summary": "Returns `true` if this plan contains an I/O future."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create an empty morsel plan."
+        },
+        {
+          "name": "set_pending_planner",
+          "signature": "fn set_pending_planner<F>(&mut self, io_future: F) where F: Future<Output = Result<Box<dyn MorselPlanner>>> + Send + 'static",
+          "summary": "Set the pending planner  for an I/O phase."
+        },
+        {
+          "name": "take_morsels",
+          "signature": "fn take_morsels(&mut self) -> Vec<Box<dyn Morsel>>",
+          "summary": "Take the ready morsels."
+        },
+        {
+          "name": "take_pending_planner",
+          "signature": "fn take_pending_planner(&mut self) -> Option<PendingMorselPlanner>",
+          "summary": "Take the pending I/O future, if any."
+        },
+        {
+          "name": "take_ready_planners",
+          "signature": "fn take_ready_planners(&mut self) -> Vec<Box<dyn MorselPlanner>>",
+          "summary": "Take the ready child planners."
+        },
+        {
+          "name": "with_morsels",
+          "signature": "fn with_morsels(self, morsels: Vec<Box<dyn Morsel>>) -> Self",
+          "summary": "Set the ready morsels."
+        },
+        {
+          "name": "with_pending_planner",
+          "signature": "fn with_pending_planner<F>(self, io_future: F) -> Self where F: Future<Output = Result<Box<dyn MorselPlanner>>> + Send + 'static",
+          "summary": "Set the pending planner for an I/O phase."
+        },
+        {
+          "name": "with_planners",
+          "signature": "fn with_planners(self, planners: Vec<Box<dyn MorselPlanner>>) -> Self",
+          "summary": "Set the ready child planners."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::morsel::PendingMorselPlanner",
+      "name": "PendingMorselPlanner",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct PendingMorselPlanner",
+      "summary": "Wrapper for I/O that must complete before planning can continue.",
+      "doc": "api/datafusion_datasource.morsel.md#pendingmorselplanner",
+      "implements": [
+        "core::future::future::Future"
+      ],
+      "methods": [
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> BoxFuture<'static, Result<Box<dyn MorselPlanner>>>",
+          "summary": "Consume this wrapper and return the underlying future."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<F>(future: F) -> Self where F: Future<Output = Result<Box<dyn MorselPlanner>>> + Send + 'static",
+          "summary": "Create a new pending planner future."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::morsel::Morsel",
+      "name": "Morsel",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait Morsel: Send + Debug",
+      "summary": "A Morsel of work ready to resolve to a stream of [`RecordBatch`]es.",
+      "doc": "api/datafusion_datasource.morsel.md#morsel",
+      "required_methods": [
+        "into_stream"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "into_stream",
+          "signature": "fn into_stream(Box<self>) -> BoxStream<'static, Result<RecordBatch>>",
+          "summary": "Consume this morsel and produce a stream of [`RecordBatch`]es for processing."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::morsel::MorselPlanner",
+      "name": "MorselPlanner",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait MorselPlanner: Send + Debug",
+      "summary": "A Morsel Planner is responsible for creating morsels for a given scan.",
+      "doc": "api/datafusion_datasource.morsel.md#morselplanner",
+      "required_methods": [
+        "plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "plan",
+          "signature": "fn plan(Box<self>) -> Result<Option<MorselPlan>>",
+          "summary": "Attempt to plan morsels. This may involve CPU work, such as parsing parquet metadata and evaluating pruning predicates."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::morsel::Morselizer",
+      "name": "Morselizer",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait Morselizer: Send + Sync + Debug",
+      "summary": "A Morselizer takes a single [`PartitionedFile`] and creates the initial planner for that file.",
+      "doc": "api/datafusion_datasource.morsel.md#morselizer",
+      "required_methods": [
+        "plan_file"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "plan_file",
+          "signature": "fn plan_file(&self, file: PartitionedFile) -> Result<Box<dyn MorselPlanner>>",
+          "summary": "Return the initial [`MorselPlanner`] for this file."
+        }
+      ]
+    }
+  ]
+}

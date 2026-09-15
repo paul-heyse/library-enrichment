@@ -67,7 +67,9 @@ def daemon_env(tmp_path: Path, upstream: FixtureUpstream) -> Iterator[dict[str, 
 
 async def _resolve(env: dict[str, str], **arguments: Any) -> dict[str, Any]:
     async with Client(daemon.transport(env)) as client:
-        result = await client.call_tool("resolve_library", {"ecosystem": "rust", **arguments})
+        result = await client.call_tool(
+            "resolve_library", {"ecosystem": "rust", **arguments}, raise_on_error=False
+        )
         payload = await daemon.wait_for_answer(client, result.structured_content)
     assert isinstance(payload, dict)
     return payload

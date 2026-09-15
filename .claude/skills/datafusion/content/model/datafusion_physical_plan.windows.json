@@ -1,0 +1,124 @@
+{
+  "module": "datafusion_physical_plan::windows",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.windows.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::windows::create_udwf_window_expr",
+      "name": "create_udwf_window_expr",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn create_udwf_window_expr(fun: &std::sync::Arc<datafusion_expr::WindowUDF>, args: &[std::sync::Arc<dyn PhysicalExpr>], input_schema: &arrow::datatypes::Schema, name: String, ignore_nulls: bool) -> datafusion_common::Result<std::sync::Arc<dyn StandardWindowFunctionExpr>>",
+      "summary": "Creates a `StandardWindowFunctionExpr` suitable for a user defined window function",
+      "doc": "api/datafusion_physical_plan.windows.md#create_udwf_window_expr"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::create_window_expr",
+      "name": "create_window_expr",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn create_window_expr(fun: &datafusion_expr::WindowFunctionDefinition, name: String, args: &[std::sync::Arc<dyn PhysicalExpr>], partition_by: &[std::sync::Arc<dyn PhysicalExpr>], order_by: &[expressions::PhysicalSortExpr], window_frame: std::sync::Arc<datafusion_expr::WindowFrame>, input_schema: arrow::datatypes::SchemaRef, ignore_nulls: bool, distinct: bool, filter: Option<std::sync::Arc<dyn PhysicalExpr>>) -> datafusion_common::Result<std::sync::Arc<dyn WindowExpr>>",
+      "summary": "Create a physical expression for window function",
+      "doc": "api/datafusion_physical_plan.windows.md#create_window_expr"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::get_best_fitting_window",
+      "name": "get_best_fitting_window",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn get_best_fitting_window(window_exprs: &[std::sync::Arc<dyn WindowExpr>], input: &std::sync::Arc<dyn ExecutionPlan>, physical_partition_keys: &[std::sync::Arc<dyn PhysicalExpr>], state_observer: Option<std::sync::Arc<dyn WindowStateObserver>>) -> datafusion_common::Result<Option<std::sync::Arc<dyn ExecutionPlan>>>",
+      "summary": "Constructs the best-fitting windowing operator (a `WindowAggExec` or a `BoundedWindowExec`) for the given `input` according to the specifications of `window_exprs` and `physical_partition_keys`. Here, best-fitting means not requiring addit…",
+      "doc": "api/datafusion_physical_plan.windows.md#get_best_fitting_window"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::get_ordered_partition_by_indices",
+      "name": "get_ordered_partition_by_indices",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn get_ordered_partition_by_indices(partition_by_exprs: &[std::sync::Arc<dyn PhysicalExpr>], input: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<Vec<usize>>",
+      "summary": "This function calculates the indices such that when partition by expressions reordered with the indices resulting expressions define a preset for existing ordering. For instance, if input is ordered by a, b, c and PARTITION BY b, a is used…",
+      "doc": "api/datafusion_physical_plan.windows.md#get_ordered_partition_by_indices"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::get_window_mode",
+      "name": "get_window_mode",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn get_window_mode(partitionby_exprs: &[std::sync::Arc<dyn PhysicalExpr>], orderby_keys: &[expressions::PhysicalSortExpr], input: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<Option<(bool, InputOrderMode)>>",
+      "summary": "Compares physical ordering (output ordering of the `input` operator) with `partitionby_exprs` and `orderby_keys` to decide whether existing ordering is sufficient to run the current window operator. - A `None` return value indicates that w…",
+      "doc": "api/datafusion_physical_plan.windows.md#get_window_mode"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::schema_add_window_field",
+      "name": "schema_add_window_field",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn schema_add_window_field(args: &[std::sync::Arc<dyn PhysicalExpr>], schema: &arrow::datatypes::Schema, window_fn: &datafusion_expr::WindowFunctionDefinition, fn_name: &str) -> datafusion_common::Result<std::sync::Arc<arrow::datatypes::Schema>>",
+      "summary": "Build field from window function and add it into schema",
+      "doc": "api/datafusion_physical_plan.windows.md#schema_add_window_field"
+    },
+    {
+      "path": "datafusion_physical_plan::windows::WindowUDFExpr",
+      "name": "WindowUDFExpr",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct WindowUDFExpr",
+      "summary": "Implements [`StandardWindowFunctionExpr`] for [`WindowUDF`]",
+      "doc": "api/datafusion_physical_plan.windows.md#windowudfexpr",
+      "implements": [
+        "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+      ],
+      "methods": [
+        {
+          "name": "args",
+          "signature": "fn args(&self) -> &[Arc<dyn PhysicalExpr>]",
+          "summary": "Returns all arguments passed to this window function."
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn std::any::Any",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "create_evaluator",
+          "signature": "fn create_evaluator(&self) -> Result<Box<dyn PartitionEvaluator>>",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self) -> Result<FieldRef>",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "fun",
+          "signature": "fn fun(&self) -> &Arc<WindowUDF>"
+        },
+        {
+          "name": "get_result_ordering",
+          "signature": "fn get_result_ordering(&self, schema: &SchemaRef) -> Option<PhysicalSortExpr>",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "limit_effect",
+          "signature": "fn limit_effect(&self) -> LimitEffect",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        },
+        {
+          "name": "reverse_expr",
+          "signature": "fn reverse_expr(&self) -> Option<Arc<dyn StandardWindowFunctionExpr>>",
+          "via_trait": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr"
+        }
+      ]
+    }
+  ]
+}

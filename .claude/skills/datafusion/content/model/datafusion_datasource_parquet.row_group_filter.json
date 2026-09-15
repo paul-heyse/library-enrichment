@@ -1,0 +1,72 @@
+{
+  "module": "datafusion_datasource_parquet::row_group_filter",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.row_group_filter.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::row_group_filter::RowGroupAccessPlanFilter",
+      "name": "RowGroupAccessPlanFilter",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct RowGroupAccessPlanFilter",
+      "summary": "Reduces the [`ParquetAccessPlan`] based on row group level metadata.",
+      "doc": "api/datafusion_datasource_parquet.row_group_filter.md#rowgroupaccessplanfilter",
+      "aliases": [
+        "datafusion::datasource::physical_plan::parquet::RowGroupAccessPlanFilter",
+        "datafusion_datasource_parquet::RowGroupAccessPlanFilter"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> ParquetAccessPlan",
+          "summary": "Returns the inner access plan."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Return true if there are no row groups"
+        },
+        {
+          "name": "is_fully_matched",
+          "signature": "fn is_fully_matched(&self) -> &Vec<bool>",
+          "summary": "Returns the is_fully_matched vector."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(access_plan: ParquetAccessPlan) -> Self",
+          "summary": "Create a new `RowGroupPlanBuilder` for pruning out the groups to scan based on metadata and statistics"
+        },
+        {
+          "name": "prune_by_bloom_filters",
+          "signature": "fn prune_by_bloom_filters(&mut self, predicate: &PruningPredicate, metrics: &ParquetFileMetrics, row_group_bloom_filters: &[BloomFilterStatistics])",
+          "summary": "Prune remaining row groups using loaded bloom filters and the [`PruningPredicate`]."
+        },
+        {
+          "name": "prune_by_limit",
+          "signature": "fn prune_by_limit(&mut self, limit: usize, rg_metadata: &[RowGroupMetaData], metrics: &ParquetFileMetrics)",
+          "summary": "Prunes the access plan based on the limit and fully contained row groups."
+        },
+        {
+          "name": "prune_by_range",
+          "signature": "fn prune_by_range(&mut self, groups: &[RowGroupMetaData], range: &FileRange)",
+          "summary": "Prune remaining row groups to only those  within the specified range."
+        },
+        {
+          "name": "prune_by_statistics",
+          "signature": "fn prune_by_statistics(&mut self, arrow_schema: &Schema, parquet_schema: &SchemaDescriptor, groups: &[RowGroupMetaData], predicate: &PruningPredicate, metrics: &ParquetFileMetrics)",
+          "summary": "Prune remaining row groups using min/max/null_count statistics and the [`PruningPredicate`] to determine if the predicate can not be true."
+        },
+        {
+          "name": "remaining_row_group_count",
+          "signature": "fn remaining_row_group_count(&self) -> usize",
+          "summary": "Return the number of row groups that are currently expected to be scanned"
+        },
+        {
+          "name": "row_group_indexes",
+          "signature": "fn row_group_indexes(&self) -> impl Iterator<Item = usize> + '_",
+          "summary": "Return indexes of row groups that still need to be scanned."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,882 @@
+{
+  "module": "datafusion::execution::session_state",
+  "crate": "datafusion",
+  "api": "api/datafusion.execution.session_state.md",
+  "items": [
+    {
+      "path": "datafusion::execution::session_state::SessionState",
+      "name": "SessionState",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct SessionState",
+      "summary": "`SessionState` contains all the necessary state to plan and execute queries, such as configuration, functions, and runtime environment. Please see the documentation on [`SessionContext`] for more information.",
+      "doc": "api/datafusion.execution.session_state.md#sessionstate",
+      "aliases": [
+        "datafusion::execution::SessionState",
+        "datafusion::execution::context::SessionState"
+      ],
+      "implements": [
+        "datafusion_execution::task::TaskContextProvider",
+        "datafusion_expr::registry::FunctionRegistry",
+        "datafusion_optimizer::optimizer::OptimizerConfig",
+        "datafusion_session::physical_optimizer::PhysicalOptimizerContext",
+        "datafusion_session::session::Session"
+      ],
+      "methods": [
+        {
+          "name": "add_analyzer_rule",
+          "signature": "fn add_analyzer_rule(&mut self, analyzer_rule: Arc<dyn AnalyzerRule + Send + Sync>) -> &Self",
+          "summary": "Add `analyzer_rule` to the end of the list of [`AnalyzerRule`]s used to rewrite queries."
+        },
+        {
+          "name": "aggregate_functions",
+          "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>",
+          "summary": "Return reference to aggregate_functions"
+        },
+        {
+          "name": "aggregate_functions",
+          "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "alias_generator",
+          "signature": "fn alias_generator(&self) -> &Arc<AliasGenerator>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "analyzer",
+          "signature": "fn analyzer(&self) -> &Analyzer",
+          "summary": "Returns the [`Analyzer`] for this session"
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "cache_factory",
+          "signature": "fn cache_factory(&self) -> Option<&Arc<dyn CacheFactory>>",
+          "summary": "Get the cache factory"
+        },
+        {
+          "name": "catalog_list",
+          "signature": "fn catalog_list(&self) -> &Arc<dyn CatalogProviderList>",
+          "summary": "Return catalog list"
+        },
+        {
+          "name": "catalog_list",
+          "signature": "fn catalog_list(&self) -> Arc<dyn CatalogProviderList>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &SessionConfig",
+          "summary": "Return the [`SessionConfig`]"
+        },
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &SessionConfig",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "config_mut",
+          "signature": "fn config_mut(&mut self) -> &mut SessionConfig",
+          "summary": "Return the mutable [`SessionConfig`]."
+        },
+        {
+          "name": "config_options",
+          "signature": "fn config_options(&self) -> &Arc<ConfigOptions>",
+          "summary": "return the configuration options"
+        },
+        {
+          "name": "config_options",
+          "signature": "fn config_options(&self) -> &ConfigOptions",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerContext"
+        },
+        {
+          "name": "create_logical_expr",
+          "signature": "fn create_logical_expr(&self, sql: &str, df_schema: &DFSchema) -> datafusion_common::Result<Expr>",
+          "summary": "Creates a datafusion style AST [`Expr`] from a SQL string."
+        },
+        {
+          "name": "create_logical_expr_from_sql_expr",
+          "signature": "fn create_logical_expr_from_sql_expr(&self, sql_expr: SQLExprWithAlias, df_schema: &DFSchema) -> datafusion_common::Result<Expr>",
+          "summary": "Creates a datafusion style AST [`Expr`] from a SQL expression."
+        },
+        {
+          "name": "create_logical_plan",
+          "signature": "async fn create_logical_plan(&self, sql: &str) -> datafusion_common::Result<LogicalPlan>",
+          "summary": "Creates a [`LogicalPlan`] from the provided SQL string. This interface will plan any SQL DataFusion supports, including DML like `CREATE TABLE`, and `COPY` (which can write to local files."
+        },
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> datafusion_common::Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Create a [`PhysicalExpr`] from an [`Expr`] after applying type coercion, and function rewrites."
+        },
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> datafusion_common::Result<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan) -> datafusion_common::Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Creates a physical [`ExecutionPlan`] plan from a [`LogicalPlan`]."
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan) -> datafusion_common::Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "default_table_options",
+          "signature": "fn default_table_options(&self) -> TableOptions",
+          "summary": "return the TableOptions options with its extensions"
+        },
+        {
+          "name": "deregister_higher_order_function",
+          "signature": "fn deregister_higher_order_function(&mut self, name: &str) -> datafusion_common::Result<Option<Arc<HigherOrderUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "deregister_udaf",
+          "signature": "fn deregister_udaf(&mut self, name: &str) -> datafusion_common::Result<Option<Arc<AggregateUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "deregister_udf",
+          "signature": "fn deregister_udf(&mut self, name: &str) -> datafusion_common::Result<Option<Arc<ScalarUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "deregister_udtf",
+          "signature": "fn deregister_udtf(&mut self, name: &str) -> datafusion_common::Result<Option<Arc<dyn TableFunctionImpl>>>",
+          "summary": "Deregister a user defined table function"
+        },
+        {
+          "name": "deregister_udwf",
+          "signature": "fn deregister_udwf(&mut self, name: &str) -> datafusion_common::Result<Option<Arc<WindowUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "execution_props",
+          "signature": "fn execution_props(&self) -> &ExecutionProps",
+          "summary": "Return the execution properties"
+        },
+        {
+          "name": "execution_props",
+          "signature": "fn execution_props(&self) -> &ExecutionProps",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "execution_props_mut",
+          "signature": "fn execution_props_mut(&mut self) -> &mut ExecutionProps",
+          "summary": "Return mutable execution properties"
+        },
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&self) -> &[Arc<dyn ExprPlanner>]",
+          "summary": "Returns the [`ExprPlanner`]s for this session"
+        },
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&self) -> Vec<Arc<dyn ExprPlanner>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "extension_type_registry",
+          "signature": "fn extension_type_registry(&self) -> &ExtensionTypeRegistryRef",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "function_factory",
+          "signature": "fn function_factory(&self) -> Option<&Arc<dyn FunctionFactory>>",
+          "summary": "Get the function factory"
+        },
+        {
+          "name": "function_registry",
+          "signature": "fn function_registry(&self) -> Option<&dyn FunctionRegistry>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "get_file_format_factory",
+          "signature": "fn get_file_format_factory(&self, ext: &str) -> Option<Arc<dyn FileFormatFactory>>",
+          "summary": "Retrieves a [FileFormatFactory] based on file extension which has been registered via SessionContext::register_file_format. Extensions are not case sensitive."
+        },
+        {
+          "name": "higher_order_function",
+          "signature": "fn higher_order_function(&self, name: &str) -> datafusion_common::Result<Arc<HigherOrderUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "higher_order_function_names",
+          "signature": "fn higher_order_function_names(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "higher_order_functions",
+          "signature": "fn higher_order_functions(&self) -> &HashMap<String, Arc<HigherOrderUDF>>",
+          "summary": "Return reference to higher_order_functions"
+        },
+        {
+          "name": "higher_order_functions",
+          "signature": "fn higher_order_functions(&self) -> &HashMap<String, Arc<HigherOrderUDF>>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "mark_start_execution",
+          "signature": "fn mark_start_execution(&mut self)",
+          "summary": "Mark the start of the execution"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: &LogicalPlan) -> datafusion_common::Result<LogicalPlan>",
+          "summary": "Optimizes the logical plan by applying optimizer rules."
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: &LogicalPlan) -> datafusion_common::Result<LogicalPlan>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "optimizer",
+          "signature": "fn optimizer(&self) -> &Optimizer",
+          "summary": "Returns the [`Optimizer`] for this session"
+        },
+        {
+          "name": "optimizers",
+          "signature": "fn optimizers(&self) -> &[Arc<dyn OptimizerRule + Send + Sync>]",
+          "summary": "Return the logical optimizers"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> Arc<ConfigOptions>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "physical_optimizers",
+          "signature": "fn physical_optimizers(&self) -> &[Arc<dyn PhysicalOptimizerRule + Send + Sync>]",
+          "summary": "Return the physical optimizers"
+        },
+        {
+          "name": "physical_optimizers",
+          "signature": "fn physical_optimizers(&self) -> &[Arc<dyn PhysicalOptimizerRule + Send + Sync>]",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "query_execution_start_time",
+          "signature": "fn query_execution_start_time(&self) -> Option<DateTime<Utc>>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "query_planner",
+          "signature": "fn query_planner(&self) -> &Arc<dyn QueryPlanner + Send + Sync>",
+          "summary": "Returns the [`QueryPlanner`] for this session"
+        },
+        {
+          "name": "query_planner",
+          "signature": "fn query_planner(&self) -> Arc<dyn QueryPlanner + Send + Sync>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "register_catalog_list",
+          "signature": "fn register_catalog_list(&mut self, catalog_list: Arc<dyn CatalogProviderList>)",
+          "summary": "Set the catalog list"
+        },
+        {
+          "name": "register_expr_planner",
+          "signature": "fn register_expr_planner(&mut self, expr_planner: Arc<dyn ExprPlanner>) -> datafusion_common::Result<()>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_file_format",
+          "signature": "fn register_file_format(&mut self, file_format: Arc<dyn FileFormatFactory>, overwrite: bool) -> Result<(), DataFusionError>",
+          "summary": "Adds or updates a [FileFormatFactory] which can be used with COPY TO or CREATE EXTERNAL TABLE statements for reading and writing files of custom formats."
+        },
+        {
+          "name": "register_function_rewrite",
+          "signature": "fn register_function_rewrite(&mut self, rewrite: Arc<dyn FunctionRewrite + Send + Sync>) -> datafusion_common::Result<()>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_higher_order_function",
+          "signature": "fn register_higher_order_function(&mut self, function: Arc<HigherOrderUDF>) -> datafusion_common::Result<Option<Arc<HigherOrderUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_relation_planner",
+          "signature": "fn register_relation_planner(&mut self, planner: Arc<dyn RelationPlanner>) -> datafusion_common::Result<()>",
+          "summary": "Registers a [`RelationPlanner`] to customize SQL relation planning."
+        },
+        {
+          "name": "register_table_options_extension",
+          "signature": "fn register_table_options_extension<T: ConfigExtension>(&mut self, extension: T)",
+          "summary": "Registers a [`ConfigExtension`] as a table option extension that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_udaf",
+          "signature": "fn register_udaf(&mut self, udaf: Arc<AggregateUDF>) -> datafusion_common::Result<Option<Arc<AggregateUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udf",
+          "signature": "fn register_udf(&mut self, udf: Arc<ScalarUDF>) -> datafusion_common::Result<Option<Arc<ScalarUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udtf",
+          "signature": "fn register_udtf(&mut self, name: &str, fun: Arc<dyn TableFunctionImpl>)",
+          "summary": "Register a user defined table function"
+        },
+        {
+          "name": "register_udwf",
+          "signature": "fn register_udwf(&mut self, udwf: Arc<WindowUDF>) -> datafusion_common::Result<Option<Arc<WindowUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "relation_planners",
+          "signature": "fn relation_planners(&self) -> &[Arc<dyn RelationPlanner>]",
+          "summary": "Returns the registered relation planners in priority order."
+        },
+        {
+          "name": "resolve_table_references",
+          "signature": "fn resolve_table_references(&self, statement: &Statement) -> datafusion_common::Result<Vec<TableReference>>",
+          "summary": "Resolve all table references in the SQL statement. Does not include CTE references."
+        },
+        {
+          "name": "runtime_env",
+          "signature": "fn runtime_env(&self) -> &Arc<RuntimeEnv>",
+          "summary": "Return the runtime env"
+        },
+        {
+          "name": "runtime_env",
+          "signature": "fn runtime_env(&self) -> &Arc<RuntimeEnv>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "scalar_functions",
+          "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>",
+          "summary": "Return reference to scalar_functions"
+        },
+        {
+          "name": "scalar_functions",
+          "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "schema_for_ref",
+          "signature": "fn schema_for_ref(&self, table_ref: impl Into<TableReference>) -> datafusion_common::Result<Arc<dyn SchemaProvider>>",
+          "summary": "Retrieve the [`SchemaProvider`] for a specific [`TableReference`], if it exists."
+        },
+        {
+          "name": "serializer_registry",
+          "signature": "fn serializer_registry(&self) -> &Arc<dyn SerializerRegistry>",
+          "summary": "Return [SerializerRegistry] for extensions"
+        },
+        {
+          "name": "session_id",
+          "signature": "fn session_id(&self) -> &str",
+          "summary": "Return the session ID"
+        },
+        {
+          "name": "session_id",
+          "signature": "fn session_id(&self) -> &str",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "set_cache_factory",
+          "signature": "fn set_cache_factory(&mut self, cache_factory: Arc<dyn CacheFactory>)",
+          "summary": "Register a [`CacheFactory`] for custom caching strategy"
+        },
+        {
+          "name": "set_function_factory",
+          "signature": "fn set_function_factory(&mut self, function_factory: Arc<dyn FunctionFactory>)",
+          "summary": "Registers a [`FunctionFactory`] to handle `CREATE FUNCTION` statements"
+        },
+        {
+          "name": "sql_to_expr",
+          "signature": "fn sql_to_expr(&self, sql: &str, dialect: &Dialect) -> datafusion_common::Result<SQLExpr>",
+          "summary": "parse a sql string into a sqlparser-rs AST [`SQLExpr`]."
+        },
+        {
+          "name": "sql_to_expr_with_alias",
+          "signature": "fn sql_to_expr_with_alias(&self, sql: &str, dialect: &Dialect) -> datafusion_common::Result<SQLExprWithAlias>",
+          "summary": "parse a sql string into a sqlparser-rs AST [`SQLExprWithAlias`]."
+        },
+        {
+          "name": "sql_to_statement",
+          "signature": "fn sql_to_statement(&self, sql: &str, dialect: &Dialect) -> datafusion_common::Result<Statement>",
+          "summary": "Parse an SQL string into an DataFusion specific AST [`Statement`]. See [`SessionContext::sql`] for running queries."
+        },
+        {
+          "name": "statement_to_plan",
+          "signature": "async fn statement_to_plan(&self, statement: Statement) -> datafusion_common::Result<LogicalPlan>",
+          "summary": "Convert an AST Statement into a LogicalPlan"
+        },
+        {
+          "name": "statistics_registry",
+          "signature": "fn statistics_registry(&self) -> Option<&StatisticsRegistry>",
+          "summary": "Returns the statistics registry if one is configured."
+        },
+        {
+          "name": "statistics_registry",
+          "signature": "fn statistics_registry(&self) -> Option<&StatisticsRegistry>",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerContext"
+        },
+        {
+          "name": "statistics_registry",
+          "signature": "fn statistics_registry(&self) -> Option<&StatisticsRegistry>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "table_factories",
+          "signature": "fn table_factories(&self) -> &HashMap<String, Arc<dyn TableProviderFactory>>",
+          "summary": "Get the table factories"
+        },
+        {
+          "name": "table_factories_mut",
+          "signature": "fn table_factories_mut(&mut self) -> &mut HashMap<String, Arc<dyn TableProviderFactory>>",
+          "summary": "Get the table factories"
+        },
+        {
+          "name": "table_functions",
+          "signature": "fn table_functions(&self) -> &HashMap<String, Arc<TableFunction>>",
+          "summary": "Return reference to table_functions"
+        },
+        {
+          "name": "table_options",
+          "signature": "fn table_options(&self) -> &TableOptions",
+          "summary": "Return the table options"
+        },
+        {
+          "name": "table_options",
+          "signature": "fn table_options(&self) -> &TableOptions",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "table_options_mut",
+          "signature": "fn table_options_mut(&mut self) -> &mut TableOptions",
+          "summary": "Returns a mutable reference to [`TableOptions`]"
+        },
+        {
+          "name": "table_options_mut",
+          "signature": "fn table_options_mut(&mut self) -> &mut TableOptions",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "summary": "Get a new TaskContext to run in this session"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "via_trait": "datafusion_execution::task::TaskContextProvider"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "via_trait": "datafusion_session::session::Session"
+        },
+        {
+          "name": "udaf",
+          "signature": "fn udaf(&self, name: &str) -> datafusion_common::Result<Arc<AggregateUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udafs",
+          "signature": "fn udafs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udf",
+          "signature": "fn udf(&self, name: &str) -> datafusion_common::Result<Arc<ScalarUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udfs",
+          "signature": "fn udfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwf",
+          "signature": "fn udwf(&self, name: &str) -> datafusion_common::Result<Arc<WindowUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwfs",
+          "signature": "fn udwfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> &str",
+          "summary": "Return version of the cargo package that produced this query"
+        },
+        {
+          "name": "window_functions",
+          "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>",
+          "summary": "Return reference to window functions"
+        },
+        {
+          "name": "window_functions",
+          "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>",
+          "via_trait": "datafusion_session::session::Session"
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::session_state::SessionStateBuilder",
+      "name": "SessionStateBuilder",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct SessionStateBuilder",
+      "summary": "A builder to be used for building [`SessionState`]'s. Defaults will be used for all values unless explicitly provided.",
+      "doc": "api/datafusion.execution.session_state.md#sessionstatebuilder",
+      "aliases": [
+        "datafusion::execution::SessionStateBuilder"
+      ],
+      "implements": [
+        "core::convert::From",
+        "datafusion_spark::session_state::SessionStateBuilderSpark"
+      ],
+      "methods": [
+        {
+          "name": "aggregate_functions",
+          "signature": "fn aggregate_functions(&mut self) -> &mut Option<Vec<Arc<AggregateUDF>>>",
+          "summary": "Returns the current aggregate_functions value"
+        },
+        {
+          "name": "analyzer",
+          "signature": "fn analyzer(&mut self) -> &mut Option<Analyzer>",
+          "summary": "Returns the current analyzer value"
+        },
+        {
+          "name": "analyzer_rules",
+          "signature": "fn analyzer_rules(&mut self) -> &mut Option<Vec<Arc<dyn AnalyzerRule + Send + Sync>>>",
+          "summary": "Returns the current analyzer_rules value"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> SessionState",
+          "summary": "Builds a [`SessionState`] with the current configuration."
+        },
+        {
+          "name": "cache_factory",
+          "signature": "fn cache_factory(&mut self) -> &mut Option<Arc<dyn CacheFactory>>",
+          "summary": "Returns the cache factory"
+        },
+        {
+          "name": "catalog_list",
+          "signature": "fn catalog_list(&mut self) -> &mut Option<Arc<dyn CatalogProviderList>>",
+          "summary": "Returns the current catalog_list value"
+        },
+        {
+          "name": "config",
+          "signature": "fn config(&mut self) -> &mut Option<SessionConfig>",
+          "summary": "Returns the current session_config value"
+        },
+        {
+          "name": "execution_props",
+          "signature": "fn execution_props(&mut self) -> &mut Option<ExecutionProps>",
+          "summary": "Returns the current execution_props value"
+        },
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&mut self) -> &mut Option<Vec<Arc<dyn ExprPlanner>>>",
+          "summary": "Returns the current expr_planners value"
+        },
+        {
+          "name": "file_formats",
+          "signature": "fn file_formats(&mut self) -> &mut Option<Vec<Arc<dyn FileFormatFactory>>>",
+          "summary": "Returns the current file_formats value"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(state: SessionState) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "function_factory",
+          "signature": "fn function_factory(&mut self) -> &mut Option<Arc<dyn FunctionFactory>>",
+          "summary": "Returns the current function_factory value"
+        },
+        {
+          "name": "higher_order_functions",
+          "signature": "fn higher_order_functions(&mut self) -> &mut Option<Vec<Arc<HigherOrderUDF>>>",
+          "summary": "Returns the current scalar_functions value"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Returns a new empty [`SessionStateBuilder`]."
+        },
+        {
+          "name": "new_from_existing",
+          "signature": "fn new_from_existing(existing: SessionState) -> Self",
+          "summary": "Returns a new [SessionStateBuilder] based on an existing [SessionState]."
+        },
+        {
+          "name": "new_with_default_features",
+          "signature": "fn new_with_default_features() -> Self",
+          "summary": "Returns a new [`SessionStateBuilder`] with default features."
+        },
+        {
+          "name": "optimizer",
+          "signature": "fn optimizer(&mut self) -> &mut Option<Optimizer>",
+          "summary": "Returns the current optimizer value"
+        },
+        {
+          "name": "optimizer_rules",
+          "signature": "fn optimizer_rules(&mut self) -> &mut Option<Vec<Arc<dyn OptimizerRule + Send + Sync>>>",
+          "summary": "Returns the current optimizer_rules value"
+        },
+        {
+          "name": "physical_optimizer_rules",
+          "signature": "fn physical_optimizer_rules(&mut self) -> &mut Option<Vec<Arc<dyn PhysicalOptimizerRule + Send + Sync>>>",
+          "summary": "Returns the current physical_optimizer_rules value"
+        },
+        {
+          "name": "physical_optimizers",
+          "signature": "fn physical_optimizers(&mut self) -> &mut Option<PhysicalOptimizer>",
+          "summary": "Returns the current physical_optimizers value"
+        },
+        {
+          "name": "query_planner",
+          "signature": "fn query_planner(&mut self) -> &mut Option<Arc<dyn QueryPlanner + Send + Sync>>",
+          "summary": "Returns the current query_planner value"
+        },
+        {
+          "name": "relation_planners",
+          "signature": "fn relation_planners(&mut self) -> &mut Option<Vec<Arc<dyn RelationPlanner>>>",
+          "summary": "Returns a mutable reference to the current [`RelationPlanner`] list."
+        },
+        {
+          "name": "runtime_env",
+          "signature": "fn runtime_env(&mut self) -> &mut Option<Arc<RuntimeEnv>>",
+          "summary": "Returns the current runtime_env value"
+        },
+        {
+          "name": "scalar_functions",
+          "signature": "fn scalar_functions(&mut self) -> &mut Option<Vec<Arc<ScalarUDF>>>",
+          "summary": "Returns the current scalar_functions value"
+        },
+        {
+          "name": "serializer_registry",
+          "signature": "fn serializer_registry(&mut self) -> &mut Option<Arc<dyn SerializerRegistry>>",
+          "summary": "Returns the current serializer_registry value"
+        },
+        {
+          "name": "session_id",
+          "signature": "fn session_id(&self) -> &Option<String>",
+          "summary": "Returns the current session_id value"
+        },
+        {
+          "name": "table_factories",
+          "signature": "fn table_factories(&mut self) -> &mut Option<HashMap<String, Arc<dyn TableProviderFactory>>>",
+          "summary": "Returns the current table_factories value"
+        },
+        {
+          "name": "table_functions",
+          "signature": "fn table_functions(&mut self) -> &mut Option<HashMap<String, Arc<TableFunction>>>",
+          "summary": "Returns the current table_functions value"
+        },
+        {
+          "name": "table_options",
+          "signature": "fn table_options(&mut self) -> &mut Option<TableOptions>",
+          "summary": "Returns the current table_options value"
+        },
+        {
+          "name": "type_planner",
+          "signature": "fn type_planner(&mut self) -> &mut Option<Arc<dyn TypePlanner>>",
+          "summary": "Returns the current type_planner value"
+        },
+        {
+          "name": "window_functions",
+          "signature": "fn window_functions(&mut self) -> &mut Option<Vec<Arc<WindowUDF>>>",
+          "summary": "Returns the current window_functions value"
+        },
+        {
+          "name": "with_aggregate_functions",
+          "signature": "fn with_aggregate_functions(self, aggregate_functions: Vec<Arc<AggregateUDF>>) -> Self",
+          "summary": "Set the map of [`AggregateUDF`]s"
+        },
+        {
+          "name": "with_analyzer_rule",
+          "signature": "fn with_analyzer_rule(self, analyzer_rule: Arc<dyn AnalyzerRule + Send + Sync>) -> Self",
+          "summary": "Add `analyzer_rule` to the end of the list of [`AnalyzerRule`]s used to rewrite queries."
+        },
+        {
+          "name": "with_analyzer_rules",
+          "signature": "fn with_analyzer_rules(self, rules: Vec<Arc<dyn AnalyzerRule + Send + Sync>>) -> Self",
+          "summary": "Set the [`AnalyzerRule`]s optimizer plan rules."
+        },
+        {
+          "name": "with_cache_factory",
+          "signature": "fn with_cache_factory(self, cache_factory: Option<Arc<dyn CacheFactory>>) -> Self",
+          "summary": "Set a [`CacheFactory`] for custom caching strategy"
+        },
+        {
+          "name": "with_catalog_list",
+          "signature": "fn with_catalog_list(self, catalog_list: Arc<dyn CatalogProviderList>) -> Self",
+          "summary": "Set the [`CatalogProviderList`]"
+        },
+        {
+          "name": "with_config",
+          "signature": "fn with_config(self, config: SessionConfig) -> Self",
+          "summary": "Set the [`SessionConfig`]"
+        },
+        {
+          "name": "with_default_features",
+          "signature": "fn with_default_features(self) -> Self",
+          "summary": "Adds defaults for table_factories, file formats, expr_planners and builtin scalar, aggregate and windows functions."
+        },
+        {
+          "name": "with_execution_props",
+          "signature": "fn with_execution_props(self, execution_props: ExecutionProps) -> Self",
+          "summary": "Set the [`ExecutionProps`]"
+        },
+        {
+          "name": "with_expr_planners",
+          "signature": "fn with_expr_planners(self, expr_planners: Vec<Arc<dyn ExprPlanner>>) -> Self",
+          "summary": "Set the [`ExprPlanner`]s used to customize the behavior of the SQL planner."
+        },
+        {
+          "name": "with_extension_type_registry",
+          "signature": "fn with_extension_type_registry(self, registry: ExtensionTypeRegistryRef) -> Self",
+          "summary": "Sets the [`ExtensionTypeRegistry`](datafusion_expr::registry::ExtensionTypeRegistry)."
+        },
+        {
+          "name": "with_file_formats",
+          "signature": "fn with_file_formats(self, file_formats: Vec<Arc<dyn FileFormatFactory>>) -> Self",
+          "summary": "Set the map of [`FileFormatFactory`]s"
+        },
+        {
+          "name": "with_function_factory",
+          "signature": "fn with_function_factory(self, function_factory: Option<Arc<dyn FunctionFactory>>) -> Self",
+          "summary": "Set a [`FunctionFactory`] to handle `CREATE FUNCTION` statements"
+        },
+        {
+          "name": "with_higher_order_functions",
+          "signature": "fn with_higher_order_functions(self, higher_order_functions: Vec<Arc<HigherOrderUDF>>) -> Self",
+          "summary": "Set the map of [`HigherOrderUDF`]s"
+        },
+        {
+          "name": "with_object_store",
+          "signature": "fn with_object_store(self, url: &Url, object_store: Arc<dyn ObjectStore>) -> Self",
+          "summary": "Register an `ObjectStore` to the [`RuntimeEnv`]. See [`RuntimeEnv::register_object_store`] for more details."
+        },
+        {
+          "name": "with_optimizer_rule",
+          "signature": "fn with_optimizer_rule(self, optimizer_rule: Arc<dyn OptimizerRule + Send + Sync>) -> Self",
+          "summary": "Add `optimizer_rule` to the end of the list of [`OptimizerRule`]s used to rewrite queries."
+        },
+        {
+          "name": "with_optimizer_rules",
+          "signature": "fn with_optimizer_rules(self, rules: Vec<Arc<dyn OptimizerRule + Send + Sync>>) -> Self",
+          "summary": "Set the [`OptimizerRule`]s used to optimize plans."
+        },
+        {
+          "name": "with_physical_optimizer_rule",
+          "signature": "fn with_physical_optimizer_rule(self, physical_optimizer_rule: Arc<dyn PhysicalOptimizerRule + Send + Sync>) -> Self",
+          "summary": "Add `physical_optimizer_rule` to the end of the list of [`PhysicalOptimizerRule`]s used to rewrite queries."
+        },
+        {
+          "name": "with_physical_optimizer_rules",
+          "signature": "fn with_physical_optimizer_rules(self, physical_optimizers: Vec<Arc<dyn PhysicalOptimizerRule + Send + Sync>>) -> Self",
+          "summary": "Set the [`PhysicalOptimizerRule`]s used to optimize plans."
+        },
+        {
+          "name": "with_query_planner",
+          "signature": "fn with_query_planner(self, query_planner: Arc<dyn QueryPlanner + Send + Sync>) -> Self",
+          "summary": "Set the [`QueryPlanner`]"
+        },
+        {
+          "name": "with_relation_planners",
+          "signature": "fn with_relation_planners(self, relation_planners: Vec<Arc<dyn RelationPlanner>>) -> Self",
+          "summary": "Sets the [`RelationPlanner`]s used to customize SQL relation planning."
+        },
+        {
+          "name": "with_runtime_env",
+          "signature": "fn with_runtime_env(self, runtime_env: Arc<RuntimeEnv>) -> Self",
+          "summary": "Set the [`RuntimeEnv`]"
+        },
+        {
+          "name": "with_scalar_functions",
+          "signature": "fn with_scalar_functions(self, scalar_functions: Vec<Arc<ScalarUDF>>) -> Self",
+          "summary": "Set the map of [`ScalarUDF`]s"
+        },
+        {
+          "name": "with_serializer_registry",
+          "signature": "fn with_serializer_registry(self, serializer_registry: Arc<dyn SerializerRegistry>) -> Self",
+          "summary": "Set the [`SerializerRegistry`]"
+        },
+        {
+          "name": "with_session_id",
+          "signature": "fn with_session_id(self, session_id: String) -> Self",
+          "summary": "Set the session id."
+        },
+        {
+          "name": "with_statistics_registry",
+          "signature": "fn with_statistics_registry(self, registry: StatisticsRegistry) -> Self",
+          "summary": "Set a [`StatisticsRegistry`] for pluggable statistics providers."
+        },
+        {
+          "name": "with_table_factories",
+          "signature": "fn with_table_factories(self, table_factories: HashMap<String, Arc<dyn TableProviderFactory>>) -> Self",
+          "summary": "Set the map of [`TableProviderFactory`]s"
+        },
+        {
+          "name": "with_table_factory",
+          "signature": "fn with_table_factory(self, key: String, table_factory: Arc<dyn TableProviderFactory>) -> Self",
+          "summary": "Add a [`TableProviderFactory`] to the map of factories"
+        },
+        {
+          "name": "with_table_function_list",
+          "signature": "fn with_table_function_list(self, table_functions: Vec<Arc<TableFunction>>) -> Self",
+          "summary": "Set the list of [`TableFunction`]s"
+        },
+        {
+          "name": "with_table_functions",
+          "signature": "fn with_table_functions(self, table_functions: HashMap<String, Arc<TableFunction>>) -> Self",
+          "summary": "Set the map of [`TableFunction`]s"
+        },
+        {
+          "name": "with_table_options",
+          "signature": "fn with_table_options(self, table_options: TableOptions) -> Self",
+          "summary": "Set the [`TableOptions`]"
+        },
+        {
+          "name": "with_type_planner",
+          "signature": "fn with_type_planner(self, type_planner: Arc<dyn TypePlanner>) -> Self",
+          "summary": "Set the [`TypePlanner`] used to customize the behavior of the SQL planner."
+        },
+        {
+          "name": "with_window_functions",
+          "signature": "fn with_window_functions(self, window_functions: Vec<Arc<WindowUDF>>) -> Self",
+          "summary": "Set the map of [`WindowUDF`]s"
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::session_state::CacheFactory",
+      "name": "CacheFactory",
+      "kind": "trait",
+      "crate": "datafusion",
+      "signature": "trait CacheFactory: Debug + Send + Sync",
+      "summary": "A [`CacheFactory`] can be registered via [`SessionState`] to create a custom logical plan for [`crate::dataframe::DataFrame::cache`]. Additionally, a custom [`crate::physical_planner::ExtensionPlanner`]/[`QueryPlanner`] may need to be impl…",
+      "doc": "api/datafusion.execution.session_state.md#cachefactory",
+      "required_methods": [
+        "create"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, plan: LogicalPlan, session_state: &SessionState) -> datafusion_common::Result<LogicalPlan>",
+          "summary": "Create a logical plan for caching"
+        }
+      ]
+    }
+  ]
+}

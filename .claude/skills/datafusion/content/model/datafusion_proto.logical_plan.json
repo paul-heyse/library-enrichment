@@ -1,0 +1,182 @@
+{
+  "module": "datafusion_proto::logical_plan",
+  "crate": "datafusion-proto",
+  "api": "api/datafusion_proto.logical_plan.md",
+  "items": [
+    {
+      "path": "datafusion_proto::logical_plan::DefaultLogicalExtensionCodec",
+      "name": "DefaultLogicalExtensionCodec",
+      "kind": "struct",
+      "crate": "datafusion-proto",
+      "signature": "struct DefaultLogicalExtensionCodec",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_proto::logical_plan::LogicalExtensionCodec"
+      ],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, _buf: &[u8], _inputs: &[LogicalPlan], _ctx: &TaskContext) -> Result<Extension>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_file_format",
+          "signature": "fn try_decode_file_format(&self, buf: &[u8], ctx: &TaskContext) -> Result<Arc<dyn FileFormatFactory>>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_table_provider",
+          "signature": "fn try_decode_table_provider(&self, _buf: &[u8], _table_ref: &TableReference, _schema: SchemaRef, _ctx: &TaskContext) -> Result<Arc<dyn TableProvider>>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, _node: &Extension, _buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_file_format",
+          "signature": "fn try_encode_file_format(&self, buf: &mut Vec<u8>, node: Arc<dyn FileFormatFactory>) -> Result<()>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_table_provider",
+          "signature": "fn try_encode_table_provider(&self, _table_ref: &TableReference, _node: Arc<dyn TableProvider>, _buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::logical_plan::LogicalExtensionCodec"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::logical_plan::AsLogicalPlan",
+      "name": "AsLogicalPlan",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait AsLogicalPlan: Debug + Send + Sync + Clone",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "datafusion_proto_models::generated::datafusion::LogicalPlanNode"
+      ],
+      "required_methods": [
+        "try_decode",
+        "try_encode",
+        "try_from_logical_plan",
+        "try_into_logical_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(buf: &[u8]) -> Result<Self> where Self: Sized"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode<B>(&self, buf: &mut B) -> Result<()> where B: BufMut, Self: Sized"
+        },
+        {
+          "name": "try_from_logical_plan",
+          "signature": "fn try_from_logical_plan(plan: &LogicalPlan, extension_codec: &dyn LogicalExtensionCodec) -> Result<Self> where Self: Sized"
+        },
+        {
+          "name": "try_into_logical_plan",
+          "signature": "fn try_into_logical_plan(&self, ctx: &TaskContext, extension_codec: &dyn LogicalExtensionCodec) -> Result<LogicalPlan>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_proto::logical_plan::LogicalExtensionCodec",
+      "name": "LogicalExtensionCodec",
+      "kind": "trait",
+      "crate": "datafusion-proto",
+      "signature": "trait LogicalExtensionCodec: Debug + Send + Sync + std::any::Any",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "datafusion_ffi::proto::logical_extension_codec::ForeignLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::DefaultLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::file_formats::ArrowLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::file_formats::AvroLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::file_formats::CsvLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::file_formats::JsonLogicalExtensionCodec",
+        "datafusion_proto::logical_plan::file_formats::parquet::ParquetLogicalExtensionCodec"
+      ],
+      "required_methods": [
+        "try_decode",
+        "try_decode_table_provider",
+        "try_encode",
+        "try_encode_table_provider"
+      ],
+      "provided_methods": [
+        "try_decode_file_format",
+        "try_decode_higher_order_function",
+        "try_decode_udaf",
+        "try_decode_udf",
+        "try_decode_udwf",
+        "try_encode_file_format",
+        "try_encode_higher_order_function",
+        "try_encode_udaf",
+        "try_encode_udf",
+        "try_encode_udwf"
+      ],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, buf: &[u8], inputs: &[LogicalPlan], ctx: &TaskContext) -> Result<Extension>"
+        },
+        {
+          "name": "try_decode_file_format",
+          "signature": "fn try_decode_file_format(&self, _buf: &[u8], _ctx: &TaskContext) -> Result<Arc<dyn FileFormatFactory>>"
+        },
+        {
+          "name": "try_decode_higher_order_function",
+          "signature": "fn try_decode_higher_order_function(&self, name: &str, _buf: &[u8]) -> Result<Arc<HigherOrderUDF>>"
+        },
+        {
+          "name": "try_decode_table_provider",
+          "signature": "fn try_decode_table_provider(&self, buf: &[u8], table_ref: &TableReference, schema: SchemaRef, ctx: &TaskContext) -> Result<Arc<dyn TableProvider>>"
+        },
+        {
+          "name": "try_decode_udaf",
+          "signature": "fn try_decode_udaf(&self, name: &str, _buf: &[u8]) -> Result<Arc<AggregateUDF>>"
+        },
+        {
+          "name": "try_decode_udf",
+          "signature": "fn try_decode_udf(&self, name: &str, _buf: &[u8]) -> Result<Arc<ScalarUDF>>"
+        },
+        {
+          "name": "try_decode_udwf",
+          "signature": "fn try_decode_udwf(&self, name: &str, _buf: &[u8]) -> Result<Arc<WindowUDF>>"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, node: &Extension, buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_file_format",
+          "signature": "fn try_encode_file_format(&self, _buf: &mut Vec<u8>, _node: Arc<dyn FileFormatFactory>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_higher_order_function",
+          "signature": "fn try_encode_higher_order_function(&self, _node: &HigherOrderUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_table_provider",
+          "signature": "fn try_encode_table_provider(&self, table_ref: &TableReference, node: Arc<dyn TableProvider>, buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udaf",
+          "signature": "fn try_encode_udaf(&self, _node: &AggregateUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udf",
+          "signature": "fn try_encode_udf(&self, _node: &ScalarUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        },
+        {
+          "name": "try_encode_udwf",
+          "signature": "fn try_encode_udwf(&self, _node: &WindowUDF, _buf: &mut Vec<u8>) -> Result<()>"
+        }
+      ]
+    }
+  ]
+}

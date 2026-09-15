@@ -1,0 +1,600 @@
+{
+  "module": "datafusion::execution::context",
+  "crate": "datafusion",
+  "api": "api/datafusion.execution.context.md",
+  "items": [
+    {
+      "path": "datafusion::execution::context::RegisterFunction",
+      "name": "RegisterFunction",
+      "kind": "enum",
+      "crate": "datafusion",
+      "signature": "enum RegisterFunction",
+      "summary": "The result of processing a [`CreateFunction`] statement with [`FunctionFactory`].",
+      "doc": "api/datafusion.execution.context.md#registerfunction",
+      "variants": [
+        "Scalar",
+        "Aggregate",
+        "Window",
+        "HigherOrder",
+        "Table"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion::execution::context::EmptySerializerRegistry",
+      "name": "EmptySerializerRegistry",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct EmptySerializerRegistry",
+      "summary": "Default implementation of [SerializerRegistry] that throws unimplemented error for all requests.",
+      "doc": "api/datafusion.execution.context.md#emptyserializerregistry",
+      "implements": [
+        "datafusion_expr::registry::SerializerRegistry"
+      ],
+      "methods": [
+        {
+          "name": "deserialize_logical_plan",
+          "signature": "fn deserialize_logical_plan(&self, name: &str, _bytes: &[u8]) -> Result<Arc<dyn UserDefinedLogicalNode>>",
+          "via_trait": "datafusion_expr::registry::SerializerRegistry"
+        },
+        {
+          "name": "serialize_logical_plan",
+          "signature": "fn serialize_logical_plan(&self, node: &dyn UserDefinedLogicalNode) -> Result<Vec<u8>>",
+          "via_trait": "datafusion_expr::registry::SerializerRegistry"
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::context::SQLOptions",
+      "name": "SQLOptions",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct SQLOptions",
+      "summary": "Describes which SQL statements can be run.",
+      "doc": "api/datafusion.execution.context.md#sqloptions",
+      "aliases": [
+        "datafusion::prelude::SQLOptions"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new `SQLOptions` with default values"
+        },
+        {
+          "name": "verify_plan",
+          "signature": "fn verify_plan(&self, plan: &LogicalPlan) -> Result<()>",
+          "summary": "Return an error if the [`LogicalPlan`] has any nodes that are incompatible with this [`SQLOptions`]."
+        },
+        {
+          "name": "with_allow_ddl",
+          "signature": "fn with_allow_ddl(self, allow: bool) -> Self",
+          "summary": "Should DDL data definition commands  (e.g. `CREATE TABLE`) be run? Defaults to `true`."
+        },
+        {
+          "name": "with_allow_dml",
+          "signature": "fn with_allow_dml(self, allow: bool) -> Self",
+          "summary": "Should DML data modification commands (e.g. `INSERT` and `COPY`) be run? Defaults to `true`"
+        },
+        {
+          "name": "with_allow_statements",
+          "signature": "fn with_allow_statements(self, allow: bool) -> Self",
+          "summary": "Should Statements such as (e.g. `SET VARIABLE and `BEGIN TRANSACTION` ...`) be run?. Defaults to `true`"
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::context::SessionContext",
+      "name": "SessionContext",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct SessionContext",
+      "summary": "Main interface for executing queries with DataFusion. Maintains the state of the connection between a user and an instance of the DataFusion engine.",
+      "doc": "api/datafusion.execution.context.md#sessioncontext",
+      "aliases": [
+        "datafusion::prelude::SessionContext"
+      ],
+      "implements": [
+        "core::convert::From",
+        "datafusion_execution::task::TaskContextProvider",
+        "datafusion_expr::registry::FunctionRegistry"
+      ],
+      "methods": [
+        {
+          "name": "add_analyzer_rule",
+          "signature": "fn add_analyzer_rule(&self, analyzer_rule: Arc<dyn AnalyzerRule + Send + Sync>)",
+          "summary": "Adds an analyzer rule to the end of the existing rules."
+        },
+        {
+          "name": "add_optimizer_rule",
+          "signature": "fn add_optimizer_rule(&self, optimizer_rule: Arc<dyn OptimizerRule + Send + Sync>)",
+          "summary": "Adds an optimizer rule to the end of the existing rules."
+        },
+        {
+          "name": "catalog",
+          "signature": "fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>",
+          "summary": "Retrieves a [`CatalogProvider`] instance by name"
+        },
+        {
+          "name": "catalog_names",
+          "signature": "fn catalog_names(&self) -> Vec<String>",
+          "summary": "Retrieves the list of available catalog names."
+        },
+        {
+          "name": "copied_config",
+          "signature": "fn copied_config(&self) -> SessionConfig",
+          "summary": "Return a copied version of config for this Session"
+        },
+        {
+          "name": "copied_table_options",
+          "signature": "fn copied_table_options(&self) -> TableOptions",
+          "summary": "Return a copied version of table options for this Session"
+        },
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Create a [`PhysicalExpr`] from an [`Expr`] after applying type coercion and function rewrites."
+        },
+        {
+          "name": "deregister_higher_order_function",
+          "signature": "fn deregister_higher_order_function(&self, name: &str)",
+          "summary": "Deregisters a higher-order function within this context."
+        },
+        {
+          "name": "deregister_object_store",
+          "signature": "fn deregister_object_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "summary": "Deregisters an [`ObjectStore`] associated with the specific URL prefix."
+        },
+        {
+          "name": "deregister_table",
+          "signature": "fn deregister_table(&self, table_ref: impl Into<TableReference>) -> Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "Deregisters the given table."
+        },
+        {
+          "name": "deregister_udaf",
+          "signature": "fn deregister_udaf(&self, name: &str)",
+          "summary": "Deregisters a UDAF within this context."
+        },
+        {
+          "name": "deregister_udf",
+          "signature": "fn deregister_udf(&self, name: &str)",
+          "summary": "Deregisters a UDF within this context."
+        },
+        {
+          "name": "deregister_udtf",
+          "signature": "fn deregister_udtf(&self, name: &str)",
+          "summary": "Deregisters a UDTF within this context."
+        },
+        {
+          "name": "deregister_udwf",
+          "signature": "fn deregister_udwf(&self, name: &str)",
+          "summary": "Deregisters a UDWF within this context."
+        },
+        {
+          "name": "enable_ident_normalization",
+          "signature": "fn enable_ident_normalization(&self) -> bool",
+          "summary": "Return the `enable_ident_normalization` of this Session"
+        },
+        {
+          "name": "enable_url_table",
+          "signature": "fn enable_url_table(self) -> Self",
+          "summary": "Enable querying local files as tables."
+        },
+        {
+          "name": "execute_logical_plan",
+          "signature": "async fn execute_logical_plan(&self, plan: LogicalPlan) -> Result<DataFrame>",
+          "summary": "Execute the [`LogicalPlan`], return a [`DataFrame`]. This API is not featured limited (so all SQL such as `CREATE TABLE` and `COPY` will be run)."
+        },
+        {
+          "name": "expr_planners",
+          "signature": "fn expr_planners(&self) -> Vec<Arc<dyn ExprPlanner>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(state: SessionState) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "higher_order_function",
+          "signature": "fn higher_order_function(&self, name: &str) -> Result<Arc<HigherOrderUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "higher_order_function_names",
+          "signature": "fn higher_order_function_names(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "into_state_builder",
+          "signature": "fn into_state_builder(self) -> SessionStateBuilder",
+          "summary": "Convert the current `SessionContext` into a [`SessionStateBuilder`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new `SessionContext` using the default [`SessionConfig`]."
+        },
+        {
+          "name": "new_with_config",
+          "signature": "fn new_with_config(config: SessionConfig) -> Self",
+          "summary": "Creates a new `SessionContext` using the provided [`SessionConfig`] and a new [`RuntimeEnv`]."
+        },
+        {
+          "name": "new_with_config_rt",
+          "signature": "fn new_with_config_rt(config: SessionConfig, runtime: Arc<RuntimeEnv>) -> Self",
+          "summary": "Creates a new `SessionContext` using the provided [`SessionConfig`] and a [`RuntimeEnv`]."
+        },
+        {
+          "name": "new_with_state",
+          "signature": "fn new_with_state(state: SessionState) -> Self",
+          "summary": "Creates a new `SessionContext` using the provided [`SessionState`]"
+        },
+        {
+          "name": "parse_capacity_limit",
+          "signature": "fn parse_capacity_limit(config_name: &str, limit: &str) -> Result<usize>",
+          "summary": "Parse capacity limit from string to number of bytes by allowing units: K, M and G. Supports formats like '1.5G', '100M', '512K'. Capacity limit can be set to 0 with '0'."
+        },
+        {
+          "name": "parse_memory_limit",
+          "signature": "fn parse_memory_limit(limit: &str) -> Result<usize>",
+          "summary": "Parse memory limit from string to number of bytes Supports formats like '1.5G', '100M', '512K'"
+        },
+        {
+          "name": "parse_sql_expr",
+          "signature": "fn parse_sql_expr(&self, sql: &str, df_schema: &DFSchema) -> Result<Expr>",
+          "summary": "Creates logical expressions from SQL query text."
+        },
+        {
+          "name": "read_arrow",
+          "signature": "async fn read_arrow<P: DataFilePaths>(&self, table_paths: P, options: ArrowReadOptions<'_>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading an Arrow data source."
+        },
+        {
+          "name": "read_avro",
+          "signature": "async fn read_avro<P: DataFilePaths>(&self, table_paths: P, options: AvroReadOptions<'_>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading an Avro data source."
+        },
+        {
+          "name": "read_batch",
+          "signature": "fn read_batch(&self, batch: RecordBatch) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading a [`RecordBatch`]"
+        },
+        {
+          "name": "read_batches",
+          "signature": "fn read_batches(&self, batches: impl IntoIterator<Item = RecordBatch>) -> Result<DataFrame>",
+          "summary": "Create a [`DataFrame`] for reading a [`Vec[`RecordBatch`]`]"
+        },
+        {
+          "name": "read_csv",
+          "signature": "async fn read_csv<P: DataFilePaths>(&self, table_paths: P, options: CsvReadOptions<'_>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading a CSV data source."
+        },
+        {
+          "name": "read_empty",
+          "signature": "fn read_empty(&self) -> Result<DataFrame>",
+          "summary": "Creates an empty DataFrame."
+        },
+        {
+          "name": "read_json",
+          "signature": "async fn read_json<P: DataFilePaths>(&self, table_paths: P, options: JsonReadOptions<'_>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading an JSON data source."
+        },
+        {
+          "name": "read_parquet",
+          "signature": "async fn read_parquet<P: DataFilePaths>(&self, table_paths: P, options: ParquetReadOptions<'_>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for reading a Parquet data source."
+        },
+        {
+          "name": "read_table",
+          "signature": "fn read_table(&self, provider: Arc<dyn TableProvider>) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] for a [`TableProvider`] such as a [`ListingTable`] or a custom user defined provider."
+        },
+        {
+          "name": "refresh_catalogs",
+          "signature": "async fn refresh_catalogs(&self) -> Result<()>",
+          "summary": "Finds any [`ListingSchemaProvider`]s and instructs them to reload tables from \"disk\""
+        },
+        {
+          "name": "register_arrow",
+          "signature": "async fn register_arrow(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: ArrowReadOptions<'_>) -> Result<()>",
+          "summary": "Registers an Arrow file as a table that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_avro",
+          "signature": "async fn register_avro(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: AvroReadOptions<'_>) -> Result<()>",
+          "summary": "Registers an Avro file as a table that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_batch",
+          "signature": "fn register_batch(&self, table_ref: impl Into<TableReference>, batch: RecordBatch) -> Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "Registers the given [`RecordBatch`] as the specified table reference."
+        },
+        {
+          "name": "register_catalog",
+          "signature": "fn register_catalog(&self, name: impl Into<String>, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>",
+          "summary": "Registers a named catalog using a custom `CatalogProvider` so that it can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_catalog_list",
+          "signature": "fn register_catalog_list(&self, catalog_list: Arc<dyn CatalogProviderList>)",
+          "summary": "Register [`CatalogProviderList`] in [`SessionState`]"
+        },
+        {
+          "name": "register_csv",
+          "signature": "async fn register_csv(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: CsvReadOptions<'_>) -> Result<()>",
+          "summary": "Registers a CSV file as a table which can referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_expr_planner",
+          "signature": "fn register_expr_planner(&mut self, expr_planner: Arc<dyn ExprPlanner>) -> Result<()>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_function_rewrite",
+          "signature": "fn register_function_rewrite(&mut self, rewrite: Arc<dyn FunctionRewrite + Send + Sync>) -> Result<()>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_higher_order_function",
+          "signature": "fn register_higher_order_function(&self, f: Arc<HigherOrderUDF>)",
+          "summary": "Registers a higher-order function within this context."
+        },
+        {
+          "name": "register_higher_order_function",
+          "signature": "fn register_higher_order_function(&mut self, function: Arc<HigherOrderUDF>) -> Result<Option<Arc<HigherOrderUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_json",
+          "signature": "async fn register_json(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: JsonReadOptions<'_>) -> Result<()>",
+          "summary": "Registers a JSON file as a table that it can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_listing_table",
+          "signature": "async fn register_listing_table(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: ListingOptions, provided_schema: Option<SchemaRef>, sql_definition: Option<String>) -> Result<()>",
+          "summary": "Registers a [`ListingTable`] that can assemble multiple files from locations in an [`ObjectStore`] instance into a single table."
+        },
+        {
+          "name": "register_object_store",
+          "signature": "fn register_object_store(&self, url: &Url, object_store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "summary": "Registers an [`ObjectStore`] to be used with a specific URL prefix."
+        },
+        {
+          "name": "register_parquet",
+          "signature": "async fn register_parquet(&self, table_ref: impl Into<TableReference>, table_path: impl AsRef<str>, options: ParquetReadOptions<'_>) -> Result<()>",
+          "summary": "Registers a Parquet file as a table that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_relation_planner",
+          "signature": "fn register_relation_planner(&self, planner: Arc<dyn RelationPlanner>) -> Result<()>",
+          "summary": "Registers a [`RelationPlanner`] to customize SQL table-factor planning."
+        },
+        {
+          "name": "register_table",
+          "signature": "fn register_table(&self, table_ref: impl Into<TableReference>, provider: Arc<dyn TableProvider>) -> Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "Registers a [`TableProvider`] as a table that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_table_options_extension",
+          "signature": "fn register_table_options_extension<T: ConfigExtension>(&self, extension: T)",
+          "summary": "Registers a [`ConfigExtension`] as a table option extension that can be referenced from SQL statements executed against this context."
+        },
+        {
+          "name": "register_udaf",
+          "signature": "fn register_udaf(&self, f: AggregateUDF)",
+          "summary": "Registers an aggregate UDF within this context."
+        },
+        {
+          "name": "register_udaf",
+          "signature": "fn register_udaf(&mut self, udaf: Arc<AggregateUDF>) -> Result<Option<Arc<AggregateUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udf",
+          "signature": "fn register_udf(&self, f: ScalarUDF)",
+          "summary": "Registers a scalar UDF within this context."
+        },
+        {
+          "name": "register_udf",
+          "signature": "fn register_udf(&mut self, udf: Arc<ScalarUDF>) -> Result<Option<Arc<ScalarUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_udtf",
+          "signature": "fn register_udtf(&self, name: &str, fun: Arc<dyn TableFunctionImpl>)",
+          "summary": "Register a table UDF with this context"
+        },
+        {
+          "name": "register_udwf",
+          "signature": "fn register_udwf(&self, f: WindowUDF)",
+          "summary": "Registers a window UDF within this context."
+        },
+        {
+          "name": "register_udwf",
+          "signature": "fn register_udwf(&mut self, udwf: Arc<WindowUDF>) -> Result<Option<Arc<WindowUDF>>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "register_variable",
+          "signature": "fn register_variable(&self, variable_type: VarType, provider: Arc<dyn VarProvider + Send + Sync>)",
+          "summary": "Registers a variable provider within this context."
+        },
+        {
+          "name": "remove_optimizer_rule",
+          "signature": "fn remove_optimizer_rule(&self, name: &str) -> bool",
+          "summary": "Removes an optimizer rule by name, returning `true` if it existed."
+        },
+        {
+          "name": "runtime_env",
+          "signature": "fn runtime_env(&self) -> Arc<RuntimeEnv>",
+          "summary": "Return the [RuntimeEnv] used to run queries with this `SessionContext`"
+        },
+        {
+          "name": "session_id",
+          "signature": "fn session_id(&self) -> String",
+          "summary": "Returns an id that uniquely identifies this `SessionContext`."
+        },
+        {
+          "name": "session_start_time",
+          "signature": "fn session_start_time(&self) -> DateTime<Utc>",
+          "summary": "Returns the time this `SessionContext` was created"
+        },
+        {
+          "name": "sql",
+          "signature": "async fn sql(&self, sql: &str) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] from SQL query text."
+        },
+        {
+          "name": "sql_with_options",
+          "signature": "async fn sql_with_options(&self, sql: &str, options: SQLOptions) -> Result<DataFrame>",
+          "summary": "Creates a [`DataFrame`] from SQL query text, first validating that the queries are allowed by `options`"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&self) -> SessionState",
+          "summary": "Return a new  [`SessionState`] suitable for executing a single query."
+        },
+        {
+          "name": "state_ref",
+          "signature": "fn state_ref(&self) -> Arc<RwLock<SessionState>>",
+          "summary": "Get reference to [`SessionState`]"
+        },
+        {
+          "name": "state_weak_ref",
+          "signature": "fn state_weak_ref(&self) -> Weak<RwLock<SessionState>>",
+          "summary": "Get weak reference to [`SessionState`]"
+        },
+        {
+          "name": "table",
+          "signature": "async fn table(&self, table_ref: impl Into<TableReference>) -> Result<DataFrame>",
+          "summary": "Retrieves a [`DataFrame`] representing a table previously registered by calling the [`register_table`] function."
+        },
+        {
+          "name": "table_exist",
+          "signature": "fn table_exist(&self, table_ref: impl Into<TableReference>) -> Result<bool>",
+          "summary": "Return `true` if the specified table exists in the schema provider."
+        },
+        {
+          "name": "table_factory",
+          "signature": "fn table_factory(&self, file_type: &str) -> Option<Arc<dyn TableProviderFactory>>",
+          "summary": "Return the [`TableProviderFactory`] that is registered for the specified file type, if any."
+        },
+        {
+          "name": "table_function",
+          "signature": "fn table_function(&self, name: &str) -> Result<Arc<TableFunction>>",
+          "summary": "Retrieves a [`TableFunction`] reference by name."
+        },
+        {
+          "name": "table_provider",
+          "signature": "async fn table_provider(&self, table_ref: impl Into<TableReference>) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Return a [`TableProvider`] for the specified table."
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "summary": "Get a new TaskContext to run in this session"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "via_trait": "datafusion_execution::task::TaskContextProvider"
+        },
+        {
+          "name": "udaf",
+          "signature": "fn udaf(&self, name: &str) -> Result<Arc<AggregateUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udafs",
+          "signature": "fn udafs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udf",
+          "signature": "fn udf(&self, name: &str) -> Result<Arc<ScalarUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udfs",
+          "signature": "fn udfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwf",
+          "signature": "fn udwf(&self, name: &str) -> Result<Arc<WindowUDF>>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "udwfs",
+          "signature": "fn udwfs(&self) -> HashSet<String>",
+          "via_trait": "datafusion_expr::registry::FunctionRegistry"
+        },
+        {
+          "name": "with_function_factory",
+          "signature": "fn with_function_factory(self, function_factory: Arc<dyn FunctionFactory>) -> Self",
+          "summary": "Registers a [`FunctionFactory`] to handle `CREATE FUNCTION` statements"
+        },
+        {
+          "name": "write_csv",
+          "signature": "async fn write_csv(&self, plan: Arc<dyn ExecutionPlan>, path: impl AsRef<str>) -> Result<()>",
+          "summary": "Executes a query and writes the results to a partitioned CSV file."
+        },
+        {
+          "name": "write_json",
+          "signature": "async fn write_json(&self, plan: Arc<dyn ExecutionPlan>, path: impl AsRef<str>) -> Result<()>",
+          "summary": "Executes a query and writes the results to a partitioned JSON file."
+        },
+        {
+          "name": "write_parquet",
+          "signature": "async fn write_parquet(&self, plan: Arc<dyn ExecutionPlan>, path: impl AsRef<str>, writer_properties: Option<WriterProperties>) -> Result<()>",
+          "summary": "Executes a query and writes the results to a partitioned Parquet file."
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::context::DataFilePaths",
+      "name": "DataFilePaths",
+      "kind": "trait",
+      "crate": "datafusion",
+      "signature": "trait DataFilePaths",
+      "summary": "DataFilePaths adds a method to convert strings and vector of strings to vector of [`ListingTableUrl`] URLs. This allows methods such [`SessionContext::read_csv`] and [`SessionContext::read_avro`] to take either a single file or multiple fi…",
+      "doc": "api/datafusion.execution.context.md#datafilepaths",
+      "implementors": [
+        "alloc::string::String",
+        "alloc::vec::Vec"
+      ],
+      "required_methods": [
+        "to_urls"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "to_urls",
+          "signature": "fn to_urls(self) -> Result<Vec<ListingTableUrl>>",
+          "summary": "Parse to a vector of [`ListingTableUrl`] URLs."
+        }
+      ]
+    },
+    {
+      "path": "datafusion::execution::context::FunctionFactory",
+      "name": "FunctionFactory",
+      "kind": "trait",
+      "crate": "datafusion",
+      "signature": "trait FunctionFactory: Debug + Sync + Send",
+      "summary": "Interface for handling `CREATE FUNCTION` statements and interacting with [SessionState] to create and register functions ([`ScalarUDF`], [`AggregateUDF`], [`WindowUDF`], and [`TableFunctionImpl`]) dynamically.",
+      "doc": "api/datafusion.execution.context.md#functionfactory",
+      "required_methods": [
+        "create"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "async fn create(&self, state: &SessionState, statement: CreateFunction) -> Result<RegisterFunction>",
+          "summary": "Creates a new dynamic function from the SQL in the [CreateFunction] statement"
+        }
+      ]
+    }
+  ]
+}

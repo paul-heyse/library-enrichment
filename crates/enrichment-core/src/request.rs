@@ -178,6 +178,8 @@ impl ResolveRequest {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields)]
 pub struct OverviewRequest {
+    /// Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.
+    pub discovery: Option<Vec<crate::wire::research::DiscoverySelection>>,
     /// The context from `resolve_library`.
     pub context_id: String,
     /// A specific snapshot; the context's current one when omitted.
@@ -214,17 +216,6 @@ pub struct SearchRequest {
 
 /// How much `inspect_symbol` retrieves.
 ///
-/// The values are, in order: `signature`, `documentation`, `source`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-#[schemars(inline)]
-pub enum InspectDepth {
-    Signature,
-    #[default]
-    Documentation,
-    Source,
-}
-
 /// What `inspect_symbol` asks for.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields)]
@@ -237,10 +228,8 @@ pub struct InspectRequest {
     pub symbol_path: String,
     /// Select one definition at this path, using an inspection candidate or search result.
     pub definition_id: Option<String>,
-    /// How much to retrieve.
-    pub depth: InspectDepth,
-    /// Aspects to include; all supported ones when omitted.
-    pub aspects: Option<Vec<String>>,
+    /// One bounded preset or explicit independently paged aspects.
+    pub selection: crate::wire::ResearchSelection,
     /// Byte budget; the configured inline budget bounds it.
     pub max_bytes: Option<usize>,
     /// Retained execution selection and explicit execution intent (ADR-0026).
@@ -343,8 +332,8 @@ impl InspectionOptions {
 pub struct ReadArtifactRequest {
     /// A service-issued artifact handle.
     pub artifact_id: String,
-    /// A named section (a markdown heading) instead of the whole artifact.
-    pub section: Option<String>,
+    /// One typed result projection or Markdown heading, instead of the complete artifact.
+    pub section: Option<crate::wire::research::ArtifactSection>,
     /// Continue a previous read.
     pub cursor: Option<String>,
     /// Byte budget for this slice; the configured inline budget bounds it.
@@ -355,6 +344,8 @@ pub struct ReadArtifactRequest {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields)]
 pub struct CompareRequest {
+    /// Continue alternatives within one changed key, independently of the changed-key page.
+    pub alternative_cursor: Option<String>,
     pub before_context_id: Option<String>,
     pub after_context_id: Option<String>,
     pub before_snapshot_id: Option<String>,
@@ -419,6 +410,8 @@ pub struct ManifestRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "method", content = "params")]
 pub enum ResearchRequest {
+    #[serde(rename = "service_status")]
+    ServiceStatus(StatusRequest),
     #[serde(rename = "verify_usage")]
     Verify(crate::execution::VerifyRequest),
     #[serde(rename = "job_control")]
@@ -437,6 +430,12 @@ pub enum ResearchRequest {
     ReadArtifact(ReadArtifactRequest),
     #[serde(rename = "snapshot_manifest")]
     SnapshotManifest(ManifestRequest),
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(default, deny_unknown_fields)]
+pub struct StatusRequest {
+    pub component: Option<String>,
 }
 
 #[cfg(test)]
@@ -518,7 +517,7 @@ mod tests {
         assert!(serde_json::from_str::<ResolveRequest>(r#"{"name":"x","upgrade":true}"#).is_err());
         let inspect: InspectRequest =
             serde_json::from_str(r#"{"context_id":"ctx_x","symbol_path":"a::b"}"#).expect("parses");
-        assert_eq!(inspect.depth, InspectDepth::Documentation);
+        assert_eq!(inspect.selection, crate::wire::ResearchSelection::Default);
         assert!(
             serde_json::from_str::<SearchRequest>(r#"{"context_id":"c","query":"q","sort":1}"#)
                 .is_err()

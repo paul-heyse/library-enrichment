@@ -1,0 +1,470 @@
+{
+  "module": "parquet::schema::types",
+  "crate": "parquet",
+  "api": "api/parquet.schema.types.md",
+  "items": [
+    {
+      "path": "parquet::schema::types::Type",
+      "name": "Type",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Type",
+      "summary": "Representation of a Parquet type.",
+      "doc": "api/parquet.schema.types.md#type",
+      "variants": [
+        "PrimitiveType",
+        "GroupType"
+      ],
+      "methods": [
+        {
+          "name": "check_contains",
+          "signature": "fn check_contains(&self, sub_type: &Type) -> bool",
+          "summary": "Checks if `sub_type` schema is part of current schema. This method can be used to check if projected columns are part of the root schema."
+        },
+        {
+          "name": "get_basic_info",
+          "signature": "fn get_basic_info(&self) -> &BasicTypeInfo",
+          "summary": "Returns [`BasicTypeInfo`] information about the type."
+        },
+        {
+          "name": "get_fields",
+          "signature": "fn get_fields(&self) -> &[TypePtr]",
+          "summary": "Gets the fields from this group type. Note that this will panic if called on a non-group type."
+        },
+        {
+          "name": "get_physical_type",
+          "signature": "fn get_physical_type(&self) -> PhysicalType",
+          "summary": "Gets physical type of this primitive type. Note that this will panic if called on a non-primitive type."
+        },
+        {
+          "name": "get_precision",
+          "signature": "fn get_precision(&self) -> i32",
+          "summary": "Gets precision of this primitive type. Note that this will panic if called on a non-primitive type."
+        },
+        {
+          "name": "get_scale",
+          "signature": "fn get_scale(&self) -> i32",
+          "summary": "Gets scale of this primitive type. Note that this will panic if called on a non-primitive type."
+        },
+        {
+          "name": "group_type_builder",
+          "signature": "fn group_type_builder(name: &str) -> GroupTypeBuilder<'_>",
+          "summary": "Creates group type builder with provided column name."
+        },
+        {
+          "name": "is_group",
+          "signature": "fn is_group(&self) -> bool",
+          "summary": "Returns `true` if this type is a group type, `false` otherwise."
+        },
+        {
+          "name": "is_optional",
+          "signature": "fn is_optional(&self) -> bool",
+          "summary": "Returns `true` if this type is repeated or optional. If this type doesn't have repetition defined, we treat it as required."
+        },
+        {
+          "name": "is_primitive",
+          "signature": "fn is_primitive(&self) -> bool",
+          "summary": "Returns `true` if this type is a primitive type, `false` otherwise."
+        },
+        {
+          "name": "is_schema",
+          "signature": "fn is_schema(&self) -> bool",
+          "summary": "Returns `true` if this type is the top-level schema type (message type)."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns this type's field name."
+        },
+        {
+          "name": "primitive_type_builder",
+          "signature": "fn primitive_type_builder(name: &str, physical_type: PhysicalType) -> PrimitiveTypeBuilder<'_>",
+          "summary": "Creates primitive type builder with provided field name and physical type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::BasicTypeInfo",
+      "name": "BasicTypeInfo",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct BasicTypeInfo",
+      "summary": "Basic type info. This contains information such as the name of the type, the repetition level, the logical type and the kind of the type (group, primitive).",
+      "doc": "api/parquet.schema.types.md#basictypeinfo",
+      "methods": [
+        {
+          "name": "converted_type",
+          "signature": "fn converted_type(&self) -> ConvertedType",
+          "summary": "Returns [`ConvertedType`] value for the type."
+        },
+        {
+          "name": "has_id",
+          "signature": "fn has_id(&self) -> bool",
+          "summary": "Returns `true` if id is set, `false` otherwise."
+        },
+        {
+          "name": "has_repetition",
+          "signature": "fn has_repetition(&self) -> bool",
+          "summary": "Returns `true` if type has repetition field set, `false` otherwise. This is mostly applied to group type, because primitive type always has repetition set."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> i32",
+          "summary": "Returns id value for the type."
+        },
+        {
+          "name": "logical_type",
+          "signature": "fn logical_type(&self) -> Option<LogicalType>",
+          "summary": "Returns [`LogicalType`] value for the type."
+        },
+        {
+          "name": "logical_type_ref",
+          "signature": "fn logical_type_ref(&self) -> Option<&LogicalType>",
+          "summary": "Return a reference to the [`LogicalType`] value for the type."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns field name."
+        },
+        {
+          "name": "repetition",
+          "signature": "fn repetition(&self) -> Repetition",
+          "summary": "Returns [`Repetition`] value for the type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::ColumnDescriptor",
+      "name": "ColumnDescriptor",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ColumnDescriptor",
+      "summary": "Physical type for leaf-level primitive columns.",
+      "doc": "api/parquet.schema.types.md#columndescriptor",
+      "methods": [
+        {
+          "name": "converted_type",
+          "signature": "fn converted_type(&self) -> ConvertedType",
+          "summary": "Returns [`ConvertedType`] for this column."
+        },
+        {
+          "name": "logical_type",
+          "signature": "fn logical_type(&self) -> Option<LogicalType>",
+          "summary": "Returns [`LogicalType`] for this column."
+        },
+        {
+          "name": "logical_type_ref",
+          "signature": "fn logical_type_ref(&self) -> Option<&LogicalType>",
+          "summary": "Returns a reference to the [`LogicalType`] for this column."
+        },
+        {
+          "name": "max_def_level",
+          "signature": "fn max_def_level(&self) -> i16",
+          "summary": "Returns maximum definition level for this column."
+        },
+        {
+          "name": "max_rep_level",
+          "signature": "fn max_rep_level(&self) -> i16",
+          "summary": "Returns maximum repetition level for this column."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns column name."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(primitive_type: TypePtr, max_def_level: i16, max_rep_level: i16, path: ColumnPath) -> Self",
+          "summary": "Creates new descriptor for leaf-level column."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &ColumnPath",
+          "summary": "Returns [`ColumnPath`] for this column."
+        },
+        {
+          "name": "physical_type",
+          "signature": "fn physical_type(&self) -> PhysicalType",
+          "summary": "Returns physical type for this column. Note that it will panic if called on a non-primitive type."
+        },
+        {
+          "name": "repeated_ancestor_def_level",
+          "signature": "fn repeated_ancestor_def_level(&self) -> i16",
+          "summary": "Returns the definition level at the nearest REPEATED ancestor, or 0 if none."
+        },
+        {
+          "name": "self_type",
+          "signature": "fn self_type(&self) -> &Type",
+          "summary": "Returns self type [`Type`] for this leaf column."
+        },
+        {
+          "name": "self_type_ptr",
+          "signature": "fn self_type_ptr(&self) -> TypePtr",
+          "summary": "Returns self type [`TypePtr`]  for this leaf column."
+        },
+        {
+          "name": "sort_order",
+          "signature": "fn sort_order(&self) -> SortOrder",
+          "summary": "Returns the sort order for this column"
+        },
+        {
+          "name": "type_length",
+          "signature": "fn type_length(&self) -> i32",
+          "summary": "Returns type length for this column. Note that it will panic if called on a non-primitive type."
+        },
+        {
+          "name": "type_precision",
+          "signature": "fn type_precision(&self) -> i32",
+          "summary": "Returns type precision for this column. Note that it will panic if called on a non-primitive type."
+        },
+        {
+          "name": "type_scale",
+          "signature": "fn type_scale(&self) -> i32",
+          "summary": "Returns type scale for this column. Note that it will panic if called on a non-primitive type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::ColumnPath",
+      "name": "ColumnPath",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ColumnPath",
+      "summary": "Represents the location of a column in a Parquet schema",
+      "doc": "api/parquet.schema.types.md#columnpath",
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(&mut self, tail: Vec<String>)",
+          "summary": "Appends more components to end of column path. ```rust use parquet::schema::types::ColumnPath;"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[String]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(single_path: &str) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(parts: Vec<String>) -> Self",
+          "summary": "Creates new column path from vector of field names."
+        },
+        {
+          "name": "parts",
+          "signature": "fn parts(&self) -> &[String]",
+          "summary": "Returns a slice of path components."
+        },
+        {
+          "name": "string",
+          "signature": "fn string(&self) -> String",
+          "summary": "Returns string representation of this column path. ```rust use parquet::schema::types::ColumnPath;"
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::GroupTypeBuilder",
+      "name": "GroupTypeBuilder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct GroupTypeBuilder<'a>",
+      "summary": "A builder for group types. All attributes are optional except the name. Note that if not specified explicitly, `None` is used as the repetition of the group, which means it is a root (message) type.",
+      "doc": "api/parquet.schema.types.md#grouptypebuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<Type>",
+          "summary": "Creates a new `GroupType` instance from the gathered attributes."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: &'a str) -> Self",
+          "summary": "Creates new group type builder with provided field name."
+        },
+        {
+          "name": "with_converted_type",
+          "signature": "fn with_converted_type(self, converted_type: ConvertedType) -> Self",
+          "summary": "Sets [`ConvertedType`] for this field and returns itself."
+        },
+        {
+          "name": "with_fields",
+          "signature": "fn with_fields(self, fields: Vec<TypePtr>) -> Self",
+          "summary": "Sets a list of fields that should be child nodes of this field. Returns updated self."
+        },
+        {
+          "name": "with_id",
+          "signature": "fn with_id(self, id: Option<i32>) -> Self",
+          "summary": "Sets optional field id and returns itself."
+        },
+        {
+          "name": "with_logical_type",
+          "signature": "fn with_logical_type(self, logical_type: Option<LogicalType>) -> Self",
+          "summary": "Sets [`LogicalType`] for this field and returns itself."
+        },
+        {
+          "name": "with_repetition",
+          "signature": "fn with_repetition(self, repetition: Repetition) -> Self",
+          "summary": "Sets [`Repetition`] for this field and returns itself."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::PrimitiveTypeBuilder",
+      "name": "PrimitiveTypeBuilder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PrimitiveTypeBuilder<'a>",
+      "summary": "A builder for primitive types. All attributes are optional except the name and physical type. Note that if not specified explicitly, `Repetition::OPTIONAL` is used.",
+      "doc": "api/parquet.schema.types.md#primitivetypebuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<Type>",
+          "summary": "Creates a new `PrimitiveType` instance from the collected attributes. Returns `Err` in case of any building conditions are not met."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: &'a str, physical_type: PhysicalType) -> Self",
+          "summary": "Creates new primitive type builder with provided field name and physical type."
+        },
+        {
+          "name": "with_converted_type",
+          "signature": "fn with_converted_type(self, converted_type: ConvertedType) -> Self",
+          "summary": "Sets [`ConvertedType`] for this field and returns itself."
+        },
+        {
+          "name": "with_id",
+          "signature": "fn with_id(self, id: Option<i32>) -> Self",
+          "summary": "Sets optional field id and returns itself."
+        },
+        {
+          "name": "with_length",
+          "signature": "fn with_length(self, length: i32) -> Self",
+          "summary": "Sets type length and returns itself. This is only applied to FIXED_LEN_BYTE_ARRAY and INT96 (INTERVAL) types, because they maintain fixed size underlying byte array. By default, value is `0`."
+        },
+        {
+          "name": "with_logical_type",
+          "signature": "fn with_logical_type(self, logical_type: Option<LogicalType>) -> Self",
+          "summary": "Sets [`LogicalType`] for this field and returns itself. If only the logical type is populated for a primitive type, the converted type will be automatically populated, and can thus be omitted."
+        },
+        {
+          "name": "with_precision",
+          "signature": "fn with_precision(self, precision: i32) -> Self",
+          "summary": "Sets precision for Parquet DECIMAL physical type and returns itself. By default, it equals to `0` and used only for decimal context."
+        },
+        {
+          "name": "with_repetition",
+          "signature": "fn with_repetition(self, repetition: Repetition) -> Self",
+          "summary": "Sets [`Repetition`] for this field and returns itself."
+        },
+        {
+          "name": "with_scale",
+          "signature": "fn with_scale(self, scale: i32) -> Self",
+          "summary": "Sets scale for Parquet DECIMAL physical type and returns itself. By default, it equals to `0` and used only for decimal context."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::SchemaDescriptor",
+      "name": "SchemaDescriptor",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct SchemaDescriptor",
+      "summary": "Schema of a Parquet file.",
+      "doc": "api/parquet.schema.types.md#schemadescriptor",
+      "methods": [
+        {
+          "name": "column",
+          "signature": "fn column(&self, i: usize) -> ColumnDescPtr",
+          "summary": "Returns [`ColumnDescriptor`] for a field position."
+        },
+        {
+          "name": "columns",
+          "signature": "fn columns(&self) -> &[ColumnDescPtr]",
+          "summary": "Returns slice of [`ColumnDescriptor`]."
+        },
+        {
+          "name": "get_column_root",
+          "signature": "fn get_column_root(&self, i: usize) -> &Type",
+          "summary": "Returns column root [`Type`] for a leaf position."
+        },
+        {
+          "name": "get_column_root_idx",
+          "signature": "fn get_column_root_idx(&self, leaf: usize) -> usize",
+          "summary": "Returns the index of the root column for a field position"
+        },
+        {
+          "name": "get_column_root_ptr",
+          "signature": "fn get_column_root_ptr(&self, i: usize) -> TypePtr",
+          "summary": "Returns column root [`Type`] pointer for a leaf position."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns schema name."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(tp: TypePtr) -> Self",
+          "summary": "Creates new schema descriptor from Parquet schema."
+        },
+        {
+          "name": "num_columns",
+          "signature": "fn num_columns(&self) -> usize",
+          "summary": "Returns number of leaf-level columns."
+        },
+        {
+          "name": "root_schema",
+          "signature": "fn root_schema(&self) -> &Type",
+          "summary": "Returns schema as [`Type`]."
+        },
+        {
+          "name": "root_schema_ptr",
+          "signature": "fn root_schema_ptr(&self) -> TypePtr",
+          "summary": "Returns schema as [`TypePtr`] for cheap cloning."
+        }
+      ]
+    },
+    {
+      "path": "parquet::schema::types::ColumnDescPtr",
+      "name": "ColumnDescPtr",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type ColumnDescPtr = std::sync::Arc<ColumnDescriptor>",
+      "summary": "Type alias for `Arc<ColumnDescriptor>`.",
+      "doc": "api/parquet.schema.types.md#columndescptr"
+    },
+    {
+      "path": "parquet::schema::types::SchemaDescPtr",
+      "name": "SchemaDescPtr",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type SchemaDescPtr = std::sync::Arc<SchemaDescriptor>",
+      "summary": "Type alias for `Arc<SchemaDescriptor>`.",
+      "doc": "api/parquet.schema.types.md#schemadescptr"
+    },
+    {
+      "path": "parquet::schema::types::TypePtr",
+      "name": "TypePtr",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type TypePtr = std::sync::Arc<Type>",
+      "summary": "Type alias for `Arc<Type>`.",
+      "doc": "api/parquet.schema.types.md#typeptr"
+    }
+  ]
+}

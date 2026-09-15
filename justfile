@@ -313,6 +313,20 @@ schemas-generate:
 rustdoc-format-matrix:
     @"{{ root }}/scripts/rustdoc-format-matrix.sh"
 
+# Regenerates the pinned capability repository the datafusion skill ships. Self-contained: the
+# builder lives in the skill and imports nothing from this workspace, so the skill directory is
+# copyable to any repository. First run downloads from docs.rs, crates.io and GitHub into a
+# gitignored cache; later runs are offline.
+[doc("Rebuild the datafusion skill's pinned capability repository from upstream sources.")]
+[group('mutating')]
+knowledge-build:
+    @python3 "{{ root }}/.claude/skills/datafusion/build/build.py"
+
+[doc("Verify the datafusion capability repository: determinism, integrity, rules, navigation.")]
+[group('gate')]
+knowledge-check:
+    @python3 "{{ root }}/.claude/skills/datafusion/build/verify.py"
+
 # Rebuilds the fixture crate captures (rustdoc JSON, .crate tarballs, index and API documents)
 # with the dated nightly from config/toolchains.toml, and records their provenance. The
 # outputs are committed; run this only when the fixture crate or the producer nightly changes,

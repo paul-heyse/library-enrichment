@@ -1,0 +1,117 @@
+{
+  "module": "arrow_buffer::pool",
+  "crate": "arrow-buffer",
+  "api": "api/arrow_buffer.pool.md",
+  "items": [
+    {
+      "path": "arrow_buffer::pool::TrackingMemoryPool",
+      "name": "TrackingMemoryPool",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct TrackingMemoryPool",
+      "summary": "A simple [`MemoryPool`] that reports the total memory usage",
+      "doc": "api/arrow_buffer.pool.md#trackingmemorypool",
+      "implements": [
+        "arrow_buffer::pool::MemoryPool"
+      ],
+      "methods": [
+        {
+          "name": "allocated",
+          "signature": "fn allocated(&self) -> usize",
+          "summary": "Returns the total allocated size"
+        },
+        {
+          "name": "available",
+          "signature": "fn available(&self) -> isize",
+          "via_trait": "arrow_buffer::pool::MemoryPool"
+        },
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "via_trait": "arrow_buffer::pool::MemoryPool"
+        },
+        {
+          "name": "reserve",
+          "signature": "fn reserve(&self, size: usize) -> Box<dyn MemoryReservation>",
+          "via_trait": "arrow_buffer::pool::MemoryPool"
+        },
+        {
+          "name": "used",
+          "signature": "fn used(&self) -> usize",
+          "via_trait": "arrow_buffer::pool::MemoryPool"
+        }
+      ]
+    },
+    {
+      "path": "arrow_buffer::pool::MemoryPool",
+      "name": "MemoryPool",
+      "kind": "trait",
+      "crate": "arrow-buffer",
+      "signature": "trait MemoryPool: Debug + Send + Sync",
+      "summary": "A pool of memory that can be reserved and released.",
+      "doc": "api/arrow_buffer.pool.md#memorypool",
+      "implementors": [
+        "arrow_buffer::pool::TrackingMemoryPool",
+        "datafusion_execution::memory_pool::arrow::ArrowMemoryPool"
+      ],
+      "required_methods": [
+        "available",
+        "capacity",
+        "reserve",
+        "used"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "available",
+          "signature": "fn available(&self) -> isize",
+          "summary": "Returns the current available memory in the pool."
+        },
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "summary": "Returns the maximum memory that can be reserved from the pool."
+        },
+        {
+          "name": "reserve",
+          "signature": "fn reserve(&self, size: usize) -> Box<dyn MemoryReservation>",
+          "summary": "Reserves memory from the pool. Infallible."
+        },
+        {
+          "name": "used",
+          "signature": "fn used(&self) -> usize",
+          "summary": "Returns the current used memory from the pool."
+        }
+      ]
+    },
+    {
+      "path": "arrow_buffer::pool::MemoryReservation",
+      "name": "MemoryReservation",
+      "kind": "trait",
+      "crate": "arrow-buffer",
+      "signature": "trait MemoryReservation: Debug + Send + Sync",
+      "summary": "A memory reservation within a [`MemoryPool`] that is freed on drop",
+      "doc": "api/arrow_buffer.pool.md#memoryreservation",
+      "implementors": [
+        "datafusion_execution::memory_pool::MemoryReservation"
+      ],
+      "required_methods": [
+        "resize",
+        "size"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "resize",
+          "signature": "fn resize(&mut self, new_size: usize)",
+          "summary": "Resize this reservation to a new size in bytes."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the size of this reservation in bytes."
+        }
+      ]
+    }
+  ]
+}

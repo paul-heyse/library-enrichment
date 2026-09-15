@@ -1,0 +1,191 @@
+{
+  "module": "datafusion_session::session",
+  "crate": "datafusion-session",
+  "api": "api/datafusion_session.session.md",
+  "items": [
+    {
+      "path": "datafusion_session::session::SessionStore",
+      "name": "SessionStore",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct SessionStore",
+      "summary": "The state store that stores the reference of the runtime session state.",
+      "doc": "api/datafusion_session.session.md#sessionstore",
+      "aliases": [
+        "datafusion_session::SessionStore"
+      ],
+      "methods": [
+        {
+          "name": "get_session",
+          "signature": "fn get_session(&self) -> Weak<RwLock<dyn Session>>",
+          "summary": "Get the current session of the store"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [SessionStore]"
+        },
+        {
+          "name": "with_state",
+          "signature": "fn with_state(&self, state: Weak<RwLock<dyn Session>>)",
+          "summary": "Set the session state of the store"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::session::Session",
+      "name": "Session",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait Session: Send + Sync",
+      "summary": "Interface for accessing [`SessionState`] from the catalog and data source.",
+      "doc": "api/datafusion_session.session.md#session",
+      "aliases": [
+        "datafusion::catalog::Session",
+        "datafusion_catalog::Session",
+        "datafusion_session::Session"
+      ],
+      "implementors": [
+        "datafusion::execution::session_state::SessionState",
+        "datafusion_ffi::session::ForeignSession"
+      ],
+      "required_methods": [
+        "aggregate_functions",
+        "as_any",
+        "catalog_list",
+        "config",
+        "create_physical_expr",
+        "create_physical_plan",
+        "execution_props",
+        "extension_type_registry",
+        "higher_order_functions",
+        "runtime_env",
+        "scalar_functions",
+        "session_id",
+        "table_options",
+        "table_options_mut",
+        "task_ctx",
+        "window_functions"
+      ],
+      "provided_methods": [
+        "config_options",
+        "default_table_options",
+        "optimize",
+        "physical_optimizers",
+        "query_planner",
+        "statistics_registry"
+      ],
+      "methods": [
+        {
+          "name": "aggregate_functions",
+          "signature": "fn aggregate_functions(&self) -> &HashMap<String, Arc<AggregateUDF>>",
+          "summary": "Return reference to aggregate_functions"
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any"
+        },
+        {
+          "name": "catalog_list",
+          "signature": "fn catalog_list(&self) -> Arc<dyn CatalogProviderList>",
+          "summary": "Return the catalogs registered with this session."
+        },
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &SessionConfig",
+          "summary": "Return the [`SessionConfig`]"
+        },
+        {
+          "name": "config_options",
+          "signature": "fn config_options(&self) -> &ConfigOptions",
+          "summary": "return the [`ConfigOptions`]"
+        },
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: Expr, df_schema: &DFSchema) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Create a [`PhysicalExpr`] from an [`Expr`] after applying type coercion, and function rewrites."
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Creates a physical [`ExecutionPlan`] plan from a [`LogicalPlan`]."
+        },
+        {
+          "name": "default_table_options",
+          "signature": "fn default_table_options(&self) -> TableOptions",
+          "summary": "return the TableOptions options with its extensions"
+        },
+        {
+          "name": "execution_props",
+          "signature": "fn execution_props(&self) -> &ExecutionProps",
+          "summary": "Return the execution properties"
+        },
+        {
+          "name": "extension_type_registry",
+          "signature": "fn extension_type_registry(&self) -> &ExtensionTypeRegistryRef",
+          "summary": "Return a reference to the extension type registry"
+        },
+        {
+          "name": "higher_order_functions",
+          "signature": "fn higher_order_functions(&self) -> &HashMap<String, Arc<HigherOrderUDF>>",
+          "summary": "Return reference to higher_order_functions"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: &LogicalPlan) -> Result<LogicalPlan>",
+          "summary": "Optimize a logical plan."
+        },
+        {
+          "name": "physical_optimizers",
+          "signature": "fn physical_optimizers(&self) -> &[Arc<dyn PhysicalOptimizerRule + Send + Sync>]",
+          "summary": "Return the physical optimizer rules for this session."
+        },
+        {
+          "name": "query_planner",
+          "signature": "fn query_planner(&self) -> Arc<dyn QueryPlanner + Send + Sync>",
+          "summary": "Return the query planner for this session."
+        },
+        {
+          "name": "runtime_env",
+          "signature": "fn runtime_env(&self) -> &Arc<RuntimeEnv>",
+          "summary": "Return the runtime env"
+        },
+        {
+          "name": "scalar_functions",
+          "signature": "fn scalar_functions(&self) -> &HashMap<String, Arc<ScalarUDF>>",
+          "summary": "Return reference to scalar_functions"
+        },
+        {
+          "name": "session_id",
+          "signature": "fn session_id(&self) -> &str",
+          "summary": "Return the session ID"
+        },
+        {
+          "name": "statistics_registry",
+          "signature": "fn statistics_registry(&self) -> Option<&StatisticsRegistry>",
+          "summary": "Return the optional statistics registry used during physical optimization."
+        },
+        {
+          "name": "table_options",
+          "signature": "fn table_options(&self) -> &TableOptions",
+          "summary": "Return the table options"
+        },
+        {
+          "name": "table_options_mut",
+          "signature": "fn table_options_mut(&mut self) -> &mut TableOptions",
+          "summary": "Returns a mutable reference to [`TableOptions`]"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> Arc<TaskContext>",
+          "summary": "Get a new TaskContext to run in this session"
+        },
+        {
+          "name": "window_functions",
+          "signature": "fn window_functions(&self) -> &HashMap<String, Arc<WindowUDF>>",
+          "summary": "Return reference to window functions"
+        }
+      ]
+    }
+  ]
+}

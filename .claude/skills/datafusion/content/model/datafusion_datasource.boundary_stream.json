@@ -1,0 +1,40 @@
+{
+  "module": "datafusion_datasource::boundary_stream",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.boundary_stream.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::boundary_stream::END_SCAN_LOOKAHEAD",
+      "name": "END_SCAN_LOOKAHEAD",
+      "kind": "constant",
+      "crate": "datafusion-datasource",
+      "signature": "const END_SCAN_LOOKAHEAD: u64 = _",
+      "summary": "How far past `raw_end` the initial bounded fetch covers. If the terminating newline is not found within this window, `ScanningLastTerminator` issues successive same-sized GETs until the newline is located or EOF is reached.",
+      "doc": "api/datafusion_datasource.boundary_stream.md#end_scan_lookahead"
+    },
+    {
+      "path": "datafusion_datasource::boundary_stream::AlignedBoundaryStream",
+      "name": "AlignedBoundaryStream",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct AlignedBoundaryStream",
+      "summary": "A stream wrapper that lazily aligns byte boundaries to newline characters.",
+      "doc": "api/datafusion_datasource.boundary_stream.md#alignedboundarystream",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "async fn new(store: Arc<dyn ObjectStore>, location: object_store::path::Path, raw_start: u64, raw_end: u64, file_size: u64, terminator: u8) -> object_store::Result<Self>",
+          "summary": "Open a ranged byte stream from `store` and return a ready-to-poll `AlignedBoundaryStream`."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::StatePaths;
 
 pub const MARKER: &str = ".library-enrichment-state.json";
+/// Operator-owned sidecars select this generation explicitly; older roots stay inactive.
+pub const GENERATION: u32 = 6;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -126,7 +128,7 @@ pub fn verify(paths: &StatePaths) -> io::Result<()> {
 
 fn identity(root: &Path, role: &str) -> io::Result<Identity> {
     Ok(Identity {
-        format: "library-enrichment-state/5".into(),
+        format: format!("library-enrichment-state/{GENERATION}"),
         role: role.into(),
         root: root.canonicalize()?,
     })
@@ -394,5 +396,51 @@ mod tests {
         std::os::unix::fs::symlink(paths.cache_root.join(MARKER), paths.data_root.join(MARKER))
             .unwrap();
         assert!(verify(&paths).is_err());
+    }
+
+    #[test]
+    fn the_previous_generation_is_rejected_without_adopting_or_removing_bytes() {
+        let temp = tempfile::tempdir().unwrap();
+        let paths = StatePaths::explicit(temp.path().join("cache"), temp.path().join("data"));
+        initialize(&paths).unwrap();
+        for root in [&paths.cache_root, &paths.data_root] {
+            let marker = root.join(MARKER);
+            let mut old: serde_json::Value =
+                serde_json::from_slice(&fs::read(&marker).unwrap()).unwrap();
+            old["format"] = "library-enrichment-state/5".into();
+            fs::write(&marker, serde_json::to_vec(&old).unwrap()).unwrap();
+            fs::write(
+                root.join("old-retained-payload"),
+                b"preserve old generation",
+            )
+            .unwrap();
+        }
+        let before: Vec<_> = [&paths.cache_root, &paths.data_root]
+            .into_iter()
+            .map(|root| {
+                (
+                    fs::read(root.join(MARKER)).unwrap(),
+                    fs::read(root.join("old-retained-payload")).unwrap(),
+                )
+            })
+            .collect();
+        assert!(initialize(&paths).is_err());
+        assert!(verify(&paths).is_err());
+        let after: Vec<_> = [&paths.cache_root, &paths.data_root]
+            .into_iter()
+            .map(|root| {
+                (
+                    fs::read(root.join(MARKER)).unwrap(),
+                    fs::read(root.join("old-retained-payload")).unwrap(),
+                )
+            })
+            .collect();
+        assert_eq!(before, after);
+        let fresh = StatePaths::explicit(
+            temp.path().join("fresh-cache"),
+            temp.path().join("fresh-data"),
+        );
+        initialize(&fresh).unwrap();
+        verify(&fresh).unwrap();
     }
 }

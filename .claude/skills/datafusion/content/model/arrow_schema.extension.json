@@ -1,0 +1,92 @@
+{
+  "module": "arrow_schema::extension",
+  "crate": "arrow-schema",
+  "api": "api/arrow_schema.extension.md",
+  "items": [
+    {
+      "path": "arrow_schema::extension::EXTENSION_TYPE_METADATA_KEY",
+      "name": "EXTENSION_TYPE_METADATA_KEY",
+      "kind": "constant",
+      "crate": "arrow-schema",
+      "signature": "const EXTENSION_TYPE_METADATA_KEY: &str = \"ARROW:extension:metadata\"",
+      "summary": "The metadata key for a serialized representation of the [`ExtensionType`] necessary to reconstruct the custom type.",
+      "doc": "api/arrow_schema.extension.md#extension_type_metadata_key"
+    },
+    {
+      "path": "arrow_schema::extension::EXTENSION_TYPE_NAME_KEY",
+      "name": "EXTENSION_TYPE_NAME_KEY",
+      "kind": "constant",
+      "crate": "arrow-schema",
+      "signature": "const EXTENSION_TYPE_NAME_KEY: &str = \"ARROW:extension:name\"",
+      "summary": "The metadata key for the string name identifying an [`ExtensionType`].",
+      "doc": "api/arrow_schema.extension.md#extension_type_name_key"
+    },
+    {
+      "path": "arrow_schema::extension::ExtensionType",
+      "name": "ExtensionType",
+      "kind": "trait",
+      "crate": "arrow-schema",
+      "signature": "trait ExtensionType: Sized",
+      "summary": "Extension types.",
+      "doc": "api/arrow_schema.extension.md#extensiontype",
+      "implementors": [
+        "arrow_schema::extension::canonical::bool8::Bool8",
+        "arrow_schema::extension::canonical::fixed_shape_tensor::FixedShapeTensor",
+        "arrow_schema::extension::canonical::json::Json",
+        "arrow_schema::extension::canonical::opaque::Opaque",
+        "arrow_schema::extension::canonical::timestamp_with_offset::TimestampWithOffset",
+        "arrow_schema::extension::canonical::uuid::Uuid",
+        "arrow_schema::extension::canonical::variable_shape_tensor::VariableShapeTensor",
+        "parquet_variant_compute::variant_array::VariantType"
+      ],
+      "required_methods": [
+        "deserialize_metadata",
+        "metadata",
+        "serialize_metadata",
+        "supports_data_type",
+        "try_new"
+      ],
+      "provided_methods": [
+        "try_new_from_field_metadata",
+        "validate"
+      ],
+      "methods": [
+        {
+          "name": "deserialize_metadata",
+          "signature": "fn deserialize_metadata(metadata: Option<&str>) -> Result<Self::Metadata, ArrowError>",
+          "summary": "Deserialize the metadata of this extension type from the serialized representation of the metadata. An extension type that defines no metadata should expect `None` for the serialized metadata and return `Ok(())`."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Self::Metadata",
+          "summary": "Returns a reference to the metadata of this extension type, or `&()` if if this extension type defines no metadata (`Self::Metadata=()`)."
+        },
+        {
+          "name": "serialize_metadata",
+          "signature": "fn serialize_metadata(&self) -> Option<String>",
+          "summary": "Returns the serialized representation of the metadata of this extension type, or `None` if this extension type defines no metadata (`Self::Metadata=()`)."
+        },
+        {
+          "name": "supports_data_type",
+          "signature": "fn supports_data_type(&self, data_type: &DataType) -> Result<(), ArrowError>",
+          "summary": "Returns `Ok(())` iff the given data type is supported by this extension type."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(data_type: &DataType, metadata: Self::Metadata) -> Result<Self, ArrowError>",
+          "summary": "Construct this extension type for a field with the given data type and metadata."
+        },
+        {
+          "name": "try_new_from_field_metadata",
+          "signature": "fn try_new_from_field_metadata(data_type: &DataType, metadata: &HashMap<String, String>) -> Result<Self, ArrowError>",
+          "summary": "Construct this extension type from field metadata and data type."
+        },
+        {
+          "name": "validate",
+          "signature": "fn validate(data_type: &DataType, metadata: Self::Metadata) -> Result<(), ArrowError>",
+          "summary": "Validate this extension type for a field with the given data type and metadata."
+        }
+      ]
+    }
+  ]
+}

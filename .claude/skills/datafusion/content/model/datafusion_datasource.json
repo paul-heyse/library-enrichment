@@ -1,0 +1,206 @@
+{
+  "module": "datafusion_datasource",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::generate_test_files",
+      "name": "generate_test_files",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn generate_test_files(num_files: usize, overlap_factor: f64) -> Vec<file_groups::FileGroup>",
+      "summary": "Generates test files with min-max statistics in different overlap patterns.",
+      "doc": "api/datafusion_datasource.md#generate_test_files"
+    },
+    {
+      "path": "datafusion_datasource::verify_sort_integrity",
+      "name": "verify_sort_integrity",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn verify_sort_integrity(file_groups: &[file_groups::FileGroup]) -> bool",
+      "summary": "Used by tests and benchmarks",
+      "doc": "api/datafusion_datasource.md#verify_sort_integrity"
+    },
+    {
+      "path": "datafusion_datasource::FileRange",
+      "name": "FileRange",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileRange",
+      "summary": "Only scan a subset of Row Groups from the Parquet file whose data \"midpoint\" lies within the [start, end) byte offsets. This option can be used to scan non-overlapping sections of a Parquet file in parallel.",
+      "doc": "api/datafusion_datasource.md#filerange",
+      "aliases": [
+        "datafusion::datasource::listing::FileRange"
+      ],
+      "fields": [
+        "start",
+        "end"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, offset: i64) -> bool",
+          "summary": "returns true if this file range contains the specified offset"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(range: &protobuf::FileRange) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::PartitionedFile",
+      "name": "PartitionedFile",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct PartitionedFile",
+      "summary": "A single file or part of a file that should be read, along with its schema, statistics and partition column values that need to be appended to each row.",
+      "doc": "api/datafusion_datasource.md#partitionedfile",
+      "aliases": [
+        "datafusion::datasource::listing::PartitionedFile"
+      ],
+      "fields": [
+        "object_meta",
+        "partition_values",
+        "range",
+        "statistics",
+        "ordering",
+        "extensions",
+        "metadata_size_hint",
+        "table_reference",
+        "arrow_schema"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "effective_size",
+          "signature": "fn effective_size(&self) -> u64",
+          "summary": "Size of the file to be scanned (taking into account the range, if present)."
+        },
+        {
+          "name": "extension",
+          "signature": "fn extension<T: Any + Send + Sync>(&self) -> Option<&T>",
+          "summary": "Borrow the extension of type `T`, if one is attached."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(object_meta: ObjectMeta) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_path",
+          "signature": "fn from_path(path: String) -> Result<Self>",
+          "summary": "Return a file reference from the given path"
+        },
+        {
+          "name": "has_statistics",
+          "signature": "fn has_statistics(&self) -> bool",
+          "summary": "Check if this file has any statistics. This returns `true` if the file has any Exact or Inexact statistics and `false` if all statistics are `Precision::Absent`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(path: impl Into<String>, size: u64) -> Self",
+          "summary": "Create a simple file without metadata or partition"
+        },
+        {
+          "name": "new_from_meta",
+          "signature": "fn new_from_meta(object_meta: ObjectMeta) -> Self",
+          "summary": "Create a file from a known ObjectMeta without partition"
+        },
+        {
+          "name": "new_with_range",
+          "signature": "fn new_with_range(path: String, size: u64, start: i64, end: i64) -> Self",
+          "summary": "Create a file range without metadata or partition"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &Path",
+          "summary": "Return the path of this partitioned file"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> (u64, u64)",
+          "summary": "Effective range of the file to be scanned."
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(file: &protobuf::PartitionedFile) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "with_arrow_schema",
+          "signature": "fn with_arrow_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Provide a physical Arrow schema for this file."
+        },
+        {
+          "name": "with_extension",
+          "signature": "fn with_extension<T: Any + Send + Sync>(self, value: T) -> Self",
+          "summary": "Attach a typed user-defined extension to this file. Multiple independent extensions can be attached, each keyed by its concrete Rust type. Inserting a value of a type that already has an extension replaces the previous one."
+        },
+        {
+          "name": "with_extensions",
+          "signature": "fn with_extensions(self, extensions: Arc<dyn Any + Send + Sync>) -> Self",
+          "summary": "Attach a type-erased extension to this file."
+        },
+        {
+          "name": "with_metadata_size_hint",
+          "signature": "fn with_metadata_size_hint(self, metadata_size_hint: usize) -> Self",
+          "summary": "Provide a hint to the size of the file metadata. If a hint is provided the reader will try and fetch the last `size_hint` bytes of the parquet file optimistically. Without an appropriate hint, two read may be required to fetch the metadata."
+        },
+        {
+          "name": "with_ordering",
+          "signature": "fn with_ordering(self, ordering: Option<LexOrdering>) -> Self",
+          "summary": "Set the known ordering of data in this file."
+        },
+        {
+          "name": "with_partition_values",
+          "signature": "fn with_partition_values(self, partition_values: Vec<ScalarValue>) -> Self",
+          "summary": "Attach partition values to this file. This replaces any existing partition values."
+        },
+        {
+          "name": "with_range",
+          "signature": "fn with_range(self, start: i64, end: i64) -> Self",
+          "summary": "Update the file to only scan the specified range (in bytes)"
+        },
+        {
+          "name": "with_statistics",
+          "signature": "fn with_statistics(self, file_statistics: Arc<Statistics>) -> Self",
+          "summary": "Update the statistics for this file."
+        },
+        {
+          "name": "with_table_reference",
+          "signature": "fn with_table_reference(self, table_reference: Option<TableReference>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::FileExtensions",
+      "name": "FileExtensions",
+      "kind": "type_alias",
+      "crate": "datafusion-datasource",
+      "signature": "type FileExtensions = datafusion_common::extensions::Extensions",
+      "summary": "User-defined per-file extension data, keyed by concrete Rust type.",
+      "doc": "api/datafusion_datasource.md#fileextensions"
+    },
+    {
+      "path": "datafusion_datasource::PartitionedFileStream",
+      "name": "PartitionedFileStream",
+      "kind": "type_alias",
+      "crate": "datafusion-datasource",
+      "signature": "type PartitionedFileStream = std::pin::Pin<Box<dyn Stream<Item = datafusion_common::Result<PartitionedFile>> + Send + Sync + 'static>>",
+      "summary": "Stream of files get listed from object store",
+      "doc": "api/datafusion_datasource.md#partitionedfilestream",
+      "deprecated": "since 54.0.0: This type is unused and will be removed in a future release",
+      "aliases": [
+        "datafusion::datasource::listing::PartitionedFileStream"
+      ]
+    }
+  ]
+}

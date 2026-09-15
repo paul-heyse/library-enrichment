@@ -11,9 +11,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUNDLE="$ROOT/docs/provenance/bundle-2026-09-13"
-MANIFEST="$BUNDLE/MANIFEST.sha256"
-PATHMAP="$BUNDLE/PATHMAP.tsv"
+# ADR-0036/0037 preserve the original manifest and relocate only superseded product-skill
+# bytes through the new, independently hashed predecessor map. Both seals are mandatory.
+verify_bundle() {
+local MANIFEST="$1"
+local PATHMAP="$2"
+local ok bad missing unmapped total want orig cur got disp
 
 [ -f "$MANIFEST" ] || { echo "provenance: missing $MANIFEST" >&2; exit 1; }
 [ -f "$PATHMAP" ]  || { echo "provenance: missing $PATHMAP"  >&2; exit 1; }
@@ -55,3 +58,8 @@ printf 'provenance: %d/%d verified' "$ok" "$total"
 printf '\n'
 
 [ $((bad+missing+unmapped)) -eq 0 ]
+}
+
+CURRENT="$ROOT/docs/provenance/bundle-2026-09-15-research-v2"
+verify_bundle "$CURRENT/MANIFEST.sha256" "$CURRENT/PATHMAP.tsv"
+verify_bundle "$ROOT/docs/provenance/bundle-2026-09-13/MANIFEST.sha256" "$CURRENT/PREDECESSOR_PATHMAP.tsv"

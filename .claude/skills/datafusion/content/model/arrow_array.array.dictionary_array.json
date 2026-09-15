@@ -1,0 +1,463 @@
+{
+  "module": "arrow_array::array::dictionary_array",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.array.dictionary_array.md",
+  "items": [
+    {
+      "path": "arrow_array::array::dictionary_array::DictionaryArray",
+      "name": "DictionaryArray",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct DictionaryArray<K: ArrowDictionaryKeyType>",
+      "summary": "An array of [dictionary encoded values](https://arrow.apache.org/docs/format/Columnar.html#dictionary-encoded-layout)",
+      "doc": "api/arrow_array.array.dictionary_array.md#dictionaryarray",
+      "implements": [
+        "arrow_array::array::Array",
+        "arrow_array::array::dictionary_array::AnyDictionaryArray",
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "downcast_dict",
+          "signature": "fn downcast_dict<V: 'static>(&self) -> Option<TypedDictionaryArray<'_, K, V>>",
+          "summary": "Downcast this dictionary to a [`TypedDictionaryArray`]"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(data: ArrayData) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = Option<&'a str>>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_data",
+          "signature": "fn into_data(self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (PrimitiveArray<K>, ArrayRef)",
+          "summary": "Deconstruct this array into its constituent parts"
+        },
+        {
+          "name": "into_primitive_dict_builder",
+          "signature": "fn into_primitive_dict_builder<V>(self) -> Result<PrimitiveDictionaryBuilder<K, V>, Self> where V: ArrowPrimitiveType",
+          "summary": "Returns `PrimitiveDictionaryBuilder` of this dictionary array for mutating its keys and values if the underlying data buffer is not shared by others."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Whether this dictionary is empty"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_ordered",
+          "signature": "fn is_ordered(&self) -> bool",
+          "summary": "Currently exists for compatibility purposes with Arrow IPC."
+        },
+        {
+          "name": "key",
+          "signature": "fn key(&self, i: usize) -> Option<usize>",
+          "summary": "Return the value of `keys` (the dictionary key) at index `i`, cast to `usize`, `None` if the value at `i` is `NULL`."
+        },
+        {
+          "name": "keys",
+          "signature": "fn keys(&self) -> &PrimitiveArray<K>",
+          "summary": "Return an array view of the keys of this dictionary as a PrimitiveArray."
+        },
+        {
+          "name": "keys",
+          "signature": "fn keys(&self) -> &dyn Array",
+          "via_trait": "arrow_array::array::dictionary_array::AnyDictionaryArray"
+        },
+        {
+          "name": "keys_iter",
+          "signature": "fn keys_iter(&self) -> impl Iterator<Item = Option<usize>> + '_",
+          "summary": "Return an iterator over the keys (indexes into the dictionary)"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "The length of the dictionary is the length of the keys array."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_null_count",
+          "signature": "fn logical_null_count(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_nulls",
+          "signature": "fn logical_nulls(&self) -> Option<NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "lookup_key",
+          "signature": "fn lookup_key(&self, value: &str) -> Option<K::Native>",
+          "summary": "If `value` is present in `values` (aka the dictionary), returns the corresponding key (index into the `values` array). Otherwise returns `None`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(keys: PrimitiveArray<K>, values: ArrayRef) -> Self",
+          "summary": "Attempt to create a new DictionaryArray with a specified keys (indexes into the dictionary) and values (dictionary) array."
+        },
+        {
+          "name": "new_scalar",
+          "signature": "fn new_scalar<T: Array + 'static>(value: Scalar<T>) -> Scalar<Self>",
+          "summary": "Create a new [`Scalar`] from `value`"
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "unsafe fn new_unchecked(keys: PrimitiveArray<K>, values: ArrayRef) -> Self",
+          "summary": "Create a new [`DictionaryArray`] without performing validation"
+        },
+        {
+          "name": "normalized_keys",
+          "signature": "fn normalized_keys(&self) -> Vec<usize>",
+          "via_trait": "arrow_array::array::dictionary_array::AnyDictionaryArray"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "occupancy",
+          "signature": "fn occupancy(&self) -> BooleanBuffer",
+          "summary": "Computes an occupancy mask for this dictionary's values"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> Self",
+          "summary": "Returns a zero-copy slice of this array with the indicated offset and length."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "to_data",
+          "signature": "fn to_data(&self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(keys: PrimitiveArray<K>, values: ArrayRef) -> Result<Self, ArrowError>",
+          "summary": "Attempt to create a new DictionaryArray with a specified keys (indexes into the dictionary) and values (dictionary) array."
+        },
+        {
+          "name": "unary_mut",
+          "signature": "fn unary_mut<F, V>(self, op: F) -> Result<DictionaryArray<K>, DictionaryArray<K>> where V: ArrowPrimitiveType, F: Fn(V::Native) -> V::Native",
+          "summary": "Applies an unary and infallible function to a mutable dictionary array. Mutable dictionary array means that the buffers are not shared with other arrays. As a result, this mutates the buffers directly without allocating new buffers."
+        },
+        {
+          "name": "value_type",
+          "signature": "fn value_type(&self) -> DataType",
+          "summary": "Returns a clone of the value type of this list."
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &ArrayRef",
+          "summary": "Returns a reference to the dictionary values array"
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &ArrayRef",
+          "via_trait": "arrow_array::array::dictionary_array::AnyDictionaryArray"
+        },
+        {
+          "name": "with_values",
+          "signature": "fn with_values(&self, values: ArrayRef) -> Self",
+          "summary": "Returns a new dictionary with the same keys as the current instance but with a different set of dictionary values"
+        },
+        {
+          "name": "with_values",
+          "signature": "fn with_values(&self, values: ArrayRef) -> ArrayRef",
+          "via_trait": "arrow_array::array::dictionary_array::AnyDictionaryArray"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::TypedDictionaryArray",
+      "name": "TypedDictionaryArray",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct TypedDictionaryArray<'a, K: ArrowDictionaryKeyType, V>",
+      "summary": "A [`DictionaryArray`] typed on its child values array",
+      "doc": "api/arrow_array.array.dictionary_array.md#typeddictionaryarray",
+      "implements": [
+        "arrow_array::array::Array",
+        "arrow_array::array::ArrayAccessor",
+        "core::iter::traits::collect::IntoIterator"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_data",
+          "signature": "fn into_data(self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "keys",
+          "signature": "fn keys(&self) -> &'a PrimitiveArray<K>",
+          "summary": "Returns the keys of this [`TypedDictionaryArray`]"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_null_count",
+          "signature": "fn logical_null_count(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_nulls",
+          "signature": "fn logical_nulls(&self) -> Option<NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "to_data",
+          "signature": "fn to_data(&self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self, index: usize) -> Self::Item",
+          "via_trait": "arrow_array::array::ArrayAccessor"
+        },
+        {
+          "name": "value_unchecked",
+          "signature": "unsafe fn value_unchecked(&self, index: usize) -> Self::Item",
+          "via_trait": "arrow_array::array::ArrayAccessor"
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &'a V",
+          "summary": "Returns the values of this [`TypedDictionaryArray`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::AnyDictionaryArray",
+      "name": "AnyDictionaryArray",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait AnyDictionaryArray: Array",
+      "summary": "A [`DictionaryArray`] with the key type erased",
+      "doc": "api/arrow_array.array.dictionary_array.md#anydictionaryarray",
+      "implementors": [
+        "arrow_array::array::dictionary_array::DictionaryArray"
+      ],
+      "required_methods": [
+        "keys",
+        "normalized_keys",
+        "values",
+        "with_values"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "keys",
+          "signature": "fn keys(&self) -> &dyn Array",
+          "summary": "Returns the primitive keys of this dictionary as an [`Array`]"
+        },
+        {
+          "name": "normalized_keys",
+          "signature": "fn normalized_keys(&self) -> Vec<usize>",
+          "summary": "Returns the keys of this dictionary as usize"
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &ArrayRef",
+          "summary": "Returns the values of this dictionary"
+        },
+        {
+          "name": "with_values",
+          "signature": "fn with_values(&self, values: ArrayRef) -> ArrayRef",
+          "summary": "Create a new [`DictionaryArray`] replacing `values` with the new values"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::Int16DictionaryArray",
+      "name": "Int16DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int16DictionaryArray = DictionaryArray<Int16Type>",
+      "summary": "A [`DictionaryArray`] indexed by `i16`",
+      "doc": "api/arrow_array.array.dictionary_array.md#int16dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::Int32DictionaryArray",
+      "name": "Int32DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int32DictionaryArray = DictionaryArray<Int32Type>",
+      "summary": "A [`DictionaryArray`] indexed by `i32`",
+      "doc": "api/arrow_array.array.dictionary_array.md#int32dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::Int64DictionaryArray",
+      "name": "Int64DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int64DictionaryArray = DictionaryArray<Int64Type>",
+      "summary": "A [`DictionaryArray`] indexed by `i64`",
+      "doc": "api/arrow_array.array.dictionary_array.md#int64dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::Int8DictionaryArray",
+      "name": "Int8DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type Int8DictionaryArray = DictionaryArray<Int8Type>",
+      "summary": "A [`DictionaryArray`] indexed by `i8`",
+      "doc": "api/arrow_array.array.dictionary_array.md#int8dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::UInt16DictionaryArray",
+      "name": "UInt16DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt16DictionaryArray = DictionaryArray<UInt16Type>",
+      "summary": "A [`DictionaryArray`] indexed by `u16`",
+      "doc": "api/arrow_array.array.dictionary_array.md#uint16dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::UInt32DictionaryArray",
+      "name": "UInt32DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt32DictionaryArray = DictionaryArray<UInt32Type>",
+      "summary": "A [`DictionaryArray`] indexed by `u32`",
+      "doc": "api/arrow_array.array.dictionary_array.md#uint32dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::UInt64DictionaryArray",
+      "name": "UInt64DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt64DictionaryArray = DictionaryArray<UInt64Type>",
+      "summary": "A [`DictionaryArray`] indexed by `u64`",
+      "doc": "api/arrow_array.array.dictionary_array.md#uint64dictionaryarray"
+    },
+    {
+      "path": "arrow_array::array::dictionary_array::UInt8DictionaryArray",
+      "name": "UInt8DictionaryArray",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type UInt8DictionaryArray = DictionaryArray<UInt8Type>",
+      "summary": "A [`DictionaryArray`] indexed by `u8`",
+      "doc": "api/arrow_array.array.dictionary_array.md#uint8dictionaryarray"
+    }
+  ]
+}

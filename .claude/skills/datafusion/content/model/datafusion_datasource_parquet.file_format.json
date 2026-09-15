@@ -1,0 +1,270 @@
+{
+  "module": "datafusion_datasource_parquet::file_format",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.file_format.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::file_format::fetch_parquet_metadata",
+      "name": "fetch_parquet_metadata",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "async fn fetch_parquet_metadata(store: &dyn ObjectStore, object_meta: &object_store::ObjectMeta, size_hint: Option<usize>, decryption_properties: Option<&datafusion_common::encryption::FileDecryptionProperties>, file_metadata_cache: Option<std::sync::Arc<datafusion_execution::cache::cache_manager::FileMetadataCache>>) -> datafusion_common::Result<std::sync::Arc<parquet::file::metadata::ParquetMetaData>>",
+      "summary": "Fetches parquet metadata from ObjectStore for given object",
+      "doc": "api/datafusion_datasource_parquet.file_format.md#fetch_parquet_metadata",
+      "deprecated": "since 50.0.0: Use `DFParquetMetadata::fetch_metadata` instead",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::fetch_parquet_metadata",
+        "datafusion::datasource::physical_plan::parquet::fetch_parquet_metadata",
+        "datafusion_datasource_parquet::fetch_parquet_metadata"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::file_format::fetch_statistics",
+      "name": "fetch_statistics",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "async fn fetch_statistics(store: &dyn ObjectStore, table_schema: arrow::datatypes::SchemaRef, file: &object_store::ObjectMeta, metadata_size_hint: Option<usize>, decryption_properties: Option<&datafusion_common::encryption::FileDecryptionProperties>, file_metadata_cache: Option<std::sync::Arc<datafusion_execution::cache::cache_manager::FileMetadataCache>>) -> datafusion_common::Result<datafusion_common::Statistics>",
+      "summary": "Read and parse the statistics of the Parquet file at location `path`",
+      "doc": "api/datafusion_datasource_parquet.file_format.md#fetch_statistics",
+      "deprecated": "since 50.0.0: Use `DFParquetMetadata::fetch_statistics` instead",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::fetch_statistics",
+        "datafusion::datasource::physical_plan::parquet::fetch_statistics",
+        "datafusion_datasource_parquet::fetch_statistics"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::file_format::statistics_from_parquet_meta_calc",
+      "name": "statistics_from_parquet_meta_calc",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn statistics_from_parquet_meta_calc(metadata: &parquet::file::metadata::ParquetMetaData, table_schema: arrow::datatypes::SchemaRef) -> datafusion_common::Result<datafusion_common::Statistics>",
+      "summary": "",
+      "doc": null,
+      "deprecated": "since 50.0.0: Use `DFParquetMetadata::statistics_from_parquet_metadata` instead",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::statistics_from_parquet_meta_calc",
+        "datafusion::datasource::physical_plan::parquet::statistics_from_parquet_meta_calc",
+        "datafusion_datasource_parquet::statistics_from_parquet_meta_calc"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::file_format::ObjectStoreFetch",
+      "name": "ObjectStoreFetch",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ObjectStoreFetch<'a>",
+      "summary": "[`MetadataFetch`] adapter for reading bytes from an [`ObjectStore`]",
+      "doc": "api/datafusion_datasource_parquet.file_format.md#objectstorefetch",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::ObjectStoreFetch",
+        "datafusion::datasource::physical_plan::parquet::ObjectStoreFetch",
+        "datafusion_datasource_parquet::ObjectStoreFetch"
+      ],
+      "implements": [
+        "parquet::arrow::async_reader::metadata::MetadataFetch"
+      ],
+      "methods": [
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes, ParquetError>>",
+          "via_trait": "parquet::arrow::async_reader::metadata::MetadataFetch"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: &'a dyn ObjectStore, meta: &'a ObjectMeta) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::file_format::ParquetFormat",
+      "name": "ParquetFormat",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ParquetFormat",
+      "summary": "The Apache Parquet `FileFormat` implementation",
+      "doc": "api/datafusion_datasource_parquet.file_format.md#parquetformat",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::ParquetFormat",
+        "datafusion::datasource::physical_plan::parquet::ParquetFormat",
+        "datafusion_datasource_parquet::ParquetFormat"
+      ],
+      "implements": [
+        "datafusion_datasource::file_format::FileFormat"
+      ],
+      "methods": [
+        {
+          "name": "binary_as_string",
+          "signature": "fn binary_as_string(&self) -> bool",
+          "summary": "Return `true` if binary types will be read as strings."
+        },
+        {
+          "name": "coerce_int96",
+          "signature": "fn coerce_int96(&self) -> Option<String>"
+        },
+        {
+          "name": "compression_type",
+          "signature": "fn compression_type(&self) -> Option<FileCompressionType>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, state: &dyn Session, conf: FileScanConfig) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_writer_physical_plan",
+          "signature": "async fn create_writer_physical_plan(&self, input: Arc<dyn ExecutionPlan>, _state: &dyn Session, conf: FileSinkConfig, order_requirements: Option<LexRequirement>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "enable_pruning",
+          "signature": "fn enable_pruning(&self) -> bool",
+          "summary": "Return `true` if pruning is enabled"
+        },
+        {
+          "name": "file_source",
+          "signature": "fn file_source(&self, table_schema: TableSchema) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "force_view_types",
+          "signature": "fn force_view_types(&self) -> bool",
+          "summary": "Return `true` if should use view types."
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "get_ext_with_compression",
+          "signature": "fn get_ext_with_compression(&self, file_compression_type: &FileCompressionType) -> Result<String>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_ordering",
+          "signature": "async fn infer_ordering(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<Option<LexOrdering>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_schema",
+          "signature": "async fn infer_schema(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, objects: &[ObjectMeta]) -> Result<SchemaRef>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_stats",
+          "signature": "async fn infer_stats(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<Statistics>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_stats_and_ordering",
+          "signature": "async fn infer_stats_and_ordering(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, object: &ObjectMeta) -> Result<datafusion_datasource::file_format::FileMeta>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "metadata_size_hint",
+          "signature": "fn metadata_size_hint(&self) -> Option<usize>",
+          "summary": "Return the metadata size hint if set"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Construct a new Format with no local overrides"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &TableParquetOptions",
+          "summary": "Parquet options"
+        },
+        {
+          "name": "skip_metadata",
+          "signature": "fn skip_metadata(&self) -> bool",
+          "summary": "Returns `true` if schema metadata will be cleared prior to schema merging."
+        },
+        {
+          "name": "with_binary_as_string",
+          "signature": "fn with_binary_as_string(self, binary_as_string: bool) -> Self",
+          "summary": "If true, will read binary types as strings. See [`Self::binary_as_string`] for details"
+        },
+        {
+          "name": "with_coerce_int96",
+          "signature": "fn with_coerce_int96(self, time_unit: Option<String>) -> Self"
+        },
+        {
+          "name": "with_enable_pruning",
+          "signature": "fn with_enable_pruning(self, enable: bool) -> Self",
+          "summary": "Activate statistics based row group level pruning - If `None`, defaults to value on `config_options`"
+        },
+        {
+          "name": "with_force_view_types",
+          "signature": "fn with_force_view_types(self, use_views: bool) -> Self",
+          "summary": "If true, will use view types. See [`Self::force_view_types`] for details"
+        },
+        {
+          "name": "with_metadata_size_hint",
+          "signature": "fn with_metadata_size_hint(self, size_hint: Option<usize>) -> Self",
+          "summary": "Provide a hint to the size of the file metadata. If a hint is provided the reader will try and fetch the last `size_hint` bytes of the parquet file optimistically. Without a hint, two read are required. One read to fetch the 8-byte parquet…"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: TableParquetOptions) -> Self",
+          "summary": "Set Parquet options for the ParquetFormat"
+        },
+        {
+          "name": "with_skip_metadata",
+          "signature": "fn with_skip_metadata(self, skip_metadata: bool) -> Self",
+          "summary": "Tell the parquet reader to skip any metadata that may be in the file Schema. This can help avoid schema conflicts due to metadata."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::file_format::ParquetFormatFactory",
+      "name": "ParquetFormatFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ParquetFormatFactory",
+      "summary": "Factory struct used to create [ParquetFormat]",
+      "doc": "api/datafusion_datasource_parquet.file_format.md#parquetformatfactory",
+      "aliases": [
+        "datafusion::datasource::file_format::parquet::ParquetFormatFactory",
+        "datafusion::datasource::physical_plan::parquet::ParquetFormatFactory",
+        "datafusion_datasource_parquet::ParquetFormatFactory"
+      ],
+      "fields": [
+        "options"
+      ],
+      "implements": [
+        "datafusion_common::file_options::file_type::GetExt",
+        "datafusion_datasource::file_format::FileFormatFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, state: &dyn Session, format_options: &std::collections::HashMap<String, String>) -> Result<Arc<dyn FileFormat>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "default",
+          "signature": "fn default(&self) -> Arc<dyn FileFormat>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_common::file_options::file_type::GetExt"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates an instance of [ParquetFormatFactory]"
+        },
+        {
+          "name": "new_with_options",
+          "signature": "fn new_with_options(options: TableParquetOptions) -> Self",
+          "summary": "Creates an instance of [ParquetFormatFactory] with customized default options"
+        }
+      ]
+    }
+  ]
+}

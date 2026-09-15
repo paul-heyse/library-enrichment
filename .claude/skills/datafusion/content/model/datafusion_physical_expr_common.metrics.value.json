@@ -1,0 +1,494 @@
+{
+  "module": "datafusion_physical_expr_common::metrics::value",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.metrics.value.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::MetricValue",
+      "name": "MetricValue",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "enum MetricValue",
+      "summary": "Possible values for a [super::Metric].",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#metricvalue",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::MetricValue",
+        "datafusion_physical_plan::metrics::MetricValue"
+      ],
+      "variants": [
+        "OutputRows",
+        "ElapsedCompute",
+        "SpillCount",
+        "SpilledBytes",
+        "OutputBytes",
+        "OutputBatches",
+        "SpilledRows",
+        "CurrentMemoryUsage",
+        "Count",
+        "Gauge",
+        "PeakMemoryUsage",
+        "Time",
+        "StartTimestamp",
+        "EndTimestamp",
+        "PruningMetrics",
+        "Ratio",
+        "Custom"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "aggregate",
+          "signature": "fn aggregate(&mut self, other: &Self)",
+          "summary": "Aggregates the value of other to `self`. panic's if the types are mismatched or aggregating does not make sense for this value"
+        },
+        {
+          "name": "as_usize",
+          "signature": "fn as_usize(&self) -> usize",
+          "summary": "Return the value of the metric as a usize value, used to aggregate metric value across partitions."
+        },
+        {
+          "name": "display_sort_key",
+          "signature": "fn display_sort_key(&self) -> u8",
+          "summary": "Returns a number by which to sort metrics by display. Lower numbers are \"more useful\" (and displayed first)"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display",
+          "summary": "Prints the value of this metric"
+        },
+        {
+          "name": "is_timestamp",
+          "signature": "fn is_timestamp(&self) -> bool",
+          "summary": "returns true if this metric has a timestamp value"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Return the name of this SQL metric"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty(&self) -> Self",
+          "summary": "create a new MetricValue with the same type as `self` suitable for accumulating"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::RatioMergeStrategy",
+      "name": "RatioMergeStrategy",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "enum RatioMergeStrategy",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::RatioMergeStrategy",
+        "datafusion_physical_plan::metrics::RatioMergeStrategy"
+      ],
+      "variants": [
+        "AddPartAddTotal",
+        "AddPartSetTotal",
+        "SetPartAddTotal"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::Count",
+      "name": "Count",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Count",
+      "summary": "A counter to record things such as number of input or output rows",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#count",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::Count",
+        "datafusion_physical_plan::metrics::Count"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&self, n: usize)",
+          "summary": "Add `n` to the metric's value"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "create a new counter"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> usize",
+          "summary": "Get the current value"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::Gauge",
+      "name": "Gauge",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Gauge",
+      "summary": "A gauge is the simplest metrics type. It just returns a value. For example, you can easily expose current memory consumption with a gauge.",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#gauge",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::Gauge",
+        "datafusion_physical_plan::metrics::Gauge"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&self, n: usize)",
+          "summary": "Add `n` to the metric's value"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "create a new gauge"
+        },
+        {
+          "name": "set",
+          "signature": "fn set(&self, n: usize) -> usize",
+          "summary": "Set the metric's value to `n` and return the previous value"
+        },
+        {
+          "name": "set_max",
+          "signature": "fn set_max(&self, n: usize)",
+          "summary": "Set metric's value to maximum of `n` and current value"
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(&self, n: usize)",
+          "summary": "Sub `n` from the metric's value"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> usize",
+          "summary": "Get the current value"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::PruningMetrics",
+      "name": "PruningMetrics",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct PruningMetrics",
+      "summary": "Counters tracking pruning metrics",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#pruningmetrics",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::PruningMetrics",
+        "datafusion_physical_plan::metrics::PruningMetrics"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add_fully_matched",
+          "signature": "fn add_fully_matched(&self, n: usize)",
+          "summary": "Add `n` to the metric's fully matched value"
+        },
+        {
+          "name": "add_matched",
+          "signature": "fn add_matched(&self, n: usize)",
+          "summary": "Add `n` to the metric's matched value"
+        },
+        {
+          "name": "add_pruned",
+          "signature": "fn add_pruned(&self, n: usize)",
+          "summary": "Add `n` to the metric's pruned value"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fully_matched",
+          "signature": "fn fully_matched(&self) -> usize",
+          "summary": "Number of items fully matched"
+        },
+        {
+          "name": "matched",
+          "signature": "fn matched(&self) -> usize",
+          "summary": "Number of items matched (not pruned)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "create a new PruningMetrics"
+        },
+        {
+          "name": "pruned",
+          "signature": "fn pruned(&self) -> usize",
+          "summary": "Number of items pruned"
+        },
+        {
+          "name": "subtract_matched",
+          "signature": "fn subtract_matched(&self, n: usize)",
+          "summary": "Subtract `n` to the metric's matched value."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::RatioMetrics",
+      "name": "RatioMetrics",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct RatioMetrics",
+      "summary": "Counters tracking ratio metrics (e.g. matched vs total)",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#ratiometrics",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::RatioMetrics",
+        "datafusion_physical_plan::metrics::RatioMetrics"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add_part",
+          "signature": "fn add_part(&self, n: usize)",
+          "summary": "Add `n` to the numerator (`part`) value"
+        },
+        {
+          "name": "add_total",
+          "signature": "fn add_total(&self, n: usize)",
+          "summary": "Add `n` to the denominator (`total`) value"
+        },
+        {
+          "name": "display_raw_values",
+          "signature": "fn display_raw_values(&self) -> bool",
+          "summary": "Whether `Display` for this metric appends the raw `(part/total)` numbers alongside the percentage"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display",
+          "summary": "Format the ratio to a format like '18.26% (220/1150)'"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(&self, other: &Self)",
+          "summary": "Merge the value from `other` into `self`"
+        },
+        {
+          "name": "merge_strategy",
+          "signature": "fn merge_strategy(&self) -> &RatioMergeStrategy",
+          "summary": "Return the strategy used to merge two [`RatioMetrics`] values"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`RatioMetrics`]"
+        },
+        {
+          "name": "part",
+          "signature": "fn part(&self) -> usize",
+          "summary": "Return the numerator (`part`) value"
+        },
+        {
+          "name": "set_part",
+          "signature": "fn set_part(&self, n: usize)",
+          "summary": "Set the numerator (`part`) value to `n`, overwriting any existing value"
+        },
+        {
+          "name": "set_total",
+          "signature": "fn set_total(&self, n: usize)",
+          "summary": "Set the denominator (`total`) value to `n`, overwriting any existing value"
+        },
+        {
+          "name": "total",
+          "signature": "fn total(&self) -> usize",
+          "summary": "Return the denominator (`total`) value"
+        },
+        {
+          "name": "with_display_raw_values",
+          "signature": "fn with_display_raw_values(self, display_raw_values: bool) -> Self"
+        },
+        {
+          "name": "with_merge_strategy",
+          "signature": "fn with_merge_strategy(self, merge_strategy: RatioMergeStrategy) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::ScopedTimerGuard",
+      "name": "ScopedTimerGuard",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct ScopedTimerGuard<'a>",
+      "summary": "RAAI structure that adds all time between its construction and destruction to the CPU time or the first call to `stop` whichever comes first",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#scopedtimerguard",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::ScopedTimerGuard",
+        "datafusion_physical_plan::metrics::ScopedTimerGuard"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "done",
+          "signature": "fn done(self)",
+          "summary": "Stop the timer, record the time taken and consume self"
+        },
+        {
+          "name": "done_with",
+          "signature": "fn done_with(self, end_time: Instant)",
+          "summary": "Stop the timer, record the time taken since `end_time` endpoint, and consume self."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "restart",
+          "signature": "fn restart(&mut self)",
+          "summary": "Restarts the timer recording from the current time"
+        },
+        {
+          "name": "stop",
+          "signature": "fn stop(&mut self)",
+          "summary": "Stop the timer timing and record the time taken"
+        },
+        {
+          "name": "stop_with",
+          "signature": "fn stop_with(&mut self, end_time: Instant)",
+          "summary": "Stop the timer timing and record the time taken since the given endpoint."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::Time",
+      "name": "Time",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Time",
+      "summary": "Measure a potentially non contiguous duration of time",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#time",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::Time",
+        "datafusion_physical_plan::metrics::Time"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&self, other: &Time)",
+          "summary": "Add the number of nanoseconds of other `Time` to self"
+        },
+        {
+          "name": "add_duration",
+          "signature": "fn add_duration(&self, duration: Duration)",
+          "summary": "Add duration of time to self"
+        },
+        {
+          "name": "add_elapsed",
+          "signature": "fn add_elapsed(&self, start: Instant)",
+          "summary": "Add elapsed nanoseconds since `start`to self"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`Time`] wrapper suitable for recording elapsed times for operations."
+        },
+        {
+          "name": "timer",
+          "signature": "fn timer(&self) -> ScopedTimerGuard<'_>",
+          "summary": "return a scoped guard that adds the amount of time elapsed between its creation and its drop or call to `stop` to the underlying metric."
+        },
+        {
+          "name": "timer_with",
+          "signature": "fn timer_with(&self, now: Instant) -> ScopedTimerGuard<'_>",
+          "summary": "Return a scoped guard that adds the amount of time elapsed between the given instant and its drop (or the call to `stop`) to the underlying metric"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> usize",
+          "summary": "Get the number of nanoseconds record by this Time metric"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::value::Timestamp",
+      "name": "Timestamp",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Timestamp",
+      "summary": "Stores a single timestamp, stored as the number of nanoseconds elapsed from Jan 1, 1970 UTC",
+      "doc": "api/datafusion_physical_expr_common.metrics.value.md#timestamp",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::Timestamp",
+        "datafusion_physical_plan::metrics::Timestamp"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new timestamp and sets its value to 0"
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self)",
+          "summary": "Sets the timestamps value to the current time"
+        },
+        {
+          "name": "set",
+          "signature": "fn set(&self, now: DateTime<Utc>)",
+          "summary": "Sets the timestamps value to a specified time"
+        },
+        {
+          "name": "update_to_max",
+          "signature": "fn update_to_max(&self, other: &Timestamp)",
+          "summary": "sets the value of this timestamp to the maximum of this and other"
+        },
+        {
+          "name": "update_to_min",
+          "signature": "fn update_to_min(&self, other: &Timestamp)",
+          "summary": "sets the value of this timestamp to the minimum of this and other"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> Option<DateTime<Utc>>",
+          "summary": "return the timestamps value at the last time `record()` was called."
+        }
+      ]
+    }
+  ]
+}

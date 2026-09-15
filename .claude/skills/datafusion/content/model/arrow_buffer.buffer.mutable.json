@@ -1,0 +1,216 @@
+{
+  "module": "arrow_buffer::buffer::mutable",
+  "crate": "arrow-buffer",
+  "api": "api/arrow_buffer.buffer.mutable.md",
+  "items": [
+    {
+      "path": "arrow_buffer::buffer::mutable::MutableBuffer",
+      "name": "MutableBuffer",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct MutableBuffer",
+      "summary": "A [`MutableBuffer`] is a wrapper over memory regions, used to build [`Buffer`]s out of items or slices of items.",
+      "doc": "api/arrow_buffer.buffer.mutable.md#mutablebuffer",
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "as_mut_ptr",
+          "signature": "fn as_mut_ptr(&mut self) -> *mut u8",
+          "summary": "Returns a mutable raw pointer to this buffer's internal memory This pointer is guaranteed to be aligned along cache-lines."
+        },
+        {
+          "name": "as_ptr",
+          "signature": "const fn as_ptr(&self) -> *const u8",
+          "summary": "Returns a raw pointer to this buffer's internal memory This pointer is guaranteed to be aligned along cache-lines."
+        },
+        {
+          "name": "as_slice",
+          "signature": "fn as_slice(&self) -> &[u8]",
+          "summary": "Returns the data stored in this buffer as a slice."
+        },
+        {
+          "name": "as_slice_mut",
+          "signature": "fn as_slice_mut(&mut self) -> &mut [u8]",
+          "summary": "Returns the data stored in this buffer as a mutable slice."
+        },
+        {
+          "name": "capacity",
+          "signature": "const fn capacity(&self) -> usize",
+          "summary": "Returns the total capacity in this buffer, in bytes."
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+          "summary": "Register this [`MutableBuffer`] with the provided [`MemoryPool`]"
+        },
+        {
+          "name": "clear",
+          "signature": "fn clear(&mut self)",
+          "summary": "Clear all existing data from this buffer."
+        },
+        {
+          "name": "collect_bool",
+          "signature": "fn collect_bool<F: FnMut(usize) -> bool>(len: usize, f: F) -> Self",
+          "summary": "Invokes `f` with values `0..len` collecting the boolean results into a new `MutableBuffer`"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &[u8]",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut [u8]",
+          "via_trait": "core::ops::deref::DerefMut"
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "extend_bool_trusted_len",
+          "signature": "unsafe fn extend_bool_trusted_len<I: Iterator<Item = bool>>(&mut self, iter: I, offset: usize)",
+          "summary": "Extends this buffer with boolean values."
+        },
+        {
+          "name": "extend_from_slice",
+          "signature": "fn extend_from_slice<T: ArrowNativeType>(&mut self, items: &[T])",
+          "summary": "Extends this buffer from a slice of items that can be represented in bytes, increasing its capacity if needed. # Example ``` # use arrow_buffer::buffer::MutableBuffer; let mut buffer = MutableBuffer::new(0); buffer.extend_from_slice(&[2u32…"
+        },
+        {
+          "name": "extend_zeros",
+          "signature": "fn extend_zeros(&mut self, additional: usize)",
+          "summary": "Extends the buffer by `additional` bytes equal to `0u8`, incrementing its capacity if needed."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Vec<T>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = bool>",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_len_zeroed",
+          "signature": "fn from_len_zeroed(len: usize) -> Self",
+          "summary": "Allocates a new [MutableBuffer] with `len` and capacity to be at least `len` where all bytes are guaranteed to be `0u8`. # Example ``` # use arrow_buffer::buffer::{Buffer, MutableBuffer}; let mut buffer = MutableBuffer::from_len_zeroed(127…"
+        },
+        {
+          "name": "from_trusted_len_iter",
+          "signature": "unsafe fn from_trusted_len_iter<T: ArrowNativeType, I: Iterator<Item = T>>(iterator: I) -> Self",
+          "summary": "Creates a [`MutableBuffer`] from an [`Iterator`] with a trusted (upper) length. Prefer this to `collect` whenever possible, as it is faster ~60% faster. # Example ``` # use arrow_buffer::buffer::MutableBuffer; let v = vec![1u32]; let iter…"
+        },
+        {
+          "name": "from_trusted_len_iter_bool",
+          "signature": "unsafe fn from_trusted_len_iter_bool<I: Iterator<Item = bool>>(iterator: I) -> Self",
+          "summary": "Creates a [`MutableBuffer`] from a boolean [`Iterator`] with a trusted (upper) length. # use arrow_buffer::buffer::MutableBuffer; # Example ``` # use arrow_buffer::buffer::MutableBuffer; let v = vec![false, true, false]; let iter = v.iter(…"
+        },
+        {
+          "name": "is_empty",
+          "signature": "const fn is_empty(&self) -> bool",
+          "summary": "Returns whether this buffer is empty or not."
+        },
+        {
+          "name": "len",
+          "signature": "const fn len(&self) -> usize",
+          "summary": "Returns the length (the number of bytes written) in this buffer. The invariant `buffer.len() <= buffer.capacity()` is always upheld."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(capacity: usize) -> Self",
+          "summary": "Allocate a new [MutableBuffer] with initial capacity to be at least `capacity`."
+        },
+        {
+          "name": "new_null",
+          "signature": "fn new_null(len: usize) -> Self",
+          "summary": "creates a new [MutableBuffer] with capacity and length capable of holding `len` bits. This is useful to create a buffer for packed bitmaps."
+        },
+        {
+          "name": "push",
+          "signature": "fn push<T: ToByteSlice>(&mut self, item: T)",
+          "summary": "Extends the buffer with a new item, increasing its capacity if needed. # Example ``` # use arrow_buffer::buffer::MutableBuffer; let mut buffer = MutableBuffer::new(0); buffer.push(256u32); assert_eq!(buffer.len(), 4) // u32 has 4 bytes ```"
+        },
+        {
+          "name": "push_unchecked",
+          "signature": "unsafe fn push_unchecked<T: ToByteSlice>(&mut self, item: T)",
+          "summary": "Extends the buffer with a new item, without checking for sufficient capacity # Safety Caller must ensure that the capacity()-len()>=`size_of<T>`()"
+        },
+        {
+          "name": "repeat_slice_n_times",
+          "signature": "fn repeat_slice_n_times<T: ArrowNativeType>(&mut self, slice_to_repeat: &[T], repeat_count: usize)",
+          "summary": "Adding to this mutable buffer `slice_to_repeat` repeated `repeat_count` times."
+        },
+        {
+          "name": "reserve",
+          "signature": "fn reserve(&mut self, additional: usize)",
+          "summary": "Ensures that this buffer has at least `self.len + additional` bytes. This re-allocates iff `self.len + additional > capacity`. # Example ``` # use arrow_buffer::buffer::{Buffer, MutableBuffer}; let mut buffer = MutableBuffer::new(0); buffe…"
+        },
+        {
+          "name": "resize",
+          "signature": "fn resize(&mut self, new_len: usize, value: u8)",
+          "summary": "Resizes the buffer, either truncating its contents (with no change in capacity), or growing it (potentially reallocating it) and writing `value` in the newly available bytes. # Example ``` # use arrow_buffer::buffer::{Buffer, MutableBuffer…"
+        },
+        {
+          "name": "set_len",
+          "signature": "unsafe fn set_len(&mut self, len: usize)",
+          "summary": "# Safety The caller must ensure that the buffer was properly initialized up to `len`."
+        },
+        {
+          "name": "set_null_bits",
+          "signature": "fn set_null_bits(&mut self, start: usize, count: usize)",
+          "summary": "Ensure that `count` bytes from `start` contain zero bits"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "summary": "Shrinks the capacity of the buffer as much as possible. The new capacity will aligned to the nearest 64 bit alignment."
+        },
+        {
+          "name": "truncate",
+          "signature": "fn truncate(&mut self, len: usize)",
+          "summary": "Truncates this buffer to `len` bytes"
+        },
+        {
+          "name": "try_from_trusted_len_iter",
+          "signature": "unsafe fn try_from_trusted_len_iter<E, T: ArrowNativeType, I: Iterator<Item = Result<T, E>>>(iterator: I) -> Result<Self, E>",
+          "summary": "Creates a [`MutableBuffer`] from an [`Iterator`] with a trusted (upper) length or errors if any of the items of the iterator is an error. Prefer this to `collect` whenever possible, as it is faster ~60% faster."
+        },
+        {
+          "name": "typed_data",
+          "signature": "fn typed_data<T: ArrowNativeType>(&self) -> &[T]",
+          "summary": "View buffer as a immutable slice of a specific type."
+        },
+        {
+          "name": "typed_data_mut",
+          "signature": "fn typed_data_mut<T: ArrowNativeType>(&mut self) -> &mut [T]",
+          "summary": "View this buffer as a mutable slice of a specific type."
+        },
+        {
+          "name": "with_bitset",
+          "signature": "fn with_bitset(self, end: usize, val: bool) -> Self",
+          "summary": "Set the bits in the range of `[0, end)` to 0 (if `val` is false), or 1 (if `val` is true). Also extend the length of this buffer to be `end`."
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(capacity: usize) -> Self",
+          "summary": "Allocate a new [MutableBuffer] with initial capacity to be at least `capacity`."
+        }
+      ]
+    }
+  ]
+}

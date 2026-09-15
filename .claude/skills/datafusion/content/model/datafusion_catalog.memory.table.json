@@ -1,0 +1,96 @@
+{
+  "module": "datafusion_catalog::memory::table",
+  "crate": "datafusion-catalog",
+  "api": "api/datafusion_catalog.memory.table.md",
+  "items": [
+    {
+      "path": "datafusion_catalog::memory::table::MemTable",
+      "name": "MemTable",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "signature": "struct MemTable",
+      "summary": "In-memory data source for presenting a `Vec<RecordBatch>` as a data source that can be queried by DataFusion. This allows data to be pre-loaded into memory and then repeatedly queried without incurring additional file I/O overhead.",
+      "doc": "api/datafusion_catalog.memory.table.md#memtable",
+      "aliases": [
+        "datafusion::catalog::MemTable",
+        "datafusion::datasource::MemTable",
+        "datafusion_catalog::MemTable"
+      ],
+      "fields": [
+        "batches",
+        "sort_order"
+      ],
+      "implements": [
+        "datafusion_session::table::TableProvider"
+      ],
+      "methods": [
+        {
+          "name": "constraints",
+          "signature": "fn constraints(&self) -> Option<&Constraints>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "delete_from",
+          "signature": "async fn delete_from(&self, state: &dyn Session, filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "get_column_default",
+          "signature": "fn get_column_default(&self, column: &str) -> Option<&Expr>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "insert_into",
+          "signature": "async fn insert_into(&self, _state: &dyn Session, input: Arc<dyn ExecutionPlan>, insert_op: InsertOp) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider",
+          "summary": "Returns an ExecutionPlan that inserts the execution results of a given [`ExecutionPlan`] into this [`MemTable`]."
+        },
+        {
+          "name": "load",
+          "signature": "async fn load(t: Arc<dyn TableProvider>, output_partitions: Option<usize>, state: &dyn Session) -> Result<Self>",
+          "summary": "Create a mem table by reading from another data source"
+        },
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, _filters: &[Expr], _limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "table_type",
+          "signature": "fn table_type(&self) -> TableType",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(schema: SchemaRef, partitions: Vec<Vec<RecordBatch>>) -> Result<Self>",
+          "summary": "Create a new in-memory table from the provided schema and record batches."
+        },
+        {
+          "name": "update",
+          "signature": "async fn update(&self, state: &dyn Session, assignments: Vec<(String, Expr)>, filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "with_column_defaults",
+          "signature": "fn with_column_defaults(self, column_defaults: HashMap<String, Expr>) -> Self",
+          "summary": "Assign column defaults"
+        },
+        {
+          "name": "with_constraints",
+          "signature": "fn with_constraints(self, constraints: Constraints) -> Self",
+          "summary": "Assign constraints"
+        },
+        {
+          "name": "with_sort_order",
+          "signature": "fn with_sort_order(self, sort_order: Vec<Vec<SortExpr>>) -> Self",
+          "summary": "Specify an optional pre-known sort order(s). Must be `SortExpr`s."
+        }
+      ]
+    }
+  ]
+}

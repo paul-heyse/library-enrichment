@@ -87,6 +87,9 @@ pub struct SchemaCompatibility {
 /// Execution-profile availability (blueprint §10).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Sandbox {
+    /// Implemented execution routes assessed by the same admission logic used by tools.
+    /// Empty when no running service is available to assess qualification and cleanup.
+    pub execution_routes: Vec<ExecutionReadiness>,
     /// Profiles configuration has enabled.
     ///
     /// Read from `LIBENR_CONFIG`; `enabled_profiles_source` names the file, or says these are
@@ -295,4 +298,25 @@ pub struct StatusData {
     pub features: Vec<ComponentStatus>,
     /// Job queue and cache health.
     pub health: Health,
+}
+
+/// A concrete execution prerequisite; configuration presence never implies qualification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecutionPrerequisite {
+    EnabledProfile,
+    ImmutableImage,
+    Qualification,
+    Cleanup,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutionReadiness {
+    pub ecosystem: crate::identity::Ecosystem,
+    pub profile: crate::policy::ExecutionProfile,
+    pub available: bool,
+    pub image_id: Option<String>,
+    pub prerequisites: Vec<ExecutionPrerequisite>,
+    pub actions: Vec<super::RecoveryAction>,
 }

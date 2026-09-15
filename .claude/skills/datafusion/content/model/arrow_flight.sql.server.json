@@ -1,0 +1,361 @@
+{
+  "module": "arrow_flight::sql::server",
+  "crate": "arrow-flight",
+  "api": "api/arrow_flight.sql.server.md",
+  "items": [
+    {
+      "path": "arrow_flight::sql::server::DoPutError",
+      "name": "DoPutError",
+      "kind": "enum",
+      "crate": "arrow-flight",
+      "signature": "enum DoPutError",
+      "summary": "Unrecoverable errors associated with `do_put` requests",
+      "doc": "api/arrow_flight.sql.server.md#doputerror",
+      "variants": [
+        "MissingCommand",
+        "MissingFlightDescriptor"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::sql::server::PeekableFlightDataStream",
+      "name": "PeekableFlightDataStream",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct PeekableFlightDataStream",
+      "summary": "A wrapper around [`Streaming<FlightData>`] that allows \"peeking\" at the message at the front of the stream without consuming it.",
+      "doc": "api/arrow_flight.sql.server.md#peekableflightdatastream",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Streaming<FlightData>",
+          "summary": "Convert this stream into a `Streaming<FlightData>`. Any messages observed through [`Self::peek`] will be lost after the conversion."
+        },
+        {
+          "name": "into_peekable",
+          "signature": "fn into_peekable(self) -> Peekable<Streaming<FlightData>>",
+          "summary": "Convert this stream into a `Peekable<Streaming<FlightData>>`. Preserves the state of the stream, so that calls to [`Self::peek`] and [`Self::poll_next`] are the same."
+        },
+        {
+          "name": "peek",
+          "signature": "async fn peek(&mut self) -> Option<&Result<FlightData, Status>>",
+          "summary": "Peek at the head of this stream without advancing it."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::sql::server::FlightSqlService",
+      "name": "FlightSqlService",
+      "kind": "trait",
+      "crate": "arrow-flight",
+      "signature": "trait FlightSqlService: Sync + Send + Sized + 'static",
+      "summary": "Implements FlightSqlService to handle the flight sql protocol",
+      "doc": "api/arrow_flight.sql.server.md#flightsqlservice",
+      "required_methods": [
+        "register_sql_info"
+      ],
+      "provided_methods": [
+        "do_action_begin_savepoint",
+        "do_action_begin_transaction",
+        "do_action_cancel_query",
+        "do_action_close_prepared_statement",
+        "do_action_create_prepared_statement",
+        "do_action_create_prepared_substrait_plan",
+        "do_action_end_savepoint",
+        "do_action_end_transaction",
+        "do_action_fallback",
+        "do_exchange_fallback",
+        "do_get_catalogs",
+        "do_get_cross_reference",
+        "do_get_exported_keys",
+        "do_get_fallback",
+        "do_get_imported_keys",
+        "do_get_prepared_statement",
+        "do_get_primary_keys",
+        "do_get_schemas",
+        "do_get_sql_info",
+        "do_get_statement",
+        "do_get_table_types",
+        "do_get_tables",
+        "do_get_xdbc_type_info",
+        "do_handshake",
+        "do_put_error_callback",
+        "do_put_fallback",
+        "do_put_prepared_statement_query",
+        "do_put_prepared_statement_update",
+        "do_put_statement_ingest",
+        "do_put_statement_update",
+        "do_put_substrait_plan",
+        "get_flight_info_catalogs",
+        "get_flight_info_cross_reference",
+        "get_flight_info_exported_keys",
+        "get_flight_info_fallback",
+        "get_flight_info_imported_keys",
+        "get_flight_info_prepared_statement",
+        "get_flight_info_primary_keys",
+        "get_flight_info_schemas",
+        "get_flight_info_sql_info",
+        "get_flight_info_statement",
+        "get_flight_info_substrait_plan",
+        "get_flight_info_table_types",
+        "get_flight_info_tables",
+        "get_flight_info_xdbc_type_info",
+        "list_custom_actions"
+      ],
+      "methods": [
+        {
+          "name": "do_action_begin_savepoint",
+          "signature": "async fn do_action_begin_savepoint(&self, _query: ActionBeginSavepointRequest, _request: Request<Action>) -> Result<ActionBeginSavepointResult, Status>",
+          "summary": "Begin a savepoint"
+        },
+        {
+          "name": "do_action_begin_transaction",
+          "signature": "async fn do_action_begin_transaction(&self, _query: ActionBeginTransactionRequest, _request: Request<Action>) -> Result<ActionBeginTransactionResult, Status>",
+          "summary": "Begin a transaction"
+        },
+        {
+          "name": "do_action_cancel_query",
+          "signature": "async fn do_action_cancel_query(&self, _query: ActionCancelQueryRequest, _request: Request<Action>) -> Result<ActionCancelQueryResult, Status>",
+          "summary": "Cancel a query"
+        },
+        {
+          "name": "do_action_close_prepared_statement",
+          "signature": "async fn do_action_close_prepared_statement(&self, _query: ActionClosePreparedStatementRequest, _request: Request<Action>) -> Result<(), Status>",
+          "summary": "Close a prepared statement."
+        },
+        {
+          "name": "do_action_create_prepared_statement",
+          "signature": "async fn do_action_create_prepared_statement(&self, _query: ActionCreatePreparedStatementRequest, _request: Request<Action>) -> Result<ActionCreatePreparedStatementResult, Status>",
+          "summary": "Create a prepared statement from given SQL statement."
+        },
+        {
+          "name": "do_action_create_prepared_substrait_plan",
+          "signature": "async fn do_action_create_prepared_substrait_plan(&self, _query: ActionCreatePreparedSubstraitPlanRequest, _request: Request<Action>) -> Result<ActionCreatePreparedStatementResult, Status>",
+          "summary": "Create a prepared substrait plan."
+        },
+        {
+          "name": "do_action_end_savepoint",
+          "signature": "async fn do_action_end_savepoint(&self, _query: ActionEndSavepointRequest, _request: Request<Action>) -> Result<(), Status>",
+          "summary": "End a savepoint"
+        },
+        {
+          "name": "do_action_end_transaction",
+          "signature": "async fn do_action_end_transaction(&self, _query: ActionEndTransactionRequest, _request: Request<Action>) -> Result<(), Status>",
+          "summary": "End a transaction"
+        },
+        {
+          "name": "do_action_fallback",
+          "signature": "async fn do_action_fallback(&self, request: Request<Action>) -> Result<Response<<Self as FlightService>::DoActionStream>, Status>",
+          "summary": "Implementors may override to handle additional calls to do_action()"
+        },
+        {
+          "name": "do_exchange_fallback",
+          "signature": "async fn do_exchange_fallback(&self, _request: Request<Streaming<FlightData>>) -> Result<Response<<Self as FlightService>::DoExchangeStream>, Status>",
+          "summary": "do_exchange Implementors may override to handle additional calls to do_exchange()"
+        },
+        {
+          "name": "do_get_catalogs",
+          "signature": "async fn do_get_catalogs(&self, _query: CommandGetCatalogs, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the list of catalogs."
+        },
+        {
+          "name": "do_get_cross_reference",
+          "signature": "async fn do_get_cross_reference(&self, _query: CommandGetCrossReference, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the cross reference."
+        },
+        {
+          "name": "do_get_exported_keys",
+          "signature": "async fn do_get_exported_keys(&self, _query: CommandGetExportedKeys, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the exported keys."
+        },
+        {
+          "name": "do_get_fallback",
+          "signature": "async fn do_get_fallback(&self, _request: Request<Ticket>, message: Any) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Implementors may override to handle additional calls to do_get()"
+        },
+        {
+          "name": "do_get_imported_keys",
+          "signature": "async fn do_get_imported_keys(&self, _query: CommandGetImportedKeys, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the imported keys."
+        },
+        {
+          "name": "do_get_prepared_statement",
+          "signature": "async fn do_get_prepared_statement(&self, _query: CommandPreparedStatementQuery, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the prepared statement query results."
+        },
+        {
+          "name": "do_get_primary_keys",
+          "signature": "async fn do_get_primary_keys(&self, _query: CommandGetPrimaryKeys, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the primary and foreign keys."
+        },
+        {
+          "name": "do_get_schemas",
+          "signature": "async fn do_get_schemas(&self, _query: CommandGetDbSchemas, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the list of schemas."
+        },
+        {
+          "name": "do_get_sql_info",
+          "signature": "async fn do_get_sql_info(&self, _query: CommandGetSqlInfo, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the list of SqlInfo results."
+        },
+        {
+          "name": "do_get_statement",
+          "signature": "async fn do_get_statement(&self, _ticket: TicketStatementQuery, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the query results."
+        },
+        {
+          "name": "do_get_table_types",
+          "signature": "async fn do_get_table_types(&self, _query: CommandGetTableTypes, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the table types."
+        },
+        {
+          "name": "do_get_tables",
+          "signature": "async fn do_get_tables(&self, _query: CommandGetTables, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the list of tables."
+        },
+        {
+          "name": "do_get_xdbc_type_info",
+          "signature": "async fn do_get_xdbc_type_info(&self, _query: CommandGetXdbcTypeInfo, _request: Request<Ticket>) -> Result<Response<<Self as FlightService>::DoGetStream>, Status>",
+          "summary": "Get a FlightDataStream containing the data related to the supported XDBC types."
+        },
+        {
+          "name": "do_handshake",
+          "signature": "async fn do_handshake(&self, _request: Request<Streaming<HandshakeRequest>>) -> Result<Response<Pin<Box<dyn Stream<Item = Result<HandshakeResponse, Status>> + Send>>>, Status>",
+          "summary": "Accept authentication and return a token <https://arrow.apache.org/docs/format/Flight.html#authentication>"
+        },
+        {
+          "name": "do_put_error_callback",
+          "signature": "async fn do_put_error_callback(&self, _request: Request<PeekableFlightDataStream>, error: DoPutError) -> Result<Response<<Self as FlightService>::DoPutStream>, Status>",
+          "summary": "Implementors may override to handle do_put errors"
+        },
+        {
+          "name": "do_put_fallback",
+          "signature": "async fn do_put_fallback(&self, _request: Request<PeekableFlightDataStream>, message: Any) -> Result<Response<<Self as FlightService>::DoPutStream>, Status>",
+          "summary": "Implementors may override to handle additional calls to do_put()"
+        },
+        {
+          "name": "do_put_prepared_statement_query",
+          "signature": "async fn do_put_prepared_statement_query(&self, _query: CommandPreparedStatementQuery, _request: Request<PeekableFlightDataStream>) -> Result<DoPutPreparedStatementResult, Status>",
+          "summary": "Bind parameters to given prepared statement."
+        },
+        {
+          "name": "do_put_prepared_statement_update",
+          "signature": "async fn do_put_prepared_statement_update(&self, _query: CommandPreparedStatementUpdate, _request: Request<PeekableFlightDataStream>) -> Result<i64, Status>",
+          "summary": "Execute an update SQL prepared statement."
+        },
+        {
+          "name": "do_put_statement_ingest",
+          "signature": "async fn do_put_statement_ingest(&self, _ticket: CommandStatementIngest, _request: Request<PeekableFlightDataStream>) -> Result<i64, Status>",
+          "summary": "Execute a bulk ingestion."
+        },
+        {
+          "name": "do_put_statement_update",
+          "signature": "async fn do_put_statement_update(&self, _ticket: CommandStatementUpdate, _request: Request<PeekableFlightDataStream>) -> Result<i64, Status>",
+          "summary": "Execute an update SQL statement."
+        },
+        {
+          "name": "do_put_substrait_plan",
+          "signature": "async fn do_put_substrait_plan(&self, _query: CommandStatementSubstraitPlan, _request: Request<PeekableFlightDataStream>) -> Result<i64, Status>",
+          "summary": "Execute a substrait plan"
+        },
+        {
+          "name": "get_flight_info_catalogs",
+          "signature": "async fn get_flight_info_catalogs(&self, _query: CommandGetCatalogs, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for listing catalogs."
+        },
+        {
+          "name": "get_flight_info_cross_reference",
+          "signature": "async fn get_flight_info_cross_reference(&self, _query: CommandGetCrossReference, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about cross reference."
+        },
+        {
+          "name": "get_flight_info_exported_keys",
+          "signature": "async fn get_flight_info_exported_keys(&self, _query: CommandGetExportedKeys, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about exported keys."
+        },
+        {
+          "name": "get_flight_info_fallback",
+          "signature": "async fn get_flight_info_fallback(&self, cmd: Command, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Implementors may override to handle additional calls to get_flight_info()"
+        },
+        {
+          "name": "get_flight_info_imported_keys",
+          "signature": "async fn get_flight_info_imported_keys(&self, _query: CommandGetImportedKeys, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about imported keys."
+        },
+        {
+          "name": "get_flight_info_prepared_statement",
+          "signature": "async fn get_flight_info_prepared_statement(&self, _query: CommandPreparedStatementQuery, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for executing an already created prepared statement."
+        },
+        {
+          "name": "get_flight_info_primary_keys",
+          "signature": "async fn get_flight_info_primary_keys(&self, _query: CommandGetPrimaryKeys, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about primary and foreign keys."
+        },
+        {
+          "name": "get_flight_info_schemas",
+          "signature": "async fn get_flight_info_schemas(&self, _query: CommandGetDbSchemas, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for listing schemas."
+        },
+        {
+          "name": "get_flight_info_sql_info",
+          "signature": "async fn get_flight_info_sql_info(&self, _query: CommandGetSqlInfo, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for retrieving other information (See SqlInfo)."
+        },
+        {
+          "name": "get_flight_info_statement",
+          "signature": "async fn get_flight_info_statement(&self, _query: CommandStatementQuery, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for executing a SQL query."
+        },
+        {
+          "name": "get_flight_info_substrait_plan",
+          "signature": "async fn get_flight_info_substrait_plan(&self, _query: CommandStatementSubstraitPlan, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for executing a substrait plan."
+        },
+        {
+          "name": "get_flight_info_table_types",
+          "signature": "async fn get_flight_info_table_types(&self, _query: CommandGetTableTypes, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about the table types."
+        },
+        {
+          "name": "get_flight_info_tables",
+          "signature": "async fn get_flight_info_tables(&self, _query: CommandGetTables, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo for listing tables."
+        },
+        {
+          "name": "get_flight_info_xdbc_type_info",
+          "signature": "async fn get_flight_info_xdbc_type_info(&self, _query: CommandGetXdbcTypeInfo, _request: Request<FlightDescriptor>) -> Result<Response<FlightInfo>, Status>",
+          "summary": "Get a FlightInfo to extract information about the supported XDBC types."
+        },
+        {
+          "name": "list_custom_actions",
+          "signature": "async fn list_custom_actions(&self) -> Option<Vec<Result<ActionType, Status>>>",
+          "summary": "Add custom actions to list_actions() result"
+        },
+        {
+          "name": "register_sql_info",
+          "signature": "async fn register_sql_info(&self, id: i32, result: &SqlInfo) -> ()",
+          "summary": "Register a new SqlInfo result, making it available when calling GetSqlInfo."
+        }
+      ]
+    }
+  ]
+}

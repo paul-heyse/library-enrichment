@@ -238,8 +238,7 @@ async fn resource_exhaustion_is_an_error_and_never_a_successful_empty_result() {
         .await;
     assert!(
         result
-            .err()
-            .expect("bound exceeded")
+            .expect_err("bound exceeded")
             .to_string()
             .contains("budget")
     );

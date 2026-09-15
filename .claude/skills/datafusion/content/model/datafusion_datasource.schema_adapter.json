@@ -1,0 +1,173 @@
+{
+  "module": "datafusion_datasource::schema_adapter",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.schema_adapter.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::schema_adapter::DefaultSchemaAdapterFactory",
+      "name": "DefaultSchemaAdapterFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct DefaultSchemaAdapterFactory",
+      "summary": "Deprecated: Default [`SchemaAdapterFactory`] for mapping schemas.",
+      "doc": "api/datafusion_datasource.schema_adapter.md#defaultschemaadapterfactory",
+      "deprecated": "since 52.0.0: DefaultSchemaAdapterFactory has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::DefaultSchemaAdapterFactory"
+      ],
+      "implements": [
+        "datafusion_datasource::schema_adapter::SchemaAdapterFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, projected_table_schema: SchemaRef, _table_schema: SchemaRef) -> Box<dyn SchemaAdapter>",
+          "via_trait": "datafusion_datasource::schema_adapter::SchemaAdapterFactory"
+        },
+        {
+          "name": "from_schema",
+          "signature": "fn from_schema(table_schema: SchemaRef) -> Box<dyn SchemaAdapter>",
+          "summary": "Deprecated: Create a new factory for mapping batches from a file schema to a table schema."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::schema_adapter::SchemaMapping",
+      "name": "SchemaMapping",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct SchemaMapping",
+      "summary": "Deprecated: The SchemaMapping struct held a mapping from the file schema to the table schema.",
+      "doc": "api/datafusion_datasource.schema_adapter.md#schemamapping",
+      "deprecated": "since 52.0.0: SchemaMapping has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::SchemaMapping"
+      ],
+      "implements": [
+        "datafusion_datasource::schema_adapter::SchemaMapper"
+      ],
+      "methods": [
+        {
+          "name": "map_batch",
+          "signature": "fn map_batch(&self, _batch: RecordBatch) -> Result<RecordBatch>",
+          "via_trait": "datafusion_datasource::schema_adapter::SchemaMapper"
+        },
+        {
+          "name": "map_column_statistics",
+          "signature": "fn map_column_statistics(&self, _file_col_statistics: &[ColumnStatistics]) -> Result<Vec<ColumnStatistics>>",
+          "via_trait": "datafusion_datasource::schema_adapter::SchemaMapper"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::schema_adapter::SchemaAdapter",
+      "name": "SchemaAdapter",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait SchemaAdapter: Send + Sync",
+      "summary": "Deprecated: Creates [`SchemaMapper`]s to map file-level [`RecordBatch`]es to a table schema.",
+      "doc": "api/datafusion_datasource.schema_adapter.md#schemaadapter",
+      "deprecated": "since 52.0.0: SchemaAdapter has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::SchemaAdapter"
+      ],
+      "required_methods": [
+        "map_column_index",
+        "map_schema"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "map_column_index",
+          "signature": "fn map_column_index(&self, index: usize, file_schema: &Schema) -> Option<usize>",
+          "summary": "Map a column index in the table schema to a column index in a particular file schema."
+        },
+        {
+          "name": "map_schema",
+          "signature": "fn map_schema(&self, file_schema: &Schema) -> Result<(Arc<dyn SchemaMapper>, Vec<usize>)>",
+          "summary": "Creates a mapping for casting columns from the file schema to the table schema."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::schema_adapter::SchemaAdapterFactory",
+      "name": "SchemaAdapterFactory",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait SchemaAdapterFactory: Debug + Send + Sync + 'static",
+      "summary": "Deprecated: Factory for creating [`SchemaAdapter`].",
+      "doc": "api/datafusion_datasource.schema_adapter.md#schemaadapterfactory",
+      "deprecated": "since 52.0.0: SchemaAdapter has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::SchemaAdapterFactory"
+      ],
+      "implementors": [
+        "datafusion_datasource::schema_adapter::DefaultSchemaAdapterFactory"
+      ],
+      "required_methods": [
+        "create"
+      ],
+      "provided_methods": [
+        "create_with_projected_schema"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, projected_table_schema: SchemaRef, table_schema: SchemaRef) -> Box<dyn SchemaAdapter>",
+          "summary": "Create a [`SchemaAdapter`]"
+        },
+        {
+          "name": "create_with_projected_schema",
+          "signature": "fn create_with_projected_schema(&self, projected_table_schema: SchemaRef) -> Box<dyn SchemaAdapter>",
+          "summary": "Create a [`SchemaAdapter`] using only the projected table schema."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::schema_adapter::SchemaMapper",
+      "name": "SchemaMapper",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait SchemaMapper: Debug + Send + Sync",
+      "summary": "Deprecated: Maps columns from a specific file schema to the table schema.",
+      "doc": "api/datafusion_datasource.schema_adapter.md#schemamapper",
+      "deprecated": "since 52.0.0: SchemaMapper has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::SchemaMapper"
+      ],
+      "implementors": [
+        "datafusion_datasource::schema_adapter::SchemaMapping"
+      ],
+      "required_methods": [
+        "map_batch",
+        "map_column_statistics"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "map_batch",
+          "signature": "fn map_batch(&self, batch: RecordBatch) -> Result<RecordBatch>",
+          "summary": "Adapts a `RecordBatch` to match the `table_schema`."
+        },
+        {
+          "name": "map_column_statistics",
+          "signature": "fn map_column_statistics(&self, file_col_statistics: &[ColumnStatistics]) -> Result<Vec<ColumnStatistics>>",
+          "summary": "Adapts file-level column `Statistics` to match the `table_schema`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::schema_adapter::CastColumnFn",
+      "name": "CastColumnFn",
+      "kind": "type_alias",
+      "crate": "datafusion-datasource",
+      "signature": "type CastColumnFn = dyn Fn(&arrow::array::ArrayRef, &arrow::datatypes::Field, &arrow::compute::CastOptions<'_>) -> datafusion_common::Result<arrow::array::ArrayRef> + Send + Sync",
+      "summary": "Deprecated: Function type for casting columns.",
+      "doc": "api/datafusion_datasource.schema_adapter.md#castcolumnfn",
+      "deprecated": "since 52.0.0: SchemaAdapter has been removed. Use PhysicalExprAdapterFactory instead. See upgrading.md for more details.",
+      "aliases": [
+        "datafusion::datasource::schema_adapter::CastColumnFn"
+      ]
+    }
+  ]
+}

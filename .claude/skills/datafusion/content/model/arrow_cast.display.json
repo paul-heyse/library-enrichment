@@ -1,0 +1,328 @@
+{
+  "module": "arrow_cast::display",
+  "crate": "arrow-cast",
+  "api": "api/arrow_cast.display.md",
+  "items": [
+    {
+      "path": "arrow_cast::display::DurationFormat",
+      "name": "DurationFormat",
+      "kind": "enum",
+      "crate": "arrow-cast",
+      "signature": "enum DurationFormat",
+      "summary": "Format for displaying durations",
+      "doc": "api/arrow_cast.display.md#durationformat",
+      "aliases": [
+        "arrow::util::display::DurationFormat"
+      ],
+      "variants": [
+        "ISO8601",
+        "Pretty"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_cast::display::FormatError",
+      "name": "FormatError",
+      "kind": "enum",
+      "crate": "arrow-cast",
+      "signature": "enum FormatError",
+      "summary": "Either an [`ArrowError`] or [`std::fmt::Error`]",
+      "doc": "api/arrow_cast.display.md#formaterror",
+      "aliases": [
+        "arrow::util::display::FormatError"
+      ],
+      "variants": [
+        "Format",
+        "Arrow"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: ArrowError) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::array_value_to_string",
+      "name": "array_value_to_string",
+      "kind": "function",
+      "crate": "arrow-cast",
+      "signature": "fn array_value_to_string(column: &dyn Array, row: usize) -> Result<String, ArrowError>",
+      "summary": "Get the value at the given row in an array as a String.",
+      "doc": "api/arrow_cast.display.md#array_value_to_string",
+      "aliases": [
+        "arrow::util::display::array_value_to_string"
+      ]
+    },
+    {
+      "path": "arrow_cast::display::lexical_to_string",
+      "name": "lexical_to_string",
+      "kind": "function",
+      "crate": "arrow-cast",
+      "signature": "fn lexical_to_string<N: lexical_core::ToLexical>(n: N) -> String",
+      "summary": "Converts numeric type to a `String`",
+      "doc": "api/arrow_cast.display.md#lexical_to_string",
+      "aliases": [
+        "arrow::util::display::lexical_to_string"
+      ]
+    },
+    {
+      "path": "arrow_cast::display::ArrayFormatter",
+      "name": "ArrayFormatter",
+      "kind": "struct",
+      "crate": "arrow-cast",
+      "signature": "struct ArrayFormatter<'a>",
+      "summary": "A string formatter for an [`Array`]",
+      "doc": "api/arrow_cast.display.md#arrayformatter",
+      "aliases": [
+        "arrow::util::display::ArrayFormatter"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(format: Box<dyn DisplayIndex + 'a>, safe: bool) -> Self",
+          "summary": "Returns an [`ArrayFormatter`] using the provided formatter."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(array: &'a dyn Array, options: &FormatOptions<'a>) -> Result<Self, ArrowError>",
+          "summary": "Returns an [`ArrayFormatter`] that can be used to format `array`"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self, idx: usize) -> ValueFormatter<'_>",
+          "summary": "Returns a [`ValueFormatter`] that implements [`Display`] for the value of the array at `idx`"
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::FormatOptions",
+      "name": "FormatOptions",
+      "kind": "struct",
+      "crate": "arrow-cast",
+      "signature": "struct FormatOptions<'a>",
+      "summary": "Options for formatting arrays",
+      "doc": "api/arrow_cast.display.md#formatoptions",
+      "aliases": [
+        "arrow::util::display::FormatOptions"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "date_format",
+          "signature": "const fn date_format(&self) -> Option<&'a str>",
+          "summary": "Returns the format used for [`DataType::Date32`] columns."
+        },
+        {
+          "name": "datetime_format",
+          "signature": "const fn datetime_format(&self) -> Option<&'a str>",
+          "summary": "Returns the format used for [`DataType::Date64`] columns."
+        },
+        {
+          "name": "duration_format",
+          "signature": "const fn duration_format(&self) -> DurationFormat",
+          "summary": "Returns the [`DurationFormat`] used for duration columns."
+        },
+        {
+          "name": "formatter_factory",
+          "signature": "const fn formatter_factory(&self) -> Option<&'a dyn ArrayFormatterFactory>",
+          "summary": "Returns the [`ArrayFormatterFactory`] used to instantiate custom [`ArrayFormatter`]s."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new() -> Self",
+          "summary": "Creates a new set of format options"
+        },
+        {
+          "name": "null",
+          "signature": "const fn null(&self) -> &'a str",
+          "summary": "Returns the string used for displaying nulls."
+        },
+        {
+          "name": "quoted_strings",
+          "signature": "const fn quoted_strings(&self) -> bool",
+          "summary": "Returns whether string values should be quoted."
+        },
+        {
+          "name": "safe",
+          "signature": "const fn safe(&self) -> bool",
+          "summary": "Returns whether formatting errors should be written to the output instead of being converted into a [`std::fmt::Error`]."
+        },
+        {
+          "name": "time_format",
+          "signature": "const fn time_format(&self) -> Option<&'a str>",
+          "summary": "Returns the format used for [`DataType::Time32`] and [`DataType::Time64`] columns."
+        },
+        {
+          "name": "timestamp_format",
+          "signature": "const fn timestamp_format(&self) -> Option<&'a str>",
+          "summary": "Returns the format used for [`DataType::Timestamp`] columns without a timezone."
+        },
+        {
+          "name": "timestamp_tz_format",
+          "signature": "const fn timestamp_tz_format(&self) -> Option<&'a str>",
+          "summary": "Returns the format used for [`DataType::Timestamp`] columns with a timezone."
+        },
+        {
+          "name": "types_info",
+          "signature": "const fn types_info(&self) -> bool",
+          "summary": "Returns true if type info should be included in a visual representation of batches."
+        },
+        {
+          "name": "with_date_format",
+          "signature": "const fn with_date_format(self, date_format: Option<&'a str>) -> Self",
+          "summary": "Overrides the format used for [`DataType::Date32`] columns"
+        },
+        {
+          "name": "with_datetime_format",
+          "signature": "const fn with_datetime_format(self, datetime_format: Option<&'a str>) -> Self",
+          "summary": "Overrides the format used for [`DataType::Date64`] columns"
+        },
+        {
+          "name": "with_display_error",
+          "signature": "const fn with_display_error(self, safe: bool) -> Self",
+          "summary": "If set to `true` any formatting errors will be written to the output instead of being converted into a [`std::fmt::Error`]"
+        },
+        {
+          "name": "with_duration_format",
+          "signature": "const fn with_duration_format(self, duration_format: DurationFormat) -> Self",
+          "summary": "Overrides the format used for duration columns"
+        },
+        {
+          "name": "with_formatter_factory",
+          "signature": "const fn with_formatter_factory(self, formatter_factory: Option<&'a dyn ArrayFormatterFactory>) -> Self",
+          "summary": "Overrides the [`ArrayFormatterFactory`] used to instantiate custom [`ArrayFormatter`]s."
+        },
+        {
+          "name": "with_null",
+          "signature": "const fn with_null(self, null: &'a str) -> Self",
+          "summary": "Overrides the string used to represent a null"
+        },
+        {
+          "name": "with_quoted_strings",
+          "signature": "const fn with_quoted_strings(self, quoted_strings: bool) -> Self",
+          "summary": "Sets whether string values should be quoted"
+        },
+        {
+          "name": "with_time_format",
+          "signature": "const fn with_time_format(self, time_format: Option<&'a str>) -> Self",
+          "summary": "Overrides the format used for [`DataType::Time32`] and [`DataType::Time64`] columns"
+        },
+        {
+          "name": "with_timestamp_format",
+          "signature": "const fn with_timestamp_format(self, timestamp_format: Option<&'a str>) -> Self",
+          "summary": "Overrides the format used for [`DataType::Timestamp`] columns without a timezone"
+        },
+        {
+          "name": "with_timestamp_tz_format",
+          "signature": "const fn with_timestamp_tz_format(self, timestamp_tz_format: Option<&'a str>) -> Self",
+          "summary": "Overrides the format used for [`DataType::Timestamp`] columns with a timezone"
+        },
+        {
+          "name": "with_types_info",
+          "signature": "const fn with_types_info(self, types_info: bool) -> Self",
+          "summary": "Overrides if types should be shown"
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::ValueFormatter",
+      "name": "ValueFormatter",
+      "kind": "struct",
+      "crate": "arrow-cast",
+      "signature": "struct ValueFormatter<'a>",
+      "summary": "Implements [`Display`] for a specific array value",
+      "doc": "api/arrow_cast.display.md#valueformatter",
+      "aliases": [
+        "arrow::util::display::ValueFormatter"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "try_to_string",
+          "signature": "fn try_to_string(&self) -> Result<String, ArrowError>",
+          "summary": "Fallibly converts this to a string"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&self, s: &mut dyn Write) -> Result<(), ArrowError>",
+          "summary": "Writes this value to the provided [`Write`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::ArrayFormatterFactory",
+      "name": "ArrayFormatterFactory",
+      "kind": "trait",
+      "crate": "arrow-cast",
+      "signature": "trait ArrayFormatterFactory: Debug + Send + Sync",
+      "summary": "Allows creating a new [`ArrayFormatter`] for a given [`Array`] and an optional [`Field`].",
+      "doc": "api/arrow_cast.display.md#arrayformatterfactory",
+      "aliases": [
+        "arrow::util::display::ArrayFormatterFactory"
+      ],
+      "implementors": [
+        "datafusion_expr::extension_types::array_formatter_factory::DFArrayFormatterFactory"
+      ],
+      "required_methods": [
+        "create_array_formatter"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_array_formatter",
+          "signature": "fn create_array_formatter<'formatter>(&self, array: &'formatter dyn Array, options: &FormatOptions<'formatter>, field: Option<&'formatter Field>) -> Result<Option<ArrayFormatter<'formatter>>, ArrowError>",
+          "summary": "Creates a new [`ArrayFormatter`] for the given [`Array`] and an optional [`Field`]. If the default implementation should be used, return [`None`]."
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::DisplayIndex",
+      "name": "DisplayIndex",
+      "kind": "trait",
+      "crate": "arrow-cast",
+      "signature": "trait DisplayIndex",
+      "summary": "[`Display`] but accepting an index",
+      "doc": "api/arrow_cast.display.md#displayindex",
+      "aliases": [
+        "arrow::util::display::DisplayIndex"
+      ],
+      "required_methods": [
+        "write"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "write",
+          "signature": "fn write(&self, idx: usize, f: &mut dyn Write) -> FormatResult",
+          "summary": "Write the value of the underlying array at `idx` to `f`."
+        }
+      ]
+    },
+    {
+      "path": "arrow_cast::display::FormatResult",
+      "name": "FormatResult",
+      "kind": "type_alias",
+      "crate": "arrow-cast",
+      "signature": "type FormatResult = Result<(), FormatError>",
+      "summary": "The result of formatting an array element via [`DisplayIndex::write`].",
+      "doc": "api/arrow_cast.display.md#formatresult",
+      "aliases": [
+        "arrow::util::display::FormatResult"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,239 @@
+{
+  "module": "datafusion_physical_expr::window::window_expr",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.window.window_expr.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::window::window_expr::WindowFn",
+      "name": "WindowFn",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr",
+      "signature": "enum WindowFn",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Builtin",
+        "Aggregate"
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::WindowEvalContext",
+      "name": "WindowEvalContext",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct WindowEvalContext<'a>",
+      "summary": "Stream-level context passed to [`WindowExpr::evaluate_stateful`].",
+      "doc": "api/datafusion_physical_expr.window.window_expr.md#windowevalcontext",
+      "aliases": [
+        "datafusion_physical_expr::window::WindowEvalContext"
+      ],
+      "fields": [
+        "most_recent_row"
+      ],
+      "methods": [
+        {
+          "name": "with_most_recent_row",
+          "signature": "fn with_most_recent_row(self, batch: Option<&'a RecordBatch>) -> Self",
+          "summary": "Sets the most recent input row (see [`Self::most_recent_row`])."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::WindowPhysicalExpressions",
+      "name": "WindowPhysicalExpressions",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct WindowPhysicalExpressions",
+      "summary": "Stores the physical expressions used inside the `WindowExpr`.",
+      "doc": "api/datafusion_physical_expr.window.window_expr.md#windowphysicalexpressions",
+      "fields": [
+        "args",
+        "partition_by_exprs",
+        "order_by_exprs"
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::WindowState",
+      "name": "WindowState",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct WindowState",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_expr::window::WindowState"
+      ],
+      "fields": [
+        "state",
+        "window_fn",
+        "published"
+      ],
+      "methods": [
+        {
+          "name": "aggregate_state",
+          "signature": "fn aggregate_state(&mut self) -> Result<Option<Vec<ScalarValue>>>",
+          "summary": "[`Accumulator::state`] if this window function is an aggregate, `None` otherwise (built-in functions like `row_number`, `rank`, `lead`/`lag` have no serializable accumulator state)."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::WindowExpr",
+      "name": "WindowExpr",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr",
+      "signature": "trait WindowExpr: Send + Sync + Debug",
+      "summary": "Common trait for [window function] implementations",
+      "doc": "api/datafusion_physical_expr.window.window_expr.md#windowexpr",
+      "aliases": [
+        "datafusion::physical_plan::WindowExpr",
+        "datafusion_physical_expr::window::WindowExpr",
+        "datafusion_physical_plan::WindowExpr",
+        "datafusion_physical_plan::execution_plan::WindowExpr",
+        "datafusion_physical_plan::windows::WindowExpr"
+      ],
+      "implementors": [
+        "datafusion_physical_expr::window::aggregate::PlainAggregateWindowExpr",
+        "datafusion_physical_expr::window::sliding_aggregate::SlidingAggregateWindowExpr",
+        "datafusion_physical_expr::window::standard::StandardWindowExpr"
+      ],
+      "required_methods": [
+        "as_any",
+        "create_window_fn",
+        "evaluate",
+        "expressions",
+        "field",
+        "get_reverse_expr",
+        "get_window_frame",
+        "order_by",
+        "partition_by",
+        "uses_bounded_memory"
+      ],
+      "provided_methods": [
+        "all_expressions",
+        "evaluate_args",
+        "evaluate_stateful",
+        "name",
+        "order_by_columns",
+        "with_new_expressions"
+      ],
+      "methods": [
+        {
+          "name": "all_expressions",
+          "signature": "fn all_expressions(&self) -> WindowPhysicalExpressions",
+          "summary": "Returns all expressions used in the [`WindowExpr`]. These expressions are (1) function arguments, (2) partition by expressions, (3) order by expressions."
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "summary": "Returns the window expression as [`Any`] so that it can be downcast to a specific implementation."
+        },
+        {
+          "name": "create_window_fn",
+          "signature": "fn create_window_fn(&self) -> Result<WindowFn>",
+          "summary": "Creates a new instance of the window function evaluator."
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &RecordBatch) -> Result<ArrayRef>",
+          "summary": "Evaluate the window function values against the batch"
+        },
+        {
+          "name": "evaluate_args",
+          "signature": "fn evaluate_args(&self, batch: &RecordBatch) -> Result<Vec<ArrayRef>>",
+          "summary": "Evaluate the window function arguments against the batch and return array ref, normally the resulting `Vec` is a single element one."
+        },
+        {
+          "name": "evaluate_stateful",
+          "signature": "fn evaluate_stateful(&self, _partition_batches: &PartitionBatches, _window_agg_state: &mut PartitionWindowAggStates, _eval_ctx: &WindowEvalContext<'_>) -> Result<()>",
+          "summary": "Evaluate the window function against the batch. This function facilitates stateful, bounded-memory implementations."
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Expressions that are passed to the WindowAccumulator. Functions which take a single input argument, such as `sum`, return a single [`datafusion_expr::expr::Expr`], others (e.g. `cov`) return many."
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self) -> Result<FieldRef>",
+          "summary": "The field of the final result of this window function."
+        },
+        {
+          "name": "get_reverse_expr",
+          "signature": "fn get_reverse_expr(&self) -> Option<Arc<dyn WindowExpr>>",
+          "summary": "Get the reverse expression of this [WindowExpr]."
+        },
+        {
+          "name": "get_window_frame",
+          "signature": "fn get_window_frame(&self) -> &Arc<WindowFrame>",
+          "summary": "Get the window frame of this [WindowExpr]."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Human readable name such as `\"MIN(c2)\"` or `\"RANK()\"`. The default implementation returns placeholder text."
+        },
+        {
+          "name": "order_by",
+          "signature": "fn order_by(&self) -> &[PhysicalSortExpr]",
+          "summary": "Expressions that's from the window function's order by clause, empty if absent"
+        },
+        {
+          "name": "order_by_columns",
+          "signature": "fn order_by_columns(&self, batch: &RecordBatch) -> Result<Vec<SortColumn>>",
+          "summary": "Get order by columns, empty if absent"
+        },
+        {
+          "name": "partition_by",
+          "signature": "fn partition_by(&self) -> &[Arc<dyn PhysicalExpr>]",
+          "summary": "Expressions that's from the window function's partition by clause, empty if absent"
+        },
+        {
+          "name": "uses_bounded_memory",
+          "signature": "fn uses_bounded_memory(&self) -> bool",
+          "summary": "Return a flag indicating whether this [WindowExpr] can run with bounded memory."
+        },
+        {
+          "name": "with_new_expressions",
+          "signature": "fn with_new_expressions(&self, _args: Vec<Arc<dyn PhysicalExpr>>, _partition_bys: Vec<Arc<dyn PhysicalExpr>>, _order_by_exprs: Vec<Arc<dyn PhysicalExpr>>) -> Option<Arc<dyn WindowExpr>>",
+          "summary": "Rewrites [`WindowExpr`], with new expressions given. The argument should be consistent with the return value of the [`WindowExpr::all_expressions`] method. Returns `Some(Arc<dyn WindowExpr>)` if re-write is supported, otherwise returns `No…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::PartitionBatches",
+      "name": "PartitionBatches",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-expr",
+      "signature": "type PartitionBatches = indexmap::IndexMap<PartitionKey, datafusion_expr::window_state::PartitionBatchState, datafusion_common::hash_utils::RandomState>",
+      "summary": "The IndexMap (i.e. an ordered HashMap) where record batches are separated for each partition.",
+      "doc": "api/datafusion_physical_expr.window.window_expr.md#partitionbatches",
+      "aliases": [
+        "datafusion_physical_expr::window::PartitionBatches"
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::PartitionKey",
+      "name": "PartitionKey",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-expr",
+      "signature": "type PartitionKey = Vec<datafusion_common::ScalarValue>",
+      "summary": "Key for IndexMap for each unique partition",
+      "doc": "api/datafusion_physical_expr.window.window_expr.md#partitionkey",
+      "aliases": [
+        "datafusion_physical_expr::window::PartitionKey"
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::window::window_expr::PartitionWindowAggStates",
+      "name": "PartitionWindowAggStates",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-expr",
+      "signature": "type PartitionWindowAggStates = indexmap::IndexMap<PartitionKey, WindowState, datafusion_common::hash_utils::RandomState>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_physical_expr::window::PartitionWindowAggStates"
+      ]
+    }
+  ]
+}

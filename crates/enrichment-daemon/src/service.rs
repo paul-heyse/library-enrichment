@@ -79,6 +79,26 @@ pub enum ServiceError {
 }
 
 impl Service {
+    /// Bind exact request/configuration identities to the native operation before queueing.
+    /// This identifies the effective daemon policy; producer admission still enforces it.
+    pub fn operation_descriptor(
+        &self,
+        method: &str,
+        request: &impl serde::Serialize,
+    ) -> enrichment_store::runtime::OperationDescriptor {
+        enrichment_store::runtime::OperationDescriptor {
+            method: method.into(),
+            request_digest: enrichment_core::canonical::digest_hex(&serde_json::json!([
+                "research-operation/2",
+                method,
+                request
+            ])),
+            policy_digest: enrichment_core::canonical::digest_hex(&serde_json::json!([
+                "effective-operation-policy/2",
+                self.config,
+            ])),
+        }
+    }
     /// Assemble the service over explicit roots.
     ///
     /// # Errors

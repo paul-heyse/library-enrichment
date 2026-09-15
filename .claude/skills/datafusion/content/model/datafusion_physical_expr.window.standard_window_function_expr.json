@@ -1,0 +1,81 @@
+{
+  "module": "datafusion_physical_expr::window::standard_window_function_expr",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.window.standard_window_function_expr.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::window::standard_window_function_expr::StandardWindowFunctionExpr",
+      "name": "StandardWindowFunctionExpr",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr",
+      "signature": "trait StandardWindowFunctionExpr: Send + Sync + std::fmt::Debug",
+      "summary": "Evaluates a window function by instantiating a [`PartitionEvaluator`] for calculating the function's output in that partition.",
+      "doc": "api/datafusion_physical_expr.window.standard_window_function_expr.md#standardwindowfunctionexpr",
+      "aliases": [
+        "datafusion_physical_expr::window::StandardWindowFunctionExpr"
+      ],
+      "implementors": [
+        "datafusion_physical_plan::windows::WindowUDFExpr"
+      ],
+      "required_methods": [
+        "as_any",
+        "create_evaluator",
+        "expressions",
+        "field",
+        "limit_effect"
+      ],
+      "provided_methods": [
+        "evaluate_args",
+        "get_result_ordering",
+        "name",
+        "reverse_expr"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "summary": "Returns the aggregate expression as [`Any`] so that it can be downcast to a specific implementation."
+        },
+        {
+          "name": "create_evaluator",
+          "signature": "fn create_evaluator(&self) -> Result<Box<dyn PartitionEvaluator>>",
+          "summary": "Create a [`PartitionEvaluator`] for evaluating the function on a particular partition."
+        },
+        {
+          "name": "evaluate_args",
+          "signature": "fn evaluate_args(&self, batch: &RecordBatch) -> Result<Vec<ArrayRef>>",
+          "summary": "Evaluate window function's arguments against the input window batch and return an [`ArrayRef`]."
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "summary": "Expressions that are passed to the [`PartitionEvaluator`]."
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self) -> Result<FieldRef>",
+          "summary": "The field of the final result of evaluating this window function."
+        },
+        {
+          "name": "get_result_ordering",
+          "signature": "fn get_result_ordering(&self, _schema: &SchemaRef) -> Option<PhysicalSortExpr>",
+          "summary": "Returns the ordering introduced by the window function, if applicable. Most window functions don't introduce an ordering, hence the default value is `None`. Note that this information is used to update ordering equivalences."
+        },
+        {
+          "name": "limit_effect",
+          "signature": "fn limit_effect(&self) -> LimitEffect"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Human readable name such as `\"MIN(c2)\"` or `\"RANK()\"`. The default implementation returns placeholder text."
+        },
+        {
+          "name": "reverse_expr",
+          "signature": "fn reverse_expr(&self) -> Option<Arc<dyn StandardWindowFunctionExpr>>",
+          "summary": "Construct a new [`StandardWindowFunctionExpr`] that produces the same result as this function on a window with reverse order. The return value of this function is used by the DataFusion optimizer to avoid re-sorting the data when possible."
+        }
+      ]
+    }
+  ]
+}

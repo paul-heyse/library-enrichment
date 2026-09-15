@@ -1,0 +1,173 @@
+{
+  "module": "datafusion_datasource_parquet::reader",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.reader.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::reader::CachedParquetFileReaderFactory",
+      "name": "CachedParquetFileReaderFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct CachedParquetFileReaderFactory",
+      "summary": "Implementation of [`ParquetFileReaderFactory`] supporting the caching of footer and page metadata. Reads and updates the [`FileMetadataCache`] with the [`ParquetMetaData`] data.",
+      "doc": "api/datafusion_datasource_parquet.reader.md#cachedparquetfilereaderfactory",
+      "implements": [
+        "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+      ],
+      "methods": [
+        {
+          "name": "create_reader",
+          "signature": "fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>",
+          "via_trait": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>, metadata_cache: Arc<FileMetadataCache>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::reader::CachedParquetMetaData",
+      "name": "CachedParquetMetaData",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct CachedParquetMetaData",
+      "summary": "Wrapper to implement [`FileMetadata`] for [`ParquetMetaData`].",
+      "doc": "api/datafusion_datasource_parquet.reader.md#cachedparquetmetadata",
+      "implements": [
+        "datafusion_execution::cache::cache_manager::FileMetadata"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "extra_info",
+          "signature": "fn extra_info(&self) -> HashMap<String, String>",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(metadata: Arc<ParquetMetaData>) -> Self"
+        },
+        {
+          "name": "parquet_metadata",
+          "signature": "fn parquet_metadata(&self) -> &Arc<ParquetMetaData>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::reader::DefaultParquetFileReaderFactory",
+      "name": "DefaultParquetFileReaderFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct DefaultParquetFileReaderFactory",
+      "summary": "Default implementation of [`ParquetFileReaderFactory`]",
+      "doc": "api/datafusion_datasource_parquet.reader.md#defaultparquetfilereaderfactory",
+      "implements": [
+        "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+      ],
+      "methods": [
+        {
+          "name": "create_reader",
+          "signature": "fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>",
+          "via_trait": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>) -> Self",
+          "summary": "Create a new `DefaultParquetFileReaderFactory`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::reader::ParquetFileReader",
+      "name": "ParquetFileReader",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ParquetFileReader",
+      "summary": "Implements [`AsyncFileReader`] for a parquet file in object storage.",
+      "doc": "api/datafusion_datasource_parquet.reader.md#parquetfilereader",
+      "implements": [
+        "core::ops::drop::Drop",
+        "parquet::arrow::async_reader::AsyncFileReader"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "file_metrics",
+          "signature": "fn file_metrics(&self) -> &ParquetFileMetrics",
+          "summary": "Returns the metrics tracked while reading this file."
+        },
+        {
+          "name": "get_byte_ranges",
+          "signature": "fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, parquet::errors::Result<Vec<Bytes>>> where Self: Send",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, parquet::errors::Result<Bytes>>",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "get_metadata",
+          "signature": "fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, parquet::errors::Result<Arc<ParquetMetaData>>>",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "partitioned_file",
+          "signature": "fn partitioned_file(&self) -> &PartitionedFile",
+          "summary": "Returns the file this reader is reading."
+        },
+        {
+          "name": "with_metadata_cache",
+          "signature": "fn with_metadata_cache(self, metadata_cache: Option<Arc<FileMetadataCache>>) -> Self",
+          "summary": "Set the [`FileMetadataCache`] for this reader"
+        },
+        {
+          "name": "with_metadata_hint",
+          "signature": "fn with_metadata_hint(self, metadata_size_hint: Option<usize>) -> Self",
+          "summary": "Set the metadata size hint for this reader."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::reader::ParquetFileReaderFactory",
+      "name": "ParquetFileReaderFactory",
+      "kind": "trait",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "trait ParquetFileReaderFactory: Debug + Send + Sync + 'static",
+      "summary": "Interface for reading Apache Parquet files.",
+      "doc": "api/datafusion_datasource_parquet.reader.md#parquetfilereaderfactory",
+      "aliases": [
+        "datafusion::datasource::physical_plan::ParquetFileReaderFactory"
+      ],
+      "implementors": [
+        "datafusion_datasource_parquet::reader::CachedParquetFileReaderFactory",
+        "datafusion_datasource_parquet::reader::DefaultParquetFileReaderFactory"
+      ],
+      "required_methods": [
+        "create_reader"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_reader",
+          "signature": "fn create_reader(&self, partition_index: usize, partitioned_file: PartitionedFile, metadata_size_hint: Option<usize>, metrics: &ExecutionPlanMetricsSet) -> datafusion_common::Result<Box<dyn AsyncFileReader + Send>>",
+          "summary": "Provides an `AsyncFileReader` for reading data from a parquet file specified"
+        }
+      ]
+    }
+  ]
+}

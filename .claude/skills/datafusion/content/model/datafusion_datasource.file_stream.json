@@ -1,0 +1,103 @@
+{
+  "module": "datafusion_datasource::file_stream",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_stream.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_stream::OnError",
+      "name": "OnError",
+      "kind": "enum",
+      "crate": "datafusion-datasource",
+      "signature": "enum OnError",
+      "summary": "Describes the behavior of the `FileStream` if file opening or scanning fails",
+      "doc": "api/datafusion_datasource.file_stream.md#onerror",
+      "aliases": [
+        "datafusion::datasource::physical_plan::OnError"
+      ],
+      "variants": [
+        "Fail",
+        "Skip"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_datasource::file_stream::FileStream",
+      "name": "FileStream",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileStream",
+      "summary": "A stream that iterates record batch by record batch, file over file.",
+      "doc": "api/datafusion_datasource.file_stream.md#filestream",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileStream"
+      ],
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(config: &FileScanConfig, partition: usize, file_opener: Arc<dyn FileOpener>, metrics: &ExecutionPlanMetricsSet) -> Result<Self>",
+          "summary": "Create a new `FileStream` using the give `FileOpener` to scan underlying files"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        },
+        {
+          "name": "with_on_error",
+          "signature": "fn with_on_error(self, on_error: OnError) -> Self",
+          "summary": "Specify the behavior when an error occurs opening or scanning a file"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_stream::FileOpener",
+      "name": "FileOpener",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileOpener: Unpin + Send + Sync",
+      "summary": "Generic API for opening a file using an [`ObjectStore`] and resolving to a stream of [`RecordBatch`]",
+      "doc": "api/datafusion_datasource.file_stream.md#fileopener",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileOpener"
+      ],
+      "implementors": [
+        "datafusion_datasource::projection::ProjectionOpener",
+        "datafusion_datasource_arrow::source::ArrowOpener",
+        "datafusion_datasource_csv::source::CsvOpener",
+        "datafusion_datasource_json::source::JsonOpener"
+      ],
+      "required_methods": [
+        "open"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "open",
+          "signature": "fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>",
+          "summary": "Asynchronously open the specified file and return a stream of [`RecordBatch`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_stream::FileOpenFuture",
+      "name": "FileOpenFuture",
+      "kind": "type_alias",
+      "crate": "datafusion-datasource",
+      "signature": "type FileOpenFuture = futures::future::BoxFuture<'static, datafusion_common::Result<futures::stream::BoxStream<'static, datafusion_common::Result<arrow::record_batch::RecordBatch>>>>",
+      "summary": "A fallible future that resolves to a stream of [`RecordBatch`]",
+      "doc": "api/datafusion_datasource.file_stream.md#fileopenfuture",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileOpenFuture"
+      ]
+    }
+  ]
+}

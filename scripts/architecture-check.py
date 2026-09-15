@@ -5,6 +5,7 @@ Scoped ast-grep rules enforce forbidden code shapes; this checks filesystem/buil
 """
 
 import ast
+import json
 import subprocess
 import sys
 import tomllib
@@ -48,6 +49,19 @@ def main() -> int:
         text = (ROOT / name).read_text()
         if binary not in text or "library-enrichment-parquet-admission" in text:
             errors.append(f"{name}: deployment must require only the current native worker")
+    schemas = ROOT / "schemas/generated"
+    envelope = json.loads((schemas / "research-envelope.schema.json").read_text())
+    if "pagination" in envelope["properties"] or "delivery" not in envelope["required"]:
+        errors.append("active research envelope exposes retired pagination or overflow")
+    if envelope["properties"]["schema_version"].get("enum") != ["2.0"]:
+        errors.append("active research envelope must emit only 2.0")
+    request = json.loads((schemas / "request.schema.json").read_text())
+    inspect = request["$defs"]["InspectRequest"]["properties"]
+    if "depth" in inspect or "aspects" in inspect or "selection" not in inspect:
+        errors.append("active inspection request must expose only typed selection")
+    candidate = ROOT / "contracts/research-v2/research-envelope.schema.json"
+    if json.loads(candidate.read_text()) != envelope:
+        errors.append("candidate research contract differs from its native generated authority")
     for error in errors:
         sys.stderr.write(error + "\n")
     if errors:

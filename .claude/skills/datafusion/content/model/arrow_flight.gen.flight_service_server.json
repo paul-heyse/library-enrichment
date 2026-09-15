@@ -1,0 +1,144 @@
+{
+  "module": "arrow_flight::gen::flight_service_server",
+  "crate": "arrow-flight",
+  "api": "api/arrow_flight.gen.flight_service_server.md",
+  "items": [
+    {
+      "path": "arrow_flight::gen::flight_service_server::FlightServiceServer",
+      "name": "FlightServiceServer",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightServiceServer<T>",
+      "summary": "A flight service is an endpoint for retrieving or storing Arrow data. A flight service can expose one or more predefined endpoints that can be accessed using the Arrow Flight Protocol. Additionally, a flight service can expose a set of act…",
+      "doc": "api/arrow_flight.gen.flight_service_server.md#flightserviceserver",
+      "aliases": [
+        "arrow_flight::flight_service_server::FlightServiceServer"
+      ],
+      "implements": [
+        "tonic::server::NamedService",
+        "tower_service::Service"
+      ],
+      "methods": [
+        {
+          "name": "accept_compressed",
+          "signature": "fn accept_compressed(self, encoding: CompressionEncoding) -> Self",
+          "summary": "Enable decompressing requests with the given encoding."
+        },
+        {
+          "name": "call",
+          "signature": "fn call(&mut self, req: http::Request<B>) -> Self::Future",
+          "via_trait": "tower_service::Service"
+        },
+        {
+          "name": "from_arc",
+          "signature": "fn from_arc(inner: Arc<T>) -> Self"
+        },
+        {
+          "name": "max_decoding_message_size",
+          "signature": "fn max_decoding_message_size(self, limit: usize) -> Self",
+          "summary": "Limits the maximum size of a decoded message."
+        },
+        {
+          "name": "max_encoding_message_size",
+          "signature": "fn max_encoding_message_size(self, limit: usize) -> Self",
+          "summary": "Limits the maximum size of an encoded message."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: T) -> Self"
+        },
+        {
+          "name": "poll_ready",
+          "signature": "fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>>",
+          "via_trait": "tower_service::Service"
+        },
+        {
+          "name": "send_compressed",
+          "signature": "fn send_compressed(self, encoding: CompressionEncoding) -> Self",
+          "summary": "Compress responses with the given encoding, if the client supports it."
+        },
+        {
+          "name": "with_interceptor",
+          "signature": "fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F> where F: tonic::service::Interceptor"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::gen::flight_service_server::FlightService",
+      "name": "FlightService",
+      "kind": "trait",
+      "crate": "arrow-flight",
+      "signature": "trait FlightService: std::marker::Send + std::marker::Sync + 'static",
+      "summary": "Generated trait containing gRPC methods that should be implemented for use with FlightServiceServer.",
+      "doc": "api/arrow_flight.gen.flight_service_server.md#flightservice",
+      "aliases": [
+        "arrow_flight::flight_service_server::FlightService"
+      ],
+      "required_methods": [
+        "do_action",
+        "do_exchange",
+        "do_get",
+        "do_put",
+        "get_flight_info",
+        "get_schema",
+        "handshake",
+        "list_actions",
+        "list_flights",
+        "poll_flight_info"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "do_action",
+          "signature": "async fn do_action(&self, request: tonic::Request<super::Action>) -> std::result::Result<tonic::Response<Self::DoActionStream>, tonic::Status>",
+          "summary": "Flight services can support an arbitrary number of simple actions in addition to the possible ListFlights, GetFlightInfo, DoGet, DoPut operations that are potentially available. DoAction allows a flight client to do a specific action again…"
+        },
+        {
+          "name": "do_exchange",
+          "signature": "async fn do_exchange(&self, request: tonic::Request<tonic::Streaming<super::FlightData>>) -> std::result::Result<tonic::Response<Self::DoExchangeStream>, tonic::Status>",
+          "summary": "Open a bidirectional data channel for a given descriptor. This allows clients to send and receive arbitrary Arrow data and application-specific metadata in a single logical stream. In contrast to DoGet/DoPut, this is more suited for client…"
+        },
+        {
+          "name": "do_get",
+          "signature": "async fn do_get(&self, request: tonic::Request<super::Ticket>) -> std::result::Result<tonic::Response<Self::DoGetStream>, tonic::Status>",
+          "summary": "Retrieve a single stream associated with a particular descriptor associated with the referenced ticket. A Flight can be composed of one or more streams where each stream can be retrieved using a separate opaque ticket that the flight servi…"
+        },
+        {
+          "name": "do_put",
+          "signature": "async fn do_put(&self, request: tonic::Request<tonic::Streaming<super::FlightData>>) -> std::result::Result<tonic::Response<Self::DoPutStream>, tonic::Status>",
+          "summary": "Push a stream to the flight service associated with a particular flight stream. This allows a client of a flight service to upload a stream of data. Depending on the particular flight service, a client consumer could be allowed to upload a…"
+        },
+        {
+          "name": "get_flight_info",
+          "signature": "async fn get_flight_info(&self, request: tonic::Request<super::FlightDescriptor>) -> std::result::Result<tonic::Response<super::FlightInfo>, tonic::Status>",
+          "summary": "For a given FlightDescriptor, get information about how the flight can be consumed. This is a useful interface if the consumer of the interface already can identify the specific flight to consume. This interface can also allow a consumer t…"
+        },
+        {
+          "name": "get_schema",
+          "signature": "async fn get_schema(&self, request: tonic::Request<super::FlightDescriptor>) -> std::result::Result<tonic::Response<super::SchemaResult>, tonic::Status>",
+          "summary": "For a given FlightDescriptor, get the Schema as described in Schema.fbs::Schema This is used when a consumer needs the Schema of flight stream. Similar to GetFlightInfo this interface may generate a new flight that was not previously avail…"
+        },
+        {
+          "name": "handshake",
+          "signature": "async fn handshake(&self, request: tonic::Request<tonic::Streaming<super::HandshakeRequest>>) -> std::result::Result<tonic::Response<Self::HandshakeStream>, tonic::Status>",
+          "summary": "Handshake between client and server. Depending on the server, the handshake may be required to determine the token that should be used for future operations. Both request and response are streams to allow multiple round-trips depending on…"
+        },
+        {
+          "name": "list_actions",
+          "signature": "async fn list_actions(&self, request: tonic::Request<super::Empty>) -> std::result::Result<tonic::Response<Self::ListActionsStream>, tonic::Status>",
+          "summary": "A flight service exposes all of the available action types that it has along with descriptions. This allows different flight consumers to understand the capabilities of the flight service."
+        },
+        {
+          "name": "list_flights",
+          "signature": "async fn list_flights(&self, request: tonic::Request<super::Criteria>) -> std::result::Result<tonic::Response<Self::ListFlightsStream>, tonic::Status>",
+          "summary": "Get a list of available streams given a particular criteria. Most flight services will expose one or more streams that are readily available for retrieval. This api allows listing the streams available for consumption. A user can also prov…"
+        },
+        {
+          "name": "poll_flight_info",
+          "signature": "async fn poll_flight_info(&self, request: tonic::Request<super::FlightDescriptor>) -> std::result::Result<tonic::Response<super::PollInfo>, tonic::Status>",
+          "summary": "For a given FlightDescriptor, start a query and get information to poll its execution status. This is a useful interface if the query may be a long-running query. The first PollFlightInfo call should return as quickly as possible. (GetFlig…"
+        }
+      ]
+    }
+  ]
+}

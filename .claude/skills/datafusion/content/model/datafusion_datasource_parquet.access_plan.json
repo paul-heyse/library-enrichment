@@ -1,0 +1,165 @@
+{
+  "module": "datafusion_datasource_parquet::access_plan",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.access_plan.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::access_plan::RowGroupAccess",
+      "name": "RowGroupAccess",
+      "kind": "enum",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "enum RowGroupAccess",
+      "summary": "Describes how the parquet reader will access a row group",
+      "doc": "api/datafusion_datasource_parquet.access_plan.md#rowgroupaccess",
+      "aliases": [
+        "datafusion::datasource::physical_plan::parquet::RowGroupAccess",
+        "datafusion_datasource_parquet::RowGroupAccess"
+      ],
+      "variants": [
+        "Skip",
+        "Scan",
+        "Selection"
+      ],
+      "methods": [
+        {
+          "name": "should_scan",
+          "signature": "fn should_scan(&self) -> bool",
+          "summary": "Return true if this row group should be scanned"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::access_plan::ParquetAccessPlan",
+      "name": "ParquetAccessPlan",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ParquetAccessPlan",
+      "summary": "A selection of rows and row groups within a ParquetFile to decode.",
+      "doc": "api/datafusion_datasource_parquet.access_plan.md#parquetaccessplan",
+      "aliases": [
+        "datafusion::datasource::physical_plan::parquet::ParquetAccessPlan",
+        "datafusion_datasource_parquet::ParquetAccessPlan"
+      ],
+      "methods": [
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &[RowGroupAccess]",
+          "summary": "Get a reference to the inner accesses"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Vec<RowGroupAccess>",
+          "summary": "Covert into the inner row group accesses"
+        },
+        {
+          "name": "into_overall_row_selection",
+          "signature": "fn into_overall_row_selection(self, row_group_meta_data: &[RowGroupMetaData]) -> Result<Option<RowSelection>>",
+          "summary": "Return an overall `RowSelection`, if needed"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Return true if there are no row groups"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Return the total number of row groups (not the total number or groups to scan)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(row_groups: Vec<RowGroupAccess>) -> Self",
+          "summary": "Create a new `ParquetAccessPlan` from the specified [`RowGroupAccess`]es"
+        },
+        {
+          "name": "new_all",
+          "signature": "fn new_all(row_group_count: usize) -> Self",
+          "summary": "Create a new `ParquetAccessPlan` that scans all row groups"
+        },
+        {
+          "name": "new_none",
+          "signature": "fn new_none(row_group_count: usize) -> Self",
+          "summary": "Create a new `ParquetAccessPlan` that scans no row groups"
+        },
+        {
+          "name": "row_group_index_iter",
+          "signature": "fn row_group_index_iter(&self) -> impl Iterator<Item = usize> + '_",
+          "summary": "Return an iterator over the row group indexes that should be scanned"
+        },
+        {
+          "name": "row_group_indexes",
+          "signature": "fn row_group_indexes(&self) -> Vec<usize>",
+          "summary": "Return a vec of all row group indexes to scan"
+        },
+        {
+          "name": "scan",
+          "signature": "fn scan(&mut self, idx: usize)",
+          "summary": "scan the i-th row group"
+        },
+        {
+          "name": "scan_selection",
+          "signature": "fn scan_selection(&mut self, idx: usize, selection: RowSelection)",
+          "summary": "Set to scan only the [`RowSelection`] in the specified row group."
+        },
+        {
+          "name": "set",
+          "signature": "fn set(&mut self, idx: usize, access: RowGroupAccess)",
+          "summary": "Set the i-th row group to the specified [`RowGroupAccess`]"
+        },
+        {
+          "name": "should_scan",
+          "signature": "fn should_scan(&self, idx: usize) -> bool",
+          "summary": "Return true if the i-th row group should be scanned"
+        },
+        {
+          "name": "skip",
+          "signature": "fn skip(&mut self, idx: usize)",
+          "summary": "skips the i-th row group (should not be scanned)"
+        },
+        {
+          "name": "try_new_from_overall_row_selection",
+          "signature": "fn try_new_from_overall_row_selection(selection: RowSelection, row_group_meta_data: &[RowGroupMetaData]) -> Result<Self>",
+          "summary": "Create a new `ParquetAccessPlan` from a file-level [`RowSelection`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::access_plan::ParquetRowSelection",
+      "name": "ParquetRowSelection",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct ParquetRowSelection",
+      "summary": "A file-level row selection for a parquet scan.",
+      "doc": "api/datafusion_datasource_parquet.access_plan.md#parquetrowselection",
+      "aliases": [
+        "datafusion::datasource::physical_plan::parquet::ParquetRowSelection",
+        "datafusion_datasource_parquet::ParquetRowSelection"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(selection: RowSelection) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> RowSelection",
+          "summary": "Convert into the underlying [`RowSelection`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(selection: RowSelection) -> Self",
+          "summary": "Create a new file-level parquet row selection."
+        },
+        {
+          "name": "selection",
+          "signature": "fn selection(&self) -> &RowSelection",
+          "summary": "Return a reference to the underlying [`RowSelection`]."
+        }
+      ]
+    }
+  ]
+}

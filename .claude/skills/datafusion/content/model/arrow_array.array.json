@@ -1,0 +1,523 @@
+{
+  "module": "arrow_array::array",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.array.md",
+  "items": [
+    {
+      "path": "arrow_array::array::make_array",
+      "name": "make_array",
+      "kind": "function",
+      "crate": "arrow-array",
+      "signature": "fn make_array(data: arrow_data::ArrayData) -> ArrayRef",
+      "summary": "Constructs an [`ArrayRef`] from an [`ArrayData`].",
+      "doc": "api/arrow_array.array.md#make_array",
+      "aliases": [
+        "arrow::array::make_array",
+        "arrow_array::make_array"
+      ]
+    },
+    {
+      "path": "arrow_array::array::new_empty_array",
+      "name": "new_empty_array",
+      "kind": "function",
+      "crate": "arrow-array",
+      "signature": "fn new_empty_array(data_type: &arrow_schema::DataType) -> ArrayRef",
+      "summary": "Creates a new empty array",
+      "doc": "api/arrow_array.array.md#new_empty_array",
+      "aliases": [
+        "arrow::array::new_empty_array",
+        "arrow_array::new_empty_array"
+      ]
+    },
+    {
+      "path": "arrow_array::array::new_null_array",
+      "name": "new_null_array",
+      "kind": "function",
+      "crate": "arrow-array",
+      "signature": "fn new_null_array(data_type: &arrow_schema::DataType, length: usize) -> ArrayRef",
+      "summary": "Creates a new array of `data_type` of length `length` filled entirely of `NULL` values",
+      "doc": "api/arrow_array.array.md#new_null_array",
+      "aliases": [
+        "arrow::array::new_null_array",
+        "arrow_array::new_null_array"
+      ]
+    },
+    {
+      "path": "arrow_array::array::Array",
+      "name": "Array",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "unsafe trait Array: std::fmt::Debug + Send + Sync",
+      "summary": "An array in the [Arrow Columnar Format](https://arrow.apache.org/docs/format/Columnar.html)",
+      "doc": "api/arrow_array.array.md#array",
+      "aliases": [
+        "arrow::array::Array",
+        "arrow_array::Array"
+      ],
+      "implementors": [
+        "arrow_array::array::ArrayRef",
+        "arrow_array::array::boolean_array::BooleanArray",
+        "arrow_array::array::byte_array::GenericByteArray",
+        "arrow_array::array::byte_view_array::GenericByteViewArray",
+        "arrow_array::array::dictionary_array::DictionaryArray",
+        "arrow_array::array::dictionary_array::TypedDictionaryArray",
+        "arrow_array::array::fixed_size_binary_array::FixedSizeBinaryArray",
+        "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+        "arrow_array::array::list_array::GenericListArray",
+        "arrow_array::array::list_view_array::GenericListViewArray",
+        "arrow_array::array::map_array::MapArray",
+        "arrow_array::array::null_array::NullArray",
+        "arrow_array::array::primitive_array::PrimitiveArray",
+        "arrow_array::array::run_array::RunArray",
+        "arrow_array::array::run_array::TypedRunArray",
+        "arrow_array::array::struct_array::StructArray",
+        "arrow_array::array::union_array::UnionArray"
+      ],
+      "required_methods": [
+        "as_any",
+        "data_type",
+        "get_array_memory_size",
+        "get_buffer_memory_size",
+        "into_data",
+        "is_empty",
+        "len",
+        "nulls",
+        "offset",
+        "slice",
+        "to_data"
+      ],
+      "provided_methods": [
+        "claim",
+        "is_null",
+        "is_nullable",
+        "is_valid",
+        "logical_null_count",
+        "logical_nulls",
+        "null_count",
+        "shrink_to_fit"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "summary": "Returns the array as [`Any`] so that it can be downcasted to a specific implementation."
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "summary": "Claim memory used by this array in the provided memory pool."
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "summary": "Returns a reference to the [`DataType`] of this array."
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "summary": "Returns the total number of bytes of memory occupied physically by this array. This value will always be greater than returned by `get_buffer_memory_size()` and includes the overhead of the data structures that contain the pointers to the…"
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "summary": "Returns the total number of bytes of memory pointed to by this array. The buffers store bytes in the Arrow memory format, and include the data as well as the validity map. Note that this does not always correspond to the exact memory usage…"
+        },
+        {
+          "name": "into_data",
+          "signature": "fn into_data(self) -> ArrayData",
+          "summary": "Returns the underlying data of this array"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns whether this array is empty."
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, index: usize) -> bool",
+          "summary": "Returns whether the element at `index` is null according to [`Array::nulls`]"
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool",
+          "summary": "Returns `false` if the array is guaranteed to not contain any logical nulls"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, index: usize) -> bool",
+          "summary": "Returns whether the element at `index` is *not* null, the opposite of [`Self::is_null`]."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the length (i.e., number of elements) of this array."
+        },
+        {
+          "name": "logical_null_count",
+          "signature": "fn logical_null_count(&self) -> usize",
+          "summary": "Returns the total number of logical null values in this array."
+        },
+        {
+          "name": "logical_nulls",
+          "signature": "fn logical_nulls(&self) -> Option<NullBuffer>",
+          "summary": "Returns a potentially computed [`NullBuffer`] that represents the logical null values of this array, if any."
+        },
+        {
+          "name": "null_count",
+          "signature": "fn null_count(&self) -> usize",
+          "summary": "Returns the total number of physical null values in this array."
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "summary": "Returns the null buffer of this array if any."
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "summary": "Returns the offset into the underlying data used by this array(-slice). Note that the underlying data can be shared by many arrays. This defaults to `0`."
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "summary": "Shrinks the capacity of any exclusively owned buffer as much as possible"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+          "summary": "Returns a zero-copy slice of this array with the indicated offset and length."
+        },
+        {
+          "name": "to_data",
+          "signature": "fn to_data(&self) -> ArrayData",
+          "summary": "Returns the underlying data of this array"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::ArrayAccessor",
+      "name": "ArrayAccessor",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait ArrayAccessor: Array",
+      "summary": "A generic trait for accessing the values of an [`Array`]",
+      "doc": "api/arrow_array.array.md#arrayaccessor",
+      "aliases": [
+        "arrow::array::ArrayAccessor",
+        "arrow_array::ArrayAccessor"
+      ],
+      "implementors": [
+        "arrow_array::array::dictionary_array::TypedDictionaryArray",
+        "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+        "arrow_array::array::run_array::TypedRunArray"
+      ],
+      "required_methods": [
+        "value",
+        "value_unchecked"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "value",
+          "signature": "fn value(&self, index: usize) -> Self::Item",
+          "summary": "Returns the element at index `i` # Panics Panics if the value is outside the bounds of the array"
+        },
+        {
+          "name": "value_unchecked",
+          "signature": "unsafe fn value_unchecked(&self, index: usize) -> Self::Item",
+          "summary": "Returns the element at index `i` # Safety Caller is responsible for ensuring that the index is within the bounds of the array"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::BinaryArrayType",
+      "name": "BinaryArrayType",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait BinaryArrayType<'a>: ArrayAccessor<Item = &'a [u8]> + Sized",
+      "summary": "A trait for Arrow Binary Arrays, currently four types are supported: - `BinaryArray` - `LargeBinaryArray` - `BinaryViewArray` - `FixedSizeBinaryArray`",
+      "doc": "api/arrow_array.array.md#binaryarraytype",
+      "aliases": [
+        "arrow::array::BinaryArrayType",
+        "arrow_array::BinaryArrayType"
+      ],
+      "required_methods": [
+        "iter"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> ArrayIter<Self>",
+          "summary": "Constructs a new iterator"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::ListLikeArray",
+      "name": "ListLikeArray",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait ListLikeArray: Array",
+      "summary": "A trait for Arrow list-like arrays, abstracting over [`GenericListArray`], [`GenericListViewArray`], and [`FixedSizeListArray`].",
+      "doc": "api/arrow_array.array.md#listlikearray",
+      "aliases": [
+        "arrow::array::ListLikeArray",
+        "arrow_array::ListLikeArray"
+      ],
+      "implementors": [
+        "arrow_array::array::fixed_size_list_array::FixedSizeListArray",
+        "arrow_array::array::list_array::GenericListArray",
+        "arrow_array::array::list_view_array::GenericListViewArray"
+      ],
+      "required_methods": [
+        "element_range",
+        "values"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "element_range",
+          "signature": "fn element_range(&self, index: usize) -> std::ops::Range<usize>",
+          "summary": "Returns the start and end indices into the values array for the list element at `index`."
+        },
+        {
+          "name": "values",
+          "signature": "fn values(&self) -> &ArrayRef",
+          "summary": "Returns the child values array."
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::StringArrayType",
+      "name": "StringArrayType",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait StringArrayType<'a>: ArrayAccessor<Item = &'a str> + Sized",
+      "summary": "A trait for Arrow String Arrays, currently three types are supported: - `StringArray` - `LargeStringArray` - `StringViewArray`",
+      "doc": "api/arrow_array.array.md#stringarraytype",
+      "aliases": [
+        "arrow::array::StringArrayType",
+        "arrow::compute::StringArrayType",
+        "arrow::compute::kernels::comparison::StringArrayType",
+        "arrow_array::StringArrayType",
+        "arrow_string::like::StringArrayType"
+      ],
+      "required_methods": [
+        "is_ascii",
+        "iter"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "is_ascii",
+          "signature": "fn is_ascii(&self) -> bool",
+          "summary": "Returns true if all data within this string array is ASCII"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> ArrayIter<Self>",
+          "summary": "Constructs a new iterator"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::array::ArrayRef",
+      "name": "ArrayRef",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type ArrayRef = std::sync::Arc<dyn Array>",
+      "summary": "A reference-counted reference to a generic `Array`",
+      "doc": "api/arrow_array.array.md#arrayref",
+      "aliases": [
+        "arrow::array::ArrayRef",
+        "arrow_array::ArrayRef"
+      ],
+      "implements": [
+        "arrow_array::array::Array",
+        "arrow_array::cast::AsArray",
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "datafusion_common::hash_utils::AsDynArray"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "as_any_dictionary_opt",
+          "signature": "fn as_any_dictionary_opt(&self) -> Option<&dyn AnyDictionaryArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_any_ree_opt",
+          "signature": "fn as_any_ree_opt(&self) -> Option<&dyn AnyRunEndArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_boolean_opt",
+          "signature": "fn as_boolean_opt(&self) -> Option<&BooleanArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_byte_view_opt",
+          "signature": "fn as_byte_view_opt<T: ByteViewType>(&self) -> Option<&GenericByteViewArray<T>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_bytes_opt",
+          "signature": "fn as_bytes_opt<T: ByteArrayType>(&self) -> Option<&GenericByteArray<T>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_dictionary_opt",
+          "signature": "fn as_dictionary_opt<K: ArrowDictionaryKeyType>(&self) -> Option<&DictionaryArray<K>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_fixed_size_binary_opt",
+          "signature": "fn as_fixed_size_binary_opt(&self) -> Option<&FixedSizeBinaryArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_fixed_size_list_opt",
+          "signature": "fn as_fixed_size_list_opt(&self) -> Option<&FixedSizeListArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_list_opt",
+          "signature": "fn as_list_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericListArray<O>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_list_view_opt",
+          "signature": "fn as_list_view_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericListViewArray<O>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_map_opt",
+          "signature": "fn as_map_opt(&self) -> Option<&MapArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_primitive_opt",
+          "signature": "fn as_primitive_opt<T: ArrowPrimitiveType>(&self) -> Option<&PrimitiveArray<T>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_run_opt",
+          "signature": "fn as_run_opt<K: RunEndIndexType>(&self) -> Option<&RunArray<K>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_string_opt",
+          "signature": "fn as_string_opt<O: OffsetSizeTrait>(&self) -> Option<&GenericStringArray<O>>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_struct_opt",
+          "signature": "fn as_struct_opt(&self) -> Option<&StructArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "as_union_opt",
+          "signature": "fn as_union_opt(&self) -> Option<&UnionArray>",
+          "via_trait": "arrow_array::cast::AsArray"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "get_buffer_memory_size",
+          "signature": "fn get_buffer_memory_size(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "into_data",
+          "signature": "fn into_data(self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, index: usize) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, index: usize) -> bool",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_null_count",
+          "signature": "fn logical_null_count(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "logical_nulls",
+          "signature": "fn logical_nulls(&self) -> Option<NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "null_count",
+          "signature": "fn null_count(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "via_trait": "arrow_array::array::Array",
+          "summary": "For shared buffers, this is a no-op."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> ArrayRef",
+          "via_trait": "arrow_array::array::Array"
+        },
+        {
+          "name": "to_data",
+          "signature": "fn to_data(&self) -> ArrayData",
+          "via_trait": "arrow_array::array::Array"
+        }
+      ]
+    }
+  ]
+}

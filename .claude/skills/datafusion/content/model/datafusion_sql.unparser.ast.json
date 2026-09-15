@@ -1,0 +1,473 @@
+{
+  "module": "datafusion_sql::unparser::ast",
+  "crate": "datafusion-sql",
+  "api": "api/datafusion_sql.unparser.ast.md",
+  "items": [
+    {
+      "path": "datafusion_sql::unparser::ast::BuilderError",
+      "name": "BuilderError",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum BuilderError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "UninitializedField",
+        "ValidationError"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(s: String) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::DerivedRelationBuilder",
+      "name": "DerivedRelationBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct DerivedRelationBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "lateral",
+          "signature": "fn lateral(&mut self, value: bool) -> &mut Self"
+        },
+        {
+          "name": "subquery",
+          "signature": "fn subquery(&mut self, value: Box<ast::Query>) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::FlattenRelationBuilder",
+      "name": "FlattenRelationBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct FlattenRelationBuilder",
+      "summary": "Builds a `LATERAL FLATTEN(INPUT => expr, OUTER => bool)` table factor for Snowflake-style unnesting.",
+      "doc": "api/datafusion_sql.unparser.ast.md#flattenrelationbuilder",
+      "fields": [
+        "alias",
+        "input_expr",
+        "outer"
+      ],
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<ast::TableFactor, BuilderError>"
+        },
+        {
+          "name": "input_expr",
+          "signature": "fn input_expr(&mut self, value: ast::Expr) -> &mut Self"
+        },
+        {
+          "name": "outer",
+          "signature": "fn outer(&mut self, value: bool) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::QueryBuilder",
+      "name": "QueryBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct QueryBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "body",
+          "signature": "fn body(&mut self, value: Box<ast::SetExpr>) -> &mut Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<ast::Query, BuilderError>"
+        },
+        {
+          "name": "distinct_union",
+          "signature": "fn distinct_union(&mut self) -> &mut Self"
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&mut self, value: Option<ast::Fetch>) -> &mut Self"
+        },
+        {
+          "name": "for_clause",
+          "signature": "fn for_clause(&mut self, value: Option<ast::ForClause>) -> &mut Self"
+        },
+        {
+          "name": "is_distinct_union",
+          "signature": "fn is_distinct_union(&self) -> bool"
+        },
+        {
+          "name": "limit",
+          "signature": "fn limit(&mut self, value: Option<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "limit_by",
+          "signature": "fn limit_by(&mut self, value: Vec<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "locks",
+          "signature": "fn locks(&mut self, value: Vec<ast::LockClause>) -> &mut Self"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&mut self, value: Option<ast::Offset>) -> &mut Self"
+        },
+        {
+          "name": "order_by",
+          "signature": "fn order_by(&mut self, value: OrderByKind) -> &mut Self"
+        },
+        {
+          "name": "take_body",
+          "signature": "fn take_body(&mut self) -> Option<Box<ast::SetExpr>>"
+        },
+        {
+          "name": "with",
+          "signature": "fn with(&mut self, value: Option<ast::With>) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::RelationBuilder",
+      "name": "RelationBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct RelationBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<Option<ast::TableFactor>, BuilderError>"
+        },
+        {
+          "name": "derived",
+          "signature": "fn derived(&mut self, value: DerivedRelationBuilder) -> &mut Self"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty(&mut self) -> &mut Self"
+        },
+        {
+          "name": "flatten",
+          "signature": "fn flatten(&mut self, value: FlattenRelationBuilder) -> &mut Self"
+        },
+        {
+          "name": "has_relation",
+          "signature": "fn has_relation(&self) -> bool"
+        },
+        {
+          "name": "nested_join",
+          "signature": "fn nested_join(&mut self, value: ast::TableWithJoins, alias: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "table",
+          "signature": "fn table(&mut self, value: TableRelationBuilder) -> &mut Self"
+        },
+        {
+          "name": "unnest",
+          "signature": "fn unnest(&mut self, value: UnnestRelationBuilder) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::SelectBuilder",
+      "name": "SelectBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct SelectBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "add_flatten_table_alias",
+          "signature": "fn add_flatten_table_alias(&mut self, alias: String)",
+          "summary": "Register a table alias as pointing to a LATERAL FLATTEN relation."
+        },
+        {
+          "name": "already_projected",
+          "signature": "fn already_projected(&self) -> bool",
+          "summary": "Returns true if a projection has been explicitly set via `projection()`."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<ast::Select, BuilderError>"
+        },
+        {
+          "name": "cluster_by",
+          "signature": "fn cluster_by(&mut self, value: Vec<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "current_flatten_alias",
+          "signature": "fn current_flatten_alias(&self) -> Option<String>",
+          "summary": "Returns the most recently generated flatten alias, or `None` if `next_flatten_alias` has not been called yet."
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(&mut self, value: Option<ast::Distinct>) -> &mut Self"
+        },
+        {
+          "name": "distribute_by",
+          "signature": "fn distribute_by(&mut self, value: Vec<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "flatten_table_aliases_empty",
+          "signature": "fn flatten_table_aliases_empty(&self) -> bool",
+          "summary": "Returns true if no FLATTEN table aliases have been registered."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(&mut self, value: Vec<TableWithJoinsBuilder>) -> &mut Self"
+        },
+        {
+          "name": "group_by",
+          "signature": "fn group_by(&mut self, value: ast::GroupByExpr) -> &mut Self"
+        },
+        {
+          "name": "has_selection",
+          "signature": "fn has_selection(&self) -> bool"
+        },
+        {
+          "name": "having",
+          "signature": "fn having(&mut self, value: Option<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "into",
+          "signature": "fn into(&mut self, value: Option<ast::SelectInto>) -> &mut Self"
+        },
+        {
+          "name": "is_flatten_table_alias",
+          "signature": "fn is_flatten_table_alias(&self, alias: &str) -> bool",
+          "summary": "Returns true if the given table alias refers to a FLATTEN relation."
+        },
+        {
+          "name": "lateral_views",
+          "signature": "fn lateral_views(&mut self, value: Vec<ast::LateralView>) -> &mut Self"
+        },
+        {
+          "name": "named_window",
+          "signature": "fn named_window(&mut self, value: Vec<ast::NamedWindowDefinition>) -> &mut Self"
+        },
+        {
+          "name": "next_flatten_alias",
+          "signature": "fn next_flatten_alias(&mut self) -> String",
+          "summary": "Generate a unique alias for a LATERAL FLATTEN relation (`_unnest_1`, `_unnest_2`, …). Each call returns a fresh name."
+        },
+        {
+          "name": "pop_from",
+          "signature": "fn pop_from(&mut self) -> Option<TableWithJoinsBuilder>"
+        },
+        {
+          "name": "pop_projections",
+          "signature": "fn pop_projections(&mut self) -> Vec<ast::SelectItem>"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&mut self, value: Vec<ast::SelectItem>) -> &mut Self"
+        },
+        {
+          "name": "push_from",
+          "signature": "fn push_from(&mut self, value: TableWithJoinsBuilder) -> &mut Self"
+        },
+        {
+          "name": "qualify",
+          "signature": "fn qualify(&mut self, value: Option<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "replace_mark",
+          "signature": "fn replace_mark(&mut self, existing_expr: &ast::Expr, value: &ast::Expr) -> &mut Self",
+          "summary": "Replaces the selection with a new value."
+        },
+        {
+          "name": "selection",
+          "signature": "fn selection(&mut self, value: Option<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "sort_by",
+          "signature": "fn sort_by(&mut self, value: Vec<ast::OrderByExpr>) -> &mut Self"
+        },
+        {
+          "name": "top",
+          "signature": "fn top(&mut self, value: Option<ast::Top>) -> &mut Self"
+        },
+        {
+          "name": "value_table_mode",
+          "signature": "fn value_table_mode(&mut self, value: Option<ast::ValueTableMode>) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::TableRelationBuilder",
+      "name": "TableRelationBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct TableRelationBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "args",
+          "signature": "fn args(&mut self, value: Option<Vec<ast::FunctionArg>>) -> &mut Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<ast::TableFactor, BuilderError>"
+        },
+        {
+          "name": "index_hints",
+          "signature": "fn index_hints(&mut self, value: Vec<ast::TableIndexHints>) -> &mut Self"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&mut self, value: ast::ObjectName) -> &mut Self"
+        },
+        {
+          "name": "partitions",
+          "signature": "fn partitions(&mut self, value: Vec<ast::Ident>) -> &mut Self"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&mut self, value: Option<ast::TableVersion>) -> &mut Self"
+        },
+        {
+          "name": "with_hints",
+          "signature": "fn with_hints(&mut self, value: Vec<ast::Expr>) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::TableWithJoinsBuilder",
+      "name": "TableWithJoinsBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct TableWithJoinsBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<Option<ast::TableWithJoins>, BuilderError>"
+        },
+        {
+          "name": "joins",
+          "signature": "fn joins(&mut self, value: Vec<ast::Join>) -> &mut Self"
+        },
+        {
+          "name": "push_join",
+          "signature": "fn push_join(&mut self, value: ast::Join) -> &mut Self"
+        },
+        {
+          "name": "relation",
+          "signature": "fn relation(&mut self, value: RelationBuilder) -> &mut Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::UninitializedFieldError",
+      "name": "UninitializedFieldError",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct UninitializedFieldError",
+      "summary": "Runtime error when a `build()` method is called and one or more required fields do not have a value.",
+      "doc": "api/datafusion_sql.unparser.ast.md#uninitializedfielderror",
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "field_name",
+          "signature": "fn field_name(&self) -> &'static str",
+          "summary": "Get the name of the first-declared field that wasn't initialized"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(field_name: &'static str) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(field_name: &'static str) -> Self",
+          "summary": "Create a new `UninitializedFieldError` for the specified field name."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::unparser::ast::UnnestRelationBuilder",
+      "name": "UnnestRelationBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct UnnestRelationBuilder",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "alias",
+        "array_exprs"
+      ],
+      "methods": [
+        {
+          "name": "alias",
+          "signature": "fn alias(&mut self, value: Option<ast::TableAlias>) -> &mut Self"
+        },
+        {
+          "name": "array_exprs",
+          "signature": "fn array_exprs(&mut self, value: Vec<ast::Expr>) -> &mut Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self) -> Result<ast::TableFactor, BuilderError>"
+        },
+        {
+          "name": "with_offset",
+          "signature": "fn with_offset(&mut self, value: bool) -> &mut Self"
+        },
+        {
+          "name": "with_offset_alias",
+          "signature": "fn with_offset_alias(&mut self, value: Option<ast::Ident>) -> &mut Self"
+        },
+        {
+          "name": "with_ordinality",
+          "signature": "fn with_ordinality(&mut self, value: bool) -> &mut Self"
+        }
+      ]
+    }
+  ]
+}

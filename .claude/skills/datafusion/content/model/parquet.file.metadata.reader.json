@@ -1,0 +1,173 @@
+{
+  "module": "parquet::file::metadata::reader",
+  "crate": "parquet",
+  "api": "api/parquet.file.metadata.reader.md",
+  "items": [
+    {
+      "path": "parquet::file::metadata::reader::PageIndexPolicy",
+      "name": "PageIndexPolicy",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum PageIndexPolicy",
+      "summary": "Describes the policy for reading page indexes",
+      "doc": "api/parquet.file.metadata.reader.md#pageindexpolicy",
+      "aliases": [
+        "parquet::file::metadata::PageIndexPolicy"
+      ],
+      "variants": [
+        "Skip",
+        "Optional",
+        "Required"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: bool) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::metadata::reader::ParquetMetaDataReader",
+      "name": "ParquetMetaDataReader",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ParquetMetaDataReader",
+      "summary": "Reads [`ParquetMetaData`] from a byte stream, with either synchronous or asynchronous I/O.",
+      "doc": "api/parquet.file.metadata.reader.md#parquetmetadatareader",
+      "aliases": [
+        "parquet::file::metadata::ParquetMetaDataReader"
+      ],
+      "methods": [
+        {
+          "name": "decode_metadata",
+          "signature": "fn decode_metadata(buf: &[u8]) -> Result<ParquetMetaData>",
+          "summary": "Decodes [`ParquetMetaData`] from the provided bytes."
+        },
+        {
+          "name": "decode_metadata_with_options",
+          "signature": "fn decode_metadata_with_options(buf: &[u8], options: Option<&ParquetMetaDataOptions>) -> Result<ParquetMetaData>",
+          "summary": "Decodes [`ParquetMetaData`] from the provided bytes."
+        },
+        {
+          "name": "decode_schema",
+          "signature": "fn decode_schema(buf: &[u8]) -> Result<Arc<SchemaDescriptor>>",
+          "summary": "Decodes the schema from the Parquet footer in `buf`. Returned as a [`SchemaDescriptor`]."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<ParquetMetaData>",
+          "summary": "Return the parsed [`ParquetMetaData`] struct, leaving `None` in its place."
+        },
+        {
+          "name": "has_metadata",
+          "signature": "fn has_metadata(&self) -> bool",
+          "summary": "Indicates whether this reader has a [`ParquetMetaData`] internally."
+        },
+        {
+          "name": "load_and_finish",
+          "signature": "async fn load_and_finish<F: MetadataFetch>(self, fetch: F, file_size: u64) -> Result<ParquetMetaData>",
+          "summary": "Given a [`MetadataFetch`], parse and return the [`ParquetMetaData`] in a single pass."
+        },
+        {
+          "name": "load_page_index",
+          "signature": "async fn load_page_index<F: MetadataFetch>(&mut self, fetch: F) -> Result<()>",
+          "summary": "Asynchronously fetch the page index structures when a [`ParquetMetaData`] has already been obtained. See [`Self::new_with_metadata()`]."
+        },
+        {
+          "name": "load_via_suffix_and_finish",
+          "signature": "async fn load_via_suffix_and_finish<F: MetadataSuffixFetch>(self, fetch: F) -> Result<ParquetMetaData>",
+          "summary": "Given a [`MetadataSuffixFetch`], parse and return the [`ParquetMetaData`] in a single pass."
+        },
+        {
+          "name": "metadata_size",
+          "signature": "fn metadata_size(&self) -> Option<usize>",
+          "summary": "Size of the serialized thrift metadata plus the 8 byte footer. Only set if `self.parse_metadata` is called."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`ParquetMetaDataReader`]"
+        },
+        {
+          "name": "new_with_metadata",
+          "signature": "fn new_with_metadata(metadata: ParquetMetaData) -> Self",
+          "summary": "Create a new [`ParquetMetaDataReader`] populated with a [`ParquetMetaData`] struct obtained via other means."
+        },
+        {
+          "name": "parse_and_finish",
+          "signature": "fn parse_and_finish<R: ChunkReader>(self, reader: &R) -> Result<ParquetMetaData>",
+          "summary": "Given a [`ChunkReader`], parse and return the [`ParquetMetaData`] in a single pass."
+        },
+        {
+          "name": "read_page_indexes",
+          "signature": "fn read_page_indexes<R: ChunkReader>(&mut self, reader: &R) -> Result<()>",
+          "summary": "Read the page index structures when a [`ParquetMetaData`] has already been obtained. See [`Self::new_with_metadata()`] and [`Self::has_metadata()`]."
+        },
+        {
+          "name": "read_page_indexes_sized",
+          "signature": "fn read_page_indexes_sized<R: ChunkReader>(&mut self, reader: &R, file_size: u64) -> Result<()>",
+          "summary": "Read the page index structures when a [`ParquetMetaData`] has already been obtained. This variant is used when `reader` cannot access the entire Parquet file (e.g. it is a [`Bytes`] struct containing the tail of the file). See [`Self::new_…"
+        },
+        {
+          "name": "try_load",
+          "signature": "async fn try_load<F: MetadataFetch>(&mut self, fetch: F, file_size: u64) -> Result<()>",
+          "summary": "Attempts to (asynchronously) parse the footer metadata (and optionally page indexes) given a [`MetadataFetch`]."
+        },
+        {
+          "name": "try_load_via_suffix",
+          "signature": "async fn try_load_via_suffix<F: MetadataSuffixFetch>(&mut self, fetch: F) -> Result<()>",
+          "summary": "Attempts to (asynchronously) parse the footer metadata (and optionally page indexes) given a [`MetadataSuffixFetch`]."
+        },
+        {
+          "name": "try_parse",
+          "signature": "fn try_parse<R: ChunkReader>(&mut self, reader: &R) -> Result<()>",
+          "summary": "Attempts to parse the footer metadata (and optionally page indexes) given a [`ChunkReader`]."
+        },
+        {
+          "name": "try_parse_sized",
+          "signature": "fn try_parse_sized<R: ChunkReader>(&mut self, reader: &R, file_size: u64) -> Result<()>",
+          "summary": "Same as [`Self::try_parse()`], but provide the original file size in the case that `reader` is a [`Bytes`] struct that does not contain the entire file. This information is necessary when the page indexes are desired. `reader` must have ac…"
+        },
+        {
+          "name": "with_arrow_reader_options",
+          "signature": "fn with_arrow_reader_options(self, options: Option<&ArrowReaderOptions>) -> Self",
+          "summary": "Applies the metadata related settings from [`ArrowReaderOptions`], such as the [`ParquetMetaDataOptions`], decryption properties, and [`PageIndexPolicy`] to this reader."
+        },
+        {
+          "name": "with_column_index_policy",
+          "signature": "fn with_column_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for the column index"
+        },
+        {
+          "name": "with_decryption_properties",
+          "signature": "fn with_decryption_properties(self, properties: Option<std::sync::Arc<FileDecryptionProperties>>) -> Self",
+          "summary": "Provide the FileDecryptionProperties to use when decrypting the file."
+        },
+        {
+          "name": "with_metadata_options",
+          "signature": "fn with_metadata_options(self, options: Option<ParquetMetaDataOptions>) -> Self",
+          "summary": "Sets the [`ParquetMetaDataOptions`] to use when decoding"
+        },
+        {
+          "name": "with_offset_index_policy",
+          "signature": "fn with_offset_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for the offset index"
+        },
+        {
+          "name": "with_page_index_policy",
+          "signature": "fn with_page_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for the column and offset indexes"
+        },
+        {
+          "name": "with_prefetch_hint",
+          "signature": "fn with_prefetch_hint(self, prefetch: Option<usize>) -> Self",
+          "summary": "Provide a hint as to the number of bytes needed to fully parse the [`ParquetMetaData`]. Only used for the asynchronous [`Self::try_load()`] method."
+        }
+      ]
+    }
+  ]
+}

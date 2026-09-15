@@ -1,0 +1,191 @@
+{
+  "module": "datafusion_expr::logical_plan::extension",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.logical_plan.extension.md",
+  "items": [
+    {
+      "path": "datafusion_expr::logical_plan::extension::UserDefinedLogicalNode",
+      "name": "UserDefinedLogicalNode",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait UserDefinedLogicalNode: fmt::Debug + Send + Sync",
+      "summary": "This defines the interface for [`LogicalPlan`] nodes that can be used to extend DataFusion with custom relational operators.",
+      "doc": "api/datafusion_expr.logical_plan.extension.md#userdefinedlogicalnode",
+      "aliases": [
+        "datafusion::logical_expr::UserDefinedLogicalNode",
+        "datafusion_expr::UserDefinedLogicalNode",
+        "datafusion_expr::logical_plan::UserDefinedLogicalNode"
+      ],
+      "required_methods": [
+        "as_any",
+        "check_invariants",
+        "dyn_eq",
+        "dyn_hash",
+        "dyn_ord",
+        "expressions",
+        "fmt_for_explain",
+        "inputs",
+        "name",
+        "schema",
+        "with_exprs_and_inputs"
+      ],
+      "provided_methods": [
+        "necessary_children_exprs",
+        "prevent_predicate_push_down_columns",
+        "supports_limit_pushdown"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "summary": "Return a reference to self as Any, to support dynamic downcasting"
+        },
+        {
+          "name": "check_invariants",
+          "signature": "fn check_invariants(&self, check: InvariantLevel) -> Result<()>",
+          "summary": "Perform check of invariants for the extension node."
+        },
+        {
+          "name": "dyn_eq",
+          "signature": "fn dyn_eq(&self, other: &dyn UserDefinedLogicalNode) -> bool",
+          "summary": "Compare `other`, respecting requirements from [Eq]."
+        },
+        {
+          "name": "dyn_hash",
+          "signature": "fn dyn_hash(&self, state: &mut dyn Hasher)",
+          "summary": "Update the hash `state` with this node requirements from [`Hash`]."
+        },
+        {
+          "name": "dyn_ord",
+          "signature": "fn dyn_ord(&self, other: &dyn UserDefinedLogicalNode) -> Option<Ordering>",
+          "summary": "Compare `other`, respecting requirements from [PartialOrd]. Must return `Some(Equal)` if and only if `self.dyn_eq(other)`."
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Expr>",
+          "summary": "Returns all expressions in the current logical plan node. This should not include expressions of any inputs (aka non-recursively)."
+        },
+        {
+          "name": "fmt_for_explain",
+          "signature": "fn fmt_for_explain(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "summary": "Write a single line, human readable string to `f` for use in explain plan."
+        },
+        {
+          "name": "inputs",
+          "signature": "fn inputs(&self) -> Vec<&LogicalPlan>",
+          "summary": "Return the logical plan's inputs."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Return the plan's name."
+        },
+        {
+          "name": "necessary_children_exprs",
+          "signature": "fn necessary_children_exprs(&self, _output_columns: &[usize]) -> Option<Vec<Vec<usize>>>",
+          "summary": "Returns the necessary input columns for this node required to compute the columns in the output schema"
+        },
+        {
+          "name": "prevent_predicate_push_down_columns",
+          "signature": "fn prevent_predicate_push_down_columns(&self) -> HashSet<String>",
+          "summary": "A list of output columns (e.g. the names of columns in self.schema()) for which predicates can not be pushed below this node without changing the output."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &DFSchemaRef",
+          "summary": "Return the output schema of this logical plan node."
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "summary": "Returns `true` if a limit can be safely pushed down through this `UserDefinedLogicalNode` node."
+        },
+        {
+          "name": "with_exprs_and_inputs",
+          "signature": "fn with_exprs_and_inputs(&self, exprs: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<Arc<dyn UserDefinedLogicalNode>>",
+          "summary": "Create a new `UserDefinedLogicalNode` with the specified children and expressions. This function is used during optimization when the plan is being rewritten and a new instance of the `UserDefinedLogicalNode` must be created."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::extension::UserDefinedLogicalNodeCore",
+      "name": "UserDefinedLogicalNodeCore",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait UserDefinedLogicalNodeCore: fmt::Debug + Eq + PartialOrd + Hash + Sized + Send + Sync + 'static",
+      "summary": "This trait facilitates implementation of the [`UserDefinedLogicalNode`].",
+      "doc": "api/datafusion_expr.logical_plan.extension.md#userdefinedlogicalnodecore",
+      "aliases": [
+        "datafusion::logical_expr::UserDefinedLogicalNodeCore",
+        "datafusion_expr::UserDefinedLogicalNodeCore",
+        "datafusion_expr::logical_plan::UserDefinedLogicalNodeCore"
+      ],
+      "required_methods": [
+        "expressions",
+        "fmt_for_explain",
+        "inputs",
+        "name",
+        "schema",
+        "with_exprs_and_inputs"
+      ],
+      "provided_methods": [
+        "check_invariants",
+        "necessary_children_exprs",
+        "prevent_predicate_push_down_columns",
+        "supports_limit_pushdown"
+      ],
+      "methods": [
+        {
+          "name": "check_invariants",
+          "signature": "fn check_invariants(&self, _check: InvariantLevel) -> Result<()>",
+          "summary": "Perform check of invariants for the extension node."
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> Vec<Expr>",
+          "summary": "Returns all expressions in the current logical plan node. This should not include expressions of any inputs (aka non-recursively). These expressions are used for optimizer passes and rewrites."
+        },
+        {
+          "name": "fmt_for_explain",
+          "signature": "fn fmt_for_explain(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "summary": "Write a single line, human readable string to `f` for use in explain plan."
+        },
+        {
+          "name": "inputs",
+          "signature": "fn inputs(&self) -> Vec<&LogicalPlan>",
+          "summary": "Return the logical plan's inputs."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Return the plan's name."
+        },
+        {
+          "name": "necessary_children_exprs",
+          "signature": "fn necessary_children_exprs(&self, _output_columns: &[usize]) -> Option<Vec<Vec<usize>>>",
+          "summary": "Returns the necessary input columns for this node required to compute the columns in the output schema"
+        },
+        {
+          "name": "prevent_predicate_push_down_columns",
+          "signature": "fn prevent_predicate_push_down_columns(&self) -> HashSet<String>",
+          "summary": "A list of output columns (e.g. the names of columns in self.schema()) for which predicates can not be pushed below this node without changing the output."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &DFSchemaRef",
+          "summary": "Return the output schema of this logical plan node."
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "summary": "Returns `true` if a limit can be safely pushed down through this `UserDefinedLogicalNode` node."
+        },
+        {
+          "name": "with_exprs_and_inputs",
+          "signature": "fn with_exprs_and_inputs(&self, exprs: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<Self>",
+          "summary": "Create a new `UserDefinedLogicalNode` with the specified children and expressions. This function is used during optimization when the plan is being rewritten and a new instance of the `UserDefinedLogicalNode` must be created."
+        }
+      ]
+    }
+  ]
+}

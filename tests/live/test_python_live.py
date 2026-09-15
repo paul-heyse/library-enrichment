@@ -41,7 +41,13 @@ async def test_real_python_distribution_cold_then_offline(tmp_path):
                         "context_id": context,
                         "snapshot_id": snapshot,
                         "symbol_path": "packaging.version.Version",
-                        "depth": "source",
+                        "selection": {
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name}
+                                for name in ("signature", "availability", "documentation", "source")
+                            ],
+                        },
                     },
                 )
             ).structured_content
@@ -77,7 +83,13 @@ async def test_real_python_distribution_cold_then_offline(tmp_path):
                         "context_id": context,
                         "snapshot_id": snapshot,
                         "symbol_path": "packaging.version.Version",
-                        "depth": "source",
+                        "selection": {
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name}
+                                for name in ("signature", "availability", "documentation", "source")
+                            ],
+                        },
                     },
                 )
             ).structured_content

@@ -1,0 +1,68 @@
+{
+  "module": "datafusion_common::extensions",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.extensions.md",
+  "items": [
+    {
+      "path": "datafusion_common::extensions::Extensions",
+      "name": "Extensions",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Extensions",
+      "summary": "A type-keyed map of opaque `Arc`'d values. Each Rust type `T` occupies its own slot, so independent components can each attach their own data without conflict.",
+      "doc": "api/datafusion_common.extensions.md#extensions",
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains<T: Any + Send + Sync>(&self) -> bool",
+          "summary": "Returns true if an extension of type `T` is set."
+        },
+        {
+          "name": "get",
+          "signature": "fn get<T: Any + Send + Sync>(&self) -> Option<&T>",
+          "summary": "Borrow the extension of type `T`, if set."
+        },
+        {
+          "name": "get_arc",
+          "signature": "fn get_arc<T: Any + Send + Sync>(&self) -> Option<Arc<T>>",
+          "summary": "Get a cloned `Arc<T>` of the extension, if set."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<T: Any + Send + Sync>(&mut self, value: T) -> Option<Arc<T>>",
+          "summary": "Insert an extension keyed by its concrete type `T`. Returns the previous value of that type, if any."
+        },
+        {
+          "name": "insert_arc",
+          "signature": "fn insert_arc<T: Any + Send + Sync>(&mut self, value: Arc<T>) -> Option<Arc<T>>",
+          "summary": "Insert an extension keyed by its concrete type `T`, taking an already-allocated [`Arc<T>`]. Returns the previous value of that type, if any."
+        },
+        {
+          "name": "insert_dyn",
+          "signature": "fn insert_dyn(&mut self, value: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn Any + Send + Sync>>",
+          "summary": "Insert an already-type-erased value, keyed by its dynamic [`TypeId`]. Used internally to support APIs that accept `Arc<dyn Any + Send + Sync>` for backwards compatibility and need to recover the concrete type for keying."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if no extensions are set."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Number of extensions set."
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge(&mut self, other: &Extensions)",
+          "summary": "Merge entries from `other` into `self`. Entries in `other` take precedence over existing entries with the same type."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create an empty map."
+        }
+      ]
+    }
+  ]
+}

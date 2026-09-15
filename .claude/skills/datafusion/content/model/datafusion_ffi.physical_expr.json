@@ -1,0 +1,164 @@
+{
+  "module": "datafusion_ffi::physical_expr",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.physical_expr.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::physical_expr::FFI_PhysicalExpr",
+      "name": "FFI_PhysicalExpr",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_PhysicalExpr",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "data_type",
+        "nullable",
+        "evaluate",
+        "return_field",
+        "evaluate_selection",
+        "children",
+        "new_with_children",
+        "evaluate_bounds",
+        "propagate_constraints",
+        "evaluate_statistics",
+        "propagate_statistics",
+        "get_properties",
+        "fmt_sql",
+        "snapshot",
+        "snapshot_generation",
+        "is_volatile_node",
+        "expression_id",
+        "display",
+        "hash",
+        "clone",
+        "release",
+        "version",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(expr: Arc<dyn PhysicalExpr>) -> Self",
+          "via_trait": "core::convert::From",
+          "summary": "Creates a new [`FFI_PhysicalExpr`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::physical_expr::ForeignPhysicalExpr",
+      "name": "ForeignPhysicalExpr",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignPhysicalExpr",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ph…",
+      "doc": "api/datafusion_ffi.physical_expr.md#foreignphysicalexpr",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+      ],
+      "methods": [
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self, input_schema: &Schema) -> Result<DataType>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &RecordBatch) -> Result<ColumnarValue>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "evaluate_bounds",
+          "signature": "fn evaluate_bounds(&self, children: &[&Interval]) -> Result<Interval>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "evaluate_selection",
+          "signature": "fn evaluate_selection(&self, batch: &RecordBatch, selection: &BooleanArray) -> Result<ColumnarValue>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "evaluate_statistics",
+          "signature": "fn evaluate_statistics(&self, children: &[&Distribution]) -> Result<Distribution>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "expression_id",
+          "signature": "fn expression_id(&self) -> Option<u64>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_sql",
+          "signature": "fn fmt_sql(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "get_properties",
+          "signature": "fn get_properties(&self, children: &[ExprProperties]) -> Result<ExprProperties>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "is_volatile_node",
+          "signature": "fn is_volatile_node(&self) -> bool",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self, input_schema: &Schema) -> Result<bool>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "propagate_constraints",
+          "signature": "fn propagate_constraints(&self, interval: &Interval, children: &[&Interval]) -> Result<Option<Vec<Interval>>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "propagate_statistics",
+          "signature": "fn propagate_statistics(&self, parent: &Distribution, children: &[&Distribution]) -> Result<Option<Vec<Distribution>>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "return_field",
+          "signature": "fn return_field(&self, input_schema: &Schema) -> Result<FieldRef>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> Result<Option<Arc<dyn PhysicalExpr>>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "snapshot_generation",
+          "signature": "fn snapshot_generation(&self) -> u64",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn PhysicalExpr>>) -> Result<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        }
+      ]
+    }
+  ]
+}

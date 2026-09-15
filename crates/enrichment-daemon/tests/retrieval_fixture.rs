@@ -120,33 +120,12 @@ async fn call(service: &Service, method: &str, params: serde_json::Value) -> ser
     if method == "library.resolve" {
         complete_answer::wait_for_answer(service, result).await
     } else {
-        result
+        complete_answer(service, result).await
     }
 }
 
 async fn comparison_result(service: &Service, response: serde_json::Value) -> serde_json::Value {
-    if response["status"] != "pending" {
-        return complete_answer(service, response).await;
-    }
-    let id = response["data"]["job_id"].as_str().expect("comparison job");
-    tokio::time::timeout(std::time::Duration::from_secs(60), async {
-        loop {
-            let record = call(
-                service,
-                "job.control",
-                serde_json::json!({"job_id":id,"action":"wait","wait_seconds":1}),
-            )
-            .await;
-            let record = complete_answer(service, record).await;
-            assert_eq!(record["status"], "ok", "job polling failed: {record}");
-            if !record["data"]["result"].is_null() {
-                return complete_answer(service, record["data"]["result"].clone()).await;
-            }
-            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
-        }
-    })
-    .await
-    .expect("bounded comparison completion")
+    complete_answer::wait_for_answer(service, response).await
 }
 
 #[tokio::test]
@@ -156,20 +135,67 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
     let mut config = config_for(&upstream);
     config.limits.inline_wait_seconds = 0;
     let request = serde_json::json!({"ecosystem":"rust", "name":"enr-fixture", "from_version":"0.1.0", "to_version":"0.2.0", "scopes":["api"]});
-    let (job_id, result) = {
+    let (job_id, result, active) = {
         let service = service_with(config.clone(), dir.path());
         let pending = call(&service, "library.compare", request.clone()).await;
         assert_eq!(pending["status"], "pending", "{pending}");
         let job_id = pending["data"]["job_id"].as_str().unwrap().to_owned();
+        let active = std::fs::read(
+            dir.path()
+                .join("data/jobs/active")
+                .join(format!("{job_id}.json")),
+        )
+        .unwrap();
         let result = comparison_result(&service, pending).await;
+        if std::env::var_os("LIBENR_MEASURE_QUERIES").is_some() {
+            let observed = service
+                .repository
+                .runtime
+                .operation_diagnostics()
+                .into_iter()
+                .find(|v| v.operation_id == job_id)
+                .expect("completed comparison operation");
+            eprintln!(
+                "PLAN13_COMPARISON_MEASUREMENT {}",
+                serde_json::to_string(&observed).unwrap()
+            );
+        }
         assert!(
             matches!(result["status"].as_str(), Some("ok" | "partial")),
             "{result}"
         );
         assert_eq!(result["data"]["before"]["release"]["version"], "0.1.0");
         assert_eq!(result["data"]["after"]["release"]["version"], "0.2.0");
-        (job_id, result)
+        let published = service
+            .repository
+            .catalog
+            .pin()
+            .await
+            .unwrap()
+            .comparison_publication(&service.repository.runtime, &job_id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(
+            published.after_snapshot_id.as_str(),
+            result["data"]["after"]["snapshot_id"].as_str().unwrap()
+        );
+        (job_id, result, active)
     };
+    // Model the precise crash boundary: catalog committed, terminal journal rename absent.
+    std::fs::write(
+        dir.path()
+            .join("data/jobs/active")
+            .join(format!("{job_id}.json")),
+        active,
+    )
+    .unwrap();
+    std::fs::remove_file(
+        dir.path()
+            .join("data/jobs/terminal")
+            .join(format!("{job_id}.json")),
+    )
+    .unwrap();
     drop(upstream);
     let service = service_with(config, dir.path());
     let journal = call(
@@ -179,8 +205,19 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
     )
     .await;
     let journal = complete_answer(&service, journal).await;
+    assert!(
+        journal["data"]["stage"]
+            .as_str()
+            .unwrap()
+            .contains("recovered committed result")
+    );
+    let terminal = &journal["data"]["result"];
+    let mut descriptor = journal.clone();
+    descriptor["delivery"] = terminal["delivery"].clone();
+    descriptor["context_id"] = terminal["context_id"].clone();
+    descriptor["snapshot_id"] = terminal["snapshot_id"].clone();
     assert_eq!(
-        complete_answer(&service, journal["data"]["result"].clone()).await["data"],
+        complete_answer(&service, descriptor).await["data"],
         result["data"]
     );
     let pending = call(&service, "library.compare", request).await;
@@ -199,7 +236,7 @@ async fn signature_projection_retains_qualified_ids_without_documentation() {
     let resolved = resolve_0_2_0(&service).await;
     let context = ctx(&resolved);
     let signature = call(&service, "symbol.inspect", serde_json::json!({
-        "context_id": context, "symbol_path": "enr_fixture::Widget", "depth": "signature", "aspects": ["signature"]
+        "context_id": context, "symbol_path": "enr_fixture::Widget", "selection": {"mode":"explicit","aspects":[{"aspect":"signature"}]}
     })).await;
     let signature = complete_answer(&service, signature).await;
     assert_ne!(signature["status"], "error", "{signature}");
@@ -212,7 +249,7 @@ async fn signature_projection_retains_qualified_ids_without_documentation() {
             .all(|o| o["docs_included"] == false && o["payload"]["docs"].is_null())
     );
     let complete = call(&service, "symbol.inspect", serde_json::json!({
-        "context_id": context, "symbol_path": "enr_fixture::Widget", "depth": "documentation", "aspects": ["signature", "documentation"]
+        "context_id": context, "symbol_path": "enr_fixture::Widget", "selection": {"mode":"explicit","aspects":[{"aspect":"signature"},{"aspect":"documentation"}]}
     })).await;
     let complete = complete_answer(&service, complete).await;
     assert_ne!(complete["status"], "error", "{complete}");
@@ -225,9 +262,14 @@ async fn signature_projection_retains_qualified_ids_without_documentation() {
             selection["payload"]["signature"],
             full["payload"]["signature"]
         );
-        assert_eq!(full["docs_included"], true);
+        assert_eq!(full["docs_included"], false);
     }
-    assert!(facts.iter().any(|o| o["payload"]["docs"].is_string()));
+    let fragments = complete["data"]["fragments"].as_array().unwrap();
+    assert!(fragments.iter().any(|item| {
+        item["fragment"]["text"]
+            .as_str()
+            .is_some_and(|text| !text.is_empty())
+    }));
 }
 
 /// Resolve the fixture release that has hosted JSON, and return its envelope.
@@ -338,16 +380,37 @@ async fn hosted_json_indexes_the_api_without_compiling_the_crate() {
             >= 3
     );
     assert_eq!(data["definitions_by_kind"]["trait"], 1);
+    let discovery = data["discovery"].as_array().expect("discovery pages");
+    let features = discovery
+        .iter()
+        .find(|facet| facet["kind"] == "features")
+        .unwrap();
     assert!(
-        data["features"].get("extra").is_some(),
-        "{}",
-        data["features"]
+        features["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["fragment"]["subject"] == "extra"),
+        "{features}"
     );
-    assert!(!strings(&data["documentation_headings"]).is_empty());
-    assert!(!strings(&data["release_note_headings"]).is_empty());
+    for kind in ["documentation", "release_notes"] {
+        assert!(
+            !discovery
+                .iter()
+                .find(|facet| facet["kind"] == kind)
+                .unwrap()["items"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+    }
+    let examples = discovery
+        .iter()
+        .find(|facet| facet["kind"] == "examples")
+        .unwrap();
     assert_eq!(
-        strings(&data["examples"]),
-        vec!["examples/basic.rs".to_owned()]
+        examples["items"][0]["fragment"]["subject"],
+        "examples/basic.rs"
     );
 
     let search = call(
@@ -441,7 +504,7 @@ async fn availability_is_reported_against_the_observed_configuration() {
         "symbol.inspect",
         serde_json::json!({
             "context_id": ctx(&resolved), "symbol_path": "enr_fixture::extra_only",
-            "aspects": ["signature", "availability"]
+            "selection": {"mode":"explicit","aspects":[{"aspect":"signature"},{"aspect":"availability"}]}
         }),
     )
     .await;
@@ -497,7 +560,7 @@ async fn a_target_difference_is_identified_before_any_availability_claim() {
         "symbol.inspect",
         serde_json::json!({
             "context_id": ctx(&resolved), "symbol_path": "enr_fixture::unix_only",
-            "aspects": ["availability"]
+            "selection": {"mode":"explicit","aspects":[{"aspect":"availability"}]}
         }),
     )
     .await;
@@ -545,7 +608,7 @@ async fn a_reexport_is_linked_to_its_definition_and_counted_once() {
         "symbol.inspect",
         serde_json::json!({
             "context_id": context_id, "symbol_path": "enr_fixture::Widget",
-            "aspects": ["signature", "relationships"]
+            "selection": {"mode":"explicit","aspects":[{"aspect":"signature"},{"aspect":"relationships"}]}
         }),
     )
     .await;
@@ -554,7 +617,7 @@ async fn a_reexport_is_linked_to_its_definition_and_counted_once() {
         "symbol.inspect",
         serde_json::json!({
             "context_id": context_id, "symbol_path": "enr_fixture::inner::Widget",
-            "aspects": ["signature", "relationships"]
+            "selection": {"mode":"explicit","aspects":[{"aspect":"signature"},{"aspect":"relationships"}]}
         }),
     )
     .await;
@@ -631,13 +694,13 @@ async fn search_pages_with_a_checksummed_cursor_and_rejects_a_foreign_one() {
     )
     .await;
     assert_eq!(first["status"], "ok", "{}", first["summary"]);
-    assert_eq!(first["pagination"]["returned"], 1);
-    assert_eq!(first["pagination"]["truncated"], true);
-    let cursor = first["pagination"]["next_cursor"]
+    assert_eq!(first["data"]["page"]["returned"], 1);
+    assert_eq!(first["data"]["page"]["has_more"], true);
+    let cursor = first["data"]["page"]["next_cursor"]
         .as_str()
         .expect("a cursor")
         .to_owned();
-    assert!(cursor.starts_with("search_"));
+    assert!(cursor.starts_with("search2_"));
 
     let second = call(
         &service,
@@ -694,13 +757,42 @@ async fn an_empty_search_states_what_was_searched() {
     )
     .await;
     assert_ne!(empty["status"], "error");
-    assert_eq!(empty["pagination"]["returned"], 0);
+    assert_eq!(empty["data"]["page"]["returned"], 0);
     assert!(!strings(&empty["data"]["searched"]).is_empty());
     let limitations = strings(&empty["coverage"]["limitations"]);
     assert!(
         limitations.iter().any(|l| l.contains("does not establish")),
         "absence is not evidence of absence: {limitations:?}"
     );
+}
+
+#[tokio::test]
+async fn discovery_keeps_successful_facets_when_one_cursor_is_invalid() {
+    let upstream = Upstream::start();
+    let dir = tempfile::tempdir().unwrap();
+    let service = service_with(config_for(&upstream), dir.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let result = call(
+        &service,
+        "library.overview",
+        serde_json::json!({
+            "context_id": ctx(&resolved),
+            "discovery": [
+                {"kind":"documentation", "cursor":"foreign-cursor"},
+                {"kind":"features", "max_items":1}
+            ]
+        }),
+    )
+    .await;
+    assert_eq!(result["status"], "partial", "{result}");
+    assert!(result["error"].is_null());
+    let facets = result["data"]["discovery"].as_array().unwrap();
+    assert_eq!(facets[0]["state"], "failed");
+    assert_eq!(facets[0]["diagnostic"]["cause"], "invalid_input");
+    assert!(facets[0]["page"].is_null());
+    assert_eq!(facets[1]["state"], "available");
+    assert_eq!(facets[1]["items"].as_array().unwrap().len(), 1);
+    assert!(!result["data"]["namespaces"].as_array().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -741,7 +833,7 @@ async fn artifacts_are_read_by_handle_in_bounded_slices() {
         assert_eq!(page["data"]["encoding"], "utf8");
         assembled.push_str(page["data"]["content"].as_str().expect("text"));
         pages += 1;
-        match page["pagination"]["next_cursor"].as_str() {
+        match page["data"]["page"]["next_cursor"].as_str() {
             Some(next) => cursor = Some(next.to_owned()),
             None => break,
         }
@@ -768,7 +860,7 @@ async fn artifacts_are_read_by_handle_in_bounded_slices() {
     let section = call(
         &service,
         "artifact.read",
-        serde_json::json!({ "artifact_id": readme_id, "section": heading }),
+        serde_json::json!({ "artifact_id": readme_id, "section": {"kind":"markdown","heading": heading} }),
     )
     .await;
     assert_ne!(section["status"], "error", "{}", section["summary"]);
@@ -783,10 +875,10 @@ async fn artifacts_are_read_by_handle_in_bounded_slices() {
     let slice = call(
         &service,
         "artifact.read",
-        serde_json::json!({ "artifact_id": tarball["artifact_id"], "max_bytes": 2048 }),
+        serde_json::json!({ "artifact_id": tarball["artifact_id"], "max_bytes": 4096 }),
     )
     .await;
-    assert_eq!(slice["data"]["encoding"], "base64");
+    assert_eq!(slice["data"]["encoding"], "base64", "{slice}");
     assert!(slice["data"]["content_digest"].is_string());
 
     // A read by handle makes no claim about versions, and must not look like one. `source_uri`
@@ -863,6 +955,109 @@ async fn workstation_every_tool_answers_offline_from_the_snapshot_published_cold
     offline_fixture(Some(config)).await;
 }
 
+/// Manual W11 experiment: actual native operations, fixed fixture, no acceptance latency
+/// threshold. The caller records binary/source identities and process resources separately.
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+#[ignore = "manual one/eight-client operation measurement"]
+async fn measure_research_operations_one_and_eight_clients() {
+    use std::time::Instant;
+    let dir = tempfile::tempdir().unwrap();
+    let upstream = Upstream::start();
+    let mut config = config_for(&upstream);
+    let resources =
+        Config::from_path(&repo_root().join("config/service.workstation.toml")).unwrap();
+    config.arrow = resources.arrow;
+    config.limits = resources.limits;
+    let service = std::sync::Arc::new(service_with(config, dir.path()));
+    let acquisition = Instant::now();
+    let resolved = resolve_0_2_0(&service).await;
+    let context = ctx(&resolved);
+    eprintln!(
+        "PLAN13_ACQUISITION {}",
+        serde_json::json!({
+            "elapsed_micros": acquisition.elapsed().as_micros(), "status":resolved["status"],
+            "operations": service.repository.runtime.operation_diagnostics(),
+        })
+    );
+    drop(upstream);
+    let workloads = [
+        (
+            "known_api",
+            "symbol.inspect",
+            serde_json::json!({"context_id":context,"symbol_path":"enr_fixture::Shape"}),
+        ),
+        (
+            "relationships",
+            "symbol.inspect",
+            serde_json::json!({"context_id":context,"symbol_path":"enr_fixture::Shape","selection":{"mode":"explicit","aspects":[{"aspect":"relationships","max_items":32}]}}),
+        ),
+        (
+            "search",
+            "evidence.search",
+            serde_json::json!({"context_id":context,"query":"perimeter"}),
+        ),
+        (
+            "overview",
+            "library.overview",
+            serde_json::json!({"context_id":context}),
+        ),
+    ];
+    let mut expected = std::collections::BTreeMap::new();
+    for clients in [1, 8] {
+        for round in 0..3 {
+            for (task, method, params) in &workloads {
+                let started = Instant::now();
+                let mut tasks = tokio::task::JoinSet::new();
+                for _ in 0..clients {
+                    let service = std::sync::Arc::clone(&service);
+                    let params = params.clone();
+                    let method = *method;
+                    tasks.spawn(async move {
+                        let start = Instant::now();
+                        let frame = serde_json::json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}).to_string();
+                        let response = server::dispatch(&service, &frame).await.response.unwrap();
+                        assert!(response.error.is_none(), "{:?}", response.error);
+                        let answer = response.result.unwrap();
+                        let first_response_micros = start.elapsed().as_micros();
+                        let observation = service.repository.runtime.operation_diagnostics().into_iter().find(|v| Some(v.operation_id.as_str()) == answer["request_id"].as_str()).expect("the response owns its native query observations");
+                        let (answer, delivery) = complete_answer::complete_answer_measured(&service, answer).await;
+                        (start.elapsed().as_micros(), first_response_micros, answer, observation, delivery)
+                    });
+                }
+                let mut samples = Vec::new();
+                let mut operations = Vec::new();
+                while let Some(result) = tasks.join_next().await {
+                    let (elapsed, first_response, answer, observation, delivery) = result.unwrap();
+                    assert!(
+                        matches!(answer["status"].as_str(), Some("ok" | "partial")),
+                        "{answer}"
+                    );
+                    let digest = enrichment_core::canonical::digest_hex(&answer["data"]);
+                    assert_eq!(
+                        expected.entry(task).or_insert_with(|| digest.clone()),
+                        &digest,
+                        "equal results for {task}"
+                    );
+                    operations.push(observation);
+                    samples.push(serde_json::json!({"elapsed_micros":elapsed,"first_response_micros":first_response,"data_digest":digest,"encoded_result_bytes":serde_json::to_vec(&answer).unwrap().len(),"delivery":delivery}));
+                }
+                assert_eq!(
+                    operations.len(),
+                    clients,
+                    "each request has separately owned observations"
+                );
+                eprintln!(
+                    "PLAN13_OPERATION_MEASUREMENTS {}",
+                    serde_json::json!({
+                        "task":task,"clients":clients,"round":round,"wall_micros":started.elapsed().as_micros(),
+                        "samples":samples,"operations":operations,"scope":"native service dispatch; no MCP transport; retained fixture inputs; first round cold readers",
+                    })
+                );
+            }
+        }
+    }
+}
+
 async fn offline_fixture(resources: Option<Config>) {
     let dir = tempfile::tempdir().expect("dir");
     let upstream = Upstream::start();
@@ -873,13 +1068,13 @@ async fn offline_fixture(resources: Option<Config>) {
         config.source = resources.source;
     }
 
-    let (context_id, snapshot_id, cold) = {
+    let (context_id, snapshot_id, cold, cold_resolution) = {
         let service = service_with(config.clone(), dir.path());
         let resolved = resolve_0_2_0(&service).await;
         let context_id = ctx(&resolved);
         let snapshot_id = resolved["snapshot_id"].as_str().expect("snap").to_owned();
         let cold = retrieval_round(&service, &context_id, &resolved).await;
-        (context_id, snapshot_id, cold)
+        (context_id, snapshot_id, cold, resolved)
     };
     drop(upstream);
 
@@ -895,6 +1090,13 @@ async fn offline_fixture(resources: Option<Config>) {
     assert_eq!(offline["snapshot_id"], snapshot_id);
     assert_eq!(offline["context_id"], context_id);
     assert_eq!(offline["data"]["answered_from_cache"], true);
+    assert_eq!(offline["status"], cold_resolution["status"]);
+    for field in ["scope", "assessments", "indexed", "missing"] {
+        assert_eq!(
+            offline["coverage"][field], cold_resolution["coverage"][field],
+            "cold/offline coverage {field}"
+        );
+    }
     let warm = retrieval_round(&service, &context_id, &offline).await;
     assert_eq!(cold, warm, "the same snapshot yields the same answers");
 
@@ -931,7 +1133,7 @@ async fn retrieval_round(
         service,
         "symbol.inspect",
         serde_json::json!({
-            "context_id": context_id, "symbol_path": "enr_fixture::Shape", "depth": "source"
+            "context_id": context_id, "symbol_path": "enr_fixture::Shape", "selection": {"mode":"explicit","aspects":[{"aspect":"signature"},{"aspect":"availability"},{"aspect":"source"}]}
         }),
     )
     .await;
@@ -1120,7 +1322,11 @@ async fn corrupted_stored_observations_are_errors_across_retrieval_boundaries() 
         params["context_id"] = resolved["context_id"].clone();
         let result = call(&service, method, params).await;
         assert_eq!(result["status"], "error", "{method}: {result}");
-        assert_eq!(result["error"]["code"], "EXTRACTION_FAILED");
+        assert_eq!(result["error"]["code"], "QUERY_FAILED");
+        assert_eq!(
+            result["error"]["diagnostic"]["cause"], "corrupt_state",
+            "{result}"
+        );
     }
 }
 
@@ -1326,7 +1532,7 @@ async fn comparison_surfaces_behavior_only_release_notes_with_unchanged_rust_api
         .find(|c| c["scope"] == "release_notes")
         .expect("behavior note");
     assert!(note["after"].to_string().contains("preserved"));
-    let artifact = note["after_sources"][0]["artifact_id"]
+    let artifact = note["after"][0]["source"]["artifact_id"]
         .as_str()
         .expect("source");
     assert!(service.blobs.find(artifact).expect("read").is_some());
@@ -1361,9 +1567,13 @@ async fn partial_api_observations_never_establish_complete_unchanged_api() {
     assert_eq!(result["data"]["api_complete"], false);
     assert_eq!(result["data"]["comparable"], false);
     assert!(
-        result["coverage"]["limitations"]
-            .to_string()
-            .contains("API coverage")
+        result["coverage"]["assessments"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(
+                |assessment| assessment["kind"] == "public_api" && assessment["state"] != "indexed"
+            )
     );
 }
 
@@ -1454,7 +1664,7 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
         assert_ne!(page["status"], "error", "{page}");
         assert!(serde_json::to_vec(&page).expect("json").len() <= 4096);
         recovered.push_str(page["data"]["content"].as_str().expect("text"));
-        cursor = page["pagination"]["next_cursor"]
+        cursor = page["data"]["page"]["next_cursor"]
             .as_str()
             .map(str::to_owned);
         if cursor.is_none() {
@@ -1469,6 +1679,8 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
             .expect("object")
             .clone(),
         enrichment_core::wire::Coverage {
+            details: None,
+            assessments: Vec::new(),
             scope: "fixture".into(),
             indexed: Default::default(),
             missing: Default::default(),
@@ -1478,20 +1690,130 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
     let bounded =
         enrichment_daemon::ops::common::enforce_budget(&service, answer.clone(), Some(1024));
     assert!(serde_json::to_vec(&bounded).expect("json").len() <= 1024);
-    assert_eq!(
-        bounded.error().expect("budget").code,
-        enrichment_core::wire::ErrorCode::BudgetExceeded
-    );
-    let id = bounded.data["result_artifact_id"]
-        .as_str()
-        .expect("pointer");
+    assert_eq!(bounded.status(), enrichment_core::wire::Status::Ok);
+    let enrichment_core::wire::DeliveryDescriptor::Artifact {
+        artifact_id: id, ..
+    } = &bounded.delivery
+    else {
+        panic!("artifact delivery");
+    };
     let mut second = answer.clone();
     second.request_id = enrichment_daemon::envelope::new_request_id();
     let second = enrichment_daemon::ops::common::enforce_budget(&service, second, Some(1024));
-    assert_eq!(second.data["result_artifact_id"], id);
+    assert!(
+        matches!(&second.delivery, enrichment_core::wire::DeliveryDescriptor::Artifact { artifact_id, .. } if artifact_id == id)
+    );
     let artifact = service.blobs.find(id).expect("lookup").expect("saved");
     let saved: serde_json::Value =
         serde_json::from_slice(&service.blobs.read(&artifact.sha256).expect("read")).expect("JSON");
-    assert_eq!(saved["data"], serde_json::json!(answer.data));
-    assert!(saved.get("request_id").is_none());
+    assert_eq!(saved["result"]["data"], serde_json::json!(answer.data));
+    assert_eq!(saved["result"]["request_id"], "req_retained");
+}
+
+#[tokio::test]
+async fn job_lookup_distinguishes_unknown_permission_and_corrupt_journals() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().expect("root");
+    let service = service_with(Config::default(), root.path());
+    let id = "job_00000000000000000000000000000000";
+    let request = serde_json::json!({"job_id": id});
+    let unknown = call(&service, "job.control", request.clone()).await;
+    assert_eq!(
+        unknown["error"]["diagnostic"]["cause"], "not_found",
+        "{unknown}"
+    );
+    assert_eq!(unknown["error"]["retryable"], false);
+    assert_eq!(
+        unknown["error"]["diagnostic"]["actions"][0]["kind"],
+        "change_request"
+    );
+    let journal = root
+        .path()
+        .join("data/jobs/terminal")
+        .join(format!("{id}.json"));
+    std::fs::write(&journal, b"{not valid json}").expect("journal fixture");
+    std::fs::set_permissions(&journal, std::fs::Permissions::from_mode(0o000)).expect("deny read");
+    let denied = call(&service, "job.control", request.clone()).await;
+    std::fs::set_permissions(&journal, std::fs::Permissions::from_mode(0o600))
+        .expect("restore read");
+    assert_eq!(
+        denied["error"]["diagnostic"]["cause"], "permission_denied",
+        "{denied}"
+    );
+    assert_eq!(
+        denied["error"]["diagnostic"]["actions"][0]["kind"],
+        "operator_setup"
+    );
+    let corrupt = call(&service, "job.control", request).await;
+    assert_eq!(
+        corrupt["error"]["diagnostic"]["cause"], "corrupt_state",
+        "{corrupt}"
+    );
+    assert_eq!(
+        corrupt["error"]["diagnostic"]["actions"][0]["kind"],
+        "report_defect"
+    );
+    for result in [unknown, denied, corrupt] {
+        assert_eq!(result["error"]["diagnostic"]["stage"], "job_lookup");
+        assert_eq!(result["error"]["diagnostic"]["affected_ids"][0], id);
+        assert_eq!(result["error"]["retryable"], false);
+    }
+}
+
+#[tokio::test]
+async fn static_service_reports_the_same_execution_prerequisites_at_every_route() {
+    let upstream = Upstream::start();
+    let root = tempfile::tempdir().expect("root");
+    let service = service_with(config_for(&upstream), root.path());
+    let resolved = resolve_0_2_0(&service).await;
+    let context = ctx(&resolved);
+    let status = call(&service, "service.status", serde_json::json!({})).await;
+    let route = status["data"]["sandbox"]["execution_routes"]
+        .as_array()
+        .expect("routes")
+        .iter()
+        .find(|route| route["ecosystem"] == "rust" && route["profile"] == "build")
+        .expect("rust build route");
+    assert_eq!(route["available"], false);
+    assert!(
+        route["prerequisites"]
+            .as_array()
+            .expect("prerequisites")
+            .contains(&serde_json::json!("enabled_profile"))
+    );
+    let verify = call(
+        &service,
+        "usage.verify",
+        serde_json::json!({
+            "context_id":context, "snippet":"fn main() {}", "mode":"compile", "profile":"build"
+        }),
+    )
+    .await;
+    let inspect = call(
+        &service,
+        "symbol.inspect",
+        serde_json::json!({
+            "context_id":context, "symbol_path":"enr_fixture::Shape",
+            "selection":{"mode":"explicit","aspects":[{"aspect":"semantics"}]},
+            "execution":{"intent":"execute_on_miss", "profile":"build"}
+        }),
+    )
+    .await;
+    for answer in [verify, inspect] {
+        assert_eq!(answer["status"], "error", "{answer}");
+        assert_eq!(
+            answer["error"]["diagnostic"]["stage"], "execution_readiness",
+            "{answer}"
+        );
+        assert_eq!(answer["error"]["diagnostic"]["actions"], route["actions"]);
+    }
+    let retained = call(
+        &service,
+        "symbol.inspect",
+        serde_json::json!({
+            "context_id":context, "symbol_path":"enr_fixture::Shape"
+        }),
+    )
+    .await;
+    assert_eq!(retained["status"], "ok", "{retained}");
 }

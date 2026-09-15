@@ -132,21 +132,13 @@ simple_url="{base}/simple"
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
 
 async def finish(client, pending: dict[str, Any]) -> dict[str, Any]:
-    if pending["status"] != "pending":
-        return pending
-    for _ in range(30):
-        result = await call(
-            client, "job_control", job_id=pending["job"]["job_id"], action="wait", wait_seconds=5
-        )
-        if result["status"] != "ok" or result["data"]["result"] is not None:
-            return result.get("data", {}).get("result") or result
-    return pending
+    return await daemon.wait_for_answer(client, pending)
 
 
 @pytest.mark.parametrize("profiles", PROFILE_SETS, ids=lambda p: "+".join(p))
@@ -204,7 +196,10 @@ async def test_core_operations_leave_a_canary_repository_byte_identical(
                             "inspect_symbol",
                             context_id=context,
                             symbol_path="canary_demo.twice",
-                            aspects=["semantics"],
+                            selection={
+                                "mode": "explicit",
+                                "aspects": [{"aspect": name} for name in ["semantics"]],
+                            },
                             execution={
                                 "intent": "execute_on_miss",
                                 "profile": "build",
@@ -329,7 +324,10 @@ async def test_completed_rust_operations_leave_canary_unchanged(
                     "inspect_symbol",
                     context_id=context,
                     symbol_path="enr_fixture::Shape",
-                    aspects=["signature"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["signature"]],
+                    },
                 )
                 assert inspected["status"] in {"ok", "partial"}, inspected
                 if executes:
@@ -340,7 +338,10 @@ async def test_completed_rust_operations_leave_canary_unchanged(
                             "inspect_symbol",
                             context_id=context,
                             symbol_path="enr_fixture::Widget",
-                            aspects=["semantics"],
+                            selection={
+                                "mode": "explicit",
+                                "aspects": [{"aspect": name} for name in ["semantics"]],
+                            },
                             execution={
                                 "intent": "execute_on_miss",
                                 "profile": "build",

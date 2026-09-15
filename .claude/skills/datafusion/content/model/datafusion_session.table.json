@@ -1,0 +1,351 @@
+{
+  "module": "datafusion_session::table",
+  "crate": "datafusion-session",
+  "api": "api/datafusion_session.table.md",
+  "items": [
+    {
+      "path": "datafusion_session::table::ScanArgs",
+      "name": "ScanArgs",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct ScanArgs<'a>",
+      "summary": "Arguments for scanning a table with [`TableProvider::scan_with_args`].",
+      "doc": "api/datafusion_session.table.md#scanargs",
+      "aliases": [
+        "datafusion_session::ScanArgs"
+      ],
+      "methods": [
+        {
+          "name": "filters",
+          "signature": "fn filters(&self) -> Option<&'a [Expr]>",
+          "summary": "Get the filter expressions for the scan."
+        },
+        {
+          "name": "limit",
+          "signature": "fn limit(&self) -> Option<usize>",
+          "summary": "Get the maximum number of rows to return from the scan."
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> Option<&'a [usize]>",
+          "summary": "Get the column projection for the scan."
+        },
+        {
+          "name": "statistics_requests",
+          "signature": "fn statistics_requests(&self) -> &'a [StatisticsRequest]",
+          "summary": "Get the statistics requests for the scan. Empty if none were set."
+        },
+        {
+          "name": "with_filters",
+          "signature": "fn with_filters(self, filters: Option<&'a [Expr]>) -> Self",
+          "summary": "Set the filter expressions for the scan."
+        },
+        {
+          "name": "with_limit",
+          "signature": "fn with_limit(self, limit: Option<usize>) -> Self",
+          "summary": "Set the maximum number of rows to return from the scan."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Option<&'a [usize]>) -> Self",
+          "summary": "Set the column projection for the scan."
+        },
+        {
+          "name": "with_statistics_requests",
+          "signature": "fn with_statistics_requests(self, statistics_requests: &'a [StatisticsRequest]) -> Self",
+          "summary": "Specifies the statistics the caller may use when optimizing the query."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::ScanResult",
+      "name": "ScanResult",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct ScanResult",
+      "summary": "Result of a table scan operation from [`TableProvider::scan_with_args`].",
+      "doc": "api/datafusion_session.table.md#scanresult",
+      "aliases": [
+        "datafusion_session::ScanResult"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(plan: Arc<dyn ExecutionPlan>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Arc<dyn ExecutionPlan>",
+          "summary": "Consume this ScanResult and return the execution plan."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(plan: Arc<dyn ExecutionPlan>) -> Self",
+          "summary": "Create a new `ScanResult` with the given execution plan."
+        },
+        {
+          "name": "plan",
+          "signature": "fn plan(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "Get a reference to the execution plan for this scan result."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::TableFunction",
+      "name": "TableFunction",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct TableFunction",
+      "summary": "A table that uses a function to generate data",
+      "doc": "api/datafusion_session.table.md#tablefunction",
+      "aliases": [
+        "datafusion_session::TableFunction"
+      ],
+      "methods": [
+        {
+          "name": "create_table_provider",
+          "signature": "fn create_table_provider(&self, args: &[Expr]) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Get the function implementation and generate a table"
+        },
+        {
+          "name": "create_table_provider_with_args",
+          "signature": "fn create_table_provider_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Get the function implementation and generate a table"
+        },
+        {
+          "name": "function",
+          "signature": "fn function(&self) -> &Arc<dyn TableFunctionImpl>",
+          "summary": "Get the implementation of the table function"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Get the name of the table function"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: String, fun: Arc<dyn TableFunctionImpl>) -> Self",
+          "summary": "Create a new table function"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::TableFunctionArgs",
+      "name": "TableFunctionArgs",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct TableFunctionArgs<'e, 's>",
+      "summary": "Describes arguments provided to the table function call.",
+      "doc": "api/datafusion_session.table.md#tablefunctionargs",
+      "aliases": [
+        "datafusion_session::TableFunctionArgs"
+      ],
+      "methods": [
+        {
+          "name": "exprs",
+          "signature": "fn exprs(&self) -> &'e [Expr]",
+          "summary": "Get expressions passed as the called function arguments."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(exprs: &'e [Expr], session: &'s dyn Session) -> Self",
+          "summary": "Make a new [`TableFunctionArgs`]."
+        },
+        {
+          "name": "session",
+          "signature": "fn session(&self) -> &'s dyn Session",
+          "summary": "Get a session where the table function is called."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::TableFunctionImpl",
+      "name": "TableFunctionImpl",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait TableFunctionImpl: Debug + Sync + Send + Any",
+      "summary": "A trait for table function implementations",
+      "doc": "api/datafusion_session.table.md#tablefunctionimpl",
+      "aliases": [
+        "datafusion_session::TableFunctionImpl"
+      ],
+      "implementors": [
+        "datafusion_ffi::udtf::ForeignTableFunction",
+        "datafusion_functions_table::generate_series::GenerateSeriesFunc",
+        "datafusion_functions_table::generate_series::RangeFunc"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "call",
+        "call_with_args"
+      ],
+      "methods": [
+        {
+          "name": "call",
+          "signature": "fn call(&self, _exprs: &[Expr]) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Create a table provider"
+        },
+        {
+          "name": "call_with_args",
+          "signature": "fn call_with_args(&self, args: TableFunctionArgs<'_, '_>) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Create a table provider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::TableProvider",
+      "name": "TableProvider",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait TableProvider: Any + Debug + Sync + Send",
+      "summary": "A table which can be queried and modified.",
+      "doc": "api/datafusion_session.table.md#tableprovider",
+      "aliases": [
+        "datafusion::datasource::TableProvider",
+        "datafusion_session::TableProvider"
+      ],
+      "implementors": [
+        "datafusion::test_util::TestTableProvider",
+        "datafusion_catalog::cte_worktable::CteWorkTable",
+        "datafusion_catalog::empty::EmptyTable",
+        "datafusion_catalog::memory::table::MemTable",
+        "datafusion_catalog::stream::StreamTable",
+        "datafusion_catalog::streaming::StreamingTable",
+        "datafusion_catalog::view::ViewTable",
+        "datafusion_catalog_listing::table::ListingTable",
+        "datafusion_ffi::table_provider::ForeignTableProvider",
+        "datafusion_functions_table::generate_series::GenerateSeriesTable"
+      ],
+      "required_methods": [
+        "scan",
+        "schema",
+        "table_type"
+      ],
+      "provided_methods": [
+        "constraints",
+        "delete_from",
+        "get_column_default",
+        "get_logical_plan",
+        "get_table_definition",
+        "insert_into",
+        "merge_into",
+        "scan_with_args",
+        "statistics",
+        "supports_filters_pushdown",
+        "truncate",
+        "update"
+      ],
+      "methods": [
+        {
+          "name": "constraints",
+          "signature": "fn constraints(&self) -> Option<&Constraints>",
+          "summary": "Get a reference to the constraints of the table. Returns: - `None` for tables that do not support constraints. - `Some(&Constraints)` for tables supporting constraints. Therefore, a `Some(&Constraints::empty())` return value indicates that…"
+        },
+        {
+          "name": "delete_from",
+          "signature": "async fn delete_from(&self, _state: &dyn Session, _filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Delete rows matching the filter predicates."
+        },
+        {
+          "name": "get_column_default",
+          "signature": "fn get_column_default(&self, _column: &str) -> Option<&Expr>",
+          "summary": "Get the default value for a column, if available."
+        },
+        {
+          "name": "get_logical_plan",
+          "signature": "fn get_logical_plan(&self) -> Option<Cow<'_, LogicalPlan>>",
+          "summary": "Get the [`LogicalPlan`] of this table, if available."
+        },
+        {
+          "name": "get_table_definition",
+          "signature": "fn get_table_definition(&self) -> Option<&str>",
+          "summary": "Get the create statement used to create this table, if available."
+        },
+        {
+          "name": "insert_into",
+          "signature": "async fn insert_into(&self, _state: &dyn Session, _input: Arc<dyn ExecutionPlan>, _insert_op: InsertOp) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Return an [`ExecutionPlan`] to insert data into this table, if supported."
+        },
+        {
+          "name": "merge_into",
+          "signature": "async fn merge_into(&self, _state: &dyn Session, _source: Arc<dyn ExecutionPlan>, _merge_schema: DFSchemaRef, _on: Expr, _clauses: Vec<MergeIntoClause>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Merge rows from a source into this table."
+        },
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, state: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Create an [`ExecutionPlan`] for scanning the table with optional `projection`, `filter`, and `limit`, described below."
+        },
+        {
+          "name": "scan_with_args",
+          "signature": "async fn scan_with_args<'a>(&self, state: &dyn Session, args: ScanArgs<'a>) -> Result<ScanResult>",
+          "summary": "Create an [`ExecutionPlan`] for scanning the table using structured arguments."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Get a reference to the schema for this table"
+        },
+        {
+          "name": "statistics",
+          "signature": "fn statistics(&self) -> Option<Statistics>",
+          "summary": "Get statistics for this table, if available Although not presently used in mainline DataFusion, this allows implementation specific behavior for downstream repositories, in conjunction with specialized optimizer rules to perform operations…"
+        },
+        {
+          "name": "supports_filters_pushdown",
+          "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>",
+          "summary": "Specify if DataFusion should provide filter expressions to the TableProvider to apply *during* the scan."
+        },
+        {
+          "name": "table_type",
+          "signature": "fn table_type(&self) -> TableType",
+          "summary": "Get the type of this table for metadata/catalog purposes."
+        },
+        {
+          "name": "truncate",
+          "signature": "async fn truncate(&self, _state: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Remove all rows from the table."
+        },
+        {
+          "name": "update",
+          "signature": "async fn update(&self, _state: &dyn Session, _assignments: Vec<(String, Expr)>, _filters: Vec<Expr>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Update rows matching the filter predicates."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::table::TableProviderFactory",
+      "name": "TableProviderFactory",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait TableProviderFactory: Debug + Sync + Send",
+      "summary": "A factory which creates [`TableProvider`]s at runtime given a URL.",
+      "doc": "api/datafusion_session.table.md#tableproviderfactory",
+      "aliases": [
+        "datafusion_session::TableProviderFactory"
+      ],
+      "implementors": [
+        "datafusion::datasource::listing_table_factory::ListingTableFactory",
+        "datafusion::datasource::provider::DefaultTableFactory",
+        "datafusion::test_util::TestTableFactory",
+        "datafusion_catalog::stream::StreamTableFactory",
+        "datafusion_ffi::table_provider_factory::ForeignTableProviderFactory"
+      ],
+      "required_methods": [
+        "create"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "async fn create(&self, state: &dyn Session, cmd: &CreateExternalTable) -> Result<Arc<dyn TableProvider>>",
+          "summary": "Create a TableProvider with the given url"
+        }
+      ]
+    }
+  ]
+}

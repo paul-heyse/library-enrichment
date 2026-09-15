@@ -1,0 +1,60 @@
+{
+  "module": "datafusion_physical_expr::statistics::stats_solver",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.statistics.stats_solver.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::statistics::stats_solver::ExprStatisticsGraph",
+      "name": "ExprStatisticsGraph",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct ExprStatisticsGraph",
+      "summary": "This object implements a directed acyclic expression graph (DAEG) that is used to compute statistics/distributions for expressions hierarchically.",
+      "doc": "api/datafusion_physical_expr.statistics.stats_solver.md#exprstatisticsgraph",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "methods": [
+        {
+          "name": "assign_statistics",
+          "signature": "fn assign_statistics(&mut self, assignments: &[(usize, Distribution)])",
+          "summary": "This function assigns given distributions to expressions in the DAEG. The argument `assignments` associates indices of sought expressions with their corresponding new distributions."
+        },
+        {
+          "name": "evaluate_statistics",
+          "signature": "fn evaluate_statistics(&mut self) -> Result<&Distribution>",
+          "summary": "Computes statistics/distributions for an expression via a bottom-up traversal."
+        },
+        {
+          "name": "propagate_statistics",
+          "signature": "fn propagate_statistics(&mut self, given_stats: Distribution) -> Result<PropagationResult>",
+          "summary": "Runs a propagation mechanism in a top-down manner to update statistics of leaf nodes."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(expr: Arc<dyn PhysicalExpr>, schema: &Schema) -> Result<Self>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::statistics::stats_solver::ExprStatisticsGraphNode",
+      "name": "ExprStatisticsGraphNode",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct ExprStatisticsGraphNode",
+      "summary": "This is a node in the DAEG; it encapsulates a reference to the actual [`PhysicalExpr`] as well as its statistics/distribution.",
+      "doc": "api/datafusion_physical_expr.statistics.stats_solver.md#exprstatisticsgraphnode",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "methods": [
+        {
+          "name": "distribution",
+          "signature": "fn distribution(&self) -> &Distribution",
+          "summary": "Get the [`Distribution`] object representing the statistics of the expression."
+        },
+        {
+          "name": "make_node",
+          "signature": "fn make_node(node: &ExprTreeNode<NodeIndex>, schema: &Schema) -> Result<Self>",
+          "summary": "This function creates a DAEG node from DataFusion's [`ExprTreeNode`] object. Literals are created with `Uniform` distributions with a definite, singleton interval. Expressions with a `Boolean` data type result in a`Bernoulli` distribution…"
+        }
+      ]
+    }
+  ]
+}

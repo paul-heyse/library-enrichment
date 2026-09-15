@@ -1,0 +1,60 @@
+{
+  "module": "datafusion_physical_expr_common::metrics::elapsed_compute",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.metrics.elapsed_compute.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::metrics::elapsed_compute::ElapsedComputeFuture",
+      "name": "ElapsedComputeFuture",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct ElapsedComputeFuture<T>",
+      "summary": "Wraps any [`Future`] and accumulates the wall-clock time spent inside each [`Future::poll`] call into `elapsed_compute`. Everything that executes synchronously within a `poll()` scope is measured — including CPU-bound work, memory copies,…",
+      "doc": "api/datafusion_physical_expr_common.metrics.elapsed_compute.md#elapsedcomputefuture",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::ElapsedComputeFuture",
+        "datafusion_physical_plan::metrics::ElapsedComputeFuture"
+      ],
+      "implements": [
+        "core::future::future::Future",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::elapsed_compute::ElapsedComputeFutureExt",
+      "name": "ElapsedComputeFutureExt",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "trait ElapsedComputeFutureExt: Future + Sized",
+      "summary": "Extension trait that wraps any [`Future`] with [`ElapsedComputeFuture`].",
+      "doc": "api/datafusion_physical_expr_common.metrics.elapsed_compute.md#elapsedcomputefutureext",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::ElapsedComputeFutureExt",
+        "datafusion_physical_plan::metrics::ElapsedComputeFutureExt"
+      ],
+      "required_methods": [
+        "with_elapsed_compute"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "with_elapsed_compute",
+          "signature": "fn with_elapsed_compute(self, elapsed_compute: Time) -> ElapsedComputeFuture<Self>",
+          "summary": "Wraps this future so that the time spent inside each [`Future::poll`] call is accumulated into `elapsed_compute`. See [`ElapsedComputeFuture`] for a full description of what is and is not measured."
+        }
+      ]
+    }
+  ]
+}

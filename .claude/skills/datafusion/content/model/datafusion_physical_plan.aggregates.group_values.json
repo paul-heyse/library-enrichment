@@ -1,0 +1,70 @@
+{
+  "module": "datafusion_physical_plan::aggregates::group_values",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.aggregates.group_values.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::new_group_values",
+      "name": "new_group_values",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn new_group_values(schema: arrow::datatypes::SchemaRef, group_ordering: &aggregates::order::GroupOrdering) -> datafusion_common::Result<Box<dyn GroupValues>>",
+      "summary": "Return a specialized implementation of [`GroupValues`] for the given schema.",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.md#new_group_values"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::GroupValues",
+      "name": "GroupValues",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait GroupValues: Send",
+      "summary": "Stores the group values during hash aggregation.",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.md#groupvalues",
+      "implementors": [
+        "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupValuesColumn",
+        "datafusion_physical_plan::aggregates::group_values::row::GroupValuesRows"
+      ],
+      "required_methods": [
+        "clear_shrink",
+        "emit",
+        "intern",
+        "is_empty",
+        "len",
+        "size"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "clear_shrink",
+          "signature": "fn clear_shrink(&mut self, num_rows: usize)",
+          "summary": "Clear the contents and shrink the capacity to the size of the batch (free up memory usage)"
+        },
+        {
+          "name": "emit",
+          "signature": "fn emit(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>",
+          "summary": "Emits the group values"
+        },
+        {
+          "name": "intern",
+          "signature": "fn intern(&mut self, cols: &[ArrayRef], groups: &mut Vec<usize>) -> Result<()>",
+          "summary": "Calculates the group id for each input row of `cols`, assigning new group ids as necessary."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if this [`GroupValues`] is empty"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "The number of values (distinct group values) stored in this [`GroupValues`]"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the number of bytes of memory used by this [`GroupValues`]."
+        }
+      ]
+    }
+  ]
+}

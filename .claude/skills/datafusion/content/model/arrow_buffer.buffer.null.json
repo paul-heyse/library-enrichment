@@ -1,0 +1,162 @@
+{
+  "module": "arrow_buffer::buffer::null",
+  "crate": "arrow-buffer",
+  "api": "api/arrow_buffer.buffer.null.md",
+  "items": [
+    {
+      "path": "arrow_buffer::buffer::null::NullBuffer",
+      "name": "NullBuffer",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct NullBuffer",
+      "summary": "A [`BooleanBuffer`] used to encode validity (null values) for Arrow arrays",
+      "doc": "api/arrow_buffer.buffer.null.md#nullbuffer",
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "buffer",
+          "signature": "fn buffer(&self) -> &Buffer",
+          "summary": "Returns the underlying [`Buffer`]"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+          "summary": "Claim memory used by this null buffer in the provided memory pool."
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, other: &NullBuffer) -> bool",
+          "summary": "Returns true if all nulls in `other` also exist in self"
+        },
+        {
+          "name": "expand",
+          "signature": "fn expand(&self, count: usize) -> Self",
+          "summary": "Returns a new [`NullBuffer`] where each bit in the current null buffer is repeated `count` times. This is useful for masking the nulls of the child of a FixedSizeListArray based on its parent"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: &[bool; N]) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = bool>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_unsliced_buffer",
+          "signature": "fn from_unsliced_buffer(buffer: impl Into<Buffer>, len: usize) -> Option<Self>",
+          "summary": "Create a [`NullBuffer`] from an *unsliced* validity bitmap (`offset = 0` **bits**) of length `len`."
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &BooleanBuffer",
+          "summary": "Returns the inner [`BooleanBuffer`]"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> BooleanBuffer",
+          "summary": "Returns the inner [`BooleanBuffer`]"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if this [`NullBuffer`] is empty"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, idx: usize) -> bool",
+          "summary": "Returns `true` if the value at `idx` is null"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, idx: usize) -> bool",
+          "summary": "Returns `true` if the value at `idx` is not null"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> BitIterator<'_>",
+          "summary": "Returns an iterator over the bits in this [`NullBuffer`]"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the length of this [`NullBuffer`] in bits"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(buffer: BooleanBuffer) -> Self",
+          "summary": "Create a new [`NullBuffer`] computing the null count"
+        },
+        {
+          "name": "new_null",
+          "signature": "fn new_null(len: usize) -> Self",
+          "summary": "Create a new [`NullBuffer`] of length `len` where all values are null"
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "unsafe fn new_unchecked(buffer: BooleanBuffer, null_count: usize) -> Self",
+          "summary": "Create a new [`NullBuffer`] with the provided `buffer` and `null_count`"
+        },
+        {
+          "name": "new_valid",
+          "signature": "fn new_valid(len: usize) -> Self",
+          "summary": "Create a new [`NullBuffer`] of length `len` where all values are valid"
+        },
+        {
+          "name": "null_count",
+          "signature": "fn null_count(&self) -> usize",
+          "summary": "Returns the null count for this [`NullBuffer`]"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "summary": "Returns the offset of this [`NullBuffer`] in bits"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "summary": "Free up unused memory."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, len: usize) -> Self",
+          "summary": "Slices this [`NullBuffer`] by the provided `offset` and `length`"
+        },
+        {
+          "name": "try_for_each_valid_idx",
+          "signature": "fn try_for_each_valid_idx<E, F: FnMut(usize) -> Result<(), E>>(&self, f: F) -> Result<(), E>",
+          "summary": "Calls the provided closure for each index in this null mask that is set"
+        },
+        {
+          "name": "union",
+          "signature": "fn union(lhs: Option<&NullBuffer>, rhs: Option<&NullBuffer>) -> Option<NullBuffer>",
+          "summary": "Computes the union of the nulls in two optional [`NullBuffer`]"
+        },
+        {
+          "name": "union_many",
+          "signature": "fn union_many<'a>(nulls: impl IntoIterator<Item = Option<&'a NullBuffer>>) -> Option<NullBuffer>",
+          "summary": "Computes the union of the nulls in multiple optional [`NullBuffer`]s"
+        },
+        {
+          "name": "valid_indices",
+          "signature": "fn valid_indices(&self) -> BitIndexIterator<'_>",
+          "summary": "Returns a [`BitIndexIterator`] over the valid indices in this [`NullBuffer`]"
+        },
+        {
+          "name": "valid_slices",
+          "signature": "fn valid_slices(&self) -> BitSliceIterator<'_>",
+          "summary": "Returns a [`BitSliceIterator`] yielding contiguous ranges of valid indices"
+        },
+        {
+          "name": "validity",
+          "signature": "fn validity(&self) -> &[u8]",
+          "summary": "Returns the packed validity of this [`NullBuffer`] not including any offset"
+        }
+      ]
+    }
+  ]
+}

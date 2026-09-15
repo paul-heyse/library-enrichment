@@ -1,0 +1,159 @@
+{
+  "module": "arrow_avro::reader",
+  "crate": "arrow-avro",
+  "api": "api/arrow_avro.reader.md",
+  "items": [
+    {
+      "path": "arrow_avro::reader::Decoder",
+      "name": "Decoder",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct Decoder",
+      "summary": "A low‑level, push‑based decoder from Avro bytes to Arrow `RecordBatch`.",
+      "doc": "api/arrow_avro.reader.md#decoder",
+      "methods": [
+        {
+          "name": "batch_is_empty",
+          "signature": "fn batch_is_empty(&self) -> bool",
+          "summary": "Returns true if the decoder has not decoded any batches yet (i.e., the current batch is empty)."
+        },
+        {
+          "name": "batch_is_full",
+          "signature": "fn batch_is_full(&self) -> bool",
+          "summary": "Returns true if the decoder has reached its capacity for the current batch."
+        },
+        {
+          "name": "batch_size",
+          "signature": "fn batch_size(&self) -> usize",
+          "summary": "Returns the configured maximum number of rows per batch."
+        },
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "summary": "Returns the number of rows that can be added to this decoder before it is full."
+        },
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, data: &[u8]) -> Result<usize, AvroError>",
+          "summary": "Feed a chunk of bytes into the decoder."
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, AvroError>",
+          "summary": "Produce a `RecordBatch` if at least one row is fully decoded, returning `Ok(None)` if no new rows are available."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the Arrow schema for the rows decoded by this decoder."
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::reader::Reader",
+      "name": "Reader",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct Reader<R: BufRead>",
+      "summary": "A high‑level Avro **Object Container File** reader.",
+      "doc": "api/arrow_avro.reader.md#reader",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "avro_header",
+          "signature": "fn avro_header(&self) -> &Header",
+          "summary": "Returns a reference to the parsed Avro container‑file header (magic, metadata, codec, sync)."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the Arrow schema discovered from the Avro file header (or derived via the optional reader schema)."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::reader::ReaderBuilder",
+      "name": "ReaderBuilder",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct ReaderBuilder",
+      "summary": "A builder that configures and constructs Avro readers and decoders.",
+      "doc": "api/arrow_avro.reader.md#readerbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<R: BufRead>(self, reader: R) -> Result<Reader<R>, ArrowError>",
+          "summary": "Build a `Reader` (OCF) from this builder and a `BufRead`."
+        },
+        {
+          "name": "build_decoder",
+          "signature": "fn build_decoder(self) -> Result<Decoder, ArrowError>",
+          "summary": "Build a streaming `Decoder` from this builder."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new `ReaderBuilder` with defaults:"
+        },
+        {
+          "name": "use_utf8view",
+          "signature": "fn use_utf8view(&self) -> bool",
+          "summary": "Returns whether `StringViewArray` is enabled for string data."
+        },
+        {
+          "name": "with_active_fingerprint",
+          "signature": "fn with_active_fingerprint(self, fp: Fingerprint) -> Self",
+          "summary": "Sets the initial schema fingerprint for stream decoding."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Sets the **row‑based batch size**."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Vec<usize>) -> Self",
+          "summary": "Sets an explicit top-level field projection by index."
+        },
+        {
+          "name": "with_reader_schema",
+          "signature": "fn with_reader_schema(self, schema: AvroSchema) -> Self",
+          "summary": "Sets the **reader schema** used during decoding."
+        },
+        {
+          "name": "with_strict_mode",
+          "signature": "fn with_strict_mode(self, strict_mode: bool) -> Self",
+          "summary": "Enable stricter behavior for certain Avro unions (e.g., `[T, \"null\"]`)."
+        },
+        {
+          "name": "with_tz",
+          "signature": "fn with_tz(self, tz: Tz) -> Self",
+          "summary": "Sets the timezone representation for Avro timestamp fields."
+        },
+        {
+          "name": "with_utf8_view",
+          "signature": "fn with_utf8_view(self, utf8_view: bool) -> Self",
+          "summary": "Choose Arrow's `StringViewArray` for UTF‑8 string data."
+        },
+        {
+          "name": "with_writer_schema_store",
+          "signature": "fn with_writer_schema_store(self, store: SchemaStore) -> Self",
+          "summary": "Sets the `SchemaStore` used to resolve writer schemas by fingerprint."
+        }
+      ]
+    }
+  ]
+}

@@ -23,16 +23,35 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
+from time import monotonic
 from typing import Annotated, Any, Literal
+from uuid import uuid4
 
 from fastmcp import FastMCP
+from fastmcp.exceptions import ValidationError as ToolValidationError
+from fastmcp.resources.base import ResourceResult
+from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.base import ToolResult
-from mcp.types import ToolAnnotations
-from pydantic import Field
+from jsonschema import Draft202012Validator, validators
+from mcp.types import (
+    CallToolRequestParams,
+    CallToolResult,
+    ReadResourceRequestParams,
+    ResourceLink,
+    TextContent,
+    ToolAnnotations,
+)
+from pydantic import BeforeValidator, Field
 
-from enrichment_mcp import envelope
-from enrichment_mcp._generated.request_schema import InspectionOptions
-from enrichment_mcp._generated.research_envelope_schema import Code, Coverage
+from enrichment_mcp import envelope, presentation
+from enrichment_mcp._generated.request_schema import (
+    ArtifactSection,
+    DiscoverySelection,
+    InspectionOptions,
+    ResearchSelection,
+)
+from enrichment_mcp._generated.research_envelope_schema import Code, Coverage, Diagnostic
 from enrichment_mcp.daemon_client import (
     ACQUISITION_TIMEOUT_SECONDS,
     DaemonClient,
@@ -58,16 +77,31 @@ Ecosystem = Literal["rust", "python"]
 ResearchMode = Literal["project", "upstream", "compare", "revision"]
 FreshnessMode = Literal["cache_ok", "revalidate", "offline"]
 EvidenceFamily = Literal["api", "docs", "examples", "release_notes", "features", "source"]
-Aspect = Literal[
-    "signature",
-    "availability",
-    "relationships",
-    "documentation",
-    "examples",
-    "source",
-    "semantics",
-    "runtime",
-]
+
+
+def _selection_from_json(value: object) -> ResearchSelection:
+    return ResearchSelection.model_validate_json(json.dumps(value), strict=True)
+
+
+def _discovery_from_json(value: object) -> DiscoverySelection:
+    return DiscoverySelection.model_validate_json(json.dumps(value), strict=True)
+
+
+DiscoveryInput = Annotated[DiscoverySelection, BeforeValidator(_discovery_from_json)]
+
+
+def _execution_from_json(value: object) -> InspectionOptions:
+    return InspectionOptions.model_validate_json(json.dumps(value), strict=True)
+
+
+def _section_from_json(value: object) -> ArtifactSection:
+    return ArtifactSection.model_validate_json(json.dumps(value), strict=True)
+
+
+SectionInput = Annotated[ArtifactSection, BeforeValidator(_section_from_json)]
+SelectionInput = Annotated[ResearchSelection, BeforeValidator(_selection_from_json)]
+ExecutionInput = Annotated[InspectionOptions, BeforeValidator(_execution_from_json)]
+
 
 # Retrieval reads a published snapshot: no network, so a short bound is enough to tell a
 # wedged daemon from a slow one.
@@ -101,10 +135,11 @@ def _emit(result: dict[str, Any], *, tool: str | None = None) -> dict[str, Any]:
     less than the `inline_result_bytes` budget it sits inside.
     """
     valid, reason = envelope.validate_document(json.dumps(result))
-    if valid and tool is not None and result.get("status") in {"ok", "partial"}:
-        raw_data = result.get("data")
-        if isinstance(raw_data, dict):
-            valid, reason = envelope.validate_tool_data(tool, raw_data)
+    if valid and tool is not None:
+        try:
+            presentation.validate_output(tool, result)
+        except ValueError as exc:
+            valid, reason = False, str(exc)
     if valid:
         return result
 
@@ -113,28 +148,156 @@ def _emit(result: dict[str, Any], *, tool: str | None = None) -> dict[str, Any]:
     # error constructor, which cannot itself produce a non-conforming envelope.
     log(f"library-enrichment: emitted a non-conforming envelope: {reason}")
     return envelope.error(
-        Code.UNSUPPORTED_FORMAT,
+        Code.INTERNAL_ERROR,
         "the service produced a response that does not match its own wire schema",
         "This is a bug in the service, not in the request. Report it with the daemon log.",
         retryable=False,
     )
 
 
-MCP_FRAME_ALLOWANCE_BYTES = 512
+MCP_FRAME_ALLOWANCE_BYTES = 1024
 
 
 def _tool_result(result: dict[str, Any], *, tool: str | None = None) -> ToolResult:
-    """Emit one canonical envelope plus at most 160 encoded bytes of readable summary.
-
-    The core budgets the complete envelope. MCP framing and this compact text have a fixed
-    512-byte allowance, measured by the raw stdio regression rather than a token estimate.
-    Resources continue returning the same canonical envelope without a second text projection.
-    """
+    """Keep evidence in structured output, with a short optional human-readable projection."""
     result = _emit(result, tool=tool)
     summary = str(result.get("summary", "Evidence response"))[:160]
     while len(json.dumps(summary, ensure_ascii=False).encode()) > 160:
         summary = summary[:-1]
-    return ToolResult(content=summary, structured_content=result)
+    content: list[TextContent | ResourceLink] = [TextContent(type="text", text=summary)]
+    failed = presentation.is_error(result)
+    if failed:
+        content = [TextContent(type="text", text=json.dumps(presentation.error_preview(result)))]
+    delivery = result["delivery"]
+    if delivery["mode"] == "artifact" and not failed:
+        content.append(
+            ResourceLink(
+                type="resource_link",
+                name="Complete result",
+                uri=f"library-evidence://artifacts/{delivery['artifact_id']}",
+                mime_type="application/json",
+            )
+        )
+    # Measure the complete MCP result; optional blocks never displace the structured handle.
+    structured_bytes = len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode())
+    measured = CallToolResult(content=content, structured_content=result, is_error=failed)
+    if len(measured.model_dump_json(by_alias=True).encode()) > (
+        structured_bytes + MCP_FRAME_ALLOWANCE_BYTES - 128
+    ):
+        content = (
+            [
+                TextContent(
+                    type="text", text=json.dumps(presentation.error_preview(result, compact=True))
+                )
+            ]
+            if failed
+            else []
+        )
+    return ToolResult(content=content, structured_content=result, is_error=failed)
+
+
+_StrictArguments = validators.extend(
+    Draft202012Validator,
+    type_checker=Draft202012Validator.TYPE_CHECKER.redefine(
+        "integer", lambda _checker, value: type(value) is int
+    ),
+)
+
+
+class OperationBoundary(Middleware):
+    """Observe original arguments and validate them before FastMCP's Python binding."""
+
+    async def on_read_resource(
+        self,
+        context: MiddlewareContext[ReadResourceRequestParams],
+        call_next: CallNext[ReadResourceRequestParams, ResourceResult],
+    ) -> ResourceResult:
+        started = monotonic()
+        correlation = f"resource_{uuid4().hex}"
+        try:
+            return await call_next(context)
+        except Exception as exc:
+            log(
+                f"library-enrichment: request_id={correlation} resource_read "
+                f"exception={type(exc).__name__}"
+            )
+            raise
+        finally:
+            # Resource URI parameters can contain caller text; record the operation kind only.
+            elapsed_ms = int((monotonic() - started) * 1000)
+            log(
+                f"library-enrichment: request_id={correlation} "
+                f"resource_read elapsed_ms={elapsed_ms}"
+            )
+
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[CallToolRequestParams],
+        call_next: CallNext[CallToolRequestParams, ToolResult],
+    ) -> ToolResult:
+        started = monotonic()
+        name = context.message.name
+        if context.fastmcp_context is None:
+            return await call_next(context)
+        tool = await context.fastmcp_context.fastmcp.get_tool(name)
+        if tool is None:
+            return await call_next(context)
+        schema = {**tool.parameters, "additionalProperties": False}
+        errors = list(_StrictArguments(schema).iter_errors(context.message.arguments or {}))
+        if errors:
+            error = errors[0]
+            path = ".".join(str(part) for part in error.absolute_path) or "arguments"
+            # Do not echo the supplied values (snippets can contain private source).
+            return _tool_result(
+                envelope.error(
+                    Code.UNSUPPORTED_FORMAT,
+                    f"Invalid {name} input at {path}: {error.validator}",
+                    "Use the published input schema and correct the named field.",
+                ),
+                tool=name,
+            )
+        correlation = "pre-admission"
+        try:
+            result = await call_next(context)
+            if result.structured_content is not None:
+                correlation = str(result.structured_content.get("request_id", correlation))
+                job = result.structured_content.get("job")
+                if isinstance(job, dict):
+                    try:
+                        await context.fastmcp_context.report_progress(
+                            progress=0, message=str(job["stage"])
+                        )
+                    except Exception as exc:
+                        # Progress is advisory; transport failure cannot replace a durable
+                        # job receipt that the operation has already returned.
+                        log(
+                            f"library-enrichment: request_id={correlation} "
+                            f"progress_exception={type(exc).__name__}"
+                        )
+            return result
+        except ToolValidationError:
+            return _tool_result(
+                envelope.error(
+                    Code.UNSUPPORTED_FORMAT,
+                    f"Invalid {name} argument binding",
+                    "Use the published input schema and exact JSON field types.",
+                ),
+                tool=name,
+            )
+        except Exception as exc:
+            failure = envelope.error(
+                Code.INTERNAL_ERROR,
+                "The adapter could not complete the operation.",
+                "Report this request_id with the adapter and daemon logs.",
+            )
+            correlation = failure["request_id"]
+            log(f"library-enrichment: request_id={correlation} exception={type(exc).__name__}")
+            return _tool_result(failure, tool=name)
+        finally:
+            log(
+                f"library-enrichment: request_id={correlation} tool={name} "
+                f"elapsed_ms={int((monotonic() - started) * 1000)}"
+            )
 
 
 # Annotations are disclosure, never enforcement -- policy is enforced in the Rust core
@@ -144,8 +307,8 @@ def _tool_result(result: dict[str, Any], *, tool: str | None = None) -> ToolResu
 # Written with the snake_case field names rather than the camelCase aliases. Both populate the
 # model (`populate_by_name=True`) and both serialize to the camelCase wire form, but the field
 # names are what the class actually declares, and `ty` cannot see through the alias generator.
-_READ_ONLY = ToolAnnotations(
-    read_only_hint=True,
+_ACQUIRES = ToolAnnotations(
+    read_only_hint=False,
     destructive_hint=False,
     idempotent_hint=True,
     open_world_hint=True,
@@ -171,9 +334,11 @@ def build_server() -> FastMCP:
 
     Pure construction: no socket is opened, no package is fetched, no subprocess is started.
     """
-    output_schema = json.loads(envelope.SCHEMA_PATH.read_text())
     mcp: FastMCP = FastMCP(
         name="library-enrichment",
+        strict_input_validation=True,
+        mask_error_details=True,
+        middleware=[OperationBoundary()],
         instructions=(
             "Evidence service for Rust and Python libraries. Resolve exact release identity "
             "before asking anything else, and read `coverage` on every result: `ok` means "
@@ -186,7 +351,7 @@ def build_server() -> FastMCP:
     )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("service_status"),
         name="service_status",
         description="Inspect readiness and capabilities, without indexing.",
         annotations=_CACHED_READ,
@@ -198,18 +363,18 @@ def build_server() -> FastMCP:
         ] = None,
     ) -> ToolResult:
         """Report what this build can actually do, including what is absent."""
-        payload, from_core = await _service_status(component)
+        payload, _from_core = await _service_status(component)
         # The payload schema is checked only for an answer the core composed. The
         # daemon-unreachable envelope below is adapter-local by necessity -- there is no core to
         # ask -- and its data is deliberately *not* a status payload. Validating it against one
         # would turn a truthful "the daemon is down" into a reported internal defect.
-        return _tool_result(payload, tool="service_status" if from_core else None)
+        return _tool_result(payload, tool="service_status")
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("resolve_library"),
         name="resolve_library",
         description="Establish exact identity and environment before research.",
-        annotations=_READ_ONLY,
+        annotations=_ACQUIRES,
     )
     async def resolve_library(
         ecosystem: Annotated[Ecosystem, Field(description="Which package ecosystem.")],
@@ -255,10 +420,6 @@ def build_server() -> FastMCP:
                 )
             ),
         ] = "cache_ok",
-        revalidate: Annotated[
-            bool,
-            Field(description="Shorthand for `freshness=revalidate`."),
-        ] = False,
         allow_local_build: Annotated[
             bool,
             Field(
@@ -290,7 +451,7 @@ def build_server() -> FastMCP:
             "allow_prerelease": allow_prerelease,
             "allow_yanked": allow_yanked,
             "allow_local_build": allow_local_build,
-            "freshness": "revalidate" if revalidate else freshness,
+            "freshness": freshness,
         }
         return _tool_result(
             await _research("library.resolve", params, timeout=ACQUISITION_TIMEOUT_SECONDS),
@@ -298,13 +459,23 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("library_overview"),
         name="library_overview",
         description="Discover unfamiliar capabilities without knowing symbol names.",
-        annotations=_READ_ONLY,
+        annotations=_CACHED_READ,
     )
     async def library_overview(
         context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
+        discovery: Annotated[
+            list[DiscoveryInput] | None,
+            Field(
+                description=(
+                    "Independent feature, README, release-note and example pages. "
+                    "Omit for bounded previews; use an empty list for namespace navigation alone."
+                ),
+                max_length=4,
+            ),
+        ] = None,
         area: Annotated[
             str | None, Field(description="Narrow the map to one module or feature area.")
         ] = None,
@@ -326,6 +497,12 @@ def build_server() -> FastMCP:
             await _research(
                 "library.overview",
                 {
+                    "discovery": None
+                    if discovery is None
+                    else [
+                        item.model_dump(mode="json", by_alias=True, warnings="error")
+                        for item in discovery
+                    ],
                     "context_id": context_id,
                     "snapshot_id": snapshot_id,
                     "area": area,
@@ -338,10 +515,10 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("search_evidence"),
         name="search_evidence",
         description="Search a bounded set of API, docs, examples, source, or release evidence.",
-        annotations=_READ_ONLY,
+        annotations=_CACHED_READ,
     )
     async def search_evidence(
         context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
@@ -389,7 +566,7 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("inspect_symbol"),
         name="inspect_symbol",
         description=(
             "Read retained symbol evidence; explicit execution options can run "
@@ -408,20 +585,13 @@ def build_server() -> FastMCP:
                 description="Select a definition from candidates when the public path is ambiguous."
             ),
         ] = None,
-        depth: Annotated[
-            Literal["signature", "documentation", "source"],
-            Field(description="How much to retrieve. Request `source` only when needed."),
-        ] = "documentation",
-        aspects: Annotated[
-            list[Aspect] | None,
-            Field(description="Aspects to include; all supported ones when omitted."),
-        ] = None,
+        selection: SelectionInput | None = None,
         snapshot_id: Annotated[
             str | None,
             Field(description="Read a specific snapshot; the context's current one otherwise."),
         ] = None,
         execution: Annotated[
-            InspectionOptions | None,
+            ExecutionInput | None,
             Field(description="Read retained evidence or explicitly select an execution profile."),
         ] = None,
         max_bytes: Annotated[
@@ -438,9 +608,12 @@ def build_server() -> FastMCP:
                     "snapshot_id": snapshot_id,
                     "symbol_path": symbol_path,
                     "definition_id": definition_id,
-                    "depth": depth,
-                    "aspects": aspects,
-                    "execution": execution.model_dump(mode="json") if execution else None,
+                    "selection": selection.model_dump(mode="json", by_alias=True, warnings="error")
+                    if selection is not None
+                    else {"mode": "default"},
+                    "execution": execution.model_dump(mode="json", by_alias=True, warnings="error")
+                    if execution is not None
+                    else None,
                     "max_bytes": max_bytes,
                 },
                 timeout=RETRIEVAL_TIMEOUT_SECONDS,
@@ -449,10 +622,10 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("compare_releases"),
         name="compare_releases",
         description="Discover additions/removals and non-API changes.",
-        annotations=_READ_ONLY,
+        annotations=_ACQUIRES,
     )
     async def compare_releases(
         ecosystem: Ecosystem | None = None,
@@ -462,6 +635,7 @@ def build_server() -> FastMCP:
         before_context_id: str | None = None,
         after_context_id: str | None = None,
         before_snapshot_id: str | None = None,
+        alternative_cursor: str | None = None,
         after_snapshot_id: str | None = None,
         scopes: list[
             Literal["api", "docs", "configuration", "release_notes", "examples", "relationships"]
@@ -484,6 +658,7 @@ def build_server() -> FastMCP:
             "before_context_id": before_context_id,
             "after_context_id": after_context_id,
             "before_snapshot_id": before_snapshot_id,
+            "alternative_cursor": alternative_cursor,
             "after_snapshot_id": after_snapshot_id,
             "scopes": scopes,
             "cursor": cursor,
@@ -496,7 +671,7 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("verify_usage"),
         name="verify_usage",
         description="Test a proposed invocation or composition in isolation.",
         annotations=_EXECUTES,
@@ -505,7 +680,7 @@ def build_server() -> FastMCP:
         context_id: Annotated[str, Field(description="From `resolve_library`.", min_length=1)],
         snippet: Annotated[str, Field(description="The code to verify.", min_length=1)],
         mode: Annotated[
-            Literal["typecheck", "compile", "runtime", "run"],
+            Literal["typecheck", "compile", "runtime"],
             Field(description="What to establish. These prove different things."),
         ] = "typecheck",
         profile: Literal["build", "runtime"] = "build",
@@ -521,7 +696,7 @@ def build_server() -> FastMCP:
                     "context_id": context_id,
                     "snapshot_id": snapshot_id,
                     "snippet": snippet,
-                    "mode": "runtime" if mode == "run" else mode,
+                    "mode": mode,
                     "profile": profile,
                     "test_intent": test_intent,
                     "max_bytes": max_bytes,
@@ -532,17 +707,18 @@ def build_server() -> FastMCP:
         )
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("read_artifact"),
         name="read_artifact",
         description="Retrieve large result sections without flooding context.",
-        annotations=_READ_ONLY,
+        annotations=_CACHED_READ,
     )
     async def read_artifact(
         artifact_id: Annotated[
             str, Field(description="From a result's `artifacts`.", min_length=1)
         ],
         section: Annotated[
-            str | None, Field(description="Read one named section instead of the whole thing.")
+            SectionInput | None,
+            Field(description="Read a typed result section or a Markdown heading."),
         ] = None,
         cursor: Annotated[str | None, Field(description="Continue a previous read.")] = None,
         max_bytes: Annotated[
@@ -558,6 +734,16 @@ def build_server() -> FastMCP:
 
     # Resource templates (blueprint §7.4) delegate to the same core reads as the tools, so a
     # client that surfaces resources and one that only surfaces tools see identical bytes.
+    @mcp.resource(
+        "library-evidence://workflow",
+        name="research_workflow",
+        description="Current selection, coverage, jobs, recovery and result-reading guidance.",
+        mime_type="text/markdown",
+    )
+    async def workflow_resource() -> str:
+        guidance = Path(__file__).with_name("_guidance").joinpath("tool-contract.md")
+        return "Registered tools: " + ", ".join(TOOL_NAMES) + "\n\n" + guidance.read_text()
+
     @mcp.resource(
         "library-evidence://artifacts/{artifact_id}",
         name="artifact",
@@ -598,10 +784,10 @@ def build_server() -> FastMCP:
         return json.dumps(_emit(payload, tool="snapshot_manifest"))
 
     @mcp.tool(
-        output_schema=output_schema,
+        output_schema=presentation.output_schema("job_control"),
         name="job_control",
         description="Observe or cancel an explicitly submitted long-running operation.",
-        annotations=_READ_ONLY,
+        annotations=_EXECUTES,
     )
     async def job_control(
         job_id: Annotated[str, Field(description="From a `pending` result.", min_length=1)],
@@ -661,14 +847,71 @@ def _rpc_error_envelope(detail: dict[str, Any]) -> dict[str, Any]:
     """
     raw_data = detail.get("data")
     data: dict[str, Any] = raw_data if isinstance(raw_data, dict) else {}
-    raw_code = data.get("code")
-    code = Code(raw_code) if raw_code in Code.__members__.values() else Code.UPSTREAM_UNAVAILABLE
-    next_action = str(data.get("next_action") or "Check the daemon log, then retry.")
+    try:
+        code = Code(data["code"])
+        diagnostic = Diagnostic.model_validate_json(json.dumps(data["diagnostic"]), strict=True)
+        next_action = str(data["next_action"])
+    except (KeyError, ValueError):
+        return envelope.error(
+            Code.INTERNAL_ERROR,
+            "The daemon returned an invalid RPC diagnostic.",
+            "Report the adapter request_id and daemon log.",
+        )
     return envelope.error(
         code,
         str(detail.get("message", "the daemon returned an error")),
         next_action,
-        retryable=code is Code.UPSTREAM_UNAVAILABLE,
+        retryable=data.get("retryable") is True,
+        diagnostic=diagnostic,
+    )
+
+
+def _transport_error(exc: DaemonUnavailableError) -> dict[str, Any]:
+    """Report the observed transport condition with a follow-up that can change it."""
+    code, cause, action, reason = {
+        "connection": (
+            Code.UPSTREAM_UNAVAILABLE,
+            "transport",
+            "operator_setup",
+            "Start the configured daemon with library-enrichmentd start.",
+        ),
+        "timeout": (
+            Code.UPSTREAM_UNAVAILABLE,
+            "deadline",
+            "change_request",
+            "Check service_status or poll an existing job handle. A timeout does not cancel work.",
+        ),
+        "request_limit": (
+            Code.BUDGET_EXCEEDED,
+            "capacity",
+            "change_request",
+            "Reduce the request's encoded size and submit it again.",
+        ),
+        "response_limit": (
+            Code.INTERNAL_ERROR,
+            "capacity",
+            "report_defect",
+            "Report the response-limit defect with the daemon log.",
+        ),
+        "incomplete_frame": (
+            Code.UPSTREAM_UNAVAILABLE,
+            "transport",
+            "report_defect",
+            "Check the daemon exit log and report the interrupted frame.",
+        ),
+        "protocol": (
+            Code.INTERNAL_ERROR,
+            "transport",
+            "report_defect",
+            "Report the malformed daemon response with the daemon log.",
+        ),
+    }[exc.cause]
+    return envelope.error(
+        code,
+        str(exc),
+        reason,
+        retryable=False,
+        diagnostic=envelope.boundary_diagnostic(cause, "daemon_transport", action, reason),
     )
 
 
@@ -705,12 +948,7 @@ async def _research(method: str, params: dict[str, Any], *, timeout: float) -> d
     try:
         response = await client.call(method, params, timeout_seconds=timeout)
     except DaemonUnavailableError as exc:
-        return envelope.error(
-            Code.UPSTREAM_UNAVAILABLE,
-            f"the daemon is unavailable: {exc}",
-            "Start it with `library-enrichmentd start`, then retry.",
-            retryable=True,
-        )
+        return _transport_error(exc)
 
     detail = response.get("error")
     if isinstance(detail, dict):
@@ -719,24 +957,26 @@ async def _research(method: str, params: dict[str, Any], *, timeout: float) -> d
     result = response.get("result")
     if not isinstance(result, dict):
         return envelope.error(
-            Code.UPSTREAM_UNAVAILABLE,
+            Code.INTERNAL_ERROR,
             "the daemon returned no envelope",
-            "Check the daemon log, then retry.",
-            retryable=True,
+            "Report the malformed response with the daemon log.",
+            retryable=False,
         )
     # Forwarded verbatim. `_emit` validates it on the way out.
     return result
 
 
 async def _read_artifact(
-    artifact_id: str, section: str | None, cursor: str | None, max_bytes: int | None
+    artifact_id: str, section: ArtifactSection | None, cursor: str | None, max_bytes: int | None
 ) -> dict[str, Any]:
     """One read, shared by the `read_artifact` tool and the artifact resource template."""
     return await _research(
         "artifact.read",
         {
             "artifact_id": artifact_id,
-            "section": section,
+            "section": section.model_dump(mode="json", by_alias=True, warnings="error")
+            if section is not None
+            else None,
             "cursor": cursor,
             "max_bytes": max_bytes,
         },
@@ -763,6 +1003,8 @@ async def _service_status(component: str | None) -> tuple[dict[str, Any], bool]:
     try:
         response = await client.call("service.status", params)
     except DaemonUnavailableError as exc:
+        if exc.cause != "connection":
+            return _transport_error(exc), False
         return envelope.partial(
             "The daemon is not running, so only adapter-local facts are available.",
             {
@@ -770,6 +1012,8 @@ async def _service_status(component: str | None) -> tuple[dict[str, Any], bool]:
                 "adapter": {"available": True, "tools": list(TOOL_NAMES)},
             },
             Coverage(
+                details=None,
+                assessments=[],
                 scope="adapter-local status only",
                 indexed=["adapter"],
                 missing=["daemon", "producers", "cache"],
@@ -781,21 +1025,15 @@ async def _service_status(component: str | None) -> tuple[dict[str, Any], bool]:
         ), False
 
     if response.get("error") is not None:
-        detail = response["error"]
-        return envelope.error(
-            Code.UPSTREAM_UNAVAILABLE,
-            str(detail.get("message", "the daemon returned an error")),
-            "Check the daemon log, then retry.",
-            retryable=True,
-        ), False
+        return _rpc_error_envelope(response["error"]), False
 
     result = response.get("result")
     if not isinstance(result, dict):
         return envelope.error(
-            Code.UPSTREAM_UNAVAILABLE,
+            Code.INTERNAL_ERROR,
             "the daemon returned no envelope",
-            "Check the daemon log, then retry.",
-            retryable=True,
+            "Report the malformed response with the daemon log.",
+            retryable=False,
         ), False
     # Forwarded verbatim. `_emit` validates both the envelope and, because this one came from
     # the core, its `service_status` payload -- so a drifted field name in the daemon is caught

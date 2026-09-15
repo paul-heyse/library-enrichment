@@ -1,0 +1,129 @@
+{
+  "module": "datafusion_functions_aggregate_common::tdigest",
+  "crate": "datafusion-functions-aggregate-common",
+  "api": "api/datafusion_functions_aggregate_common.tdigest.md",
+  "items": [
+    {
+      "path": "datafusion_functions_aggregate_common::tdigest::DEFAULT_MAX_SIZE",
+      "name": "DEFAULT_MAX_SIZE",
+      "kind": "constant",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "const DEFAULT_MAX_SIZE: usize = 100",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::tdigest::Centroid",
+      "name": "Centroid",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "struct Centroid",
+      "summary": "Centroid implementation to the cluster mentioned in the paper.",
+      "doc": "api/datafusion_functions_aggregate_common.tdigest.md#centroid",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, sum: f64, weight: f64) -> f64"
+        },
+        {
+          "name": "cmp_mean",
+          "signature": "fn cmp_mean(&self, other: &Self) -> Ordering"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> f64"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(mean: f64, weight: f64) -> Self"
+        },
+        {
+          "name": "weight",
+          "signature": "fn weight(&self) -> f64"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate_common::tdigest::TDigest",
+      "name": "TDigest",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate-common",
+      "signature": "struct TDigest",
+      "summary": "T-Digest to be operated on.",
+      "doc": "api/datafusion_functions_aggregate_common.tdigest.md#tdigest",
+      "methods": [
+        {
+          "name": "centroids",
+          "signature": "fn centroids(&self) -> &[Centroid]",
+          "summary": "The centroids that make up this digest, ordered by mean."
+        },
+        {
+          "name": "count",
+          "signature": "fn count(&self) -> f64"
+        },
+        {
+          "name": "estimate_quantile",
+          "signature": "fn estimate_quantile(&self, q: f64) -> f64",
+          "summary": "To estimate the value located at `q` quantile"
+        },
+        {
+          "name": "from_scalar_state",
+          "signature": "fn from_scalar_state(state: &[ScalarValue]) -> Self",
+          "summary": "Unpack the serialized state of a [`TDigest`] produced by [`Self::to_scalar_state()`]."
+        },
+        {
+          "name": "max",
+          "signature": "fn max(&self) -> f64"
+        },
+        {
+          "name": "max_size",
+          "signature": "fn max_size(&self) -> usize"
+        },
+        {
+          "name": "merge_digests",
+          "signature": "fn merge_digests<'a>(digests: impl IntoIterator<Item = &'a TDigest>) -> TDigest"
+        },
+        {
+          "name": "merge_sorted_f64",
+          "signature": "fn merge_sorted_f64(&self, sorted_values: &[f64]) -> TDigest"
+        },
+        {
+          "name": "merge_unsorted_f64",
+          "signature": "fn merge_unsorted_f64(&self, unsorted_values: Vec<f64>) -> TDigest"
+        },
+        {
+          "name": "min",
+          "signature": "fn min(&self) -> f64"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(max_size: usize) -> Self"
+        },
+        {
+          "name": "new_with_centroid",
+          "signature": "fn new_with_centroid(max_size: usize, centroid: Centroid) -> Self"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Size in bytes including `Self`."
+        },
+        {
+          "name": "sum",
+          "signature": "fn sum(&self) -> f64",
+          "summary": "The sum of all values ingested into this digest."
+        },
+        {
+          "name": "to_scalar_state",
+          "signature": "fn to_scalar_state(&self) -> Vec<ScalarValue>",
+          "summary": "This method decomposes the [`TDigest`] and its [`Centroid`] instances into a series of primitive scalar values."
+        },
+        {
+          "name": "try_from_parts",
+          "signature": "fn try_from_parts(max_size: usize, sum: f64, count: f64, max: f64, min: f64, centroids: Vec<Centroid>) -> Result<Self, DataFusionError>",
+          "summary": "Construct a [`TDigest`] directly from its constituent parts, validating the inputs."
+        }
+      ]
+    }
+  ]
+}

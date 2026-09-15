@@ -5,10 +5,14 @@
 //! documentation and release-note headings and example names -- never a flat dump of every
 //! symbol. Definitions are counted once however many paths reach them (gate R07).
 
-use enrichment_core::evidence::{EvidenceKind, FragmentKind};
+use enrichment_core::evidence::EvidenceKind;
 use enrichment_core::request::OverviewRequest;
-use enrichment_core::wire::data::{NamespaceFacet, OverviewChild, OverviewData, SnapshotSummary};
-use enrichment_core::wire::{Coverage, Envelope, Freshness, SourceVersionMatch};
+use enrichment_core::search::row_page::RowCursor;
+use enrichment_core::wire::data::{OverviewData, SnapshotSummary};
+use enrichment_core::wire::research::DiscoverySelection;
+use enrichment_core::wire::{
+    Envelope, ErrorCode, Freshness, Page, RecoveryAction, SourceVersionMatch,
+};
 
 use super::common::{self, evidence_from_fragment};
 use crate::envelope::Research;
@@ -16,6 +20,19 @@ use crate::service::Service;
 
 /// Build the overview.
 pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
+    let selections = request
+        .discovery
+        .clone()
+        .unwrap_or_else(DiscoverySelection::defaults);
+    if let Err(error) = DiscoverySelection::validate(&selections) {
+        return crate::envelope::error(
+            ErrorCode::UnsupportedFormat,
+            error,
+            "Use bounded, unique discovery selections.",
+            false,
+        );
+    }
+
     let opened =
         match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
             .await
@@ -39,36 +56,25 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     };
     let manifest = opened.reader.manifest().clone();
 
-    // Bound the namespace list by the byte budget: fewer complete namespaces, never a cut one.
     let budget = common::byte_budget(service, request.max_bytes);
-    let mut namespaces: Vec<NamespaceFacet> = Vec::new();
-    let mut truncated_namespaces = raw.truncated_namespaces;
-    let mut used = 2048usize; // headroom for the rest of the payload
-    for ns in raw.namespaces {
-        let facet = NamespaceFacet {
-            path: ns.path,
-            doc_summary: ns.doc_summary,
-            counts_by_kind: ns.counts_by_kind,
-            children: ns
-                .children
-                .into_iter()
-                .map(|c| OverviewChild {
-                    path: c.path,
-                    kind: c.kind,
-                    doc_summary: c.doc_summary,
-                    is_reexport: c.is_reexport,
-                    deprecated: c.deprecated,
-                })
-                .collect(),
-            truncated_children: ns.truncated_children,
-        };
-        let size = common::json_size(&facet);
-        if used + size > budget && !namespaces.is_empty() {
-            truncated_namespaces += 1;
-            continue;
-        }
-        used += size;
-        namespaces.push(facet);
+    let namespaces = raw.namespaces;
+    let truncated_namespaces = raw.truncated_namespaces;
+    let mut discovery = Vec::new();
+    for selection in selections {
+        let kind = selection.kind;
+        discovery.push(
+            match discovery_facet(&opened, &request, selection, budget).await {
+                Ok(facet) => facet,
+                Err(error) => enrichment_core::wire::data::DiscoveryFacet {
+                    kind,
+                    state: enrichment_core::wire::AspectState::Failed,
+                    reason: Some(error.summary.clone()),
+                    diagnostic: error.error().map(|detail| detail.diagnostic.clone()),
+                    items: Vec::new(),
+                    page: None,
+                },
+            },
+        );
     }
 
     let source_version_match =
@@ -80,59 +86,24 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
             SourceVersionMatch::Mismatched
         };
 
-    // Cite the module docs and the feature table as evidence, bounded.
+    // Cite only the selected discovery fragments; namespace counts come from the admitted
+    // snapshot. An ancillary module-doc query must not override independent facet outcomes.
     let excerpt_chars = service.config.limits.excerpt_characters;
     let mut evidence = Vec::new();
-    let fragments = match opened
-        .reader
-        .fragments(enrichment_store::query::FragmentSelection {
-            path: Some(&manifest.crate_name),
-            symbol_id: None,
-            kinds: &[FragmentKind::DocText],
-            limit: 1,
-            require_complete: false,
-        })
-        .await
+    for fragment in discovery
+        .iter()
+        .flat_map(|facet| &facet.items)
+        .take(per_namespace)
     {
-        Ok(rows) => rows,
-        Err(err) => return common::query_error(&err),
-    };
-    {
-        for fragment in &fragments {
-            evidence.push(evidence_from_fragment(
-                service,
-                fragment,
-                source_version_match,
-                excerpt_chars,
-            ));
-        }
-    }
-    let fragments = match opened
-        .reader
-        .fragments(enrichment_store::query::FragmentSelection {
-            path: None,
-            symbol_id: None,
-            kinds: &[FragmentKind::FeatureDefinition],
-            limit: per_namespace.clamp(1, 128),
-            require_complete: false,
-        })
-        .await
-    {
-        Ok(rows) => rows,
-        Err(err) => return common::query_error(&err),
-    };
-    {
-        for fragment in &fragments {
-            evidence.push(evidence_from_fragment(
-                service,
-                fragment,
-                source_version_match,
-                excerpt_chars,
-            ));
-        }
+        evidence.push(evidence_from_fragment(
+            service,
+            &fragment.fragment,
+            source_version_match,
+            excerpt_chars,
+        ));
     }
 
-    let data = OverviewData {
+    let mut data = OverviewData {
         crate_name: manifest.crate_name.clone(),
         crate_version: manifest.crate_version.clone(),
         snapshot: SnapshotSummary {
@@ -146,15 +117,13 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         definitions_by_kind: raw.definitions_by_kind,
         namespaces,
         truncated_namespaces,
-        features: raw.features,
-        documentation_headings: raw.documentation_headings,
-        release_note_headings: raw.release_note_headings,
-        examples: raw.examples,
+        discovery,
         reexports: raw.reexports,
         unresolved_reexports: raw.unresolved_reexports,
     };
 
     let mut limitations = vec![
+        "Discovery facets describe library-level source documents; area narrows the namespace tree. Each facet has its own continuation.".into(),
         "Counts and samples describe the documented build (observed_configuration), not the \
          calling project's feature set or target."
             .to_owned(),
@@ -168,37 +137,74 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
             data.unresolved_reexports
         ));
     }
-    let mut missing: std::collections::BTreeSet<String> = manifest
-        .missing
-        .iter()
-        .map(|k| k.as_str().to_owned())
-        .collect();
-    if !manifest.indexed.contains(&EvidenceKind::ReleaseNotes) {
-        missing.insert(EvidenceKind::ReleaseNotes.as_str().to_owned());
+    let mut kinds = vec![EvidenceKind::PublicApi];
+    for facet in &data.discovery {
+        use enrichment_core::wire::research::DiscoveryKind;
+        kinds.push(match facet.kind {
+            DiscoveryKind::Features => EvidenceKind::RegistryMetadata,
+            DiscoveryKind::Documentation => EvidenceKind::Documentation,
+            DiscoveryKind::ReleaseNotes => EvidenceKind::ReleaseNotes,
+            DiscoveryKind::Examples => EvidenceKind::Examples,
+        });
     }
-    let partial = !missing.is_empty();
-    let coverage = Coverage {
-        scope: format!(
-            "module tree, feature map and document headings of {} {} from snapshot {}",
-            opened.release.key.package, opened.release.key.version, manifest.snapshot_id
-        ),
-        indexed: manifest
-            .indexed
-            .iter()
-            .map(|k| k.as_str().to_owned())
-            .collect(),
-        missing,
-        limitations,
+    let mut coverage = match opened
+        .reader
+        .assess(
+            &kinds,
+            None,
+            format!(
+                "overview of {} {} from snapshot {}",
+                opened.release.key.package, opened.release.key.version, manifest.snapshot_id
+            ),
+        )
+        .await
+    {
+        Ok(value) => value,
+        Err(e) => return common::query_error(&e),
     };
+    for facet in &mut data.discovery {
+        if facet.state == enrichment_core::wire::AspectState::Absent {
+            let kind = match facet.kind {
+                enrichment_core::wire::research::DiscoveryKind::Features => {
+                    EvidenceKind::RegistryMetadata
+                }
+                enrichment_core::wire::research::DiscoveryKind::Documentation => {
+                    EvidenceKind::Documentation
+                }
+                enrichment_core::wire::research::DiscoveryKind::ReleaseNotes => {
+                    EvidenceKind::ReleaseNotes
+                }
+                enrichment_core::wire::research::DiscoveryKind::Examples => EvidenceKind::Examples,
+            };
+            if coverage.assessments.iter().any(|assessment| {
+                assessment.kind == kind
+                    && assessment.state != enrichment_core::wire::ScopeState::Indexed
+            }) {
+                facet.state = enrichment_core::wire::AspectState::Unavailable;
+                facet.reason =
+                    Some("No retained match; this facet lacks complete qualified coverage.".into());
+            } else {
+                facet.reason = Some("No retained match in this qualified discovery scope.".into());
+            }
+        }
+    }
+    let partial = !coverage.complete()
+        || data
+            .discovery
+            .iter()
+            .any(|facet| facet.state == enrichment_core::wire::AspectState::Failed);
+    coverage.limitations.extend(limitations);
     let research = Research {
         summary: format!(
-            "{} {}: {} definitions across {} namespace(s); {} feature(s), {} example(s).",
+            "{} {}: {} definitions across {} namespace(s); {} retained discovery fragments in this page.",
             opened.release.key.package,
             opened.release.key.version,
             data.definitions_by_kind.values().sum::<u64>(),
             data.namespaces.len() as u64 + truncated_namespaces,
-            data.features.len(),
-            data.examples.len()
+            data.discovery
+                .iter()
+                .map(|facet| facet.items.len())
+                .sum::<usize>()
         ),
         data: common::to_object(&data),
         coverage,
@@ -217,4 +223,107 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     } else {
         research.ok()
     }
+}
+
+fn discovery_digest(selection: &DiscoverySelection, budget: usize) -> String {
+    enrichment_core::canonical::digest_hex(&serde_json::json!([
+        "library-discovery/2",
+        selection.kind,
+        selection.max_items,
+        selection.max_characters,
+        budget,
+    ]))
+}
+
+async fn discovery_facet(
+    opened: &common::Opened,
+    request: &OverviewRequest,
+    selection: DiscoverySelection,
+    budget: usize,
+) -> Result<enrichment_core::wire::data::DiscoveryFacet, Box<Envelope>> {
+    let manifest = opened.reader.manifest();
+    let digest = discovery_digest(&selection, budget);
+    let after = match selection
+        .cursor
+        .as_deref()
+        .map(|cursor| RowCursor::decode(cursor, manifest.snapshot_id.as_str(), &digest))
+        .transpose()
+    {
+        Ok(value) => value.map(|cursor| cursor.after),
+        Err(error) => {
+            return Err(Box::new(crate::envelope::error(
+                ErrorCode::InvalidCursor,
+                error.to_string(),
+                "Restart this discovery facet without a cursor for this snapshot and selection.",
+                false,
+            )));
+        }
+    };
+    let page = match opened
+        .reader
+        .discovery_page(
+            selection.kind.fragment_kind(),
+            selection.max_items,
+            after.as_deref(),
+            selection.max_characters,
+        )
+        .await
+    {
+        Ok(page) => page,
+        Err(error) => return Err(Box::new(common::query_error(&error))),
+    };
+    let next_cursor = match page
+        .next_key
+        .as_ref()
+        .map(|key| RowCursor::encode(manifest.snapshot_id.as_str(), &digest, key.clone()))
+        .transpose()
+    {
+        Ok(cursor) => cursor,
+        Err(error) => {
+            return Err(Box::new(common::operation_error(
+                &error,
+                "discovery_projection",
+            )));
+        }
+    };
+    let accounting = Page::new(page.items.len() as u64, None, page.has_more, next_cursor);
+    let mut items = Vec::new();
+    for (fragment, text_complete) in page.items {
+        let complete = if text_complete {
+            None
+        } else {
+            let mut full = selection.clone();
+            full.max_characters = None;
+            let full_digest = discovery_digest(&full, budget);
+            full.cursor = after.as_ref().map(|key| {
+                RowCursor::encode(manifest.snapshot_id.as_str(), &full_digest, key.clone())
+                    .expect("bounded retained identity serializes")
+            });
+            Some(RecoveryAction::CallTool {
+                tool: "library_overview".into(),
+                arguments: common::to_object(&serde_json::json!({
+                    "context_id": request.context_id, "snapshot_id": manifest.snapshot_id,
+                    "area": request.area, "max_items": request.max_items, "max_bytes": request.max_bytes,
+                    "discovery": [full],
+                })),
+            })
+        };
+        items.push(enrichment_core::wire::data::FragmentProjection {
+            fragment,
+            text_complete,
+            complete,
+        });
+    }
+    Ok(enrichment_core::wire::data::DiscoveryFacet {
+        kind: selection.kind,
+        state: if items.is_empty() {
+            enrichment_core::wire::AspectState::Absent
+        } else {
+            enrichment_core::wire::AspectState::Available
+        },
+        reason: None,
+        diagnostic: None,
+        items,
+        page: Some(accounting),
+    })
 }

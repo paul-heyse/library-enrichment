@@ -1,0 +1,229 @@
+{
+  "module": "arrow_array::builder::generic_bytes_view_builder",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.builder.generic_bytes_view_builder.md",
+  "items": [
+    {
+      "path": "arrow_array::builder::generic_bytes_view_builder::make_view",
+      "name": "make_view",
+      "kind": "function",
+      "crate": "arrow-array",
+      "signature": "fn make_view(data: &[u8], block_id: u32, offset: u32) -> u128",
+      "summary": "Create a view based on the given data, block id and offset.",
+      "doc": "api/arrow_array.builder.generic_bytes_view_builder.md#make_view"
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_view_builder::GenericByteViewBuilder",
+      "name": "GenericByteViewBuilder",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct GenericByteViewBuilder<T: ByteViewType + ?Sized>",
+      "summary": "A builder for [`GenericByteViewArray`]",
+      "doc": "api/arrow_array.builder.generic_bytes_view_builder.md#genericbyteviewbuilder",
+      "implements": [
+        "arrow_array::builder::ArrayBuilder",
+        "core::iter::traits::collect::Extend"
+      ],
+      "methods": [
+        {
+          "name": "allocated_size",
+          "signature": "fn allocated_size(&self) -> usize",
+          "summary": "Return the allocated size of this builder in bytes, useful for memory accounting."
+        },
+        {
+          "name": "append_array",
+          "signature": "fn append_array(&mut self, array: &GenericByteViewArray<T>)",
+          "summary": "Appends an array to the builder. This will flush any in-progress block and append the data buffers and add the (adapted) views."
+        },
+        {
+          "name": "append_block",
+          "signature": "fn append_block(&mut self, buffer: Buffer) -> u32",
+          "summary": "Append a new data block returning the new block offset"
+        },
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "summary": "Append a null value into the builder"
+        },
+        {
+          "name": "append_option",
+          "signature": "fn append_option(&mut self, value: Option<impl AsRef<T::Native>>)",
+          "summary": "Append an `Option` value into the builder"
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value(&mut self, value: impl AsRef<T::Native>)",
+          "summary": "Appends a value into the builder"
+        },
+        {
+          "name": "append_view_unchecked",
+          "signature": "unsafe fn append_view_unchecked(&mut self, block: u32, offset: u32, len: u32)",
+          "summary": "Append a view of the given `block`, `offset` and `length`"
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "as_any_mut",
+          "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<I: IntoIterator<Item = Option<V>>>(&mut self, iter: I)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> GenericByteViewArray<T>",
+          "summary": "Builds the [`GenericByteViewArray`] and reset this builder"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> ArrayRef",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "finish_cloned",
+          "signature": "fn finish_cloned(&self) -> GenericByteViewArray<T>",
+          "summary": "Builds the [`GenericByteViewArray`] without resetting the builder"
+        },
+        {
+          "name": "finish_cloned",
+          "signature": "fn finish_cloned(&self) -> ArrayRef",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "get_value",
+          "signature": "fn get_value(&self, index: usize) -> &[u8]",
+          "summary": "Returns the value at the given index Useful if we want to know what value has been inserted to the builder The index has to be smaller than `self.len()`, otherwise it will panic"
+        },
+        {
+          "name": "into_box_any",
+          "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new [`GenericByteViewBuilder`]."
+        },
+        {
+          "name": "try_append_value",
+          "signature": "fn try_append_value(&mut self, value: impl AsRef<T::Native>) -> Result<(), ArrowError>",
+          "summary": "Appends a value into the builder"
+        },
+        {
+          "name": "try_append_value_n",
+          "signature": "fn try_append_value_n(&mut self, value: impl AsRef<T::Native>, n: usize) -> Result<(), ArrowError>",
+          "summary": "Append the same value `n` times into the builder"
+        },
+        {
+          "name": "try_append_view",
+          "signature": "fn try_append_view(&mut self, block: u32, offset: u32, len: u32) -> Result<(), ArrowError>",
+          "summary": "Try to append a view of the given `block`, `offset` and `length`"
+        },
+        {
+          "name": "validity_slice",
+          "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+          "summary": "Returns the current null buffer as a slice"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(capacity: usize) -> Self",
+          "summary": "Creates a new [`GenericByteViewBuilder`] with space for `capacity` string values."
+        },
+        {
+          "name": "with_deduplicate_strings",
+          "signature": "fn with_deduplicate_strings(self) -> Self",
+          "summary": "Deduplicate strings while building the array"
+        },
+        {
+          "name": "with_fixed_block_size",
+          "signature": "fn with_fixed_block_size(self, block_size: u32) -> Self",
+          "summary": "Set a fixed buffer size for variable length strings"
+        },
+        {
+          "name": "with_max_deduplication_len",
+          "signature": "fn with_max_deduplication_len(self, max_deduplication_len: u32) -> Self",
+          "summary": "Configure max deduplication length when deduplicating strings while building the array. Default is None."
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_view_builder::BinaryViewBuilder",
+      "name": "BinaryViewBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type BinaryViewBuilder = GenericByteViewBuilder<types::BinaryViewType>",
+      "summary": "Array builder for [`BinaryViewArray`][crate::BinaryViewArray]",
+      "doc": "api/arrow_array.builder.generic_bytes_view_builder.md#binaryviewbuilder",
+      "implements": [
+        "arrow_array::builder::generic_bytes_builder::BinaryLikeArrayBuilder"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::BinaryLikeArrayBuilder"
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value(&mut self, value: &[u8])",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::BinaryLikeArrayBuilder"
+        },
+        {
+          "name": "type_name",
+          "signature": "fn type_name() -> &'static str",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::BinaryLikeArrayBuilder"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(capacity: usize) -> Self",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::BinaryLikeArrayBuilder"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_view_builder::StringViewBuilder",
+      "name": "StringViewBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type StringViewBuilder = GenericByteViewBuilder<types::StringViewType>",
+      "summary": "Array builder for [`StringViewArray`][crate::StringViewArray]",
+      "doc": "api/arrow_array.builder.generic_bytes_view_builder.md#stringviewbuilder",
+      "implements": [
+        "arrow_array::builder::generic_bytes_builder::StringLikeArrayBuilder"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::StringLikeArrayBuilder"
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value(&mut self, value: &str)",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::StringLikeArrayBuilder"
+        },
+        {
+          "name": "type_name",
+          "signature": "fn type_name() -> &'static str",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::StringLikeArrayBuilder"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(capacity: usize) -> Self",
+          "via_trait": "arrow_array::builder::generic_bytes_builder::StringLikeArrayBuilder"
+        }
+      ]
+    }
+  ]
+}

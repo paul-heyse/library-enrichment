@@ -460,6 +460,8 @@ one. No producer emits `agent_inferred`, which is correct: that class is the cal
 
 ### 6.3 Schema ownership
 
+> Decision: ADR-0037 — Rust domain DTOs generate schemas and Python models; authored Pydantic presentation composes tool output variants without owning domain policy.
+
 > Decision: ADR-0035 makes same-path ambiguity actionable with typed candidates and an exact definition selector.
 
 > Decision: ADR-0034 adds the Rust-owned native query status projection.
@@ -521,6 +523,8 @@ unqualified execution profile returns an explicit scoped gap or policy error.*
 
 ### 7.1 Tool behavior requirements
 
+> Decision: ADR-0036 — One explicit research selection drives native requested-scope assessment and independent aspect pages. ADR-0038 governs operation preparation and budgets.
+
 > Decision: ADR-0035 makes same-path ambiguity actionable with typed candidates and an exact definition selector.
 
 > Decision: ADR-0028 — Compose cold comparisons and reuse exactly qualified retained execution.
@@ -535,8 +539,8 @@ Resolution returns candidates and an actionable ambiguity rather than guessing, 
 a lookup as an upgrade request. Overview represents unindexed sections as **unknown, not empty**.
 Search is deterministic lexical and token matching with recorded scoring factors — no embeddings
 in v1 — and reports what it covered. Inspection defaults to public API plus a small documentation
-section and does not start an LSP for a signature already normalized. Comparison computes
-additive as well as breaking changes, and a clean API diff does not mean no behavioral change.
+section and does not start an LSP for a signature already normalized. Comparison computes observed differences and per-side coverage. A signature representation
+change does not establish source incompatibility, and a clean API diff does not mean unchanged behavior.
 Verification's caller-supplied profile can only *select* from locally enabled profiles, never
 grant one, and reports `not_run` rather than a fabricated success. Artifact reading resolves only
 service-issued handles — **never a general filesystem path reader**. blueprint §7.1.
@@ -546,19 +550,30 @@ reads, durable pending completion and explicit policy-controlled execution.*
 
 ### 7.2 Common response envelope
 
-One stable root schema for every tool, carrying `schema_version`, `request_id`, `status`,
-`summary`, `context_id`, `snapshot_id`, `data`, `coverage`, `freshness`, `evidence`, `artifacts`,
-`pagination`, `job` and `error`. `status` is `ok`, `partial`, `pending` or `error`, and **`ok`
-means successful within the declared scope, not complete knowledge**: a valid empty search is
-distinct from an extraction failure and from a missing index. Thirteen stable error codes, each
-carrying retryability and a concrete next action. blueprint §7.2.
+> Decision: ADR-0037 — Research/2.0 replaces the prior root pagination and nested terminal-result contract.
 
-`contracts/research-envelope.schema.json` is the frozen Phase-0 acceptance target; generated
-schemas must match it *behaviourally*, not the other way round.
+Research/2.0 retains explicit outcome, scope, freshness and source evidence while separating
+`delivery` from the native outcome. `ok` means success within the declared scope. Coverage
+assessments distinguish indexed, partial, missing and unknown; indexed-empty is meaningful only
+within its evaluated domain. Each requested aspect and alternative set has its own page/cursor.
+There is no root pagination field. Errors carry a typed cause, stage, rule, affected identities,
+limits and recovery actions. Nullable root fields remain required even when their value is null.
 
-*Evidence: Tested — `just schema-conformance` against the frozen contract and its four fixtures.*
+`contracts/research-v2/research-envelope.schema.json` is the current frozen candidate generated
+from Rust. The original contract remains preserved provenance and is not a compatibility reader.
+Authored Pydantic presentation models use generated domain types and validate actual inline,
+artifact, pending and error outputs. Individual comparison values are tagged inline/artifact;
+artifact variants retain complete JSON, digest, size and original alternative FactSource.
+Comparison values remain native Arrow cells until a bounded final sink selects inline JSON or
+streams a complete artifact. Indexed result dependency closure is verified and included in
+catalog admission/export, with descriptors for offline reads of presentation-only artifacts.
+
+*Evidence: Tested for the cases recorded in the Plan 13 ledger; final client and deployment
+qualification remains open.*
 
 ### 7.3 Output budgets
+
+> Decision: ADR-0036 and ADR-0037 — Independent aspect/alternative pages and complete indexed artifact delivery preserve scope and native outcome.
 
 > Decision: ADR-0029 — Distinguish selected API projections from complete retained observations.
 
@@ -568,7 +583,7 @@ schemas must match it *behaviourally*, not the other way round.
 > Decision: ADR-0024 — keyset cursors bind semantic query/snapshot/sort versions; complete envelope and execution budgets are separate obligations.
 
 The core enforces `max_bytes` against the complete service envelope. MCP adds one compact text
-summary (at most 160 JSON-encoded UTF-8 bytes) and at most 512 bytes of standard protocol framing
+summary (at most 160 JSON-encoded UTF-8 bytes) and at most 1024 bytes of standard protocol framing
 allowance, measured on actual stdio responses. The canonical envelope appears once in structured
 content; tools advertise its generated schema. Client SDK coercion is not wire JSON.
 
@@ -587,6 +602,8 @@ defaults, **not measured performance claims**.*
 
 ### 7.4 FastMCP implementation
 
+> Decision: ADR-0037 — FastMCP 4.0.3 validates original inputs and emitted tool variants; optional progress cannot replace a completed outcome.
+
 Typed Pydantic request and result models generated from or checked against the wire schemas; a
 small human-readable summary plus compact structured data, never the same long document twice.
 Four resource templates delegate to the same core read operations as the tools, taking IDs
@@ -602,6 +619,8 @@ as read-only. **All logs go to stderr or daemon logs, never MCP stdout.** bluepr
 
 ### 8.1 Producer plans, not bespoke scripts
 
+> Decision: ADR-0038 — Foreground operations and durable jobs have distinct deadline, admission, correlation and retained-output owners.
+
 Typed `ProducerSpec` and `ProducerPlan` records over a small explicit dependency graph for the
 known producers — **not a generic orchestration platform** (§B11). A tool requests missing
 evidence kinds and the daemon plans the minimum additional producers; work already done for
@@ -612,6 +631,8 @@ is retained with a `partial` status. blueprint §8.1.
 other producers' evidence with a `partial` status.*
 
 ### 8.2 Single-flight and publication
+
+> Decision: ADR-0037 — Complete indexed result closure is admitted before job success; recovery reads committed bytes without generating replacement results.
 
 > Decision: ADR-0030 — Admit complete delivery artifacts before committing successful jobs.
 > Decision: ADR-0031 — Isolate native Parquet admission allocations.
@@ -641,6 +662,8 @@ publication, same-context distinct snapshots and failed precommit delivery have 
 
 ### 8.3 Job state
 
+> Decision: ADR-0037 — Job/5 exposes a compact outcome and readable delivery descriptor, not recursive full research envelopes.
+
 > Decision: ADR-0030 — Admit complete delivery artifacts before committing successful jobs.
 
 > Decision: ADR-0017 (supersedes ADR-0016) — retain isolated producers and durable interests; Rust admits Python dependency metadata before following registry edges.
@@ -665,6 +688,16 @@ remain provenance. Query provider/metadata eviction releases memory without reac
 Changed files or validation contracts require re-admission; paths/mtimes are only witnesses.
 One bounded RuntimeEnv serves scoped immutable request catalogs. *Evidence: Implemented — exact admitted providers and qualified retained execution reuse share
 one bounded native runtime; eviction releases caches without deleting evidence.*
+
+> Decision: ADR-0038 — Request, policy, snapshot and resource ownership span all native child work.
+
+An operation binds its request/effective-policy digests and admitted snapshot file identities,
+catalog generations and retention leases. Bounded query diagnostics record that binding alongside
+the actual native plan and function inventory. A blocking Arrow result sink retains the existing
+query permit through worker exit even after a caller timeout. Retained output and streamed
+artifact bytes have separate cumulative operation limits; neither is a process RSS measurement.
+No cross-operation result cache is implied by these diagnostic bindings. Operation-local reuse
+remains a measured W11 choice.
 
 ## 9. LSP and verification implementation details
 
@@ -724,6 +757,8 @@ supported environment and source/lock scope accompany each observation; this is 
 project integration certification. Current integrated results are recorded in the Plan 12 ledger.*
 
 ## 10. Execution policy and source handling
+
+> Decision: ADR-0039 — Revision archives omit only explicitly safe link entries and retain a typed extraction/source-closure receipt; missing required inputs remain incomplete.
 
 > Decision: ADR-0031 — Isolate native Parquet admission allocations.
 > Decision: ADR-0032 — Configure producer capacity and qualify observed resource limits.
@@ -897,12 +932,14 @@ source-bound integrated acceptance is recorded in `STATUS.md`, the Plan 12 ledge
 
 ### 14.3 Operational metrics
 
+> Decision: ADR-0038 — Preparation attempts receive early query identities, stage diagnostics and native rule failures; metrics describe actual execution only.
+
 > Decision: ADR-0034 exposes bounded native query status.
 
 `health.native_queries` reports process-scoped physical execution/completion/interruption totals,
 summed planning and elapsed microseconds, current admitted queries, and configured concurrency,
 managed-memory, spill and metadata-cache limits. Null means no query runtime is open. Recorded
-execution totals exclude failures before physical plan creation; overlapping durations are not
+query totals include preparation attempts, including failures before physical plan creation; overlapping durations are not
 whole-process wall time. Limits are configuration, not peak RSS or library completeness.
 
 > Decision: ADR-0024 — bounded diagnostics describe the executed plan, admission/scan/hydration costs, memory/spill and actual scope without a second hidden execution.
@@ -998,3 +1035,95 @@ decided it. See [`README.md`](README.md) for the amendment rule.
 | 18 | 2026-09-14 | Select an existing definition within its public path and snapshot; return typed ambiguity candidates. | ADR-0035 |
 | 19 | 2026-09-14 | Reconcile implemented native storage, tools, producer ownership, durable jobs and installer evidence labels with Plan 12. | Maintenance |
 | 20 | 2026-09-14 | Record completed functional validation and the user-stopped registry-only audit boundary; retain deferred performance work. | Maintenance |
+
+| 21 | 2026-09-15 | Research/2.0 selection, coverage, delivery, native preparation, adapter presentation and revision omission contracts; scoped design acceptance with final qualification open. | ADR-0036, ADR-0037, ADR-0038, ADR-0039 |
+| 22 | 2026-09-15 | Record implemented Arrow value streaming, indexed artifact dependency closure and operation-owned input/permit lifetimes. | ADR-0037, ADR-0038 |
+
+
+### Plan 13 derived comparison publication refinement (2026-09-15)
+
+ADR-0037's precommit result obligation also applies to comparison jobs. A comparison publication
+is a separate typed catalog relation binding its request digest, terminal outcome, result descriptor
+and both exact context/snapshot pairs. It is derived research, with no producer attempt invented
+for the query. Native reference checks admit both inputs and package compatibility. The after
+snapshot owns export reachability; bounded native selection follows required before snapshots and
+copies their complete closure. Catalog/5 and bundle/5 replace the earlier development candidates.
+Committed indexed bytes win a terminal-journal interruption and are verified on recovery without
+rerunning acquisition or comparison. Result writing participates in the operation's cumulative
+artifact budget, including when called from a blocking publication worker.
+
+Revision receipts additionally retain candidate source roots reached through bounded explicit and
+workspace-inherited local dependency manifests. Native omission joins use those roots, while
+missing declared files are independent failure facts. Receipt policy revision-extraction/3 and
+producer revision-source/4 distinguish this collection scope. Declared presence never establishes
+Cargo resolution, generated inputs or complete source/build coverage.
+
+
+Comparison detail cursors select one side's alternatives. The opposite side retains its observed
+presence with an unknown count, without repeating large value hydration. Nonempty alternative pages
+may stop at the remaining artifact byte allowance; every continuation advances. Values are measured
+from borrowed Arrow before an immutable write. Minimum pages that cannot fit remain capacity failures.
+Blocking native publication work retains operation identity and admission through worker exit; its
+callback/future is heap-owned before polling. The operation policy digest includes the full configured
+limits/freshness/producer policy, excluding where the configuration file was loaded from.
+
+
+### Native operation-local reuse (2026-09-15)
+
+Search's folded key/score relation, overview's chosen child relation and comparison's changed-key
+relation are computed once for their multiple consumers. The private index uses DataFusion 55.1.0
+DiskManager/SpillFile quota ownership, Arrow IPC streams and the native StreamingTable provider.
+Long search text and comparison alternatives stay in admitted source relations until selection.
+Exact count, ordering, joins and page semantics remain DataFusion work. The index is private to
+one operation's isolated catalog; its captured request/config identity and snapshot leases stay
+alive until the final provider/reader drops. No computation lookup or persistent cache is added.
+
+Each scan batch has the runtime's existing bound. Readers reserve managed decode workspace before
+opening the unbuffered stream; writers reserve encoding workspace. Native disk quota remains
+authoritative, and an additional counter-based preflight preserves a typed capacity witness when
+that limit is already provable. Generic native concurrent I/O errors remain I/O rather than being
+guessed from message strings. Arrow wrappers preserve concrete nested I/O/native causes.
+
+Fixed research decoder families now include unsigned counts, namespace kind counts/summary/child
+projections and full fragment rendering. Per-operation diagnostics retain attributed child query
+counters, queue/planning time, cumulative result/artifact charges and index reads/spill bytes in
+a bounded 32-entry completion history. It describes owned lifetime, not total process RSS or
+protocol latency. Artifact follow-ups are separate operations. Measurement evidence and remaining
+limits are in [the native operation report](../reports/plan13-native-operation-measurements-2026-09-15.md).
+
+Qualification state is generation-scoped beside its explicitly selected execution-image root.
+Requalification preserves older sidecars and uses the current generation; it never initializes
+production XDG state, migrates old evidence or resets prior files.
+
+### Native semantic scope and portable recovery (2026-09-15)
+
+Python nominal-class selection is a qualified native relation, shared by semantic consumers.
+A semi join selects the symbol's source observations; aggregate FILTER counts and UNNEST of
+declared bases require every selected declaration to establish the supported nominal scope.
+Unknown, conflicting or unsupported declarations do not silently become supported. The native
+decision has an independent Arrow result-field contract and contributes its implementation
+identity to producer provenance. The adapter makes no Python semantic decision.
+
+The namespace overview summary is an indexed native relation whose partition and result-family
+contracts are checked before decoding. Search scores/keys, comparison keys and overview indexes
+remain private to one operation and are released with its native leases and spill ownership.
+The measured relationship endpoint plan retains the semi join: for the sampled high-fanout
+symbols, four keyed joins plus union/deduplication cost more despite using hash joins.
+
+For MCP error results, portable text includes a bounded projection of the native recovery
+diagnostic. A failed durable job includes its immutable result-read action when one exists.
+Canonical structured output and the MCP error flag keep the original meaning. Long explanations
+may be omitted from text within the framing allowance; this is explicitly labeled. Optional host
+presentation does not become another evidence model or job state machine. Actual installed
+launch selection binds the daemon, both native helpers, adapter and worker interpreter together.
+
+
+### Plan 13 implementation and deployment closure — 2026-09-15
+
+The shared native research architecture described above is implemented and serves research/2.0
+from one verified fresh-state generation. Independent final-source and real installed-client
+qualification passed; the scoped closing review accepts G1–G7. The [final qualification report](../reports/plan13-final-qualification-2026-09-15.md)
+records J01–J20, D01–D12, exact component hashes and the 47 active acceptance gates. Old evidence
+is preserved inactive with no compatibility reader. Production execution permissions remain
+static-only; separately qualified execution does not silently change that policy. Explicit source,
+semantic, budget and measurement limits remain part of the accepted design.

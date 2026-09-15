@@ -1,0 +1,134 @@
+{
+  "module": "datafusion_datasource::write",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.write.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::write::get_writer_schema",
+      "name": "get_writer_schema",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn get_writer_schema(config: &file_sink_config::FileSinkConfig) -> std::sync::Arc<arrow::datatypes::Schema>",
+      "summary": "Converts table schema to writer schema, which may differ in the case of hive style partitioning where some columns are removed from the underlying files.",
+      "doc": "api/datafusion_datasource.write.md#get_writer_schema",
+      "aliases": [
+        "datafusion::datasource::file_format::write::get_writer_schema"
+      ]
+    },
+    {
+      "path": "datafusion_datasource::write::ObjectWriterBuilder",
+      "name": "ObjectWriterBuilder",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct ObjectWriterBuilder",
+      "summary": "A builder for an [`AsyncWrite`] that writes to an object store location.",
+      "doc": "api/datafusion_datasource.write.md#objectwriterbuilder",
+      "aliases": [
+        "datafusion::datasource::file_format::write::ObjectWriterBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<Box<dyn AsyncWrite + Send + Unpin>>",
+          "summary": "Return a writer object that writes to the object store location."
+        },
+        {
+          "name": "get_buffer_size",
+          "signature": "fn get_buffer_size(&self) -> Option<usize>",
+          "summary": "Currently specified buffer size in bytes."
+        },
+        {
+          "name": "get_compression_level",
+          "signature": "fn get_compression_level(&self) -> Option<u32>",
+          "summary": "Currently specified compression level."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(file_compression_type: FileCompressionType, location: &Path, object_store: Arc<dyn ObjectStore>) -> Self",
+          "summary": "Create a new [`ObjectWriterBuilder`] for the specified path and compression type."
+        },
+        {
+          "name": "set_buffer_size",
+          "signature": "fn set_buffer_size(&mut self, buffer_size: Option<usize>)",
+          "summary": "Set buffer size in bytes for object writer."
+        },
+        {
+          "name": "set_compression_level",
+          "signature": "fn set_compression_level(&mut self, compression_level: Option<u32>)",
+          "summary": "Set compression level for object writer."
+        },
+        {
+          "name": "with_buffer_size",
+          "signature": "fn with_buffer_size(self, buffer_size: Option<usize>) -> Self",
+          "summary": "Set buffer size in bytes for object writer, returning the builder."
+        },
+        {
+          "name": "with_compression_level",
+          "signature": "fn with_compression_level(self, compression_level: Option<u32>) -> Self",
+          "summary": "Set compression level for object writer, returning the builder."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::write::SharedBuffer",
+      "name": "SharedBuffer",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct SharedBuffer",
+      "summary": "A buffer with interior mutability shared by the SerializedFileWriter and ObjectStore writer",
+      "doc": "api/datafusion_datasource.write.md#sharedbuffer",
+      "aliases": [
+        "datafusion::datasource::file_format::write::SharedBuffer"
+      ],
+      "fields": [
+        "buffer"
+      ],
+      "implements": [
+        "core::io::write::Write"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> std::io::Result<()>",
+          "via_trait": "core::io::write::Write"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(capacity: usize) -> Self"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> std::io::Result<usize>",
+          "via_trait": "core::io::write::Write"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::write::BatchSerializer",
+      "name": "BatchSerializer",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait BatchSerializer: Sync + Send",
+      "summary": "A trait that defines the methods required for a RecordBatch serializer.",
+      "doc": "api/datafusion_datasource.write.md#batchserializer",
+      "aliases": [
+        "datafusion::datasource::file_format::write::BatchSerializer"
+      ],
+      "implementors": [
+        "datafusion_datasource_csv::file_format::CsvSerializer",
+        "datafusion_datasource_json::file_format::JsonSerializer"
+      ],
+      "required_methods": [
+        "serialize"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize(&self, batch: RecordBatch, initial: bool) -> Result<Bytes>",
+          "summary": "Asynchronously serializes a `RecordBatch` and returns the serialized bytes. Parameter `initial` signals whether the given batch is the first batch. This distinction is important for certain serializers (like CSV)."
+        }
+      ]
+    }
+  ]
+}

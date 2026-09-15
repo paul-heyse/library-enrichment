@@ -1,0 +1,96 @@
+{
+  "module": "datafusion_expr_common::groups_accumulator",
+  "crate": "datafusion-expr-common",
+  "api": "api/datafusion_expr_common.groups_accumulator.md",
+  "items": [
+    {
+      "path": "datafusion_expr_common::groups_accumulator::EmitTo",
+      "name": "EmitTo",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum EmitTo",
+      "summary": "Describes how many rows should be emitted during grouping.",
+      "doc": "api/datafusion_expr_common.groups_accumulator.md#emitto",
+      "aliases": [
+        "datafusion::logical_expr::EmitTo",
+        "datafusion_expr::EmitTo",
+        "datafusion_expr::groups_accumulator::EmitTo"
+      ],
+      "variants": [
+        "All",
+        "First"
+      ],
+      "methods": [
+        {
+          "name": "take_needed",
+          "signature": "fn take_needed<T>(&self, v: &mut Vec<T>) -> Vec<T>",
+          "summary": "Removes the number of rows from `v` required to emit the right number of rows, returning a `Vec` with elements taken, and the remaining values in `v`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::groups_accumulator::GroupsAccumulator",
+      "name": "GroupsAccumulator",
+      "kind": "trait",
+      "crate": "datafusion-expr-common",
+      "signature": "trait GroupsAccumulator: Send + std::any::Any",
+      "summary": "`GroupsAccumulator` implements a single aggregate (e.g. AVG) and stores the state for *all* groups internally.",
+      "doc": "api/datafusion_expr_common.groups_accumulator.md#groupsaccumulator",
+      "aliases": [
+        "datafusion::logical_expr::GroupsAccumulator",
+        "datafusion_expr::GroupsAccumulator",
+        "datafusion_expr::groups_accumulator::GroupsAccumulator"
+      ],
+      "implementors": [
+        "datafusion_functions_aggregate::correlation::CorrelationGroupsAccumulator",
+        "datafusion_functions_aggregate::stddev::StddevGroupsAccumulator",
+        "datafusion_functions_aggregate::variance::VarianceGroupsAccumulator",
+        "datafusion_functions_aggregate_common::aggregate::count_distinct::groups::PrimitiveDistinctCountGroupsAccumulator",
+        "datafusion_functions_aggregate_common::aggregate::groups_accumulator::GroupsAccumulatorAdapter",
+        "datafusion_functions_aggregate_common::aggregate::groups_accumulator::bool_op::BooleanGroupsAccumulator",
+        "datafusion_functions_aggregate_common::aggregate::groups_accumulator::prim_op::PrimitiveGroupsAccumulator"
+      ],
+      "required_methods": [
+        "convert_to_state",
+        "evaluate",
+        "merge_batch",
+        "size",
+        "state",
+        "update_batch"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "convert_to_state",
+          "signature": "fn convert_to_state(&self, values: &[ArrayRef], opt_filter: Option<&BooleanArray>) -> Result<Vec<ArrayRef>>",
+          "summary": "Converts an input batch directly to the intermediate aggregate state."
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self, emit_to: EmitTo) -> Result<ArrayRef>",
+          "summary": "Returns the final aggregate value for each group as a single `RecordBatch`, resetting the internal state."
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], total_num_groups: usize) -> Result<()>",
+          "summary": "Merges intermediate state (the output from [`Self::state`]) into this accumulator's current state."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Amount of memory used to store the state of this accumulator, in bytes."
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>",
+          "summary": "Returns the intermediate aggregate state for this accumulator, used for multi-phase grouping, resetting its internal state."
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>",
+          "summary": "Updates the accumulator's state from its arguments, encoded as a vector of [`ArrayRef`]s."
+        }
+      ]
+    }
+  ]
+}

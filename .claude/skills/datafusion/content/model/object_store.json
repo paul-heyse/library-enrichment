@@ -1,0 +1,634 @@
+{
+  "module": "object_store",
+  "crate": "object_store",
+  "api": "api/object_store.md",
+  "items": [
+    {
+      "path": "object_store::CopyMode",
+      "name": "CopyMode",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum CopyMode",
+      "summary": "Configure preconditions for the copy operation",
+      "doc": "api/object_store.md#copymode",
+      "aliases": [
+        "datafusion::object_store::CopyMode"
+      ],
+      "variants": [
+        "Overwrite",
+        "Create"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::Error",
+      "name": "Error",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum Error",
+      "summary": "A specialized `Error` for object store-related errors",
+      "doc": "api/object_store.md#error",
+      "aliases": [
+        "datafusion::object_store::Error"
+      ],
+      "variants": [
+        "Generic",
+        "NotFound",
+        "InvalidPath",
+        "JoinError",
+        "NotSupported",
+        "AlreadyExists",
+        "Precondition",
+        "NotModified",
+        "NotImplemented",
+        "PermissionDenied",
+        "Unauthenticated",
+        "UnknownConfigurationKey"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: path::Error) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "object_store::GetResultPayload",
+      "name": "GetResultPayload",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum GetResultPayload",
+      "summary": "The kind of a [`GetResult`]",
+      "doc": "api/object_store.md#getresultpayload",
+      "aliases": [
+        "datafusion::object_store::GetResultPayload"
+      ],
+      "variants": [
+        "File",
+        "Stream"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::PutMode",
+      "name": "PutMode",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum PutMode",
+      "summary": "Configure preconditions for the put operation",
+      "doc": "api/object_store.md#putmode",
+      "aliases": [
+        "datafusion::object_store::PutMode"
+      ],
+      "variants": [
+        "Overwrite",
+        "Create",
+        "Update"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::RenameTargetMode",
+      "name": "RenameTargetMode",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum RenameTargetMode",
+      "summary": "Configure preconditions for the target of rename operation.",
+      "doc": "api/object_store.md#renametargetmode",
+      "aliases": [
+        "datafusion::object_store::RenameTargetMode"
+      ],
+      "variants": [
+        "Overwrite",
+        "Create"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::CopyOptions",
+      "name": "CopyOptions",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct CopyOptions",
+      "summary": "Options for a copy request",
+      "doc": "api/object_store.md#copyoptions",
+      "aliases": [
+        "datafusion::object_store::CopyOptions"
+      ],
+      "fields": [
+        "mode",
+        "extensions"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`CopyOptions`]"
+        },
+        {
+          "name": "with_extensions",
+          "signature": "fn with_extensions(self, extensions: Extensions) -> Self",
+          "summary": "Sets the `extensions`."
+        },
+        {
+          "name": "with_mode",
+          "signature": "fn with_mode(self, mode: CopyMode) -> Self",
+          "summary": "Sets the `mode."
+        }
+      ]
+    },
+    {
+      "path": "object_store::GetOptions",
+      "name": "GetOptions",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct GetOptions",
+      "summary": "Options for a get request, such as range",
+      "doc": "api/object_store.md#getoptions",
+      "aliases": [
+        "datafusion::object_store::GetOptions"
+      ],
+      "fields": [
+        "if_match",
+        "if_none_match",
+        "if_modified_since",
+        "if_unmodified_since",
+        "range",
+        "version",
+        "head",
+        "extensions"
+      ],
+      "methods": [
+        {
+          "name": "check_preconditions",
+          "signature": "fn check_preconditions(&self, meta: &ObjectMeta) -> Result<()>",
+          "summary": "Returns an error if the modification conditions on this request are not satisfied"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`GetOptions`]"
+        },
+        {
+          "name": "with_extensions",
+          "signature": "fn with_extensions(self, extensions: Extensions) -> Self",
+          "summary": "Sets the `extensions` condition."
+        },
+        {
+          "name": "with_head",
+          "signature": "fn with_head(self, head: impl Into<bool>) -> Self",
+          "summary": "Sets the `head` condition."
+        },
+        {
+          "name": "with_if_match",
+          "signature": "fn with_if_match(self, etag: Option<impl Into<String>>) -> Self",
+          "summary": "Sets the `if_match` condition."
+        },
+        {
+          "name": "with_if_modified_since",
+          "signature": "fn with_if_modified_since(self, dt: Option<impl Into<DateTime<Utc>>>) -> Self",
+          "summary": "Sets the `if_modified_since` condition."
+        },
+        {
+          "name": "with_if_none_match",
+          "signature": "fn with_if_none_match(self, etag: Option<impl Into<String>>) -> Self",
+          "summary": "Sets the `if_none_match` condition."
+        },
+        {
+          "name": "with_if_unmodified_since",
+          "signature": "fn with_if_unmodified_since(self, dt: Option<impl Into<DateTime<Utc>>>) -> Self",
+          "summary": "Sets the `if_unmodified_since` condition."
+        },
+        {
+          "name": "with_range",
+          "signature": "fn with_range(self, range: Option<impl Into<GetRange>>) -> Self",
+          "summary": "Sets the `range` condition."
+        },
+        {
+          "name": "with_version",
+          "signature": "fn with_version(self, version: Option<impl Into<String>>) -> Self",
+          "summary": "Sets the `version` condition."
+        }
+      ]
+    },
+    {
+      "path": "object_store::GetResult",
+      "name": "GetResult",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct GetResult",
+      "summary": "Result for a get request",
+      "doc": "api/object_store.md#getresult",
+      "aliases": [
+        "datafusion::object_store::GetResult"
+      ],
+      "fields": [
+        "payload",
+        "meta",
+        "range",
+        "attributes"
+      ],
+      "methods": [
+        {
+          "name": "bytes",
+          "signature": "async fn bytes(self) -> Result<Bytes>",
+          "summary": "Collects the data into a [`Bytes`]"
+        },
+        {
+          "name": "into_stream",
+          "signature": "fn into_stream(self) -> BoxStream<'static, Result<Bytes>>",
+          "summary": "Converts this into a byte stream"
+        }
+      ]
+    },
+    {
+      "path": "object_store::ListResult",
+      "name": "ListResult",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct ListResult",
+      "summary": "Result of a list call that includes objects, prefixes (directories) and a token for the next set of results. Individual result sets may be limited to 1,000 objects based on the underlying object storage's limitations.",
+      "doc": "api/object_store.md#listresult",
+      "aliases": [
+        "datafusion::object_store::ListResult"
+      ],
+      "fields": [
+        "common_prefixes",
+        "objects"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::ObjectMeta",
+      "name": "ObjectMeta",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct ObjectMeta",
+      "summary": "The metadata that describes an object.",
+      "doc": "api/object_store.md#objectmeta",
+      "aliases": [
+        "datafusion::object_store::ObjectMeta"
+      ],
+      "fields": [
+        "location",
+        "last_modified",
+        "size",
+        "e_tag",
+        "version"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::PutMultipartOptions",
+      "name": "PutMultipartOptions",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct PutMultipartOptions",
+      "summary": "Options for [`ObjectStore::put_multipart_opts`]",
+      "doc": "api/object_store.md#putmultipartoptions",
+      "aliases": [
+        "datafusion::object_store::PutMultipartOptions"
+      ],
+      "fields": [
+        "tags",
+        "attributes",
+        "extensions"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(attributes: Attributes) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "object_store::PutOptions",
+      "name": "PutOptions",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct PutOptions",
+      "summary": "Options for a put request",
+      "doc": "api/object_store.md#putoptions",
+      "aliases": [
+        "datafusion::object_store::PutOptions"
+      ],
+      "fields": [
+        "mode",
+        "tags",
+        "attributes",
+        "extensions"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(mode: PutMode) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "object_store::PutResult",
+      "name": "PutResult",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct PutResult",
+      "summary": "Result for a put request",
+      "doc": "api/object_store.md#putresult",
+      "aliases": [
+        "datafusion::object_store::PutResult"
+      ],
+      "fields": [
+        "e_tag",
+        "version"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::RenameOptions",
+      "name": "RenameOptions",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct RenameOptions",
+      "summary": "Options for a rename request",
+      "doc": "api/object_store.md#renameoptions",
+      "aliases": [
+        "datafusion::object_store::RenameOptions"
+      ],
+      "fields": [
+        "target_mode",
+        "extensions"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`RenameOptions`]"
+        },
+        {
+          "name": "with_extensions",
+          "signature": "fn with_extensions(self, extensions: Extensions) -> Self",
+          "summary": "Sets the `extensions`."
+        },
+        {
+          "name": "with_target_mode",
+          "signature": "fn with_target_mode(self, target_mode: RenameTargetMode) -> Self",
+          "summary": "Sets the `target_mode=."
+        }
+      ]
+    },
+    {
+      "path": "object_store::UpdateVersion",
+      "name": "UpdateVersion",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct UpdateVersion",
+      "summary": "Uniquely identifies a version of an object to update",
+      "doc": "api/object_store.md#updateversion",
+      "aliases": [
+        "datafusion::object_store::UpdateVersion"
+      ],
+      "fields": [
+        "e_tag",
+        "version"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: PutResult) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "object_store::ObjectStore",
+      "name": "ObjectStore",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait ObjectStore: std::fmt::Display + Send + Sync + Debug + 'static",
+      "summary": "Universal API for object store services.",
+      "doc": "api/object_store.md#objectstore",
+      "aliases": [
+        "datafusion::object_store::ObjectStore"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::sync::Arc",
+        "object_store::aws::AmazonS3",
+        "object_store::azure::MicrosoftAzure",
+        "object_store::chunked::ChunkedStore",
+        "object_store::gcp::GoogleCloudStorage",
+        "object_store::http::HttpStore",
+        "object_store::limit::LimitStore",
+        "object_store::local::LocalFileSystem",
+        "object_store::memory::InMemory",
+        "object_store::prefix::PrefixStore",
+        "object_store::throttle::ThrottledStore"
+      ],
+      "required_methods": [
+        "copy_opts",
+        "delete_stream",
+        "get_opts",
+        "list",
+        "list_with_delimiter",
+        "put_multipart_opts",
+        "put_opts"
+      ],
+      "provided_methods": [
+        "get_ranges",
+        "list_with_offset",
+        "rename_opts"
+      ],
+      "methods": [
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+          "summary": "Copy an object from one path to another in the same object store."
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+          "summary": "Delete all the objects at the specified locations"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+          "summary": "Perform a get request with options"
+        },
+        {
+          "name": "get_ranges",
+          "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> Result<Vec<Bytes>>",
+          "summary": "Return the bytes that are stored at the specified location in the given byte ranges"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+          "summary": "List all the objects with the given prefix."
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+          "summary": "List objects with the given prefix and an implementation specific delimiter. Returns common prefixes (directories) in addition to object metadata."
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+          "summary": "List all the objects with the given prefix and a location greater than `offset`"
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+          "summary": "Perform a multipart upload with options"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+          "summary": "Save the provided `payload` to `location` with the given options"
+        },
+        {
+          "name": "rename_opts",
+          "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>",
+          "summary": "Move an object from one path to another in the same object store."
+        }
+      ]
+    },
+    {
+      "path": "object_store::ObjectStoreExt",
+      "name": "ObjectStoreExt",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait ObjectStoreExt: ObjectStore",
+      "summary": "Extension trait for [`ObjectStore`] with convenience functions.",
+      "doc": "api/object_store.md#objectstoreext",
+      "aliases": [
+        "datafusion::object_store::ObjectStoreExt"
+      ],
+      "required_methods": [
+        "copy",
+        "copy_if_not_exists",
+        "delete",
+        "get",
+        "get_range",
+        "head",
+        "put",
+        "put_multipart",
+        "rename",
+        "rename_if_not_exists"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "copy",
+          "signature": "fn copy(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>",
+          "summary": "Copy an object from one path to another in the same object store."
+        },
+        {
+          "name": "copy_if_not_exists",
+          "signature": "fn copy_if_not_exists(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>",
+          "summary": "Copy an object from one path to another, only if destination is empty."
+        },
+        {
+          "name": "delete",
+          "signature": "fn delete(&self, location: &Path) -> impl Future<Output = Result<()>>",
+          "summary": "Delete the object at the specified location."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, location: &Path) -> impl Future<Output = Result<GetResult>>",
+          "summary": "Return the bytes that are stored at the specified location."
+        },
+        {
+          "name": "get_range",
+          "signature": "fn get_range(&self, location: &Path, range: Range<u64>) -> impl Future<Output = Result<Bytes>>",
+          "summary": "Return the bytes that are stored at the specified location in the given byte range."
+        },
+        {
+          "name": "head",
+          "signature": "fn head(&self, location: &Path) -> impl Future<Output = Result<ObjectMeta>>",
+          "summary": "Return the metadata for the specified location"
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&self, location: &Path, payload: PutPayload) -> impl Future<Output = Result<PutResult>>",
+          "summary": "Save the provided bytes to the specified location"
+        },
+        {
+          "name": "put_multipart",
+          "signature": "fn put_multipart(&self, location: &Path) -> impl Future<Output = Result<Box<dyn MultipartUpload>>>",
+          "summary": "Perform a multipart upload"
+        },
+        {
+          "name": "rename",
+          "signature": "fn rename(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>",
+          "summary": "Move an object from one path to another in the same object store."
+        },
+        {
+          "name": "rename_if_not_exists",
+          "signature": "fn rename_if_not_exists(&self, from: &Path, to: &Path) -> impl Future<Output = Result<()>>",
+          "summary": "Move an object from one path to another in the same object store."
+        }
+      ]
+    },
+    {
+      "path": "object_store::DynObjectStore",
+      "name": "DynObjectStore",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type DynObjectStore = dyn ObjectStore",
+      "summary": "An alias for a dynamically dispatched object store implementation.",
+      "doc": "api/object_store.md#dynobjectstore",
+      "aliases": [
+        "datafusion::object_store::DynObjectStore"
+      ]
+    },
+    {
+      "path": "object_store::MultipartId",
+      "name": "MultipartId",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type MultipartId = String",
+      "summary": "Id type for multipart uploads.",
+      "doc": "api/object_store.md#multipartid",
+      "aliases": [
+        "datafusion::object_store::MultipartId"
+      ]
+    },
+    {
+      "path": "object_store::Result",
+      "name": "Result",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type Result<T, E = Error> = std::result::Result<T, E>",
+      "summary": "A specialized `Result` for object store-related errors",
+      "doc": "api/object_store.md#result",
+      "aliases": [
+        "datafusion::object_store::Result"
+      ]
+    }
+  ]
+}

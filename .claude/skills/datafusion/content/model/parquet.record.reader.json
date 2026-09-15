@@ -1,0 +1,127 @@
+{
+  "module": "parquet::record::reader",
+  "crate": "parquet",
+  "api": "api/parquet.record.reader.md",
+  "items": [
+    {
+      "path": "parquet::record::reader::Reader",
+      "name": "Reader",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Reader",
+      "summary": "Reader tree for record assembly",
+      "doc": "api/parquet.record.reader.md#reader",
+      "variants": [
+        "PrimitiveReader",
+        "OptionReader",
+        "GroupReader",
+        "RepeatedReader",
+        "KeyValueReader"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::reader::ReaderIter",
+      "name": "ReaderIter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ReaderIter",
+      "summary": "Internal iterator of [`Row`]s for a reader.",
+      "doc": "api/parquet.record.reader.md#readeriter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Row>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::reader::RowIter",
+      "name": "RowIter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct RowIter<'a>",
+      "summary": "Access parquet data as an iterator of [`Row`]",
+      "doc": "api/parquet.record.reader.md#rowiter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "from_file",
+          "signature": "fn from_file(proj: Option<Type>, reader: &'a dyn FileReader) -> Result<Self>",
+          "summary": "Creates iterator of [`Row`]s for all row groups in a file."
+        },
+        {
+          "name": "from_file_into",
+          "signature": "fn from_file_into(reader: Box<dyn FileReader>) -> Self",
+          "summary": "Creates a iterator of [`Row`]s from a [`FileReader`] using the full file schema."
+        },
+        {
+          "name": "from_row_group",
+          "signature": "fn from_row_group(proj: Option<Type>, reader: &'a dyn RowGroupReader) -> Result<Self>",
+          "summary": "Creates iterator of [`Row`]s for a specific row group."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Result<Row>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "project",
+          "signature": "fn project(self, proj: Option<Type>) -> Result<Self>",
+          "summary": "Tries to create a iterator of [`Row`]s using projections. Returns a error if a file reader is not the source of this iterator."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Sets batch size for this row iter."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::reader::TreeBuilder",
+      "name": "TreeBuilder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct TreeBuilder",
+      "summary": "Tree builder for `Reader` enum. Serves as a container of options for building a reader tree and a builder, and accessing a records iterator [`RowIter`].",
+      "doc": "api/parquet.record.reader.md#treebuilder",
+      "methods": [
+        {
+          "name": "as_iter",
+          "signature": "fn as_iter(&self, descr: SchemaDescPtr, row_group_reader: &dyn RowGroupReader) -> Result<ReaderIter>",
+          "summary": "Creates iterator of `Row`s directly from schema descriptor and row group."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(&self, descr: SchemaDescPtr, row_group_reader: &dyn RowGroupReader) -> Result<Reader>",
+          "summary": "Creates new root reader for provided schema and row group."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates new tree builder with default parameters."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Sets batch size for this tree builder."
+        }
+      ]
+    }
+  ]
+}

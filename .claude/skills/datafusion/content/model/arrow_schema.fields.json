@@ -1,0 +1,180 @@
+{
+  "module": "arrow_schema::fields",
+  "crate": "arrow-schema",
+  "api": "api/arrow_schema.fields.md",
+  "items": [
+    {
+      "path": "arrow_schema::fields::Fields",
+      "name": "Fields",
+      "kind": "struct",
+      "crate": "arrow-schema",
+      "signature": "struct Fields",
+      "summary": "A cheaply cloneable, owned slice of [`FieldRef`]",
+      "doc": "api/arrow_schema.fields.md#fields",
+      "aliases": [
+        "arrow::datatypes::Fields"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::deref::Deref",
+        "datafusion_common::heap_size::DFHeapSize",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, other: &Fields) -> bool",
+          "summary": "Check to see if `self` is a superset of `other`"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Returns a new empty [`Fields`]"
+        },
+        {
+          "name": "filter_leaves",
+          "signature": "fn filter_leaves<F: FnMut(usize, &FieldRef) -> bool>(&self, filter: F) -> Self",
+          "summary": "Returns a copy of this [`Fields`] containing only those [`FieldRef`] passing a predicate"
+        },
+        {
+          "name": "find",
+          "signature": "fn find(&self, name: &str) -> Option<(usize, &FieldRef)>",
+          "summary": "Searches for a field by name, returning it along with its index if found"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Vec<FieldRef>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = FieldRef>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Return size of this instance in bytes."
+        },
+        {
+          "name": "try_filter_leaves",
+          "signature": "fn try_filter_leaves<F: FnMut(usize, &FieldRef) -> Result<bool, ArrowError>>(&self, filter: F) -> Result<Self, ArrowError>",
+          "summary": "Returns a copy of this [`Fields`] containing only those [`FieldRef`] passing a predicate or an error if the predicate fails."
+        }
+      ]
+    },
+    {
+      "path": "arrow_schema::fields::UnionFields",
+      "name": "UnionFields",
+      "kind": "struct",
+      "crate": "arrow-schema",
+      "signature": "struct UnionFields",
+      "summary": "A cheaply cloneable, owned collection of [`FieldRef`] and their corresponding type ids",
+      "doc": "api/arrow_schema.fields.md#unionfields",
+      "aliases": [
+        "arrow::datatypes::UnionFields"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::index::Index",
+        "datafusion_common::heap_size::DFHeapSize",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Create a new [`UnionFields`] with no fields"
+        },
+        {
+          "name": "find_by_field",
+          "signature": "fn find_by_field(&self, field: &Field) -> Option<(i8, &FieldRef)>",
+          "summary": "Searches for a field by value equality, returning its type id and reference if found. Returns `None` if no matching field exists in this [`UnionFields`]."
+        },
+        {
+          "name": "find_by_type_id",
+          "signature": "fn find_by_type_id(&self, type_id: i8) -> Option<(i8, &FieldRef)>",
+          "summary": "Searches for a field by its type id, returning the type id and field reference if found. Returns `None` if no field with the given type id exists."
+        },
+        {
+          "name": "from_fields",
+          "signature": "fn from_fields<F>(fields: F) -> Self where F: IntoIterator, F::Item: Into<FieldRef>",
+          "summary": "Create a new [`UnionFields`] from a collection of fields with automatically assigned type IDs starting from 0."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = (i8, FieldRef)>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, index: usize) -> Option<&(i8, FieldRef)>",
+          "summary": "Returns a reference to the field at the given index, or `None` if out of bounds."
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self, index: usize) -> &Self::Output",
+          "via_trait": "core::ops::index::Index"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns `true` if this is empty"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (i8, &FieldRef)> + '_",
+          "summary": "Returns an iterator over the fields and type ids in this [`UnionFields`]"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of fields in this [`UnionFields`]"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Return size of this instance in bytes."
+        },
+        {
+          "name": "try_from_fields",
+          "signature": "fn try_from_fields<F>(fields: F) -> Result<Self, ArrowError> where F: IntoIterator, F::Item: Into<FieldRef>",
+          "summary": "Create a new [`UnionFields`] from a collection of fields with automatically assigned type IDs starting from 0."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new<F, T>(type_ids: T, fields: F) -> Result<Self, ArrowError> where F: IntoIterator, F::Item: Into<FieldRef>, T: IntoIterator<Item = i8>",
+          "summary": "Create a new [`UnionFields`] from a [`Fields`] and array of type_ids"
+        }
+      ]
+    }
+  ]
+}

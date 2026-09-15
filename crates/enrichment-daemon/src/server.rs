@@ -258,6 +258,41 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         ));
     }
 
+    let id = request.id.clone();
+    let requested = request
+        .params
+        .get("max_bytes")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|n| usize::try_from(n).ok());
+    let correlation = crate::envelope::new_request_id().to_string();
+    match service
+        .repository
+        .runtime
+        .operation(
+            correlation.clone(),
+            service.operation_descriptor(&request.method, &request.params),
+            Box::pin(dispatch_request(service, request, began)),
+        )
+        .await
+    {
+        Ok(result) => result,
+        Err(error) => Dispatched {
+            response: id.map(|id| {
+                let mut result = ops::common::query_error(&error.into());
+                result.request_id = enrichment_core::wire::RequestId::try_from(correlation)
+                    .expect("admitted identity");
+                research_response(service, Some(id), result, requested)
+            }),
+            shutdown: false,
+        },
+    }
+}
+
+async fn dispatch_request(
+    service: &Service,
+    request: Request,
+    began: std::time::Instant,
+) -> Dispatched {
     // A notification is a request with no id; it is still dispatched, but answered with nothing.
     let is_notification = request.id.is_none();
     let mut shutdown = false;
@@ -266,7 +301,7 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         .get("max_bytes")
         .and_then(serde_json::Value::as_u64)
         .and_then(|n| usize::try_from(n).ok());
-    let mut response = match request.method.as_str() {
+    let response = match request.method.as_str() {
         "daemon.shutdown" => {
             shutdown = true;
             Response::ok(request.id, serde_json::json!({ "stopping": true }))
@@ -275,22 +310,32 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         // evidence-model assertions and belong to the core (§1.1); the adapter forwards this
         // rather than composing its own, so there is one author of those fields.
         "service.status" => {
-            let filter = request.params.get("component").and_then(|c| c.as_str());
-            Response::ok(
-                request.id,
-                serde_json::to_value(status::status_envelope(Some(service), filter))
-                    .expect("an Envelope always serializes"),
-            )
+            match serde_json::from_value::<enrichment_core::request::StatusRequest>(request.params)
+            {
+                Ok(status_request) => research_response(
+                    service,
+                    request.id,
+                    status::status_envelope(Some(service), status_request.component.as_deref()),
+                    requested_budget,
+                ),
+                Err(error) => invalid_params(
+                    request.id,
+                    "service.status",
+                    &error,
+                    "an optional string component",
+                ),
+            }
         }
         "daemon.ping" => Response::ok(request.id, serde_json::json!({ "pong": true })),
         // Phase 1: establish exact identity and environment before research (§7,
         // `resolve_library`). Parameters are the typed core request; the answer is a complete
         // envelope whose `partial`/`error` states are decided by the core, not here.
         "library.resolve" => match serde_json::from_value::<ResolveRequest>(request.params) {
-            Ok(resolve) => Response::ok(
+            Ok(resolve) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::resolve::resolve(service, resolve).await)
-                    .expect("an Envelope always serializes"),
+                ops::resolve::resolve(service, resolve).await,
+                requested_budget,
             ),
             Err(err) => Response::err(
                 request.id,
@@ -309,10 +354,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             match serde_json::from_value::<enrichment_core::execution::VerifyRequest>(
                 request.params,
             ) {
-                Ok(req) => Response::ok(
+                Ok(req) => research_response(
+                    service,
                     request.id,
-                    serde_json::to_value(ops::verify::verify(service, req).await)
-                        .expect("envelope"),
+                    ops::verify::verify(service, req).await,
+                    requested_budget,
                 ),
                 Err(err) => invalid_params(
                     request.id,
@@ -324,18 +370,21 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         }
         "job.control" => {
             match serde_json::from_value::<enrichment_core::execution::JobRequest>(request.params) {
-                Ok(req) => Response::ok(
+                Ok(req) => research_response(
+                    service,
                     request.id,
-                    serde_json::to_value(ops::verify::control(service, req).await)
-                        .expect("envelope"),
+                    ops::verify::control(service, req).await,
+                    requested_budget,
                 ),
                 Err(err) => invalid_params(request.id, "job.control", &err, "job_id and action"),
             }
         }
         "library.compare" => match serde_json::from_value::<CompareRequest>(request.params) {
-            Ok(req) => Response::ok(
+            Ok(req) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::compare::compare(service, req).await).expect("envelope"),
+                ops::compare::compare(service, req).await,
+                requested_budget,
             ),
             Err(err) => invalid_params(
                 request.id,
@@ -345,10 +394,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             ),
         },
         "library.overview" => match serde_json::from_value::<OverviewRequest>(request.params) {
-            Ok(req) => Response::ok(
+            Ok(req) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::overview::overview(service, req).await)
-                    .expect("an Envelope always serializes"),
+                ops::overview::overview(service, req).await,
+                requested_budget,
             ),
             Err(err) => invalid_params(
                 request.id,
@@ -358,10 +408,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             ),
         },
         "evidence.search" => match serde_json::from_value::<SearchRequest>(request.params) {
-            Ok(req) => Response::ok(
+            Ok(req) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::search::search(service, req).await)
-                    .expect("an Envelope always serializes"),
+                ops::search::search(service, req).await,
+                requested_budget,
             ),
             Err(err) => invalid_params(
                 request.id,
@@ -371,10 +422,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             ),
         },
         "symbol.inspect" => match serde_json::from_value::<InspectRequest>(request.params) {
-            Ok(req) => Response::ok(
+            Ok(req) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::inspect::inspect(service, req).await)
-                    .expect("an Envelope always serializes"),
+                ops::inspect::inspect(service, req).await,
+                requested_budget,
             ),
             Err(err) => invalid_params(
                 request.id,
@@ -384,10 +436,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             ),
         },
         "artifact.read" => match serde_json::from_value::<ReadArtifactRequest>(request.params) {
-            Ok(req) => Response::ok(
+            Ok(req) => research_response(
+                service,
                 request.id,
-                serde_json::to_value(ops::artifact::read(service, req).await)
-                    .expect("an Envelope always serializes"),
+                ops::artifact::read(service, req).await,
+                requested_budget,
             ),
             Err(err) => invalid_params(
                 request.id,
@@ -398,10 +451,11 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         },
         "snapshot.manifest" => {
             match serde_json::from_value::<ops::manifest::ManifestRequest>(request.params) {
-                Ok(req) => Response::ok(
+                Ok(req) => research_response(
+                    service,
                     request.id,
-                    serde_json::to_value(ops::manifest::manifest(service, req).await)
-                        .expect("an Envelope always serializes"),
+                    ops::manifest::manifest(service, req).await,
+                    requested_budget,
                 ),
                 Err(err) => invalid_params(
                     request.id,
@@ -468,24 +522,23 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         ),
     };
 
-    // Budget enforcement happens before the counters read the response, so `response_bytes`
-    // is what a caller actually receives rather than what a handler wanted to send.
-    let mut status = None;
-    let mut has_gap = false;
-    if let Some(value) = response.result.take() {
-        response.result = Some(
-            if let Ok(result) =
-                serde_json::from_value::<enrichment_core::wire::Envelope>(value.clone())
-            {
-                let bounded = ops::common::enforce_budget(service, result, requested_budget);
-                status = Some(bounded.status());
-                has_gap = !bounded.coverage.missing.is_empty();
-                serde_json::to_value(bounded).expect("bounded envelope")
-            } else {
-                value
-            },
-        );
-    }
+    // These are observations of the already encoded response, never deserialization of a
+    // result into a second semantic model. Research replies were bounded while still typed.
+    let status = response
+        .result
+        .as_ref()
+        .and_then(|value| match value["status"].as_str() {
+            Some("ok") => Some(enrichment_core::wire::Status::Ok),
+            Some("partial") => Some(enrichment_core::wire::Status::Partial),
+            Some("pending") => Some(enrichment_core::wire::Status::Pending),
+            Some("error") => Some(enrichment_core::wire::Status::Error),
+            _ => None,
+        });
+    let has_gap = response.result.as_ref().is_some_and(|value| {
+        value["coverage"]["missing"]
+            .as_array()
+            .is_some_and(|missing| !missing.is_empty())
+    });
 
     // Measured even for a notification: the work happened, and a counter that quietly skipped
     // it would understate what this process did.
@@ -504,6 +557,35 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         response: (!is_notification).then_some(response),
         shutdown,
     }
+}
+
+/// The only native research-to-RPC projection. Keep the domain result typed through delivery
+/// and diagnostics; serialize once when constructing the transport response.
+fn research_response(
+    service: &Service,
+    id: Option<serde_json::Value>,
+    mut result: enrichment_core::wire::Envelope,
+    requested: Option<usize>,
+) -> Response {
+    if enrichment_store::runtime::operation_id().is_some() {
+        result.request_id = crate::envelope::new_request_id();
+    }
+    if let Some(error) = result.error_mut() {
+        if error.diagnostic.correlation_id.is_none() {
+            error.diagnostic.correlation_id = enrichment_store::runtime::operation_id();
+        }
+        if error.diagnostic.rule.is_some() {
+            service
+                .repository
+                .runtime
+                .record_failure(error.diagnostic.clone());
+        }
+    }
+    let bounded = ops::common::enforce_budget(service, result, requested);
+    Response::ok(
+        id,
+        serde_json::to_value(bounded).expect("bounded native research envelope"),
+    )
 }
 
 fn invalid_params(
@@ -631,7 +713,7 @@ mod tests {
             "the core states its own coverage"
         );
         assert_eq!(envelope["freshness"]["latest_verified"], false);
-        assert_eq!(envelope["schema_version"], "1.0");
+        assert_eq!(envelope["schema_version"], "2.0");
     }
 
     #[tokio::test]

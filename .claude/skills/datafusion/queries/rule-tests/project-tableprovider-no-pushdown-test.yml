@@ -1,0 +1,27 @@
+id: project-tableprovider-no-pushdown
+valid:
+  - |
+    impl TableProvider for MyTable {
+        fn schema(&self) -> SchemaRef { self.schema.clone() }
+        fn supports_filters_pushdown(
+            &self,
+            filters: &[&Expr],
+        ) -> Result<Vec<TableProviderFilterPushDown>> {
+            Ok(vec![TableProviderFilterPushDown::Inexact; filters.len()])
+        }
+    }
+  - |
+    impl SchemaProvider for MyCatalog {
+        fn table_names(&self) -> Vec<String> { vec![] }
+    }
+invalid:
+  - |
+    impl TableProvider for MyTable {
+        fn schema(&self) -> SchemaRef { self.schema.clone() }
+        fn table_type(&self) -> TableType { TableType::Base }
+    }
+  - |
+    #[async_trait]
+    impl TableProvider for Other {
+        async fn scan(&self, _s: &dyn Session) -> Result<Arc<dyn ExecutionPlan>> { todo!() }
+    }

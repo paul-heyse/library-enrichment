@@ -1,0 +1,309 @@
+{
+  "module": "datafusion_sql::parser",
+  "crate": "datafusion-sql",
+  "api": "api/datafusion_sql.parser.md",
+  "items": [
+    {
+      "path": "datafusion_sql::parser::CopyToSource",
+      "name": "CopyToSource",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum CopyToSource",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Relation",
+        "Query"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::ParserInput",
+      "name": "ParserInput",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum ParserInput<'a>",
+      "summary": "Describes a possible input for parser",
+      "doc": "api/datafusion_sql.parser.md#parserinput",
+      "variants": [
+        "Sql",
+        "Tokens"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(tokens: Vec<TokenWithSpan>) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::ResetStatement",
+      "name": "ResetStatement",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum ResetStatement",
+      "summary": "DataFusion extension for `RESET`",
+      "doc": "api/datafusion_sql.parser.md#resetstatement",
+      "variants": [
+        "Variable"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::Statement",
+      "name": "Statement",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum Statement",
+      "summary": "DataFusion SQL Statement.",
+      "doc": "api/datafusion_sql.parser.md#statement",
+      "variants": [
+        "Statement",
+        "CreateExternalTable",
+        "CopyTo",
+        "Explain",
+        "Reset"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::CopyToStatement",
+      "name": "CopyToStatement",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct CopyToStatement",
+      "summary": "DataFusion extension DDL for `COPY`",
+      "doc": "api/datafusion_sql.parser.md#copytostatement",
+      "fields": [
+        "source",
+        "target",
+        "partitioned_by",
+        "stored_as",
+        "options"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::CreateExternalTable",
+      "name": "CreateExternalTable",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct CreateExternalTable",
+      "summary": "DataFusion extension DDL for `CREATE EXTERNAL TABLE`",
+      "doc": "api/datafusion_sql.parser.md#createexternaltable",
+      "fields": [
+        "name",
+        "columns",
+        "file_type",
+        "locations",
+        "table_partition_cols",
+        "order_exprs",
+        "if_not_exists",
+        "or_replace",
+        "temporary",
+        "unbounded",
+        "options",
+        "constraints"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::DFParser",
+      "name": "DFParser",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct DFParser<'a>",
+      "summary": "DataFusion SQL Parser based on [`sqlparser`]",
+      "doc": "api/datafusion_sql.parser.md#dfparser",
+      "fields": [
+        "parser"
+      ],
+      "methods": [
+        {
+          "name": "parse_copy",
+          "signature": "fn parse_copy(&mut self) -> Result<Statement, DataFusionError>",
+          "summary": "Parse a SQL `COPY TO` statement"
+        },
+        {
+          "name": "parse_create",
+          "signature": "fn parse_create(&mut self) -> Result<Statement, DataFusionError>",
+          "summary": "Parse a SQL `CREATE` statement handling `CREATE EXTERNAL TABLE`"
+        },
+        {
+          "name": "parse_explain",
+          "signature": "fn parse_explain(&mut self) -> Result<Statement, DataFusionError>",
+          "summary": "Parse a SQL `EXPLAIN`"
+        },
+        {
+          "name": "parse_explain_format",
+          "signature": "fn parse_explain_format(&mut self) -> Result<Option<String>, DataFusionError>"
+        },
+        {
+          "name": "parse_expr",
+          "signature": "fn parse_expr(&mut self) -> Result<ExprWithAlias, DataFusionError>"
+        },
+        {
+          "name": "parse_into_expr",
+          "signature": "fn parse_into_expr(&mut self) -> Result<ExprWithAlias, DataFusionError>",
+          "summary": "Parses the entire SQL string into an expression."
+        },
+        {
+          "name": "parse_option_key",
+          "signature": "fn parse_option_key(&mut self) -> Result<String, DataFusionError>",
+          "summary": "Parse the next token as a key name for an option list"
+        },
+        {
+          "name": "parse_option_value",
+          "signature": "fn parse_option_value(&mut self) -> Result<Value, DataFusionError>",
+          "summary": "Parse the next token as a value for an option list"
+        },
+        {
+          "name": "parse_order_by_expr",
+          "signature": "fn parse_order_by_expr(&mut self) -> Result<OrderByExpr, DataFusionError>",
+          "summary": "Parse an ORDER BY sub-expression optionally followed by ASC or DESC."
+        },
+        {
+          "name": "parse_order_by_exprs",
+          "signature": "fn parse_order_by_exprs(&mut self) -> Result<Vec<OrderByExpr>, DataFusionError>",
+          "summary": "Parse the ordering clause of a `CREATE EXTERNAL TABLE` SQL statement"
+        },
+        {
+          "name": "parse_reset",
+          "signature": "fn parse_reset(&mut self) -> Result<Statement, DataFusionError>",
+          "summary": "Parse a SQL `RESET`"
+        },
+        {
+          "name": "parse_sql",
+          "signature": "fn parse_sql(sql: &'a str) -> Result<VecDeque<Statement>, DataFusionError>",
+          "summary": "Parse a sql string into one or [`Statement`]s using the [`GenericDialect`]."
+        },
+        {
+          "name": "parse_sql_into_expr",
+          "signature": "fn parse_sql_into_expr(sql: &str) -> Result<ExprWithAlias, DataFusionError>"
+        },
+        {
+          "name": "parse_sql_into_expr_with_dialect",
+          "signature": "fn parse_sql_into_expr_with_dialect(sql: &str, dialect: &dyn Dialect) -> Result<ExprWithAlias, DataFusionError>"
+        },
+        {
+          "name": "parse_sql_with_dialect",
+          "signature": "fn parse_sql_with_dialect(sql: &str, dialect: &dyn Dialect) -> Result<VecDeque<Statement>, DataFusionError>",
+          "summary": "Parse a SQL string and produce one or more [`Statement`]s with with the specified dialect."
+        },
+        {
+          "name": "parse_statement",
+          "signature": "fn parse_statement(&mut self) -> Result<Statement, DataFusionError>",
+          "summary": "Parse a new expression"
+        },
+        {
+          "name": "parse_statements",
+          "signature": "fn parse_statements(&mut self) -> Result<VecDeque<Statement>, DataFusionError>",
+          "summary": "Parse a sql string into one or [`Statement`]s"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::DFParserBuilder",
+      "name": "DFParserBuilder",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct DFParserBuilder<'a, 'b>",
+      "summary": "Builder for [`DFParser`]",
+      "doc": "api/datafusion_sql.parser.md#dfparserbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<DFParser<'b>, DataFusionError>",
+          "summary": "Build resulting parser"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(input: impl Into<ParserInput<'a>>) -> Self",
+          "summary": "Create a new parser builder for the specified tokens using the [`GenericDialect`]."
+        },
+        {
+          "name": "with_dialect",
+          "signature": "fn with_dialect(self, dialect: &'b dyn Dialect) -> Self",
+          "summary": "Adjust the parser builder's dialect. Defaults to [`GenericDialect`]"
+        },
+        {
+          "name": "with_recursion_limit",
+          "signature": "fn with_recursion_limit(self, recursion_limit: usize) -> Self",
+          "summary": "Adjust the recursion limit of sql parsing.  Defaults to 50"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::parser::ExplainStatement",
+      "name": "ExplainStatement",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct ExplainStatement",
+      "summary": "DataFusion specific `EXPLAIN`",
+      "doc": "api/datafusion_sql.parser.md#explainstatement",
+      "fields": [
+        "options",
+        "statement"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    }
+  ]
+}

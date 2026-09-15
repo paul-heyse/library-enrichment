@@ -1,0 +1,527 @@
+{
+  "module": "datafusion_common::scalar",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.scalar.md",
+  "items": [
+    {
+      "path": "datafusion_common::scalar::ScalarValue",
+      "name": "ScalarValue",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum ScalarValue",
+      "summary": "A dynamically typed, nullable single value.",
+      "doc": "api/datafusion_common.scalar.md#scalarvalue",
+      "aliases": [
+        "datafusion::common::ScalarValue",
+        "datafusion::scalar::ScalarValue",
+        "datafusion_common::ScalarValue"
+      ],
+      "variants": [
+        "Null",
+        "Boolean",
+        "Float16",
+        "Float32",
+        "Float64",
+        "Decimal32",
+        "Decimal64",
+        "Decimal128",
+        "Decimal256",
+        "Int8",
+        "Int16",
+        "Int32",
+        "Int64",
+        "UInt8",
+        "UInt16",
+        "UInt32",
+        "UInt64",
+        "Utf8",
+        "Utf8View",
+        "LargeUtf8",
+        "Binary",
+        "BinaryView",
+        "FixedSizeBinary",
+        "LargeBinary",
+        "FixedSizeList",
+        "List",
+        "LargeList",
+        "ListView",
+        "LargeListView",
+        "Struct",
+        "Map",
+        "Date32",
+        "Date64",
+        "Time32Second",
+        "Time32Millisecond",
+        "Time64Microsecond",
+        "Time64Nanosecond",
+        "TimestampSecond",
+        "TimestampMillisecond",
+        "TimestampMicrosecond",
+        "TimestampNanosecond",
+        "IntervalYearMonth",
+        "IntervalDayTime",
+        "IntervalMonthDayNano",
+        "DurationSecond",
+        "DurationMillisecond",
+        "DurationMicrosecond",
+        "DurationNanosecond",
+        "Union",
+        "Dictionary",
+        "RunEndEncoded"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "core::str::traits::FromStr",
+        "datafusion_common::heap_size::DFHeapSize",
+        "datafusion_expr::literal::Literal"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Wrapping addition of `ScalarValue`"
+        },
+        {
+          "name": "add_checked",
+          "signature": "fn add_checked<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Checked addition of `ScalarValue`"
+        },
+        {
+          "name": "arithmetic_negate",
+          "signature": "fn arithmetic_negate(&self) -> Result<Self>",
+          "summary": "Calculate arithmetic negation for a scalar value"
+        },
+        {
+          "name": "cast_to",
+          "signature": "fn cast_to(&self, target_type: &DataType) -> Result<Self>",
+          "summary": "Cast this value to a `ScalarValue` of type `target_type` using the default [`CastOptions`]."
+        },
+        {
+          "name": "cast_to_with_options",
+          "signature": "fn cast_to_with_options(&self, target_type: &DataType, cast_options: &CastOptions<'static>) -> Result<Self>",
+          "summary": "Cast this value to type `target_type` with the given [`CastOptions`]."
+        },
+        {
+          "name": "compact",
+          "signature": "fn compact(&mut self)",
+          "summary": "Compacts the allocation referenced by `self` to the minimum, copying the data if necessary."
+        },
+        {
+          "name": "compacted",
+          "signature": "fn compacted(self) -> Self",
+          "summary": "Compacts ([ScalarValue::compact]) the current [ScalarValue] and returns it."
+        },
+        {
+          "name": "convert_array_to_scalar_vec",
+          "signature": "fn convert_array_to_scalar_vec(array: &dyn Array) -> Result<Vec<Option<Vec<Self>>>>",
+          "summary": "Retrieve ScalarValue for each row in `array`"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType",
+          "summary": "return the [`DataType`] of this `ScalarValue`"
+        },
+        {
+          "name": "distance",
+          "signature": "fn distance(&self, other: &ScalarValue) -> Option<usize>",
+          "summary": "Absolute distance between two numeric values (of the same type). This method will return None if either one of the arguments are null. It might also return None if the resulting distance is greater than [`usize::MAX`]. If the type is a flo…"
+        },
+        {
+          "name": "distance_u64",
+          "signature": "fn distance_u64(&self, other: &ScalarValue) -> Option<u64>",
+          "summary": "Absolute distance between two numeric values (of the same type). This method will return None if either one of the arguments are null. It might also return None if the resulting distance is greater than [`u64::MAX`]. If the type is a float…"
+        },
+        {
+          "name": "div",
+          "signature": "fn div<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Performs `lhs / rhs`"
+        },
+        {
+          "name": "eq_array",
+          "signature": "fn eq_array(&self, array: &ArrayRef, index: usize) -> Result<bool>",
+          "summary": "Compares a single row of array @ index for equality with self, in an optimized fashion."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: u16) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize",
+          "via_trait": "datafusion_common::heap_size::DFHeapSize"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self) -> bool",
+          "summary": "whether this value is null or not."
+        },
+        {
+          "name": "is_unsigned",
+          "signature": "fn is_unsigned(&self) -> bool"
+        },
+        {
+          "name": "iter_to_array",
+          "signature": "fn iter_to_array(scalars: impl IntoIterator<Item = ScalarValue>) -> Result<ArrayRef>",
+          "summary": "Converts an iterator of references [`ScalarValue`] into an [`ArrayRef`] corresponding to those values. For example, an iterator of [`ScalarValue::Int32`] would be converted to an [`Int32Array`]."
+        },
+        {
+          "name": "max",
+          "signature": "fn max(datatype: &DataType) -> Option<ScalarValue>",
+          "summary": "Returns the maximum value for the given numeric `DataType`."
+        },
+        {
+          "name": "min",
+          "signature": "fn min(datatype: &DataType) -> Option<ScalarValue>",
+          "summary": "Returns the minimum value for the given numeric `DataType`."
+        },
+        {
+          "name": "mul",
+          "signature": "fn mul<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Wrapping multiplication of `ScalarValue`"
+        },
+        {
+          "name": "mul_checked",
+          "signature": "fn mul_checked<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Checked multiplication of `ScalarValue`"
+        },
+        {
+          "name": "new_default",
+          "signature": "fn new_default(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a default value for the given `DataType`."
+        },
+        {
+          "name": "new_frac_pi_2",
+          "signature": "fn new_frac_pi_2(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing PI/2"
+        },
+        {
+          "name": "new_frac_pi_2_upper",
+          "signature": "fn new_frac_pi_2_upper(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing FRAC_PI_2's upper bound"
+        },
+        {
+          "name": "new_infinity",
+          "signature": "fn new_infinity(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing infinity"
+        },
+        {
+          "name": "new_interval_dt",
+          "signature": "fn new_interval_dt(days: i32, millis: i32) -> Self",
+          "summary": "Returns a [`ScalarValue::IntervalDayTime`] representing `days` days and `millis` milliseconds"
+        },
+        {
+          "name": "new_interval_mdn",
+          "signature": "fn new_interval_mdn(months: i32, days: i32, nanos: i64) -> Self",
+          "summary": "Returns a [`ScalarValue::IntervalMonthDayNano`] representing `months` months and `days` days, and `nanos` nanoseconds"
+        },
+        {
+          "name": "new_interval_ym",
+          "signature": "fn new_interval_ym(years: i32, months: i32) -> Self",
+          "summary": "Returns a [`ScalarValue::IntervalYearMonth`] representing `years` years and `months` months"
+        },
+        {
+          "name": "new_large_list",
+          "signature": "fn new_large_list(values: &[ScalarValue], data_type: &DataType) -> Arc<LargeListArray>",
+          "summary": "Converts `Vec<ScalarValue>` where each element has type corresponding to `data_type`, to a [`LargeListArray`]."
+        },
+        {
+          "name": "new_list",
+          "signature": "fn new_list(values: &[ScalarValue], data_type: &DataType, nullable: bool) -> Arc<ListArray>",
+          "summary": "Converts `Vec<ScalarValue>` where each element has type corresponding to `data_type`, to a single element [`ListArray`]."
+        },
+        {
+          "name": "new_list_from_iter",
+          "signature": "fn new_list_from_iter(values: impl IntoIterator<Item = ScalarValue> + ExactSizeIterator, data_type: &DataType, nullable: bool) -> Arc<ListArray>",
+          "summary": "Converts `IntoIterator<Item = ScalarValue>` where each element has type corresponding to `data_type`, to a [`ListArray`]."
+        },
+        {
+          "name": "new_list_nullable",
+          "signature": "fn new_list_nullable(values: &[ScalarValue], data_type: &DataType) -> Arc<ListArray>",
+          "summary": "Same as [`ScalarValue::new_list`] but with nullable set to true."
+        },
+        {
+          "name": "new_neg_frac_pi_2",
+          "signature": "fn new_neg_frac_pi_2(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing -PI/2"
+        },
+        {
+          "name": "new_neg_frac_pi_2_lower",
+          "signature": "fn new_neg_frac_pi_2_lower(datatype: &DataType) -> Result<ScalarValue>"
+        },
+        {
+          "name": "new_neg_infinity",
+          "signature": "fn new_neg_infinity(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing negative infinity"
+        },
+        {
+          "name": "new_negative_one",
+          "signature": "fn new_negative_one(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Create a negative one value in the given type."
+        },
+        {
+          "name": "new_negative_pi",
+          "signature": "fn new_negative_pi(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing -PI"
+        },
+        {
+          "name": "new_negative_pi_lower",
+          "signature": "fn new_negative_pi_lower(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing -PI's lower bound"
+        },
+        {
+          "name": "new_null_list",
+          "signature": "fn new_null_list(data_type: DataType, nullable: bool, null_len: usize) -> Self",
+          "summary": "Create ListArray with Null with specific data type"
+        },
+        {
+          "name": "new_one",
+          "signature": "fn new_one(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Create an one value in the given type."
+        },
+        {
+          "name": "new_pi",
+          "signature": "fn new_pi(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing PI"
+        },
+        {
+          "name": "new_pi_upper",
+          "signature": "fn new_pi_upper(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Returns a [`ScalarValue`] representing PI's upper bound"
+        },
+        {
+          "name": "new_primitive",
+          "signature": "fn new_primitive<T: ArrowPrimitiveType>(a: Option<T::Native>, d: &DataType) -> Result<Self>",
+          "summary": "Create a [`Result<ScalarValue>`] with the provided value and datatype"
+        },
+        {
+          "name": "new_ten",
+          "signature": "fn new_ten(datatype: &DataType) -> Result<ScalarValue>"
+        },
+        {
+          "name": "new_timestamp",
+          "signature": "fn new_timestamp<T: ArrowTimestampType>(value: Option<i64>, tz_opt: Option<Arc<str>>) -> Self",
+          "summary": "Returns a [`ScalarValue`] representing `value` and `tz_opt` timezone"
+        },
+        {
+          "name": "new_utf8",
+          "signature": "fn new_utf8(val: impl Into<String>) -> Self",
+          "summary": "Returns a [`ScalarValue::Utf8`] representing `val`"
+        },
+        {
+          "name": "new_utf8view",
+          "signature": "fn new_utf8view(val: impl Into<String>) -> Self",
+          "summary": "Returns a [`ScalarValue::Utf8View`] representing `val`"
+        },
+        {
+          "name": "new_zero",
+          "signature": "fn new_zero(datatype: &DataType) -> Result<ScalarValue>",
+          "summary": "Create a zero value in the given type."
+        },
+        {
+          "name": "raw_data",
+          "signature": "fn raw_data(&self) -> Result<ArrayRef>"
+        },
+        {
+          "name": "rem",
+          "signature": "fn rem<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Performs `lhs % rhs`"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Estimate size if bytes including `Self`. For values with internal containers such as `String` includes the allocated size (`capacity`) rather than the current length (`len`)"
+        },
+        {
+          "name": "size_of_hashmap",
+          "signature": "fn size_of_hashmap<V, S>(map: &HashMap<Self, V, S>) -> usize",
+          "summary": "Estimates [size](Self::size) of [`HashMap`] keyed by [`ScalarValue`] in bytes."
+        },
+        {
+          "name": "size_of_hashset",
+          "signature": "fn size_of_hashset<S>(set: &HashSet<Self, S>) -> usize",
+          "summary": "Estimates [size](Self::size) of [`HashSet`] in bytes."
+        },
+        {
+          "name": "size_of_vec",
+          "signature": "fn size_of_vec(vec: &Vec<Self>) -> usize",
+          "summary": "Estimates [size](Self::size) of [`Vec`] in bytes."
+        },
+        {
+          "name": "size_of_vec_deque",
+          "signature": "fn size_of_vec_deque(vec_deque: &VecDeque<Self>) -> usize",
+          "summary": "Estimates [size](Self::size) of [`VecDeque`] in bytes."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Wrapping subtraction of `ScalarValue`"
+        },
+        {
+          "name": "sub_checked",
+          "signature": "fn sub_checked<T: Borrow<ScalarValue>>(&self, other: T) -> Result<ScalarValue>",
+          "summary": "Checked subtraction of `ScalarValue`"
+        },
+        {
+          "name": "to_array",
+          "signature": "fn to_array(&self) -> Result<ArrayRef>",
+          "summary": "Converts a scalar value into an 1-row array."
+        },
+        {
+          "name": "to_array_of_size",
+          "signature": "fn to_array_of_size(&self, size: usize) -> Result<ArrayRef>",
+          "summary": "Converts a scalar value into an array of `size` rows."
+        },
+        {
+          "name": "to_scalar",
+          "signature": "fn to_scalar(&self) -> Result<Scalar<ArrayRef>>",
+          "summary": "Converts a scalar into an arrow [`Scalar`] (which implements the [`Datum`] interface)."
+        },
+        {
+          "name": "try_as_str",
+          "signature": "fn try_as_str(&self) -> Option<Option<&str>>",
+          "summary": "Returns the Some(`&str`) representation of `ScalarValue` of logical string type"
+        },
+        {
+          "name": "try_cmp",
+          "signature": "fn try_cmp(&self, other: &Self) -> Result<Ordering>",
+          "summary": "Compare `self` with `other` and return an `Ordering`."
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(datatype: DataType) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom",
+          "summary": "Create a Null instance of ScalarValue for this datatype"
+        },
+        {
+          "name": "try_from_array",
+          "signature": "fn try_from_array(array: &dyn Array, index: usize) -> Result<Self>",
+          "summary": "Converts a value in `array` at `index` into a ScalarValue"
+        },
+        {
+          "name": "try_from_string",
+          "signature": "fn try_from_string(value: String, target_type: &DataType) -> Result<Self>",
+          "summary": "Try to parse `value` into a ScalarValue of type `target_type`"
+        },
+        {
+          "name": "try_new_decimal128",
+          "signature": "fn try_new_decimal128(value: i128, precision: u8, scale: i8) -> Result<Self>",
+          "summary": "Create a decimal Scalar from value/precision and scale."
+        },
+        {
+          "name": "try_new_null",
+          "signature": "fn try_new_null(data_type: &DataType) -> Result<Self>",
+          "summary": "Create a Null instance of ScalarValue for this datatype"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::scalar::copy_array_data",
+      "name": "copy_array_data",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn copy_array_data(src_data: &arrow::array::ArrayData) -> arrow::array::ArrayData",
+      "summary": "Compacts the data of an `ArrayData` into a new `ArrayData`.",
+      "doc": "api/datafusion_common.scalar.md#copy_array_data"
+    },
+    {
+      "path": "datafusion_common::scalar::date_to_timestamp_multiplier",
+      "name": "date_to_timestamp_multiplier",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn date_to_timestamp_multiplier(source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> Option<i64>",
+      "summary": "Returns the multiplier that converts the input date representation into the desired timestamp unit, if the conversion requires a multiplication that can overflow an `i64`.",
+      "doc": "api/datafusion_common.scalar.md#date_to_timestamp_multiplier"
+    },
+    {
+      "path": "datafusion_common::scalar::dict_from_values",
+      "name": "dict_from_values",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn dict_from_values<K: ArrowDictionaryKeyType>(values_array: arrow::array::ArrayRef) -> error::Result<arrow::array::ArrayRef>",
+      "summary": "Create a `DictionaryArray` from the provided values array.",
+      "doc": "api/datafusion_common.scalar.md#dict_from_values"
+    },
+    {
+      "path": "datafusion_common::scalar::ensure_timestamp_in_bounds",
+      "name": "ensure_timestamp_in_bounds",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn ensure_timestamp_in_bounds(value: i64, multiplier: i64, source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> error::Result<()>",
+      "summary": "Ensures the provided value can be represented as a timestamp with the given multiplier. Returns an [`DataFusionError::Execution`] when the converted value would overflow the timestamp range.",
+      "doc": "api/datafusion_common.scalar.md#ensure_timestamp_in_bounds"
+    },
+    {
+      "path": "datafusion_common::scalar::get_dict_value",
+      "name": "get_dict_value",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_dict_value<K: ArrowDictionaryKeyType>(array: &dyn Array, index: usize) -> error::Result<(&arrow::array::ArrayRef, Option<usize>)>",
+      "summary": "Return a reference to the values array and the index into it for a dictionary array",
+      "doc": "api/datafusion_common.scalar.md#get_dict_value"
+    },
+    {
+      "path": "datafusion_common::scalar::partial_cmp_struct",
+      "name": "partial_cmp_struct",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn partial_cmp_struct(s1: &arrow::array::StructArray, s2: &arrow::array::StructArray) -> Option<std::cmp::Ordering>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_common::scalar::timestamp_to_timestamp_multiplier",
+      "name": "timestamp_to_timestamp_multiplier",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn timestamp_to_timestamp_multiplier(source_type: &arrow::datatypes::DataType, target_type: &arrow::datatypes::DataType) -> Option<i64>",
+      "summary": "Returns the multiplier that converts the input timestamp representation into the desired timestamp unit, if the conversion requires a multiplication that can overflow an `i64`.",
+      "doc": "api/datafusion_common.scalar.md#timestamp_to_timestamp_multiplier"
+    },
+    {
+      "path": "datafusion_common::scalar::ScalarType",
+      "name": "ScalarType",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait ScalarType<T: ArrowNativeType>",
+      "summary": "Trait used to map a NativeType to a ScalarValue",
+      "doc": "api/datafusion_common.scalar.md#scalartype",
+      "aliases": [
+        "datafusion::common::ScalarType",
+        "datafusion::scalar::ScalarType",
+        "datafusion_common::ScalarType"
+      ],
+      "implementors": [
+        "arrow_array::types::Date32Type",
+        "arrow_array::types::Float32Type",
+        "arrow_array::types::TimestampMicrosecondType",
+        "arrow_array::types::TimestampMillisecondType",
+        "arrow_array::types::TimestampNanosecondType",
+        "arrow_array::types::TimestampSecondType"
+      ],
+      "required_methods": [
+        "scalar"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "scalar",
+          "signature": "fn scalar(r: Option<T>) -> ScalarValue",
+          "summary": "returns a scalar from an optional T"
+        }
+      ]
+    }
+  ]
+}

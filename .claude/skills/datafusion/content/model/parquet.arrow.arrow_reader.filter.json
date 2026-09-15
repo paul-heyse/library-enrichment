@@ -1,0 +1,100 @@
+{
+  "module": "parquet::arrow::arrow_reader::filter",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.arrow_reader.filter.md",
+  "items": [
+    {
+      "path": "parquet::arrow::arrow_reader::filter::ArrowPredicateFn",
+      "name": "ArrowPredicateFn",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowPredicateFn<F>",
+      "summary": "An [`ArrowPredicate`] created from an [`FnMut`] and a [`ProjectionMask`]",
+      "doc": "api/parquet.arrow.arrow_reader.filter.md#arrowpredicatefn",
+      "aliases": [
+        "parquet::arrow::arrow_reader::ArrowPredicateFn"
+      ],
+      "implements": [
+        "parquet::arrow::arrow_reader::filter::ArrowPredicate"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError>",
+          "via_trait": "parquet::arrow::arrow_reader::filter::ArrowPredicate"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(projection: ProjectionMask, f: F) -> Self",
+          "summary": "Create a new [`ArrowPredicateFn`] that invokes `f` on the columns specified in `projection`."
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> &ProjectionMask",
+          "via_trait": "parquet::arrow::arrow_reader::filter::ArrowPredicate"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::filter::RowFilter",
+      "name": "RowFilter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct RowFilter",
+      "summary": "Filter applied *during* the parquet read process",
+      "doc": "api/parquet.arrow.arrow_reader.filter.md#rowfilter",
+      "aliases": [
+        "parquet::arrow::arrow_reader::RowFilter"
+      ],
+      "methods": [
+        {
+          "name": "into_predicates",
+          "signature": "fn into_predicates(self) -> Vec<Box<dyn ArrowPredicate>>",
+          "summary": "Returns the inner predicates, consuming self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(predicates: Vec<Box<dyn ArrowPredicate>>) -> Self",
+          "summary": "Create a new [`RowFilter`] from an array of [`ArrowPredicate`]"
+        },
+        {
+          "name": "predicates",
+          "signature": "fn predicates(&self) -> &Vec<Box<dyn ArrowPredicate>>",
+          "summary": "Returns the inner predicates"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::filter::ArrowPredicate",
+      "name": "ArrowPredicate",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ArrowPredicate: Send + 'static",
+      "summary": "A predicate operating on [`RecordBatch`]",
+      "doc": "api/parquet.arrow.arrow_reader.filter.md#arrowpredicate",
+      "aliases": [
+        "parquet::arrow::arrow_reader::ArrowPredicate"
+      ],
+      "implementors": [
+        "parquet::arrow::arrow_reader::filter::ArrowPredicateFn"
+      ],
+      "required_methods": [
+        "evaluate",
+        "projection"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self, batch: RecordBatch) -> Result<BooleanArray, ArrowError>",
+          "summary": "Evaluate this predicate for the given [`RecordBatch`] containing the columns identified by [`Self::projection`]"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> &ProjectionMask",
+          "summary": "Returns the [`ProjectionMask`] that describes the columns required to evaluate this predicate."
+        }
+      ]
+    }
+  ]
+}

@@ -11,9 +11,13 @@ use enrichment_core::evidence::{
     ArtifactKind, Availability, EvidenceKind, FragmentKind, RequestedConfiguration, Symbol,
 };
 use enrichment_core::producer::source;
-use enrichment_core::request::{InspectDepth, InspectRequest};
+use enrichment_core::request::InspectRequest;
+use enrichment_core::search::row_page::RowCursor;
 use enrichment_core::wire::data::InspectData;
-use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch};
+use enrichment_core::wire::{
+    AspectOutcome, AspectState, Envelope, ErrorCode, Freshness, InspectionAspect, Page,
+    SourceVersionMatch,
+};
 
 use super::common::{self, evidence_from_fragment};
 use crate::envelope::{self, Research};
@@ -27,11 +31,23 @@ pub const ASPECTS: &[&str] = &[
     "documentation",
     "examples",
     "source",
+    "semantics",
+    "runtime",
+    "children",
+    "members",
 ];
 
 /// Select retained results first. Only explicit execution intent can schedule a producer.
 pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
     use enrichment_core::request::InspectionIntent;
+    if let Err(error) = request.selection.validate() {
+        return envelope::error(
+            ErrorCode::UnsupportedFormat,
+            error,
+            "Use a unique, bounded aspect selection.",
+            false,
+        );
+    }
     if let Some(options) = &request.execution {
         if let Err(error) = options.validate(service.config.limits.verification_input_bytes) {
             return envelope::error(
@@ -43,9 +59,10 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
         }
         if options.intent != InspectionIntent::Retained
             && request
-                .aspects
-                .as_ref()
-                .is_some_and(|a| a.iter().any(|a| a == "runtime"))
+                .selection
+                .aspects()
+                .iter()
+                .any(|a| a.aspect == enrichment_core::wire::InspectionAspect::Runtime)
             && options.runtime.is_none()
         {
             return envelope::error(
@@ -56,6 +73,20 @@ pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
             );
         }
         if options.intent != InspectionIntent::Retained {
+            let selected = request.selection.aspects();
+            let target = if options.runtime.is_some() {
+                InspectionAspect::Runtime
+            } else {
+                InspectionAspect::Semantics
+            };
+            if !selected.iter().any(|selection| selection.aspect == target) {
+                return envelope::error(
+                    ErrorCode::UnsupportedFormat,
+                    "Execution intent must name its selected inspection aspect",
+                    "Include runtime for execution.runtime, or semantics for semantic execution, in selection.aspects.",
+                    false,
+                );
+            }
             return super::inspect_execution::submit(service, request).await;
         }
     }
@@ -73,23 +104,16 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             false,
         );
     }
-    let aspects: Vec<String> = request
-        .aspects
-        .clone()
-        .unwrap_or_else(|| ASPECTS.iter().map(|a| (*a).to_owned()).collect());
-    if let Some(unknown) = aspects
-        .iter()
-        .find(|a| !ASPECTS.contains(&a.as_str()) && !matches!(a.as_str(), "semantics" | "runtime"))
-    {
+    if let Err(error) = request.selection.validate() {
         return envelope::error(
             ErrorCode::UnsupportedFormat,
-            format!("`{unknown}` is not an aspect"),
-            format!("Use any of: {}, semantics, runtime.", ASPECTS.join(", ")),
+            error,
+            "Use a unique, bounded aspect selection.",
             false,
         );
     }
-    let want = |a: &str| aspects.iter().any(|x| x == a);
-    let include_docs = want("documentation") && request.depth != InspectDepth::Signature;
+    let selection = request.selection.aspects();
+    let want = |name: &str| selection.iter().any(|s| s.aspect.as_str() == name);
 
     let opened =
         match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
@@ -103,7 +127,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     // Exact path first; a bare name is accepted only when it names one definition.
     let mut matches = match opened
         .reader
-        .symbols_at(wanted, request.definition_id.as_deref(), include_docs)
+        .symbols_at(wanted, request.definition_id.as_deref())
         .await
     {
         Ok(m) => m,
@@ -112,7 +136,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     if matches.is_empty() && !wanted.contains("::") && !wanted.contains('.') {
         matches = match opened
             .reader
-            .symbols_ending_with(wanted, request.definition_id.as_deref(), include_docs)
+            .symbols_ending_with(wanted, request.definition_id.as_deref())
             .await
         {
             Ok(m) => m,
@@ -168,6 +192,9 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         });
         candidates.dedup();
         let data = InspectData {
+            children: Vec::new(),
+            members: Vec::new(),
+            aspect_outcomes: Vec::new(),
             symbol: None,
             observations: Vec::new(),
             docs_truncated: false,
@@ -187,17 +214,13 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 definitions.len()
             ),
             data: common::to_object(&data),
-            coverage: Coverage {
-                scope: format!("candidate definitions for `{wanted}`"),
-                indexed: [EvidenceKind::PublicApi.as_str().to_owned()]
-                    .into_iter()
-                    .collect(),
-                missing: std::collections::BTreeSet::new(),
-                limitations: vec![
-                    "The reference matched more than one definition; nothing was guessed. Pass \
-                     a candidate's path as symbol_path and its definition_id to select exactly."
-                        .to_owned(),
-                ],
+            coverage: match opened.reader.assess(&[EvidenceKind::PublicApi], None,
+                format!("candidate definitions for `{wanted}`")).await {
+                Ok(mut coverage) => {
+                    coverage.limitations.push("The reference matched multiple definitions. Select a candidate path and definition_id; no identity was guessed.".into());
+                    coverage
+                }
+                Err(error) => return common::query_error(&error),
             },
             freshness,
             context_id,
@@ -214,7 +237,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             .cmp(&b.is_reexport)
             .then_with(|| a.path.cmp(&b.path))
     });
-    let selected: Symbol = matches[0].clone();
+    let mut selected: Symbol = matches[0].clone();
     let also_at = match opened
         .reader
         .aliases_for(&selected.definition_id, &selected.path)
@@ -223,139 +246,316 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         Ok(rows) => rows,
         Err(err) => return common::query_error(&err),
     };
-    let observations = match opened
-        .reader
-        .observations_for(&selected.symbol_id, include_docs)
-        .await
-    {
-        Ok(rows) => rows,
-        Err(err) => return common::query_error(&err),
-    };
-
     let excerpt_chars = service.config.limits.excerpt_characters;
     let budget = common::byte_budget(service, request.max_bytes);
+    let mut selected_pages = std::collections::BTreeMap::new();
+    for aspect in &selection {
+        let digest = selection_digest(&selected.symbol_id, aspect, budget, &request.execution);
+        let after = match aspect
+            .cursor
+            .as_deref()
+            .map(|text| RowCursor::decode(text, manifest.snapshot_id.as_str(), &digest))
+            .transpose()
+        {
+            Ok(value) => value.map(|c| c.after),
+            Err(e) => {
+                return envelope::error(
+                    ErrorCode::InvalidCursor,
+                    e.to_string(),
+                    "Restart this aspect without a cursor for the selected snapshot and limits.",
+                    false,
+                );
+            }
+        };
+        selected_pages.insert(aspect.aspect, (aspect.max_items, digest, after));
+    }
+    let mut outcomes = Vec::new();
+    let mut observations = Vec::new();
     let mut evidence = Vec::new();
     let mut fragments = Vec::new();
     let mut returned_aspects = Vec::new();
-
-    // signature: always cheap, from the normalized evidence -- never LSP (gate C17 premise).
-    if want("signature") {
-        returned_aspects.push("signature".to_owned());
-        let selected_fragments = match opened
-            .reader
-            .fragments(enrichment_store::query::FragmentSelection {
-                path: None,
-                symbol_id: Some(&selected.symbol_id),
-                kinds: &[FragmentKind::ApiSignature],
-                limit: 256,
-                require_complete: true,
-            })
-            .await
-        {
-            Ok(rows) => rows,
-            Err(err) => return common::query_error(&err),
-        };
-        for f in selected_fragments {
-            evidence.push(evidence_from_fragment(
-                service,
-                &f,
-                source_version_match,
-                excerpt_chars,
-            ));
-            fragments.push(f);
-        }
-    }
-
-    let mut symbol = selected.clone();
-    let mut docs_truncated = false;
-    match request.depth {
-        InspectDepth::Signature => {
-            symbol.docs = None;
-        }
-        InspectDepth::Documentation | InspectDepth::Source => {
-            if want("documentation") {
-                returned_aspects.push("documentation".to_owned());
-                let cap = budget / 3;
-                if let Some(docs) = &symbol.docs
-                    && docs.len() > cap
-                {
-                    symbol.docs = Some(common::truncate(docs, cap));
-                    docs_truncated = true;
-                }
-                let docs = match opened
-                    .reader
-                    .fragments(enrichment_store::query::FragmentSelection {
-                        path: None,
-                        symbol_id: Some(&selected.symbol_id),
-                        kinds: &[FragmentKind::DocText],
-                        limit: 256,
-                        require_complete: true,
-                    })
-                    .await
-                {
-                    Ok(rows) => rows,
-                    Err(err) => return common::query_error(&err),
-                };
-                for f in &docs {
-                    evidence.push(evidence_from_fragment(
-                        service,
-                        f,
-                        source_version_match,
-                        excerpt_chars,
-                    ));
-                }
-            } else {
-                symbol.docs = None;
-            }
-        }
-    }
-
     let mut relationships = Vec::new();
-    if want("relationships") {
-        returned_aspects.push("relationships".to_owned());
-        relationships = match opened
-            .reader
-            .relationships_for(
-                &selected.symbol_id,
-                service.config.limits.namespace_entries.saturating_mul(2),
-            )
-            .await
-        {
-            Ok(rows) => rows,
-            Err(err) => return common::query_error(&err),
-        };
-    }
-
-    if want("examples") {
-        returned_aspects.push("examples".to_owned());
-        let name = selected.name.clone();
-        let examples = match opened.reader.examples_for(&name).await {
-            Ok(rows) => rows,
-            Err(err) => return common::query_error(&err),
-        };
-        {
-            for f in &examples {
-                evidence.push(evidence_from_fragment(
-                    service,
-                    f,
-                    source_version_match,
-                    excerpt_chars,
-                ));
-                fragments.push(f.clone());
-            }
-        }
-    }
-
+    let mut children = Vec::new();
+    let mut members = Vec::new();
+    let mut execution_observations = Vec::new();
     let mut missing = std::collections::BTreeSet::new();
     let mut limitations = Vec::new();
-    if selected.python.is_some() && manifest.missing.contains(&EvidenceKind::RuntimeApi) {
-        missing.insert(EvidenceKind::RuntimeApi.as_str().to_owned());
-        limitations.push("Only source/stub declarations are available: native implementation source and runtime signatures have not been observed.".into());
+    let mut docs_truncated = false;
+    for aspect in &selection {
+        let (limit, digest, after) = &selected_pages[&aspect.aspect];
+        let mut outcome = AspectOutcome {
+            aspect: aspect.aspect,
+            state: AspectState::Available,
+            reason: None,
+            page: None,
+            diagnostic: None,
+        };
+        let page_result = match aspect.aspect {
+            InspectionAspect::Semantics | InspectionAspect::Runtime => {
+                match super::inspect_execution::retained_page(
+                    &opened.reader,
+                    &selected,
+                    request.execution.as_ref(),
+                    aspect.aspect == InspectionAspect::Runtime,
+                    *limit,
+                    after.as_deref(),
+                )
+                .await
+                {
+                    Ok(page) => {
+                        let result = aspect_page(manifest.snapshot_id.as_str(), digest, &page);
+                        execution_observations.extend(page.items);
+                        Some(result)
+                    }
+                    Err(error) => Some(Err(error)),
+                }
+            }
+            InspectionAspect::Signature => match opened
+                .reader
+                .observation_page(&selected.symbol_id, false, *limit, after.as_deref())
+                .await
+            {
+                Ok(page) => {
+                    let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                    observations = page.items;
+                    Some(result)
+                }
+                Err(e) => Some(Err(e)),
+            },
+            InspectionAspect::Relationships => match opened
+                .reader
+                .relationship_page(&selected.symbol_id, *limit, after.as_deref())
+                .await
+            {
+                Ok(page) => {
+                    let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                    relationships = page.items;
+                    Some(result)
+                }
+                Err(e) => Some(Err(e)),
+            },
+            InspectionAspect::Children | InspectionAspect::Members => {
+                match opened
+                    .reader
+                    .navigation_page(
+                        &selected.symbol_id,
+                        aspect.aspect == InspectionAspect::Members,
+                        *limit,
+                        after.as_deref(),
+                    )
+                    .await
+                {
+                    Ok(page) => {
+                        let result = aspect_page(manifest.snapshot_id.as_str(), digest, &page);
+                        let entries = page
+                            .items
+                            .into_iter()
+                            .map(|symbol| enrichment_core::wire::data::InspectionCandidate {
+                                path: symbol.path,
+                                definition_id: symbol.definition_id,
+                                kind: symbol.kind,
+                                qualifier: symbol.qualifier,
+                            })
+                            .collect();
+                        if aspect.aspect == InspectionAspect::Members {
+                            members = entries;
+                        } else {
+                            children = entries;
+                        }
+                        Some(result)
+                    }
+                    Err(error) => Some(Err(error)),
+                }
+            }
+            InspectionAspect::Documentation | InspectionAspect::Examples => {
+                let kinds = if aspect.aspect == InspectionAspect::Documentation {
+                    vec![FragmentKind::DocText, FragmentKind::ReadmeSection]
+                } else {
+                    vec![FragmentKind::Example]
+                };
+                match opened
+                    .reader
+                    .fragment_page(
+                        &selected.symbol_id,
+                        &kinds,
+                        *limit,
+                        after.as_deref(),
+                        aspect.max_characters,
+                    )
+                    .await
+                {
+                    Ok(page) => {
+                        let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                        if aspect.aspect == InspectionAspect::Documentation {
+                            docs_truncated = page.has_more;
+                        }
+                        for (fragment, text_complete) in page.items {
+                            evidence.push(evidence_from_fragment(
+                                service,
+                                &fragment,
+                                source_version_match,
+                                excerpt_chars,
+                            ));
+                            let complete = (!text_complete).then(|| {
+                                let mut full_aspect = aspect.clone();
+                                full_aspect.max_characters = None;
+                                let mut execution = request.execution.clone();
+                                if let Some(options) = &mut execution {
+                                    options.intent = enrichment_core::request::InspectionIntent::Retained;
+                                }
+                                let full_digest = selection_digest(&selected.symbol_id, &full_aspect, budget, &execution);
+                                full_aspect.cursor = after.as_ref().map(|key| RowCursor::encode(
+                                    manifest.snapshot_id.as_str(), &full_digest, key.clone(),
+                                ).expect("bounded admitted fragment identity serializes"));
+                                enrichment_core::wire::RecoveryAction::CallTool {
+                                    tool: "inspect_symbol".into(), arguments: common::to_object(&serde_json::json!({
+                                        "context_id": opened.context.context_id, "snapshot_id": manifest.snapshot_id,
+                                        "symbol_path": selected.path, "definition_id": selected.definition_id,
+                                        "selection": {"mode":"explicit", "aspects":[full_aspect]},
+                                        "max_bytes": request.max_bytes, "execution": execution,
+                                    })),
+                                }
+                            });
+                            docs_truncated |=
+                                aspect.aspect == InspectionAspect::Documentation && !text_complete;
+                            fragments.push(enrichment_core::wire::data::FragmentProjection {
+                                fragment,
+                                text_complete,
+                                complete,
+                            });
+                        }
+                        Some(result)
+                    }
+                    Err(e) => Some(Err(e)),
+                }
+            }
+            _ => {
+                if after.is_some() {
+                    return envelope::error(
+                        ErrorCode::InvalidCursor,
+                        "This aspect has no collection continuation",
+                        "Remove its cursor.",
+                        false,
+                    );
+                }
+                None
+            }
+        };
+        if let Some(result) = page_result {
+            match result {
+                Ok(page) => {
+                    if page.returned == 0 {
+                        outcome.state = AspectState::Absent;
+                        outcome.reason = Some("No retained rows match this selection; see coverage before inferring absence".into());
+                    }
+                    outcome.page = Some(page);
+                }
+                Err(e) => {
+                    let error = common::query_error(&e);
+                    outcome.state = AspectState::Failed;
+                    outcome.reason = Some(error.summary.clone());
+                    outcome.diagnostic = error.error().map(|e| e.diagnostic.clone());
+                }
+            }
+        }
+        if outcome.state != AspectState::Failed {
+            returned_aspects.push(aspect.aspect.as_str().into());
+        }
+        outcomes.push(outcome);
     }
-
+    // The source and availability projections may need a locator even without a signature page.
+    // This is one explicit ancillary observation, never a complete-alternatives claim.
+    let ancillary;
+    let mut header_complete = outcomes
+        .iter()
+        .find(|o| o.aspect == InspectionAspect::Signature)
+        .and_then(|o| o.page.as_ref())
+        .is_some_and(|page| !page.has_more);
+    let header_observations = if observations.is_empty() && (want("source") || want("availability"))
+    {
+        ancillary = match opened
+            .reader
+            .observation_page(&selected.symbol_id, false, 32, None)
+            .await
+        {
+            Ok(page) => {
+                header_complete = !page.has_more;
+                page.items
+            }
+            Err(error) => {
+                for aspect in [InspectionAspect::Source, InspectionAspect::Availability] {
+                    fail_aspect(&mut outcomes, aspect, &error);
+                }
+                Vec::new()
+            }
+        };
+        &ancillary
+    } else {
+        &observations
+    };
+    if let Some(first) = header_observations.first().filter(|_| header_complete) {
+        if header_observations
+            .iter()
+            .all(|o| o.payload.doc_summary == first.payload.doc_summary)
+        {
+            selected.doc_summary = first.payload.doc_summary.clone();
+        }
+        if header_observations
+            .iter()
+            .all(|o| o.payload.deprecated == first.payload.deprecated)
+        {
+            selected.deprecated = first.payload.deprecated.clone();
+        }
+        if header_observations
+            .iter()
+            .all(|o| o.payload.cfg_hints == first.payload.cfg_hints)
+        {
+            selected.cfg_hints = first.payload.cfg_hints.clone();
+        } else {
+            limitations.push("Qualified observations disagree on cfg hints; read the independent signature observations.".into());
+        }
+        if header_observations
+            .iter()
+            .all(|o| o.source.locator == first.source.locator)
+        {
+            match &first.source.locator {
+                enrichment_core::evidence::relational::Locator::RustdocItem {
+                    reported_file,
+                    reported_line,
+                    item,
+                } => {
+                    selected.span_file = reported_file.clone();
+                    selected.span_line = *reported_line;
+                    selected.producer_local_id = *item;
+                }
+                enrichment_core::evidence::relational::Locator::PythonDeclaration {
+                    file,
+                    line,
+                    ..
+                } => {
+                    selected.span_file = Some(file.clone());
+                    selected.span_line = *line;
+                }
+                _ => {}
+            }
+        }
+    }
+    let signatures: std::collections::BTreeSet<_> = observations
+        .iter()
+        .filter_map(|o| o.payload.signature.clone())
+        .collect();
+    if signatures.len() == 1
+        && outcomes
+            .iter()
+            .find(|o| o.aspect == InspectionAspect::Signature)
+            .and_then(|o| o.page.as_ref())
+            .is_some_and(|page| !page.has_more)
+    {
+        selected.signature = signatures.first().cloned();
+    }
+    let symbol = selected.clone();
     let mut availability = None;
     if want("availability") {
-        returned_aspects.push("availability".to_owned());
         let requested = RequestedConfiguration {
             features: (opened.environment.features_known
                 || !opened.environment.features.is_empty())
@@ -370,11 +570,10 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     }
 
     let mut source_excerpt = None;
-    if request.depth == InspectDepth::Source && want("source") {
-        returned_aspects.push("source".to_owned());
+    if want("source") {
         match source_for(service, &opened, &selected).await {
             Ok(Some(excerpt)) => source_excerpt = Some(excerpt),
-            Err(error) => return common::query_error(&error),
+            Err(error) => fail_aspect(&mut outcomes, InspectionAspect::Source, &error),
             Ok(None) => {
                 missing.insert(EvidenceKind::SourceExcerpts.as_str().to_owned());
                 limitations.push(
@@ -385,43 +584,15 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             }
         }
     }
-    let is_runtime = want("runtime")
-        || request
-            .execution
-            .as_ref()
-            .is_some_and(|o| o.runtime.is_some());
-    let mut execution_observations = Vec::new();
-    if want("semantics") || want("runtime") || request.execution.is_some() {
-        execution_observations = match super::inspect_execution::retained(
-            &opened.reader,
-            &selected,
-            request.execution.as_ref(),
-            is_runtime,
-        )
-        .await
-        {
-            Ok(rows) => rows,
-            Err(error) => return common::query_error(&error),
-        };
-        if execution_observations.is_empty() {
-            missing.insert(
-                if is_runtime {
-                    "runtime_api"
-                } else {
-                    "semantic_queries"
-                }
-                .into(),
-            );
-            limitations.push("No retained execution observation matches this exact scope. Execution requires explicit execute_on_miss or rerun intent and an enabled profile.".into());
-        } else {
-            returned_aspects.push(if is_runtime { "runtime" } else { "semantics" }.into());
-        }
-    }
     for observation in &execution_observations {
         use enrichment_core::evidence::execution::{ExecutionOutcome, ExecutionPayload};
-        let (outcome, notes) = match &observation.payload {
-            ExecutionPayload::SemanticQuery(q) => (q.outcome, &q.limitations),
-            ExecutionPayload::RuntimeObject(q) => (q.outcome, &q.limitations),
+        let (outcome, notes, kind) = match &observation.payload {
+            ExecutionPayload::SemanticQuery(q) => {
+                (q.outcome, &q.limitations, EvidenceKind::SemanticQueries)
+            }
+            ExecutionPayload::RuntimeObject(q) => {
+                (q.outcome, &q.limitations, EvidenceKind::RuntimeApi)
+            }
             ExecutionPayload::UsageProbe(_) => continue,
         };
         for note in notes {
@@ -430,14 +601,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             }
         }
         if !matches!(outcome, ExecutionOutcome::Results | ExecutionOutcome::Empty) {
-            missing.insert(
-                if is_runtime {
-                    "runtime_api"
-                } else {
-                    "semantic_queries"
-                }
-                .into(),
-            );
+            missing.insert(kind.as_str().into());
         }
     }
     limitations.push(
@@ -446,7 +610,124 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             .to_owned(),
     );
 
+    let kinds: Vec<_> = selection
+        .iter()
+        .map(|aspect| match aspect.aspect {
+            InspectionAspect::Signature
+            | InspectionAspect::Availability
+            | InspectionAspect::Relationships
+            | InspectionAspect::Children
+            | InspectionAspect::Members => EvidenceKind::PublicApi,
+            InspectionAspect::Documentation => EvidenceKind::Documentation,
+            InspectionAspect::Examples => EvidenceKind::Examples,
+            InspectionAspect::Source => {
+                if opened.release.key.ecosystem == enrichment_core::identity::Ecosystem::Python {
+                    EvidenceKind::DistributionSource
+                } else {
+                    EvidenceKind::CrateSource
+                }
+            }
+            InspectionAspect::Runtime => EvidenceKind::RuntimeApi,
+            InspectionAspect::Semantics => EvidenceKind::SemanticQueries,
+        })
+        .collect();
+    let execution_kinds: std::collections::BTreeSet<_> = execution_observations
+        .iter()
+        .map(|fact| match fact.payload {
+            enrichment_core::evidence::execution::ExecutionPayload::SemanticQuery(_) => {
+                EvidenceKind::SemanticQueries
+            }
+            enrichment_core::evidence::execution::ExecutionPayload::RuntimeObject(_) => {
+                EvidenceKind::RuntimeApi
+            }
+            enrichment_core::evidence::execution::ExecutionPayload::UsageProbe(_) => {
+                EvidenceKind::UsageProbes
+            }
+        })
+        .collect();
+    let other_kinds: Vec<_> = kinds
+        .iter()
+        .filter(|kind| !execution_kinds.contains(kind))
+        .copied()
+        .collect();
+    let scope = format!(
+        "requested aspects of {} in {}",
+        selected.path, manifest.snapshot_id
+    );
+    let mut coverage = if other_kinds.is_empty() {
+        enrichment_core::wire::Coverage::unassessed(scope)
+    } else {
+        match opened
+            .reader
+            .assess(&other_kinds, Some(&selected.symbol_id), scope)
+            .await
+        {
+            Ok(value) => value,
+            Err(error) => return common::query_error(&error),
+        }
+    };
+    if !execution_observations.is_empty() {
+        let ids = execution_observations
+            .iter()
+            .map(|fact| fact.source.artifact_id.clone())
+            .collect::<Vec<_>>();
+        let assessed = match opened.reader.assess_execution(&ids).await {
+            Ok(value) => value,
+            Err(error) => return common::query_error(&error),
+        };
+        coverage.assessments.extend(assessed.assessments);
+        coverage.limitations.extend(assessed.limitations);
+        coverage.refresh_kinds();
+    }
+    for outcome in &mut outcomes {
+        if outcome.state == AspectState::Failed {
+            continue;
+        }
+        if outcome.state == AspectState::Absent
+            && coverage.assessments.iter().any(|item| {
+                item.kind
+                    == kinds[selection
+                        .iter()
+                        .position(|a| a.aspect == outcome.aspect)
+                        .expect("selected aspect")]
+                    && item.state != enrichment_core::wire::ScopeState::Indexed
+            })
+        {
+            outcome.state = AspectState::Unavailable;
+        }
+        if outcome.aspect == InspectionAspect::Source && source_excerpt.is_none() {
+            outcome.state = AspectState::Unavailable;
+            outcome.reason = Some("No trustworthy recorded source window is available".into());
+        }
+        if outcome.aspect == InspectionAspect::Availability && availability.is_none() {
+            outcome.state = AspectState::Unavailable;
+            outcome.reason = Some("No observed build configuration is retained; availability has not been established for the requested environment".into());
+        }
+        if matches!(
+            outcome.aspect,
+            InspectionAspect::Semantics | InspectionAspect::Runtime
+        ) && outcome.page.as_ref().is_some_and(|page| page.returned == 0)
+        {
+            outcome.state = AspectState::Unavailable;
+            outcome.reason = Some("No retained execution result for this scope; explicit execution intent and an enabled profile are required".into());
+        }
+    }
+    returned_aspects.retain(|name| {
+        outcomes
+            .iter()
+            .any(|o| o.aspect.as_str() == name && o.state == AspectState::Available)
+    });
+    coverage.missing.extend(missing);
+    coverage.limitations.extend(limitations);
+    let partial = !coverage.complete()
+        || !coverage.missing.is_empty()
+        || outcomes
+            .iter()
+            .any(|o| matches!(o.state, AspectState::Unavailable | AspectState::Failed));
     let data = InspectData {
+        children,
+        members,
+        aspect_outcomes: outcomes,
         symbol: Some(symbol),
         observations,
         docs_truncated,
@@ -460,7 +741,6 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         execution_observations,
         producer_runs: Vec::new(),
     };
-    let partial = !missing.is_empty();
     let research = Research {
         summary: format!(
             "{} `{}`{}{}",
@@ -478,22 +758,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 .unwrap_or_default()
         ),
         data: common::to_object(&data),
-        coverage: Coverage {
-            scope: format!(
-                "{} in snapshot {} of {} {}",
-                selected.path,
-                manifest.snapshot_id,
-                opened.release.key.package,
-                opened.release.key.version
-            ),
-            indexed: manifest
-                .indexed
-                .iter()
-                .map(|k| k.as_str().to_owned())
-                .collect(),
-            missing,
-            limitations,
-        },
+        coverage,
         freshness,
         context_id,
         snapshot_id,
@@ -507,7 +772,54 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     }
 }
 
-/// Cut a bounded source excerpt for a symbol from the extracted crate tarball.
+fn selection_digest(
+    symbol: &str,
+    aspect: &enrichment_core::wire::research::AspectSelection,
+    budget: usize,
+    execution: &Option<enrichment_core::request::InspectionOptions>,
+) -> String {
+    enrichment_core::canonical::digest_hex(&serde_json::json!([
+        symbol,
+        aspect.aspect,
+        aspect.max_items,
+        aspect.max_characters,
+        budget,
+        execution,
+    ]))
+}
+
+fn fail_aspect(
+    outcomes: &mut [AspectOutcome],
+    aspect: InspectionAspect,
+    error: &enrichment_store::QueryError,
+) {
+    if let Some(outcome) = outcomes.iter_mut().find(|o| o.aspect == aspect) {
+        outcome.state = AspectState::Failed;
+        outcome.reason = Some(error.to_string());
+        outcome.diagnostic = Some(error.diagnostic());
+    }
+}
+
+fn aspect_page<T>(
+    snapshot: &str,
+    digest: &str,
+    page: &enrichment_store::query::NativePage<T>,
+) -> Result<Page, enrichment_store::QueryError> {
+    let cursor = page
+        .next_key
+        .as_ref()
+        .map(|key| RowCursor::encode(snapshot, digest, key.clone()))
+        .transpose()
+        .map_err(std::io::Error::other)?;
+    Ok(Page::new(
+        page.items.len() as u64,
+        None,
+        page.has_more,
+        cursor,
+    ))
+}
+
+/// Cut a bounded source window; the recorded start is not a trustworthy item-end span.
 async fn source_for(
     service: &Service,
     opened: &common::Opened,
@@ -517,7 +829,7 @@ async fn source_for(
         return Ok(None);
     };
     let line = line as usize;
-    if symbol.python.is_some() {
+    if opened.release.key.ecosystem == enrichment_core::identity::Ecosystem::Python {
         let inputs = opened
             .reader
             .inputs_for_role(&format!("python-source:{file}"))

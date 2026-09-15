@@ -104,7 +104,7 @@ simple_url="{base}/simple"
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
@@ -199,17 +199,19 @@ async def test_the_artifact_reader_accepts_only_service_issued_handles(
 
 
 async def test_an_empty_handle_is_refused_before_the_daemon_is_asked(tmp_path: Path):
-    """The tool's own schema rejects it, so no request reaches the evidence store at all.
-
-    A stronger guarantee than a typed envelope, and worth asserting separately: it means the
-    refusal survives even if the daemon is not running.
-    """
+    """Original argument validation reports a typed error even without a daemon."""
     upstream_fixture(tmp_path / "upstream", tmp_path / "unused")
     config = tmp_path / "service.toml"
     with serve(tmp_path / "upstream") as upstream:
         configuration(config, upstream.base_url)
         env = daemon.daemon_env(tmp_path / "state", config)
-        with daemon.running(env):
-            async with Client(daemon.transport(env)) as client:
-                with pytest.raises(Exception, match="at least 1 character"):
-                    await client.call_tool("read_artifact", {"artifact_id": ""})
+        assert not Path(env["LIBENR_SOCKET"]).exists()
+        async with Client(daemon.transport(env)) as client:
+            result = await client.call_tool(
+                "read_artifact", {"artifact_id": ""}, raise_on_error=False
+            )
+            answer = result.structured_content
+            assert result.is_error and answer["status"] == "error", answer
+            assert answer["error"]["diagnostic"]["cause"] == "invalid_input", answer
+            assert "artifact_id" in answer["summary"]
+            assert not Path(env["LIBENR_SOCKET"]).exists()

@@ -1,0 +1,136 @@
+{
+  "module": "object_store::buffered",
+  "crate": "object_store",
+  "api": "api/object_store.buffered.md",
+  "items": [
+    {
+      "path": "object_store::buffered::DEFAULT_BUFFER_SIZE",
+      "name": "DEFAULT_BUFFER_SIZE",
+      "kind": "constant",
+      "crate": "object_store",
+      "signature": "const DEFAULT_BUFFER_SIZE: usize = _",
+      "summary": "The default buffer size used by [`BufReader`]",
+      "doc": "api/object_store.buffered.md#default_buffer_size"
+    },
+    {
+      "path": "object_store::buffered::BufReader",
+      "name": "BufReader",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct BufReader",
+      "summary": "An async-buffered reader compatible with the tokio IO traits",
+      "doc": "api/object_store.buffered.md#bufreader",
+      "implements": [
+        "tokio::io::async_buf_read::AsyncBufRead",
+        "tokio::io::async_read::AsyncRead",
+        "tokio::io::async_seek::AsyncSeek"
+      ],
+      "methods": [
+        {
+          "name": "consume",
+          "signature": "fn consume(Pin<&mut self>, amt: usize)",
+          "via_trait": "tokio::io::async_buf_read::AsyncBufRead"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>, meta: &ObjectMeta) -> Self",
+          "summary": "Create a new [`BufReader`] from the provided [`ObjectMeta`] and [`ObjectStore`]"
+        },
+        {
+          "name": "poll_complete",
+          "signature": "fn poll_complete(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<u64>>",
+          "via_trait": "tokio::io::async_seek::AsyncSeek"
+        },
+        {
+          "name": "poll_fill_buf",
+          "signature": "fn poll_fill_buf(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<std::io::Result<&[u8]>>",
+          "via_trait": "tokio::io::async_buf_read::AsyncBufRead"
+        },
+        {
+          "name": "poll_read",
+          "signature": "fn poll_read(Pin<&mut self>, cx: &mut Context<'_>, out: &mut ReadBuf<'_>) -> Poll<std::io::Result<()>>",
+          "via_trait": "tokio::io::async_read::AsyncRead"
+        },
+        {
+          "name": "start_seek",
+          "signature": "fn start_seek(Pin<&mut self>, position: SeekFrom) -> std::io::Result<()>",
+          "via_trait": "tokio::io::async_seek::AsyncSeek"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(store: Arc<dyn ObjectStore>, meta: &ObjectMeta, capacity: usize) -> Self",
+          "summary": "Create a new [`BufReader`] from the provided [`ObjectMeta`], [`ObjectStore`], and `capacity`"
+        }
+      ]
+    },
+    {
+      "path": "object_store::buffered::BufWriter",
+      "name": "BufWriter",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct BufWriter",
+      "summary": "An async buffered writer compatible with the tokio IO traits",
+      "doc": "api/object_store.buffered.md#bufwriter",
+      "implements": [
+        "tokio::io::async_write::AsyncWrite"
+      ],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(&mut self) -> Result<()>",
+          "summary": "Abort this writer, cleaning up any partially uploaded state"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>, path: Path) -> Self",
+          "summary": "Create a new [`BufWriter`] from the provided [`ObjectStore`] and [`Path`]"
+        },
+        {
+          "name": "poll_flush",
+          "signature": "fn poll_flush(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>>",
+          "via_trait": "tokio::io::async_write::AsyncWrite"
+        },
+        {
+          "name": "poll_shutdown",
+          "signature": "fn poll_shutdown(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>>",
+          "via_trait": "tokio::io::async_write::AsyncWrite"
+        },
+        {
+          "name": "poll_write",
+          "signature": "fn poll_write(Pin<&mut self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize, Error>>",
+          "via_trait": "tokio::io::async_write::AsyncWrite"
+        },
+        {
+          "name": "put",
+          "signature": "async fn put(&mut self, bytes: Bytes) -> Result<()>",
+          "summary": "Write data to the writer in [`Bytes`]."
+        },
+        {
+          "name": "with_attributes",
+          "signature": "fn with_attributes(self, attributes: Attributes) -> Self",
+          "summary": "Set the attributes of the uploaded object"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(store: Arc<dyn ObjectStore>, path: Path, capacity: usize) -> Self",
+          "summary": "Create a new [`BufWriter`] from the provided [`ObjectStore`], [`Path`] and `capacity`"
+        },
+        {
+          "name": "with_extensions",
+          "signature": "fn with_extensions(self, extensions: Extensions) -> Self",
+          "summary": "Set the extensions of the uploaded object"
+        },
+        {
+          "name": "with_max_concurrency",
+          "signature": "fn with_max_concurrency(self, max_concurrency: usize) -> Self",
+          "summary": "Override the maximum number of in-flight requests for this writer"
+        },
+        {
+          "name": "with_tags",
+          "signature": "fn with_tags(self, tags: TagSet) -> Self",
+          "summary": "Set the tags of the uploaded object"
+        }
+      ]
+    }
+  ]
+}

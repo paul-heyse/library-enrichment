@@ -88,7 +88,9 @@ class Running(dict[str, str]):
 
 
 @contextmanager
-def running(env: dict[str, str], cwd: Path | None = None) -> Iterator[Running]:
+def running(
+    env: dict[str, str], cwd: Path | None = None, *, binary: Path = DAEMON_BIN
+) -> Iterator[Running]:
     """A real daemon under `env`, stopped on exit.
 
     `cwd` exists for gate C20: starting the daemon *inside* a canary repository is the sharpest
@@ -96,7 +98,7 @@ def running(env: dict[str, str], cwd: Path | None = None) -> Iterator[Running]:
     service would then land in the canary rather than somewhere harmless.
     """
     process = subprocess.Popen(  # a first-party binary at a known path
-        [str(DAEMON_BIN), "start"],
+        [str(binary), "start"],
         env=env,
         cwd=str(cwd) if cwd else None,
         stdout=subprocess.DEVNULL,
@@ -120,7 +122,7 @@ def running(env: dict[str, str], cwd: Path | None = None) -> Iterator[Running]:
         yield handle
     finally:
         subprocess.run(  # same first-party binary
-            [str(DAEMON_BIN), "stop"], env=env, capture_output=True, check=False, timeout=10
+            [str(binary), "stop"], env=env, capture_output=True, check=False, timeout=10
         )
         try:
             process.wait(timeout=10)
@@ -147,59 +149,78 @@ def transport(env: dict[str, str], cwd: Path | None = None) -> StdioTransport:
 
 
 async def read_complete_answer(client, result):
-    """Follow the real service's overflow artifact protocol without inflating inline results."""
-    error = result.get("error")
-    if not isinstance(error, dict) or error.get("code") != "BUDGET_EXCEEDED":
+    """Traverse the current indexed artifact delivery and verify exact retained bytes."""
+    if result["delivery"]["mode"] != "artifact":
         return result
-    artifact_id = result.get("data", {}).get("result_artifact_id")
-    if artifact_id is None:
-        return result
+    import hashlib
     import json
 
+    artifact_id = result["delivery"]["artifact_id"]
     cursor = None
     parts = []
-    while True:
+    for _ in range(4096):
         page = (
-            await client.call_tool("read_artifact", {"artifact_id": artifact_id, "cursor": cursor})
+            await client.call_tool(
+                "read_artifact",
+                {
+                    "artifact_id": artifact_id,
+                    "cursor": cursor,
+                    "max_bytes": 65536,
+                },
+                raise_on_error=False,
+            )
         ).structured_content
         assert page["status"] == "ok", page
-        assert page["data"]["encoding"] == "utf8"
-        parts.append(page["data"]["content"])
-        cursor = page["pagination"]["next_cursor"]
-        if cursor is None:
-            break
-    return json.loads("".join(parts))
+        data = page["data"]
+        assert data["encoding"] == "utf8"
+        chunk = data["content"].encode()
+        assert hashlib.sha256(chunk).hexdigest() == data["content_digest"]
+        parts.append(chunk)
+        following = data["page"]["next_cursor"]
+        if following is None:
+            content = b"".join(parts)
+            assert hashlib.sha256(content).hexdigest() == data["artifact"]["sha256"]
+            document = json.loads(content)
+            assert document["index"]["format"] == "research-result/2"
+            return document["result"]
+        assert chunk and following != cursor
+        cursor = following
+    raise AssertionError("retained result did not finish within the traversal bound")
+
+
+async def read_terminal_answer(client, response):
+    """Expand the compact terminal descriptor, preserving the research outcome."""
+    result = response["data"]["result"]
+    assert result is not None
+    envelope = response | {key: value for key, value in result.items() if key != "outcome"}
+    envelope.update(status=result["outcome"], data={}, job=None)
+    return await read_complete_answer(client, envelope)
 
 
 async def wait_for_answer(client, result, timeout: float = 300.0):
-    """Wait on the real durable job, retaining the original caller's sharing disclosure."""
+    """Wait for a durable result using the current compact job contract."""
     deadline = time.monotonic() + timeout
-    shared = [
-        note
-        for note in result.get("coverage", {}).get("limitations", [])
-        if "already in flight" in note
-    ]
-    while result.get("status") == "pending":
+    shared = [note for note in result["coverage"]["limitations"] if "already in flight" in note]
+    while result["status"] == "pending":
         assert time.monotonic() < deadline, result
-        job_id = result["job"]["job_id"]
         response = (
             await client.call_tool(
                 "job_control",
                 {
-                    "job_id": job_id,
+                    "job_id": result["job"]["job_id"],
                     "action": "wait",
                     "wait_seconds": 10,
                 },
+                raise_on_error=False,
             )
         ).structured_content
         response = await read_complete_answer(client, response)
         if response["status"] == "error":
             return response
-        data = response["data"]
-        if data.get("result") is not None:
-            result = data["result"]
+        if response["data"]["result"] is not None:
+            result = await read_terminal_answer(client, response)
             break
-        assert data["state"] in {"queued", "running", "cancel_requested"}, response
+        assert response["data"]["state"] in {"queued", "running", "cancel_requested"}, response
     result = await read_complete_answer(client, result)
     for note in shared:
         if note not in result["coverage"]["limitations"]:

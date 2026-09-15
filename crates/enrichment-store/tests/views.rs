@@ -343,3 +343,163 @@ async fn overview_keeps_documentation_when_an_undocumented_observation_sorts_fir
         Some("Documented source.")
     );
 }
+
+#[tokio::test]
+async fn documentation_folds_only_the_same_definition_and_source() {
+    let dir = tempfile::tempdir().unwrap();
+    let evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
+    let files = dataset::write(
+        &dir.path().join("files"),
+        &evidence,
+        &WriteLimits::default(),
+    )
+    .unwrap();
+    let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
+    let cache = AdmissionCache::new(runtime.clone(), AdmissionLimits::default()).unwrap();
+    let admitted = cache
+        .admit(
+            "fixture",
+            &EvidenceScope {
+                ecosystem: Ecosystem::Rust,
+                symbol_package: "enr_fixture".into(),
+                release_id: "rel_fixture".into(),
+                environment_id: "env_fixture".into(),
+            },
+            &files,
+        )
+        .await
+        .unwrap();
+    let session = runtime.session();
+    admitted.register(&session).unwrap();
+    views::register(&session).await.unwrap();
+    session.deregister_table("fragment_surface").unwrap();
+    // Equal-text aliases share one exact source. Another definition and an independent
+    // producer remain independent evidence even when their wording is identical.
+    let fragments = session
+        .sql(
+            r"
+        SELECT fragment_id, 'doc_text' AS kind, label, 'widget documentation' AS text,
+            definition_id, named_struct('producer', producer) AS source
+        FROM (VALUES
+            ('a', 'widget::A', 'd1', 'p1'), ('b', 'widget::B', 'd1', 'p1'),
+            ('c', 'widget::C', 'd2', 'p1'), ('d', 'widget::D', 'd1', 'p2')
+        ) AS f(fragment_id, label, definition_id, producer)
+    ",
+        )
+        .await
+        .unwrap();
+    session
+        .register_table("fragment_surface", fragments.into_view())
+        .unwrap();
+    let folded = enrichment_store::search_plan::folded(
+        &session,
+        &enrichment_core::search::spec::SearchSpec::new("widget"),
+        &enrichment_store::search_plan::SearchOptions {
+            include_api: false,
+            fragment_kinds: vec![enrichment_core::evidence::FragmentKind::DocText],
+            area: None,
+            page_size: 10,
+            after: None,
+        },
+    )
+    .await
+    .unwrap();
+    let output = runtime.execute(folded).await.unwrap();
+    assert_eq!(output.rows, 3);
+    let aliases = runtime
+        .execute(
+            session
+                .sql("SELECT label FROM folded_fragments ORDER BY label")
+                .await
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let labels = aliases
+        .batches
+        .iter()
+        .flat_map(|batch| {
+            let values = TextColumn::new(batch.column(0).as_ref()).unwrap();
+            (0..batch.num_rows())
+                .map(|i| values.get(i).unwrap().to_owned())
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(labels, ["widget::A", "widget::C", "widget::D"]);
+}
+
+#[tokio::test]
+async fn overview_uses_one_clipped_namespace_set_across_many_index_batches() {
+    let dir = tempfile::tempdir().unwrap();
+    let runtime = QueryRuntime::new(
+        &dir.path().join("spill"),
+        QueryLimits {
+            batch_rows: 32,
+            partitions: 4,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let session = runtime.session();
+    let nodes = session
+        .sql(
+            "SELECT 'python' AS ecosystem,
+        make_array('sample', 'n' || CAST(value AS VARCHAR)) AS components,
+        'sample.n' || CAST(value AS VARCHAR) AS path, CAST(2 AS BIGINT) AS depth
+        FROM generate_series(1, 300)",
+        )
+        .await
+        .unwrap();
+    session
+        .register_table("navigation_nodes", nodes.into_view())
+        .unwrap();
+    let api = session
+        .sql(
+            "SELECT ecosystem, components AS namespace_components,
+        array_append(components, 'Thing') AS components, path || '.Thing' AS path,
+        'class' AS kind, path AS definition_id, path AS symbol_id,
+        false AS is_reexport, false AS is_deprecated, path AS observation_id,
+        repeat('Qualified documentation. ', 60) AS doc_summary FROM navigation_nodes",
+        )
+        .await
+        .unwrap();
+    session
+        .register_table("api_surface", api.clone().into_view())
+        .unwrap();
+    session
+        .register_table("namespace_children", api.into_view())
+        .unwrap();
+    let page = enrichment_store::browse::overview(&session, &runtime, None, 4, 256)
+        .await
+        .unwrap();
+    let mut expected = (1..=300)
+        .map(|i| format!("sample.n{i}"))
+        .collect::<Vec<_>>();
+    expected.sort();
+    expected.truncate(256);
+    assert_eq!(
+        page.namespaces
+            .iter()
+            .map(|namespace| namespace.path.clone())
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(page.truncated_namespaces, 44);
+    assert_eq!(page.definitions_by_kind.get("class"), Some(&300));
+    for namespace in page.namespaces {
+        assert_eq!(namespace.counts_by_kind.get("class"), Some(&1));
+        assert_eq!(namespace.children.len(), 1);
+        assert_eq!(
+            namespace.children[0].path,
+            format!("{}.Thing", namespace.path)
+        );
+        assert_eq!(namespace.truncated_children, 0);
+    }
+    let env = session.runtime_env();
+    drop(session);
+    assert_eq!(
+        env.disk_manager.used_disk_space(),
+        0,
+        "overview indexes must drop with their operation catalog"
+    );
+}

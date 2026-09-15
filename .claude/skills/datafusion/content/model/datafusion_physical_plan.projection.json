@@ -1,0 +1,347 @@
+{
+  "module": "datafusion_physical_plan::projection",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.projection.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::projection::all_alias_free_columns",
+      "name": "all_alias_free_columns",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn all_alias_free_columns(exprs: &[ProjectionExpr]) -> bool",
+      "summary": "Given the expression set of a projection, checks if the projection causes any renaming or constructs a non-`Column` physical expression.",
+      "doc": "api/datafusion_physical_plan.projection.md#all_alias_free_columns"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::all_columns",
+      "name": "all_columns",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn all_columns(exprs: &[ProjectionExpr]) -> bool",
+      "summary": "Returns `true` if all the expressions in the argument are `Column`s.",
+      "doc": "api/datafusion_physical_plan.projection.md#all_columns"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::join_allows_pushdown",
+      "name": "join_allows_pushdown",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn join_allows_pushdown(projection_as_columns: &[(super::expressions::Column, String)], join_schema: &arrow::datatypes::SchemaRef, far_right_left_col_ind: i32, far_left_right_col_ind: i32) -> bool",
+      "summary": "Checks three conditions for pushing a projection down through a join: - Projection must narrow the join output schema. - Columns coming from left/right tables must be collected at the left/right   sides of the output table. - Left or right…",
+      "doc": "api/datafusion_physical_plan.projection.md#join_allows_pushdown"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::join_table_borders",
+      "name": "join_table_borders",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn join_table_borders(left_table_column_count: usize, projection_as_columns: &[(super::expressions::Column, String)]) -> (i32, i32)",
+      "summary": "Returns the last index before encountering a column coming from the right table when traveling through the projection from left to right, and the last index before encountering a column coming from the left table when traveling through the…",
+      "doc": "api/datafusion_physical_plan.projection.md#join_table_borders"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::make_with_child",
+      "name": "make_with_child",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn make_with_child(projection: &ProjectionExec, child: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>",
+      "summary": "Creates a new [`ProjectionExec`] instance with the given child plan and projected expressions, preserving the original output metadata.",
+      "doc": "api/datafusion_physical_plan.projection.md#make_with_child"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::new_join_children",
+      "name": "new_join_children",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn new_join_children(projection_as_columns: &[(super::expressions::Column, String)], far_right_left_col_ind: i32, far_left_right_col_ind: i32, left_child: &std::sync::Arc<dyn ExecutionPlan>, right_child: &std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<(ProjectionExec, ProjectionExec)>",
+      "summary": "If pushing down the projection over this join's children seems possible, this function constructs the new [`ProjectionExec`]s that will come on top of the original children of the join.",
+      "doc": "api/datafusion_physical_plan.projection.md#new_join_children"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::new_projections_for_columns",
+      "name": "new_projections_for_columns",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn new_projections_for_columns(projection: &[ProjectionExpr], source: &[usize]) -> Vec<usize>",
+      "summary": "Updates a source provider's projected columns according to the given projection operator's expressions. To use this function safely, one must ensure that all expressions are `Column` expressions without aliases.",
+      "doc": "api/datafusion_physical_plan.projection.md#new_projections_for_columns"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::physical_to_column_exprs",
+      "name": "physical_to_column_exprs",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn physical_to_column_exprs(exprs: &[ProjectionExpr]) -> Option<Vec<(super::expressions::Column, String)>>",
+      "summary": "Downcasts all the expressions in `exprs` to `Column`s. If any of the given expressions is not a `Column`, returns `None`.",
+      "doc": "api/datafusion_physical_plan.projection.md#physical_to_column_exprs"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::remove_unnecessary_projections",
+      "name": "remove_unnecessary_projections",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn remove_unnecessary_projections(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<std::sync::Arc<dyn ExecutionPlan>>>",
+      "summary": "This function checks if `plan` is a [`ProjectionExec`], and inspects its input(s) to test whether it can push `plan` under its input(s). This function will operate on the entire tree and may ultimately remove `plan` entirely by leveraging…",
+      "doc": "api/datafusion_physical_plan.projection.md#remove_unnecessary_projections"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::try_embed_projection",
+      "name": "try_embed_projection",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn try_embed_projection<Exec: EmbeddedProjection + 'static>(projection: &ProjectionExec, execution_plan: &Exec) -> datafusion_common::Result<Option<std::sync::Arc<dyn ExecutionPlan>>>",
+      "summary": "Some projection can't be pushed down left input or right input of hash join because filter or on need may need some columns that won't be used in later. By embed those projection to hash join, we can reduce the cost of build_batch_from_ind…",
+      "doc": "api/datafusion_physical_plan.projection.md#try_embed_projection"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::try_pushdown_through_join",
+      "name": "try_pushdown_through_join",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn try_pushdown_through_join(projection: &ProjectionExec, join_left: &std::sync::Arc<dyn ExecutionPlan>, join_right: &std::sync::Arc<dyn ExecutionPlan>, join_on: joins::utils::JoinOnRef<'_>, schema: &arrow::datatypes::SchemaRef, filter: Option<&joins::utils::JoinFilter>) -> datafusion_common::Result<Option<JoinData>>",
+      "summary": "",
+      "doc": null,
+      "deprecated": "since 55.0.0: Use try_pushdown_through_join_with_column_indices instead"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::try_pushdown_through_join_with_column_indices",
+      "name": "try_pushdown_through_join_with_column_indices",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn try_pushdown_through_join_with_column_indices(projection: &ProjectionExec, join_left: &std::sync::Arc<dyn ExecutionPlan>, join_right: &std::sync::Arc<dyn ExecutionPlan>, join_on: joins::utils::JoinOnRef<'_>, schema: &arrow::datatypes::SchemaRef, filter: Option<&joins::utils::JoinFilter>, column_indices: &[joins::utils::ColumnIndex]) -> datafusion_common::Result<Option<JoinData>>",
+      "summary": "Attempts to move a projection below a join by mapping each join output column to the child column that produced it.",
+      "doc": "api/datafusion_physical_plan.projection.md#try_pushdown_through_join_with_column_indices"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::update_join_filter",
+      "name": "update_join_filter",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn update_join_filter(projection_left_exprs: &[(super::expressions::Column, String)], projection_right_exprs: &[(super::expressions::Column, String)], join_filter: &joins::utils::JoinFilter, left_field_size: usize) -> Option<joins::utils::JoinFilter>",
+      "summary": "Tries to update the column indices of a [`JoinFilter`] as if the input of the join was replaced by a projection.",
+      "doc": "api/datafusion_physical_plan.projection.md#update_join_filter"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::update_join_on",
+      "name": "update_join_on",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn update_join_on(proj_left_exprs: &[(super::expressions::Column, String)], proj_right_exprs: &[(super::expressions::Column, String)], hash_join_on: &[(datafusion_physical_expr_common::physical_expr::PhysicalExprRef, datafusion_physical_expr_common::physical_expr::PhysicalExprRef)], left_field_size: usize) -> Option<Vec<(datafusion_physical_expr_common::physical_expr::PhysicalExprRef, datafusion_physical_expr_common::physical_expr::PhysicalExprRef)>>",
+      "summary": "Tries to update the equi-join `Column`'s of a join as if the input of the join was replaced by a projection.",
+      "doc": "api/datafusion_physical_plan.projection.md#update_join_on"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::update_ordering",
+      "name": "update_ordering",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn update_ordering(ordering: datafusion_physical_expr_common::sort_expr::LexOrdering, projected_exprs: &[ProjectionExpr]) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexOrdering>>",
+      "summary": "Updates the given lexicographic ordering according to given projected expressions using the [`update_expr`] function.",
+      "doc": "api/datafusion_physical_plan.projection.md#update_ordering"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::update_ordering_requirement",
+      "name": "update_ordering_requirement",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn update_ordering_requirement(reqs: datafusion_physical_expr_common::sort_expr::LexRequirement, projected_exprs: &[ProjectionExpr]) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexRequirement>>",
+      "summary": "Updates the given lexicographic requirement according to given projected expressions using the [`update_expr`] function.",
+      "doc": "api/datafusion_physical_plan.projection.md#update_ordering_requirement"
+    },
+    {
+      "path": "datafusion_physical_plan::projection::JoinData",
+      "name": "JoinData",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct JoinData",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "projected_left_child",
+        "projected_right_child",
+        "join_filter",
+        "join_on"
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::projection::ProjectionExec",
+      "name": "ProjectionExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ProjectionExec",
+      "summary": "[`ExecutionPlan`] for a projection",
+      "doc": "api/datafusion_physical_plan.projection.md#projectionexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "benefits_from_input_partitioning",
+          "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "expr",
+          "signature": "fn expr(&self) -> &[ProjectionExpr]",
+          "summary": "The projection expressions stored as tuples of (expression, output column name)"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "The input plan"
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "projection_expr",
+          "signature": "fn projection_expr(&self) -> &ProjectionExprs",
+          "summary": "The projection expressions as a [`ProjectionExprs`]."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Return a reference to Any that can be used for downcasting"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstruct a [`ProjectionExec`] from its protobuf representation."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new<I, E>(expr: I, input: Arc<dyn ExecutionPlan>) -> Result<Self> where I: IntoIterator<Item = E>, E: Into<ProjectionExpr>",
+          "summary": "Create a projection on an input"
+        },
+        {
+          "name": "try_new_with_schema_metadata",
+          "signature": "fn try_new_with_schema_metadata<I, E>(expr: I, input: Arc<dyn ExecutionPlan>, projected_schema: &Schema) -> Result<Self> where I: IntoIterator<Item = E>, E: Into<ProjectionExpr>",
+          "summary": "Create a projection using field and schema metadata from `projected_schema`."
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::projection::EmbeddedProjection",
+      "name": "EmbeddedProjection",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait EmbeddedProjection: ExecutionPlan + Sized",
+      "summary": "Trait for execution plans that can embed a projection, avoiding a separate [`ProjectionExec`] wrapper.",
+      "doc": "api/datafusion_physical_plan.projection.md#embeddedprojection",
+      "implementors": [
+        "datafusion_physical_plan::filter::FilterExec",
+        "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec",
+        "datafusion_physical_plan::joins::nested_loop_join::NestedLoopJoinExec"
+      ],
+      "required_methods": [
+        "with_projection"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>"
+        }
+      ]
+    }
+  ]
+}

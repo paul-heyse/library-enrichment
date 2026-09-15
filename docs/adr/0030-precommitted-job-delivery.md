@@ -1,7 +1,7 @@
 ---
 id: ADR-0030
 title: Admit complete delivery artifacts before committing successful jobs
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§7.3, §8.2, §8.3]
 review: docs/design_review/reviews/design_review_native-architecture-completion_2026-09-14.md
 evidence: Proposed
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0037
 revisit: A supported operation needs a complete delivery document larger than 32 MiB.
 verification: delivery_failure_prevents_job_catalog_commit; committed_overflow_delivery_recovers_without_writes; exported_job_delivery_has_complete_artifact_closure
 ---
@@ -117,3 +117,4 @@ query authority, storage engine, generic job language or public SQL/shell tool.
 
 - 2026-09-14 — accepted after scoped native architecture review; remaining actual producer,
   client and final performance qualification stays in Plan 12.
+- 2026-09-15 — superseded by ADR-0037.

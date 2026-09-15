@@ -1,0 +1,79 @@
+{
+  "module": "datafusion_optimizer::decorrelate",
+  "crate": "datafusion-optimizer",
+  "api": "api/datafusion_optimizer.decorrelate.md",
+  "items": [
+    {
+      "path": "datafusion_optimizer::decorrelate::UN_MATCHED_ROW_INDICATOR",
+      "name": "UN_MATCHED_ROW_INDICATOR",
+      "kind": "constant",
+      "crate": "datafusion-optimizer",
+      "signature": "const UN_MATCHED_ROW_INDICATOR: &str = \"__always_true\"",
+      "summary": "Used to indicate the unmatched rows from the inner(subquery) table after the left out Join This is used to handle [the Count bug]",
+      "doc": "api/datafusion_optimizer.decorrelate.md#un_matched_row_indicator"
+    },
+    {
+      "path": "datafusion_optimizer::decorrelate::PullUpCorrelatedExpr",
+      "name": "PullUpCorrelatedExpr",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct PullUpCorrelatedExpr",
+      "summary": "This struct rewrite the sub query plan by pull up the correlated expressions(contains outer reference columns) from the inner subquery's 'Filter'. It adds the inner reference columns to the 'Projection' or 'Aggregate' of the subquery if th…",
+      "doc": "api/datafusion_optimizer.decorrelate.md#pullupcorrelatedexpr",
+      "fields": [
+        "join_filters",
+        "correlated_subquery_cols_map",
+        "in_predicate_opt",
+        "exists_sub_query",
+        "can_pull_up",
+        "need_handle_count_bug",
+        "collected_count_expr_map",
+        "pull_up_having_expr",
+        "pulled_up_scalar_agg"
+      ],
+      "implements": [
+        "datafusion_common::tree_node::TreeNodeRewriter"
+      ],
+      "methods": [
+        {
+          "name": "f_down",
+          "signature": "fn f_down(&mut self, plan: LogicalPlan) -> Result<Transformed<LogicalPlan>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeRewriter"
+        },
+        {
+          "name": "f_up",
+          "signature": "fn f_up(&mut self, plan: LogicalPlan) -> Result<Transformed<LogicalPlan>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeRewriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "with_exists_sub_query",
+          "signature": "fn with_exists_sub_query(self, exists_sub_query: bool) -> Self",
+          "summary": "Set if this is an Exists(Not Exists) SubQuery"
+        },
+        {
+          "name": "with_in_predicate_opt",
+          "signature": "fn with_in_predicate_opt(self, in_predicate_opt: Option<Expr>) -> Self",
+          "summary": "Set the in_predicate_opt"
+        },
+        {
+          "name": "with_need_handle_count_bug",
+          "signature": "fn with_need_handle_count_bug(self, need_handle_count_bug: bool) -> Self",
+          "summary": "Set if we need to handle [the count bug] during the pull up process"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::decorrelate::ExprResultMap",
+      "name": "ExprResultMap",
+      "kind": "type_alias",
+      "crate": "datafusion-optimizer",
+      "signature": "type ExprResultMap = datafusion_common::HashMap<String, datafusion_expr::Expr>",
+      "summary": "Mapping from expr display name to its evaluation result on empty record batch (for example: 'count(*)' is 'ScalarValue(0)', 'count(*) + 2' is 'ScalarValue(2)')",
+      "doc": "api/datafusion_optimizer.decorrelate.md#exprresultmap"
+    }
+  ]
+}

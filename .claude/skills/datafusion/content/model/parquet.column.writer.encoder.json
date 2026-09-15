@@ -1,0 +1,172 @@
+{
+  "module": "parquet::column::writer::encoder",
+  "crate": "parquet",
+  "api": "api/parquet.column.writer.encoder.md",
+  "items": [
+    {
+      "path": "parquet::column::writer::encoder::ColumnValueEncoderImpl",
+      "name": "ColumnValueEncoderImpl",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ColumnValueEncoderImpl<T: DataType>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "parquet::column::writer::encoder::DataPageValues",
+      "name": "DataPageValues",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct DataPageValues<T>",
+      "summary": "The encoded values for a data page, with optional statistics",
+      "doc": "api/parquet.column.writer.encoder.md#datapagevalues",
+      "fields": [
+        "buf",
+        "num_values",
+        "encoding",
+        "min_value",
+        "max_value",
+        "variable_length_bytes"
+      ]
+    },
+    {
+      "path": "parquet::column::writer::encoder::DictionaryPage",
+      "name": "DictionaryPage",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct DictionaryPage",
+      "summary": "The encoded data for a dictionary page",
+      "doc": "api/parquet.column.writer.encoder.md#dictionarypage",
+      "fields": [
+        "buf",
+        "num_values",
+        "is_sorted"
+      ]
+    },
+    {
+      "path": "parquet::column::writer::encoder::ColumnValueEncoder",
+      "name": "ColumnValueEncoder",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ColumnValueEncoder",
+      "summary": "A generic encoder of [`ColumnValues`] to data and dictionary pages used by [super::GenericColumnWriter`]",
+      "doc": "api/parquet.column.writer.encoder.md#columnvalueencoder",
+      "required_methods": [
+        "estimated_data_page_size",
+        "estimated_dict_page_size",
+        "estimated_memory_size",
+        "flush_bloom_filter",
+        "flush_data_page",
+        "flush_dict_page",
+        "flush_geospatial_statistics",
+        "has_dictionary",
+        "num_values",
+        "try_new",
+        "write",
+        "write_gather"
+      ],
+      "provided_methods": [
+        "compresses_against_previous_value",
+        "count_values_within_byte_budget",
+        "count_values_within_byte_budget_gather"
+      ],
+      "methods": [
+        {
+          "name": "compresses_against_previous_value",
+          "signature": "fn compresses_against_previous_value(&self) -> bool",
+          "summary": "Returns true if the encoder compresses each value against the value immediately before it, within the current page."
+        },
+        {
+          "name": "count_values_within_byte_budget",
+          "signature": "fn count_values_within_byte_budget(_values: &Self::Values, _offset: usize, _len: usize, _byte_budget: usize) -> Option<usize>",
+          "summary": "Returns the largest `k` such that the first `k` values in `values[offset..offset + len]` encode to at most `byte_budget` bytes — i.e. how many values fit in a single page byte budget."
+        },
+        {
+          "name": "count_values_within_byte_budget_gather",
+          "signature": "fn count_values_within_byte_budget_gather(_values: &Self::Values, _indices: &[usize], _byte_budget: usize) -> Option<usize>",
+          "summary": "As [`Self::count_values_within_byte_budget`] but using gather `indices` rather than a contiguous range. Returns the number of `indices` that fit, not the maximum index value."
+        },
+        {
+          "name": "estimated_data_page_size",
+          "signature": "fn estimated_data_page_size(&self) -> usize",
+          "summary": "Returns an estimate of the encoded data page size in bytes"
+        },
+        {
+          "name": "estimated_dict_page_size",
+          "signature": "fn estimated_dict_page_size(&self) -> Option<usize>",
+          "summary": "Returns an estimate of the encoded size of dictionary page size in bytes, or `None` if no dictionary"
+        },
+        {
+          "name": "estimated_memory_size",
+          "signature": "fn estimated_memory_size(&self) -> usize",
+          "summary": "Returns the estimated total memory usage of the encoder"
+        },
+        {
+          "name": "flush_bloom_filter",
+          "signature": "fn flush_bloom_filter(&mut self) -> Option<Sbbf>",
+          "summary": "Flushes bloom filter if enabled and returns it, otherwise returns `None`. Subsequent writes will *not* be tracked by the bloom filter as it is empty since. This should be called once near the end of encoding."
+        },
+        {
+          "name": "flush_data_page",
+          "signature": "fn flush_data_page(&mut self) -> Result<DataPageValues<Self::T>>",
+          "summary": "Flush the next data page for this column chunk"
+        },
+        {
+          "name": "flush_dict_page",
+          "signature": "fn flush_dict_page(&mut self) -> Result<Option<DictionaryPage>>",
+          "summary": "Flush the dictionary page for this column chunk if any. Any subsequent calls to [`Self::write`] will not be dictionary encoded"
+        },
+        {
+          "name": "flush_geospatial_statistics",
+          "signature": "fn flush_geospatial_statistics(&mut self) -> Option<Box<GeospatialStatistics>>",
+          "summary": "Computes [`GeospatialStatistics`], if any, and resets internal state such that any internal accumulator is prepared to accumulate statistics for the next column chunk."
+        },
+        {
+          "name": "has_dictionary",
+          "signature": "fn has_dictionary(&self) -> bool",
+          "summary": "Returns true if this encoder has a dictionary page"
+        },
+        {
+          "name": "num_values",
+          "signature": "fn num_values(&self) -> usize",
+          "summary": "Returns the number of buffered values"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(descr: &ColumnDescPtr, props: &WriterProperties) -> Result<Self> where Self: Sized",
+          "summary": "Create a new [`ColumnValueEncoder`]"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, values: &Self::Values, offset: usize, len: usize) -> Result<()>",
+          "summary": "Write the corresponding values to this [`ColumnValueEncoder`]"
+        },
+        {
+          "name": "write_gather",
+          "signature": "fn write_gather(&mut self, values: &Self::Values, indices: &[usize]) -> Result<()>",
+          "summary": "Write the values at the indexes in `indices` to this [`ColumnValueEncoder`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::writer::encoder::ColumnValues",
+      "name": "ColumnValues",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ColumnValues",
+      "summary": "A collection of [`ParquetValueType`] encoded by a [`ColumnValueEncoder`]",
+      "doc": "api/parquet.column.writer.encoder.md#columnvalues",
+      "required_methods": [
+        "len"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "The number of values in this collection"
+        }
+      ]
+    }
+  ]
+}

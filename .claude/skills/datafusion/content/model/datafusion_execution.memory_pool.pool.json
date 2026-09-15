@@ -1,0 +1,273 @@
+{
+  "module": "datafusion_execution::memory_pool::pool",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.memory_pool.pool.md",
+  "items": [
+    {
+      "path": "datafusion_execution::memory_pool::pool::FairSpillPool",
+      "name": "FairSpillPool",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct FairSpillPool",
+      "summary": "A [`MemoryPool`] that prevents spillable reservations from using more than an even fraction of the available memory sans any unspillable reservations (i.e. `(pool_size - unspillable_memory) / num_spillable_reservations`)",
+      "doc": "api/datafusion_execution.memory_pool.pool.md#fairspillpool",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_execution::memory_pool::MemoryPool"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, reservation: &MemoryReservation, additional: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "memory_limit",
+          "signature": "fn memory_limit(&self) -> MemoryLimit",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pool_size: usize) -> Self",
+          "summary": "Allocate up to `limit` bytes"
+        },
+        {
+          "name": "register",
+          "signature": "fn register(&self, consumer: &MemoryConsumer)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "reserved",
+          "signature": "fn reserved(&self) -> usize",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, reservation: &MemoryReservation, shrink: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "unregister",
+          "signature": "fn unregister(&self, consumer: &MemoryConsumer)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::pool::GreedyMemoryPool",
+      "name": "GreedyMemoryPool",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct GreedyMemoryPool",
+      "summary": "A [`MemoryPool`] that implements a greedy first-come first-serve limit.",
+      "doc": "api/datafusion_execution.memory_pool.pool.md#greedymemorypool",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_execution::memory_pool::MemoryPool"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, _reservation: &MemoryReservation, additional: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "memory_limit",
+          "signature": "fn memory_limit(&self) -> MemoryLimit",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pool_size: usize) -> Self",
+          "summary": "Create a new pool that can allocate up to `pool_size` bytes"
+        },
+        {
+          "name": "reserved",
+          "signature": "fn reserved(&self) -> usize",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, _reservation: &MemoryReservation, shrink: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::pool::MemoryConsumerMetrics",
+      "name": "MemoryConsumerMetrics",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct MemoryConsumerMetrics",
+      "summary": "A point-in-time snapshot of a tracked memory consumer's state.",
+      "doc": "api/datafusion_execution.memory_pool.pool.md#memoryconsumermetrics",
+      "fields": [
+        "name",
+        "can_spill",
+        "reserved",
+        "peak"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_execution::memory_pool::pool::TrackConsumersPool",
+      "name": "TrackConsumersPool",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct TrackConsumersPool<I>",
+      "summary": "A [`MemoryPool`] that tracks the consumers that have reserved memory within the inner memory pool.",
+      "doc": "api/datafusion_execution.memory_pool.pool.md#trackconsumerspool",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_execution::memory_pool::MemoryPool"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, reservation: &MemoryReservation, additional: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &I",
+          "summary": "Returns a reference to the wrapped inner [`MemoryPool`]."
+        },
+        {
+          "name": "memory_limit",
+          "signature": "fn memory_limit(&self) -> MemoryLimit",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Vec<MemoryConsumerMetrics>",
+          "summary": "Returns a snapshot of all currently tracked consumers."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: I, top: NonZeroUsize) -> Self",
+          "summary": "Creates a new [`TrackConsumersPool`]."
+        },
+        {
+          "name": "register",
+          "signature": "fn register(&self, consumer: &MemoryConsumer)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "report_top",
+          "signature": "fn report_top(&self, top: usize) -> String",
+          "summary": "Returns a formatted string with the top memory consumers."
+        },
+        {
+          "name": "reserved",
+          "signature": "fn reserved(&self) -> usize",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, reservation: &MemoryReservation, shrink: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "unregister",
+          "signature": "fn unregister(&self, consumer: &MemoryConsumer)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::memory_pool::pool::UnboundedMemoryPool",
+      "name": "UnboundedMemoryPool",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct UnboundedMemoryPool",
+      "summary": "A [`MemoryPool`] that enforces no limit",
+      "doc": "api/datafusion_execution.memory_pool.pool.md#unboundedmemorypool",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_execution::memory_pool::MemoryPool"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "grow",
+          "signature": "fn grow(&self, _reservation: &MemoryReservation, additional: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "memory_limit",
+          "signature": "fn memory_limit(&self) -> MemoryLimit",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "reserved",
+          "signature": "fn reserved(&self) -> usize",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "shrink",
+          "signature": "fn shrink(&self, _reservation: &MemoryReservation, shrink: usize)",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        },
+        {
+          "name": "try_grow",
+          "signature": "fn try_grow(&self, reservation: &MemoryReservation, additional: usize) -> Result<()>",
+          "via_trait": "datafusion_execution::memory_pool::MemoryPool"
+        }
+      ]
+    }
+  ]
+}

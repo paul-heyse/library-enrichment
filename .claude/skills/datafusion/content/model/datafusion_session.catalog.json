@@ -1,0 +1,128 @@
+{
+  "module": "datafusion_session::catalog",
+  "crate": "datafusion-session",
+  "api": "api/datafusion_session.catalog.md",
+  "items": [
+    {
+      "path": "datafusion_session::catalog::EmptyCatalogProviderList",
+      "name": "EmptyCatalogProviderList",
+      "kind": "struct",
+      "crate": "datafusion-session",
+      "signature": "struct EmptyCatalogProviderList",
+      "summary": "A catalog list that contains no catalogs.",
+      "doc": "api/datafusion_session.catalog.md#emptycatalogproviderlist",
+      "aliases": [
+        "datafusion_session::EmptyCatalogProviderList"
+      ],
+      "implements": [
+        "datafusion_session::catalog::CatalogProviderList"
+      ],
+      "methods": [
+        {
+          "name": "catalog",
+          "signature": "fn catalog(&self, _name: &str) -> Option<Arc<dyn CatalogProvider>>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        },
+        {
+          "name": "catalog_names",
+          "signature": "fn catalog_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        },
+        {
+          "name": "register_catalog",
+          "signature": "fn register_catalog(&self, _name: String, _catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::catalog::CatalogProvider",
+      "name": "CatalogProvider",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait CatalogProvider: Any + Debug + Sync + Send",
+      "summary": "Represents a catalog, comprising a number of named schemas.",
+      "doc": "api/datafusion_session.catalog.md#catalogprovider",
+      "aliases": [
+        "datafusion_session::CatalogProvider"
+      ],
+      "implementors": [
+        "datafusion_catalog::memory::catalog::MemoryCatalogProvider",
+        "datafusion_ffi::catalog_provider::ForeignCatalogProvider",
+        "datafusion_ffi::tests::catalog::FixedCatalogProvider"
+      ],
+      "required_methods": [
+        "schema",
+        "schema_names"
+      ],
+      "provided_methods": [
+        "deregister_schema",
+        "register_schema"
+      ],
+      "methods": [
+        {
+          "name": "deregister_schema",
+          "signature": "fn deregister_schema(&self, _name: &str, _cascade: bool) -> Result<Option<Arc<dyn SchemaProvider>>>",
+          "summary": "Removes a schema from this catalog. Implementations of this method should return errors if the schema exists but cannot be dropped. For example, in DataFusion's default in-memory catalog, `MemoryCatalogProvider`, a non-empty schema will on…"
+        },
+        {
+          "name": "register_schema",
+          "signature": "fn register_schema(&self, name: &str, schema: Arc<dyn SchemaProvider>) -> Result<Option<Arc<dyn SchemaProvider>>>",
+          "summary": "Adds a new schema to this catalog."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self, name: &str) -> Option<Arc<dyn SchemaProvider>>",
+          "summary": "Retrieves a specific schema from the catalog by name, provided it exists."
+        },
+        {
+          "name": "schema_names",
+          "signature": "fn schema_names(&self) -> Vec<String>",
+          "summary": "Retrieves the list of available schema names in this catalog."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_session::catalog::CatalogProviderList",
+      "name": "CatalogProviderList",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait CatalogProviderList: Any + Debug + Sync + Send",
+      "summary": "Represent a list of named [`CatalogProvider`]s.",
+      "doc": "api/datafusion_session.catalog.md#catalogproviderlist",
+      "aliases": [
+        "datafusion_session::CatalogProviderList"
+      ],
+      "implementors": [
+        "datafusion_catalog::dynamic_file::catalog::DynamicFileCatalog",
+        "datafusion_catalog::memory::catalog::MemoryCatalogProviderList",
+        "datafusion_ffi::catalog_provider_list::ForeignCatalogProviderList",
+        "datafusion_ffi::tests::catalog::FixedCatalogProviderList",
+        "datafusion_session::catalog::EmptyCatalogProviderList"
+      ],
+      "required_methods": [
+        "catalog",
+        "catalog_names",
+        "register_catalog"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "catalog",
+          "signature": "fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>",
+          "summary": "Retrieves a specific catalog by name, provided it exists."
+        },
+        {
+          "name": "catalog_names",
+          "signature": "fn catalog_names(&self) -> Vec<String>",
+          "summary": "Retrieves the list of available catalog names"
+        },
+        {
+          "name": "register_catalog",
+          "signature": "fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>",
+          "summary": "Adds a new catalog to this catalog list If a catalog of the same name existed before, it is replaced in the list and returned."
+        }
+      ]
+    }
+  ]
+}

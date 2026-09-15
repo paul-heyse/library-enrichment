@@ -46,6 +46,8 @@ type Attempts = Vec<(
     enrichment_core::producer::ProducerRun,
     Vec<enrichment_core::evidence::Artifact>,
 )>;
+type RecordProducer = dyn FnOnce(&mut crate::record_writer::RelationWriter) -> std::result::Result<Attempts, String>
+    + Send;
 
 /// One open exact snapshot. The catalog generation is retained for the request lifetime.
 pub struct OpenedSnapshot {
@@ -53,6 +55,7 @@ pub struct OpenedSnapshot {
     pub binding: Arc<AdmittedRelations>,
     pub catalog: Arc<PinnedCatalog>,
     pub directory: PathBuf,
+    manifest_digest: String,
     _lease: Arc<File>,
 }
 
@@ -70,6 +73,12 @@ impl OpenedSnapshot {
     /// # Errors
     /// Any file changed since admission is refused.
     pub fn session(&self, runtime: &QueryRuntime) -> Result<SessionContext> {
+        crate::runtime::bind_snapshot(
+            &self.manifest,
+            &self.manifest_digest,
+            self.catalog.generation(),
+            Arc::clone(&self._lease),
+        )?;
         let session = runtime.session();
         self.binding
             .register_leased(&session, Arc::clone(&self._lease))?;
@@ -96,7 +105,12 @@ type LogReferences = Vec<(String, u64)>;
 
 /// One bounded preparation step after the candidate identity is known, before catalog commit.
 pub type JobDeliveryFactory = Arc<
-    dyn Fn(&EvidenceManifest) -> std::io::Result<enrichment_core::evidence::Artifact> + Send + Sync,
+    dyn Fn(
+            &EvidenceManifest,
+            &enrichment_core::wire::Coverage,
+        ) -> std::io::Result<enrichment_core::evidence::Artifact>
+        + Send
+        + Sync,
 >;
 
 /// Result intent becomes a publication only in the successful catalog selection commit.
@@ -384,7 +398,7 @@ impl EvidenceRepository {
     /// This is the sole publication path for both streaming producers and bounded execution DTOs.
     /// # Errors
     /// Invalid input, exhausted limits, closure errors and publication conflicts stay explicit.
-    pub async fn publish_records(
+    pub fn publish_records(
         &self,
         mut metadata: SnapshotMetadata,
         produce: impl FnOnce(
@@ -394,67 +408,79 @@ impl EvidenceRepository {
         + 'static,
         mut expected_base: Option<SnapshotId>,
         completion: Option<JobCompletion>,
-    ) -> Result<EvidenceManifest> {
-        if self.read_only {
-            return Err(invalid("evidence repository was opened read-only"));
-        }
-        metadata.validate().map_err(invalid)?;
-        let _lease = crate::leases::shared(&self.paths.data_root)?;
-        let paths = self.paths.clone();
-        let limits = self.write_limits.clone();
-        let (directory, files, mut attempts) = tokio::task::spawn_blocking(move || {
-            let _lease = crate::leases::shared(&paths.data_root)?;
-            std::fs::create_dir_all(paths.staging())?;
-            let directory = tempfile::Builder::new()
-                .prefix("evidence-")
-                .tempdir_in(paths.staging())?;
-            let mut sink = crate::record_writer::RelationWriter::new(directory.path(), &limits)?;
-            let attempts = produce(&mut sink).map_err(invalid)?;
-            let files = sink.finish()?;
-            File::open(directory.path())?.sync_all()?;
-            crate::publication_probe::hit(
-                &paths.data_root,
-                crate::publication_probe::Point::SnapshotFilesDurable,
-            )?;
-            Ok::<_, DataFusionError>((directory, files, attempts))
-        })
-        .await
-        .map_err(external)??;
-        let base = if expected_base.is_none() {
-            let catalog = self.catalog.pin().await?;
-            if let Some(id) = catalog
-                .current(&self.runtime, &metadata.context.context_id)
-                .await?
-            {
-                let base = self.open_snapshot(catalog, &id).await?;
-                merge_metadata(&mut metadata, &base.manifest.metadata)?;
-                for (run, artifacts) in self.attempts(&base).await? {
-                    if let Some((existing, acquisitions)) = attempts
-                        .iter()
-                        .find(|(r, _)| r.attempt_id == run.attempt_id)
-                    {
-                        if existing != &run || acquisitions != &artifacts {
-                            return Err(invalid(
-                                "conflicting producing attempt during contribution",
-                            ));
+    ) -> futures::future::BoxFuture<'_, Result<EvidenceManifest>> {
+        // Keep the producer payload and publication state machine off every caller's poll
+        // frame. Acquisition, admission and native SQL planning otherwise nest large future
+        // frames on the same worker stack. This changes allocation, not task ownership.
+        let produce: Box<RecordProducer> = Box::new(produce);
+        Box::pin(async move {
+            if self.read_only {
+                return Err(invalid("evidence repository was opened read-only"));
+            }
+            metadata.validate().map_err(invalid)?;
+            let _lease = crate::leases::shared(&self.paths.data_root)?;
+            let paths = self.paths.clone();
+            let limits = self.write_limits.clone();
+            // Producers may drive native normalization queries. Carry the operation but do not
+            // acquire a query permit around a callback that can acquire one itself.
+            let operation = crate::runtime::capture_operation();
+            let (directory, files, mut attempts) = tokio::task::spawn_blocking(move || {
+                operation.run(|| {
+                    let _lease = crate::leases::shared(&paths.data_root)?;
+                    std::fs::create_dir_all(paths.staging())?;
+                    let directory = tempfile::Builder::new()
+                        .prefix("evidence-")
+                        .tempdir_in(paths.staging())?;
+                    let mut sink =
+                        crate::record_writer::RelationWriter::new(directory.path(), &limits)?;
+                    let attempts = produce(&mut sink).map_err(invalid)?;
+                    let files = sink.finish()?;
+                    File::open(directory.path())?.sync_all()?;
+                    crate::publication_probe::hit(
+                        &paths.data_root,
+                        crate::publication_probe::Point::SnapshotFilesDurable,
+                    )?;
+                    Ok::<_, DataFusionError>((directory, files, attempts))
+                })
+            })
+            .await
+            .map_err(external)??;
+            let base = if expected_base.is_none() {
+                let catalog = self.catalog.pin().await?;
+                if let Some(id) = catalog
+                    .current(&self.runtime, &metadata.context.context_id)
+                    .await?
+                {
+                    let base = self.open_snapshot(catalog, &id).await?;
+                    merge_metadata(&mut metadata, &base.manifest.metadata)?;
+                    for (run, artifacts) in self.attempts(&base).await? {
+                        if let Some((existing, acquisitions)) = attempts
+                            .iter()
+                            .find(|(r, _)| r.attempt_id == run.attempt_id)
+                        {
+                            if existing != &run || acquisitions != &artifacts {
+                                return Err(invalid(
+                                    "conflicting producing attempt during contribution",
+                                ));
+                            }
+                        } else {
+                            attempts.push((run, artifacts));
                         }
-                    } else {
-                        attempts.push((run, artifacts));
                     }
+                    expected_base = Some(id);
+                    Some(base)
+                } else {
+                    None
                 }
-                expected_base = Some(id);
-                Some(base)
             } else {
                 None
-            }
-        } else {
-            None
-        };
-        let staged = self
-            .stage_files(&metadata, directory, files, base.as_ref())
-            .await?;
-        self.publish_prepared(metadata, staged, attempts, expected_base, completion)
-            .await
+            };
+            let staged = self
+                .stage_files(&metadata, directory, files, base.as_ref())
+                .await?;
+            self.publish_prepared(metadata, staged, attempts, expected_base, completion)
+                .await
+        })
     }
 
     async fn publish_prepared(
@@ -491,8 +517,49 @@ impl EvidenceRepository {
             let (manifest, entry) = self.finish_stage(staged).await?;
             let publication = if let Some(completion) = &completion {
                 let prepare = Arc::clone(&completion.prepare_delivery);
+                let directory = self.paths.snapshots().join(manifest.snapshot_id.as_str());
+                let (_, bytes) = read_manifest(&directory)?;
+                let binding = self.admit_manifest(&directory, &manifest, &bytes).await?;
+                let session = self.runtime.session();
+                binding.register(&session)?;
+                let coverage = if completion.kind
+                    == enrichment_core::evidence::catalog::PublishedJobKind::Resolve
+                {
+                    crate::coverage::assess(
+                        &session,
+                        &self.runtime,
+                        &manifest,
+                        &crate::coverage::acquisition_kinds(&manifest),
+                        None,
+                        format!(
+                            "requested acquisition evidence in snapshot {}",
+                            manifest.snapshot_id
+                        ),
+                    )
+                    .await
+                } else {
+                    crate::coverage::assess_execution(
+                        &session,
+                        &self.runtime,
+                        &manifest,
+                        &completion.result_artifact_ids,
+                    )
+                    .await
+                }
+                .map_err(std::io::Error::other)?;
+                let mut completion = completion.clone();
+                if completion.kind == enrichment_core::evidence::catalog::PublishedJobKind::Resolve
+                {
+                    completion.state = if coverage.complete() {
+                        enrichment_core::wire::JobState::Succeeded
+                    } else {
+                        enrichment_core::wire::JobState::Partial
+                    };
+                }
                 let candidate = manifest.clone();
-                let artifact = tokio::task::spawn_blocking(move || prepare(&candidate))
+                let artifact = self
+                    .runtime
+                    .blocking(move || prepare(&candidate, &coverage))
                     .await
                     .map_err(|e| invalid(format!("delivery preparation worker failed: {e}")))??;
                 let publication = completion.bind(&manifest, artifact);
@@ -504,6 +571,7 @@ impl EvidenceRepository {
             };
             let delta = CatalogDelta {
                 publication,
+                comparison: None,
                 releases: vec![metadata.release.clone()],
                 environments: vec![metadata.environment.clone()],
                 contexts: vec![metadata.context.clone()],
@@ -871,6 +939,7 @@ impl EvidenceRepository {
             .await?;
         Ok(OpenedSnapshot {
             manifest,
+            manifest_digest: entry.manifest_digest,
             binding,
             catalog,
             directory,
@@ -883,44 +952,140 @@ impl EvidenceRepository {
     pub async fn validate_delivery(
         &self,
         publication: &enrichment_core::evidence::catalog::JobPublication,
-    ) -> Result<()> {
+    ) -> Result<Vec<enrichment_core::evidence::Artifact>> {
         publication.validate().map_err(invalid)?;
         let publication = publication.clone();
         let blobs = self.blobs.clone();
-        tokio::task::spawn_blocking(move || -> std::io::Result<()> {
-            let header = blobs.read_delivery(&publication.delivery, "delivery-admission")?;
-            let expected = match publication.state {
-                enrichment_core::wire::JobState::Succeeded => {
-                    header.outcome().is_some_and(|outcome| {
-                        matches!(outcome, enrichment_core::wire::Outcome::Ok { .. })
-                    })
-                }
-                enrichment_core::wire::JobState::Partial => {
-                    header.outcome().is_some_and(|outcome| {
-                        matches!(outcome, enrichment_core::wire::Outcome::Partial { .. })
-                    })
-                }
-                enrichment_core::wire::JobState::Failed
-                | enrichment_core::wire::JobState::Cancelled => {
-                    header.outcome().is_some_and(|outcome| {
-                        matches!(outcome, enrichment_core::wire::Outcome::Error { .. })
-                    })
-                }
-                _ => false,
-            };
-            if header.context_id.as_deref() != Some(publication.context_id.as_str())
-                || header.snapshot_id.as_deref() != Some(publication.snapshot_id.as_str())
-                || !expected
-            {
-                return Err(std::io::Error::other(
-                    "delivery differs from its catalog scope or outcome",
-                ));
-            }
-            Ok(())
-        })
-        .await
-        .map_err(|e| invalid(format!("delivery validation worker failed: {e}")))??;
+        let dependencies = self
+            .runtime
+            .blocking(
+                move || -> std::io::Result<Vec<enrichment_core::evidence::Artifact>> {
+                    let header =
+                        blobs.read_delivery(&publication.delivery, "delivery-admission")?;
+                    let dependencies = blobs.result_dependencies(&publication.delivery)?;
+                    let expected = match publication.state {
+                        enrichment_core::wire::JobState::Succeeded => {
+                            header.outcome().is_some_and(|outcome| {
+                                matches!(outcome, enrichment_core::wire::Outcome::Ok { .. })
+                            })
+                        }
+                        enrichment_core::wire::JobState::Partial => {
+                            header.outcome().is_some_and(|outcome| {
+                                matches!(outcome, enrichment_core::wire::Outcome::Partial { .. })
+                            })
+                        }
+                        enrichment_core::wire::JobState::Failed
+                        | enrichment_core::wire::JobState::Cancelled => {
+                            header.outcome().is_some_and(|outcome| {
+                                matches!(outcome, enrichment_core::wire::Outcome::Error { .. })
+                            })
+                        }
+                        _ => false,
+                    };
+                    if header.context_id.as_deref() != Some(publication.context_id.as_str())
+                        || header.snapshot_id.as_deref() != Some(publication.snapshot_id.as_str())
+                        || !expected
+                    {
+                        return Err(std::io::Error::other(
+                            "delivery differs from its catalog scope or outcome",
+                        ));
+                    }
+                    Ok(dependencies)
+                },
+            )
+            .await
+            .map_err(|e| invalid(format!("delivery validation worker failed: {e}")))??;
+        Ok(dependencies)
+    }
+
+    /// Commit a derived result without a producer attempt or a change to either input selection.
+    pub async fn publish_comparison(
+        &self,
+        publication: enrichment_core::evidence::catalog::ComparisonPublication,
+    ) -> Result<()> {
+        publication.validate().map_err(invalid)?;
+        let catalog = self.catalog.pin().await?;
+        let before = self
+            .open_snapshot(catalog.clone(), &publication.before_snapshot_id)
+            .await?;
+        let after = self
+            .open_snapshot(catalog, &publication.after_snapshot_id)
+            .await?;
+        if before.manifest.context_id != publication.before_context_id
+            || after.manifest.context_id != publication.after_context_id
+        {
+            return Err(invalid("comparison publication input ownership differs"));
+        }
+        self.validate_comparison_delivery(&publication).await?;
+        self.catalog
+            .commit(CatalogDelta {
+                comparison: Some(publication),
+                ..Default::default()
+            })
+            .await?;
         Ok(())
+    }
+
+    /// Verify indexed headers, the two input identities, the full bytes and dependency closure.
+    pub async fn validate_comparison_delivery(
+        &self,
+        publication: &enrichment_core::evidence::catalog::ComparisonPublication,
+    ) -> Result<Vec<enrichment_core::evidence::Artifact>> {
+        publication.validate().map_err(invalid)?;
+        let publication = publication.clone();
+        let blobs = self.blobs.clone();
+        self.runtime
+            .blocking(move || -> std::io::Result<_> {
+                let (_, fields) = blobs.read_result_sections(
+                    &publication.delivery,
+                    &[
+                        "status",
+                        "context_id",
+                        "snapshot_id",
+                        "data.before",
+                        "data.after",
+                    ],
+                    1024 * 1024,
+                )?;
+                let expected = match publication.state {
+                    enrichment_core::wire::JobState::Succeeded => "ok",
+                    enrichment_core::wire::JobState::Partial => "partial",
+                    _ => {
+                        return Err(std::io::Error::other(
+                            "invalid comparison publication outcome",
+                        ));
+                    }
+                };
+                let text = |key: &str| fields.get(key).and_then(serde_json::Value::as_str);
+                let side = |key: &str, context: &str, snapshot: &str| {
+                    fields.get(key).is_some_and(|side| {
+                        side.get("context_id").and_then(serde_json::Value::as_str) == Some(context)
+                            && side.get("snapshot_id").and_then(serde_json::Value::as_str)
+                                == Some(snapshot)
+                    })
+                };
+                if text("status") != Some(expected)
+                    || text("context_id") != Some(publication.after_context_id.as_str())
+                    || text("snapshot_id") != Some(publication.after_snapshot_id.as_str())
+                    || !side(
+                        "data.before",
+                        publication.before_context_id.as_str(),
+                        publication.before_snapshot_id.as_str(),
+                    )
+                    || !side(
+                        "data.after",
+                        publication.after_context_id.as_str(),
+                        publication.after_snapshot_id.as_str(),
+                    )
+                {
+                    return Err(std::io::Error::other(
+                        "comparison delivery differs from its exact input pair or outcome",
+                    ));
+                }
+                blobs.result_dependencies(&publication.delivery)
+            })
+            .await?
+            .map_err(Into::into)
     }
 
     async fn validate_attempts(
@@ -968,17 +1133,20 @@ impl EvidenceRepository {
                 "attempt acquisition is outside snapshot input closure",
             ),
         ] {
-            if self.runtime.execute(session.sql(sql).await?).await?.rows != 0 {
-                return Err(invalid(message));
-            }
+            self.runtime
+                .require_empty(session.sql(sql).await?, message, "attempt_admission")
+                .await?;
         }
         let output = self
             .runtime
-            .execute(
+            .execute_family(
                 session
                     .table("snapshot_attempts")
                     .await?
                     .filter(col("log").is_not_null())?,
+                Some(crate::preparation::QueryFamily::Catalog(
+                    crate::catalog_generation::Table::Attempts,
+                )),
             )
             .await?;
         let mut log_bytes = 0u64;
@@ -1000,24 +1168,62 @@ impl EvidenceRepository {
         }
         let deliveries = self
             .runtime
-            .execute(
+            .execute_family(
                 session
                     .table("job_publications")
                     .await?
                     .filter(col("snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
+                Some(crate::preparation::QueryFamily::Catalog(
+                    crate::catalog_generation::Table::JobPublications,
+                )),
             )
             .await?;
         let mut delivery_bytes = 0u64;
         let mut seen_deliveries = BTreeSet::new();
         for batch in deliveries.batches {
             for publication in projection::catalog::job_publications_from_batch(&batch)? {
-                self.validate_delivery(&publication).await?;
+                let dependencies = self.validate_delivery(&publication).await?;
                 if seen_deliveries.insert(publication.delivery.artifact_id.clone()) {
                     delivery_bytes = delivery_bytes
                         .checked_add(publication.delivery.size_bytes)
                         .filter(|n| *n <= 512 * 1024 * 1024)
                         .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
                     logs.push((publication.delivery.sha256, publication.delivery.size_bytes));
+                }
+                for artifact in dependencies {
+                    if seen_deliveries.insert(artifact.artifact_id) {
+                        delivery_bytes = delivery_bytes
+                            .checked_add(artifact.size_bytes)
+                            .filter(|n| *n <= 512 * 1024 * 1024)
+                            .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
+                        logs.push((artifact.sha256, artifact.size_bytes));
+                    }
+                }
+            }
+        }
+        let comparisons = self
+            .runtime
+            .execute_family(
+                session
+                    .table("comparison_publications")
+                    .await?
+                    .filter(col("after_snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
+                Some(crate::preparation::QueryFamily::Catalog(
+                    crate::catalog_generation::Table::ComparisonPublications,
+                )),
+            )
+            .await?;
+        for batch in comparisons.batches {
+            for publication in projection::catalog::comparison_publications_from_batch(&batch)? {
+                let dependencies = self.validate_comparison_delivery(&publication).await?;
+                for artifact in std::iter::once(publication.delivery).chain(dependencies) {
+                    if seen_deliveries.insert(artifact.artifact_id) {
+                        delivery_bytes = delivery_bytes
+                            .checked_add(artifact.size_bytes)
+                            .filter(|n| *n <= 512 * 1024 * 1024)
+                            .ok_or_else(|| invalid("job delivery closure exceeds 512 MiB"))?;
+                        logs.push((artifact.sha256, artifact.size_bytes));
+                    }
                 }
             }
         }
@@ -1163,7 +1369,13 @@ impl EvidenceRepository {
     }
 
     async fn count(&self, session: &SessionContext, sql: &str) -> Result<u64> {
-        let output = self.runtime.execute(session.sql(sql).await?).await?;
+        let output = self
+            .runtime
+            .execute_family(
+                session.sql(sql).await?,
+                Some(crate::preparation::QueryFamily::CountUnsigned),
+            )
+            .await?;
         if output.rows != 1 {
             return Err(invalid("invalid aggregate cardinality"));
         }
@@ -1239,15 +1451,16 @@ impl EvidenceRepository {
         }
         let expected_digest = digest.to_owned();
 
-        tokio::task::spawn_blocking(move || {
-            let (found, length) = canonical::sha256_reader(File::open(&path)?, bytes)?;
-            if found != expected_digest || length != bytes {
-                return Err(invalid("input artifact bytes disagree with provenance"));
-            }
-            Ok::<_, DataFusionError>(())
-        })
-        .await
-        .map_err(external)??;
+        self.runtime
+            .blocking(move || {
+                let (found, length) = canonical::sha256_reader(File::open(&path)?, bytes)?;
+                if found != expected_digest || length != bytes {
+                    return Err(invalid("input artifact bytes disagree with provenance"));
+                }
+                Ok::<_, DataFusionError>(())
+            })
+            .await
+            .map_err(external)??;
         if FileWitness::read(&self.blobs.path_for(digest))? != witness {
             return Err(invalid("input artifact changed during validation"));
         }

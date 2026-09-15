@@ -1,10 +1,6 @@
 //! Durable inspection producers and retained native result delivery (ADR-0026).
 use super::{common, inspect, verify};
-use crate::{
-    execution::{Runner, capsule},
-    jobs,
-    service::Service,
-};
+use crate::{execution::capsule, jobs, service::Service};
 use enrichment_core::{
     canonical, clock,
     evidence::{
@@ -56,13 +52,16 @@ pub fn methods(options: &InspectionOptions) -> Vec<SemanticMethod> {
 }
 
 /// Exact source/query selection is lowered before result hydration and alternatives bounds.
-pub async fn retained(
+pub async fn retained_page(
     reader: &SnapshotReader,
     symbol: &Symbol,
     options: Option<&InspectionOptions>,
     runtime: bool,
-) -> Result<Vec<ExecutionObservation>, enrichment_store::QueryError> {
-    retained_matching(reader, symbol, options, runtime, None).await
+    limit: usize,
+    after: Option<&str>,
+) -> Result<enrichment_store::query::NativePage<ExecutionObservation>, enrichment_store::QueryError>
+{
+    retained_matching(reader, symbol, options, runtime, None, Some((limit, after))).await
 }
 
 /// Producer implementation identity is separate from the immutable container identity.
@@ -106,6 +105,7 @@ pub(super) fn producer_identity(runtime: bool) -> (&'static str, String) {
                 include_str!("../../../enrichment-core/src/evidence/text.rs"),
                 include_str!("../../../enrichment-core/src/canonical.rs"),
                 include_str!("../../../../Cargo.lock"),
+                enrichment_store::semantic_scope::identity(),
             ]))
         ),
     )
@@ -117,10 +117,12 @@ async fn retained_matching(
     options: Option<&InspectionOptions>,
     runtime: bool,
     qualification: Option<(&str, &str, &str, &str)>,
-) -> Result<Vec<ExecutionObservation>, enrichment_store::QueryError> {
+    page: Option<(usize, Option<&str>)>,
+) -> Result<enrichment_store::query::NativePage<ExecutionObservation>, enrichment_store::QueryError>
+{
     let default = InspectionOptions::default();
     let options = options.unwrap_or(&default);
-    let is_runtime = runtime || options.runtime.is_some();
+    let is_runtime = runtime;
     let consumer = if !is_runtime {
         Some(
             crate::lsp::document::Consumer::new(
@@ -136,24 +138,35 @@ async fn retained_matching(
     let document_id = consumer.as_ref().map(|c| {
         enrichment_core::evidence::artifact_id_for(&canonical::sha256_hex(c.text.as_bytes()))
     });
-    reader
-        .execution_selection(ExecutionSelection {
-            symbol_id: Some(&symbol.symbol_id),
-            document_id: document_id.as_deref(),
-            kind: Some(if is_runtime {
-                "runtime_object"
-            } else {
-                "semantic_query"
-            }),
-            methods: &options.methods,
-            position: consumer.as_ref().and_then(|c| c.position),
-            runtime: options.runtime.as_ref(),
-            image: qualification.map(|q| q.0),
-            containment: qualification.map(|q| q.1),
-            producer: qualification.map(|q| (q.2, q.3)),
-            ..Default::default()
+    let selection = ExecutionSelection {
+        symbol_id: Some(&symbol.symbol_id),
+        document_id: document_id.as_deref(),
+        kind: Some(if is_runtime {
+            "runtime_object"
+        } else {
+            "semantic_query"
+        }),
+        methods: if is_runtime { &[] } else { &options.methods },
+        position: consumer.as_ref().and_then(|c| c.position),
+        runtime: if is_runtime {
+            options.runtime.as_ref()
+        } else {
+            None
+        },
+        image: qualification.map(|q| q.0),
+        containment: qualification.map(|q| q.1),
+        producer: qualification.map(|q| (q.2, q.3)),
+        ..Default::default()
+    };
+    if let Some((limit, after)) = page {
+        reader.execution_page(selection, limit, after).await
+    } else {
+        Ok(enrichment_store::query::NativePage {
+            items: reader.execution_selection(selection).await?,
+            has_more: false,
+            next_key: None,
         })
-        .await
+    }
 }
 
 fn sufficient(facts: &[ExecutionObservation], options: &InspectionOptions) -> bool {
@@ -177,7 +190,7 @@ async fn retained_child(
     let children = catalog
         .children(&service.repository.runtime, &opened.context)
         .await
-        .map_err(|e| Box::new(common::store_error(&e)))?;
+        .map_err(|e| Box::new(common::operation_error(&e, "inspection_execution")))?;
     if children.is_empty() {
         return Ok(None);
     }
@@ -245,10 +258,11 @@ async fn retained_child(
             Some(options),
             options.runtime.is_some(),
             Some((image, &containment, producer, &version)),
+            None,
         )
         .await
         .map_err(|e| Box::new(common::query_error(&e)))?;
-        if sufficient(&facts, options) {
+        if sufficient(&facts.items, options) {
             candidates.push((
                 child.context.context_id.to_string(),
                 child.snapshot_id.to_string(),
@@ -259,12 +273,28 @@ async fn retained_child(
         let mut result = crate::envelope::error(
             ErrorCode::UnsupportedFormat,
             "More than one exactly qualified derived context has retained observations.",
-            "Select a context from data.candidates and repeat inspection with that explicit context.",
+            "Select one of the explicit context requests in error.diagnostic.actions.",
             false,
         );
-        result.data = common::to_object(
-            &serde_json::json!({"candidates": candidates.into_iter().map(|(context_id,snapshot_id)| serde_json::json!({"context_id":context_id,"snapshot_id":snapshot_id})).collect::<Vec<_>>()}),
-        );
+        result
+            .error_mut()
+            .expect("typed ambiguity")
+            .diagnostic
+            .actions = candidates
+            .into_iter()
+            .map(|(context_id, snapshot_id)| {
+                let mut selected = request.clone();
+                selected.context_id = context_id;
+                selected.snapshot_id = Some(snapshot_id);
+                if let Some(execution) = &mut selected.execution {
+                    execution.intent = InspectionIntent::Retained;
+                }
+                enrichment_core::wire::RecoveryAction::CallTool {
+                    tool: "inspect_symbol".into(),
+                    arguments: common::to_object(&selected),
+                }
+            })
+            .collect();
         return Ok(Some(result));
     }
     let Some((context_id, snapshot_id)) = candidates.pop() else {
@@ -328,28 +358,15 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
             Err(result) => return *result,
         }
     }
-    if options.profile != Some(profile) || !profile.is_enabled(&service.config) {
-        return denied("The required explicit inspection profile is not enabled by the operator.");
+    if options.profile != Some(profile) {
+        return denied("Select the explicit build or runtime profile required by this inspection.");
     }
-    let qualification = crate::execution::admission::qualification(
-        &service.config.execution,
-        &service.paths.cache_root,
-    );
-    if !qualification.is_qualified() {
-        return denied(&qualification.detail());
+    let readiness =
+        crate::execution::readiness::assess(service, opened.release.key.ecosystem, profile);
+    if !readiness.available {
+        return crate::execution::readiness::refusal(&readiness);
     }
-    if let crate::execution::cleanup::Admission::Quarantined { detail, .. } =
-        service.execution.admission()
-    {
-        return denied(&detail);
-    }
-    let image = match opened.release.key.ecosystem {
-        Ecosystem::Rust => service.config.execution.rust_image.as_ref(),
-        Ecosystem::Python => service.config.execution.python_image.as_ref(),
-    };
-    let Some(image) = image.filter(|s| Runner::valid_image(s)).cloned() else {
-        return denied("An admitted immutable producer image is required.");
-    };
+    let image = readiness.image_id.expect("ready route has an image");
     request.snapshot_id = Some(opened.snapshot_id.to_string());
     request.symbol_path = symbol.path.clone();
     request.definition_id = Some(symbol.definition_id.clone());
@@ -361,7 +378,7 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     let containment =
         match crate::execution::description::containment_identity(&service.config.execution) {
             Ok(v) => v,
-            Err(e) => return common::store_error(&e),
+            Err(e) => return common::operation_error(&e, "inspection_execution"),
         };
     let key = canonical::digest_hex(&serde_json::json!([
         "inspection/2",
@@ -374,13 +391,22 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
         .submit(key, jobs::JobSpec::Inspect(request.clone()))
     {
         Ok(v) => v,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "inspection_execution"),
     };
     if new {
         let service = service.clone();
         let id = record.job_id.clone();
         tokio::spawn(async move {
-            let result = run(&service, &id, &opened, &symbol, &request).await;
+            let result = service
+                .repository
+                .runtime
+                .job_operation(
+                    id.clone(),
+                    service.operation_descriptor("symbol.inspect", &request),
+                    std::time::Duration::from_secs(service.config.execution.deadline_seconds),
+                    run(&service, &id, &opened, &symbol, &request),
+                )
+                .await;
             let (state, result) = match result {
                 Ok(v) => v,
                 Err(e) => (
@@ -413,7 +439,7 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
             .result
             .unwrap_or_else(|| denied("Terminal inspection lacks its result.")),
         Ok(record) => verify::pending(record.data(Some(token))),
-        Err(e) => common::store_error(&e),
+        Err(e) => common::operation_error(&e, "inspection_execution"),
     }
 }
 
@@ -813,8 +839,14 @@ async fn publish(
     )?;
     crate::delivery::size(&result, crate::delivery::MAX_RESULT_BYTES)?;
     let (prepare_delivery, delivery) =
-        crate::delivery::prepare_job(service.blobs.clone(), move |manifest| {
+        crate::delivery::prepare_job(service.blobs.clone(), move |manifest, coverage| {
             let mut result = result.clone();
+            let limitations = std::mem::take(&mut result.coverage.limitations);
+            result.coverage = coverage.clone();
+            result.coverage.limitations.extend(limitations);
+            if !result.coverage.complete() {
+                result = result.into_partial();
+            }
             result.context_id = Some(manifest.context_id.to_string());
             result.snapshot_id = Some(manifest.snapshot_id.to_string());
             Ok(result)
@@ -930,6 +962,9 @@ fn render(
         .as_ref()
         .is_some_and(|o| o.runtime.is_some());
     let data = InspectData {
+        children: Vec::new(),
+        members: Vec::new(),
+        aspect_outcomes: Vec::new(),
         symbol: Some(symbol),
         docs_truncated: false,
         also_at: Vec::new(),
@@ -953,6 +988,8 @@ fn render(
         context_id: None,
         snapshot_id: None,
         coverage: Coverage {
+            details: None,
+            assessments: Vec::new(),
             scope: "selected consumer queries; no complete-library execution claim".into(),
             indexed: [if runtime {
                 "runtime_api"
@@ -1166,6 +1203,14 @@ mod tests {
             ..Default::default()
         };
         let request = InspectRequest {
+            selection: enrichment_core::wire::ResearchSelection::Explicit {
+                aspects: vec![enrichment_core::wire::research::AspectSelection {
+                    aspect: enrichment_core::wire::InspectionAspect::Semantics,
+                    cursor: None,
+                    max_items: 32,
+                    max_characters: None,
+                }],
+            },
             context_id: base_metadata.context.context_id.to_string(),
             snapshot_id: Some(base.snapshot_id.to_string()),
             symbol_path: "fixture.f".into(),
@@ -1262,11 +1307,7 @@ mod tests {
         .await
         .unwrap();
         let fixture_symbol = fixture_reader
-            .symbols_at(
-                &request.symbol_path,
-                request.definition_id.as_deref(),
-                false,
-            )
+            .symbols_at(&request.symbol_path, request.definition_id.as_deref())
             .await
             .unwrap()
             .pop()
@@ -1287,7 +1328,7 @@ mod tests {
                 .push("🌎\"\n".repeat(180_000));
         }
         let (prepare_delivery, _delivery) =
-            crate::delivery::prepare_job(service.blobs.clone(), move |manifest| {
+            crate::delivery::prepare_job(service.blobs.clone(), move |manifest, _coverage| {
                 let mut reply = fixture_reply.clone();
                 reply.context_id = Some(manifest.context_id.to_string());
                 reply.snapshot_id = Some(manifest.snapshot_id.to_string());

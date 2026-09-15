@@ -15,6 +15,34 @@
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 
+/// Serialize an existing JSON value canonically without copying its strings or arrays.
+pub struct BorrowedValue<'a>(pub &'a Value);
+
+impl serde::Serialize for BorrowedValue<'_> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::{SerializeMap, SerializeSeq};
+        match self.0 {
+            Value::Object(values) => {
+                let mut entries: Vec<_> = values.iter().collect();
+                entries.sort_by_key(|(key, _)| *key);
+                let mut map = serializer.serialize_map(Some(entries.len()))?;
+                for (key, value) in entries {
+                    map.serialize_entry(key, &Self(value))?;
+                }
+                map.end()
+            }
+            Value::Array(values) => {
+                let mut array = serializer.serialize_seq(Some(values.len()))?;
+                for value in values {
+                    array.serialize_element(&Self(value))?;
+                }
+                array.end()
+            }
+            scalar => scalar.serialize(serializer),
+        }
+    }
+}
+
 /// Sort every object's keys, recursively. Arrays keep their order.
 #[must_use]
 pub fn canonicalize(value: Value) -> Value {
@@ -152,7 +180,12 @@ pub fn serialized_size(value: &impl serde::Serialize, limit: usize) -> std::io::
                 .bytes
                 .checked_add(bytes.len())
                 .filter(|n| *n <= self.limit)
-                .ok_or_else(|| std::io::Error::other("serialized value exceeds byte bound"))?;
+                .ok_or_else(|| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::OutOfMemory,
+                        "serialized value exceeds byte bound",
+                    )
+                })?;
             Ok(bytes.len())
         }
         fn flush(&mut self) -> std::io::Result<()> {

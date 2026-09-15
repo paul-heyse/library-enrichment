@@ -1,0 +1,22 @@
+id: project-tableprovider-no-pushdown
+language: rust
+severity: hint
+message: TableProvider does not override supports_filters_pushdown; every filter runs after the scan.
+note: |
+  The default returns `Unsupported` for every filter, so DataFusion reads all rows and filters
+  above the scan. Overriding it to return `Inexact` (or `Exact` when the source can guarantee the
+  predicate) is usually the single largest win available to a custom provider.
+  See content/api/datafusion_session.table.md#tableprovider and the upstream example at
+  content/corpus/examples/custom_data_source/.
+metadata:
+  record: capability-gap
+  capability: filter-pushdown
+rule:
+  kind: impl_item
+  all:
+    - has: { field: trait, regex: '^TableProvider' }
+    - not:
+        has:
+          kind: function_item
+          has: { field: name, regex: '^supports_filters_pushdown$' }
+          stopBy: end

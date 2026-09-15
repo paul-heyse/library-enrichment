@@ -1,0 +1,94 @@
+{
+  "module": "datafusion_ffi::schema_provider",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.schema_provider.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::schema_provider::FFI_SchemaProvider",
+      "name": "FFI_SchemaProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_SchemaProvider",
+      "summary": "A stable struct for sharing [`SchemaProvider`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.schema_provider.md#ffi_schemaprovider",
+      "fields": [
+        "owner_name",
+        "table_names",
+        "table",
+        "register_table",
+        "deregister_table",
+        "table_exist",
+        "logical_codec",
+        "clone",
+        "release",
+        "version",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(provider: Arc<dyn SchemaProvider>, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Option<Arc<dyn LogicalExtensionCodec>>) -> Self",
+          "summary": "Creates a new [`FFI_SchemaProvider`]."
+        },
+        {
+          "name": "new_with_ffi_codec",
+          "signature": "fn new_with_ffi_codec(provider: Arc<dyn SchemaProvider>, runtime: Option<Handle>, logical_codec: FFI_LogicalExtensionCodec) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::schema_provider::ForeignSchemaProvider",
+      "name": "ForeignSchemaProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignSchemaProvider",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Sc…",
+      "doc": "api/datafusion_ffi.schema_provider.md#foreignschemaprovider",
+      "implements": [
+        "datafusion_session::schema::SchemaProvider"
+      ],
+      "methods": [
+        {
+          "name": "deregister_table",
+          "signature": "fn deregister_table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "owner_name",
+          "signature": "fn owner_name(&self) -> Option<&str>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "register_table",
+          "signature": "fn register_table(&self, name: String, table: Arc<dyn TableProvider>) -> Result<Option<Arc<dyn TableProvider>>>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table",
+          "signature": "async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>, DataFusionError>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table_exist",
+          "signature": "fn table_exist(&self, name: &str) -> bool",
+          "via_trait": "datafusion_session::schema::SchemaProvider",
+          "summary": "Returns true if table exist in the schema provider, false otherwise."
+        },
+        {
+          "name": "table_names",
+          "signature": "fn table_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        }
+      ]
+    }
+  ]
+}

@@ -97,122 +97,144 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         .await
         .map_err(error)?
         .ok_or_else(|| error("context has no selected snapshot"))?;
-    let reader = SnapshotReader::open(&repository, catalog.clone(), &snapshot)
+    let snapshots = catalog
+        .comparison_closure(&runtime, &snapshot)
         .await
         .map_err(error)?;
-    if reader.manifest().context_id != id {
-        return Err(error("snapshot does not belong to this context"));
-    }
-    let manifest = reader.manifest();
-    let target = root.join("data/snapshots").join(snapshot.as_str());
-    fs::create_dir_all(&target)?;
+    fs::create_dir_all(root.join("data"))?;
     crate::leases::initialize(&root.join("data"))?;
-    let entry = catalog
-        .snapshot(&runtime, &snapshot)
-        .await
-        .map_err(error)?
-        .ok_or_else(|| error("catalog membership disappeared"))?;
-    copy_exact(
-        &reader.dir().join("manifest.json"),
-        &target.join("manifest.json"),
-        &entry.manifest_digest,
-        entry.manifest_bytes,
-    )?;
-    for table in &manifest.tables {
-        copy_exact(
-            &reader.dir().join(&table.file),
-            &target.join(&table.file),
-            &table.sha256,
-            table.bytes,
-        )?;
-    }
     let blobs = BlobStore::read_only(&paths.data_root)?;
     fs::create_dir_all(root.join("data/blobs/sha256"))?;
-    let inputs = reader
-        .session()
-        .table("input_artifacts")
-        .await
-        .map_err(error)?
-        .select(vec![col("sha256"), col("size_bytes")])
-        .map_err(error)?
-        .distinct()
-        .map_err(error)?;
     let mut artifact_count = 0usize;
     let mut artifact_bytes = 0u64;
-    runtime
-        .visit(inputs, 1_000_000, |batch| {
-            let digests = projection::TextColumn::new(
-                batch
-                    .column_by_name("sha256")
-                    .ok_or_else(|| {
-                        datafusion::error::DataFusionError::Execution("missing blob digest".into())
-                    })?
-                    .as_ref(),
+    for input_snapshot in snapshots {
+        let reader = SnapshotReader::open(&repository, catalog.clone(), &input_snapshot)
+            .await
+            .map_err(error)?;
+        if input_snapshot == snapshot && reader.manifest().context_id != id {
+            return Err(error("snapshot does not belong to this context"));
+        }
+        let manifest = reader.manifest();
+        let target = root.join("data/snapshots").join(input_snapshot.as_str());
+        fs::create_dir_all(&target)?;
+        let entry = catalog
+            .snapshot(&runtime, &input_snapshot)
+            .await
+            .map_err(error)?
+            .ok_or_else(|| error("catalog membership disappeared"))?;
+        copy_exact(
+            &reader.dir().join("manifest.json"),
+            &target.join("manifest.json"),
+            &entry.manifest_digest,
+            entry.manifest_bytes,
+        )?;
+        for table in &manifest.tables {
+            copy_exact(
+                &reader.dir().join(&table.file),
+                &target.join(&table.file),
+                &table.sha256,
+                table.bytes,
             )?;
-            let sizes = batch
-                .column_by_name("size_bytes")
-                .and_then(|a| a.as_any().downcast_ref::<arrow::array::UInt64Array>())
-                .ok_or_else(|| {
-                    datafusion::error::DataFusionError::Execution("invalid blob sizes".into())
-                })?;
-            for row in 0..batch.num_rows() {
-                let digest = digests.get(row).ok_or_else(|| {
-                    datafusion::error::DataFusionError::Execution("null blob digest".into())
-                })?;
-                artifact_bytes = artifact_bytes
-                    .checked_add(sizes.value(row))
-                    .filter(|n| *n <= 512 * 1024 * 1024)
+        }
+        let inputs = reader
+            .session()
+            .table("input_artifacts")
+            .await
+            .map_err(error)?
+            .select(vec![col("sha256"), col("size_bytes")])
+            .map_err(error)?
+            .distinct()
+            .map_err(error)?;
+        runtime
+            .visit(inputs, 1_000_000, |batch| {
+                let digests = projection::TextColumn::new(
+                    batch
+                        .column_by_name("sha256")
+                        .ok_or_else(|| {
+                            datafusion::error::DataFusionError::Execution(
+                                "missing blob digest".into(),
+                            )
+                        })?
+                        .as_ref(),
+                )?;
+                let sizes = batch
+                    .column_by_name("size_bytes")
+                    .and_then(|a| a.as_any().downcast_ref::<arrow::array::UInt64Array>())
                     .ok_or_else(|| {
-                        datafusion::error::DataFusionError::ResourcesExhausted(
-                            "bundle blob closure exceeds 512 MiB".into(),
-                        )
+                        datafusion::error::DataFusionError::Execution("invalid blob sizes".into())
                     })?;
-                let target = root
-                    .join("data/blobs/sha256")
-                    .join(&digest[..2])
-                    .join(digest);
+                for row in 0..batch.num_rows() {
+                    let digest = digests.get(row).ok_or_else(|| {
+                        datafusion::error::DataFusionError::Execution("null blob digest".into())
+                    })?;
+                    let target = root
+                        .join("data/blobs/sha256")
+                        .join(&digest[..2])
+                        .join(digest);
+                    if !target.try_exists()? {
+                        artifact_bytes = artifact_bytes
+                            .checked_add(sizes.value(row))
+                            .filter(|n| *n <= 512 * 1024 * 1024)
+                            .ok_or_else(|| {
+                                datafusion::error::DataFusionError::ResourcesExhausted(
+                                    "bundle blob closure exceeds 512 MiB".into(),
+                                )
+                            })?;
+                        fs::create_dir_all(
+                            target
+                                .parent()
+                                .ok_or_else(|| error("blob destination has no parent"))?,
+                        )?;
+                        copy_exact(&blobs.path_for(digest), &target, digest, sizes.value(row))?;
+                        artifact_count += 1;
+                    }
+                }
+                Ok(())
+            })
+            .await
+            .map_err(error)?;
+        // Attempt logs are operational outputs, outside semantic snapshot identity, but are
+        // mandatory offline provenance with exact acquisition descriptors and retained bytes.
+        let mut operational = reader.attempt_logs().await.map_err(error)?;
+        for delivery in reader.job_deliveries().await.map_err(error)? {
+            let owned = blobs.clone();
+            let selected = delivery.clone();
+            operational.extend(
+                runtime
+                    .blocking(move || owned.result_dependencies(&selected))
+                    .await
+                    .map_err(error)??,
+            );
+            operational.push(delivery);
+        }
+        for log in operational {
+            let target = root
+                .join("data/blobs/sha256")
+                .join(&log.sha256[..2])
+                .join(&log.sha256);
+            if !target.try_exists()? {
+                artifact_bytes = artifact_bytes
+                    .checked_add(log.size_bytes)
+                    .filter(|n| *n <= 512 * 1024 * 1024)
+                    .ok_or_else(|| error("bundle blob closure exceeds 512 MiB"))?;
                 fs::create_dir_all(
                     target
                         .parent()
-                        .ok_or_else(|| error("blob destination has no parent"))?,
+                        .ok_or_else(|| error("log destination has no parent"))?,
                 )?;
-                copy_exact(&blobs.path_for(digest), &target, digest, sizes.value(row))?;
+                copy_exact(
+                    &blobs.path_for(&log.sha256),
+                    &target,
+                    &log.sha256,
+                    log.size_bytes,
+                )?;
                 artifact_count += 1;
             }
-            Ok(())
-        })
-        .await
-        .map_err(error)?;
-    // Attempt logs are operational outputs, outside semantic snapshot identity, but are
-    // mandatory offline provenance with exact acquisition descriptors and retained bytes.
-    for log in reader
-        .attempt_logs()
-        .await
-        .map_err(error)?
-        .into_iter()
-        .chain(reader.job_deliveries().await.map_err(error)?)
-    {
-        let target = root
-            .join("data/blobs/sha256")
-            .join(&log.sha256[..2])
-            .join(&log.sha256);
-        if !target.try_exists()? {
-            artifact_bytes = artifact_bytes
-                .checked_add(log.size_bytes)
-                .filter(|n| *n <= 512 * 1024 * 1024)
-                .ok_or_else(|| error("bundle blob closure exceeds 512 MiB"))?;
-            fs::create_dir_all(
-                target
-                    .parent()
-                    .ok_or_else(|| error("log destination has no parent"))?,
-            )?;
-            copy_exact(
-                &blobs.path_for(&log.sha256),
-                &target,
-                &log.sha256,
-                log.size_bytes,
-            )?;
-            artifact_count += 1;
+            // Result handles are operational references and may have no producer-input row.
+            // Carry their exact verified descriptors so offline reads resolve those handles too.
+            let mut metadata_path = target.into_os_string();
+            metadata_path.push(".meta.json");
+            fs::write(PathBuf::from(metadata_path), serde_json::to_vec(&log)?)?;
         }
     }
     catalog
@@ -220,7 +242,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         .await
         .map_err(error)?;
     let description = Description {
-        bundle_version: "typed-evidence-bundle/3".into(),
+        bundle_version: "typed-evidence-bundle/5".into(),
         context_id: id.clone(),
         snapshot_id: snapshot.clone(),
         source_catalog_generation: catalog.generation(),
@@ -319,7 +341,7 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     }
     let description: Description =
         serde_json::from_slice(&read_small(&root.join(BUNDLE), 4 * 1024 * 1024)?)?;
-    if description.bundle_version != "typed-evidence-bundle/3" {
+    if description.bundle_version != "typed-evidence-bundle/5" {
         return Err(error("unsupported bundle contract"));
     }
     let scratch = tempfile::tempdir()?;
@@ -345,12 +367,19 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     {
         return Err(error("bundle identity and catalog selection disagree"));
     }
-    let opened = repository
-        .open_snapshot(catalog, &description.snapshot_id)
+    for input in catalog
+        .comparison_closure(&runtime, &description.snapshot_id)
         .await
-        .map_err(error)?;
-    if opened.manifest.context_id != description.context_id {
-        return Err(error("bundle context and snapshot disagree"));
+        .map_err(error)?
+    {
+        let opened = repository
+            .open_snapshot(catalog.clone(), &input)
+            .await
+            .map_err(error)?;
+        if input == description.snapshot_id && opened.manifest.context_id != description.context_id
+        {
+            return Err(error("bundle context and snapshot disagree"));
+        }
     }
     Ok(problems)
 }

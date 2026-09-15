@@ -26,7 +26,16 @@ pub async fn wait_for_answer(service: &Service, response: Value) -> Value {
             let record = complete_answer(service, response.result.expect("job envelope")).await;
             assert_eq!(record["data"]["job_id"], id);
             if record["data"]["result"].is_object() {
-                return complete_answer(service, record["data"]["result"].clone()).await;
+                let terminal = &record["data"]["result"];
+                assert_eq!(
+                    terminal["delivery"]["mode"], "artifact",
+                    "terminal results retain a direct descriptor"
+                );
+                let mut descriptor = record.clone();
+                descriptor["delivery"] = terminal["delivery"].clone();
+                descriptor["context_id"] = terminal["context_id"].clone();
+                descriptor["snapshot_id"] = terminal["snapshot_id"].clone();
+                return complete_answer(service, descriptor).await;
             }
             assert!(
                 matches!(
@@ -42,12 +51,27 @@ pub async fn wait_for_answer(service: &Service, response: Value) -> Value {
 }
 
 pub async fn complete_answer(service: &Service, response: Value) -> Value {
-    if response["error"]["code"] != "BUDGET_EXCEEDED"
-        || !response["data"]["result_artifact_id"].is_string()
-    {
-        return response;
+    complete_answer_measured(service, response).await.0
+}
+
+#[derive(Default, serde::Serialize)]
+pub struct DeliveryObservation {
+    pub artifact_calls: usize,
+    pub artifact_response_bytes: usize,
+    pub complete_content_bytes: usize,
+    pub read_micros: u128,
+}
+
+pub async fn complete_answer_measured(
+    service: &Service,
+    response: Value,
+) -> (Value, DeliveryObservation) {
+    let started = std::time::Instant::now();
+    let mut observed = DeliveryObservation::default();
+    if response["delivery"]["mode"] != "artifact" {
+        return (response, observed);
     }
-    let id = response["data"]["result_artifact_id"].as_str().unwrap();
+    let id = response["delivery"]["artifact_id"].as_str().unwrap();
     let mut cursor = None::<String>;
     let mut content = String::new();
     tokio::time::timeout(std::time::Duration::from_secs(30), async {
@@ -61,6 +85,10 @@ pub async fn complete_answer(service: &Service, response: Value) -> Value {
                 .expect("artifact RPC");
             assert!(result.error.is_none(), "{:?}", result.error);
             let page = result.result.expect("artifact envelope");
+            observed.artifact_calls += 1;
+            observed.artifact_response_bytes += serde_json::to_vec(&page)
+                .expect("encoded native result")
+                .len();
             assert_eq!(page["status"], "ok", "{page}");
             let slice = page["data"]["content"].as_str().expect("UTF-8 answer JSON");
             assert_eq!(
@@ -72,7 +100,7 @@ pub async fn complete_answer(service: &Service, response: Value) -> Value {
                 "result contract bound"
             );
             content.push_str(slice);
-            let next = page["pagination"]["next_cursor"]
+            let next = page["data"]["page"]["next_cursor"]
                 .as_str()
                 .map(str::to_owned);
             let Some(next) = next else {
@@ -84,9 +112,13 @@ pub async fn complete_answer(service: &Service, response: Value) -> Value {
     })
     .await
     .expect("bounded artifact delivery");
-    let mut decoded: Value = serde_json::from_str(&content).expect("complete answer JSON");
+    let document: Value = serde_json::from_str(&content).expect("complete indexed answer JSON");
+    assert_eq!(document["index"]["format"], "research-result/2");
+    let mut decoded = document["result"].clone();
     assert_eq!(decoded["context_id"], response["context_id"]);
     assert_eq!(decoded["snapshot_id"], response["snapshot_id"]);
     decoded["request_id"] = response["request_id"].clone();
-    decoded
+    observed.complete_content_bytes = content.len();
+    observed.read_micros = started.elapsed().as_micros();
+    (decoded, observed)
 }

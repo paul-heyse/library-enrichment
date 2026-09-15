@@ -1,0 +1,54 @@
+# Custom outline extractors for DataFusion domain constructs.
+#
+#     ast-grep outline --outline-rules <this file> <paths>
+#
+# `ast-grep outline` knows Rust's own grammar, so it already surfaces structs, traits and
+# functions. What it cannot know is which of them matter here. These extractors promote the
+# DataFusion-specific shapes -- an extension point implementation, a UDF registration, a physical
+# operator -- into first-class outline items, so a directory map answers "what does this code plug
+# into" instead of "what types are declared".
+#
+# They work against any checkout without modifying it: the example corpus, this repository, or a
+# consumer's own tree.
+#
+# A stream of YAML documents, one extractor per document.
+id: datafusion-extension-impl
+language: rust
+role: item
+symbolType: class
+rule:
+  kind: impl_item
+  all:
+    - has:
+        field: trait
+        regex: '^(TableProvider|ExecutionPlan|ScalarUDFImpl|AggregateUDFImpl|WindowUDFImpl|OptimizerRule|PhysicalOptimizerRule|AnalyzerRule|QueryPlanner|CatalogProvider|SchemaProvider|FileFormat|ObjectStore|Accumulator|GroupsAccumulator|PartitionEvaluator|UserDefinedLogicalNode|UserDefinedLogicalNodeCore|ExprPlanner|TypePlanner|FunctionFactory|TableFunctionImpl|DataSink|FileOpener)\b'
+    - has:
+        field: type
+        pattern: $TYPE
+    - has:
+        field: trait
+        pattern: $TRAIT
+name: $TYPE
+signature: impl $TRAIT for $TYPE
+isExported: true
+
+---
+id: datafusion-registration
+language: rust
+role: item
+symbolType: function
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        has:
+          field: field
+          regex: '^(register_udf|register_udaf|register_udwf|register_udtf|register_table|register_catalog|register_object_store|register_listing_table|add_optimizer_rule|add_analyzer_rule|register_relation_planner)$'
+    - has:
+        field: function
+        pattern: $CALL
+name: $CALL
+signature: $CALL(...)
+isExported: false

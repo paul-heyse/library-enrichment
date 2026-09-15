@@ -1,0 +1,136 @@
+{
+  "module": "datafusion_datasource::decoder",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.decoder.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::decoder::DeserializerOutput",
+      "name": "DeserializerOutput",
+      "kind": "enum",
+      "crate": "datafusion-datasource",
+      "signature": "enum DeserializerOutput",
+      "summary": "Possible outputs of a [`BatchDeserializer`].",
+      "doc": "api/datafusion_datasource.decoder.md#deserializeroutput",
+      "variants": [
+        "RecordBatch",
+        "RequiresMoreData",
+        "InputExhausted"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_datasource::decoder::deserialize_stream",
+      "name": "deserialize_stream",
+      "kind": "function",
+      "crate": "datafusion-datasource",
+      "signature": "fn deserialize_stream<'a>(input: impl Stream<Item = datafusion_common::Result<bytes::Bytes>> + Unpin + Send + 'a, deserializer: impl BatchDeserializer<bytes::Bytes> + 'a) -> futures::stream::BoxStream<'a, datafusion_common::Result<::arrow::array::RecordBatch, arrow::error::ArrowError>>",
+      "summary": "Deserializes a stream of bytes into a stream of [`RecordBatch`] objects using the provided deserializer.",
+      "doc": "api/datafusion_datasource.decoder.md#deserialize_stream"
+    },
+    {
+      "path": "datafusion_datasource::decoder::DecoderDeserializer",
+      "name": "DecoderDeserializer",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct DecoderDeserializer<T: Decoder>",
+      "summary": "A generic, decoder-based deserialization scheme for processing encoded data.",
+      "doc": "api/datafusion_datasource.decoder.md#decoderdeserializer",
+      "implements": [
+        "datafusion_datasource::decoder::BatchDeserializer"
+      ],
+      "methods": [
+        {
+          "name": "digest",
+          "signature": "fn digest(&mut self, message: Bytes) -> usize",
+          "via_trait": "datafusion_datasource::decoder::BatchDeserializer"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self)",
+          "via_trait": "datafusion_datasource::decoder::BatchDeserializer"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(decoder: T) -> Self",
+          "summary": "Creates a new `DecoderDeserializer` with the provided decoder."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Result<DeserializerOutput, ArrowError>",
+          "via_trait": "datafusion_datasource::decoder::BatchDeserializer"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::decoder::BatchDeserializer",
+      "name": "BatchDeserializer",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait BatchDeserializer<T>: Send + fmt::Debug",
+      "summary": "Trait defining a scheme for deserializing byte streams into structured data. Implementors of this trait are responsible for converting raw bytes into `RecordBatch` objects.",
+      "doc": "api/datafusion_datasource.decoder.md#batchdeserializer",
+      "implementors": [
+        "datafusion_datasource::decoder::DecoderDeserializer"
+      ],
+      "required_methods": [
+        "digest",
+        "finish",
+        "next"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "digest",
+          "signature": "fn digest(&mut self, message: T) -> usize",
+          "summary": "Feeds a message for deserialization, updating the internal state of this `BatchDeserializer`. Note that one can call this function multiple times before calling `next`, which will queue multiple messages for deserialization. Returns the nu…"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self)",
+          "summary": "Informs the deserializer that no more messages will be provided for deserialization."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Result<DeserializerOutput, ArrowError>",
+          "summary": "Attempts to deserialize any pending messages and returns a `DeserializerOutput` to indicate progress."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::decoder::Decoder",
+      "name": "Decoder",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait Decoder: Send + fmt::Debug",
+      "summary": "A general interface for decoders such as [`arrow::json::reader::Decoder`] and [`arrow::csv::reader::Decoder`]. Defines an interface similar to [`Decoder::decode`] and [`Decoder::flush`] methods, but also includes a method to check if the d…",
+      "doc": "api/datafusion_datasource.decoder.md#decoder",
+      "implementors": [
+        "datafusion_datasource_csv::file_format::CsvDecoder",
+        "datafusion_datasource_json::file_format::JsonDecoder"
+      ],
+      "required_methods": [
+        "can_flush_early",
+        "decode",
+        "flush"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "can_flush_early",
+          "signature": "fn can_flush_early(&self) -> bool",
+          "summary": "Whether the decoder can flush early in its current state."
+        },
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+          "summary": "See [`arrow::json::reader::Decoder::decode`]."
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+          "summary": "See [`arrow::json::reader::Decoder::flush`]."
+        }
+      ]
+    }
+  ]
+}

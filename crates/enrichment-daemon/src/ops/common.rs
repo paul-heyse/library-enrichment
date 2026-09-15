@@ -40,7 +40,7 @@ pub async fn open_context(
         .catalog
         .pin()
         .await
-        .map_err(|e| Box::new(store_error(&e)))?;
+        .map_err(|e| Box::new(operation_error(&e, "context_selection")))?;
     open_context_at(service, catalog, context_id, snapshot_id).await
 }
 
@@ -63,7 +63,7 @@ pub async fn open_context_at(
     let (context, environment) = catalog
         .context(runtime, &id)
         .await
-        .map_err(|e| Box::new(store_error(&e)))?
+        .map_err(|e| Box::new(operation_error(&e, "context_selection")))?
         .ok_or_else(|| {
             Box::new(envelope::error(
                 ErrorCode::ArtifactUnavailable,
@@ -75,7 +75,7 @@ pub async fn open_context_at(
     let release = catalog
         .release(runtime, &context.release_id)
         .await
-        .map_err(|e| Box::new(store_error(&e)))?
+        .map_err(|e| Box::new(operation_error(&e, "context_selection")))?
         .ok_or_else(|| {
             Box::new(envelope::error(
                 ErrorCode::ExtractionFailed,
@@ -96,7 +96,7 @@ pub async fn open_context_at(
         None => catalog
             .current(runtime, &id)
             .await
-            .map_err(|e| Box::new(store_error(&e)))?
+            .map_err(|e| Box::new(operation_error(&e, "context_selection")))?
             .ok_or_else(|| {
                 Box::new(envelope::error(
                     ErrorCode::ArtifactUnavailable,
@@ -128,30 +128,66 @@ pub async fn open_context_at(
 
 /// A store failure as an envelope.
 #[must_use]
-pub fn store_error(err: &impl std::fmt::Display) -> Envelope {
-    envelope::error(
-        ErrorCode::ArtifactUnavailable,
-        format!("service state could not be read: {err}"),
-        "Check that the service data directory is readable; see `library-enrichmentd status`.",
-        true,
-    )
+pub fn operation_error(err: &(impl std::error::Error + 'static), stage: &str) -> Envelope {
+    let Some(mut diagnostic) = enrichment_store::query_failure::diagnostic_from_error(err) else {
+        let mut result = envelope::error(
+            ErrorCode::InternalError,
+            format!("service operation failed: {err}"),
+            "Report the request correlation and native failure; no automatic retry is established.",
+            false,
+        );
+        result.error_mut().expect("typed error").diagnostic.stage = stage.into();
+        return result;
+    };
+    if diagnostic.rule.is_none() {
+        diagnostic.stage = stage.into();
+    }
+    diagnostic_envelope(err, diagnostic)
 }
 
-/// A query failure as an envelope.
+/// Native failures preserve their origin and state whether repeating a request is useful.
 #[must_use]
 pub fn query_error(err: &enrichment_store::QueryError) -> Envelope {
-    envelope::error(
-        if err.is_budget() {
-            ErrorCode::BudgetExceeded
-        } else if matches!(err, enrichment_store::QueryError::NotPublished(_)) {
-            ErrorCode::ArtifactUnavailable
-        } else {
-            ErrorCode::ExtractionFailed
-        },
-        format!("snapshot query failed: {err}"),
-        "Refine the requested scope or inspect the configured query budgets and storage integrity.",
-        true,
-    )
+    let diagnostic = err.diagnostic();
+    diagnostic_envelope(err, diagnostic)
+}
+
+fn diagnostic_envelope(
+    err: &impl std::fmt::Display,
+    diagnostic: enrichment_core::wire::Diagnostic,
+) -> Envelope {
+    use enrichment_core::wire::{DiagnosticCause, RecoveryAction};
+    let code = match diagnostic.cause {
+        DiagnosticCause::Capacity | DiagnosticCause::Deadline => ErrorCode::BudgetExceeded,
+        DiagnosticCause::NotFound => ErrorCode::ArtifactUnavailable,
+        DiagnosticCause::InvalidInput => ErrorCode::UnsupportedFormat,
+        DiagnosticCause::Unsupported => ErrorCode::UnsupportedCapability,
+        _ => ErrorCode::QueryFailed,
+    };
+    let next = match &diagnostic.actions[0] {
+        RecoveryAction::ChangeRequest { reason }
+        | RecoveryAction::OperatorSetup { reason }
+        | RecoveryAction::ReportDefect { reason } => reason.as_str(),
+        _ => "Inspect the structured recovery action.",
+    };
+    let mut result = envelope::error(code, format!("native operation failed: {err}"), next, false);
+    result.error_mut().expect("error outcome").diagnostic = diagnostic;
+    result
+}
+
+#[must_use]
+pub fn job_error(error: std::io::Error, job_id: &str) -> Envelope {
+    let mut result = query_error(&error.into());
+    let detail = result.error_mut().expect("error outcome");
+    detail.diagnostic.stage = "job_lookup".into();
+    detail.diagnostic.affected_ids.push(job_id.into());
+    if detail.diagnostic.cause == enrichment_core::wire::DiagnosticCause::NotFound {
+        detail.next_action = "Use the job_id returned by the original submission. An unknown ID is not a storage-permission failure.".into();
+        detail.diagnostic.actions = vec![enrichment_core::wire::RecoveryAction::ChangeRequest {
+            reason: detail.next_action.clone(),
+        }];
+    }
+    result
 }
 
 /// The URI an artifact is cited by.
@@ -246,18 +282,74 @@ pub fn to_object<T: serde::Serialize>(value: &T) -> enrichment_core::wire::JsonO
 /// Enforce the complete serialized envelope budget. Oversized answers remain available as
 /// immutable JSON artifacts; only the per-call request ID is excluded from reusable content.
 pub fn enforce_budget(service: &Service, result: Envelope, requested: Option<usize>) -> Envelope {
+    let result = match enrichment_store::runtime::charge_result(json_size(&result)) {
+        Ok(()) => result,
+        Err(error) => query_error(&error.into()),
+    };
     crate::delivery::encode(
         &service.blobs,
         result,
         byte_budget(service, requested),
-        true,
+        requested,
     )
     .unwrap_or_else(|error| {
-        envelope::error(
-            ErrorCode::BudgetExceeded,
-            format!("Answer delivery failed: {error}"),
-            "Inspect service storage and request a bounded evidence selection.",
-            false,
-        )
+        if let Some(minimum) = error
+            .get_ref()
+            .and_then(|e| e.downcast_ref::<crate::delivery::MinimumBudget>())
+        {
+            return crate::delivery::budget_failure(
+                requested,
+                byte_budget(service, requested),
+                minimum.minimum,
+            );
+        }
+        let mut failure = query_error(&error.into());
+        failure.error_mut().expect("error outcome").diagnostic.stage = "result_delivery".into();
+        failure
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use enrichment_core::wire::{DiagnosticCause, RecoveryAction};
+
+    #[test]
+    fn operation_failures_preserve_io_causes_and_stage_without_blanket_retry() {
+        for (kind, cause) in [
+            (std::io::ErrorKind::NotFound, DiagnosticCause::NotFound),
+            (
+                std::io::ErrorKind::PermissionDenied,
+                DiagnosticCause::PermissionDenied,
+            ),
+            (
+                std::io::ErrorKind::InvalidData,
+                DiagnosticCause::CorruptState,
+            ),
+            (std::io::ErrorKind::StorageFull, DiagnosticCause::Capacity),
+        ] {
+            let result =
+                operation_error(&std::io::Error::new(kind, "fixture origin"), "journal_read");
+            let error = result.error().unwrap();
+            assert_eq!(error.diagnostic.cause, cause);
+            assert_eq!(error.diagnostic.stage, "journal_read");
+            assert!(!error.retryable);
+            if cause == DiagnosticCause::NotFound {
+                assert!(matches!(
+                    error.diagnostic.actions[0],
+                    RecoveryAction::ChangeRequest { .. }
+                ));
+            } else if cause == DiagnosticCause::PermissionDenied {
+                assert!(matches!(
+                    error.diagnostic.actions[0],
+                    RecoveryAction::OperatorSetup { .. }
+                ));
+            } else if cause == DiagnosticCause::CorruptState {
+                assert!(matches!(
+                    error.diagnostic.actions[0],
+                    RecoveryAction::ReportDefect { .. }
+                ));
+            }
+        }
+    }
 }

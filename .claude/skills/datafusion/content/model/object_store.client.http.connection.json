@@ -1,0 +1,172 @@
+{
+  "module": "object_store::client::http::connection",
+  "crate": "object_store",
+  "api": "api/object_store.client.http.connection.md",
+  "items": [
+    {
+      "path": "object_store::client::http::connection::HttpErrorKind",
+      "name": "HttpErrorKind",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum HttpErrorKind",
+      "summary": "Identifies the kind of [`HttpError`]",
+      "doc": "api/object_store.client.http.connection.md#httperrorkind",
+      "variants": [
+        "Connect",
+        "Request",
+        "Timeout",
+        "Interrupted",
+        "Decode",
+        "Unknown"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::client::http::connection::HttpClient",
+      "name": "HttpClient",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct HttpClient",
+      "summary": "An HTTP client",
+      "doc": "api/object_store.client.http.connection.md#httpclient",
+      "methods": [
+        {
+          "name": "execute",
+          "signature": "async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, HttpError>",
+          "summary": "Performs [`HttpRequest`] using this client"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(service: impl HttpService + 'static) -> Self",
+          "summary": "Create a new [`HttpClient`] from an [`HttpService`]"
+        }
+      ]
+    },
+    {
+      "path": "object_store::client::http::connection::HttpError",
+      "name": "HttpError",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct HttpError",
+      "summary": "An HTTP protocol error",
+      "doc": "api/object_store.client.http.connection.md#httperror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> HttpErrorKind",
+          "summary": "Returns the [`HttpErrorKind`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<E>(kind: HttpErrorKind, e: E) -> Self where E: Error + Send + Sync + 'static",
+          "summary": "Create a new [`HttpError`] with the optional status code"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private18::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "object_store::client::http::connection::ReqwestConnector",
+      "name": "ReqwestConnector",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct ReqwestConnector",
+      "summary": "[`HttpConnector`] using [`reqwest::Client`]",
+      "doc": "api/object_store.client.http.connection.md#reqwestconnector",
+      "implements": [
+        "object_store::client::http::connection::HttpConnector"
+      ],
+      "methods": [
+        {
+          "name": "connect",
+          "signature": "fn connect(&self, options: &ClientOptions) -> Result<HttpClient>",
+          "via_trait": "object_store::client::http::connection::HttpConnector"
+        }
+      ]
+    },
+    {
+      "path": "object_store::client::http::connection::SpawnedReqwestConnector",
+      "name": "SpawnedReqwestConnector",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct SpawnedReqwestConnector",
+      "summary": "[`reqwest::Client`] connector that performs all I/O on the provided tokio [`Runtime`] (thread pool).",
+      "doc": "api/object_store.client.http.connection.md#spawnedreqwestconnector",
+      "implements": [
+        "object_store::client::http::connection::HttpConnector"
+      ],
+      "methods": [
+        {
+          "name": "connect",
+          "signature": "fn connect(&self, options: &ClientOptions) -> Result<HttpClient>",
+          "via_trait": "object_store::client::http::connection::HttpConnector"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(runtime: Handle) -> Self",
+          "summary": "Create a new [`SpawnedReqwestConnector`] with the provided [`Handle`] to a tokio [`Runtime`]"
+        }
+      ]
+    },
+    {
+      "path": "object_store::client::http::connection::HttpConnector",
+      "name": "HttpConnector",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait HttpConnector: std::fmt::Debug + Send + Sync + 'static",
+      "summary": "A factory for [`HttpClient`]",
+      "doc": "api/object_store.client.http.connection.md#httpconnector",
+      "implementors": [
+        "object_store::client::http::connection::ReqwestConnector",
+        "object_store::client::http::connection::SpawnedReqwestConnector"
+      ],
+      "required_methods": [
+        "connect"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "connect",
+          "signature": "fn connect(&self, options: &ClientOptions) -> Result<HttpClient>",
+          "summary": "Create a new [`HttpClient`] with the provided [`ClientOptions`]"
+        }
+      ]
+    },
+    {
+      "path": "object_store::client::http::connection::HttpService",
+      "name": "HttpService",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait HttpService: std::fmt::Debug + Send + Sync + 'static",
+      "summary": "An asynchronous function from a [`HttpRequest`] to a [`HttpResponse`].",
+      "doc": "api/object_store.client.http.connection.md#httpservice",
+      "implementors": [
+        "object_store::client::http::spawn::SpawnService",
+        "reqwest::async_impl::client::Client"
+      ],
+      "required_methods": [
+        "call"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "call",
+          "signature": "async fn call(&self, req: HttpRequest) -> Result<HttpResponse, HttpError>",
+          "summary": "Perform [`HttpRequest`] returning [`HttpResponse`]"
+        }
+      ]
+    }
+  ]
+}

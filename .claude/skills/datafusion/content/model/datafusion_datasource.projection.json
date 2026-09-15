@@ -1,0 +1,77 @@
+{
+  "module": "datafusion_datasource::projection",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.projection.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::projection::PartitionColumnIndex",
+      "name": "PartitionColumnIndex",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct PartitionColumnIndex",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::datasource::projection::PartitionColumnIndex"
+      ],
+      "fields": [
+        "in_remainder_projection",
+        "in_partition_values"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_datasource::projection::ProjectionOpener",
+      "name": "ProjectionOpener",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct ProjectionOpener",
+      "summary": "A file opener that handles applying a projection on top of an inner opener.",
+      "doc": "api/datafusion_datasource.projection.md#projectionopener",
+      "aliases": [
+        "datafusion::datasource::projection::ProjectionOpener"
+      ],
+      "implements": [
+        "datafusion_datasource::file_stream::FileOpener"
+      ],
+      "methods": [
+        {
+          "name": "open",
+          "signature": "fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>",
+          "via_trait": "datafusion_datasource::file_stream::FileOpener"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(projection: SplitProjection, inner: Arc<dyn FileOpener>, file_schema: &Schema) -> Result<Arc<dyn FileOpener>>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::projection::SplitProjection",
+      "name": "SplitProjection",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct SplitProjection",
+      "summary": "At a high level the goal of SplitProjection is to take a ProjectionExprs meant to be applied to the table schema and split that into: - The projection indices into the file schema (file_indices) - The projection indices into the partition…",
+      "doc": "api/datafusion_datasource.projection.md#splitprojection",
+      "aliases": [
+        "datafusion::datasource::projection::SplitProjection"
+      ],
+      "fields": [
+        "source",
+        "file_indices"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(logical_file_schema: &Schema, projection: &ProjectionExprs) -> Self",
+          "summary": "Creates a new [`SplitProjection`] by splitting a projection into simple file column indices and a remainder projection that is applied after reading the file."
+        },
+        {
+          "name": "unprojected",
+          "signature": "fn unprojected(table_schema: &TableSchema) -> Self"
+        }
+      ]
+    }
+  ]
+}

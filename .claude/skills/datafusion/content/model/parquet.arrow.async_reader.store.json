@@ -1,0 +1,67 @@
+{
+  "module": "parquet::arrow::async_reader::store",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.async_reader.store.md",
+  "items": [
+    {
+      "path": "parquet::arrow::async_reader::store::ParquetObjectReader",
+      "name": "ParquetObjectReader",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ParquetObjectReader",
+      "summary": "Reads Parquet files in object storage using [`ObjectStore`].",
+      "doc": "api/parquet.arrow.async_reader.store.md#parquetobjectreader",
+      "deprecated": "since 59.2.0: Implement `AsyncFileReader` directly instead; see the example on the `AsyncFileReader` trait documentation and `parquet/examples/object_store.rs`. Use `SpawnedReader` to perform I/O on a dedicated runtime. See https://github.com/apache/arrow-rs/issues/10308",
+      "implements": [
+        "parquet::arrow::async_reader::AsyncFileReader"
+      ],
+      "methods": [
+        {
+          "name": "get_byte_ranges",
+          "signature": "fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<Vec<Bytes>>> where Self: Send",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "get_metadata",
+          "signature": "fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, Result<Arc<ParquetMetaData>>>",
+          "via_trait": "parquet::arrow::async_reader::AsyncFileReader"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>, path: Path) -> Self",
+          "summary": "Creates a new [`ParquetObjectReader`] for the provided [`ObjectStore`] and [`Path`]."
+        },
+        {
+          "name": "with_file_size",
+          "signature": "fn with_file_size(self, file_size: u64) -> Self",
+          "summary": "Provide the byte size of this file."
+        },
+        {
+          "name": "with_footer_size_hint",
+          "signature": "fn with_footer_size_hint(self, hint: usize) -> Self",
+          "summary": "Provide a hint as to the size of the parquet file's footer, see [`ParquetMetaDataReader::with_prefetch_hint`]"
+        },
+        {
+          "name": "with_preload_column_index",
+          "signature": "fn with_preload_column_index(self, preload_column_index: bool) -> Self",
+          "summary": "Whether to load the Column Index as part of [`Self::get_metadata`]"
+        },
+        {
+          "name": "with_preload_offset_index",
+          "signature": "fn with_preload_offset_index(self, preload_offset_index: bool) -> Self",
+          "summary": "Whether to load the Offset Index as part of [`Self::get_metadata`]"
+        },
+        {
+          "name": "with_runtime",
+          "signature": "fn with_runtime(self, handle: Handle) -> Self",
+          "summary": "Perform IO on the provided tokio runtime"
+        }
+      ]
+    }
+  ]
+}

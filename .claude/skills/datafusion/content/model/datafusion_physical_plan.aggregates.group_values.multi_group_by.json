@@ -1,0 +1,148 @@
+{
+  "module": "datafusion_physical_plan::aggregates::group_values::multi_group_by",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.aggregates.group_values.multi_group_by.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::nulls_equal_to",
+      "name": "nulls_equal_to",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn nulls_equal_to(lhs_null: bool, rhs_null: bool) -> Option<bool>",
+      "summary": "Determines if the nullability of the existing and new input array can be used to short-circuit the comparison of the two values.",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.multi_group_by.md#nulls_equal_to"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::supported_schema",
+      "name": "supported_schema",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn supported_schema(schema: &arrow::datatypes::Schema) -> bool",
+      "summary": "Returns true if [`GroupValuesColumn`] supported for the specified schema",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.multi_group_by.md#supported_schema"
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupValuesColumn",
+      "name": "GroupValuesColumn",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct GroupValuesColumn<const STREAMING: bool>",
+      "summary": "A [`GroupValues`] that stores multiple columns of group values, and supports vectorized operators for them",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.multi_group_by.md#groupvaluescolumn",
+      "implements": [
+        "datafusion_physical_plan::aggregates::group_values::GroupValues"
+      ],
+      "methods": [
+        {
+          "name": "clear_shrink",
+          "signature": "fn clear_shrink(&mut self, num_rows: usize)",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "emit",
+          "signature": "fn emit(&mut self, emit_to: EmitTo) -> Result<Vec<ArrayRef>>",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "intern",
+          "signature": "fn intern(&mut self, cols: &[ArrayRef], groups: &mut Vec<usize>) -> Result<()>",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_physical_plan::aggregates::group_values::GroupValues"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(schema: SchemaRef) -> Result<Self>",
+          "summary": "Create a new instance of GroupValuesColumn if supported for the specified schema"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::aggregates::group_values::multi_group_by::GroupColumn",
+      "name": "GroupColumn",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait GroupColumn: Send + Sync",
+      "summary": "Trait for storing a single column of group values in [`GroupValuesColumn`]",
+      "doc": "api/datafusion_physical_plan.aggregates.group_values.multi_group_by.md#groupcolumn",
+      "implementors": [
+        "datafusion_physical_plan::aggregates::group_values::multi_group_by::bytes_view::ByteViewGroupValueBuilder",
+        "datafusion_physical_plan::aggregates::group_values::multi_group_by::primitive::PrimitiveGroupValueBuilder",
+        "datafusion_physical_plan::aggregates::group_values::multi_group_by::row_backed::RowsGroupColumn"
+      ],
+      "required_methods": [
+        "append_val",
+        "build",
+        "equal_to",
+        "len",
+        "size",
+        "take_n",
+        "vectorized_append",
+        "vectorized_equal_to"
+      ],
+      "provided_methods": [
+        "is_empty"
+      ],
+      "methods": [
+        {
+          "name": "append_val",
+          "signature": "fn append_val(&mut self, array: &ArrayRef, row: usize) -> Result<()>",
+          "summary": "Appends the row at `row` in `array` to this builder"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(Box<self>) -> ArrayRef",
+          "summary": "Builds a new array from all of the stored rows"
+        },
+        {
+          "name": "equal_to",
+          "signature": "fn equal_to(&self, lhs_row: usize, array: &ArrayRef, rhs_row: usize) -> bool",
+          "summary": "Returns equal if the row stored in this builder at `lhs_row` is equal to the row in `array` at `rhs_row`"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "true if len == 0"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of rows stored in this builder"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the number of bytes used by this [`GroupColumn`]"
+        },
+        {
+          "name": "take_n",
+          "signature": "fn take_n(&mut self, n: usize) -> ArrayRef",
+          "summary": "Builds a new array from the first `n` stored rows, shifting the remaining rows to the start of the builder"
+        },
+        {
+          "name": "vectorized_append",
+          "signature": "fn vectorized_append(&mut self, array: &ArrayRef, rows: &[usize]) -> Result<()>",
+          "summary": "The vectorized version `append_val`"
+        },
+        {
+          "name": "vectorized_equal_to",
+          "signature": "fn vectorized_equal_to(&self, lhs_rows: &[usize], array: &ArrayRef, rhs_rows: &[usize], equal_to_results: &mut BooleanBufferBuilder)",
+          "summary": "The vectorized version equal to"
+        }
+      ]
+    }
+  ]
+}

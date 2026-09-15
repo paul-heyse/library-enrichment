@@ -1,0 +1,315 @@
+{
+  "module": "datafusion_physical_expr_common::metrics",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.metrics.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::metrics::ExecutionPlanMetricsSet",
+      "name": "ExecutionPlanMetricsSet",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct ExecutionPlanMetricsSet",
+      "summary": "A set of [`Metric`]s for an individual operator.",
+      "doc": "api/datafusion_physical_expr_common.metrics.md#executionplanmetricsset",
+      "aliases": [
+        "datafusion_physical_plan::metrics::ExecutionPlanMetricsSet"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "clone_inner",
+          "signature": "fn clone_inner(&self) -> MetricsSet",
+          "summary": "Return a clone of the inner [`MetricsSet`]"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(metrics: MetricsSet) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new empty shared metrics set"
+        },
+        {
+          "name": "register",
+          "signature": "fn register(&self, metric: Arc<Metric>)",
+          "summary": "Add the specified metric to the underlying metric set"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::Label",
+      "name": "Label",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Label",
+      "summary": "`name=value` pairs identifying a metric. This concept is called various things in various different systems:",
+      "doc": "api/datafusion_physical_expr_common.metrics.md#label",
+      "aliases": [
+        "datafusion_physical_plan::metrics::Label"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns the name of this label"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: impl Into<LabelValue>, value: impl Into<LabelValue>) -> Self",
+          "summary": "Create a new [`Label`]"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> &str",
+          "summary": "Returns the value of this label"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::LabelValue",
+      "name": "LabelValue",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct LabelValue",
+      "summary": "A label name or value.",
+      "doc": "api/datafusion_physical_expr_common.metrics.md#labelvalue",
+      "aliases": [
+        "datafusion_physical_plan::metrics::LabelValue"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Return this label value as a string slice."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: Arc<str>) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::Metric",
+      "name": "Metric",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct Metric",
+      "summary": "Something that tracks a value of interest (metric) during execution.",
+      "doc": "api/datafusion_physical_expr_common.metrics.md#metric",
+      "aliases": [
+        "datafusion::physical_plan::Metric",
+        "datafusion_physical_plan::Metric",
+        "datafusion_physical_plan::execution_plan::Metric",
+        "datafusion_physical_plan::metrics::Metric"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "labels",
+          "signature": "fn labels(&self) -> &[Label]",
+          "summary": "What labels are present for this metric?"
+        },
+        {
+          "name": "metric_category",
+          "signature": "fn metric_category(&self) -> Option<MetricCategory>",
+          "summary": "Return the metric category, if one was declared."
+        },
+        {
+          "name": "metric_type",
+          "signature": "fn metric_type(&self) -> MetricType",
+          "summary": "Return the metric type (verbosity level) associated with this metric"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(value: MetricValue, partition: Option<usize>) -> Self",
+          "summary": "Create a new [`Metric`]. Consider using [`MetricBuilder`] rather than this function directly."
+        },
+        {
+          "name": "new_with_labels",
+          "signature": "fn new_with_labels(value: MetricValue, partition: Option<usize>, labels: Vec<Label>) -> Self",
+          "summary": "Create a new [`Metric`]. Consider using [`MetricBuilder`] rather than this function directly."
+        },
+        {
+          "name": "partition",
+          "signature": "fn partition(&self) -> Option<usize>",
+          "summary": "Return a reference to the partition"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> &MetricValue",
+          "summary": "Return a reference to the value of this metric"
+        },
+        {
+          "name": "value_mut",
+          "signature": "fn value_mut(&mut self) -> &mut MetricValue",
+          "summary": "Return a mutable reference to the value of this metric"
+        },
+        {
+          "name": "with_category",
+          "signature": "fn with_category(self, category: MetricCategory) -> Self",
+          "summary": "Set the semantic category for this metric."
+        },
+        {
+          "name": "with_label",
+          "signature": "fn with_label(self, label: Label) -> Self",
+          "summary": "Add a new label to this metric"
+        },
+        {
+          "name": "with_type",
+          "signature": "fn with_type(self, metric_type: MetricType) -> Self",
+          "summary": "Set the type for this metric. Defaults to [`MetricType::Dev`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::MetricsSet",
+      "name": "MetricsSet",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct MetricsSet",
+      "summary": "A snapshot of the metrics for a particular execution plan.",
+      "doc": "api/datafusion_physical_expr_common.metrics.md#metricsset",
+      "aliases": [
+        "datafusion_physical_plan::metrics::MetricsSet"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "core::iter::traits::collect::IntoIterator"
+      ],
+      "methods": [
+        {
+          "name": "aggregate_by_name",
+          "signature": "fn aggregate_by_name(&self) -> Self",
+          "summary": "Returns a new derived `MetricsSet` where all metrics that had the same name have been aggregated together. The resulting `MetricsSet` has all metrics with `Partition=None`"
+        },
+        {
+          "name": "elapsed_compute",
+          "signature": "fn elapsed_compute(&self) -> Option<usize>",
+          "summary": "Convenience: return the amount of elapsed CPU time spent, aggregated across partitions or `None` if no metric is present"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<I: IntoIterator<Item = Arc<Metric>>>(&mut self, iter: I)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "filter_by_categories",
+          "signature": "fn filter_by_categories(self, allowed: &[MetricCategory]) -> Self",
+          "summary": "Returns a new `MetricsSet` filtered by [`MetricCategory`]."
+        },
+        {
+          "name": "filter_by_metric_types",
+          "signature": "fn filter_by_metric_types(self, allowed: &[MetricType]) -> Self",
+          "summary": "Returns a new derived `MetricsSet` containing only metrics whose [`MetricType`] appears in `allowed`."
+        },
+        {
+          "name": "filter_by_names",
+          "signature": "fn filter_by_names(self, names: &[String]) -> Self",
+          "summary": "Returns a new `MetricsSet` filtered by metric name. Only metrics with the names appearing the list will be kept."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display",
+          "summary": "Format the [`MetricsSet`] as a single string"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = Arc<Metric>>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = &Arc<Metric>>",
+          "summary": "Returns an iterator across all metrics"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new container of metrics"
+        },
+        {
+          "name": "output_rows",
+          "signature": "fn output_rows(&self) -> Option<usize>",
+          "summary": "Convenience: return the number of rows produced, aggregated across partitions or `None` if no metric is present"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, metric: Arc<Metric>)",
+          "summary": "Add the specified metric"
+        },
+        {
+          "name": "sorted_for_display",
+          "signature": "fn sorted_for_display(self) -> Self",
+          "summary": "Sort the order of metrics so the \"most useful\" show up first"
+        },
+        {
+          "name": "spill_count",
+          "signature": "fn spill_count(&self) -> Option<usize>",
+          "summary": "Convenience: return the count of spills, aggregated across partitions or `None` if no metric is present"
+        },
+        {
+          "name": "spilled_bytes",
+          "signature": "fn spilled_bytes(&self) -> Option<usize>",
+          "summary": "Convenience: return the total byte size of spills, aggregated across partitions or `None` if no metric is present"
+        },
+        {
+          "name": "spilled_rows",
+          "signature": "fn spilled_rows(&self) -> Option<usize>",
+          "summary": "Convenience: return the total rows of spills, aggregated across partitions or `None` if no metric is present"
+        },
+        {
+          "name": "sum",
+          "signature": "fn sum<F>(&self, f: F) -> Option<MetricValue> where F: FnMut(&Metric) -> bool",
+          "summary": "Sums the values for metrics for which `f(metric)` returns `true`, and returns the value. Returns `None` if no metrics match the predicate."
+        },
+        {
+          "name": "sum_by_name",
+          "signature": "fn sum_by_name(&self, metric_name: &str) -> Option<MetricValue>",
+          "summary": "Returns the sum of all the metrics with the specified name in the returned set."
+        },
+        {
+          "name": "timestamps_removed",
+          "signature": "fn timestamps_removed(self) -> Self",
+          "summary": "Remove all timestamp metrics (for more compact display)"
+        }
+      ]
+    }
+  ]
+}

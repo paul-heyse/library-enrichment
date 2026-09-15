@@ -1,0 +1,87 @@
+{
+  "module": "datafusion_ffi::table_provider",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.table_provider.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::table_provider::FFI_TableProvider",
+      "name": "FFI_TableProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_TableProvider",
+      "summary": "A stable struct for sharing [`TableProvider`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.table_provider.md#ffi_tableprovider",
+      "fields": [
+        "statistics",
+        "logical_codec",
+        "version",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(provider: Arc<dyn TableProvider>, can_support_pushdown_filters: bool, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>, logical_codec: Option<Arc<dyn LogicalExtensionCodec>>) -> Self",
+          "summary": "Creates a new [`FFI_TableProvider`]."
+        },
+        {
+          "name": "new_with_ffi_codec",
+          "signature": "fn new_with_ffi_codec(provider: Arc<dyn TableProvider>, can_support_pushdown_filters: bool, runtime: Option<Handle>, logical_codec: FFI_LogicalExtensionCodec) -> Self",
+          "summary": "Creates an [`FFI_TableProvider`] using a prebuilt FFI logical codec."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::table_provider::ForeignTableProvider",
+      "name": "ForeignTableProvider",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignTableProvider",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ta…",
+      "doc": "api/datafusion_ffi.table_provider.md#foreigntableprovider",
+      "implements": [
+        "datafusion_session::table::TableProvider"
+      ],
+      "methods": [
+        {
+          "name": "insert_into",
+          "signature": "async fn insert_into(&self, session: &dyn Session, input: Arc<dyn ExecutionPlan>, insert_op: InsertOp) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, session: &dyn Session, projection: Option<&Vec<usize>>, filters: &[Expr], limit: Option<usize>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "statistics",
+          "signature": "fn statistics(&self) -> Option<Statistics>",
+          "via_trait": "datafusion_session::table::TableProvider"
+        },
+        {
+          "name": "supports_filters_pushdown",
+          "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>",
+          "via_trait": "datafusion_session::table::TableProvider",
+          "summary": "Tests whether the table provider can make use of a filter expression to optimize data retrieval."
+        },
+        {
+          "name": "table_type",
+          "signature": "fn table_type(&self) -> TableType",
+          "via_trait": "datafusion_session::table::TableProvider"
+        }
+      ]
+    }
+  ]
+}

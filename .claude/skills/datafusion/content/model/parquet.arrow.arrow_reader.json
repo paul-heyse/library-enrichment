@@ -1,0 +1,334 @@
+{
+  "module": "parquet::arrow::arrow_reader",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.arrow_reader.md",
+  "items": [
+    {
+      "path": "parquet::arrow::arrow_reader::DEFAULT_BATCH_SIZE",
+      "name": "DEFAULT_BATCH_SIZE",
+      "kind": "constant",
+      "crate": "parquet",
+      "signature": "const DEFAULT_BATCH_SIZE: usize = 1024",
+      "summary": "Default batch size for reading parquet files",
+      "doc": "api/parquet.arrow.arrow_reader.md#default_batch_size"
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderBuilder",
+      "name": "ArrowReaderBuilder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowReaderBuilder<T>",
+      "summary": "Builder for constructing Parquet readers that decode into [Apache Arrow] arrays.",
+      "doc": "api/parquet.arrow.arrow_reader.md#arrowreaderbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<ParquetPushDecoder, ParquetError>",
+          "summary": "Create a [`ParquetPushDecoder`] with the configured options"
+        },
+        {
+          "name": "get_row_group_column_bloom_filter",
+          "signature": "async fn get_row_group_column_bloom_filter(&mut self, row_group_idx: usize, column_idx: usize) -> Result<Option<Sbbf>>",
+          "summary": "Read bloom filter for a column in a row group"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Arc<ParquetMetaData>",
+          "summary": "Returns a reference to the [`ParquetMetaData`] for this parquet file"
+        },
+        {
+          "name": "new",
+          "signature": "async fn new(input: T) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchStreamBuilder`] for reading from the specified source."
+        },
+        {
+          "name": "new_with_metadata",
+          "signature": "fn new_with_metadata(arrow_reader_metadata: ArrowReaderMetadata) -> Self",
+          "summary": "Create a new `ParquetDecoderBuilder` given [`ArrowReaderMetadata`]."
+        },
+        {
+          "name": "new_with_options",
+          "signature": "async fn new_with_options(input: T, options: ArrowReaderOptions) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchStreamBuilder`] with the provided async source and [`ArrowReaderOptions`]."
+        },
+        {
+          "name": "parquet_schema",
+          "signature": "fn parquet_schema(&self) -> &SchemaDescriptor",
+          "summary": "Returns the parquet [`SchemaDescriptor`] for this parquet file"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Returns the arrow [`SchemaRef`] for this parquet file"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(reader: T) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchReaderBuilder`]"
+        },
+        {
+          "name": "try_new_decoder",
+          "signature": "fn try_new_decoder(parquet_metadata: Arc<ParquetMetaData>) -> Result<Self, ParquetError>",
+          "summary": "Create a new `ParquetDecoderBuilder` for configuring a Parquet decoder for the given file."
+        },
+        {
+          "name": "try_new_decoder_with_options",
+          "signature": "fn try_new_decoder_with_options(parquet_metadata: Arc<ParquetMetaData>, arrow_reader_options: ArrowReaderOptions) -> Result<Self, ParquetError>",
+          "summary": "Create a new `ParquetDecoderBuilder` for configuring a Parquet decoder for the given file with the given reader options."
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(reader: T, options: ArrowReaderOptions) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchReaderBuilder`] with [`ArrowReaderOptions`]"
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Set the size of [`RecordBatch`] to produce. Defaults to [`DEFAULT_BATCH_SIZE`]."
+        },
+        {
+          "name": "with_buffers",
+          "signature": "fn with_buffers(self, buffers: PushBuffers) -> Self",
+          "summary": "Provide a preexisting [`PushBuffers`] for the built decoder to read from, so bytes already fetched are not requested again."
+        },
+        {
+          "name": "with_limit",
+          "signature": "fn with_limit(self, limit: usize) -> Self",
+          "summary": "Provide a limit to the number of rows to be read"
+        },
+        {
+          "name": "with_max_predicate_cache_size",
+          "signature": "fn with_max_predicate_cache_size(self, max_predicate_cache_size: usize) -> Self",
+          "summary": "Set the maximum size (per row group) of the predicate cache in bytes for the async decoder."
+        },
+        {
+          "name": "with_metrics",
+          "signature": "fn with_metrics(self, metrics: ArrowReaderMetrics) -> Self",
+          "summary": "Specify metrics collection during reading"
+        },
+        {
+          "name": "with_offset",
+          "signature": "fn with_offset(self, offset: usize) -> Self",
+          "summary": "Provide an offset to skip over the given number of rows"
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, mask: ProjectionMask) -> Self",
+          "summary": "Only read data from the provided column indexes"
+        },
+        {
+          "name": "with_row_filter",
+          "signature": "fn with_row_filter(self, filter: RowFilter) -> Self",
+          "summary": "Provide a [`RowFilter`] to skip decoding rows"
+        },
+        {
+          "name": "with_row_groups",
+          "signature": "fn with_row_groups(self, row_groups: Vec<usize>) -> Self",
+          "summary": "Only read data from the provided row group indexes"
+        },
+        {
+          "name": "with_row_selection",
+          "signature": "fn with_row_selection(self, selection: RowSelection) -> Self",
+          "summary": "Provide a [`RowSelection`] to filter out rows, and avoid fetching their data into memory."
+        },
+        {
+          "name": "with_row_selection_policy",
+          "signature": "fn with_row_selection_policy(self, policy: RowSelectionPolicy) -> Self",
+          "summary": "Configure how row selections should be materialised during execution"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderMetadata",
+      "name": "ArrowReaderMetadata",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowReaderMetadata",
+      "summary": "The metadata necessary to construct a [`ArrowReaderBuilder`]",
+      "doc": "api/parquet.arrow.arrow_reader.md#arrowreadermetadata",
+      "methods": [
+        {
+          "name": "load",
+          "signature": "fn load<T: ChunkReader>(reader: &T, options: ArrowReaderOptions) -> Result<Self>",
+          "summary": "Create [`ArrowReaderMetadata`] from the provided [`ArrowReaderOptions`] and [`ChunkReader`]"
+        },
+        {
+          "name": "load_async",
+          "signature": "async fn load_async<T: AsyncFileReader>(input: &mut T, options: ArrowReaderOptions) -> Result<Self>",
+          "summary": "Returns a new [`ArrowReaderMetadata`] for this builder"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Arc<ParquetMetaData>",
+          "summary": "Returns a reference to the [`ParquetMetaData`] for this parquet file"
+        },
+        {
+          "name": "parquet_schema",
+          "signature": "fn parquet_schema(&self) -> &SchemaDescriptor",
+          "summary": "Returns the parquet [`SchemaDescriptor`] for this parquet file"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Returns the arrow [`SchemaRef`] for this parquet file"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(metadata: Arc<ParquetMetaData>, options: ArrowReaderOptions) -> Result<Self>",
+          "summary": "Create a new [`ArrowReaderMetadata`] from a pre-existing [`ParquetMetaData`] and [`ArrowReaderOptions`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ArrowReaderOptions",
+      "name": "ArrowReaderOptions",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ArrowReaderOptions",
+      "summary": "Options that control how [`ParquetMetaData`] is read when constructing an Arrow reader.",
+      "doc": "api/parquet.arrow.arrow_reader.md#arrowreaderoptions",
+      "methods": [
+        {
+          "name": "column_index_policy",
+          "signature": "fn column_index_policy(&self) -> PageIndexPolicy",
+          "summary": "Retrieve the currently set [`PageIndexPolicy`] for the column index."
+        },
+        {
+          "name": "file_decryption_properties",
+          "signature": "fn file_decryption_properties(&self) -> Option<&Arc<FileDecryptionProperties>>",
+          "summary": "Retrieve the currently set file decryption properties."
+        },
+        {
+          "name": "metadata_options",
+          "signature": "fn metadata_options(&self) -> &ParquetMetaDataOptions",
+          "summary": "Retrieve the currently set metadata decoding options."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`ArrowReaderOptions`] with the default settings"
+        },
+        {
+          "name": "offset_index_policy",
+          "signature": "fn offset_index_policy(&self) -> PageIndexPolicy",
+          "summary": "Retrieve the currently set [`PageIndexPolicy`] for the offset index."
+        },
+        {
+          "name": "page_index",
+          "signature": "fn page_index(&self) -> bool",
+          "summary": "Returns whether page index reading is enabled."
+        },
+        {
+          "name": "with_column_index_policy",
+          "signature": "fn with_column_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for the Parquet [ColumnIndex] structure."
+        },
+        {
+          "name": "with_column_stats_policy",
+          "signature": "fn with_column_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self",
+          "summary": "Sets the decoding policy for [`statistics`] in the Parquet `ColumnMetaData`."
+        },
+        {
+          "name": "with_encoding_stats_as_mask",
+          "signature": "fn with_encoding_stats_as_mask(self, val: bool) -> Self",
+          "summary": "Set whether to convert the [`encoding_stats`] in the Parquet `ColumnMetaData` to a bitmask (defaults to `false`)."
+        },
+        {
+          "name": "with_encoding_stats_policy",
+          "signature": "fn with_encoding_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self",
+          "summary": "Sets the decoding policy for [`encoding_stats`] in the Parquet `ColumnMetaData`."
+        },
+        {
+          "name": "with_file_decryption_properties",
+          "signature": "fn with_file_decryption_properties(self, file_decryption_properties: Arc<FileDecryptionProperties>) -> Self",
+          "summary": "Provide the file decryption properties to use when reading encrypted parquet files."
+        },
+        {
+          "name": "with_offset_index_policy",
+          "signature": "fn with_offset_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for the Parquet [OffsetIndex] structure."
+        },
+        {
+          "name": "with_page_index",
+          "signature": "fn with_page_index(self, page_index: bool) -> Self",
+          "summary": "Enable reading the [`PageIndex`] from the metadata, if present (defaults to `false`)"
+        },
+        {
+          "name": "with_page_index_policy",
+          "signature": "fn with_page_index_policy(self, policy: PageIndexPolicy) -> Self",
+          "summary": "Sets the [`PageIndexPolicy`] for both the column and offset indexes."
+        },
+        {
+          "name": "with_parquet_schema",
+          "signature": "fn with_parquet_schema(self, schema: Arc<SchemaDescriptor>) -> Self",
+          "summary": "Provide a Parquet schema to use when decoding the metadata. The schema in the Parquet footer will be skipped."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Provide a schema hint to use when reading the Parquet file."
+        },
+        {
+          "name": "with_size_stats_policy",
+          "signature": "fn with_size_stats_policy(self, policy: ParquetStatisticsPolicy) -> Self",
+          "summary": "Sets the decoding policy for [`size_statistics`] in the Parquet `ColumnMetaData`."
+        },
+        {
+          "name": "with_skip_arrow_metadata",
+          "signature": "fn with_skip_arrow_metadata(self, skip_arrow_metadata: bool) -> Self",
+          "summary": "Skip decoding the embedded arrow metadata (defaults to `false`)"
+        },
+        {
+          "name": "with_virtual_columns",
+          "signature": "fn with_virtual_columns(self, virtual_columns: Vec<FieldRef>) -> Result<Self>",
+          "summary": "Include virtual columns in the output."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ParquetRecordBatchReader",
+      "name": "ParquetRecordBatchReader",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ParquetRecordBatchReader",
+      "summary": "Reads Parquet data as Arrow [`RecordBatch`]es",
+      "doc": "api/parquet.arrow.arrow_reader.md#parquetrecordbatchreader",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader",
+          "summary": "Returns the projected [`SchemaRef`] for reading the parquet file."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new<T: ChunkReader + 'static>(reader: T, batch_size: usize) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchReader`] from the provided chunk reader"
+        },
+        {
+          "name": "try_new_with_row_groups",
+          "signature": "fn try_new_with_row_groups(levels: &FieldLevels, row_groups: &dyn RowGroups, batch_size: usize, selection: Option<RowSelection>) -> Result<Self>",
+          "summary": "Create a new [`ParquetRecordBatchReader`] from the provided [`RowGroups`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder",
+      "name": "ParquetRecordBatchReaderBuilder",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type ParquetRecordBatchReaderBuilder<T> = ArrowReaderBuilder<SyncReader<T>>",
+      "summary": "Creates [`ParquetRecordBatchReader`] for reading Parquet files into Arrow [`RecordBatch`]es",
+      "doc": "api/parquet.arrow.arrow_reader.md#parquetrecordbatchreaderbuilder"
+    }
+  ]
+}

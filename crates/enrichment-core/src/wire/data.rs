@@ -39,6 +39,7 @@ pub enum HostedJsonState {
 
 /// The hosted rustdoc JSON facet of a resolution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct HostedJsonReport {
     /// What was found.
     pub state: HostedJsonState,
@@ -56,6 +57,7 @@ pub struct HostedJsonReport {
 
 /// What the published snapshot holds, summarized.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SnapshotSummary {
     /// The snapshot identity.
     pub snapshot_id: String,
@@ -69,6 +71,7 @@ pub struct SnapshotSummary {
 
 /// The `resolve_library` payload.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ResolveData {
     /// The release that was resolved. Its version is the one asked for, never an upgrade.
     pub release: Release,
@@ -99,6 +102,7 @@ pub struct ResolveData {
 
 /// One child in a namespace sample.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct OverviewChild {
     /// Public path.
     pub path: String,
@@ -114,6 +118,7 @@ pub struct OverviewChild {
 
 /// A namespace facet in an overview.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct NamespaceFacet {
     /// The module path.
     pub path: String,
@@ -129,6 +134,7 @@ pub struct NamespaceFacet {
 
 /// The `library_overview` payload (§7.1: a tree and facets, never a symbol dump).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct OverviewData {
     /// The crate's root module name.
     pub crate_name: String,
@@ -146,18 +152,23 @@ pub struct OverviewData {
     pub namespaces: Vec<NamespaceFacet>,
     /// Namespaces beyond the returned set.
     pub truncated_namespaces: u64,
-    /// Feature definitions: name and what it enables.
-    pub features: BTreeMap<String, String>,
-    /// README headings, in order.
-    pub documentation_headings: Vec<String>,
-    /// Changelog headings, in order.
-    pub release_note_headings: Vec<String>,
-    /// Example names.
-    pub examples: Vec<String>,
+    /// Library-level retained fragments, preserving independently sourced alternatives.
+    pub discovery: Vec<DiscoveryFacet>,
     /// Paths that re-export a definition reachable elsewhere.
     pub reexports: u64,
     /// Re-exports whose target is outside this crate.
     pub unresolved_reexports: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct DiscoveryFacet {
+    pub kind: crate::wire::research::DiscoveryKind,
+    pub state: super::research::AspectState,
+    pub reason: Option<String>,
+    pub diagnostic: Option<super::research::Diagnostic>,
+    pub items: Vec<FragmentProjection>,
+    pub page: Option<super::Page>,
 }
 
 /// What kind of thing a search hit is.
@@ -173,6 +184,7 @@ pub enum HitKind {
 
 /// One scoring factor that fired.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ScoreFactor {
     /// Factor name.
     pub name: String,
@@ -182,6 +194,7 @@ pub struct ScoreFactor {
 
 /// One search hit.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SearchHit {
     /// Symbol or fragment.
     pub hit: HitKind,
@@ -211,7 +224,10 @@ pub struct SearchHit {
 
 /// The `search_evidence` payload.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SearchData {
+    /// Bounded page over this payload, not over the whole research envelope.
+    pub page: super::job::Page,
     /// The query as asked.
     pub query: String,
     /// The tokens it was split into.
@@ -233,6 +249,7 @@ pub struct SearchData {
 
 /// A selected projection of an admitted API observation, never a replacement stored fact.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ApiObservationProjection {
     /// Identity of the complete admitted fact, not a hash of this query projection.
     pub observation_id: String,
@@ -247,6 +264,7 @@ pub struct ApiObservationProjection {
 
 /// One exact definition a caller can select when a public path is ambiguous.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct InspectionCandidate {
     pub path: String,
     pub definition_id: String,
@@ -254,9 +272,26 @@ pub struct InspectionCandidate {
     pub qualifier: Option<String>,
 }
 
+/// A requested projection of a retained fragment; its identity still names the full fact.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct FragmentProjection {
+    pub fragment: EvidenceFragment,
+    pub text_complete: bool,
+    /// A complete-text request for this selection when text was projected.
+    pub complete: Option<super::research::RecoveryAction>,
+}
+
 /// Bounded inspection payload with independently qualified observation projections.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct InspectData {
+    /// Lexical direct children, independently paged; this does not establish typed membership.
+    pub children: Vec<InspectionCandidate>,
+    /// Bindings reached by qualified member_of relationships, independently paged.
+    pub members: Vec<InspectionCandidate>,
+    /// Independent aspect states and continuations.
+    pub aspect_outcomes: Vec<super::research::AspectOutcome>,
     /// The symbol, when one was selected. Its `docs` are bounded here.
     pub symbol: Option<Symbol>,
     /// Whether `docs` was cut to fit.
@@ -274,7 +309,7 @@ pub struct InspectData {
     /// Qualified projections; complete immutable observations remain in the snapshot.
     pub observations: Vec<ApiObservationProjection>,
     /// Fragments about the symbol, bounded.
-    pub fragments: Vec<EvidenceFragment>,
+    pub fragments: Vec<FragmentProjection>,
     /// Source excerpt at `source` depth.
     pub source: Option<SourceExcerpt>,
     /// Retained execution facts selected natively by symbol/document and exact scope.
@@ -296,7 +331,10 @@ pub enum SliceEncoding {
 
 /// The `read_artifact` payload.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ArtifactSliceData {
+    /// Bounded page over this payload, not over the whole research envelope.
+    pub page: super::job::Page,
     /// The artifact record.
     pub artifact: Artifact,
     /// How `content` is encoded.
@@ -319,6 +357,7 @@ pub struct ArtifactSliceData {
 
 /// The snapshot manifest resource: what a snapshot contains.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ManifestData {
     /// The immutable manifest as published.
     pub manifest: crate::evidence::snapshot::EvidenceManifest,
@@ -331,7 +370,9 @@ pub struct ManifestData {
 
 /// Identity of one side of an immutable comparison.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ComparisonSide {
+    pub coverage: super::Coverage,
     pub context_id: String,
     pub snapshot_id: String,
     pub release: Release,
@@ -340,6 +381,7 @@ pub struct ComparisonSide {
 
 /// A changed environment/configuration field, separate from release changes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ConfigurationDifference {
     pub field: String,
     pub before: serde_json::Value,
@@ -348,7 +390,10 @@ pub struct ConfigurationDifference {
 
 /// An observed diff with explicit completeness and environment confounders.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct CompareData {
+    /// Bounded page over this payload, not over the whole research envelope.
+    pub page: super::job::Page,
     pub before: ComparisonSide,
     pub after: ComparisonSide,
     pub comparable: bool,
@@ -391,7 +436,18 @@ pub enum ToolData {
 #[must_use]
 pub fn tool_data_schema() -> serde_json::Value {
     let settings = schemars::generate::SchemaSettings::draft2020_12().for_serialize();
-    let generator = settings.into_generator();
+    let mut generator = settings.into_generator();
+    // Tagged-union emission may inline closed payloads to accommodate its own tool tag.
+    // Explicitly retain the untagged domain DTO definitions for adapter composition.
+    let _ = generator.subschema_for::<ResolveData>();
+    let _ = generator.subschema_for::<OverviewData>();
+    let _ = generator.subschema_for::<SearchData>();
+    let _ = generator.subschema_for::<InspectData>();
+    let _ = generator.subschema_for::<CompareData>();
+    let _ = generator.subschema_for::<ArtifactSliceData>();
+    let _ = generator.subschema_for::<ManifestData>();
+    let _ = generator.subschema_for::<crate::execution::JobData>();
+    let _ = generator.subschema_for::<crate::execution::VerificationData>();
     let schema = generator.into_root_schema_for::<ToolData>();
     let mut value = serde_json::to_value(schema).unwrap_or_default();
     if let Some(object) = value.as_object_mut() {

@@ -103,7 +103,10 @@ pub fn qualification_paths(root: &Path) -> io::Result<enrichment_store::StatePat
         .file_name()
         .and_then(|s| s.to_str())
         .ok_or_else(|| io::Error::other("qualification engine root has no name"))?;
-    let state = parent.join(format!(".{name}-qualification-state"));
+    // A new evidence format gets a new qualification sidecar too. Never adopt, migrate or
+    // reset the previous generation merely to requalify the same retained container images.
+    let generation = enrichment_store::state::GENERATION;
+    let state = parent.join(format!(".{name}-qualification-state-{generation}"));
     let paths = enrichment_store::StatePaths::explicit(state.join("cache"), state.join("data"));
     enrichment_store::state::validate_paths(&paths)?;
     Ok(paths)
@@ -296,25 +299,39 @@ mod tests {
         let paths = qualification_paths(&root).unwrap();
         assert_eq!(
             paths.cache_root,
-            temporary.path().join(".engine-qualification-state/cache")
+            temporary.path().join(".engine-qualification-state-6/cache")
         );
         assert_eq!(
             paths.data_root,
-            temporary.path().join(".engine-qualification-state/data")
+            temporary.path().join(".engine-qualification-state-6/data")
         );
         assert!(
             !temporary
                 .path()
-                .join(".engine-qualification-state")
+                .join(".engine-qualification-state-6")
                 .exists()
         );
         assert!(qualification_paths(Path::new("relative")).is_err());
         assert!(qualification_paths(Path::new("/")).is_err());
         std::os::unix::fs::symlink(
             temporary.path(),
-            temporary.path().join(".engine-qualification-state"),
+            temporary.path().join(".engine-qualification-state-6"),
         )
         .unwrap();
         assert!(qualification_paths(&root).is_err());
+    }
+
+    #[test]
+    fn qualification_preserves_the_inactive_generation() {
+        let temporary = tempfile::tempdir().unwrap();
+        let old = temporary.path().join(".engine-qualification-state");
+        std::fs::create_dir_all(&old).unwrap();
+        let witness = old.join("retained-receipt");
+        std::fs::write(&witness, b"previous-generation").unwrap();
+        let paths = qualification_paths(&temporary.path().join("engine")).unwrap();
+        enrichment_store::state::initialize(&paths).unwrap();
+        enrichment_store::state::verify(&paths).unwrap();
+        assert_eq!(std::fs::read(&witness).unwrap(), b"previous-generation");
+        assert_eq!(std::fs::read_dir(old).unwrap().count(), 1);
     }
 }

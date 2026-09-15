@@ -1,0 +1,745 @@
+{
+  "module": "parquet::data_type",
+  "crate": "parquet",
+  "api": "api/parquet.data_type.md",
+  "items": [
+    {
+      "path": "parquet::data_type::Decimal",
+      "name": "Decimal",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Decimal",
+      "summary": "Rust representation for Decimal values.",
+      "doc": "api/parquet.data_type.md#decimal",
+      "variants": [
+        "Int32",
+        "Int64",
+        "Bytes"
+      ],
+      "implements": [
+        "parquet::data_type::AsBytes"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "via_trait": "parquet::data_type::AsBytes"
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &[u8]",
+          "summary": "Returns bytes of unscaled value."
+        },
+        {
+          "name": "from_bytes",
+          "signature": "fn from_bytes(value: ByteArray, precision: i32, scale: i32) -> Self",
+          "summary": "Creates new decimal value from `ByteArray`."
+        },
+        {
+          "name": "from_i32",
+          "signature": "fn from_i32(value: i32, precision: i32, scale: i32) -> Self",
+          "summary": "Creates new decimal value from `i32`."
+        },
+        {
+          "name": "from_i64",
+          "signature": "fn from_i64(value: i64, precision: i32, scale: i32) -> Self",
+          "summary": "Creates new decimal value from `i64`."
+        },
+        {
+          "name": "precision",
+          "signature": "fn precision(&self) -> i32",
+          "summary": "Returns decimal precision."
+        },
+        {
+          "name": "scale",
+          "signature": "fn scale(&self) -> i32",
+          "summary": "Returns decimal scale."
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::BoolType",
+      "name": "BoolType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct BoolType",
+      "summary": "Parquet physical type: BoolType",
+      "doc": "api/parquet.data_type.md#booltype",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::ByteArray",
+      "name": "ByteArray",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ByteArray",
+      "summary": "Rust representation for BYTE_ARRAY and FIXED_LEN_BYTE_ARRAY Parquet physical types. Value is backed by a byte buffer.",
+      "doc": "api/parquet.data_type.md#bytearray",
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "parquet::data_type::AsBytes",
+        "parquet::data_type::SliceAsBytes",
+        "parquet::file::page_index::column_index::ColumnIndexIterators"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "via_trait": "parquet::data_type::AsBytes"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[u8]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "as_utf8",
+          "signature": "fn as_utf8(&self) -> Result<&str>",
+          "summary": "Try to convert the byte array to a utf8 slice"
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &[u8]",
+          "summary": "Returns slice of data."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(b: &'a [u8]) -> ByteArray",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Checks if the underlying buffer is empty."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Gets length of the underlying byte buffer."
+        },
+        {
+          "name": "max_values_iter",
+          "signature": "fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "min_values_iter",
+          "signature": "fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates new byte array with no data set."
+        },
+        {
+          "name": "set_data",
+          "signature": "fn set_data(&mut self, data: Bytes)",
+          "summary": "Set data from another byte buffer."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, start: usize, len: usize) -> Self",
+          "summary": "Returns `ByteArray` instance with slice of values for a data."
+        },
+        {
+          "name": "slice_as_bytes",
+          "signature": "fn slice_as_bytes(_self: &[Self]) -> &[u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        },
+        {
+          "name": "slice_as_bytes_mut",
+          "signature": "unsafe fn slice_as_bytes_mut(_self: &mut [Self]) -> &mut [u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::ByteArrayType",
+      "name": "ByteArrayType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ByteArrayType",
+      "summary": "Parquet physical type: ByteArrayType",
+      "doc": "api/parquet.data_type.md#bytearraytype",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::DoubleType",
+      "name": "DoubleType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct DoubleType",
+      "summary": "Parquet physical type: DoubleType",
+      "doc": "api/parquet.data_type.md#doubletype",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::FixedLenByteArray",
+      "name": "FixedLenByteArray",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct FixedLenByteArray",
+      "summary": "Wrapper type for performance reasons, this represents `FIXED_LEN_BYTE_ARRAY` but in all other considerations behaves the same as `ByteArray`",
+      "doc": "api/parquet.data_type.md#fixedlenbytearray",
+      "implements": [
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut",
+        "parquet::data_type::AsBytes",
+        "parquet::data_type::SliceAsBytes",
+        "parquet::file::page_index::column_index::ColumnIndexIterators"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "via_trait": "parquet::data_type::AsBytes"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[u8]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut Self::Target",
+          "via_trait": "core::ops::deref::DerefMut"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(other: ByteArray) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "max_values_iter",
+          "signature": "fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "min_values_iter",
+          "signature": "fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "slice_as_bytes",
+          "signature": "fn slice_as_bytes(_self: &[Self]) -> &[u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        },
+        {
+          "name": "slice_as_bytes_mut",
+          "signature": "unsafe fn slice_as_bytes_mut(_self: &mut [Self]) -> &mut [u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::FixedLenByteArrayType",
+      "name": "FixedLenByteArrayType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct FixedLenByteArrayType",
+      "summary": "Parquet physical type: FixedLenByteArrayType",
+      "doc": "api/parquet.data_type.md#fixedlenbytearraytype",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::FloatType",
+      "name": "FloatType",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct FloatType",
+      "summary": "Parquet physical type: FloatType",
+      "doc": "api/parquet.data_type.md#floattype",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::Int32Type",
+      "name": "Int32Type",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Int32Type",
+      "summary": "Parquet physical type: Int32Type",
+      "doc": "api/parquet.data_type.md#int32type",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::Int64Type",
+      "name": "Int64Type",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Int64Type",
+      "summary": "Parquet physical type: Int64Type",
+      "doc": "api/parquet.data_type.md#int64type",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::Int96",
+      "name": "Int96",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Int96",
+      "summary": "Rust representation for logical type INT96, value is backed by an array of `u32`. The type only takes 12 bytes, without extra padding.",
+      "doc": "api/parquet.data_type.md#int96",
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "parquet::data_type::AsBytes",
+        "parquet::data_type::SliceAsBytes",
+        "parquet::file::page_index::column_index::ColumnIndexIterators"
+      ],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "via_trait": "parquet::data_type::AsBytes"
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &[u32]",
+          "summary": "Returns underlying data as slice of [`u32`]."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(buf: Vec<u32>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "max_values_iter",
+          "signature": "fn max_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "min_values_iter",
+          "signature": "fn min_values_iter(colidx: &ColumnIndexMetaData) -> impl Iterator<Item = Option<Self::Item>>",
+          "via_trait": "parquet::file::page_index::column_index::ColumnIndexIterators"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates new INT96 type struct with no data set."
+        },
+        {
+          "name": "set_data",
+          "signature": "fn set_data(&mut self, elem0: u32, elem1: u32, elem2: u32)",
+          "summary": "Sets data for this INT96 type."
+        },
+        {
+          "name": "slice_as_bytes",
+          "signature": "fn slice_as_bytes(_self: &[Self]) -> &[u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        },
+        {
+          "name": "slice_as_bytes_mut",
+          "signature": "unsafe fn slice_as_bytes_mut(_self: &mut [Self]) -> &mut [u8]",
+          "via_trait": "parquet::data_type::SliceAsBytes"
+        },
+        {
+          "name": "to_micros",
+          "signature": "fn to_micros(&self) -> i64",
+          "summary": "Converts this INT96 into an i64 representing the number of MICROSECONDS since EPOCH"
+        },
+        {
+          "name": "to_millis",
+          "signature": "fn to_millis(&self) -> i64",
+          "summary": "Converts this INT96 into an i64 representing the number of MILLISECONDS since EPOCH"
+        },
+        {
+          "name": "to_nanos",
+          "signature": "fn to_nanos(&self) -> i64",
+          "summary": "Converts this INT96 into an i64 representing the number of NANOSECONDS since EPOCH"
+        },
+        {
+          "name": "to_seconds",
+          "signature": "fn to_seconds(&self) -> i64",
+          "summary": "Converts this INT96 into an i64 representing the number of SECONDS since EPOCH"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::Int96Type",
+      "name": "Int96Type",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Int96Type",
+      "summary": "Parquet physical type: Int96Type",
+      "doc": "api/parquet.data_type.md#int96type",
+      "implements": [
+        "parquet::data_type::DataType"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_reader: ColumnReader) -> Option<ColumnReaderImpl<Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'a ColumnWriter<'b>) -> Option<&'a ColumnWriterImpl<'b, Self>>",
+          "via_trait": "parquet::data_type::DataType"
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "via_trait": "parquet::data_type::DataType"
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::AsBytes",
+      "name": "AsBytes",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait AsBytes",
+      "summary": "Converts an instance of data type to a slice of bytes as `u8`.",
+      "doc": "api/parquet.data_type.md#asbytes",
+      "implementors": [
+        "alloc::vec::Vec",
+        "parquet::data_type::ByteArray",
+        "parquet::data_type::Decimal",
+        "parquet::data_type::FixedLenByteArray",
+        "parquet::data_type::Int96"
+      ],
+      "required_methods": [
+        "as_bytes"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_bytes",
+          "signature": "fn as_bytes(&self) -> &[u8]",
+          "summary": "Returns slice of bytes for this data type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::DataType",
+      "name": "DataType",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait DataType: 'static + Send",
+      "summary": "Contains the Parquet physical type information as well as the Rust primitive type presentation.",
+      "doc": "api/parquet.data_type.md#datatype",
+      "implementors": [
+        "parquet::data_type::BoolType",
+        "parquet::data_type::ByteArrayType",
+        "parquet::data_type::DoubleType",
+        "parquet::data_type::FixedLenByteArrayType",
+        "parquet::data_type::FloatType",
+        "parquet::data_type::Int32Type",
+        "parquet::data_type::Int64Type",
+        "parquet::data_type::Int96Type"
+      ],
+      "required_methods": [
+        "get_column_reader",
+        "get_column_writer",
+        "get_column_writer_mut",
+        "get_column_writer_ref",
+        "get_type_size"
+      ],
+      "provided_methods": [
+        "get_physical_type"
+      ],
+      "methods": [
+        {
+          "name": "get_column_reader",
+          "signature": "fn get_column_reader(column_writer: ColumnReader) -> Option<ColumnReaderImpl<Self>> where Self: Sized",
+          "summary": "Returns the underlying [`ColumnReaderImpl`] for the given [`ColumnReader`]."
+        },
+        {
+          "name": "get_column_writer",
+          "signature": "fn get_column_writer(column_writer: ColumnWriter<'_>) -> Option<ColumnWriterImpl<'_, Self>> where Self: Sized",
+          "summary": "Returns the underlying [`ColumnWriterImpl`] for the given [`ColumnWriter`]."
+        },
+        {
+          "name": "get_column_writer_mut",
+          "signature": "fn get_column_writer_mut<'a, 'b: 'a>(column_writer: &'a mut ColumnWriter<'b>) -> Option<&'a mut ColumnWriterImpl<'b, Self>> where Self: Sized",
+          "summary": "Returns a mutable reference to the underlying [`ColumnWriterImpl`] for the given"
+        },
+        {
+          "name": "get_column_writer_ref",
+          "signature": "fn get_column_writer_ref<'a, 'b: 'a>(column_writer: &'b ColumnWriter<'a>) -> Option<&'b ColumnWriterImpl<'a, Self>> where Self: Sized",
+          "summary": "Returns a reference to the underlying [`ColumnWriterImpl`] for the given [`ColumnWriter`]."
+        },
+        {
+          "name": "get_physical_type",
+          "signature": "fn get_physical_type() -> Type",
+          "summary": "Returns Parquet physical type."
+        },
+        {
+          "name": "get_type_size",
+          "signature": "fn get_type_size() -> usize",
+          "summary": "Returns size in bytes for Rust representation of the physical type."
+        }
+      ]
+    },
+    {
+      "path": "parquet::data_type::SliceAsBytes",
+      "name": "SliceAsBytes",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait SliceAsBytes: Sized",
+      "summary": "Converts an slice of a data type to a slice of bytes.",
+      "doc": "api/parquet.data_type.md#sliceasbytes",
+      "implementors": [
+        "parquet::data_type::ByteArray",
+        "parquet::data_type::FixedLenByteArray",
+        "parquet::data_type::Int96"
+      ],
+      "required_methods": [
+        "slice_as_bytes",
+        "slice_as_bytes_mut"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "slice_as_bytes",
+          "signature": "fn slice_as_bytes(self_: &[Self]) -> &[u8]",
+          "summary": "Returns slice of bytes for a slice of this data type."
+        },
+        {
+          "name": "slice_as_bytes_mut",
+          "signature": "unsafe fn slice_as_bytes_mut(self_: &mut [Self]) -> &mut [u8]",
+          "summary": "Return the internal representation as a mutable slice"
+        }
+      ]
+    }
+  ]
+}

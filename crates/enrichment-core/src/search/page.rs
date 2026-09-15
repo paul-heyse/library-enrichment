@@ -34,7 +34,7 @@ impl SearchCursor {
         let mut value = Self {
             scope,
             query_digest,
-            contract: "search-keyset/1;lexical/2".into(),
+            contract: "search-keyset/2;lexical/2".into(),
             returned_before,
             after,
             check: String::new(),
@@ -56,7 +56,10 @@ impl SearchCursor {
     /// # Errors
     /// A failed serialization is not an empty cursor.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!("search_{}", super::hex(&serde_json::to_vec(self)?)))
+        Ok(format!(
+            "search2_{}",
+            super::hex(&serde_json::to_vec(self)?)
+        ))
     }
 
     /// # Errors
@@ -65,12 +68,15 @@ impl SearchCursor {
         if text.len() > 32768 {
             return Err(CursorError::Malformed);
         }
-        let bytes = super::unhex(text.strip_prefix("search_").ok_or(CursorError::Malformed)?)
-            .ok_or(CursorError::Malformed)?;
+        let bytes = super::unhex(
+            text.strip_prefix("search2_")
+                .ok_or(CursorError::Malformed)?,
+        )
+        .ok_or(CursorError::Malformed)?;
         let value: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
         if value.after.hit_order > 1
             || value.after.candidate_id.is_empty()
-            || value.contract != "search-keyset/1;lexical/2"
+            || value.contract != "search-keyset/2;lexical/2"
             || value.check != value.checksum()
         {
             return Err(CursorError::Malformed);
@@ -109,12 +115,14 @@ mod tests {
         );
         assert!(SearchCursor::decode(&encoded, "snapshot-b", "query-a").is_err());
         assert!(SearchCursor::decode(&encoded, "snapshot-a", "query-b").is_err());
+        let legacy = encoded.replacen("search2_", "search_", 1);
+        assert!(SearchCursor::decode(&legacy, "snapshot-a", "query-a").is_err());
         let mut corrupt = value;
         corrupt.after.subject = "pkg::Y".into();
         assert!(
             SearchCursor::decode(&corrupt.encode().expect("encode"), "snapshot-a", "query-a")
                 .is_err()
         );
-        assert!(SearchCursor::decode(&"search_00".repeat(4000), "snapshot-a", "query-a").is_err());
+        assert!(SearchCursor::decode(&"search2_00".repeat(4000), "snapshot-a", "query-a").is_err());
     }
 }

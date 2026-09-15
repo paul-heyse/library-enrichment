@@ -1,0 +1,278 @@
+{
+  "module": "datafusion_datasource_json::file_format",
+  "crate": "datafusion-datasource-json",
+  "api": "api/datafusion_datasource_json.file_format.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_json::file_format::JsonDecoder",
+      "name": "JsonDecoder",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonDecoder",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::datasource::file_format::json::JsonDecoder",
+        "datafusion_datasource_json::JsonDecoder"
+      ],
+      "implements": [
+        "datafusion_datasource::decoder::Decoder"
+      ],
+      "methods": [
+        {
+          "name": "can_flush_early",
+          "signature": "fn can_flush_early(&self) -> bool",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(decoder: json::reader::Decoder) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::file_format::JsonFormat",
+      "name": "JsonFormat",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonFormat",
+      "summary": "JSON `FileFormat` implementation supporting both line-delimited and array formats.",
+      "doc": "api/datafusion_datasource_json.file_format.md#jsonformat",
+      "aliases": [
+        "datafusion::datasource::file_format::json::JsonFormat",
+        "datafusion_datasource_json::JsonFormat"
+      ],
+      "implements": [
+        "datafusion_datasource::file_format::FileFormat"
+      ],
+      "methods": [
+        {
+          "name": "compression_type",
+          "signature": "fn compression_type(&self) -> Option<FileCompressionType>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, _state: &dyn Session, conf: FileScanConfig) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_writer_physical_plan",
+          "signature": "async fn create_writer_physical_plan(&self, input: Arc<dyn ExecutionPlan>, _state: &dyn Session, conf: FileSinkConfig, order_requirements: Option<LexRequirement>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "file_source",
+          "signature": "fn file_source(&self, table_schema: TableSchema) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "get_ext_with_compression",
+          "signature": "fn get_ext_with_compression(&self, file_compression_type: &FileCompressionType) -> Result<String>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_schema",
+          "signature": "async fn infer_schema(&self, _state: &dyn Session, store: &Arc<dyn ObjectStore>, objects: &[ObjectMeta]) -> Result<SchemaRef>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_stats",
+          "signature": "async fn infer_stats(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Statistics>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "is_newline_delimited",
+          "signature": "fn is_newline_delimited(&self) -> bool",
+          "summary": "Returns whether this format expects newline-delimited JSON."
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &JsonOptions",
+          "summary": "Retrieve JSON options"
+        },
+        {
+          "name": "with_file_compression_type",
+          "signature": "fn with_file_compression_type(self, file_compression_type: FileCompressionType) -> Self",
+          "summary": "Set a [`FileCompressionType`] of JSON - defaults to `FileCompressionType::UNCOMPRESSED`"
+        },
+        {
+          "name": "with_newline_delimited",
+          "signature": "fn with_newline_delimited(self, newline_delimited: bool) -> Self",
+          "summary": "Set whether to read as newline-delimited JSON (NDJSON)."
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: JsonOptions) -> Self",
+          "summary": "Set JSON options"
+        },
+        {
+          "name": "with_schema_infer_max_rec",
+          "signature": "fn with_schema_infer_max_rec(self, max_rec: usize) -> Self",
+          "summary": "Set a limit in terms of records to scan to infer the schema - defaults to `DEFAULT_SCHEMA_INFER_MAX_RECORD`"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::file_format::JsonFormatFactory",
+      "name": "JsonFormatFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonFormatFactory",
+      "summary": "Factory struct used to create [JsonFormat]",
+      "doc": "api/datafusion_datasource_json.file_format.md#jsonformatfactory",
+      "aliases": [
+        "datafusion::datasource::file_format::json::JsonFormatFactory",
+        "datafusion_datasource_json::JsonFormatFactory"
+      ],
+      "fields": [
+        "options"
+      ],
+      "implements": [
+        "datafusion_common::file_options::file_type::GetExt",
+        "datafusion_datasource::file_format::FileFormatFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) -> Result<Arc<dyn FileFormat>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "default",
+          "signature": "fn default(&self) -> Arc<dyn FileFormat>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_common::file_options::file_type::GetExt"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates an instance of [JsonFormatFactory]"
+        },
+        {
+          "name": "new_with_options",
+          "signature": "fn new_with_options(options: JsonOptions) -> Self",
+          "summary": "Creates an instance of [JsonFormatFactory] with customized default options"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::file_format::JsonSerializer",
+      "name": "JsonSerializer",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonSerializer",
+      "summary": "Define a struct for serializing Json records to a stream",
+      "doc": "api/datafusion_datasource_json.file_format.md#jsonserializer",
+      "aliases": [
+        "datafusion::datasource::file_format::json::JsonSerializer",
+        "datafusion_datasource_json::JsonSerializer"
+      ],
+      "implements": [
+        "datafusion_datasource::write::BatchSerializer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Constructor for the JsonSerializer object"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize(&self, batch: RecordBatch, _initial: bool) -> Result<Bytes>",
+          "via_trait": "datafusion_datasource::write::BatchSerializer"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::file_format::JsonSink",
+      "name": "JsonSink",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonSink",
+      "summary": "Implements [`DataSink`] for writing to a Json file.",
+      "doc": "api/datafusion_datasource_json.file_format.md#jsonsink",
+      "aliases": [
+        "datafusion::datasource::file_format::json::JsonSink",
+        "datafusion_datasource_json::JsonSink"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "datafusion_datasource::file_sink_config::FileSink",
+        "datafusion_datasource::sink::DataSink",
+        "datafusion_physical_plan::display::DisplayAs"
+      ],
+      "methods": [
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &FileSinkConfig",
+          "via_trait": "datafusion_datasource::file_sink_config::FileSink"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(config: FileSinkConfig, writer_options: JsonWriterOptions) -> Self",
+          "summary": "Create from config."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "spawn_writer_tasks_and_join",
+          "signature": "async fn spawn_writer_tasks_and_join(&self, context: &Arc<TaskContext>, demux_task: SpawnedTask<Result<()>>, file_stream_rx: DemuxedStreamReceiver, object_store: Arc<dyn ObjectStore>) -> Result<u64>",
+          "via_trait": "datafusion_datasource::file_sink_config::FileSink"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: &datafusion_proto_models::protobuf::JsonSink) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstructs a [`DataSinkExec`] containing a `JsonSink` from protobuf."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, exec: &DataSinkExec, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "write_all",
+          "signature": "async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "writer_options",
+          "signature": "fn writer_options(&self) -> &JsonWriterOptions",
+          "summary": "Retrieve the writer options"
+        }
+      ]
+    }
+  ]
+}

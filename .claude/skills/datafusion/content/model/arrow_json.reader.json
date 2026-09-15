@@ -1,0 +1,168 @@
+{
+  "module": "arrow_json::reader",
+  "crate": "arrow-json",
+  "api": "api/arrow_json.reader.md",
+  "items": [
+    {
+      "path": "arrow_json::reader::Decoder",
+      "name": "Decoder",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct Decoder",
+      "summary": "A low-level interface for reading JSON data from a byte stream",
+      "doc": "api/arrow_json.reader.md#decoder",
+      "methods": [
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+          "summary": "Read JSON objects from `buf`, returning the number of bytes read"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+          "summary": "Flushes the currently buffered data to a [`RecordBatch`]"
+        },
+        {
+          "name": "has_partial_record",
+          "signature": "fn has_partial_record(&self) -> bool",
+          "summary": "True if the decoder is currently part way through decoding a record."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "True if there are no records to flush, i.e. [`Self::len`] is zero."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "The number of unflushed records, including the partially decoded record (if any)."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: Serialize>(&mut self, rows: &[S]) -> Result<(), ArrowError>",
+          "summary": "Serialize `rows` to this [`Decoder`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::reader::DecoderContext",
+      "name": "DecoderContext",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct DecoderContext",
+      "summary": "Context for decoder creation, containing configuration.",
+      "doc": "api/arrow_json.reader.md#decodercontext",
+      "methods": [
+        {
+          "name": "coerce_primitive",
+          "signature": "fn coerce_primitive(&self) -> bool",
+          "summary": "Returns whether to coerce primitive types (e.g., number to string)"
+        },
+        {
+          "name": "ignore_type_conflicts",
+          "signature": "fn ignore_type_conflicts(&self) -> bool",
+          "summary": "Returns whether to treat columns with incompatible types as missing (i.e. NULL)"
+        },
+        {
+          "name": "strict_mode",
+          "signature": "fn strict_mode(&self) -> bool",
+          "summary": "Returns whether to validate struct fields strictly"
+        },
+        {
+          "name": "struct_mode",
+          "signature": "fn struct_mode(&self) -> StructMode",
+          "summary": "Returns how to decode struct fields"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::reader::Reader",
+      "name": "Reader",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct Reader<R>",
+      "summary": "Reads JSON data with a known schema directly into arrow [`RecordBatch`]",
+      "doc": "api/arrow_json.reader.md#reader",
+      "aliases": [
+        "arrow::json::Reader",
+        "arrow_json::Reader"
+      ],
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::reader::ReaderBuilder",
+      "name": "ReaderBuilder",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct ReaderBuilder",
+      "summary": "A builder for [`Reader`] and [`Decoder`]",
+      "doc": "api/arrow_json.reader.md#readerbuilder",
+      "aliases": [
+        "arrow::json::ReaderBuilder",
+        "arrow_json::ReaderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<R: BufRead>(self, reader: R) -> Result<Reader<R>, ArrowError>",
+          "summary": "Create a [`Reader`] with the provided [`BufRead`]"
+        },
+        {
+          "name": "build_decoder",
+          "signature": "fn build_decoder(self) -> Result<Decoder, ArrowError>",
+          "summary": "Create a [`Decoder`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef) -> Self",
+          "summary": "Create a new [`ReaderBuilder`] with the provided [`SchemaRef`]"
+        },
+        {
+          "name": "new_with_field",
+          "signature": "fn new_with_field(field: impl Into<FieldRef>) -> Self",
+          "summary": "Create a new [`ReaderBuilder`] that will parse JSON values of `field.data_type()`"
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: usize) -> Self",
+          "summary": "Sets the batch size in rows to read"
+        },
+        {
+          "name": "with_coerce_primitive",
+          "signature": "fn with_coerce_primitive(self, coerce_primitive: bool) -> Self",
+          "summary": "Sets if the decoder should coerce primitive values (bool and number) into string when the Schema's column is Utf8 or LargeUtf8."
+        },
+        {
+          "name": "with_ignore_type_conflicts",
+          "signature": "fn with_ignore_type_conflicts(self, ignore_type_conflicts: bool) -> Self",
+          "summary": "Sets whether the decoder should produce NULL instead of returning an error if it encounters value that can not be parsed into the specified column type."
+        },
+        {
+          "name": "with_strict_mode",
+          "signature": "fn with_strict_mode(self, strict_mode: bool) -> Self",
+          "summary": "Sets if the decoder should return an error if it encounters a column not present in `schema`. If `struct_mode` is `ListOnly` the value of `strict_mode` is effectively `true`. It is required for all fields of the struct to be in the list: w…"
+        },
+        {
+          "name": "with_struct_mode",
+          "signature": "fn with_struct_mode(self, struct_mode: StructMode) -> Self",
+          "summary": "Set the [`StructMode`] for the reader, which determines whether structs can be decoded from JSON as objects or lists. For more details refer to the enum documentation. Default is to use `ObjectOnly`."
+        }
+      ]
+    }
+  ]
+}

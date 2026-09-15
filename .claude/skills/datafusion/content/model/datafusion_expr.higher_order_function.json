@@ -1,0 +1,388 @@
+{
+  "module": "datafusion_expr::higher_order_function",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.higher_order_function.md",
+  "items": [
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderTypeSignature",
+      "name": "HigherOrderTypeSignature",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum HigherOrderTypeSignature",
+      "summary": "The types of arguments for which a function has implementations.",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherordertypesignature",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderTypeSignature",
+        "datafusion_expr::HigherOrderTypeSignature"
+      ],
+      "variants": [
+        "UserDefined",
+        "VariadicAny",
+        "Any",
+        "Exact"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::LambdaParametersProgress",
+      "name": "LambdaParametersProgress",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum LambdaParametersProgress",
+      "summary": "Represents a step during the resolution of the parameters of all lambdas of a given higher-order function via [HigherOrderUDFImpl::lambda_parameters]. It's valid that the fields of a given lambda changes between steps, and is up to the imp…",
+      "doc": "api/datafusion_expr.higher_order_function.md#lambdaparametersprogress",
+      "aliases": [
+        "datafusion::logical_expr::LambdaParametersProgress",
+        "datafusion_expr::LambdaParametersProgress"
+      ],
+      "variants": [
+        "Partial",
+        "Complete"
+      ]
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::ValueOrLambda",
+      "name": "ValueOrLambda",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum ValueOrLambda<V, L>",
+      "summary": "An argument to a higher order function",
+      "doc": "api/datafusion_expr.higher_order_function.md#valueorlambda",
+      "aliases": [
+        "datafusion::logical_expr::ValueOrLambda",
+        "datafusion_expr::ValueOrLambda"
+      ],
+      "variants": [
+        "Value",
+        "Lambda"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderFunctionArgs",
+      "name": "HigherOrderFunctionArgs",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct HigherOrderFunctionArgs",
+      "summary": "Arguments passed to [`HigherOrderUDFImpl::invoke_with_args`] when invoking a higher order function.",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherorderfunctionargs",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderFunctionArgs",
+        "datafusion_expr::HigherOrderFunctionArgs"
+      ],
+      "fields": [
+        "args",
+        "arg_fields",
+        "number_rows",
+        "return_field",
+        "config_options"
+      ],
+      "methods": [
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self) -> &DataType",
+          "summary": "The return type of the function. See [`Self::return_field`] for more details."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderReturnFieldArgs",
+      "name": "HigherOrderReturnFieldArgs",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct HigherOrderReturnFieldArgs<'a>",
+      "summary": "Information about arguments passed to the function",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherorderreturnfieldargs",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderReturnFieldArgs",
+        "datafusion_expr::HigherOrderReturnFieldArgs"
+      ],
+      "fields": [
+        "arg_fields",
+        "scalar_arguments"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderSignature",
+      "name": "HigherOrderSignature",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct HigherOrderSignature",
+      "summary": "Provides information necessary for calling a higher order function.",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherordersignature",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderSignature",
+        "datafusion_expr::HigherOrderSignature"
+      ],
+      "fields": [
+        "type_signature",
+        "volatility",
+        "lambda_parameters_max_iterations"
+      ],
+      "methods": [
+        {
+          "name": "any",
+          "signature": "fn any(arg_count: usize, volatility: Volatility) -> Self",
+          "summary": "A specified number of arguments of any type"
+        },
+        {
+          "name": "exact",
+          "signature": "fn exact(args: Vec<ValueOrLambda<(), ()>>, volatility: Volatility) -> Self",
+          "summary": "Exactly the specified arguments in the given order, with arbitrary types. DataFusion will call [`HigherOrderUDFImpl::coerce_value_types`] to prepare the value argument types."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(type_signature: HigherOrderTypeSignature, volatility: Volatility) -> Self",
+          "summary": "Creates a new `HigherOrderSignature` from a given type signature and volatility."
+        },
+        {
+          "name": "user_defined",
+          "signature": "fn user_defined(volatility: Volatility) -> Self",
+          "summary": "User-defined coercion rules for the function."
+        },
+        {
+          "name": "variadic_any",
+          "signature": "fn variadic_any(volatility: Volatility) -> Self",
+          "summary": "An arbitrary number of lambdas or arguments of any type."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderUDF",
+      "name": "HigherOrderUDF",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct HigherOrderUDF",
+      "summary": "Logical representation of a Higher Order User Defined Function.",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherorderudf",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderUDF",
+        "datafusion_expr::HigherOrderUDF"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "aliases",
+          "signature": "fn aliases(&self) -> &[String]",
+          "summary": "Returns the aliases for this function."
+        },
+        {
+          "name": "clear_null_values",
+          "signature": "fn clear_null_values(&self) -> bool",
+          "summary": "Whether List or LargeList arguments should have non-empty null sublists cleaned before invoking this function."
+        },
+        {
+          "name": "coerce_value_types",
+          "signature": "fn coerce_value_types(&self, arg_types: &[DataType]) -> Result<Vec<DataType>>",
+          "summary": "Coerce value arguments of a function call to types that the function can evaluate."
+        },
+        {
+          "name": "coerce_values_for_lambdas",
+          "signature": "fn coerce_values_for_lambdas(&self, fields: &[ValueOrLambda<DataType, DataType>]) -> Result<Option<Vec<DataType>>>",
+          "summary": "Coerce value arguments based on lambda output types."
+        },
+        {
+          "name": "conditional_arguments",
+          "signature": "fn conditional_arguments<'a>(&self, args: &'a [Expr]) -> Option<(Vec<&'a Expr>, Vec<&'a Expr>)>",
+          "summary": "Returns which arguments are evaluated eagerly vs lazily."
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "summary": "Returns the documentation for this function, if any."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(fun: F) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &Arc<dyn HigherOrderUDFImpl>",
+          "summary": "Return the underlying [`HigherOrderUDFImpl`] trait object for this function."
+        },
+        {
+          "name": "invoke_with_args",
+          "signature": "fn invoke_with_args(&self, args: HigherOrderFunctionArgs) -> Result<ColumnarValue>",
+          "summary": "Invoke the function returning the appropriate result."
+        },
+        {
+          "name": "lambda_parameters",
+          "signature": "fn lambda_parameters(&self, step: usize, fields: &[ValueOrLambda<FieldRef, Option<FieldRef>>]) -> Result<LambdaParametersProgress>",
+          "summary": "Returns the parameters of all lambdas of this function for the current step."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns this function's name."
+        },
+        {
+          "name": "new_from_impl",
+          "signature": "fn new_from_impl<F>(fun: F) -> HigherOrderUDF where F: HigherOrderUDFImpl + 'static",
+          "summary": "Create a new `HigherOrderUDF` from a [`HigherOrderUDFImpl`] trait object."
+        },
+        {
+          "name": "new_from_shared_impl",
+          "signature": "fn new_from_shared_impl(fun: Arc<dyn HigherOrderUDFImpl>) -> HigherOrderUDF",
+          "summary": "Create a new `HigherOrderUDF` from a shared [`HigherOrderUDFImpl`] trait object."
+        },
+        {
+          "name": "return_field_from_args",
+          "signature": "fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<FieldRef>",
+          "summary": "Returns the return field of the function given its arguments."
+        },
+        {
+          "name": "schema_name",
+          "signature": "fn schema_name(&self, args: &[Expr]) -> Result<String>",
+          "summary": "Returns this function's schema_name."
+        },
+        {
+          "name": "short_circuits",
+          "signature": "fn short_circuits(&self) -> bool",
+          "summary": "Returns true if some of this function's subexpressions may not be evaluated."
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &HigherOrderSignature",
+          "summary": "Returns this function's [`HigherOrderSignature`]."
+        },
+        {
+          "name": "with_aliases",
+          "signature": "fn with_aliases(self, aliases: impl IntoIterator<Item = &'static str>) -> Self",
+          "summary": "Adds additional names that can be used to invoke this function, in addition to `name`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::LambdaArgument",
+      "name": "LambdaArgument",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct LambdaArgument",
+      "summary": "A lambda argument to a HigherOrderFunction",
+      "doc": "api/datafusion_expr.higher_order_function.md#lambdaargument",
+      "aliases": [
+        "datafusion::logical_expr::LambdaArgument",
+        "datafusion_expr::LambdaArgument"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, args: &[&dyn Fn() -> Result<ArrayRef>], spread_captures: impl FnOnce(&[ArrayRef]) -> Result<Vec<ArrayRef>>) -> Result<ColumnarValue>",
+          "summary": "Evaluate this lambda `args` should evaluate to the value of each parameter of the correspondent lambda returned in [HigherOrderUDFImpl::lambda_parameters]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(params: Vec<FieldRef>, body: Arc<dyn PhysicalExpr>, captures: Option<RecordBatch>, used_param_indices: &[usize]) -> Self",
+          "summary": "# Preconditions"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::higher_order_function::HigherOrderUDFImpl",
+      "name": "HigherOrderUDFImpl",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait HigherOrderUDFImpl: Debug + DynEq + DynHash + Send + Sync + Any",
+      "summary": "Trait for implementing user defined higher order functions.",
+      "doc": "api/datafusion_expr.higher_order_function.md#higherorderudfimpl",
+      "aliases": [
+        "datafusion::logical_expr::HigherOrderUDFImpl",
+        "datafusion_expr::HigherOrderUDFImpl"
+      ],
+      "implementors": [
+        "datafusion_functions_nested::array_any_match::ArrayAnyMatch",
+        "datafusion_functions_nested::array_filter::ArrayFilter",
+        "datafusion_functions_nested::array_first::ArrayFirst",
+        "datafusion_functions_nested::array_transform::ArrayTransform"
+      ],
+      "required_methods": [
+        "invoke_with_args",
+        "lambda_parameters",
+        "name",
+        "return_field_from_args",
+        "signature"
+      ],
+      "provided_methods": [
+        "aliases",
+        "clear_null_values",
+        "coerce_value_types",
+        "coerce_values_for_lambdas",
+        "conditional_arguments",
+        "documentation",
+        "schema_name",
+        "short_circuits"
+      ],
+      "methods": [
+        {
+          "name": "aliases",
+          "signature": "fn aliases(&self) -> &[String]",
+          "summary": "Returns any aliases (alternate names) for this function."
+        },
+        {
+          "name": "clear_null_values",
+          "signature": "fn clear_null_values(&self) -> bool",
+          "summary": "Whether List or LargeList arguments should have it's non-empty null sublists cleaned with [remove_list_null_values] before invoking this function"
+        },
+        {
+          "name": "coerce_value_types",
+          "signature": "fn coerce_value_types(&self, _arg_types: &[DataType]) -> Result<Vec<DataType>>",
+          "summary": "Coerce value arguments of a function call to types that the function can evaluate. Note that if you need to coerce values based on the output type of lambdas, you must use [HigherOrderUDFImpl::coerce_values_for_lambdas], as this function i…"
+        },
+        {
+          "name": "coerce_values_for_lambdas",
+          "signature": "fn coerce_values_for_lambdas(&self, _fields: &[ValueOrLambda<DataType, DataType>]) -> Result<Option<Vec<DataType>>>",
+          "summary": "Coerce value arguments of a function call to types that the function can evaluate also taking into account the *output type of it's lambdas*. This differs from [HigherOrderUDFImpl::coerce_value_types] that only has access to the type of it…"
+        },
+        {
+          "name": "conditional_arguments",
+          "signature": "fn conditional_arguments<'a>(&self, args: &'a [Expr]) -> Option<(Vec<&'a Expr>, Vec<&'a Expr>)>",
+          "summary": "Determines which of the arguments passed to *this higher-order function* are evaluated eagerly and which may be evaluated lazily. Note that this does *not* applies to the arguments that *lambda functions* pass to it's body expression"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "summary": "Returns the documentation for this function."
+        },
+        {
+          "name": "invoke_with_args",
+          "signature": "fn invoke_with_args(&self, args: HigherOrderFunctionArgs) -> Result<ColumnarValue>",
+          "summary": "Invoke the function returning the appropriate result."
+        },
+        {
+          "name": "lambda_parameters",
+          "signature": "fn lambda_parameters(&self, step: usize, fields: &[ValueOrLambda<FieldRef, Option<FieldRef>>]) -> Result<LambdaParametersProgress>",
+          "summary": "Return the field of all the parameters supported by the lambdas in `fields`. If a lambda support multiple parameters, all should be returned, regardless of whether they are used or not on a particular invocation"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns this function's name"
+        },
+        {
+          "name": "return_field_from_args",
+          "signature": "fn return_field_from_args(&self, args: HigherOrderReturnFieldArgs<'_>) -> Result<FieldRef>",
+          "summary": "What type will be returned by this function, given the arguments?"
+        },
+        {
+          "name": "schema_name",
+          "signature": "fn schema_name(&self, args: &[Expr]) -> Result<String>",
+          "summary": "Returns the name of the column this expression would create"
+        },
+        {
+          "name": "short_circuits",
+          "signature": "fn short_circuits(&self) -> bool",
+          "summary": "Returns true if some of this `exprs` subexpressions may not be evaluated and thus any side effects (like divide by zero) may not be encountered."
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &HigherOrderSignature",
+          "summary": "Returns a [`HigherOrderSignature`] describing the argument types for which this function has an implementation, and the function's [`Volatility`]."
+        }
+      ]
+    }
+  ]
+}

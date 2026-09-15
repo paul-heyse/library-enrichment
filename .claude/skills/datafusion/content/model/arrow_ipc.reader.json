@@ -1,0 +1,291 @@
+{
+  "module": "arrow_ipc::reader",
+  "crate": "arrow-ipc",
+  "api": "api/arrow_ipc.reader.md",
+  "items": [
+    {
+      "path": "arrow_ipc::reader::read_dictionary",
+      "name": "read_dictionary",
+      "kind": "function",
+      "crate": "arrow-ipc",
+      "signature": "fn read_dictionary(buf: &arrow_buffer::Buffer, batch: DictionaryBatch<'_>, schema: &Schema, dictionaries_by_id: &mut std::collections::HashMap<i64, ArrayRef>, metadata: &MetadataVersion) -> Result<(), ArrowError>",
+      "summary": "Read the dictionary from the buffer and provided metadata, updating the `dictionaries_by_id` with the resulting dictionary",
+      "doc": "api/arrow_ipc.reader.md#read_dictionary"
+    },
+    {
+      "path": "arrow_ipc::reader::read_dictionary_impl",
+      "name": "read_dictionary_impl",
+      "kind": "function",
+      "crate": "arrow-ipc",
+      "signature": "fn read_dictionary_impl(buf: &arrow_buffer::Buffer, batch: DictionaryBatch<'_>, schema: &Schema, dictionaries_by_id: &mut std::collections::HashMap<i64, ArrayRef>, metadata: &MetadataVersion, require_alignment: bool, skip_validation: arrow_data::UnsafeFlag) -> Result<(), ArrowError>",
+      "summary": "Low-level version of [`read_dictionary`] with alignment and validation controls",
+      "doc": "api/arrow_ipc.reader.md#read_dictionary_impl"
+    },
+    {
+      "path": "arrow_ipc::reader::read_footer_length",
+      "name": "read_footer_length",
+      "kind": "function",
+      "crate": "arrow-ipc",
+      "signature": "fn read_footer_length(buf: [u8; 10]) -> Result<usize, ArrowError>",
+      "summary": "Read the footer length from the last 10 bytes of an Arrow IPC file",
+      "doc": "api/arrow_ipc.reader.md#read_footer_length"
+    },
+    {
+      "path": "arrow_ipc::reader::read_record_batch",
+      "name": "read_record_batch",
+      "kind": "function",
+      "crate": "arrow-ipc",
+      "signature": "fn read_record_batch(buf: &arrow_buffer::Buffer, batch: RecordBatch<'_>, schema: SchemaRef, dictionaries_by_id: &std::collections::HashMap<i64, ArrayRef>, projection: Option<&[usize]>, metadata: &MetadataVersion) -> Result<RecordBatch, ArrowError>",
+      "summary": "Creates a record batch from binary data using the `crate::RecordBatch` indexes and the `Schema`.",
+      "doc": "api/arrow_ipc.reader.md#read_record_batch"
+    },
+    {
+      "path": "arrow_ipc::reader::FileDecoder",
+      "name": "FileDecoder",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct FileDecoder",
+      "summary": "A low-level, push-based interface for reading an IPC file",
+      "doc": "api/arrow_ipc.reader.md#filedecoder",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, version: MetadataVersion) -> Self",
+          "summary": "Create a new [`FileDecoder`] with the given schema and version"
+        },
+        {
+          "name": "read_dictionary",
+          "signature": "fn read_dictionary(&mut self, block: &Block, buf: &Buffer) -> Result<(), ArrowError>",
+          "summary": "Read the dictionary with the given block and data buffer"
+        },
+        {
+          "name": "read_record_batch",
+          "signature": "fn read_record_batch(&self, block: &Block, buf: &Buffer) -> Result<Option<RecordBatch>, ArrowError>",
+          "summary": "Read the RecordBatch with the given block and data buffer"
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Vec<usize>) -> Self",
+          "summary": "Specify a projection"
+        },
+        {
+          "name": "with_require_alignment",
+          "signature": "fn with_require_alignment(self, require_alignment: bool) -> Self",
+          "summary": "Specifies if the array data in input buffers is required to be properly aligned."
+        },
+        {
+          "name": "with_skip_validation",
+          "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+          "summary": "Specifies if validation should be skipped when reading data (defaults to `false`)"
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::reader::FileReader",
+      "name": "FileReader",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct FileReader<R>",
+      "summary": "Arrow File Reader",
+      "doc": "api/arrow_ipc.reader.md#filereader",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "custom_metadata",
+          "signature": "fn custom_metadata(&self) -> &HashMap<String, String>",
+          "summary": "Return user defined customized metadata"
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut R",
+          "summary": "Gets a mutable reference to the underlying reader."
+        },
+        {
+          "name": "get_ref",
+          "signature": "fn get_ref(&self) -> &R",
+          "summary": "Gets a reference to the underlying reader."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "num_batches",
+          "signature": "fn num_batches(&self) -> usize",
+          "summary": "Return the number of batches in the file"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Return the schema of the file"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        },
+        {
+          "name": "set_index",
+          "signature": "fn set_index(&mut self, index: usize) -> Result<(), ArrowError>",
+          "summary": "See to a specific [`RecordBatch`]"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new file reader."
+        },
+        {
+          "name": "try_new_buffered",
+          "signature": "fn try_new_buffered(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new file reader with the reader wrapped in a BufReader."
+        },
+        {
+          "name": "with_skip_validation",
+          "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+          "summary": "Specifies if validation should be skipped when reading data (defaults to `false`)"
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::reader::FileReaderBuilder",
+      "name": "FileReaderBuilder",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct FileReaderBuilder",
+      "summary": "Build an Arrow [`FileReader`] with custom options.",
+      "doc": "api/arrow_ipc.reader.md#filereaderbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<R: Read + Seek>(self, reader: R) -> Result<FileReader<R>, ArrowError>",
+          "summary": "Build [`FileReader`] with given reader."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Options for creating a new [`FileReader`]."
+        },
+        {
+          "name": "with_max_footer_fb_depth",
+          "signature": "fn with_max_footer_fb_depth(self, max_footer_fb_depth: usize) -> Self",
+          "summary": "Flatbuffers option for parsing the footer. Controls the max depth for schemas with nested fields parsed from the footer."
+        },
+        {
+          "name": "with_max_footer_fb_tables",
+          "signature": "fn with_max_footer_fb_tables(self, max_footer_fb_tables: usize) -> Self",
+          "summary": "Flatbuffers option for parsing the footer. Controls the max number of fields and metadata key-value pairs that can be parsed from the schema of the footer."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Vec<usize>) -> Self",
+          "summary": "Optional projection for which columns to load (zero-based column indices)."
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::reader::RecordBatchDecoder",
+      "name": "RecordBatchDecoder",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct RecordBatchDecoder<'a>",
+      "summary": "State for decoding Arrow arrays from an [IPC RecordBatch] structure to [`RecordBatch`]",
+      "doc": "api/arrow_ipc.reader.md#recordbatchdecoder",
+      "methods": [
+        {
+          "name": "read_record_batch",
+          "signature": "fn read_record_batch(self) -> Result<RecordBatch, ArrowError>",
+          "summary": "Read the record batch, consuming the reader"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(buf: &'a Buffer, batch: RecordBatch<'a>, schema: SchemaRef, dictionaries_by_id: &'a HashMap<i64, ArrayRef>, metadata: &'a MetadataVersion) -> Result<Self, ArrowError>",
+          "summary": "Create a reader for decoding arrays from an encoded [`RecordBatch`]"
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Option<&'a [usize]>) -> Self",
+          "summary": "Set the projection (default: None)"
+        },
+        {
+          "name": "with_require_alignment",
+          "signature": "fn with_require_alignment(self, require_alignment: bool) -> Self",
+          "summary": "Set require_alignment (default: false)"
+        },
+        {
+          "name": "with_skip_validation",
+          "signature": "fn with_skip_validation(self, skip_validation: UnsafeFlag) -> Self",
+          "summary": "Specifies if validation should be skipped when reading data (defaults to `false`)"
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::reader::StreamReader",
+      "name": "StreamReader",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct StreamReader<R>",
+      "summary": "Arrow Stream Reader",
+      "doc": "api/arrow_ipc.reader.md#streamreader",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut R",
+          "summary": "Gets a mutable reference to the underlying reader."
+        },
+        {
+          "name": "get_ref",
+          "signature": "fn get_ref(&self) -> &R",
+          "summary": "Gets a reference to the underlying reader."
+        },
+        {
+          "name": "is_finished",
+          "signature": "fn is_finished(&self) -> bool",
+          "summary": "Check if the stream is finished"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Return the schema of the stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(reader: R, projection: Option<Vec<usize>>) -> Result<StreamReader<R>, ArrowError>",
+          "summary": "Try to create a new stream reader."
+        },
+        {
+          "name": "try_new_buffered",
+          "signature": "fn try_new_buffered(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new stream reader with the reader wrapped in a BufReader."
+        },
+        {
+          "name": "try_new_unbuffered",
+          "signature": "fn try_new_unbuffered(reader: R, projection: Option<Vec<usize>>) -> Result<Self, ArrowError>",
+          "summary": "Deprecated, use [`StreamReader::try_new`] instead."
+        },
+        {
+          "name": "with_skip_validation",
+          "signature": "unsafe fn with_skip_validation(self, skip_validation: bool) -> Self",
+          "summary": "Specifies if validation should be skipped when reading data (defaults to `false`)"
+        }
+      ]
+    }
+  ]
+}

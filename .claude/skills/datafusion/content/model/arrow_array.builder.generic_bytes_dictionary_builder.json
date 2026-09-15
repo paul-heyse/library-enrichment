@@ -1,0 +1,189 @@
+{
+  "module": "arrow_array::builder::generic_bytes_dictionary_builder",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.builder.generic_bytes_dictionary_builder.md",
+  "items": [
+    {
+      "path": "arrow_array::builder::generic_bytes_dictionary_builder::GenericByteDictionaryBuilder",
+      "name": "GenericByteDictionaryBuilder",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct GenericByteDictionaryBuilder<K, T> where K: ArrowDictionaryKeyType, T: ByteArrayType",
+      "summary": "Builder for [`DictionaryArray`] of [`GenericByteArray`]",
+      "doc": "api/arrow_array.builder.generic_bytes_dictionary_builder.md#genericbytedictionarybuilder",
+      "implements": [
+        "arrow_array::builder::ArrayBuilder",
+        "core::iter::traits::collect::Extend"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(&mut self, value: impl AsRef<T::Native>) -> Result<K::Native, ArrowError>",
+          "summary": "Append a value to the array. Return an existing index if already present in the values array or a new index if the value is appended to the values array."
+        },
+        {
+          "name": "append_n",
+          "signature": "fn append_n(&mut self, value: impl AsRef<T::Native>, count: usize) -> Result<K::Native, ArrowError>",
+          "summary": "Append a value multiple times to the array. This is the same as `append` but allows to append the same value multiple times without doing multiple lookups."
+        },
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "summary": "Appends a null slot into the builder"
+        },
+        {
+          "name": "append_nulls",
+          "signature": "fn append_nulls(&mut self, n: usize)",
+          "summary": "Infallibly append `n` null slots into the builder"
+        },
+        {
+          "name": "append_option",
+          "signature": "fn append_option(&mut self, value: Option<impl AsRef<T::Native>>)",
+          "summary": "Append an `Option` value into the builder"
+        },
+        {
+          "name": "append_options",
+          "signature": "fn append_options(&mut self, value: Option<impl AsRef<T::Native>>, count: usize)",
+          "summary": "Append an `Option` value into the builder repeatedly `count` times. This is the same as `append_option` but allows to append the same value multiple times without doing multiple lookups."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value(&mut self, value: impl AsRef<T::Native>)",
+          "summary": "Infallibly append a value to this builder"
+        },
+        {
+          "name": "append_values",
+          "signature": "fn append_values(&mut self, value: impl AsRef<T::Native>, count: usize)",
+          "summary": "Infallibly append a value to this builder repeatedly `count` times. This is the same as `append_value` but allows to append the same value multiple times without doing multiple lookups."
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Returns the builder as an non-mutable `Any` reference."
+        },
+        {
+          "name": "as_any_mut",
+          "signature": "fn as_any_mut(&mut self) -> &mut dyn Any",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Returns the builder as an mutable `Any` reference."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<I: IntoIterator<Item = Option<V>>>(&mut self, iter: I)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "extend_dictionary",
+          "signature": "fn extend_dictionary(&mut self, dictionary: &TypedDictionaryArray<'_, K, GenericByteArray<T>>) -> Result<(), ArrowError>",
+          "summary": "Extends builder with an existing dictionary array."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> DictionaryArray<K>",
+          "summary": "Builds the `DictionaryArray` and reset this builder."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> ArrayRef",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Builds the array and reset this builder."
+        },
+        {
+          "name": "finish_cloned",
+          "signature": "fn finish_cloned(&self) -> DictionaryArray<K>",
+          "summary": "Builds the `DictionaryArray` without resetting the builder."
+        },
+        {
+          "name": "finish_cloned",
+          "signature": "fn finish_cloned(&self) -> ArrayRef",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Builds the array without resetting the builder."
+        },
+        {
+          "name": "finish_preserve_values",
+          "signature": "fn finish_preserve_values(&mut self) -> DictionaryArray<K>",
+          "summary": "Builds the `DictionaryArray` without resetting the values builder or the internal de-duplication map."
+        },
+        {
+          "name": "finish_preserve_values",
+          "signature": "fn finish_preserve_values(&mut self) -> ArrayRef",
+          "via_trait": "arrow_array::builder::ArrayBuilder"
+        },
+        {
+          "name": "into_box_any",
+          "signature": "fn into_box_any(Box<self>) -> Box<dyn Any>",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Returns the boxed builder as a box of `Any`."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "arrow_array::builder::ArrayBuilder",
+          "summary": "Returns the number of array slots in the builder"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new `GenericByteDictionaryBuilder`"
+        },
+        {
+          "name": "new_with_dictionary",
+          "signature": "fn new_with_dictionary(keys_capacity: usize, dictionary_values: &GenericByteArray<T>) -> Result<Self, ArrowError>",
+          "summary": "Creates a new `GenericByteDictionaryBuilder` from a keys capacity and a dictionary which is initialized with the given values. The indices of those dictionary values are used as keys."
+        },
+        {
+          "name": "try_new_from_builder",
+          "signature": "fn try_new_from_builder<K2>(source: GenericByteDictionaryBuilder<K2, T>) -> Result<Self, ArrowError> where K::Native: NumCast, K2: ArrowDictionaryKeyType, K2::Native: NumCast",
+          "summary": "Creates a new `GenericByteDictionaryBuilder` from the existing builder with the same keys and values, but with a new data type for the keys."
+        },
+        {
+          "name": "validity_slice",
+          "signature": "fn validity_slice(&self) -> Option<&[u8]>",
+          "summary": "Returns the current null buffer as a slice"
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(keys_capacity: usize, value_capacity: usize, data_capacity: usize) -> Self",
+          "summary": "Creates a new `GenericByteDictionaryBuilder` with the provided capacities"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_dictionary_builder::BinaryDictionaryBuilder",
+      "name": "BinaryDictionaryBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type BinaryDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericBinaryType<i32>>",
+      "summary": "Builder for [`DictionaryArray`] of [`BinaryArray`](crate::array::BinaryArray)",
+      "doc": "api/arrow_array.builder.generic_bytes_dictionary_builder.md#binarydictionarybuilder"
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_dictionary_builder::LargeBinaryDictionaryBuilder",
+      "name": "LargeBinaryDictionaryBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type LargeBinaryDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericBinaryType<i64>>",
+      "summary": "Builder for [`DictionaryArray`] of [`LargeBinaryArray`](crate::array::LargeBinaryArray)",
+      "doc": "api/arrow_array.builder.generic_bytes_dictionary_builder.md#largebinarydictionarybuilder"
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_dictionary_builder::LargeStringDictionaryBuilder",
+      "name": "LargeStringDictionaryBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type LargeStringDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericStringType<i64>>",
+      "summary": "Builder for [`DictionaryArray`] of [`LargeStringArray`](crate::array::LargeStringArray)",
+      "doc": "api/arrow_array.builder.generic_bytes_dictionary_builder.md#largestringdictionarybuilder"
+    },
+    {
+      "path": "arrow_array::builder::generic_bytes_dictionary_builder::StringDictionaryBuilder",
+      "name": "StringDictionaryBuilder",
+      "kind": "type_alias",
+      "crate": "arrow-array",
+      "signature": "type StringDictionaryBuilder<K> = GenericByteDictionaryBuilder<K, types::GenericStringType<i32>>",
+      "summary": "Builder for [`DictionaryArray`] of [`StringArray`](crate::array::StringArray)",
+      "doc": "api/arrow_array.builder.generic_bytes_dictionary_builder.md#stringdictionarybuilder"
+    }
+  ]
+}

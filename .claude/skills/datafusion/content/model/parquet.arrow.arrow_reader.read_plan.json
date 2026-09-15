@@ -1,0 +1,124 @@
+{
+  "module": "parquet::arrow::arrow_reader::read_plan",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.arrow_reader.read_plan.md",
+  "items": [
+    {
+      "path": "parquet::arrow::arrow_reader::read_plan::PredicateOptions",
+      "name": "PredicateOptions",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct PredicateOptions<'a>",
+      "summary": "Options for [`ReadPlanBuilder::with_predicate_options`].",
+      "doc": "api/parquet.arrow.arrow_reader.read_plan.md#predicateoptions",
+      "aliases": [
+        "parquet::arrow::arrow_reader::PredicateOptions"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(array_reader: Box<dyn ArrayReader>, predicate: &'a mut dyn ArrowPredicate) -> Self",
+          "summary": "Create options for evaluating `predicate` against rows produced by `array_reader`."
+        },
+        {
+          "name": "with_limit",
+          "signature": "fn with_limit(self, limit: usize, total_rows: usize) -> Self",
+          "summary": "Stop scanning `array_reader` once `limit` matches have accumulated."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::read_plan::ReadPlan",
+      "name": "ReadPlan",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ReadPlan",
+      "summary": "A plan reading specific rows from a Parquet Row Group.",
+      "doc": "api/parquet.arrow.arrow_reader.read_plan.md#readplan",
+      "aliases": [
+        "parquet::arrow::arrow_reader::ReadPlan"
+      ],
+      "methods": [
+        {
+          "name": "batch_size",
+          "signature": "fn batch_size(&self) -> usize",
+          "summary": "Return the number of rows to read in each output batch"
+        },
+        {
+          "name": "row_selection_cursor_mut",
+          "signature": "fn row_selection_cursor_mut(&mut self) -> &mut RowSelectionCursor",
+          "summary": "Returns a mutable reference to the row selection cursor"
+        },
+        {
+          "name": "selection_mut",
+          "signature": "fn selection_mut(&mut self) -> Option<&mut VecDeque<RowSelector>>",
+          "summary": "Returns a mutable reference to the selection selectors, if any"
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::arrow_reader::read_plan::ReadPlanBuilder",
+      "name": "ReadPlanBuilder",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ReadPlanBuilder",
+      "summary": "A builder for [`ReadPlan`]",
+      "doc": "api/parquet.arrow.arrow_reader.read_plan.md#readplanbuilder",
+      "aliases": [
+        "parquet::arrow::arrow_reader::ReadPlanBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> ReadPlan",
+          "summary": "Create a final `ReadPlan` the read plan for the scan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(batch_size: usize) -> Self",
+          "summary": "Create a `ReadPlanBuilder` with the given batch size"
+        },
+        {
+          "name": "num_rows_selected",
+          "signature": "fn num_rows_selected(&self) -> Option<usize>",
+          "summary": "Returns the number of rows selected, or `None` if all rows are selected."
+        },
+        {
+          "name": "row_selection_policy",
+          "signature": "fn row_selection_policy(&self) -> &RowSelectionPolicy",
+          "summary": "Returns the current row selection policy"
+        },
+        {
+          "name": "selection",
+          "signature": "fn selection(&self) -> Option<&RowSelection>",
+          "summary": "Returns the current selection, if any"
+        },
+        {
+          "name": "selects_any",
+          "signature": "fn selects_any(&self) -> bool",
+          "summary": "Returns true if the current plan selects any rows"
+        },
+        {
+          "name": "with_predicate",
+          "signature": "fn with_predicate(self, array_reader: Box<dyn ArrayReader>, predicate: &mut dyn ArrowPredicate) -> Result<Self>",
+          "summary": "Evaluates an [`ArrowPredicate`], updating this plan's `selection`"
+        },
+        {
+          "name": "with_predicate_options",
+          "signature": "fn with_predicate_options(self, options: PredicateOptions<'_>) -> Result<Self>",
+          "summary": "Evaluates an [`ArrowPredicate`] with the given [`PredicateOptions`], updating this plan's `selection`."
+        },
+        {
+          "name": "with_row_selection_policy",
+          "signature": "fn with_row_selection_policy(self, policy: RowSelectionPolicy) -> Self",
+          "summary": "Configure the policy to use when materialising the [`RowSelection`]"
+        },
+        {
+          "name": "with_selection",
+          "signature": "fn with_selection(self, selection: Option<RowSelection>) -> Self",
+          "summary": "Set the current selection to the given value"
+        }
+      ]
+    }
+  ]
+}

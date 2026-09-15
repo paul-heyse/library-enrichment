@@ -43,6 +43,8 @@ def transcripts() -> dict[str, Any]:
     argv = [sys.executable, str(HARNESS), "--apply", "--out", str(out)]
     if os.environ.get("LIBENR_CLIENT_USE_OPERATOR_CREDENTIALS"):
         argv.append("--use-operator-credentials")
+    if installation := os.environ.get("LIBENR_CLIENT_INSTALLATION"):
+        argv.extend(["--installed", installation])
     result = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True, check=False)
 
     summary_path = out / "summary.json"
@@ -51,7 +53,7 @@ def transcripts() -> dict[str, Any]:
     summary = json.loads(summary_path.read_text())
     expected = {f"A{i:02d}" for i in range(1, 7)} | {
         f"{journey}-{client}"
-        for journey in ("upgrade", "runtime")
+        for journey in ("discovery", "recovery", "upgrade", "runtime")
         for client in ("codex", "claude")
     }
     validate_summary(summary, result.returncode, expected)
@@ -165,16 +167,14 @@ def test_a06_an_unavailable_service_is_stated_rather_than_invented(
     """The skill says so itself: "do not fabricate tool results" when the service is absent."""
     recorded = trace(transcripts, "A06")
     assert not any(c.server == SERVICE for c in recorded.calls)
-    answer = recorded.answer.lower()
-    assert any(
-        phrase in answer
-        for phrase in ("not available", "unavailable", "not registered", "not installed")
-    ), recorded.answer[-1200:]
+    from client_fixture import assess
+
+    assess("A06", recorded)
 
 
 @pytest.mark.parametrize("client", ["codex", "claude"])
-@pytest.mark.parametrize("journey", ["upgrade", "runtime"])
-def test_upgrade_and_runtime_research_complete_in_both_clients(transcripts, client, journey):
+@pytest.mark.parametrize("journey", ["discovery", "recovery", "upgrade", "runtime"])
+def test_research_journeys_complete_in_both_clients(transcripts, client, journey):
     from client_fixture import assess
 
     gate = f"{journey}-{client}"

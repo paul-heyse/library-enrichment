@@ -1,0 +1,357 @@
+{
+  "module": "datafusion_datasource_csv::file_format",
+  "crate": "datafusion-datasource-csv",
+  "api": "api/datafusion_datasource_csv.file_format.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_csv::file_format::CsvDecoder",
+      "name": "CsvDecoder",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvDecoder",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::datasource::file_format::csv::CsvDecoder",
+        "datafusion_datasource_csv::CsvDecoder"
+      ],
+      "implements": [
+        "datafusion_datasource::decoder::Decoder"
+      ],
+      "methods": [
+        {
+          "name": "can_flush_early",
+          "signature": "fn can_flush_early(&self) -> bool",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "decode",
+          "signature": "fn decode(&mut self, buf: &[u8]) -> Result<usize, ArrowError>",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<Option<RecordBatch>, ArrowError>",
+          "via_trait": "datafusion_datasource::decoder::Decoder"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(decoder: arrow::csv::reader::Decoder) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::file_format::CsvFormat",
+      "name": "CsvFormat",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvFormat",
+      "summary": "Character Separated Value [`FileFormat`] implementation.",
+      "doc": "api/datafusion_datasource_csv.file_format.md#csvformat",
+      "aliases": [
+        "datafusion::datasource::file_format::csv::CsvFormat",
+        "datafusion_datasource_csv::CsvFormat"
+      ],
+      "implements": [
+        "datafusion_datasource::file_format::FileFormat"
+      ],
+      "methods": [
+        {
+          "name": "compression_type",
+          "signature": "fn compression_type(&self) -> Option<FileCompressionType>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, state: &dyn Session, conf: FileScanConfig) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "create_writer_physical_plan",
+          "signature": "async fn create_writer_physical_plan(&self, input: Arc<dyn ExecutionPlan>, state: &dyn Session, conf: FileSinkConfig, order_requirements: Option<LexRequirement>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "delimiter",
+          "signature": "fn delimiter(&self) -> u8",
+          "summary": "The delimiter character."
+        },
+        {
+          "name": "escape",
+          "signature": "fn escape(&self) -> Option<u8>",
+          "summary": "The escape character."
+        },
+        {
+          "name": "file_source",
+          "signature": "fn file_source(&self, table_schema: TableSchema) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "get_ext_with_compression",
+          "signature": "fn get_ext_with_compression(&self, file_compression_type: &FileCompressionType) -> Result<String>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "has_header",
+          "signature": "fn has_header(&self) -> Option<bool>",
+          "summary": "Returns `Some(true)` if the first line is a header, `Some(false)` if it is not, and `None` if it is not specified."
+        },
+        {
+          "name": "infer_schema",
+          "signature": "async fn infer_schema(&self, state: &dyn Session, store: &Arc<dyn ObjectStore>, objects: &[ObjectMeta]) -> Result<SchemaRef>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "infer_schema_from_stream",
+          "signature": "async fn infer_schema_from_stream(&self, state: &dyn Session, records_to_read: usize, stream: impl Stream<Item = Result<Bytes>>) -> Result<(Schema, usize)>",
+          "summary": "Return the inferred schema reading up to records_to_read from a stream of delimited chunks returning the inferred schema and the number of lines that were read."
+        },
+        {
+          "name": "infer_stats",
+          "signature": "async fn infer_stats(&self, _state: &dyn Session, _store: &Arc<dyn ObjectStore>, table_schema: SchemaRef, _object: &ObjectMeta) -> Result<Statistics>",
+          "via_trait": "datafusion_datasource::file_format::FileFormat"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &CsvOptions",
+          "summary": "Retrieve the csv options"
+        },
+        {
+          "name": "quote",
+          "signature": "fn quote(&self) -> u8",
+          "summary": "The quote character."
+        },
+        {
+          "name": "read_to_delimited_chunks_from_stream",
+          "signature": "fn read_to_delimited_chunks_from_stream<'a>(&self, stream: BoxStream<'a, Result<Bytes>>) -> BoxStream<'a, Result<Bytes>>",
+          "summary": "Convert a stream of bytes into a stream of [`Bytes`] containing newline delimited CSV records, while accounting for `\\` and `\"`."
+        },
+        {
+          "name": "with_comment",
+          "signature": "fn with_comment(self, comment: Option<u8>) -> Self",
+          "summary": "Lines beginning with this byte are ignored."
+        },
+        {
+          "name": "with_delimiter",
+          "signature": "fn with_delimiter(self, delimiter: u8) -> Self",
+          "summary": "The character separating values within a row. - default to ','"
+        },
+        {
+          "name": "with_escape",
+          "signature": "fn with_escape(self, escape: Option<u8>) -> Self",
+          "summary": "The escape character in a row. - default is None"
+        },
+        {
+          "name": "with_file_compression_type",
+          "signature": "fn with_file_compression_type(self, file_compression_type: FileCompressionType) -> Self",
+          "summary": "Set a `FileCompressionType` of CSV - defaults to `FileCompressionType::UNCOMPRESSED`"
+        },
+        {
+          "name": "with_has_header",
+          "signature": "fn with_has_header(self, has_header: bool) -> Self",
+          "summary": "Set true to indicate that the first line is a header. - default to true"
+        },
+        {
+          "name": "with_newlines_in_values",
+          "signature": "fn with_newlines_in_values(self, newlines_in_values: bool) -> Self",
+          "summary": "Specifies whether newlines in (quoted) values are supported."
+        },
+        {
+          "name": "with_null_regex",
+          "signature": "fn with_null_regex(self, null_regex: Option<String>) -> Self",
+          "summary": "Set the regex to use for null values in the CSV reader. - default to treat empty values as null."
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: CsvOptions) -> Self",
+          "summary": "Set the csv options"
+        },
+        {
+          "name": "with_quote",
+          "signature": "fn with_quote(self, quote: u8) -> Self",
+          "summary": "The quote character in a row. - default to '\"'"
+        },
+        {
+          "name": "with_schema_infer_max_rec",
+          "signature": "fn with_schema_infer_max_rec(self, max_rec: usize) -> Self",
+          "summary": "Set a limit in terms of records to scan to infer the schema - default to `DEFAULT_SCHEMA_INFER_MAX_RECORD`"
+        },
+        {
+          "name": "with_terminator",
+          "signature": "fn with_terminator(self, terminator: Option<u8>) -> Self",
+          "summary": "The character used to indicate the end of a row. - default to None (CRLF)"
+        },
+        {
+          "name": "with_truncate_rows",
+          "signature": "fn with_truncate_rows(self, truncate_rows: bool) -> Self",
+          "summary": "Set whether rows should be truncated to the column width - defaults to false"
+        },
+        {
+          "name": "with_truncated_rows",
+          "signature": "fn with_truncated_rows(self, truncated_rows: bool) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::file_format::CsvFormatFactory",
+      "name": "CsvFormatFactory",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvFormatFactory",
+      "summary": "Factory used to create [`CsvFormat`]",
+      "doc": "api/datafusion_datasource_csv.file_format.md#csvformatfactory",
+      "aliases": [
+        "datafusion::datasource::file_format::csv::CsvFormatFactory",
+        "datafusion_datasource_csv::CsvFormatFactory"
+      ],
+      "fields": [
+        "options"
+      ],
+      "implements": [
+        "datafusion_common::file_options::file_type::GetExt",
+        "datafusion_datasource::file_format::FileFormatFactory"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(&self, state: &dyn Session, format_options: &HashMap<String, String>) -> Result<Arc<dyn FileFormat>>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "default",
+          "signature": "fn default(&self) -> Arc<dyn FileFormat>",
+          "via_trait": "datafusion_datasource::file_format::FileFormatFactory"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_common::file_options::file_type::GetExt"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates an instance of [`CsvFormatFactory`]"
+        },
+        {
+          "name": "new_with_options",
+          "signature": "fn new_with_options(options: CsvOptions) -> Self",
+          "summary": "Creates an instance of [`CsvFormatFactory`] with customized default options"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::file_format::CsvSerializer",
+      "name": "CsvSerializer",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvSerializer",
+      "summary": "Define a struct for serializing CSV records to a stream",
+      "doc": "api/datafusion_datasource_csv.file_format.md#csvserializer",
+      "aliases": [
+        "datafusion::datasource::file_format::csv::CsvSerializer",
+        "datafusion_datasource_csv::CsvSerializer"
+      ],
+      "implements": [
+        "datafusion_datasource::write::BatchSerializer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Constructor for the CsvSerializer object"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize(&self, batch: RecordBatch, initial: bool) -> Result<Bytes>",
+          "via_trait": "datafusion_datasource::write::BatchSerializer"
+        },
+        {
+          "name": "with_builder",
+          "signature": "fn with_builder(self, builder: WriterBuilder) -> Self",
+          "summary": "Method for setting the CSV writer builder"
+        },
+        {
+          "name": "with_header",
+          "signature": "fn with_header(self, header: bool) -> Self",
+          "summary": "Method for setting the CSV writer header status"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_csv::file_format::CsvSink",
+      "name": "CsvSink",
+      "kind": "struct",
+      "crate": "datafusion-datasource-csv",
+      "signature": "struct CsvSink",
+      "summary": "Implements [`DataSink`] for writing to a CSV file.",
+      "doc": "api/datafusion_datasource_csv.file_format.md#csvsink",
+      "aliases": [
+        "datafusion::datasource::file_format::csv::CsvSink",
+        "datafusion_datasource_csv::CsvSink"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "datafusion_datasource::file_sink_config::FileSink",
+        "datafusion_datasource::sink::DataSink",
+        "datafusion_physical_plan::display::DisplayAs"
+      ],
+      "methods": [
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &FileSinkConfig",
+          "via_trait": "datafusion_datasource::file_sink_config::FileSink"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(config: FileSinkConfig, writer_options: CsvWriterOptions) -> Self",
+          "summary": "Create from config."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "spawn_writer_tasks_and_join",
+          "signature": "async fn spawn_writer_tasks_and_join(&self, context: &Arc<TaskContext>, demux_task: SpawnedTask<Result<()>>, file_stream_rx: DemuxedStreamReceiver, object_store: Arc<dyn ObjectStore>) -> Result<u64>",
+          "via_trait": "datafusion_datasource::file_sink_config::FileSink"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: &datafusion_proto_models::protobuf::CsvSink) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstructs a [`DataSinkExec`] containing a `CsvSink` from protobuf."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, exec: &DataSinkExec, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "write_all",
+          "signature": "async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>",
+          "via_trait": "datafusion_datasource::sink::DataSink"
+        },
+        {
+          "name": "writer_options",
+          "signature": "fn writer_options(&self) -> &CsvWriterOptions",
+          "summary": "Retrieve the writer options"
+        }
+      ]
+    }
+  ]
+}

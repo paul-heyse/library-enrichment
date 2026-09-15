@@ -114,19 +114,25 @@ pub(super) async fn publish(
                 .jobs
                 .pin_resolution(&work.id, stage)
                 .map_err(|e| e.to_string())?;
-            let state = completion.state;
             let manifest = service
                 .repository
                 .publish_records(metadata, produce, None, Some(completion))
                 .await
                 .map_err(|e| e.to_string())?;
-            let _ = work.committed.set((
-                state,
-                manifest.snapshot_id.to_string(),
-                delivery
-                    .get(manifest.snapshot_id.as_str())
-                    .map_err(|e| e.to_string())?,
-            ));
+            let result = delivery
+                .get(manifest.snapshot_id.as_str())
+                .map_err(|e| e.to_string())?;
+            let state = match result.status() {
+                enrichment_core::wire::Status::Ok => enrichment_core::wire::JobState::Succeeded,
+                enrichment_core::wire::Status::Partial => enrichment_core::wire::JobState::Partial,
+                enrichment_core::wire::Status::Error => enrichment_core::wire::JobState::Failed,
+                enrichment_core::wire::Status::Pending => {
+                    return Err("committed acquisition cannot remain pending".into());
+                }
+            };
+            let _ = work
+                .committed
+                .set((state, manifest.snapshot_id.to_string(), result));
             Ok(manifest)
         }
         None => service

@@ -29,17 +29,19 @@ pub(crate) fn count(batches: &[RecordBatch]) -> Result<u64, ArrowError> {
     RowSet::batch(&batches[0])?.row(0).number("count")
 }
 
-pub(crate) fn sources(batches: &[RecordBatch]) -> Result<Vec<FactSource>, ArrowError> {
+pub(crate) fn alternative_sources(
+    batches: &[RecordBatch],
+) -> Result<Vec<Option<FactSource>>, ArrowError> {
     let mut sources = Vec::new();
     for batch in batches {
         let rows = RowSet::batch(batch)?;
         for i in 0..batch.num_rows() {
-            if let Some(source) = rows.row(i).optional_struct("source")? {
-                let source = decode::source(source)?;
-                if !sources.contains(&source) {
-                    sources.push(source);
-                }
-            }
+            sources.push(
+                rows.row(i)
+                    .optional_struct("source")?
+                    .map(decode::source)
+                    .transpose()?,
+            );
         }
     }
     Ok(sources)

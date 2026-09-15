@@ -1,0 +1,150 @@
+{
+  "module": "arrow_select::filter",
+  "crate": "arrow-select",
+  "api": "api/arrow_select.filter.md",
+  "items": [
+    {
+      "path": "arrow_select::filter::filter",
+      "name": "filter",
+      "kind": "function",
+      "crate": "arrow-select",
+      "signature": "fn filter(values: &dyn Array, predicate: &BooleanArray) -> Result<ArrayRef, ArrowError>",
+      "summary": "Returns a filtered `values` [`Array`] where the corresponding elements of `predicate` are `true`.",
+      "doc": "api/arrow_select.filter.md#filter",
+      "aliases": [
+        "arrow::compute::filter",
+        "arrow::compute::kernels::filter::filter"
+      ]
+    },
+    {
+      "path": "arrow_select::filter::filter_record_batch",
+      "name": "filter_record_batch",
+      "kind": "function",
+      "crate": "arrow-select",
+      "signature": "fn filter_record_batch(record_batch: &RecordBatch, predicate: &BooleanArray) -> Result<RecordBatch, ArrowError>",
+      "summary": "Returns a filtered [RecordBatch] where the corresponding elements of `predicate` are true.",
+      "doc": "api/arrow_select.filter.md#filter_record_batch",
+      "aliases": [
+        "arrow::compute::filter_record_batch",
+        "arrow::compute::kernels::filter::filter_record_batch"
+      ]
+    },
+    {
+      "path": "arrow_select::filter::prep_null_mask_filter",
+      "name": "prep_null_mask_filter",
+      "kind": "function",
+      "crate": "arrow-select",
+      "signature": "fn prep_null_mask_filter(filter: &BooleanArray) -> BooleanArray",
+      "summary": "Convert all null values in `BooleanArray` to `false`",
+      "doc": "api/arrow_select.filter.md#prep_null_mask_filter",
+      "aliases": [
+        "arrow::compute::kernels::filter::prep_null_mask_filter",
+        "arrow::compute::prep_null_mask_filter"
+      ]
+    },
+    {
+      "path": "arrow_select::filter::FilterBuilder",
+      "name": "FilterBuilder",
+      "kind": "struct",
+      "crate": "arrow-select",
+      "signature": "struct FilterBuilder",
+      "summary": "A builder to construct [`FilterPredicate`]",
+      "doc": "api/arrow_select.filter.md#filterbuilder",
+      "aliases": [
+        "arrow::compute::FilterBuilder",
+        "arrow::compute::kernels::filter::FilterBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> FilterPredicate",
+          "summary": "Construct the final `FilterPredicate`"
+        },
+        {
+          "name": "is_optimize_beneficial",
+          "signature": "fn is_optimize_beneficial(data_type: &DataType) -> bool",
+          "summary": "Determines if calling [FilterBuilder::optimize] is beneficial for the given type even when filtering just a single array."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(filter: &BooleanArray) -> Self",
+          "summary": "Create a new [`FilterBuilder`] that can be used to construct a [`FilterPredicate`]"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(self) -> Self",
+          "summary": "Compute an optimized representation of the provided `filter` mask that can be applied to an array more quickly."
+        }
+      ]
+    },
+    {
+      "path": "arrow_select::filter::FilterPredicate",
+      "name": "FilterPredicate",
+      "kind": "struct",
+      "crate": "arrow-select",
+      "signature": "struct FilterPredicate",
+      "summary": "A filtering predicate that can be applied to an [`Array`]",
+      "doc": "api/arrow_select.filter.md#filterpredicate",
+      "aliases": [
+        "arrow::compute::FilterPredicate",
+        "arrow::compute::kernels::filter::FilterPredicate"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(&self) -> usize",
+          "summary": "Number of rows being selected based on this [`FilterPredicate`]"
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(&self, values: &dyn Array) -> Result<ArrayRef, ArrowError>",
+          "summary": "Selects rows from `values` based on this [`FilterPredicate`]"
+        },
+        {
+          "name": "filter_nulls",
+          "signature": "fn filter_nulls(&self, nulls: Option<&NullBuffer>) -> Option<NullBuffer>",
+          "summary": "Filters the given `nulls` buffer using this predicate."
+        },
+        {
+          "name": "filter_record_batch",
+          "signature": "fn filter_record_batch(&self, record_batch: &RecordBatch) -> Result<RecordBatch, ArrowError>",
+          "summary": "Returns a filtered [`RecordBatch`] containing only the rows that are selected by this [`FilterPredicate`]."
+        }
+      ]
+    },
+    {
+      "path": "arrow_select::filter::SlicesIterator",
+      "name": "SlicesIterator",
+      "kind": "struct",
+      "crate": "arrow-select",
+      "signature": "struct SlicesIterator<'a>",
+      "summary": "An iterator of `(usize, usize)` each representing an interval `[start, end)` whose slots of a bitmap [Buffer] are true.",
+      "doc": "api/arrow_select.filter.md#slicesiterator",
+      "aliases": [
+        "arrow::compute::SlicesIterator",
+        "arrow::compute::kernels::filter::SlicesIterator"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(filter: &'a BooleanBuffer) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(filter: &'a BooleanArray) -> Self",
+          "summary": "Creates a new iterator from a [BooleanArray]"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    }
+  ]
+}

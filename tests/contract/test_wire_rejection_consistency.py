@@ -9,7 +9,7 @@ nothing would notice. So one corpus — defined once in ``tests/wire_corpus.py``
 to every boundary, and the verdicts are compared per document:
 
 1. **CLI** — `library-enrichmentd validate`, a real subprocess reading the document;
-2. **Frozen schema** — `contracts/research-envelope.schema.json`, the Phase-0 acceptance target;
+2. **Candidate schema** — `contracts/research-v2/research-envelope.schema.json`;
 3. **Generated schema** — emitted from the Rust wire types by `emit-schemas`;
 4. **Adapter** — `enrichment_mcp.envelope.validate_document`, which `server._emit` runs over
    every tool response.
@@ -51,7 +51,7 @@ from wire_corpus import wire_corpus
 
 ROOT = Path(__file__).resolve().parents[2]
 DAEMON_BIN = ROOT / "target/debug/library-enrichmentd"
-FROZEN_SCHEMA = ROOT / "contracts/research-envelope.schema.json"
+FROZEN_SCHEMA = ROOT / "contracts/research-v2/research-envelope.schema.json"
 GENERATED_SCHEMA = ROOT / "schemas/generated/research-envelope.schema.json"
 
 CORPUS = wire_corpus()
@@ -158,7 +158,9 @@ def test_every_builder_emits_a_conforming_envelope() -> None:
     from enrichment_mcp import envelope
     from enrichment_mcp._generated.research_envelope_schema import Code, Coverage
 
-    coverage = Coverage(scope="s", indexed=[], missing=[], limitations=[])
+    coverage = Coverage(
+        scope="s", indexed=[], missing=[], limitations=[], assessments=[], details=None
+    )
     built = {
         "ok": envelope.ok("summary", {}, coverage),
         "partial": envelope.partial("summary", {}, coverage),
@@ -189,10 +191,13 @@ def test_the_corpus_covers_every_root_conditional() -> None:
         "ok_with_error_object",
         "partial_with_error_object",
         "pending_with_error_object",
+        "artifact_receipt",
+        "artifact_with_inline_data",
+        "pending_artifact",
     }
     assert required <= names, f"corpus is missing {sorted(required - names)}"
-    assert sum(1 for _, _, valid in CORPUS if valid) == 4, (
-        "all four delivered fixtures must be present as accept cases, or a reject-everything "
+    assert sum(1 for _, _, valid in CORPUS if valid) == 5, (
+        "all four outcome fixtures and the artifact receipt must be accepted, or a reject-all "
         "validator would pass this corpus trivially"
     )
 
@@ -244,4 +249,4 @@ def test_the_adapter_validates_every_response_it_emits() -> None:
     valid, reason = validate_document(json.dumps(replaced))
     assert valid, f"the replacement envelope must itself conform: {reason}"
     assert replaced["status"] == "error"
-    assert replaced["error"]["code"] == "UNSUPPORTED_FORMAT"
+    assert replaced["error"]["code"] == "INTERNAL_ERROR"

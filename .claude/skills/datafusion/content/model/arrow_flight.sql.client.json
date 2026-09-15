@@ -1,0 +1,231 @@
+{
+  "module": "arrow_flight::sql::client",
+  "crate": "arrow-flight",
+  "api": "api/arrow_flight.sql.client.md",
+  "items": [
+    {
+      "path": "arrow_flight::sql::client::ArrowFlightData",
+      "name": "ArrowFlightData",
+      "kind": "enum",
+      "crate": "arrow-flight",
+      "signature": "enum ArrowFlightData",
+      "summary": "A polymorphic structure to natively represent different types of data contained in `FlightData`",
+      "doc": "api/arrow_flight.sql.client.md#arrowflightdata",
+      "variants": [
+        "RecordBatch",
+        "Schema"
+      ]
+    },
+    {
+      "path": "arrow_flight::sql::client::arrow_data_from_flight_data",
+      "name": "arrow_data_from_flight_data",
+      "kind": "function",
+      "crate": "arrow-flight",
+      "signature": "fn arrow_data_from_flight_data(flight_data: FlightData, arrow_schema_ref: &arrow_schema::SchemaRef) -> std::result::Result<ArrowFlightData, arrow_schema::ArrowError>",
+      "summary": "Extract `Schema` or `RecordBatch`es from the `FlightData` wire representation",
+      "doc": "api/arrow_flight.sql.client.md#arrow_data_from_flight_data"
+    },
+    {
+      "path": "arrow_flight::sql::client::FlightSqlServiceClient",
+      "name": "FlightSqlServiceClient",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightSqlServiceClient<T>",
+      "summary": "A FlightSQLServiceClient is an endpoint for retrieving or storing Arrow data by FlightSQL protocol.",
+      "doc": "api/arrow_flight.sql.client.md#flightsqlserviceclient",
+      "methods": [
+        {
+          "name": "begin_transaction",
+          "signature": "async fn begin_transaction(&mut self) -> Result<Bytes>",
+          "summary": "Request to begin a transaction."
+        },
+        {
+          "name": "clear_token",
+          "signature": "fn clear_token(&mut self)",
+          "summary": "Clear the auth token."
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(&mut self) -> Result<()>",
+          "summary": "Explicitly shut down and clean up the client."
+        },
+        {
+          "name": "do_action",
+          "signature": "async fn do_action(&mut self, request: impl IntoRequest<Action>) -> Result<Streaming<Result>>",
+          "summary": "DoAction allows a flight client to do a specific action against a flight service"
+        },
+        {
+          "name": "do_get",
+          "signature": "async fn do_get(&mut self, ticket: impl IntoRequest<Ticket>) -> Result<FlightRecordBatchStream>",
+          "summary": "Given a flight ticket, request to be sent the stream. Returns record batch stream reader"
+        },
+        {
+          "name": "do_put",
+          "signature": "async fn do_put(&mut self, request: impl tonic::IntoStreamingRequest<Message = FlightData>) -> Result<Streaming<PutResult>>",
+          "summary": "Push a stream to the flight service associated with a particular flight stream."
+        },
+        {
+          "name": "end_transaction",
+          "signature": "async fn end_transaction(&mut self, transaction_id: Bytes, action: EndTransaction) -> Result<()>",
+          "summary": "Request to commit/rollback a transaction."
+        },
+        {
+          "name": "execute",
+          "signature": "async fn execute(&mut self, query: String, transaction_id: Option<Bytes>) -> Result<FlightInfo>",
+          "summary": "Execute a query on the server."
+        },
+        {
+          "name": "execute_ingest",
+          "signature": "async fn execute_ingest<S>(&mut self, command: CommandStatementIngest, stream: S) -> Result<i64> where S: Stream<Item = error::Result<RecordBatch>> + Send + 'static",
+          "summary": "Execute a bulk ingest on the server and return the number of records added"
+        },
+        {
+          "name": "execute_update",
+          "signature": "async fn execute_update(&mut self, query: String, transaction_id: Option<Bytes>) -> Result<i64>",
+          "summary": "Execute a update query on the server, and return the number of records affected"
+        },
+        {
+          "name": "get_catalogs",
+          "signature": "async fn get_catalogs(&mut self) -> Result<FlightInfo>",
+          "summary": "Request a list of catalogs as tabular FlightInfo results"
+        },
+        {
+          "name": "get_cross_reference",
+          "signature": "async fn get_cross_reference(&mut self, request: CommandGetCrossReference) -> Result<FlightInfo>",
+          "summary": "Retrieves a description of the foreign key columns in the given foreign key table that reference the primary key or the columns representing a unique constraint of the parent table (could be the same or a different table)."
+        },
+        {
+          "name": "get_db_schemas",
+          "signature": "async fn get_db_schemas(&mut self, request: CommandGetDbSchemas) -> Result<FlightInfo>",
+          "summary": "Request a list of database schemas as tabular FlightInfo results"
+        },
+        {
+          "name": "get_exported_keys",
+          "signature": "async fn get_exported_keys(&mut self, request: CommandGetExportedKeys) -> Result<FlightInfo>",
+          "summary": "Retrieves a description about the foreign key columns that reference the primary key columns of the given table."
+        },
+        {
+          "name": "get_imported_keys",
+          "signature": "async fn get_imported_keys(&mut self, request: CommandGetImportedKeys) -> Result<FlightInfo>",
+          "summary": "Retrieves the foreign key columns for the given table."
+        },
+        {
+          "name": "get_primary_keys",
+          "signature": "async fn get_primary_keys(&mut self, request: CommandGetPrimaryKeys) -> Result<FlightInfo>",
+          "summary": "Request the primary keys for a table."
+        },
+        {
+          "name": "get_sql_info",
+          "signature": "async fn get_sql_info(&mut self, sql_infos: Vec<SqlInfo>) -> Result<FlightInfo>",
+          "summary": "Request a list of SQL information."
+        },
+        {
+          "name": "get_table_types",
+          "signature": "async fn get_table_types(&mut self) -> Result<FlightInfo>",
+          "summary": "Request a list of table types."
+        },
+        {
+          "name": "get_tables",
+          "signature": "async fn get_tables(&mut self, request: CommandGetTables) -> Result<FlightInfo>",
+          "summary": "Request a list of tables."
+        },
+        {
+          "name": "get_xdbc_type_info",
+          "signature": "async fn get_xdbc_type_info(&mut self, request: CommandGetXdbcTypeInfo) -> Result<FlightInfo>",
+          "summary": "Request XDBC SQL information."
+        },
+        {
+          "name": "handshake",
+          "signature": "async fn handshake(&mut self, username: &str, password: &str) -> Result<Bytes>",
+          "summary": "Perform a `handshake` with the server, passing credentials and establishing a session."
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &FlightServiceClient<T>",
+          "summary": "Return a reference to the underlying [`FlightServiceClient`]"
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut FlightServiceClient<T>",
+          "summary": "Return a mutable reference to the underlying [`FlightServiceClient`]"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> FlightServiceClient<T>",
+          "summary": "Consume this client and return the underlying [`FlightServiceClient`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(channel: T) -> Self",
+          "summary": "Creates a new FlightSql client that connects to a server over an arbitrary tonic `Channel`"
+        },
+        {
+          "name": "new_from_inner",
+          "signature": "fn new_from_inner(inner: FlightServiceClient<T>) -> Self",
+          "summary": "Creates a new higher level client with the provided lower level client"
+        },
+        {
+          "name": "prepare",
+          "signature": "async fn prepare(&mut self, query: String, transaction_id: Option<Bytes>) -> Result<PreparedStatement<T>> where T: Clone",
+          "summary": "Create a prepared statement object."
+        },
+        {
+          "name": "set_header",
+          "signature": "fn set_header(&mut self, key: impl Into<String>, value: impl Into<String>)",
+          "summary": "Set header value."
+        },
+        {
+          "name": "set_token",
+          "signature": "fn set_token(&mut self, token: String)",
+          "summary": "Set auth token to the given value."
+        },
+        {
+          "name": "token",
+          "signature": "fn token(&self) -> Option<&String>",
+          "summary": "Share the bearer token with potentially different `DoGet` clients"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::sql::client::PreparedStatement",
+      "name": "PreparedStatement",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct PreparedStatement<T>",
+      "summary": "A PreparedStatement",
+      "doc": "api/arrow_flight.sql.client.md#preparedstatement",
+      "methods": [
+        {
+          "name": "close",
+          "signature": "async fn close(self) -> Result<()>",
+          "summary": "Close the prepared statement, so that this PreparedStatement can not used anymore and server can free up any resources."
+        },
+        {
+          "name": "dataset_schema",
+          "signature": "fn dataset_schema(&self) -> Result<&Schema>",
+          "summary": "Retrieve the ResultSet schema from the query."
+        },
+        {
+          "name": "execute",
+          "signature": "async fn execute(&mut self) -> Result<FlightInfo>",
+          "summary": "Executes the prepared statement query on the server."
+        },
+        {
+          "name": "execute_update",
+          "signature": "async fn execute_update(&mut self) -> Result<i64>",
+          "summary": "Executes the prepared statement update query on the server."
+        },
+        {
+          "name": "parameter_schema",
+          "signature": "fn parameter_schema(&self) -> Result<&Schema>",
+          "summary": "Retrieve the parameter schema from the query."
+        },
+        {
+          "name": "set_parameters",
+          "signature": "fn set_parameters(&mut self, parameter_binding: RecordBatch) -> Result<()>",
+          "summary": "Set a RecordBatch that contains the parameters that will be bind."
+        }
+      ]
+    }
+  ]
+}

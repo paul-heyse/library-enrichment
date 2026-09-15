@@ -1,0 +1,104 @@
+{
+  "module": "datafusion_ffi::physical_optimizer",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.physical_optimizer.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::physical_optimizer::FFI_PhysicalOptimizerContext",
+      "name": "FFI_PhysicalOptimizerContext",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_PhysicalOptimizerContext",
+      "summary": "A stable struct for sharing [`PhysicalOptimizerContext`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.physical_optimizer.md#ffi_physicaloptimizercontext",
+      "fields": [
+        "config_options",
+        "release",
+        "private_data"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(context: &dyn PhysicalOptimizerContext) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::physical_optimizer::FFI_PhysicalOptimizerRule",
+      "name": "FFI_PhysicalOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_PhysicalOptimizerRule",
+      "summary": "A stable struct for sharing [`PhysicalOptimizerRule`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.physical_optimizer.md#ffi_physicaloptimizerrule",
+      "fields": [
+        "optimize",
+        "name",
+        "schema_check",
+        "clone",
+        "release",
+        "version",
+        "optimize_with_context",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(rule: Arc<dyn PhysicalOptimizerRule + Send + Sync>, runtime: Option<Handle>) -> Self",
+          "summary": "Creates a new [`FFI_PhysicalOptimizerRule`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::physical_optimizer::ForeignPhysicalOptimizerRule",
+      "name": "ForeignPhysicalOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignPhysicalOptimizerRule",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ph…",
+      "doc": "api/datafusion_ffi.physical_optimizer.md#foreignphysicaloptimizerrule",
+      "implements": [
+        "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "optimize_with_context",
+          "signature": "fn optimize_with_context(&self, plan: Arc<dyn ExecutionPlan>, context: &dyn PhysicalOptimizerContext) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "schema_check",
+          "signature": "fn schema_check(&self) -> bool",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        }
+      ]
+    }
+  ]
+}

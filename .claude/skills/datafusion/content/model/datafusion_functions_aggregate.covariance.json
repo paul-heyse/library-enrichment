@@ -1,0 +1,220 @@
+{
+  "module": "datafusion_functions_aggregate::covariance",
+  "crate": "datafusion-functions-aggregate",
+  "api": "api/datafusion_functions_aggregate.covariance.md",
+  "items": [
+    {
+      "path": "datafusion_functions_aggregate::covariance::covar_pop",
+      "name": "covar_pop",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn covar_pop(y: datafusion_expr::Expr, x: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "Computes the population covariance.",
+      "doc": "api/datafusion_functions_aggregate.covariance.md#covar_pop",
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::covar_pop"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::covar_pop_udaf",
+      "name": "covar_pop_udaf",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn covar_pop_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>",
+      "summary": "AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`CovariancePopulation`]",
+      "doc": "api/datafusion_functions_aggregate.covariance.md#covar_pop_udaf"
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::covar_samp",
+      "name": "covar_samp",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn covar_samp(y: datafusion_expr::Expr, x: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "Computes the sample covariance.",
+      "doc": "api/datafusion_functions_aggregate.covariance.md#covar_samp",
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::covar_samp"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::covar_samp_udaf",
+      "name": "covar_samp_udaf",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn covar_samp_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>",
+      "summary": "AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`CovarianceSample`]",
+      "doc": "api/datafusion_functions_aggregate.covariance.md#covar_samp_udaf"
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::CovarianceAccumulator",
+      "name": "CovarianceAccumulator",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct CovarianceAccumulator",
+      "summary": "An accumulator to compute covariance The algorithm used is an online implementation and numerically stable. It is derived from the following paper for calculating variance: Welford, B. P. (1962). \"Note on a method for calculating corrected…",
+      "doc": "api/datafusion_functions_aggregate.covariance.md#covarianceaccumulator",
+      "implements": [
+        "datafusion_expr_common::accumulator::Accumulator"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self) -> Result<ScalarValue>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "get_algo_const",
+          "signature": "fn get_algo_const(&self) -> f64"
+        },
+        {
+          "name": "get_count",
+          "signature": "fn get_count(&self) -> u64"
+        },
+        {
+          "name": "get_mean1",
+          "signature": "fn get_mean1(&self) -> f64"
+        },
+        {
+          "name": "get_mean2",
+          "signature": "fn get_mean2(&self) -> f64"
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, states: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "retract_batch",
+          "signature": "fn retract_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self) -> Result<Vec<ScalarValue>>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "supports_retract_batch",
+          "signature": "fn supports_retract_batch(&self) -> bool",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(s_type: StatsType) -> Result<Self>",
+          "summary": "Creates a new `CovarianceAccumulator`"
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::CovariancePopulation",
+      "name": "CovariancePopulation",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct CovariancePopulation",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr::udaf::AggregateUDFImpl"
+      ],
+      "methods": [
+        {
+          "name": "accumulator",
+          "signature": "fn accumulator(&self, _acc_args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &Signature",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::covariance::CovarianceSample",
+      "name": "CovarianceSample",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct CovarianceSample",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr::udaf::AggregateUDFImpl"
+      ],
+      "methods": [
+        {
+          "name": "accumulator",
+          "signature": "fn accumulator(&self, _acc_args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "aliases",
+          "signature": "fn aliases(&self) -> &[String]",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &Signature",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        }
+      ]
+    }
+  ]
+}

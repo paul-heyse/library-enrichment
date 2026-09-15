@@ -242,9 +242,10 @@ pub fn read_file_limited(path: &Path, limit: u64) -> std::io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// A bounded source excerpt around a line, for `inspect_symbol` at `source` depth.
+/// A bounded source excerpt starting at a recorded line; it does not identify the end of an item.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SourceExcerpt {
+    pub window_kind: SourceWindowKind,
     /// The file, relative to the crate root.
     pub path: String,
     /// First line included, 1-based.
@@ -255,6 +256,12 @@ pub struct SourceExcerpt {
     pub text: String,
     /// Whether the file had more lines after `end_line`.
     pub truncated: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SourceWindowKind {
+    RecordedLineWindow,
 }
 
 /// Cut up to `max_lines` lines starting at `line` from `file` under `crate_root`.
@@ -343,6 +350,7 @@ pub fn source_excerpt_reader(
     }
     selected.truncate(end);
     Ok(Some(SourceExcerpt {
+        window_kind: SourceWindowKind::RecordedLineWindow,
         path: file.into(),
         start_line: start,
         end_line: start + count - 1,

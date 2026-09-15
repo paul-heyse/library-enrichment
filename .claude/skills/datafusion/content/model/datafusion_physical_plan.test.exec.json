@@ -1,0 +1,524 @@
+{
+  "module": "datafusion_physical_plan::test::exec",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.test.exec.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::test::exec::assert_strong_count_converges_to_zero",
+      "name": "assert_strong_count_converges_to_zero",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "async fn assert_strong_count_converges_to_zero<T>(refs: std::sync::Weak<T>)",
+      "summary": "Asserts that the strong count of the given [`Weak`] pointer converges to zero.",
+      "doc": "api/datafusion_physical_plan.test.exec.md#assert_strong_count_converges_to_zero"
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::BarrierExec",
+      "name": "BarrierExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BarrierExec",
+      "summary": "A Mock ExecutionPlan that does not start producing input until a barrier is called",
+      "doc": "api/datafusion_physical_plan.test.exec.md#barrierexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Returns a stream which yields data"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "is_finish_barrier_reached",
+          "signature": "fn is_finish_barrier_reached(&self) -> bool",
+          "summary": "Return true if the finish barrier has been reached in all partitions"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: Vec<Vec<RecordBatch>>, schema: SchemaRef) -> Self",
+          "summary": "Create a new exec with some number of partitions."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "wait",
+          "signature": "async fn wait(&self)",
+          "summary": "wait until all the input streams and this function is ready"
+        },
+        {
+          "name": "wait_finish",
+          "signature": "async fn wait_finish(&self)"
+        },
+        {
+          "name": "with_finish_barrier",
+          "signature": "fn with_finish_barrier(self) -> Self"
+        },
+        {
+          "name": "with_log",
+          "signature": "fn with_log(self, log: bool) -> Self"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "without_start_barrier",
+          "signature": "fn without_start_barrier(self) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::BatchIndex",
+      "name": "BatchIndex",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BatchIndex",
+      "summary": "Index into the data that has been returned so far",
+      "doc": "api/datafusion_physical_plan.test.exec.md#batchindex",
+      "methods": [
+        {
+          "name": "incr",
+          "signature": "fn incr(&self)"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> usize",
+          "summary": "Return the current index"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::BlockingExec",
+      "name": "BlockingExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BlockingExec",
+      "summary": "Execution plan that emits streams that block forever.",
+      "doc": "api/datafusion_physical_plan.test.exec.md#blockingexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, _partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, n_partitions: usize) -> Self",
+          "summary": "Create new [`BlockingExec`] with a give schema and number of partitions."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "refs",
+          "signature": "fn refs(&self) -> Weak<()>",
+          "summary": "Weak pointer that can be used for ref-counting this execution plan and its streams."
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::BlockingStream",
+      "name": "BlockingStream",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BlockingStream",
+      "summary": "A [`RecordBatchStream`] that is pending forever.",
+      "doc": "api/datafusion_physical_plan.test.exec.md#blockingstream",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::ErrorExec",
+      "name": "ErrorExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ErrorExec",
+      "summary": "A mock execution plan that errors on a call to execute",
+      "doc": "api/datafusion_physical_plan.test.exec.md#errorexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Returns a stream which yields data"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::MockExec",
+      "name": "MockExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct MockExec",
+      "summary": "A Mock ExecutionPlan that can be used for writing tests of other ExecutionPlans",
+      "doc": "api/datafusion_physical_plan.test.exec.md#mockexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Returns a stream which yields data"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: Vec<Result<RecordBatch>>, schema: SchemaRef) -> Self",
+          "summary": "Create a new `MockExec` with a single partition that returns the specified `Results`s."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_unknown_statistics",
+          "signature": "fn with_unknown_statistics(self) -> Self",
+          "summary": "Report unknown statistics rather than computing them from `data`."
+        },
+        {
+          "name": "with_use_task",
+          "signature": "fn with_use_task(self, use_task: bool) -> Self",
+          "summary": "If `use_task` is true (the default) then the batches are sent back using a separate task to ensure the underlying stream is not immediately ready"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::PanicExec",
+      "name": "PanicExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct PanicExec",
+      "summary": "Execution plan that emits streams that panics.",
+      "doc": "api/datafusion_physical_plan.test.exec.md#panicexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: SchemaRef, n_partitions: usize) -> Self",
+          "summary": "Create new [`PanicExec`] with a give schema and number of partitions, which will each panic immediately."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_partition_panic",
+          "signature": "fn with_partition_panic(self, partition: usize, count: usize) -> Self",
+          "summary": "Set the number of batches prior to panic for a partition"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::StatisticsExec",
+      "name": "StatisticsExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct StatisticsExec",
+      "summary": "A mock execution plan that simply returns the provided statistics",
+      "doc": "api/datafusion_physical_plan.test.exec.md#statisticsexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, _partition: usize, _context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(stats: Statistics, schema: Schema) -> Self"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, _: Vec<Arc<dyn ExecutionPlan>>, _: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, _input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::test::exec::TestStream",
+      "name": "TestStream",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct TestStream",
+      "summary": "Iterator over batches",
+      "doc": "api/datafusion_physical_plan.test.exec.md#teststream",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> BatchIndex",
+          "summary": "Return a handle to the index counter for this stream"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: Vec<RecordBatch>) -> Self",
+          "summary": "Create an iterator for a vector of record batches. Assumes at least one entry in data (for the schema)"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, _: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream",
+          "summary": "Get the schema"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "futures_core::stream::Stream"
+        }
+      ]
+    }
+  ]
+}

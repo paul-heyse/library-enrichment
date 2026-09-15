@@ -1,0 +1,337 @@
+{
+  "module": "datafusion_expr::utils",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.utils.md",
+  "items": [
+    {
+      "path": "datafusion_expr::utils::add_filter",
+      "name": "add_filter",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn add_filter(plan: LogicalPlan, predicates: &[&Expr]) -> datafusion_common::Result<LogicalPlan>",
+      "summary": "Returns a new [LogicalPlan] that filters the output of  `plan` with a [LogicalPlan::Filter] with all `predicates` ANDed.",
+      "doc": "api/datafusion_expr.utils.md#add_filter"
+    },
+    {
+      "path": "datafusion_expr::utils::can_hash",
+      "name": "can_hash",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn can_hash(data_type: &arrow::datatypes::DataType) -> bool",
+      "summary": "Can this data type be used in hash join equal conditions?? Data types here come from function 'equal_rows', if more data types are supported in create_hashes, add those data types here to generate join logical plan.",
+      "doc": "api/datafusion_expr.utils.md#can_hash"
+    },
+    {
+      "path": "datafusion_expr::utils::check_all_columns_from_schema",
+      "name": "check_all_columns_from_schema",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn check_all_columns_from_schema(columns: &std::collections::HashSet<&datafusion_common::Column>, schema: &datafusion_common::DFSchema) -> datafusion_common::Result<bool>",
+      "summary": "Check whether all columns are from the schema.",
+      "doc": "api/datafusion_expr.utils.md#check_all_columns_from_schema"
+    },
+    {
+      "path": "datafusion_expr::utils::collect_subquery_cols",
+      "name": "collect_subquery_cols",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn collect_subquery_cols(exprs: &[Expr], subquery_schema: &datafusion_common::DFSchema) -> datafusion_common::Result<std::collections::BTreeSet<datafusion_common::Column>>",
+      "summary": "Determine the set of [`Column`]s produced by the subquery.",
+      "doc": "api/datafusion_expr.utils.md#collect_subquery_cols"
+    },
+    {
+      "path": "datafusion_expr::utils::columnize_expr",
+      "name": "columnize_expr",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn columnize_expr(e: Expr, input: &LogicalPlan) -> datafusion_common::Result<Expr>",
+      "summary": "Convert an expression into Column expression if it's already provided as input plan.",
+      "doc": "api/datafusion_expr.utils.md#columnize_expr"
+    },
+    {
+      "path": "datafusion_expr::utils::compare_sort_expr",
+      "name": "compare_sort_expr",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn compare_sort_expr(sort_expr_a: &expr::Sort, sort_expr_b: &expr::Sort, schema: &datafusion_common::DFSchemaRef) -> std::cmp::Ordering",
+      "summary": "Compare the sort expr as PostgreSQL's common_prefix_cmp(): <https://github.com/postgres/postgres/blob/master/src/backend/optimizer/plan/planner.c>",
+      "doc": "api/datafusion_expr.utils.md#compare_sort_expr"
+    },
+    {
+      "path": "datafusion_expr::utils::conjunction",
+      "name": "conjunction",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn conjunction(filters: impl IntoIterator<Item = Expr>) -> Option<Expr>",
+      "summary": "Combines an array of filter expressions into a single filter expression consisting of the input filter expressions joined with logical AND.",
+      "doc": "api/datafusion_expr.utils.md#conjunction"
+    },
+    {
+      "path": "datafusion_expr::utils::disjunction",
+      "name": "disjunction",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn disjunction(filters: impl IntoIterator<Item = Expr>) -> Option<Expr>",
+      "summary": "Combines an array of filter expressions into a single filter expression consisting of the input filter expressions joined with logical OR.",
+      "doc": "api/datafusion_expr.utils.md#disjunction"
+    },
+    {
+      "path": "datafusion_expr::utils::enumerate_grouping_sets",
+      "name": "enumerate_grouping_sets",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn enumerate_grouping_sets(group_expr: Vec<Expr>) -> datafusion_common::Result<Vec<Expr>>",
+      "summary": "Convert multiple grouping expressions into one [`GroupingSet::GroupingSets`],\\ if the grouping expression does not contain [`Expr::GroupingSet`] or only has one expression,\\ no conversion will be performed.",
+      "doc": "api/datafusion_expr.utils.md#enumerate_grouping_sets"
+    },
+    {
+      "path": "datafusion_expr::utils::expand_qualified_wildcard",
+      "name": "expand_qualified_wildcard",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn expand_qualified_wildcard(qualifier: &datafusion_common::TableReference, schema: &datafusion_common::DFSchema, wildcard_options: Option<&expr::WildcardOptions>) -> datafusion_common::Result<Vec<Expr>>",
+      "summary": "Resolves an `Expr::Wildcard` to a collection of qualified `Expr::Column`'s.",
+      "doc": "api/datafusion_expr.utils.md#expand_qualified_wildcard"
+    },
+    {
+      "path": "datafusion_expr::utils::expand_wildcard",
+      "name": "expand_wildcard",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn expand_wildcard(schema: &datafusion_common::DFSchema, plan: &LogicalPlan, wildcard_options: Option<&expr::WildcardOptions>) -> datafusion_common::Result<Vec<Expr>>",
+      "summary": "Resolves an `Expr::Wildcard` to a collection of `Expr::Column`'s.",
+      "doc": "api/datafusion_expr.utils.md#expand_wildcard"
+    },
+    {
+      "path": "datafusion_expr::utils::expr_as_column_expr",
+      "name": "expr_as_column_expr",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn expr_as_column_expr(expr: &Expr, plan: &LogicalPlan) -> datafusion_common::Result<Expr>",
+      "summary": "Convert any `Expr` to an `Expr::Column`.",
+      "doc": "api/datafusion_expr.utils.md#expr_as_column_expr"
+    },
+    {
+      "path": "datafusion_expr::utils::expr_to_columns",
+      "name": "expr_to_columns",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn expr_to_columns(expr: &Expr, accum: &mut std::collections::HashSet<datafusion_common::Column>) -> datafusion_common::Result<()>",
+      "summary": "Recursively walk an expression tree, collecting the unique set of columns referenced in the expression",
+      "doc": "api/datafusion_expr.utils.md#expr_to_columns"
+    },
+    {
+      "path": "datafusion_expr::utils::exprlist_to_fields",
+      "name": "exprlist_to_fields",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn exprlist_to_fields<'a>(exprs: impl IntoIterator<Item = &'a Expr>, plan: &LogicalPlan) -> datafusion_common::Result<Vec<(Option<datafusion_common::TableReference>, std::sync::Arc<arrow::datatypes::Field>)>>",
+      "summary": "Create schema fields from an expression list, for use in result set schema construction",
+      "doc": "api/datafusion_expr.utils.md#exprlist_to_fields"
+    },
+    {
+      "path": "datafusion_expr::utils::find_aggregate_exprs",
+      "name": "find_aggregate_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_aggregate_exprs<'a>(exprs: impl IntoIterator<Item = &'a Expr>) -> Vec<Expr>",
+      "summary": "Collect all deeply nested `Expr::AggregateFunction`. They are returned in order of occurrence (depth first), with duplicates omitted.",
+      "doc": "api/datafusion_expr.utils.md#find_aggregate_exprs"
+    },
+    {
+      "path": "datafusion_expr::utils::find_column_exprs",
+      "name": "find_column_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_column_exprs(exprs: &[Expr]) -> Vec<Expr>",
+      "summary": "Collect all deeply nested `Expr::Column`'s. They are returned in order of appearance (depth first), and may contain duplicates.",
+      "doc": "api/datafusion_expr.utils.md#find_column_exprs"
+    },
+    {
+      "path": "datafusion_expr::utils::find_join_exprs",
+      "name": "find_join_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_join_exprs(exprs: Vec<&Expr>) -> datafusion_common::Result<(Vec<Expr>, Vec<Expr>)>",
+      "summary": "Looks for correlating expressions: for example, a binary expression with one field from the subquery, and one not in the subquery (closed upon from outer scope)",
+      "doc": "api/datafusion_expr.utils.md#find_join_exprs"
+    },
+    {
+      "path": "datafusion_expr::utils::find_out_reference_exprs",
+      "name": "find_out_reference_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_out_reference_exprs(expr: &Expr) -> Vec<Expr>",
+      "summary": "Collect all deeply nested `Expr::OuterReferenceColumn`. They are returned in order of occurrence (depth first), with duplicates omitted.",
+      "doc": "api/datafusion_expr.utils.md#find_out_reference_exprs"
+    },
+    {
+      "path": "datafusion_expr::utils::find_valid_equijoin_key_pair",
+      "name": "find_valid_equijoin_key_pair",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_valid_equijoin_key_pair(left_key: &Expr, right_key: &Expr, left_schema: &datafusion_common::DFSchema, right_schema: &datafusion_common::DFSchema) -> datafusion_common::Result<Option<(Expr, Expr)>>",
+      "summary": "Give two sides of the equijoin predicate, return a valid join key pair. If there is no valid join key pair, return None.",
+      "doc": "api/datafusion_expr.utils.md#find_valid_equijoin_key_pair"
+    },
+    {
+      "path": "datafusion_expr::utils::find_window_exprs",
+      "name": "find_window_exprs",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn find_window_exprs<'a>(exprs: impl IntoIterator<Item = &'a Expr>) -> Vec<Expr>",
+      "summary": "Collect all deeply nested `Expr::WindowFunction`. They are returned in order of occurrence (depth first), with duplicates omitted.",
+      "doc": "api/datafusion_expr.utils.md#find_window_exprs"
+    },
+    {
+      "path": "datafusion_expr::utils::format_state_name",
+      "name": "format_state_name",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn format_state_name(name: &str, state_name: &str) -> String",
+      "summary": "Build state name. State is the intermediate state of the aggregate function.",
+      "doc": "api/datafusion_expr.utils.md#format_state_name",
+      "aliases": [
+        "datafusion_physical_expr::expressions::format_state_name",
+        "datafusion_physical_plan::execution_plan::expressions::format_state_name",
+        "datafusion_physical_plan::expressions::format_state_name"
+      ]
+    },
+    {
+      "path": "datafusion_expr::utils::generate_signature_error_msg",
+      "name": "generate_signature_error_msg",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn generate_signature_error_msg(func_name: &str, func_signature: datafusion_expr_common::signature::Signature, input_expr_types: &[arrow::datatypes::DataType]) -> String",
+      "summary": "Creates a detailed error message for a function with wrong signature.",
+      "doc": "api/datafusion_expr.utils.md#generate_signature_error_msg",
+      "deprecated": "since 53.0.0: Internal function"
+    },
+    {
+      "path": "datafusion_expr::utils::generate_sort_key",
+      "name": "generate_sort_key",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn generate_sort_key(partition_by: &[Expr], order_by: &[expr::Sort]) -> datafusion_common::Result<Vec<(expr::Sort, bool)>>",
+      "summary": "Generate a sort key for a given window expr's partition_by and order_by expr",
+      "doc": "api/datafusion_expr.utils.md#generate_sort_key"
+    },
+    {
+      "path": "datafusion_expr::utils::group_window_expr_by_sort_keys",
+      "name": "group_window_expr_by_sort_keys",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn group_window_expr_by_sort_keys(window_expr: impl IntoIterator<Item = Expr>) -> datafusion_common::Result<Vec<(Vec<(expr::Sort, bool)>, Vec<Expr>)>>",
+      "summary": "Group a slice of window expression expr by their order by expressions",
+      "doc": "api/datafusion_expr.utils.md#group_window_expr_by_sort_keys"
+    },
+    {
+      "path": "datafusion_expr::utils::grouping_set_expr_count",
+      "name": "grouping_set_expr_count",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn grouping_set_expr_count(group_expr: &[Expr]) -> datafusion_common::Result<usize>",
+      "summary": "Count the number of distinct exprs in a list of group by expressions. If the first element is a `GroupingSet` expression then it must be the only expr.",
+      "doc": "api/datafusion_expr.utils.md#grouping_set_expr_count"
+    },
+    {
+      "path": "datafusion_expr::utils::grouping_set_to_exprlist",
+      "name": "grouping_set_to_exprlist",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn grouping_set_to_exprlist(group_expr: &[Expr]) -> datafusion_common::Result<Vec<&Expr>>",
+      "summary": "Find all distinct exprs in a list of group by expressions. If the first element is a `GroupingSet` expression then it must be the only expr.",
+      "doc": "api/datafusion_expr.utils.md#grouping_set_to_exprlist"
+    },
+    {
+      "path": "datafusion_expr::utils::inspect_expr_pre",
+      "name": "inspect_expr_pre",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn inspect_expr_pre<F, E>(expr: &Expr, f: F) -> datafusion_common::Result<(), E> where F: FnMut(&Expr) -> datafusion_common::Result<(), E>",
+      "summary": "Recursively inspect an [`Expr`] and all its children.",
+      "doc": "api/datafusion_expr.utils.md#inspect_expr_pre"
+    },
+    {
+      "path": "datafusion_expr::utils::iter_conjunction",
+      "name": "iter_conjunction",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn iter_conjunction(expr: &Expr) -> impl Iterator<Item = &Expr>",
+      "summary": "Iterate parts in a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#iter_conjunction"
+    },
+    {
+      "path": "datafusion_expr::utils::iter_conjunction_owned",
+      "name": "iter_conjunction_owned",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn iter_conjunction_owned(expr: Expr) -> impl Iterator<Item = Expr>",
+      "summary": "Iterate parts in a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#iter_conjunction_owned"
+    },
+    {
+      "path": "datafusion_expr::utils::merge_schema",
+      "name": "merge_schema",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn merge_schema(inputs: &[&LogicalPlan]) -> datafusion_common::DFSchema",
+      "summary": "merge inputs schema into a single schema.",
+      "doc": "api/datafusion_expr.utils.md#merge_schema"
+    },
+    {
+      "path": "datafusion_expr::utils::only_or_err",
+      "name": "only_or_err",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn only_or_err<T>(slice: &[T]) -> datafusion_common::Result<&T>",
+      "summary": "Returns the first (and only) element in a slice, or an error",
+      "doc": "api/datafusion_expr.utils.md#only_or_err"
+    },
+    {
+      "path": "datafusion_expr::utils::powerset",
+      "name": "powerset",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn powerset<T>(slice: &[T]) -> datafusion_common::Result<Vec<Vec<&T>>>",
+      "summary": "The [power set] (or powerset) of a set S is the set of all subsets of S, \\ including the empty set and S itself.",
+      "doc": "api/datafusion_expr.utils.md#powerset"
+    },
+    {
+      "path": "datafusion_expr::utils::split_binary",
+      "name": "split_binary",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn split_binary(expr: &Expr, op: Operator) -> Vec<&Expr>",
+      "summary": "Splits an binary operator tree [`Expr`] such as `A <OP> B <OP> C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#split_binary"
+    },
+    {
+      "path": "datafusion_expr::utils::split_binary_owned",
+      "name": "split_binary_owned",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn split_binary_owned(expr: Expr, op: Operator) -> Vec<Expr>",
+      "summary": "Splits an owned binary operator tree [`Expr`] such as `A <OP> B <OP> C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#split_binary_owned"
+    },
+    {
+      "path": "datafusion_expr::utils::split_conjunction",
+      "name": "split_conjunction",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn split_conjunction(expr: &Expr) -> Vec<&Expr>",
+      "summary": "Splits a conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#split_conjunction"
+    },
+    {
+      "path": "datafusion_expr::utils::split_conjunction_owned",
+      "name": "split_conjunction_owned",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn split_conjunction_owned(expr: Expr) -> Vec<Expr>",
+      "summary": "Splits an owned conjunctive [`Expr`] such as `A AND B AND C` => `[A, B, C]`",
+      "doc": "api/datafusion_expr.utils.md#split_conjunction_owned"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "module": "datafusion_physical_expr::expressions::dynamic_filters::tracker",
+  "crate": "datafusion-physical-expr",
+  "api": "api/datafusion_physical_expr.expressions.dynamic_filters.tracker.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr::expressions::dynamic_filters::tracker::DynamicFilterTracking",
+      "name": "DynamicFilterTracking",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr",
+      "signature": "enum DynamicFilterTracking",
+      "summary": "Classification of a predicate according to the dynamic filters it contains.",
+      "doc": "api/datafusion_physical_expr.expressions.dynamic_filters.tracker.md#dynamicfiltertracking",
+      "aliases": [
+        "datafusion::physical_expr::DynamicFilterTracking",
+        "datafusion_physical_expr::DynamicFilterTracking",
+        "datafusion_physical_expr::expressions::DynamicFilterTracking",
+        "datafusion_physical_plan::execution_plan::expressions::DynamicFilterTracking",
+        "datafusion_physical_plan::expressions::DynamicFilterTracking"
+      ],
+      "variants": [
+        "Static",
+        "AllComplete",
+        "Watching"
+      ],
+      "methods": [
+        {
+          "name": "classify",
+          "signature": "fn classify(predicate: &Arc<dyn PhysicalExpr>) -> Self",
+          "summary": "Walk `predicate` once and classify its dynamic-filter content, subscribing to every filter that is not yet complete."
+        },
+        {
+          "name": "contains_dynamic_filter",
+          "signature": "fn contains_dynamic_filter(&self) -> bool",
+          "summary": "`true` if the predicate contains any dynamic filter (complete or not), i.e. its value may differ from what was known at planning time and is therefore worth re-evaluating at least once."
+        },
+        {
+          "name": "watcher",
+          "signature": "fn watcher(&mut self) -> Option<&mut DynamicFilterTracker>",
+          "summary": "Mutable access to the underlying tracker when there is still something to watch."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr::expressions::dynamic_filters::tracker::DynamicFilterTracker",
+      "name": "DynamicFilterTracker",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr",
+      "signature": "struct DynamicFilterTracker",
+      "summary": "Watches every still-incomplete [`DynamicFilterPhysicalExpr`] reachable from a predicate and reports, cheaply, whether any of them has been updated since the last check.",
+      "doc": "api/datafusion_physical_expr.expressions.dynamic_filters.tracker.md#dynamicfiltertracker",
+      "aliases": [
+        "datafusion::physical_expr::DynamicFilterTracker",
+        "datafusion_physical_expr::DynamicFilterTracker",
+        "datafusion_physical_expr::expressions::DynamicFilterTracker",
+        "datafusion_physical_plan::execution_plan::expressions::DynamicFilterTracker",
+        "datafusion_physical_plan::expressions::DynamicFilterTracker"
+      ],
+      "methods": [
+        {
+          "name": "changed",
+          "signature": "fn changed(&mut self) -> bool",
+          "summary": "Returns `true` if any watched filter's expression has advanced since the previous call."
+        }
+      ]
+    }
+  ]
+}

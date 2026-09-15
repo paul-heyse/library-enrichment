@@ -1,0 +1,261 @@
+{
+  "module": "arrow_json::writer",
+  "crate": "arrow-json",
+  "api": "api/arrow_json.writer.md",
+  "items": [
+    {
+      "path": "arrow_json::writer::JsonArray",
+      "name": "JsonArray",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct JsonArray",
+      "summary": "Produces JSON output as a single JSON array.",
+      "doc": "api/arrow_json.writer.md#jsonarray",
+      "implements": [
+        "arrow_json::writer::JsonFormat"
+      ],
+      "methods": [
+        {
+          "name": "end_stream",
+          "signature": "fn end_stream<W: Write>(&self, writer: &mut W) -> Result<(), ArrowError>",
+          "via_trait": "arrow_json::writer::JsonFormat"
+        },
+        {
+          "name": "start_row",
+          "signature": "fn start_row<W: Write>(&self, writer: &mut W, is_first_row: bool) -> Result<(), ArrowError>",
+          "via_trait": "arrow_json::writer::JsonFormat"
+        },
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&self, writer: &mut W) -> Result<(), ArrowError>",
+          "via_trait": "arrow_json::writer::JsonFormat"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::LineDelimited",
+      "name": "LineDelimited",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct LineDelimited",
+      "summary": "Produces JSON output with one record per line.",
+      "doc": "api/arrow_json.writer.md#linedelimited",
+      "implements": [
+        "arrow_json::writer::JsonFormat"
+      ],
+      "methods": [
+        {
+          "name": "end_row",
+          "signature": "fn end_row<W: Write>(&self, writer: &mut W) -> Result<(), ArrowError>",
+          "via_trait": "arrow_json::writer::JsonFormat"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::Writer",
+      "name": "Writer",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct Writer<W, F> where W: Write, F: JsonFormat",
+      "summary": "A JSON writer which serializes [`RecordBatch`]es to a stream of `u8` encoded JSON objects.",
+      "doc": "api/arrow_json.writer.md#writer",
+      "aliases": [
+        "arrow::json::Writer",
+        "arrow_json::Writer"
+      ],
+      "implements": [
+        "arrow_array::record_batch::RecordBatchWriter"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<(), ArrowError>",
+          "summary": "Finishes the output stream. This function must be called after all record batches have been produced. (e.g. producing the final `']'` if writing arrays."
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Gets a mutable reference to the underlying writer."
+        },
+        {
+          "name": "get_ref",
+          "signature": "fn get_ref(&self) -> &W",
+          "summary": "Gets a reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> W",
+          "summary": "Unwraps this `Writer<W>`, returning the underlying writer"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(writer: W) -> Self",
+          "summary": "Construct a new writer"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "summary": "Serialize `batch` to JSON output"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "write_batches",
+          "signature": "fn write_batches(&mut self, batches: &[&RecordBatch]) -> Result<(), ArrowError>",
+          "summary": "Serialize `batches` to JSON output"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::WriterBuilder",
+      "name": "WriterBuilder",
+      "kind": "struct",
+      "crate": "arrow-json",
+      "signature": "struct WriterBuilder",
+      "summary": "JSON writer builder.",
+      "doc": "api/arrow_json.writer.md#writerbuilder",
+      "aliases": [
+        "arrow::json::WriterBuilder",
+        "arrow_json::WriterBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build<W, F>(self, writer: W) -> Writer<W, F> where W: Write, F: JsonFormat",
+          "summary": "Create a new `Writer` with specified `JsonFormat` and builder options."
+        },
+        {
+          "name": "explicit_nulls",
+          "signature": "fn explicit_nulls(&self) -> bool",
+          "summary": "Returns `true` if this writer is configured to keep keys with null values."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new builder for configuring JSON writing options."
+        },
+        {
+          "name": "struct_mode",
+          "signature": "fn struct_mode(&self) -> StructMode",
+          "summary": "Returns if this writer is configured to write structs as JSON Objects or Arrays."
+        },
+        {
+          "name": "with_date_format",
+          "signature": "fn with_date_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's date format"
+        },
+        {
+          "name": "with_datetime_format",
+          "signature": "fn with_datetime_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's datetime format"
+        },
+        {
+          "name": "with_encoder_factory",
+          "signature": "fn with_encoder_factory(self, factory: Arc<dyn EncoderFactory>) -> Self",
+          "summary": "Set an encoder factory to use when creating encoders for writing JSON."
+        },
+        {
+          "name": "with_explicit_nulls",
+          "signature": "fn with_explicit_nulls(self, explicit_nulls: bool) -> Self",
+          "summary": "Set whether to keep keys with null values, or to omit writing them."
+        },
+        {
+          "name": "with_struct_mode",
+          "signature": "fn with_struct_mode(self, struct_mode: StructMode) -> Self",
+          "summary": "Set the [`StructMode`] for the writer, which determines whether structs are encoded to JSON as objects or lists. For more details refer to the enum documentation. Default is to use `ObjectOnly`. If this is set to `ListOnly`, nulls will be…"
+        },
+        {
+          "name": "with_time_format",
+          "signature": "fn with_time_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's time format"
+        },
+        {
+          "name": "with_timestamp_format",
+          "signature": "fn with_timestamp_format(self, format: String) -> Self",
+          "summary": "Set the JSON file's timestamp format"
+        },
+        {
+          "name": "with_timestamp_tz_format",
+          "signature": "fn with_timestamp_tz_format(self, tz_format: String) -> Self",
+          "summary": "Set the JSON file's timestamp tz format"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::JsonFormat",
+      "name": "JsonFormat",
+      "kind": "trait",
+      "crate": "arrow-json",
+      "signature": "trait JsonFormat: Debug + Default",
+      "summary": "This trait defines how to format a sequence of JSON objects to a byte stream.",
+      "doc": "api/arrow_json.writer.md#jsonformat",
+      "implementors": [
+        "arrow_json::writer::JsonArray",
+        "arrow_json::writer::LineDelimited"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "end_row",
+        "end_stream",
+        "start_row",
+        "start_stream"
+      ],
+      "methods": [
+        {
+          "name": "end_row",
+          "signature": "fn end_row<W: Write>(&self, _writer: &mut W) -> Result<(), ArrowError>",
+          "summary": "write any bytes needed for the end of each row"
+        },
+        {
+          "name": "end_stream",
+          "signature": "fn end_stream<W: Write>(&self, _writer: &mut W) -> Result<(), ArrowError>",
+          "summary": "write any bytes needed for the start of each row"
+        },
+        {
+          "name": "start_row",
+          "signature": "fn start_row<W: Write>(&self, _writer: &mut W, _is_first_row: bool) -> Result<(), ArrowError>",
+          "summary": "write any bytes needed for the start of each row"
+        },
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&self, _writer: &mut W) -> Result<(), ArrowError>",
+          "summary": "write any bytes needed at the start of the file to the writer"
+        }
+      ]
+    },
+    {
+      "path": "arrow_json::writer::ArrayWriter",
+      "name": "ArrayWriter",
+      "kind": "type_alias",
+      "crate": "arrow-json",
+      "signature": "type ArrayWriter<W> = Writer<W, JsonArray>",
+      "summary": "A JSON writer which serializes [`RecordBatch`]es to JSON arrays.",
+      "doc": "api/arrow_json.writer.md#arraywriter",
+      "aliases": [
+        "arrow::json::ArrayWriter",
+        "arrow_json::ArrayWriter"
+      ]
+    },
+    {
+      "path": "arrow_json::writer::LineDelimitedWriter",
+      "name": "LineDelimitedWriter",
+      "kind": "type_alias",
+      "crate": "arrow-json",
+      "signature": "type LineDelimitedWriter<W> = Writer<W, LineDelimited>",
+      "summary": "A JSON writer which serializes [`RecordBatch`]es to newline delimited JSON objects.",
+      "doc": "api/arrow_json.writer.md#linedelimitedwriter",
+      "aliases": [
+        "arrow::json::LineDelimitedWriter",
+        "arrow_json::LineDelimitedWriter"
+      ]
+    }
+  ]
+}

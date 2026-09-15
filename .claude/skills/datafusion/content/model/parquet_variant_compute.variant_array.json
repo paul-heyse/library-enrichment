@@ -1,0 +1,225 @@
+{
+  "module": "parquet_variant_compute::variant_array",
+  "crate": "parquet-variant-compute",
+  "api": "api/parquet_variant_compute.variant_array.md",
+  "items": [
+    {
+      "path": "parquet_variant_compute::variant_array::ShreddedVariantFieldArray",
+      "name": "ShreddedVariantFieldArray",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct ShreddedVariantFieldArray",
+      "summary": "One shredded field of a partially or perfectly shredded variant. For example, suppose the shredding schema for variant `v` treats it as an object with a single field `a`, where `a` is itself a struct with the single field `b` of type INT.…",
+      "doc": "api/parquet_variant_compute.variant_array.md#shreddedvariantfieldarray"
+    },
+    {
+      "path": "parquet_variant_compute::variant_array::ShreddingState",
+      "name": "ShreddingState",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct ShreddingState",
+      "summary": "Represents the shredding state of a [`VariantArray`]",
+      "doc": "api/parquet_variant_compute.variant_array.md#shreddingstate",
+      "aliases": [
+        "parquet::variant::ShreddingState",
+        "parquet_variant_compute::ShreddingState"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(value: ArrayRef, typed_value: Option<ArrayRef>) -> Self",
+          "summary": "Create a new `ShreddingState` from the given `value` and `typed_value` fields"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> Self",
+          "summary": "Slice all the underlying arrays"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(inner_struct: &StructArray) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "typed_value_column",
+          "signature": "fn typed_value_column(&self) -> Option<&ArrayRef>",
+          "summary": "Return a reference to the `typed_value` column, if present"
+        },
+        {
+          "name": "value_column",
+          "signature": "fn value_column(&self) -> &ArrayRef",
+          "summary": "Return a reference to the `value` column"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant_compute::variant_array::VariantArray",
+      "name": "VariantArray",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantArray",
+      "summary": "An array of Parquet [`Variant`] values",
+      "doc": "api/parquet_variant_compute.variant_array.md#variantarray",
+      "aliases": [
+        "parquet::variant::VariantArray",
+        "parquet_variant_compute::VariantArray"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> &DataType",
+          "summary": "Returns a new DataType representing this VariantArray's inner type"
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self, name: impl Into<String>) -> Field",
+          "summary": "Return a field to represent this VariantArray in a `Schema` with a particular name"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = Variant<'m, 'v>>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &StructArray",
+          "summary": "Returns a reference to the underlying [`StructArray`]."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> StructArray",
+          "summary": "Returns the inner [`StructArray`], consuming self"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, index: usize) -> bool",
+          "summary": "Is the element at index null?"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, index: usize) -> bool",
+          "summary": "Is the element at index valid (not null)?"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> VariantArrayIter<'_>",
+          "summary": "Returns an iterator over the values in this array"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "metadata_column",
+          "signature": "fn metadata_column(&self) -> &ArrayRef",
+          "summary": "Return a reference to the `metadata` column of the [`StructArray`]"
+        },
+        {
+          "name": "nulls",
+          "signature": "fn nulls(&self) -> Option<&NullBuffer>"
+        },
+        {
+          "name": "shredding_state",
+          "signature": "fn shredding_state(&self) -> &ShreddingState",
+          "summary": "Return the shredding state of this `VariantArray`"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> Self"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(inner: &dyn Array) -> Result<Self>",
+          "summary": "Creates a new `VariantArray` from a [`StructArray`]."
+        },
+        {
+          "name": "try_value",
+          "signature": "fn try_value(&self, index: usize) -> Result<Variant<'_, '_>>",
+          "summary": "Return the [`Variant`] instance stored at the given row"
+        },
+        {
+          "name": "typed_value_column",
+          "signature": "fn typed_value_column(&self) -> Option<&ArrayRef>",
+          "summary": "Return a reference to the `typed_value` column of the [`StructArray`], if present"
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self, index: usize) -> Variant<'_, '_>",
+          "summary": "Return the [`Variant`] instance stored at the given row"
+        },
+        {
+          "name": "value_column",
+          "signature": "fn value_column(&self) -> &ArrayRef",
+          "summary": "Return a reference to the `value` column of the [`StructArray`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant_compute::variant_array::VariantArrayIter",
+      "name": "VariantArrayIter",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantArrayIter<'a>",
+      "summary": "An iterator over [`VariantArray`]",
+      "doc": "api/parquet_variant_compute.variant_array.md#variantarrayiter"
+    },
+    {
+      "path": "parquet_variant_compute::variant_array::VariantType",
+      "name": "VariantType",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantType",
+      "summary": "Arrow Variant [`ExtensionType`].",
+      "doc": "api/parquet_variant_compute.variant_array.md#varianttype",
+      "aliases": [
+        "parquet::variant::VariantType",
+        "parquet_variant_compute::VariantType"
+      ],
+      "implements": [
+        "arrow_schema::extension::ExtensionType"
+      ],
+      "methods": [
+        {
+          "name": "deserialize_metadata",
+          "signature": "fn deserialize_metadata(_metadata: Option<&str>) -> Result<Self::Metadata>",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Self::Metadata",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        },
+        {
+          "name": "serialize_metadata",
+          "signature": "fn serialize_metadata(&self) -> Option<String>",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        },
+        {
+          "name": "supports_data_type",
+          "signature": "fn supports_data_type(&self, data_type: &DataType) -> Result<()>",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(data_type: &DataType, _metadata: Self::Metadata) -> Result<Self>",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        },
+        {
+          "name": "validate",
+          "signature": "fn validate(data_type: &DataType, _metadata: Self::Metadata) -> Result<()>",
+          "via_trait": "arrow_schema::extension::ExtensionType"
+        }
+      ]
+    }
+  ]
+}

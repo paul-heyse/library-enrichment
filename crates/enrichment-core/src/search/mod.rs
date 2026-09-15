@@ -18,6 +18,7 @@ use crate::canonical;
 #[cfg(test)]
 use crate::evidence::Symbol;
 pub mod page;
+pub mod row_page;
 
 /// Lower-case tokens of length two or more, split on anything that is not a word character.
 /// A `::`-qualified path stays a single token as well, so exact-path matching sees it whole.
@@ -248,6 +249,7 @@ fn query_digest(query: &str, kinds: &[String]) -> String {
 
 /// A pagination cursor (§7.3): scope, query digest, sort and position, checksummed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Cursor {
     /// What is being paged: a snapshot id, or an artifact id.
     pub scope: String,
@@ -290,6 +292,7 @@ impl Cursor {
 
     fn checksum(scope: &str, query_digest: &str, sort: &str, offset: u64) -> String {
         canonical::digest_hex(&serde_json::json!({
+            "contract": "artifact-window/2",
             "scope": scope, "query": query_digest, "sort": sort, "offset": offset
         }))[..16]
             .to_owned()
@@ -299,7 +302,7 @@ impl Cursor {
     /// # Errors
     /// Serialization failure cannot become an empty valid-looking cursor.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!("cur_{}", hex(&serde_json::to_vec(self)?)))
+        Ok(format!("artifact2_{}", hex(&serde_json::to_vec(self)?)))
     }
 
     /// Parse and check a cursor against what the caller is paging now.
@@ -316,7 +319,9 @@ impl Cursor {
         if text.len() > 32768 {
             return Err(CursorError::Malformed);
         }
-        let body = text.strip_prefix("cur_").ok_or(CursorError::Malformed)?;
+        let body = text
+            .strip_prefix("artifact2_")
+            .ok_or(CursorError::Malformed)?;
         let bytes = unhex(body).ok_or(CursorError::Malformed)?;
         let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
         if cursor.check
@@ -435,7 +440,7 @@ mod tests {
         let digest = query_digest("Widget", &["api".to_owned()]);
         let cursor = Cursor::new("snap_x", &digest, "score", 12);
         let text = cursor.encode().expect("cursor serializes");
-        assert!(text.starts_with("cur_"));
+        assert!(text.starts_with("artifact2_"));
         assert_eq!(
             Cursor::decode(&text, "snap_x", &digest, "score")
                 .expect("ok")
@@ -456,7 +461,7 @@ mod tests {
             })
         ));
         assert!(matches!(
-            Cursor::decode("cur_zz", "snap_x", &digest, "score"),
+            Cursor::decode("artifact2_zz", "snap_x", &digest, "score"),
             Err(CursorError::Malformed)
         ));
         assert!(matches!(
@@ -464,6 +469,15 @@ mod tests {
             Err(CursorError::Malformed)
         ));
         // A tampered offset fails the checksum.
+        assert!(
+            Cursor::decode(
+                &text.replacen("artifact2_", "cur_", 1),
+                "snap_x",
+                &digest,
+                "score"
+            )
+            .is_err()
+        );
         let mut tampered = cursor.clone();
         tampered.offset = 99;
         assert!(matches!(

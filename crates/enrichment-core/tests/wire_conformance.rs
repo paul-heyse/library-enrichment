@@ -14,12 +14,16 @@ use std::path::{Path, PathBuf};
 use enrichment_core::wire::{Envelope, EnvelopeError, Outcome, Status, envelope_schema_json};
 use serde_json::{Value, json};
 
-const OK_FIXTURE: &str = include_str!("../../../contracts/examples/ok.fixture.json");
-const PARTIAL_FIXTURE: &str = include_str!("../../../contracts/examples/partial.fixture.json");
-const PENDING_FIXTURE: &str = include_str!("../../../contracts/examples/pending.fixture.json");
-const ERROR_FIXTURE: &str = include_str!("../../../contracts/examples/error.fixture.json");
-const FROZEN_CONTRACT: &str = include_str!("../../../contracts/research-envelope.schema.json");
-const FROZEN_ENUMS: &str = include_str!("../../../schemas/frozen/enums.json");
+const OK_FIXTURE: &str = include_str!("../../../contracts/research-v2/examples/ok.fixture.json");
+const PARTIAL_FIXTURE: &str =
+    include_str!("../../../contracts/research-v2/examples/partial.fixture.json");
+const PENDING_FIXTURE: &str =
+    include_str!("../../../contracts/research-v2/examples/pending.fixture.json");
+const ERROR_FIXTURE: &str =
+    include_str!("../../../contracts/research-v2/examples/error.fixture.json");
+const FROZEN_CONTRACT: &str =
+    include_str!("../../../contracts/research-v2/research-envelope.schema.json");
+const FROZEN_ENUMS: &str = include_str!("../../../contracts/research-v2/enums.json");
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -146,7 +150,10 @@ fn ok_status_with_an_error_object_is_rejected() {
                 "code": "POLICY_DENIED",
                 "message": "m",
                 "retryable": false,
-                "next_action": "n"
+                "next_action": "n",
+                "diagnostic": {"cause":"policy_denied", "stage":"admission",
+                    "affected_ids":[], "rule":null, "observed":null, "allowed":null,
+                    "correlation_id":null, "actions":[{"kind":"operator_setup","reason":"n"}]}
             }),
         );
     });
@@ -175,7 +182,10 @@ fn pending_status_with_an_error_object_is_rejected() {
                 "code": "POLICY_DENIED",
                 "message": "m",
                 "retryable": false,
-                "next_action": "n"
+                "next_action": "n",
+                "diagnostic": {"cause":"policy_denied", "stage":"admission",
+                    "affected_ids":[], "rule":null, "observed":null, "allowed":null,
+                    "correlation_id":null, "actions":[{"kind":"operator_setup","reason":"n"}]}
             }),
         );
     });
@@ -221,7 +231,7 @@ fn error_outcome_always_emits_an_error_object() {
     );
 }
 
-// --- 13-21: structure, against schemas/frozen/enums.json ----------------------------------
+// --- 13-21: structure, against contracts/research-v2/enums.json ----------------------------------
 //
 // 13-17 double as the guard against a `///` doc comment on a unit enum variant: that turns the
 // emitted `enum` into `oneOf` + `const`, and these lookups return `None`.
@@ -240,7 +250,7 @@ fn enum_at(schema: &Value, pointer: &str) -> Vec<String> {
 fn frozen_list(key: &str) -> Vec<String> {
     frozen_enums()[key]
         .as_array()
-        .unwrap_or_else(|| panic!("schemas/frozen/enums.json has no array `{key}`"))
+        .unwrap_or_else(|| panic!("contracts/research-v2/enums.json has no array `{key}`"))
         .iter()
         .map(|v| v.as_str().expect("values are strings").to_owned())
         .collect()
@@ -319,7 +329,7 @@ fn root_required_fields_match_the_frozen_contract() {
 }
 
 #[test]
-fn defs_are_exactly_the_seven_frozen_definitions() {
+fn defs_match_the_active_contract_definitions() {
     let schema = generated_schema();
     let actual: BTreeSet<String> = schema["$defs"]
         .as_object()
@@ -327,18 +337,7 @@ fn defs_are_exactly_the_seven_frozen_definitions() {
         .keys()
         .cloned()
         .collect();
-    let expected: BTreeSet<String> = [
-        "ArtifactHandle",
-        "Coverage",
-        "Error",
-        "Evidence",
-        "Freshness",
-        "JobHandle",
-        "Pagination",
-    ]
-    .into_iter()
-    .map(str::to_owned)
-    .collect();
+    let expected: BTreeSet<String> = frozen_list("definitions").into_iter().collect();
     assert_eq!(
         actual, expected,
         "an extra $defs entry means a type that should be inlined is not, or a \

@@ -146,9 +146,16 @@ pub async fn folded(
         })?
         .filter(scoring::fragment_eligibility(&spec.fragment_clauses))?;
     fragments = fragments.select(
-        ["fragment_id", "kind", "label", "text"]
-            .into_iter()
-            .map(col),
+        [
+            "fragment_id",
+            "kind",
+            "label",
+            "text",
+            "definition_id",
+            "source",
+        ]
+        .into_iter()
+        .map(col),
     )?;
     fragments = fragments
         .with_column(
@@ -159,6 +166,37 @@ pub async fn folded(
         .filter(col("ranking").is_not_null())?
         .with_column("rank_score", col("ranking").field("score"))?;
     session.register_table("eligible_fragments", fragments.into_view())?;
+    // Fold only qualified aliases of the same definition. Full source equality retains
+    // producer, artifact, locator and epistemic distinctions even when text is identical.
+    session.register_table(
+        "fragment_aliases",
+        session
+            .sql(
+                r"
+        SELECT coalesce(definition_id, fragment_id) AS fold_key, kind, text, source,
+            array_agg(DISTINCT label ORDER BY label) AS labels
+        FROM eligible_fragments GROUP BY coalesce(definition_id, fragment_id), kind, text, source
+    ",
+            )
+            .await?
+            .into_view(),
+    )?;
+    session.register_table(
+        "folded_fragments",
+        session
+            .sql(
+                r"
+        SELECT * FROM (
+            SELECT f.*, row_number() OVER (
+                PARTITION BY coalesce(definition_id, fragment_id), kind, text, source
+                ORDER BY rank_score DESC, label ASC, fragment_id ASC
+            ) AS position FROM eligible_fragments f
+        ) WHERE position = 1
+    ",
+            )
+            .await?
+            .into_view(),
+    )?;
     let api = session.sql(r"
         SELECT CAST(0 AS INTEGER UNSIGNED) AS hit_order, s.observation_id || '/' || s.symbol_id AS candidate_id,
             s.observation_id AS fact_id, s.path AS label, s.path, coalesce(s.declared_kind, s.kind) AS symbol_kind, s.signature,
@@ -168,8 +206,10 @@ pub async fn folded(
     ").await?;
     let fragments = session.sql(r"
         SELECT CAST(1 AS INTEGER UNSIGNED) AS hit_order, f.fragment_id AS candidate_id, f.fragment_id AS fact_id, f.label, CAST(NULL AS VARCHAR) AS path, CAST(NULL AS VARCHAR) AS symbol_kind, CAST(NULL AS VARCHAR) AS signature,
-            f.kind AS fragment_kind, f.text AS excerpt, arrow_cast(make_array(), 'List(Utf8)') AS also_at, false AS deprecated, f.ranking, f.rank_score
-        FROM eligible_fragments f
+            f.kind AS fragment_kind, f.text AS excerpt, array_remove(a.labels, f.label) AS also_at, false AS deprecated, f.ranking, f.rank_score
+        FROM folded_fragments f JOIN fragment_aliases a
+          ON coalesce(f.definition_id, f.fragment_id) = a.fold_key AND f.kind = a.kind
+          AND f.text = a.text AND f.source IS NOT DISTINCT FROM a.source
     ").await?;
     session.register_table(
         "search_api_candidates",
@@ -206,13 +246,41 @@ pub async fn page(
             "search page item budget is outside 1..=1024".into(),
         ));
     }
-    let folded = folded(session, spec, options).await?;
-    session.register_table("search_candidates", folded.clone().into_view())?;
+    // Exact counts and pages consume the same native ranking once. Keep long text and
+    // signatures in their admitted source relations until the small page is selected.
+    let index = folded(session, spec, options).await?.select(
+        [
+            "hit_order",
+            "candidate_id",
+            "fact_id",
+            "label",
+            "path",
+            "symbol_kind",
+            "fragment_kind",
+            "also_at",
+            "deprecated",
+            "ranking",
+            "rank_score",
+        ]
+        .into_iter()
+        .map(col),
+    )?;
+    session.register_table(
+        "search_candidates",
+        crate::operation_index::materialize(
+            runtime,
+            index,
+            crate::preparation::QueryFamily::SearchIndex,
+        )
+        .await?,
+    )?;
+    let folded = session.table("search_candidates").await?;
     let count = runtime
-        .execute(
+        .execute_family(
             session
                 .sql("SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM search_candidates")
                 .await?,
+            Some(crate::preparation::QueryFamily::CountUnsigned),
         )
         .await?;
     let total = projection::search::count(&count.batches)?;
@@ -233,7 +301,10 @@ pub async fn page(
     let hydrated = session
         .sql(
             r"
-        SELECT p.*, CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source
+        SELECT p.*,
+            CASE p.hit_order WHEN 0 THEN a.payload.signature ELSE NULL END AS signature,
+            CASE p.hit_order WHEN 0 THEN coalesce(a.payload.signature, a.payload.doc_summary, a.payload.docs, '') ELSE f.text END AS excerpt,
+            CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source
         FROM search_page p
         LEFT JOIN api_observations a ON p.fact_id = a.observation_id AND p.hit_order = 0
         LEFT JOIN fragments f ON p.fact_id = f.fragment_id AND p.hit_order = 1
@@ -241,7 +312,21 @@ pub async fn page(
     ",
         )
         .await?;
-    let output = runtime.execute(hydrated).await?;
+    // CASE derives a new field and does not copy top-level metadata. Declare the role of
+    // this selected qualified source explicitly; row provenance still comes from the joins.
+    let source = crate::admission::Relation::ApiObservations.schema()?;
+    let hydrated = hydrated.with_column(
+        "source",
+        col("source").alias_with_metadata(
+            "source",
+            Some(datafusion::common::metadata::FieldMetadata::from(
+                source.field_with_name("source")?.metadata().clone(),
+            )),
+        ),
+    )?;
+    let output = runtime
+        .execute_family(hydrated, Some(crate::preparation::QueryFamily::Search))
+        .await?;
     let mut rows = output
         .batches
         .iter()

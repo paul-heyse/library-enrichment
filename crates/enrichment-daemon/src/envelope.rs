@@ -11,16 +11,20 @@
 //! an adapter-local fact the core is by definition not around to state.
 
 use enrichment_core::wire::{
-    ArtifactUri, Coverage, Envelope, EnvelopeBody, ErrorCode, ErrorDetail, Freshness, JsonObject,
-    Outcome, Pagination, RequestId, SourceVersionMatch,
+    ArtifactUri, Coverage, DeliveryDescriptor, Diagnostic, Envelope, EnvelopeBody, ErrorCode,
+    ErrorDetail, Freshness, JsonObject, Outcome, Page, RequestId, SourceVersionMatch,
 };
 
-/// Mint a fresh request identity.
+/// Use the admitted request identity, or mint one outside a foreground operation.
 ///
 /// Distinct from any job or content key on purpose: jobs are shared between callers and
 /// reusable, requests are neither (§8.3).
 #[must_use]
 pub fn new_request_id() -> RequestId {
+    if let Some(id) = enrichment_store::runtime::operation_id().filter(|id| id.starts_with("req_"))
+    {
+        return RequestId::try_from(id).expect("admitted nonempty operation identity");
+    }
     RequestId::try_from(format!("req_{}", uuid::Uuid::new_v4().simple()))
         .expect("a uuid-derived id is never empty")
 }
@@ -38,17 +42,6 @@ pub fn unverified_freshness() -> Freshness {
     }
 }
 
-/// Pagination for a result that is not a page of anything.
-#[must_use]
-pub fn single_result_pagination() -> Pagination {
-    Pagination {
-        returned: 1,
-        total_matches: Some(1),
-        truncated: false,
-        next_cursor: None,
-    }
-}
-
 /// Assemble the status-independent half of an envelope.
 fn body(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> EnvelopeBody {
     EnvelopeBody {
@@ -63,7 +56,7 @@ fn body(summary: impl Into<String>, data: JsonObject, coverage: Coverage) -> Env
         freshness: unverified_freshness(),
         evidence: Vec::new(),
         artifacts: Vec::new(),
-        pagination: single_result_pagination(),
+        delivery: DeliveryDescriptor::default(),
     }
 }
 
@@ -116,7 +109,7 @@ impl Research {
             freshness: self.freshness,
             evidence: self.evidence,
             artifacts: self.artifacts,
-            pagination: single_result_pagination(),
+            delivery: DeliveryDescriptor::default(),
         }
     }
 
@@ -134,47 +127,13 @@ impl Research {
 
     /// Successful, with explicit pagination (a page of a larger result).
     #[must_use]
-    pub fn ok_with_pagination(self, pagination: Pagination) -> Envelope {
+    pub fn ok_with_page(self, page: Page) -> Envelope {
         let mut body = self.body();
-        body.pagination = pagination;
+        body.data.insert(
+            "page".into(),
+            serde_json::to_value(page).expect("typed page"),
+        );
         Envelope::new(body, Outcome::Ok { job: None })
-    }
-}
-
-/// Re-issue an `ok` envelope as `partial`, keeping everything else.
-pub trait IntoPartial {
-    /// The same body with `partial` status.
-    fn into_partial(self) -> Envelope;
-}
-
-impl IntoPartial for Envelope {
-    fn into_partial(self) -> Envelope {
-        // The envelope's body fields are public; only status/job/error are private and are
-        // re-established by `Envelope::new`.
-        let raw: serde_json::Value = serde_json::to_value(&self).unwrap_or_default();
-        let body = EnvelopeBody {
-            request_id: raw["request_id"]
-                .as_str()
-                .and_then(|s| RequestId::try_from(s.to_owned()).ok())
-                .unwrap_or_else(new_request_id),
-            summary: raw["summary"].as_str().unwrap_or_default().to_owned(),
-            context_id: raw["context_id"].as_str().map(str::to_owned),
-            snapshot_id: raw["snapshot_id"].as_str().map(str::to_owned),
-            data: raw["data"].as_object().cloned().unwrap_or_default(),
-            coverage: serde_json::from_value(raw["coverage"].clone()).unwrap_or(Coverage {
-                scope: String::new(),
-                indexed: std::collections::BTreeSet::new(),
-                missing: std::collections::BTreeSet::new(),
-                limitations: Vec::new(),
-            }),
-            freshness: serde_json::from_value(raw["freshness"].clone())
-                .unwrap_or_else(|_| unverified_freshness()),
-            evidence: serde_json::from_value(raw["evidence"].clone()).unwrap_or_default(),
-            artifacts: serde_json::from_value(raw["artifacts"].clone()).unwrap_or_default(),
-            pagination: serde_json::from_value(raw["pagination"].clone())
-                .unwrap_or_else(|_| single_result_pagination()),
-        };
-        Envelope::new(body, Outcome::Partial { job: None })
     }
 }
 
@@ -187,29 +146,27 @@ pub fn error(
     retryable: bool,
 ) -> Envelope {
     let message = message.into();
+    let next_action = next_action.into();
+    let mut diagnostic = Diagnostic::for_error(code, next_action.clone());
+    diagnostic.correlation_id = enrichment_store::runtime::operation_id();
     let coverage = Coverage {
+        details: None,
+        assessments: Vec::new(),
         scope: "no evidence was produced for this request".to_owned(),
         indexed: std::collections::BTreeSet::new(),
         missing: std::collections::BTreeSet::new(),
         limitations: vec![message.clone()],
     };
     Envelope::new(
-        EnvelopeBody {
-            pagination: Pagination {
-                returned: 0,
-                total_matches: Some(0),
-                truncated: false,
-                next_cursor: None,
-            },
-            ..body(message.clone(), JsonObject::new(), coverage)
-        },
+        body(message.clone(), JsonObject::new(), coverage),
         Outcome::Error {
             job: None,
             error: ErrorDetail {
                 code,
                 message,
                 retryable,
-                next_action: next_action.into(),
+                next_action,
+                diagnostic,
             },
         },
     )
@@ -243,6 +200,8 @@ mod tests {
             "done",
             JsonObject::new(),
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: "s".to_owned(),
                 indexed: std::collections::BTreeSet::new(),
                 missing: std::collections::BTreeSet::new(),

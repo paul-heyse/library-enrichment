@@ -1,0 +1,127 @@
+{
+  "module": "datafusion_datasource_json::source",
+  "crate": "datafusion-datasource-json",
+  "api": "api/datafusion_datasource_json.source.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_json::source::plan_to_json",
+      "name": "plan_to_json",
+      "kind": "function",
+      "crate": "datafusion-datasource-json",
+      "signature": "async fn plan_to_json(task_ctx: std::sync::Arc<datafusion_execution::TaskContext>, plan: std::sync::Arc<dyn ExecutionPlan>, path: impl AsRef<str>) -> datafusion_common::error::Result<()>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::datasource::physical_plan::json::plan_to_json"
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::source::JsonOpener",
+      "name": "JsonOpener",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonOpener",
+      "summary": "A [`FileOpener`] that opens a JSON file and yields a [`FileOpenFuture`]",
+      "doc": "api/datafusion_datasource_json.source.md#jsonopener",
+      "aliases": [
+        "datafusion::datasource::physical_plan::JsonOpener",
+        "datafusion::datasource::physical_plan::json::JsonOpener"
+      ],
+      "implements": [
+        "datafusion_datasource::file_stream::FileOpener"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(batch_size: usize, projected_schema: SchemaRef, file_compression_type: FileCompressionType, object_store: Arc<dyn ObjectStore>, newline_delimited: bool) -> Self",
+          "summary": "Returns a [`JsonOpener`]"
+        },
+        {
+          "name": "open",
+          "signature": "fn open(&self, partitioned_file: PartitionedFile) -> Result<FileOpenFuture>",
+          "via_trait": "datafusion_datasource::file_stream::FileOpener",
+          "summary": "Open a partitioned JSON file."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::source::JsonSource",
+      "name": "JsonSource",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonSource",
+      "summary": "JsonSource holds the extra configuration that is necessary for [`JsonOpener`]",
+      "doc": "api/datafusion_datasource_json.source.md#jsonsource",
+      "aliases": [
+        "datafusion::datasource::physical_plan::JsonSource",
+        "datafusion::datasource::physical_plan::json::JsonSource"
+      ],
+      "implements": [
+        "datafusion_datasource::file::FileSource"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn datafusion_physical_plan::PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "create_file_opener",
+          "signature": "fn create_file_opener(&self, object_store: Arc<dyn ObjectStore>, base_config: &FileScanConfig, _partition: usize) -> Result<Arc<dyn FileOpener>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> &str",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> &ExecutionPlanMetricsSet",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(table_schema: impl Into<datafusion_datasource::TableSchema>) -> Self",
+          "summary": "Initialize a JsonSource with the provided schema"
+        },
+        {
+          "name": "projection",
+          "signature": "fn projection(&self) -> Option<&ProjectionExprs>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> &datafusion_datasource::TableSchema",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &datafusion_physical_plan::proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstructs a `DataSourceExec` from a protobuf `JsonScan`."
+        },
+        {
+          "name": "try_pushdown_projection",
+          "signature": "fn try_pushdown_projection(&self, projection: &ProjectionExprs) -> Result<Option<Arc<dyn FileSource>>>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, base: &FileScanConfig, ctx: &datafusion_physical_plan::proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_datasource::file::FileSource",
+          "summary": "Emit a `JsonScan` node wrapping the shared base config."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(&self, batch_size: usize) -> Arc<dyn FileSource>",
+          "via_trait": "datafusion_datasource::file::FileSource"
+        },
+        {
+          "name": "with_newline_delimited",
+          "signature": "fn with_newline_delimited(self, newline_delimited: bool) -> Self",
+          "summary": "Set whether to read as newline-delimited JSON."
+        }
+      ]
+    }
+  ]
+}

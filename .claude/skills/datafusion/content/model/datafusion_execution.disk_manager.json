@@ -1,0 +1,255 @@
+{
+  "module": "datafusion_execution::disk_manager",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.disk_manager.md",
+  "items": [
+    {
+      "path": "datafusion_execution::disk_manager::DEFAULT_MAX_SPILL_MERGE_FAN_IN",
+      "name": "DEFAULT_MAX_SPILL_MERGE_FAN_IN",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_MAX_SPILL_MERGE_FAN_IN: usize = 0",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::disk_manager::DEFAULT_MAX_TEMP_DIRECTORY_SIZE",
+      "name": "DEFAULT_MAX_TEMP_DIRECTORY_SIZE",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_MAX_TEMP_DIRECTORY_SIZE: u64 = _",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::disk_manager::DiskManagerMode",
+      "name": "DiskManagerMode",
+      "kind": "enum",
+      "crate": "datafusion-execution",
+      "signature": "enum DiskManagerMode",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "OsTmpDirectory",
+        "Directories",
+        "Custom",
+        "Disabled"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_execution::disk_manager::DiskManager",
+      "name": "DiskManager",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct DiskManager",
+      "summary": "Manages files generated during query execution, e.g. spill files generated while processing dataset larger than available memory.",
+      "doc": "api/datafusion_execution.disk_manager.md#diskmanager",
+      "aliases": [
+        "datafusion::execution::DiskManager",
+        "datafusion_execution::DiskManager"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> DiskManagerBuilder",
+          "summary": "Creates a builder for [DiskManager]"
+        },
+        {
+          "name": "create_tmp_file",
+          "signature": "fn create_tmp_file(&Arc<self>, request_description: &str) -> Result<Arc<dyn SpillFile>>",
+          "summary": "Return a temporary file from a randomized choice in the configured locations"
+        },
+        {
+          "name": "max_spill_merge_fan_in",
+          "signature": "fn max_spill_merge_fan_in(&self) -> usize",
+          "summary": "Returns the maximum number of spill files opened by one merge pass."
+        },
+        {
+          "name": "max_temp_directory_size",
+          "signature": "fn max_temp_directory_size(&self) -> u64",
+          "summary": "Returns the maximum temporary directory size in bytes"
+        },
+        {
+          "name": "set_arc_max_temp_directory_size",
+          "signature": "fn set_arc_max_temp_directory_size(this: &Arc<Self>, max_temp_directory_size: u64) -> Result<()>"
+        },
+        {
+          "name": "set_max_spill_merge_fan_in",
+          "signature": "fn set_max_spill_merge_fan_in(&self, max_spill_merge_fan_in: usize)",
+          "summary": "Atomically set the maximum spill merge fan-in."
+        },
+        {
+          "name": "set_max_temp_directory_size",
+          "signature": "fn set_max_temp_directory_size(&self, max_temp_directory_size: u64) -> Result<()>",
+          "summary": "Atomically set the max temp directory size at runtime."
+        },
+        {
+          "name": "spilling_progress",
+          "signature": "fn spilling_progress(&self) -> SpillingProgress",
+          "summary": "Returns the current spilling progress"
+        },
+        {
+          "name": "temp_dir_paths",
+          "signature": "fn temp_dir_paths(&self) -> Vec<PathBuf>",
+          "summary": "Returns the temporary directory paths"
+        },
+        {
+          "name": "tmp_files_enabled",
+          "signature": "fn tmp_files_enabled(&self) -> bool",
+          "summary": "Return true if this disk manager supports creating temporary files. If this returns false, any call to `create_tmp_file` will error."
+        },
+        {
+          "name": "used_disk_space",
+          "signature": "fn used_disk_space(&self) -> u64"
+        },
+        {
+          "name": "with_max_temp_directory_size",
+          "signature": "fn with_max_temp_directory_size(self, max_temp_directory_size: u64) -> Result<Self>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::disk_manager::DiskManagerBuilder",
+      "name": "DiskManagerBuilder",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct DiskManagerBuilder",
+      "summary": "Builder pattern for the [DiskManager] structure",
+      "doc": "api/datafusion_execution.disk_manager.md#diskmanagerbuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<DiskManager>",
+          "summary": "Create a DiskManager given the builder"
+        },
+        {
+          "name": "set_max_spill_merge_fan_in",
+          "signature": "fn set_max_spill_merge_fan_in(&mut self, value: usize)"
+        },
+        {
+          "name": "set_max_temp_directory_size",
+          "signature": "fn set_max_temp_directory_size(&mut self, value: u64)"
+        },
+        {
+          "name": "set_mode",
+          "signature": "fn set_mode(&mut self, mode: DiskManagerMode)"
+        },
+        {
+          "name": "set_temp_file_factory",
+          "signature": "fn set_temp_file_factory(&mut self, temp_file_factory: Arc<dyn TempFileFactory>)",
+          "summary": "Configure a custom factory for creating temporary spill files."
+        },
+        {
+          "name": "with_max_spill_merge_fan_in",
+          "signature": "fn with_max_spill_merge_fan_in(self, value: usize) -> Self"
+        },
+        {
+          "name": "with_max_temp_directory_size",
+          "signature": "fn with_max_temp_directory_size(self, value: u64) -> Self"
+        },
+        {
+          "name": "with_mode",
+          "signature": "fn with_mode(self, mode: DiskManagerMode) -> Self"
+        },
+        {
+          "name": "with_temp_file_factory",
+          "signature": "fn with_temp_file_factory(self, temp_file_factory: Arc<dyn TempFileFactory>) -> Self",
+          "summary": "Configure a custom factory for creating temporary spill files."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::disk_manager::FileSpillWriter",
+      "name": "FileSpillWriter",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct FileSpillWriter",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::io::write::Write",
+        "datafusion_execution::spill_file::SpillWriter"
+      ],
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<()>",
+          "via_trait": "datafusion_execution::spill_file::SpillWriter"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> std::io::Result<()>",
+          "via_trait": "core::io::write::Write"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> std::io::Result<usize>",
+          "via_trait": "core::io::write::Write"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::disk_manager::RefCountedTempFile",
+      "name": "RefCountedTempFile",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct RefCountedTempFile",
+      "summary": "A wrapper around a [`NamedTempFile`] that also contains a reference to its parent temporary directory.",
+      "doc": "api/datafusion_execution.disk_manager.md#refcountedtempfile",
+      "implements": [
+        "core::ops::drop::Drop",
+        "datafusion_execution::spill_file::SpillFile"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &NamedTempFile"
+        },
+        {
+          "name": "open_writer",
+          "signature": "fn open_writer(&self) -> Result<Box<dyn SpillWriter>>",
+          "via_trait": "datafusion_execution::spill_file::SpillFile"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &Path"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> Option<&Path>",
+          "via_trait": "datafusion_execution::spill_file::SpillFile"
+        },
+        {
+          "name": "read_stream",
+          "signature": "fn read_stream(&self) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Result<Bytes>> + Send>>>",
+          "via_trait": "datafusion_execution::spill_file::SpillFile"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> Option<u64>",
+          "via_trait": "datafusion_execution::spill_file::SpillFile"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::disk_manager::SpillingProgress",
+      "name": "SpillingProgress",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct SpillingProgress",
+      "summary": "Information about the current disk usage for spilling",
+      "doc": "api/datafusion_execution.disk_manager.md#spillingprogress",
+      "fields": [
+        "current_bytes",
+        "active_files_count"
+      ],
+      "methods": []
+    }
+  ]
+}

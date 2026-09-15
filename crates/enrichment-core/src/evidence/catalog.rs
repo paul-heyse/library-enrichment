@@ -4,6 +4,67 @@ use crate::identity::{ContextId, SnapshotId};
 use crate::producer::ProducerRun;
 use serde::{Deserialize, Serialize};
 
+/// A derived comparison is owned by its request and exact input pair, never a producer run.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ComparisonPublication {
+    pub job_id: String,
+    pub request_digest: String,
+    pub before_context_id: ContextId,
+    pub before_snapshot_id: SnapshotId,
+    pub after_context_id: ContextId,
+    pub after_snapshot_id: SnapshotId,
+    pub state: crate::wire::JobState,
+    pub delivery: super::Artifact,
+}
+
+impl ComparisonPublication {
+    pub fn validate(&self) -> Result<(), String> {
+        if !valid_job_id(&self.job_id)
+            || !valid_digest(&self.request_digest)
+            || !matches!(
+                self.state,
+                crate::wire::JobState::Succeeded | crate::wire::JobState::Partial
+            )
+        {
+            return Err("invalid comparison publication identity or outcome".into());
+        }
+        validate_delivery(&self.delivery)
+    }
+}
+
+fn valid_job_id(value: &str) -> bool {
+    value
+        .strip_prefix("job_")
+        .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+}
+
+fn valid_digest(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+fn validate_delivery(delivery: &super::Artifact) -> Result<(), String> {
+    if !valid_digest(&delivery.sha256)
+        || delivery.artifact_id != super::artifact_id_for(&delivery.sha256)
+        || delivery.size_bytes == 0
+        || delivery.size_bytes > 32 * 1024 * 1024
+        || delivery.kind != super::ArtifactKind::Other
+        || delivery.media_type != "application/json"
+        || delivery.source_uri != "service:job-delivery/2"
+        || delivery.retrieved_at.is_empty()
+        || delivery.final_url.is_some()
+        || delivery.etag.is_some()
+        || delivery.last_modified.is_some()
+        || delivery.compression.is_some()
+    {
+        return Err("invalid committed job delivery descriptor".into());
+    }
+    Ok(())
+}
+
 /// A committed job result is recovered through native catalog records, never by rerunning it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -32,10 +93,7 @@ impl JobPublication {
     /// # Errors
     /// Only a service job, a terminal outcome and a bounded result closure may be published.
     pub fn validate(&self) -> Result<(), String> {
-        if !self
-            .job_id
-            .strip_prefix("job_")
-            .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+        if !valid_job_id(&self.job_id)
             || !matches!(
                 self.state,
                 crate::wire::JobState::Succeeded
@@ -53,26 +111,7 @@ impl JobPublication {
         {
             return Err("invalid durable job publication".into());
         }
-        let delivery = &self.delivery;
-        if delivery.sha256.len() != 64
-            || !delivery
-                .sha256
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            || delivery.artifact_id != super::artifact_id_for(&delivery.sha256)
-            || delivery.size_bytes == 0
-            || delivery.size_bytes > 32 * 1024 * 1024
-            || delivery.kind != super::ArtifactKind::Other
-            || delivery.media_type != "application/json"
-            || delivery.source_uri != "service:job-delivery/1"
-            || delivery.retrieved_at.is_empty()
-            || delivery.final_url.is_some()
-            || delivery.etag.is_some()
-            || delivery.last_modified.is_some()
-            || delivery.compression.is_some()
-        {
-            return Err("invalid committed job delivery descriptor".into());
-        }
+        validate_delivery(&self.delivery)?;
         let mut ids = self.result_artifact_ids.clone();
         ids.sort();
         ids.dedup();

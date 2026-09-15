@@ -2,12 +2,12 @@
 #   filename:  research-envelope.schema.json
 
 from enum import StrEnum
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
-from typing import Any
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
+from typing import Any, Literal
 
 
 class SchemaVersion(StrEnum):
-    field_1_0 = "1.0"
+    field_2_0 = "2.0"
 
 
 class Status(StrEnum):
@@ -33,14 +33,36 @@ class ArtifactHandle(BaseModel):
     )
 
 
-class Coverage(BaseModel):
+class ArtifactSection(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    indexed: list[str] = Field(..., description="Evidence kinds that were successfully indexed.")
-    limitations: list[str] = Field(..., description="Known reasons this result may not generalize.")
-    missing: list[str] = Field(..., description="Evidence kinds that were expected but are absent.")
-    scope: str = Field(..., description="What the result claims to cover, in prose.")
+    heading: str
+    kind: Literal["markdown"]
+
+
+class DeliveryLimits(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    effective_max_bytes: int | None = Field(..., ge=0)
+    requested_max_bytes: int | None = Field(..., ge=0)
+
+
+class DiagnosticCause(StrEnum):
+    invalid_input = "invalid_input"
+    not_found = "not_found"
+    permission_denied = "permission_denied"
+    corrupt_state = "corrupt_state"
+    io = "io"
+    capacity = "capacity"
+    deadline = "deadline"
+    invalid_plan = "invalid_plan"
+    policy_denied = "policy_denied"
+    unsupported = "unsupported"
+    upstream = "upstream"
+    transport = "transport"
+    internal = "internal"
 
 
 class Code(StrEnum):
@@ -57,21 +79,8 @@ class Code(StrEnum):
     VERIFICATION_FAILED = "VERIFICATION_FAILED"
     BUDGET_EXCEEDED = "BUDGET_EXCEEDED"
     INVALID_CURSOR = "INVALID_CURSOR"
-
-
-class Error(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    code: Code = Field(..., description="The stable code a caller can branch on.")
-    message: str = Field(..., description="Human-readable explanation. Not a stable interface.")
-    next_action: str = Field(
-        ...,
-        description="What the caller should do instead. Blueprint §7.2 requires this, not just a code.",
-    )
-    retryable: bool = Field(
-        ..., description="Whether retrying the identical request could succeed."
-    )
+    QUERY_FAILED = "QUERY_FAILED"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
 class EvidenceClass(StrEnum):
@@ -161,18 +170,281 @@ class JobHandle(BaseModel):
     state: State = Field(..., description="Where the job is now.")
 
 
-class Pagination(BaseModel):
+class RecoveryAction1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    next_cursor: str | None = Field(
-        ..., description="Opaque cursor for the next page, or `null` at the end."
+    arguments: dict[str, Any]
+    kind: Literal["call_tool"]
+    tool: str
+
+
+class RecoveryAction3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    returned: int = Field(..., description="How many entries this page carries.", ge=0)
-    total_matches: int | None = Field(
-        ..., description='Total matches when known. `null` means "not counted", never "zero".', ge=0
+    kind: Literal["retry_after"]
+    milliseconds: int = Field(..., ge=0)
+
+
+class RecoveryAction4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
     )
-    truncated: bool = Field(..., description="Whether output was cut short by a budget.")
+    kind: Literal["change_request"]
+    reason: str
+
+
+class RecoveryAction5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["operator_setup"]
+    reason: str
+
+
+class RecoveryAction6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["report_defect"]
+    reason: str
+
+
+class ResultSectionName(StrEnum):
+    coverage = "coverage"
+    signature = "signature"
+    changes = "changes"
+    aspects = "aspects"
+    data = "data"
+
+
+class Kind(StrEnum):
+    registry_metadata = "registry_metadata"
+    crate_source = "crate_source"
+    documentation_build_config = "documentation_build_config"
+    hosted_rustdoc_json = "hosted_rustdoc_json"
+    public_api = "public_api"
+    documentation = "documentation"
+    examples = "examples"
+    release_notes = "release_notes"
+    source_excerpts = "source_excerpts"
+    distribution_source = "distribution_source"
+    stubs = "stubs"
+    inventory = "inventory"
+    runtime_api = "runtime_api"
+    semantic_queries = "semantic_queries"
+    usage_probes = "usage_probes"
+
+
+class ScopeState(StrEnum):
+    indexed = "indexed"
+    partial = "partial"
+    missing = "missing"
+    unknown = "unknown"
+
+
+class SubjectRef1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["symbol"]
+    symbol_id: str
+
+
+class SubjectRef2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    definition_id: str
+    kind: Literal["definition"]
+
+
+class SubjectRef3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["library"]
+    release_id: str
+
+
+class SubjectRef4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["feature"]
+    name: str
+
+
+class SubjectRef5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    heading: str
+    kind: Literal["document"]
+
+
+class SubjectRef6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    kind: Literal["example"]
+    path: str
+
+
+class SubjectRef(
+    RootModel[SubjectRef1 | SubjectRef2 | SubjectRef3 | SubjectRef4 | SubjectRef5 | SubjectRef6]
+):
+    root: SubjectRef1 | SubjectRef2 | SubjectRef3 | SubjectRef4 | SubjectRef5 | SubjectRef6 = Field(
+        ...,
+        description="A reference carries its indexing domain. External paths never masquerade as local keys.",
+    )
+
+
+class ArtifactSection5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Literal["result"]
+    name: ResultSectionName
+
+
+class ArtifactSection3(RootModel[ArtifactSection | ArtifactSection5]):
+    root: ArtifactSection | ArtifactSection5 = Field(
+        ..., description="A result projection is distinct from a Markdown heading selection."
+    )
+
+
+class DeliveryDescriptor1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    limits: DeliveryLimits
+    mode: Literal["inline"]
+
+
+class RecoveryAction2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    cursor: str | None
+    kind: Literal["read_artifact"]
+    section: ArtifactSection3 | None
+
+
+class RecoveryAction(
+    RootModel[
+        RecoveryAction1
+        | RecoveryAction2
+        | RecoveryAction3
+        | RecoveryAction4
+        | RecoveryAction5
+        | RecoveryAction6
+    ]
+):
+    root: (
+        RecoveryAction1
+        | RecoveryAction2
+        | RecoveryAction3
+        | RecoveryAction4
+        | RecoveryAction5
+        | RecoveryAction6
+    ) = Field(
+        ..., description="An actionable follow-up, never an instruction to execute automatically."
+    )
+
+
+class ResultSection(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    name: ResultSectionName
+
+
+class ScopeAssessment(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    kind: Kind = Field(
+        ...,
+        description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
+    )
+    snapshot_id: str
+    state: ScopeState
+    subject: SubjectRef
+    witness_id: str | None = Field(
+        ...,
+        description="A qualified fact establishing the selected state. Historical attempts remain retained.",
+    )
+
+
+class Coverage(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    assessments: list[ScopeAssessment] = Field(
+        ..., description="Requested evidence scopes assessed against qualified native facts."
+    )
+    details: RecoveryAction | None = Field(
+        ...,
+        description="When present, additional limitation text is retained in the exact coverage section.\nScope, assessments, indexed and missing remain the authoritative inline assessment.",
+    )
+    indexed: list[str] = Field(..., description="Evidence kinds that were successfully indexed.")
+    limitations: list[str] = Field(..., description="Known reasons this result may not generalize.")
+    missing: list[str] = Field(..., description="Evidence kinds that were expected but are absent.")
+    scope: str = Field(..., description="What the result claims to cover, in prose.")
+
+
+class DeliveryDescriptor2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    artifact_id: str
+    limits: DeliveryLimits
+    mode: Literal["artifact"]
+    read: RecoveryAction
+    sections: list[ResultSection]
+
+
+class DeliveryDescriptor(RootModel[DeliveryDescriptor1 | DeliveryDescriptor2]):
+    root: DeliveryDescriptor1 | DeliveryDescriptor2 = Field(
+        ...,
+        description="Delivery changes representation, never the original research status or coverage.",
+    )
+
+
+class Diagnostic(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    actions: list[RecoveryAction]
+    affected_ids: list[str]
+    allowed: int | None = Field(..., ge=0)
+    cause: DiagnosticCause
+    correlation_id: str | None
+    observed: int | None = Field(..., ge=0)
+    rule: str | None
+    stage: str
+
+
+class Error(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    code: Code = Field(..., description="The stable code a caller can branch on.")
+    diagnostic: Diagnostic = Field(..., description="Structured origin and recovery evidence.")
+    message: str = Field(..., description="Human-readable explanation. Not a stable interface.")
+    next_action: str = Field(
+        ...,
+        description="What the caller should do instead. Blueprint §7.2 requires this, not just a code.",
+    )
+    retryable: bool = Field(
+        ..., description="Whether retrying the identical request could succeed."
+    )
 
 
 class LibraryEnrichmentResponseEnvelope(BaseModel):
@@ -185,13 +457,13 @@ class LibraryEnrichmentResponseEnvelope(BaseModel):
     context_id: str | None = Field(..., description="The research context, or `null`.")
     coverage: Coverage = Field(..., description="What was looked at, and what was not.")
     data: dict[str, Any] = Field(..., description="Tool-specific payload.")
+    delivery: DeliveryDescriptor = Field(..., description="Result-bounding accounting.")
     error: Error | None
     evidence: list[Evidence] = Field(..., description="Supporting facts with provenance.")
     freshness: Freshness = Field(..., description="Registry freshness.")
     job: JobHandle | None
-    pagination: Pagination = Field(..., description="Result-bounding accounting.")
     request_id: str = Field(..., description="Opaque per-request identifier.", min_length=1)
-    schema_version: SchemaVersion = Field(..., description="Always `1.0` for this contract.")
+    schema_version: SchemaVersion = Field(..., description="Always `2.0` for this contract.")
     snapshot_id: str | None = Field(..., description="The snapshot read, or `null`.")
     status: Status = Field(
         ...,

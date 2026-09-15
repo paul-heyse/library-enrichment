@@ -30,17 +30,59 @@ class Invocation:
 
     def envelope(self) -> dict[str, Any]:
         """Validate the wire and tool payload emitted by the Rust-owned service contract."""
-        if self.server != SERVICE or self.completed is None or self.error:
+        if self.server != SERVICE or self.completed is None:
             raise ValueError(f"{self.call_id}: no completed service result")
         payload = result_object(self.result)
         valid, reason = validate_document(json.dumps(payload))
         if not valid:
             raise ValueError(f"{self.call_id}: invalid result envelope: {reason}")
-        if payload["status"] in {"ok", "partial"}:
+        flagged = self.error or (
+            isinstance(self.result, dict)
+            and (self.result.get("isError") or self.result.get("is_error"))
+        )
+        terminal = payload.get("data", {}).get("result")
+        failed_job = isinstance(terminal, dict) and terminal.get("outcome") == "error"
+        if flagged and payload["status"] != "error" and not failed_job:
+            raise ValueError(f"{self.call_id}: failed MCP result claims usable evidence")
+        if payload["status"] in {"ok", "partial"} and payload["delivery"]["mode"] == "inline":
             valid, reason = validate_tool_data(self.tool, payload["data"])
             if not valid:
                 raise ValueError(f"{self.call_id}: invalid {self.tool} payload: {reason}")
         return payload
+
+    def failure_preview(self) -> dict[str, Any] | None:
+        """A bounded native recovery projection is evidence of failure, never success."""
+        if not self.error or self.completed is None or self.server != SERVICE:
+            return None
+        content = self.result
+        if isinstance(content, dict):
+            content = content.get("content")
+        if isinstance(content, list):
+            texts = [
+                b.get("text") for b in content if isinstance(b, dict) and b.get("type") == "text"
+            ]
+        else:
+            texts = [content]
+        previews = []
+        for text in texts:
+            if not isinstance(text, str):
+                continue
+            try:
+                value = json.loads(text)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict) and value.get("format") == "research-error-preview/1":
+                previews.append(value)
+        if len(previews) != 1:
+            return None
+        preview = previews[0]
+        # A pre-admission argument error is not a terminal job observation, even when
+        # the rejected request contained a job_id. Only terminal previews bind a job.
+        if "job_id" not in preview:
+            return None
+        if preview.get("job_id") != self.arguments.get("job_id") or not preview.get("code"):
+            raise ValueError("failure preview does not match its native job invocation")
+        return preview
 
 
 @dataclass
@@ -89,7 +131,7 @@ class Trace:
                     response = self.expand(poll.envelope())
                     result = response.get("data", {}).get("result")
                     if response["status"] == "ok" and isinstance(result, dict):
-                        payload = result
+                        payload = self.terminal_descriptor(response, result)
                         break
         payload = self.expand(payload)
         valid, reason = validate_document(json.dumps(payload))
@@ -102,16 +144,31 @@ class Trace:
         return payload
 
     def expand(self, payload: dict[str, Any]) -> dict[str, Any]:
-        if (payload.get("error") or {}).get("code") != "BUDGET_EXCEEDED":
+        if payload["delivery"]["mode"] != "artifact":
             return payload
-        artifact = payload.get("data", {}).get("result_artifact_id")
-        if not isinstance(artifact, str):
-            return payload
+        artifact = payload["delivery"]["artifact_id"]
         return self.result_artifact(payload, artifact)[0]
+
+    @staticmethod
+    def terminal_descriptor(response: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+        """A compact job result points directly to the retained research envelope."""
+        if result["delivery"]["mode"] != "artifact":
+            raise ValueError("terminal job result has no durable delivery")
+        return response | {
+            "status": result["outcome"],
+            "summary": result["summary"],
+            "coverage": result["coverage"],
+            "error": result["error"],
+            "job": None,
+            "data": {},
+            "delivery": result["delivery"],
+            "context_id": result["context_id"],
+            "snapshot_id": result["snapshot_id"],
+        }
 
     def result_artifact(self, payload: dict, artifact: str) -> tuple[dict, int]:
         """Accept a complete native cursor chain, including a restarted smaller-page read."""
-        states: dict[str | None, ArtifactChain] = {None: ArtifactChain(None, b"", 0, 0)}
+        states: dict[tuple[str | None, str | None], ArtifactChain] = {}
         identity = None
         for call in self.calls:
             if (
@@ -126,6 +183,11 @@ class Trace:
             if page["status"] != "ok":
                 continue
             data = page["data"]
+            section = data["section"]
+            selected = call.arguments.get("section")
+            expected = selected.get("name") if isinstance(selected, dict) else None
+            if section != expected or section not in {None, "data"}:
+                continue
             raw = data["content"].encode()
             current = (data["artifact"]["sha256"], data["total"])
             if (
@@ -138,17 +200,20 @@ class Trace:
             ):
                 raise ValueError("invalid native result artifact page")
             identity = current
-            previous = states.get(call.arguments.get("cursor"))
-            if previous is None or data["start"] != previous.end or data["section"] is not None:
+            cursor_in = call.arguments.get("cursor")
+            previous = states.get((section, cursor_in))
+            if cursor_in is None:
+                previous = ArtifactChain(None, b"", data["start"] if section else 0, 0)
+            if previous is None or data["start"] != previous.end:
                 continue
             chain = ArtifactChain(
                 previous, raw, data["end"], max(previous.completed, call.completed)
             )
-            cursor = page["pagination"]["next_cursor"]
+            cursor = data["page"]["next_cursor"]
             if cursor is not None:
-                states[cursor] = chain
+                states[section, cursor] = chain
                 continue
-            if chain.end != data["total"] or data["remaining"] != 0:
+            if (section is None and chain.end != data["total"]) or data["remaining"] != 0:
                 raise ValueError("incomplete result artifact")
             chunks = []
             node: ArtifactChain | None = chain
@@ -156,13 +221,34 @@ class Trace:
                 chunks.append(node.chunk)
                 node = node.previous
             complete = b"".join(reversed(chunks))
+            if section == "data":
+                # Direct sections intentionally do not read the complete artifact. Each page
+                # has a digest and a contiguous, section-bound cursor chain; the live witness
+                # independently rereads those exact requests against the immutable daemon.
+                value = json.loads(complete)
+                if not isinstance(value, dict):
+                    raise ValueError("result data section is not an object")
+                return payload | {
+                    "data": value,
+                    "delivery": {
+                        "mode": "inline",
+                        "limits": {"requested_max_bytes": None, "effective_max_bytes": None},
+                    },
+                }, chain.completed
             if hashlib.sha256(complete).hexdigest() != data["artifact"]["sha256"]:
                 raise ValueError("result artifact digest mismatch")
-            result = json.loads(complete)
+            document = json.loads(complete)
+            if (
+                not isinstance(document, dict)
+                or document.get("index", {}).get("format") != "research-result/2"
+            ):
+                raise ValueError("result artifact is not an indexed research result")
+            result = document["result"]
             if not isinstance(result, dict):
-                raise ValueError("result artifact is not an envelope")
-            # The immutable document excludes transport identity, not research fields.
-            result.setdefault("request_id", payload["request_id"])
+                raise ValueError("result artifact has no research envelope")
+            # The immutable document has a fixed retained request placeholder. This caller
+            # owns only the transport identity; research fields remain exactly retained.
+            result["request_id"] = payload["request_id"]
             return result, chain.completed
         raise ValueError("client did not read the complete result artifact")
 
@@ -190,10 +276,10 @@ class Trace:
                         finished = self.usable_at(poll)
                         if finished is None:
                             return None
-                        at, payload = max(at, finished), result
+                        at, payload = max(at, finished), self.terminal_descriptor(response, result)
                         break
-        if (payload.get("error") or {}).get("code") == "BUDGET_EXCEEDED":
-            artifact = payload["data"]["result_artifact_id"]
+        if payload["delivery"]["mode"] == "artifact":
+            artifact = payload["delivery"]["artifact_id"]
             _, finished = self.result_artifact(payload, artifact)
             at = max(at, finished)
         return at
@@ -202,8 +288,6 @@ class Trace:
 def result_object(result: object) -> dict[str, Any]:
     """Accept only an explicit structured result or a complete JSON text result."""
     if isinstance(result, dict):
-        if result.get("isError") or result.get("is_error"):
-            raise ValueError("MCP result explicitly failed")
         if "schema_version" in result:
             return result
         for name in ("structured_content", "structuredContent"):
@@ -211,14 +295,22 @@ def result_object(result: object) -> dict[str, Any]:
                 return result[name]
         result = result.get("content")
     if isinstance(result, list):
-        if not all(
-            isinstance(block, dict)
-            and block.get("type") == "text"
-            and isinstance(block.get("text"), str)
-            for block in result
-        ):
-            raise ValueError("service result is not a JSON text payload")
-        result = "\n".join(block["text"] for block in result)
+        # Hosts can render resource links as text beside the structured JSON. Only one
+        # complete envelope block is authority; neither a preview nor conflicting JSON is.
+        envelopes = []
+        for block in result:
+            if not isinstance(block, dict):
+                raise ValueError("malformed service content block")
+            if block.get("type") == "text" and isinstance(block.get("text"), str):
+                try:
+                    candidate = json.loads(block["text"])
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(candidate, dict) and "schema_version" in candidate:
+                    envelopes.append(candidate)
+        if len(envelopes) != 1:
+            raise ValueError("service result must contain one explicit JSON envelope")
+        return envelopes[0]
     if isinstance(result, str):
         value = json.loads(result)
         if isinstance(value, dict) and "schema_version" in value:

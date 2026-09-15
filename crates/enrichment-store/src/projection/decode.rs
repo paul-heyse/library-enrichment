@@ -366,3 +366,11 @@ pub fn observations(batch: &RecordBatch) -> Result<Vec<ApiObservation>, ArrowErr
         })
         .collect()
 }
+
+/// Decode native requested-domain subjects without JSON projection.
+pub(crate) fn subjects(batch: &RecordBatch) -> Result<Vec<SubjectRef>, ArrowError> {
+    let rows = RowSet::batch(batch)?;
+    (0..batch.num_rows())
+        .map(|i| subject(rows.row(i).structure("subject")?))
+        .collect()
+}

@@ -31,18 +31,40 @@ pub enum ChangeKind {
     Changed,
 }
 
-/// Source references survive even when the inline before/after value is paged out.
+/// Each value retains its own qualified source, including a legitimate absent observation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub struct Alternative {
+    pub value: AlternativeValue,
+    pub source: Option<crate::evidence::relational::FactSource>,
+}
+
+/// Complete value delivery, independent of the alternative's fact provenance.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
+pub enum AlternativeValue {
+    Inline {
+        value: Value,
+    },
+    Artifact {
+        artifact: crate::wire::ArtifactHandle,
+        size_bytes: u64,
+        sha256: String,
+    },
+}
+
+/// A changed key with independently paged observational alternatives.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Change {
     pub change_id: String,
     pub scope: Scope,
     pub kind: ChangeKind,
     pub subject: String,
-    pub before: Option<Value>,
-    pub after: Option<Value>,
+    pub before: Option<Vec<Alternative>>,
+    pub after: Option<Vec<Alternative>>,
     pub interpretation: String,
-    pub before_sources: Vec<crate::evidence::relational::FactSource>,
-    pub after_sources: Vec<crate::evidence::relational::FactSource>,
+    /// Values and their source references share this bounded alternative order.
+    pub before_page: crate::wire::Page,
+    pub after_page: crate::wire::Page,
 }
 
 /// Construct a stable change from selected observations.
@@ -51,8 +73,8 @@ pub fn change(
     scope: Scope,
     key: &str,
     subject: &str,
-    before: Option<Value>,
-    after: Option<Value>,
+    before: Option<Vec<Alternative>>,
+    after: Option<Vec<Alternative>>,
 ) -> Change {
     let kind = if before.is_none() {
         ChangeKind::Added
@@ -62,14 +84,14 @@ pub fn change(
         ChangeKind::Changed
     };
     let interpretation = match (scope, kind) {
-        (Scope::Api, ChangeKind::Added) => "Additive observed API; execution and project compatibility have not been established.",
-        (Scope::Api, _) => "Potentially breaking observed API change; check environment confounders and verify consequential usage.",
+        (Scope::Api, ChangeKind::Added) => "API observed only on the after side; confirm coverage before treating this as an addition. Execution and project compatibility have not been established.",
+        (Scope::Api, _) => "Observed API representation changed; producer rendering, including Infallible versus never-type (!), can differ without a source-level compatibility change. Verify consequential usage.",
         _ => "Evidence changed within this scope; this is not an executed behavior assertion.",
     }.into();
     Change {
         change_id: format!(
             "change_{}",
-            canonical::digest_hex(&json!(["typed-comparison/1", scope, key, before, after]))
+            canonical::digest_hex(&json!(["typed-comparison/2", scope, key, before, after]))
         ),
         scope,
         kind,
@@ -77,7 +99,7 @@ pub fn change(
         before,
         after,
         interpretation,
-        before_sources: Vec::new(),
-        after_sources: Vec::new(),
+        before_page: crate::wire::Page::default(),
+        after_page: crate::wire::Page::default(),
     }
 }

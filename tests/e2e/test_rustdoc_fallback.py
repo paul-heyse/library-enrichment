@@ -81,22 +81,13 @@ def upstream() -> Iterator[FixtureUpstream]:
 
 async def call(client, tool: str, **params: Any) -> dict[str, Any]:
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
 
 async def finish(client, pending: dict[str, Any]) -> dict[str, Any]:
-    if pending["status"] != "pending":
-        return pending
-    for _ in range(60):
-        result = await call(
-            client, "job_control", job_id=pending["job"]["job_id"], action="wait", wait_seconds=10
-        )
-        assert result["status"] == "ok", result
-        if result["data"]["result"] is not None:
-            return result["data"]["result"]
-    pytest.fail("the probe exceeded bounded job polling")
+    return await daemon.wait_for_answer(client, pending)
 
 
 async def test_asking_for_a_local_build_without_the_build_profile_is_denied(
@@ -269,7 +260,10 @@ async def test_rust_navigation_runs_in_a_warm_rust_analyzer_session(
                     "inspect_symbol",
                     context_id=context,
                     symbol_path="enr_fixture::Widget",
-                    aspects=["semantics"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["semantics"]],
+                    },
                     execution={
                         "intent": "execute_on_miss",
                         "profile": "build",
@@ -308,7 +302,10 @@ async def test_rust_navigation_runs_in_a_warm_rust_analyzer_session(
                 "inspect_symbol",
                 context_id=answer["context_id"],
                 symbol_path="enr_fixture::Widget",
-                aspects=["semantics"],
+                selection={
+                    "mode": "explicit",
+                    "aspects": [{"aspect": name} for name in ["semantics"]],
+                },
                 execution={
                     "intent": "execute_on_miss",
                     "profile": "build",

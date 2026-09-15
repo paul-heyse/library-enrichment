@@ -16,7 +16,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 __all__ = [
     "ACQUISITION_TIMEOUT_SECONDS",
@@ -46,6 +46,22 @@ class DaemonUnavailableError(RuntimeError):
     Not a bug and not a crash: a stopped daemon is an ordinary, reportable condition. Callers
     turn this into a truthful ``service_status`` answer rather than a failed tool call.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        cause: Literal[
+            "connection",
+            "timeout",
+            "request_limit",
+            "response_limit",
+            "incomplete_frame",
+            "protocol",
+        ] = "connection",
+    ) -> None:
+        super().__init__(message)
+        self.cause = cause
 
 
 def socket_path() -> Path:
@@ -113,31 +129,70 @@ class DaemonClient:
         frame = json.dumps(request, separators=(",", ":"))
         if len(frame.encode()) > RPC_MESSAGE_BYTES:
             message = f"request exceeds the {RPC_MESSAGE_BYTES}-byte rpc limit"
-            raise DaemonUnavailableError(message)
+            raise DaemonUnavailableError(message, cause="request_limit")
 
         deadline = self.timeout_seconds if timeout_seconds is None else timeout_seconds
         try:
             return await asyncio.wait_for(self._exchange(frame), deadline)
         except TimeoutError as exc:
             message = f"daemon did not answer within {deadline}s at {self.path}"
-            raise DaemonUnavailableError(message) from exc
-        except (OSError, json.JSONDecodeError) as exc:
+            raise DaemonUnavailableError(message, cause="timeout") from exc
+        except OSError as exc:
             raise DaemonUnavailableError(f"daemon unreachable at {self.path}: {exc}") from exc
 
     async def _exchange(self, frame: str) -> dict[str, Any]:
-        reader, writer = await asyncio.open_unix_connection(str(self.path))
+        reader, writer = await asyncio.open_unix_connection(
+            str(self.path), limit=RPC_MESSAGE_BYTES + 1
+        )
         try:
             writer.write(f"{frame}\n".encode())
             await writer.drain()
             # Bounded on this side too: a daemon that streamed without a newline must not be
             # able to exhaust the adapter, which shares a process with the MCP session.
-            line = await reader.readline()
+            try:
+                line = await reader.readuntil(b"\n")
+            except asyncio.LimitOverrunError as exc:
+                raise DaemonUnavailableError(
+                    f"daemon response exceeds {RPC_MESSAGE_BYTES} bytes", cause="response_limit"
+                ) from exc
+            except asyncio.IncompleteReadError as exc:
+                raise DaemonUnavailableError(
+                    "daemon closed without a complete newline-terminated frame",
+                    cause="incomplete_frame",
+                ) from exc
         finally:
             writer.close()
             await asyncio.gather(writer.wait_closed(), return_exceptions=True)
 
-        if not line:
-            message = f"daemon closed the connection without answering at {self.path}"
-            raise DaemonUnavailableError(message)
-        parsed: dict[str, Any] = json.loads(line)
+        if len(line) - 1 > RPC_MESSAGE_BYTES:
+            raise DaemonUnavailableError(
+                f"daemon response exceeds {RPC_MESSAGE_BYTES} bytes", cause="response_limit"
+            )
+        try:
+            parsed = json.loads(line)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise DaemonUnavailableError(
+                "daemon returned an invalid JSON frame", cause="protocol"
+            ) from exc
+        if (
+            not isinstance(parsed, dict)
+            or parsed.get("jsonrpc") != JSONRPC_VERSION
+            or type(parsed.get("id")) is not int
+            or parsed["id"] != 1
+            or (("result" in parsed) == ("error" in parsed))
+            or set(parsed) - {"jsonrpc", "id", "result", "error"}
+        ):
+            raise DaemonUnavailableError(
+                "daemon response violates the correlated JSON-RPC frame contract", cause="protocol"
+            )
+        if "error" in parsed:
+            error = parsed["error"]
+            if (
+                not isinstance(error, dict)
+                or type(error.get("code")) is not int
+                or not isinstance(error.get("message"), str)
+            ):
+                raise DaemonUnavailableError(
+                    "daemon returned a malformed RPC error", cause="protocol"
+                )
         return parsed

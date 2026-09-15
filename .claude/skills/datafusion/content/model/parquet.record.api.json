@@ -1,0 +1,790 @@
+{
+  "module": "parquet::record::api",
+  "crate": "parquet",
+  "api": "api/parquet.record.api.md",
+  "items": [
+    {
+      "path": "parquet::record::api::Field",
+      "name": "Field",
+      "kind": "enum",
+      "crate": "parquet",
+      "signature": "enum Field",
+      "summary": "API to represent a single field in a `Row`.",
+      "doc": "api/parquet.record.api.md#field",
+      "aliases": [
+        "parquet::record::Field"
+      ],
+      "variants": [
+        "Null",
+        "Bool",
+        "Byte",
+        "Short",
+        "Int",
+        "Long",
+        "UByte",
+        "UShort",
+        "UInt",
+        "ULong",
+        "Float16",
+        "Float",
+        "Double",
+        "Decimal",
+        "Str",
+        "Bytes",
+        "Date",
+        "TimeMillis",
+        "TimeMicros",
+        "TimestampMillis",
+        "TimestampMicros",
+        "Group",
+        "ListInternal",
+        "MapInternal"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "convert_bool",
+          "signature": "fn convert_bool(_descr: &ColumnDescPtr, value: bool) -> Self",
+          "summary": "Converts Parquet BOOLEAN type with logical type into `bool` value."
+        },
+        {
+          "name": "convert_byte_array",
+          "signature": "fn convert_byte_array(descr: &ColumnDescPtr, value: ByteArray) -> Result<Self>",
+          "summary": "Converts Parquet BYTE_ARRAY type with converted type into a UTF8 string, decimal, float16, or an array of bytes."
+        },
+        {
+          "name": "convert_double",
+          "signature": "fn convert_double(_descr: &ColumnDescPtr, value: f64) -> Self",
+          "summary": "Converts Parquet DOUBLE type with converted type into `f64` value."
+        },
+        {
+          "name": "convert_float",
+          "signature": "fn convert_float(_descr: &ColumnDescPtr, value: f32) -> Self",
+          "summary": "Converts Parquet FLOAT type with logical type into `f32` value."
+        },
+        {
+          "name": "convert_int32",
+          "signature": "fn convert_int32(descr: &ColumnDescPtr, value: i32) -> Self",
+          "summary": "Converts Parquet INT32 type with converted type into `i32` value."
+        },
+        {
+          "name": "convert_int64",
+          "signature": "fn convert_int64(descr: &ColumnDescPtr, value: i64) -> Self",
+          "summary": "Converts Parquet INT64 type with converted type into `i64` value."
+        },
+        {
+          "name": "convert_int96",
+          "signature": "fn convert_int96(_descr: &ColumnDescPtr, value: Int96) -> Self",
+          "summary": "Converts Parquet INT96 (nanosecond timestamps) type and logical type into `Timestamp` value."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_primitive",
+          "signature": "fn is_primitive(&self) -> bool",
+          "summary": "Determines if this Row represents a primitive value."
+        },
+        {
+          "name": "to_json_value",
+          "signature": "fn to_json_value(&self) -> Value",
+          "summary": "Converts the Parquet field into a JSON [`Value`]."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::List",
+      "name": "List",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct List",
+      "summary": "`List` represents a list which contains an array of elements.",
+      "doc": "api/parquet.record.api.md#list",
+      "aliases": [
+        "parquet::record::List"
+      ],
+      "implements": [
+        "parquet::record::api::ListAccessor"
+      ],
+      "methods": [
+        {
+          "name": "elements",
+          "signature": "fn elements(&self) -> &[Field]",
+          "summary": "Get the reference to the elements in this list"
+        },
+        {
+          "name": "get_bool",
+          "signature": "fn get_bool(&self, i: usize) -> Result<bool>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_byte",
+          "signature": "fn get_byte(&self, i: usize) -> Result<i8>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self, i: usize) -> Result<&ByteArray>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_decimal",
+          "signature": "fn get_decimal(&self, i: usize) -> Result<&Decimal>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_double",
+          "signature": "fn get_double(&self, i: usize) -> Result<f64>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_float",
+          "signature": "fn get_float(&self, i: usize) -> Result<f32>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_float16",
+          "signature": "fn get_float16(&self, i: usize) -> Result<f16>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_group",
+          "signature": "fn get_group(&self, i: usize) -> Result<&Row>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_int",
+          "signature": "fn get_int(&self, i: usize) -> Result<i32>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_list",
+          "signature": "fn get_list(&self, i: usize) -> Result<&List>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_long",
+          "signature": "fn get_long(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_map",
+          "signature": "fn get_map(&self, i: usize) -> Result<&Map>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_short",
+          "signature": "fn get_short(&self, i: usize) -> Result<i16>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_string",
+          "signature": "fn get_string(&self, i: usize) -> Result<&String>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_timestamp_micros",
+          "signature": "fn get_timestamp_micros(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_timestamp_millis",
+          "signature": "fn get_timestamp_millis(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_ubyte",
+          "signature": "fn get_ubyte(&self, i: usize) -> Result<u8>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_uint",
+          "signature": "fn get_uint(&self, i: usize) -> Result<u32>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_ulong",
+          "signature": "fn get_ulong(&self, i: usize) -> Result<u64>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "get_ushort",
+          "signature": "fn get_ushort(&self, i: usize) -> Result<u16>",
+          "via_trait": "parquet::record::api::ListAccessor"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Get the number of fields in this row"
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::Map",
+      "name": "Map",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Map",
+      "summary": "`Map` represents a map which contains a list of key->value pairs.",
+      "doc": "api/parquet.record.api.md#map",
+      "aliases": [
+        "parquet::record::Map"
+      ],
+      "implements": [
+        "parquet::record::api::MapAccessor"
+      ],
+      "methods": [
+        {
+          "name": "entries",
+          "signature": "fn entries(&self) -> &[(Field, Field)]",
+          "summary": "Get the reference to the key-value pairs in this map"
+        },
+        {
+          "name": "get_keys",
+          "signature": "fn get_keys<'a>(&'a self) -> Box<dyn ListAccessor + 'a>",
+          "via_trait": "parquet::record::api::MapAccessor"
+        },
+        {
+          "name": "get_values",
+          "signature": "fn get_values<'a>(&'a self) -> Box<dyn ListAccessor + 'a>",
+          "via_trait": "parquet::record::api::MapAccessor"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Get the number of fields in this row"
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::Row",
+      "name": "Row",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Row",
+      "summary": "`Row` represents a nested Parquet record.",
+      "doc": "api/parquet.record.api.md#row",
+      "aliases": [
+        "parquet::record::Row"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "parquet::record::api::RowAccessor",
+        "parquet::record::api::RowFormatter"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, i: usize) -> &dyn fmt::Display",
+          "via_trait": "parquet::record::api::RowFormatter",
+          "summary": "Get Display reference for a given field."
+        },
+        {
+          "name": "get_bool",
+          "signature": "fn get_bool(&self, i: usize) -> Result<bool>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_byte",
+          "signature": "fn get_byte(&self, i: usize) -> Result<i8>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self, i: usize) -> Result<&ByteArray>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_column_iter",
+          "signature": "fn get_column_iter(&self) -> RowColumnIter<'_>",
+          "summary": "Get an iterator to go through all columns in the row."
+        },
+        {
+          "name": "get_decimal",
+          "signature": "fn get_decimal(&self, i: usize) -> Result<&Decimal>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_double",
+          "signature": "fn get_double(&self, i: usize) -> Result<f64>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_float",
+          "signature": "fn get_float(&self, i: usize) -> Result<f32>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_float16",
+          "signature": "fn get_float16(&self, i: usize) -> Result<f16>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_group",
+          "signature": "fn get_group(&self, i: usize) -> Result<&Row>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_int",
+          "signature": "fn get_int(&self, i: usize) -> Result<i32>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_list",
+          "signature": "fn get_list(&self, i: usize) -> Result<&List>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_long",
+          "signature": "fn get_long(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_map",
+          "signature": "fn get_map(&self, i: usize) -> Result<&Map>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_short",
+          "signature": "fn get_short(&self, i: usize) -> Result<i16>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_string",
+          "signature": "fn get_string(&self, i: usize) -> Result<&String>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_timestamp_micros",
+          "signature": "fn get_timestamp_micros(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_timestamp_millis",
+          "signature": "fn get_timestamp_millis(&self, i: usize) -> Result<i64>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_ubyte",
+          "signature": "fn get_ubyte(&self, i: usize) -> Result<u8>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_uint",
+          "signature": "fn get_uint(&self, i: usize) -> Result<u32>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_ulong",
+          "signature": "fn get_ulong(&self, i: usize) -> Result<u64>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "get_ushort",
+          "signature": "fn get_ushort(&self, i: usize) -> Result<u16>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "into_columns",
+          "signature": "fn into_columns(self) -> Vec<(String, Field)>",
+          "summary": "Move columns data out of the row. Useful to avoid internal data cloning."
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, i: usize) -> Result<bool>",
+          "via_trait": "parquet::record::api::RowAccessor"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Get the number of fields in this row."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(fields: Vec<(String, Field)>) -> Row",
+          "summary": "Constructs a `Row` from the list of `fields` and returns it."
+        },
+        {
+          "name": "to_json_value",
+          "signature": "fn to_json_value(&self) -> Value",
+          "summary": "Converts the row into a JSON object."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::RowColumnIter",
+      "name": "RowColumnIter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct RowColumnIter<'a>",
+      "summary": "`RowColumnIter` represents an iterator over column names and values in a Row.",
+      "doc": "api/parquet.record.api.md#rowcolumniter",
+      "aliases": [
+        "parquet::record::RowColumnIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::ListAccessor",
+      "name": "ListAccessor",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ListAccessor",
+      "summary": "Trait for type-safe access of an index for a `List`. Note that the get_XXX methods do not do bound checking.",
+      "doc": "api/parquet.record.api.md#listaccessor",
+      "aliases": [
+        "parquet::record::ListAccessor"
+      ],
+      "implementors": [
+        "parquet::record::api::List"
+      ],
+      "required_methods": [
+        "get_bool",
+        "get_byte",
+        "get_bytes",
+        "get_decimal",
+        "get_double",
+        "get_float",
+        "get_float16",
+        "get_group",
+        "get_int",
+        "get_list",
+        "get_long",
+        "get_map",
+        "get_short",
+        "get_string",
+        "get_timestamp_micros",
+        "get_timestamp_millis",
+        "get_ubyte",
+        "get_uint",
+        "get_ulong",
+        "get_ushort"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_bool",
+          "signature": "fn get_bool(&self, i: usize) -> Result<bool>",
+          "summary": "Try getting a `boolean` value at the given index."
+        },
+        {
+          "name": "get_byte",
+          "signature": "fn get_byte(&self, i: usize) -> Result<i8>",
+          "summary": "Try getting a `byte` value at the given index."
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self, i: usize) -> Result<&ByteArray>",
+          "summary": "Try getting a `bytes` value at the given index."
+        },
+        {
+          "name": "get_decimal",
+          "signature": "fn get_decimal(&self, i: usize) -> Result<&Decimal>",
+          "summary": "Try getting a `decimal` value at the given index."
+        },
+        {
+          "name": "get_double",
+          "signature": "fn get_double(&self, i: usize) -> Result<f64>",
+          "summary": "Try getting a `f64` value at the given index."
+        },
+        {
+          "name": "get_float",
+          "signature": "fn get_float(&self, i: usize) -> Result<f32>",
+          "summary": "Try getting a `f32` value at the given index."
+        },
+        {
+          "name": "get_float16",
+          "signature": "fn get_float16(&self, i: usize) -> Result<f16>",
+          "summary": "Try getting a `f16` value at the given index."
+        },
+        {
+          "name": "get_group",
+          "signature": "fn get_group(&self, i: usize) -> Result<&Row>",
+          "summary": "Try getting a `group` value at the given index."
+        },
+        {
+          "name": "get_int",
+          "signature": "fn get_int(&self, i: usize) -> Result<i32>",
+          "summary": "Try getting an `i32` value at the given index."
+        },
+        {
+          "name": "get_list",
+          "signature": "fn get_list(&self, i: usize) -> Result<&List>",
+          "summary": "Try getting a `list` value at the given index."
+        },
+        {
+          "name": "get_long",
+          "signature": "fn get_long(&self, i: usize) -> Result<i64>",
+          "summary": "Try getting an `i64` value at the given index."
+        },
+        {
+          "name": "get_map",
+          "signature": "fn get_map(&self, i: usize) -> Result<&Map>",
+          "summary": "Try getting a `map` value at the given index."
+        },
+        {
+          "name": "get_short",
+          "signature": "fn get_short(&self, i: usize) -> Result<i16>",
+          "summary": "Try getting an `i16` value at the given index."
+        },
+        {
+          "name": "get_string",
+          "signature": "fn get_string(&self, i: usize) -> Result<&String>",
+          "summary": "Try getting a `string` value at the given index."
+        },
+        {
+          "name": "get_timestamp_micros",
+          "signature": "fn get_timestamp_micros(&self, i: usize) -> Result<i64>",
+          "summary": "Try getting a `timestamp` as microseconds value encoded as `i64` at the given index."
+        },
+        {
+          "name": "get_timestamp_millis",
+          "signature": "fn get_timestamp_millis(&self, i: usize) -> Result<i64>",
+          "summary": "Try getting a `timestamp` as milliseconds value encoded as `i64` at the given index."
+        },
+        {
+          "name": "get_ubyte",
+          "signature": "fn get_ubyte(&self, i: usize) -> Result<u8>",
+          "summary": "Try getting a `u8` value at the given index."
+        },
+        {
+          "name": "get_uint",
+          "signature": "fn get_uint(&self, i: usize) -> Result<u32>",
+          "summary": "Try getting a `u32` value at the given index."
+        },
+        {
+          "name": "get_ulong",
+          "signature": "fn get_ulong(&self, i: usize) -> Result<u64>",
+          "summary": "Try getting a `u64` value at the given index."
+        },
+        {
+          "name": "get_ushort",
+          "signature": "fn get_ushort(&self, i: usize) -> Result<u16>",
+          "summary": "Try getting a `u16` value at the given index."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::MapAccessor",
+      "name": "MapAccessor",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait MapAccessor",
+      "summary": "Trait for type-safe access of an index for a `Map`",
+      "doc": "api/parquet.record.api.md#mapaccessor",
+      "aliases": [
+        "parquet::record::MapAccessor"
+      ],
+      "implementors": [
+        "parquet::record::api::Map"
+      ],
+      "required_methods": [
+        "get_keys",
+        "get_values"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_keys",
+          "signature": "fn get_keys<'a>(&'a self) -> Box<dyn ListAccessor + 'a>",
+          "summary": "Get the keys of the map."
+        },
+        {
+          "name": "get_values",
+          "signature": "fn get_values<'a>(&'a self) -> Box<dyn ListAccessor + 'a>",
+          "summary": "Get the values of the map."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::RowAccessor",
+      "name": "RowAccessor",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait RowAccessor",
+      "summary": "Trait for type-safe convenient access to fields within a Row.",
+      "doc": "api/parquet.record.api.md#rowaccessor",
+      "aliases": [
+        "parquet::record::RowAccessor"
+      ],
+      "implementors": [
+        "parquet::record::api::Row"
+      ],
+      "required_methods": [
+        "get_bool",
+        "get_byte",
+        "get_bytes",
+        "get_decimal",
+        "get_double",
+        "get_float",
+        "get_float16",
+        "get_group",
+        "get_int",
+        "get_list",
+        "get_long",
+        "get_map",
+        "get_short",
+        "get_string",
+        "get_timestamp_micros",
+        "get_timestamp_millis",
+        "get_ubyte",
+        "get_uint",
+        "get_ulong",
+        "get_ushort",
+        "is_null"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_bool",
+          "signature": "fn get_bool(&self, i: usize) -> Result<bool>",
+          "summary": "Try to get a boolean value at the given index."
+        },
+        {
+          "name": "get_byte",
+          "signature": "fn get_byte(&self, i: usize) -> Result<i8>",
+          "summary": "Try to get a byte value at the given index."
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self, i: usize) -> Result<&ByteArray>",
+          "summary": "Try to get a bytes value at the given index."
+        },
+        {
+          "name": "get_decimal",
+          "signature": "fn get_decimal(&self, i: usize) -> Result<&Decimal>",
+          "summary": "Try to get a decimal value at the given index."
+        },
+        {
+          "name": "get_double",
+          "signature": "fn get_double(&self, i: usize) -> Result<f64>",
+          "summary": "Try to get a double value at the given index."
+        },
+        {
+          "name": "get_float",
+          "signature": "fn get_float(&self, i: usize) -> Result<f32>",
+          "summary": "Try to get a float value at the given index."
+        },
+        {
+          "name": "get_float16",
+          "signature": "fn get_float16(&self, i: usize) -> Result<f16>",
+          "summary": "Try to get a float16 value at the given index."
+        },
+        {
+          "name": "get_group",
+          "signature": "fn get_group(&self, i: usize) -> Result<&Row>",
+          "summary": "Try to get a group value at the given index."
+        },
+        {
+          "name": "get_int",
+          "signature": "fn get_int(&self, i: usize) -> Result<i32>",
+          "summary": "Try to get a int value at the given index."
+        },
+        {
+          "name": "get_list",
+          "signature": "fn get_list(&self, i: usize) -> Result<&List>",
+          "summary": "Try to get a list value at the given index."
+        },
+        {
+          "name": "get_long",
+          "signature": "fn get_long(&self, i: usize) -> Result<i64>",
+          "summary": "Try to get a long value at the given index."
+        },
+        {
+          "name": "get_map",
+          "signature": "fn get_map(&self, i: usize) -> Result<&Map>",
+          "summary": "Try to get a map value at the given index."
+        },
+        {
+          "name": "get_short",
+          "signature": "fn get_short(&self, i: usize) -> Result<i16>",
+          "summary": "Try to get a short value at the given index."
+        },
+        {
+          "name": "get_string",
+          "signature": "fn get_string(&self, i: usize) -> Result<&String>",
+          "summary": "Try to get a string value at the given index."
+        },
+        {
+          "name": "get_timestamp_micros",
+          "signature": "fn get_timestamp_micros(&self, i: usize) -> Result<i64>",
+          "summary": "Try to get a date value at the given index."
+        },
+        {
+          "name": "get_timestamp_millis",
+          "signature": "fn get_timestamp_millis(&self, i: usize) -> Result<i64>",
+          "summary": "Try to get a date value at the given index."
+        },
+        {
+          "name": "get_ubyte",
+          "signature": "fn get_ubyte(&self, i: usize) -> Result<u8>",
+          "summary": "Try to get a ubyte value at the given index."
+        },
+        {
+          "name": "get_uint",
+          "signature": "fn get_uint(&self, i: usize) -> Result<u32>",
+          "summary": "Try to get a uint value at the given index."
+        },
+        {
+          "name": "get_ulong",
+          "signature": "fn get_ulong(&self, i: usize) -> Result<u64>",
+          "summary": "Try to get a ulong value at the given index."
+        },
+        {
+          "name": "get_ushort",
+          "signature": "fn get_ushort(&self, i: usize) -> Result<u16>",
+          "summary": "Try to get a ushort value at the given index."
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(&self, i: usize) -> Result<bool>",
+          "summary": "Check if the field at the index is null."
+        }
+      ]
+    },
+    {
+      "path": "parquet::record::api::RowFormatter",
+      "name": "RowFormatter",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait RowFormatter",
+      "summary": "Trait for formatting fields within a Row.",
+      "doc": "api/parquet.record.api.md#rowformatter",
+      "aliases": [
+        "parquet::record::RowFormatter"
+      ],
+      "implementors": [
+        "parquet::record::api::Row"
+      ],
+      "required_methods": [
+        "fmt"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, i: usize) -> &dyn fmt::Display",
+          "summary": "The method to format a field at the given index."
+        }
+      ]
+    }
+  ]
+}

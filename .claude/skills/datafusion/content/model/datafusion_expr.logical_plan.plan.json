@@ -1,0 +1,1155 @@
+{
+  "module": "datafusion_expr::logical_plan::plan",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.logical_plan.plan.md",
+  "items": [
+    {
+      "path": "datafusion_expr::logical_plan::plan::Distinct",
+      "name": "Distinct",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum Distinct",
+      "summary": "Removes duplicate rows from the input",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#distinct",
+      "aliases": [
+        "datafusion::logical_expr::Distinct",
+        "datafusion_expr::Distinct",
+        "datafusion_expr::logical_plan::Distinct"
+      ],
+      "variants": [
+        "All",
+        "On"
+      ],
+      "methods": [
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<LogicalPlan>",
+          "summary": "return a reference to the nodes input"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::FetchType",
+      "name": "FetchType",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum FetchType",
+      "summary": "Different types of fetch expression in Limit plan.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#fetchtype",
+      "aliases": [
+        "datafusion::logical_expr::FetchType",
+        "datafusion_expr::FetchType",
+        "datafusion_expr::logical_plan::FetchType"
+      ],
+      "variants": [
+        "Literal",
+        "UnsupportedExpr"
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::LogicalPlan",
+      "name": "LogicalPlan",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum LogicalPlan",
+      "summary": "A `LogicalPlan` is a node in a tree of relational operators (such as Projection or Filter).",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#logicalplan",
+      "aliases": [
+        "datafusion::logical_expr::LogicalPlan",
+        "datafusion_expr::LogicalPlan",
+        "datafusion_expr::logical_plan::LogicalPlan"
+      ],
+      "variants": [
+        "Projection",
+        "Filter",
+        "Window",
+        "Aggregate",
+        "Sort",
+        "Join",
+        "Repartition",
+        "Union",
+        "TableScan",
+        "EmptyRelation",
+        "Subquery",
+        "SubqueryAlias",
+        "Limit",
+        "Statement",
+        "Values",
+        "Explain",
+        "Analyze",
+        "Extension",
+        "Distinct",
+        "Dml",
+        "Ddl",
+        "Copy",
+        "DescribeTable",
+        "Unnest",
+        "RecursiveQuery"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_common::display::ToStringifiedPlan",
+        "datafusion_common::tree_node::TreeNode",
+        "datafusion_common::tree_node::TreeNodeContainer"
+      ],
+      "methods": [
+        {
+          "name": "all_out_ref_exprs",
+          "signature": "fn all_out_ref_exprs(&LogicalPlan) -> Vec<Expr>",
+          "summary": "Returns all the out reference(correlated) expressions (recursively) in the current logical plan nodes and all its descendant nodes."
+        },
+        {
+          "name": "apply_children",
+          "signature": "fn apply_children<'n, F: FnMut(&'n Self) -> Result<TreeNodeRecursion>>(&'n self, f: F) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TreeNode"
+        },
+        {
+          "name": "apply_elements",
+          "signature": "fn apply_elements<F: FnMut(&'a Self) -> Result<TreeNodeRecursion>>(&'a self, f: F) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions<F: FnMut(&Expr) -> Result<TreeNodeRecursion>>(&self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Calls `f` on all expressions in the current `LogicalPlan` node."
+        },
+        {
+          "name": "apply_subqueries",
+          "signature": "fn apply_subqueries<F: FnMut(&Self) -> Result<TreeNodeRecursion>>(&self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Similarly to [`Self::apply`], calls `f` on this node and its inputs, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "apply_with_subqueries",
+          "signature": "fn apply_with_subqueries<F: FnMut(&Self) -> Result<TreeNodeRecursion>>(&self, f: F) -> Result<TreeNodeRecursion>",
+          "summary": "Similarly to [`Self::apply`], calls `f` on this node and all its inputs, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "check_invariants",
+          "signature": "fn check_invariants(&self, check: InvariantLevel) -> Result<()>",
+          "summary": "checks that the plan conforms to the listed invariant level, returning an Error if not"
+        },
+        {
+          "name": "columnized_output_exprs",
+          "signature": "fn columnized_output_exprs(&self) -> Result<Vec<(&Expr, Column)>>",
+          "summary": "Get the output expressions and their corresponding columns."
+        },
+        {
+          "name": "contains_outer_reference",
+          "signature": "fn contains_outer_reference(&self) -> bool",
+          "summary": "If this node's expressions contains any references to an outer subquery"
+        },
+        {
+          "name": "describe_schema",
+          "signature": "fn describe_schema() -> Schema",
+          "summary": "Returns the (fixed) output schema for `DESCRIBE` plans"
+        },
+        {
+          "name": "display",
+          "signature": "fn display(&self) -> impl Display + '_",
+          "summary": "Return a `format`able structure with the a human readable description of this LogicalPlan node per node, not including children. For example:"
+        },
+        {
+          "name": "display_graphviz",
+          "signature": "fn display_graphviz(&self) -> impl Display + '_",
+          "summary": "Return a `format`able structure that produces lines meant for graphical display using the `DOT` language. This format can be visualized using software from [`graphviz`](https://graphviz.org/)"
+        },
+        {
+          "name": "display_indent",
+          "signature": "fn display_indent(&self) -> impl Display + '_",
+          "summary": "Return a `format`able structure that produces a single line per node."
+        },
+        {
+          "name": "display_indent_schema",
+          "signature": "fn display_indent_schema(&self) -> impl Display + '_",
+          "summary": "Return a `format`able structure that produces a single line per node that includes the output schema. For example:"
+        },
+        {
+          "name": "display_pg_json",
+          "signature": "fn display_pg_json(&self) -> impl Display + '_",
+          "summary": "Return a displayable structure that produces plan in postgresql JSON format."
+        },
+        {
+          "name": "explain_schema",
+          "signature": "fn explain_schema() -> SchemaRef",
+          "summary": "Returns the (fixed) output schema for explain plans"
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&LogicalPlan) -> Vec<Expr>",
+          "summary": "Returns all expressions (non-recursively) evaluated by the current logical plan node. This does not include expressions in any children."
+        },
+        {
+          "name": "fallback_normalize_schemas",
+          "signature": "fn fallback_normalize_schemas(&self) -> Vec<&DFSchema>",
+          "summary": "Used for normalizing columns, as the fallback schemas to the main schema of the plan."
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Result<Option<usize>>",
+          "summary": "Returns the fetch (limit) of this plan node, if it has one."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_parameter_fields",
+          "signature": "fn get_parameter_fields(&self) -> Result<HashMap<String, Option<FieldRef>>, DataFusionError>",
+          "summary": "Walk the logical plan, find any `Placeholder` tokens, and return a map of their IDs and FieldRefs"
+        },
+        {
+          "name": "get_parameter_names",
+          "signature": "fn get_parameter_names(&self) -> Result<HashSet<String>>",
+          "summary": "Walk the logical plan, find any `Placeholder` tokens, and return a set of their names."
+        },
+        {
+          "name": "get_parameter_types",
+          "signature": "fn get_parameter_types(&self) -> Result<HashMap<String, Option<DataType>>, DataFusionError>",
+          "summary": "Walk the logical plan, find any `Placeholder` tokens, and return a map of their IDs and DataTypes"
+        },
+        {
+          "name": "head_output_expr",
+          "signature": "fn head_output_expr(&self) -> Result<Option<Expr>>",
+          "summary": "returns the first output expression of this `LogicalPlan` node."
+        },
+        {
+          "name": "inputs",
+          "signature": "fn inputs(&self) -> Vec<&LogicalPlan>",
+          "summary": "Returns all inputs / children of this `LogicalPlan` node."
+        },
+        {
+          "name": "map_children",
+          "signature": "fn map_children<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "via_trait": "datafusion_common::tree_node::TreeNode",
+          "summary": "Applies `f` to each child (input) of this plan node, rewriting them *in place.*"
+        },
+        {
+          "name": "map_elements",
+          "signature": "fn map_elements<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeContainer"
+        },
+        {
+          "name": "map_expressions",
+          "signature": "fn map_expressions<F: FnMut(Expr) -> Result<Transformed<Expr>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Rewrites all expressions in the current `LogicalPlan` node using `f`."
+        },
+        {
+          "name": "map_subqueries",
+          "signature": "fn map_subqueries<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::map_children`], rewrites all subqueries that may appear in expressions such as `IN (SELECT ...)` using `f`."
+        },
+        {
+          "name": "map_uncorrelated_subqueries",
+          "signature": "fn map_uncorrelated_subqueries<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Similar to [`Self::map_subqueries`], but only applies `f` to uncorrelated subqueries (those with no outer column references)."
+        },
+        {
+          "name": "max_rows",
+          "signature": "fn max_rows(&LogicalPlan) -> Option<usize>",
+          "summary": "Returns the maximum number of rows that this plan can output, if known."
+        },
+        {
+          "name": "recompute_schema",
+          "signature": "fn recompute_schema(self) -> Result<Self>",
+          "summary": "Recomputes schema and type information for this LogicalPlan if needed."
+        },
+        {
+          "name": "replace_params_with_values",
+          "signature": "fn replace_params_with_values(self, param_values: &ParamValues) -> Result<LogicalPlan>",
+          "summary": "Return a `LogicalPlan` with all placeholders (e.g $1 $2, ...) replaced with corresponding values provided in `params_values`"
+        },
+        {
+          "name": "resolve_lambda_variables",
+          "signature": "fn resolve_lambda_variables(self) -> Result<Transformed<LogicalPlan>>",
+          "summary": "Return a `LogicalPLan` with all [`LambdaVariable`]'s resolved"
+        },
+        {
+          "name": "rewrite_with_subqueries",
+          "signature": "fn rewrite_with_subqueries<R: TreeNodeRewriter<Node = Self>>(self, rewriter: &mut R) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::rewrite`], rewrites this node and its inputs using `f`, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &DFSchemaRef",
+          "summary": "Get a reference to the logical plan's schema"
+        },
+        {
+          "name": "skip",
+          "signature": "fn skip(&self) -> Result<Option<usize>>",
+          "summary": "Returns the skip (offset) of this plan node, if it has one."
+        },
+        {
+          "name": "to_stringified",
+          "signature": "fn to_stringified(&self, plan_type: PlanType) -> StringifiedPlan",
+          "via_trait": "datafusion_common::display::ToStringifiedPlan"
+        },
+        {
+          "name": "transform_down_up_with_subqueries",
+          "signature": "fn transform_down_up_with_subqueries<FD: FnMut(Self) -> Result<Transformed<Self>>, FU: FnMut(Self) -> Result<Transformed<Self>>>(self, f_down: FD, f_up: FU) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::transform_down`], rewrites this node and its inputs using `f`, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "transform_down_with_subqueries",
+          "signature": "fn transform_down_with_subqueries<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::transform_down`], rewrites this node and its inputs using `f`, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "transform_up_with_subqueries",
+          "signature": "fn transform_up_with_subqueries<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::transform_up`], rewrites this node and its inputs using `f`, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "transform_with_subqueries",
+          "signature": "fn transform_with_subqueries<F: FnMut(Self) -> Result<Transformed<Self>>>(self, f: F) -> Result<Transformed<Self>>",
+          "summary": "Similarly to [`Self::transform`], rewrites this node and its inputs using `f`, including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "using_columns",
+          "signature": "fn using_columns(&self) -> Result<Vec<HashSet<Column>>, DataFusionError>",
+          "summary": "returns all `Using` join columns in a logical plan"
+        },
+        {
+          "name": "visit_with_subqueries",
+          "signature": "fn visit_with_subqueries<V: for<'n> TreeNodeVisitor<'n, Node = Self>>(&self, visitor: &mut V) -> Result<TreeNodeRecursion>",
+          "summary": "Visits a plan similarly to [`Self::visit`], including subqueries that may appear in expressions such as `IN (SELECT ...)`."
+        },
+        {
+          "name": "with_new_exprs",
+          "signature": "fn with_new_exprs(&self, expr: Vec<Expr>, inputs: Vec<LogicalPlan>) -> Result<LogicalPlan>",
+          "summary": "Returns a new `LogicalPlan` based on `self` with inputs and expressions replaced."
+        },
+        {
+          "name": "with_param_values",
+          "signature": "fn with_param_values(self, param_values: impl Into<ParamValues>) -> Result<LogicalPlan>",
+          "summary": "Replaces placeholder param values (like `$1`, `$2`) in [`LogicalPlan`] with the specified `param_values`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Partitioning",
+      "name": "Partitioning",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum Partitioning",
+      "summary": "Logical partitioning schemes.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#partitioning",
+      "aliases": [
+        "datafusion::logical_expr::Partitioning",
+        "datafusion::prelude::Partitioning",
+        "datafusion_expr::Partitioning",
+        "datafusion_expr::logical_plan::Partitioning"
+      ],
+      "variants": [
+        "RoundRobinBatch",
+        "Hash",
+        "Range",
+        "DistributeBy"
+      ],
+      "methods": [
+        {
+          "name": "partition_count",
+          "signature": "fn partition_count(&self) -> Option<usize>",
+          "summary": "Return the number of partitions, if known."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::SkipType",
+      "name": "SkipType",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum SkipType",
+      "summary": "Different types of skip expression in Limit plan.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#skiptype",
+      "aliases": [
+        "datafusion::logical_expr::SkipType",
+        "datafusion_expr::SkipType",
+        "datafusion_expr::logical_plan::SkipType"
+      ],
+      "variants": [
+        "Literal",
+        "UnsupportedExpr"
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::projection_schema",
+      "name": "projection_schema",
+      "kind": "function",
+      "crate": "datafusion-expr",
+      "signature": "fn projection_schema(input: &LogicalPlan, exprs: &[Expr]) -> datafusion_common::Result<std::sync::Arc<datafusion_common::DFSchema>>",
+      "summary": "Computes the schema of the result produced by applying a projection to the input logical plan.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#projection_schema",
+      "aliases": [
+        "datafusion::logical_expr::projection_schema",
+        "datafusion_expr::logical_plan::projection_schema",
+        "datafusion_expr::projection_schema"
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Aggregate",
+      "name": "Aggregate",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Aggregate",
+      "summary": "Aggregates its input based on a set of grouping and aggregate expressions (e.g. SUM).",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#aggregate",
+      "aliases": [
+        "datafusion::logical_expr::Aggregate",
+        "datafusion_expr::Aggregate",
+        "datafusion_expr::logical_plan::Aggregate"
+      ],
+      "fields": [
+        "input",
+        "group_expr",
+        "aggr_expr",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "group_expr_len",
+          "signature": "fn group_expr_len(&self) -> Result<usize>",
+          "summary": "Get the length of the group by expression in the output schema This is not simply group by expression length. Expression may be GroupingSet, etc. In these case we need to get inner expression lengths."
+        },
+        {
+          "name": "grouping_id_type",
+          "signature": "fn grouping_id_type(group_exprs: usize, max_ordinal: usize) -> DataType",
+          "summary": "Returns the data type of the grouping id."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>) -> Result<Self>",
+          "summary": "Create a new aggregate operator."
+        },
+        {
+          "name": "try_new_with_schema",
+          "signature": "fn try_new_with_schema(input: Arc<LogicalPlan>, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>, schema: DFSchemaRef) -> Result<Self>",
+          "summary": "Create a new aggregate operator using the provided schema to avoid the overhead of building the schema again when the schema is already known."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Analyze",
+      "name": "Analyze",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Analyze",
+      "summary": "Runs the actual plan, and then prints the physical plan with with execution metrics.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#analyze",
+      "aliases": [
+        "datafusion::logical_expr::Analyze",
+        "datafusion_expr::Analyze",
+        "datafusion_expr::logical_plan::Analyze"
+      ],
+      "fields": [
+        "verbose",
+        "format",
+        "input",
+        "schema",
+        "analyze_level",
+        "analyze_categories"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::ColumnUnnestList",
+      "name": "ColumnUnnestList",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ColumnUnnestList",
+      "summary": "Represent the unnesting operation on a list column, such as the recursion depth and the output column name after unnesting",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#columnunnestlist",
+      "aliases": [
+        "datafusion::logical_expr::ColumnUnnestList",
+        "datafusion_expr::ColumnUnnestList",
+        "datafusion_expr::logical_plan::ColumnUnnestList"
+      ],
+      "fields": [
+        "output_column",
+        "depth"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::DescribeTable",
+      "name": "DescribeTable",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct DescribeTable",
+      "summary": "Describe the schema of table",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#describetable",
+      "aliases": [
+        "datafusion::logical_expr::DescribeTable",
+        "datafusion_expr::DescribeTable",
+        "datafusion_expr::logical_plan::DescribeTable"
+      ],
+      "fields": [
+        "schema",
+        "output_schema"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::DistinctOn",
+      "name": "DistinctOn",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct DistinctOn",
+      "summary": "Removes duplicate rows from the input",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#distincton",
+      "aliases": [
+        "datafusion::logical_expr::DistinctOn",
+        "datafusion_expr::DistinctOn",
+        "datafusion_expr::logical_plan::DistinctOn"
+      ],
+      "fields": [
+        "on_expr",
+        "select_expr",
+        "sort_expr",
+        "input",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(on_expr: Vec<Expr>, select_expr: Vec<Expr>, sort_expr: Option<Vec<SortExpr>>, input: Arc<LogicalPlan>) -> Result<Self>",
+          "summary": "Create a new `DistinctOn` struct."
+        },
+        {
+          "name": "with_sort_expr",
+          "signature": "fn with_sort_expr(self, sort_expr: Vec<SortExpr>) -> Result<Self>",
+          "summary": "Try to update `self` with a new sort expressions."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::EmptyRelation",
+      "name": "EmptyRelation",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct EmptyRelation",
+      "summary": "Relationship produces 0 or 1 placeholder rows with specified output schema In most cases the output schema for `EmptyRelation` would be empty, however, it can be non-empty typically for optimizer rules",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#emptyrelation",
+      "aliases": [
+        "datafusion::logical_expr::EmptyRelation",
+        "datafusion_expr::EmptyRelation",
+        "datafusion_expr::logical_plan::EmptyRelation"
+      ],
+      "fields": [
+        "produce_one_row",
+        "schema"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Explain",
+      "name": "Explain",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Explain",
+      "summary": "Produces a relation with string representations of various parts of the plan",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#explain",
+      "aliases": [
+        "datafusion::logical_expr::Explain",
+        "datafusion_expr::Explain",
+        "datafusion_expr::logical_plan::Explain"
+      ],
+      "fields": [
+        "verbose",
+        "explain_format",
+        "plan",
+        "stringified_plans",
+        "schema",
+        "logical_optimization_succeeded",
+        "show_statistics"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::ExplainOption",
+      "name": "ExplainOption",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct ExplainOption",
+      "summary": "Options for EXPLAIN",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#explainoption",
+      "aliases": [
+        "datafusion::logical_expr::ExplainOption",
+        "datafusion_expr::ExplainOption",
+        "datafusion_expr::logical_plan::ExplainOption"
+      ],
+      "fields": [
+        "verbose",
+        "analyze",
+        "format",
+        "show_statistics",
+        "analyze_level",
+        "analyze_categories"
+      ],
+      "methods": [
+        {
+          "name": "with_analyze",
+          "signature": "fn with_analyze(self, analyze: bool) -> Self",
+          "summary": "Builder‐style setter for `analyze`"
+        },
+        {
+          "name": "with_analyze_categories",
+          "signature": "fn with_analyze_categories(self, analyze_categories: Option<ExplainAnalyzeCategories>) -> Self",
+          "summary": "Builder-style setter for a statement-level override of `datafusion.explain.analyze_categories`."
+        },
+        {
+          "name": "with_analyze_level",
+          "signature": "fn with_analyze_level(self, analyze_level: Option<MetricType>) -> Self",
+          "summary": "Builder-style setter for a statement-level override of `datafusion.explain.analyze_level`."
+        },
+        {
+          "name": "with_format",
+          "signature": "fn with_format(self, format: ExplainFormat) -> Self",
+          "summary": "Builder‐style setter for `format`"
+        },
+        {
+          "name": "with_show_statistics",
+          "signature": "fn with_show_statistics(self, show_statistics: Option<bool>) -> Self",
+          "summary": "Builder-style setter for a statement-level override of `datafusion.explain.show_statistics`."
+        },
+        {
+          "name": "with_verbose",
+          "signature": "fn with_verbose(self, verbose: bool) -> Self",
+          "summary": "Builder‐style setter for `verbose`"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Extension",
+      "name": "Extension",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Extension",
+      "summary": "Extension operator defined outside of DataFusion",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#extension",
+      "aliases": [
+        "datafusion::logical_expr::Extension",
+        "datafusion_expr::Extension",
+        "datafusion_expr::logical_plan::Extension"
+      ],
+      "fields": [
+        "node"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Filter",
+      "name": "Filter",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Filter",
+      "summary": "Filters rows from its input that do not match an expression (essentially a WHERE clause with a predicate expression).",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#filter",
+      "aliases": [
+        "datafusion::logical_expr::Filter",
+        "datafusion_expr::Filter",
+        "datafusion_expr::logical_plan::Filter"
+      ],
+      "fields": [
+        "predicate",
+        "input"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(predicate: Expr, input: Arc<LogicalPlan>) -> Result<Self>",
+          "summary": "Create a new filter operator."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Join",
+      "name": "Join",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Join",
+      "summary": "Join two logical plans on one or more join columns",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#join",
+      "aliases": [
+        "datafusion::logical_expr::Join",
+        "datafusion_expr::Join",
+        "datafusion_expr::logical_plan::Join"
+      ],
+      "fields": [
+        "left",
+        "right",
+        "on",
+        "filter",
+        "join_type",
+        "join_constraint",
+        "schema",
+        "null_equality",
+        "null_aware"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(left: Arc<LogicalPlan>, right: Arc<LogicalPlan>, on: Vec<(Expr, Expr)>, filter: Option<Expr>, join_type: JoinType, join_constraint: JoinConstraint, null_equality: NullEquality, null_aware: bool) -> Result<Self>",
+          "summary": "Creates a new Join operator with automatically computed schema."
+        },
+        {
+          "name": "try_new_with_project_input",
+          "signature": "fn try_new_with_project_input(original: &LogicalPlan, left: Arc<LogicalPlan>, right: Arc<LogicalPlan>, column_on: (Vec<Column>, Vec<Column>)) -> Result<(Self, bool)>",
+          "summary": "Create Join with input which wrapped with projection, this method is used in physical planning only to help create the physical join."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Limit",
+      "name": "Limit",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Limit",
+      "summary": "Produces the first `n` tuples from its input and discards the rest.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#limit",
+      "aliases": [
+        "datafusion::logical_expr::Limit",
+        "datafusion_expr::Limit",
+        "datafusion_expr::logical_plan::Limit"
+      ],
+      "fields": [
+        "skip",
+        "fetch",
+        "input"
+      ],
+      "methods": [
+        {
+          "name": "get_fetch_type",
+          "signature": "fn get_fetch_type(&self) -> Result<FetchType>",
+          "summary": "Get the fetch type from the limit plan."
+        },
+        {
+          "name": "get_skip_type",
+          "signature": "fn get_skip_type(&self) -> Result<SkipType>",
+          "summary": "Get the skip type from the limit plan."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Projection",
+      "name": "Projection",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Projection",
+      "summary": "Evaluates an arbitrary list of expressions (essentially a SELECT with an expression list) on its input.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#projection",
+      "aliases": [
+        "datafusion::logical_expr::Projection",
+        "datafusion_expr::Projection",
+        "datafusion_expr::logical_plan::Projection"
+      ],
+      "fields": [
+        "expr",
+        "input",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "new_from_schema",
+          "signature": "fn new_from_schema(input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Self",
+          "summary": "Create a new Projection using the specified output schema"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(expr: Vec<Expr>, input: Arc<LogicalPlan>) -> Result<Self>",
+          "summary": "Create a new Projection"
+        },
+        {
+          "name": "try_new_with_schema",
+          "signature": "fn try_new_with_schema(expr: Vec<Expr>, input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Result<Self>",
+          "summary": "Create a new Projection using the specified output schema"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::RangePartitioning",
+      "name": "RangePartitioning",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RangePartitioning",
+      "summary": "Logical range partitioning.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#rangepartitioning",
+      "aliases": [
+        "datafusion::logical_expr::RangePartitioning",
+        "datafusion_expr::RangePartitioning",
+        "datafusion_expr::logical_plan::RangePartitioning"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "ordering",
+          "signature": "fn ordering(&self) -> &[SortExpr]",
+          "summary": "Returns the ordering that defines the range key."
+        },
+        {
+          "name": "partition_count",
+          "signature": "fn partition_count(&self) -> usize",
+          "summary": "Return the number of partitions."
+        },
+        {
+          "name": "split_points",
+          "signature": "fn split_points(&self) -> &[SplitPoint]",
+          "summary": "Returns the ordered split points between partitions."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(ordering: Vec<SortExpr>, split_points: Vec<SplitPoint>) -> Result<Self>",
+          "summary": "Creates logical range partitioning metadata and validates split point shape and ordering."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::RecursiveQuery",
+      "name": "RecursiveQuery",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct RecursiveQuery",
+      "summary": "A variadic query operation, Recursive CTE.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#recursivequery",
+      "aliases": [
+        "datafusion::logical_expr::RecursiveQuery",
+        "datafusion_expr::RecursiveQuery",
+        "datafusion_expr::logical_plan::RecursiveQuery"
+      ],
+      "fields": [
+        "name",
+        "static_term",
+        "recursive_term",
+        "is_distinct",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(name: String, static_term: Arc<LogicalPlan>, recursive_term: Arc<LogicalPlan>, is_distinct: bool) -> Result<Self>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Repartition",
+      "name": "Repartition",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Repartition",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion::logical_expr::Repartition",
+        "datafusion_expr::Repartition",
+        "datafusion_expr::logical_plan::Repartition"
+      ],
+      "fields": [
+        "input",
+        "partitioning_scheme"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Sort",
+      "name": "Sort",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Sort",
+      "summary": "Sorts its input according to a list of sort expressions.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#sort",
+      "aliases": [
+        "datafusion::logical_expr::Sort",
+        "datafusion_expr::Sort",
+        "datafusion_expr::logical_plan::Sort"
+      ],
+      "fields": [
+        "expr",
+        "input",
+        "fetch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Subquery",
+      "name": "Subquery",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Subquery",
+      "summary": "Subquery",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#subquery",
+      "aliases": [
+        "datafusion::logical_expr::Subquery",
+        "datafusion_expr::Subquery",
+        "datafusion_expr::logical_plan::Subquery"
+      ],
+      "fields": [
+        "subquery",
+        "outer_ref_columns",
+        "spans"
+      ],
+      "implements": [
+        "datafusion_common::cse::NormalizeEq",
+        "datafusion_common::cse::Normalizeable"
+      ],
+      "methods": [
+        {
+          "name": "can_normalize",
+          "signature": "fn can_normalize(&self) -> bool",
+          "via_trait": "datafusion_common::cse::Normalizeable"
+        },
+        {
+          "name": "normalize_eq",
+          "signature": "fn normalize_eq(&self, other: &Self) -> bool",
+          "via_trait": "datafusion_common::cse::NormalizeEq"
+        },
+        {
+          "name": "try_from_expr",
+          "signature": "fn try_from_expr(plan: &Expr) -> Result<&Subquery>"
+        },
+        {
+          "name": "with_plan",
+          "signature": "fn with_plan(&self, plan: Arc<LogicalPlan>) -> Subquery"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::SubqueryAlias",
+      "name": "SubqueryAlias",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct SubqueryAlias",
+      "summary": "Aliased subquery",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#subqueryalias",
+      "aliases": [
+        "datafusion::logical_expr::SubqueryAlias",
+        "datafusion_expr::SubqueryAlias",
+        "datafusion_expr::logical_plan::SubqueryAlias"
+      ],
+      "fields": [
+        "input",
+        "alias",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(plan: Arc<LogicalPlan>, alias: impl Into<TableReference>) -> Result<Self>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::TableScan",
+      "name": "TableScan",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct TableScan",
+      "summary": "Produces rows from a table provider by reference or from the context",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#tablescan",
+      "aliases": [
+        "datafusion::logical_expr::TableScan",
+        "datafusion_expr::TableScan",
+        "datafusion_expr::logical_plan::TableScan"
+      ],
+      "fields": [
+        "table_name",
+        "source",
+        "projection",
+        "projected_schema",
+        "filters",
+        "fetch",
+        "statistics_requests"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(table_name: impl Into<TableReference>, table_source: Arc<dyn TableSource>, projection: Option<Vec<usize>>, filters: Vec<Expr>, fetch: Option<usize>) -> Result<Self>",
+          "summary": "Initialize TableScan with appropriate schema from the given arguments."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::TableScanBuilder",
+      "name": "TableScanBuilder",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct TableScanBuilder",
+      "summary": "Builder for [`TableScan`].",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#tablescanbuilder",
+      "aliases": [
+        "datafusion::logical_expr::TableScanBuilder",
+        "datafusion_expr::TableScanBuilder",
+        "datafusion_expr::logical_plan::TableScanBuilder"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<TableScan>",
+          "summary": "Build the [`TableScan`], deriving its `projected_schema` from the source schema and projection."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(scan: TableScan) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(table_name: impl Into<TableReference>, source: Arc<dyn TableSource>) -> Self",
+          "summary": "Create a new builder for a scan of `source` named `table_name`."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(self, fetch: Option<usize>) -> Self",
+          "summary": "Set the maximum number of rows to read."
+        },
+        {
+          "name": "with_filters",
+          "signature": "fn with_filters(self, filters: Vec<Expr>) -> Self",
+          "summary": "Set the filter expressions offered to the table provider."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Option<Vec<usize>>) -> Self",
+          "summary": "Set the column projection (indices into the source schema)."
+        },
+        {
+          "name": "with_statistics_requests",
+          "signature": "fn with_statistics_requests(self, statistics_requests: BTreeSet<StatisticsRequest>) -> Self",
+          "summary": "Set the statistics requests for the scan. See [`TableScan::statistics_requests`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Union",
+      "name": "Union",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Union",
+      "summary": "Union multiple inputs",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#union",
+      "aliases": [
+        "datafusion::logical_expr::Union",
+        "datafusion_expr::Union",
+        "datafusion_expr::logical_plan::Union"
+      ],
+      "fields": [
+        "inputs",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(inputs: Vec<Arc<LogicalPlan>>) -> Result<Self>",
+          "summary": "Constructs new Union instance deriving schema from inputs. Schema data types must match exactly."
+        },
+        {
+          "name": "try_new_by_name",
+          "signature": "fn try_new_by_name(inputs: Vec<Arc<LogicalPlan>>) -> Result<Self>",
+          "summary": "Constructs a new Union instance that combines rows from different tables by name, instead of by position. This means that the specified inputs need not have schemas that are all the same width."
+        },
+        {
+          "name": "try_new_with_loose_types",
+          "signature": "fn try_new_with_loose_types(inputs: Vec<Arc<LogicalPlan>>) -> Result<Self>",
+          "summary": "Constructs new Union instance deriving schema from inputs. Inputs do not have to have matching types and produced schema will take type from the first input."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Unnest",
+      "name": "Unnest",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Unnest",
+      "summary": "Unnest a column that contains a nested list type. See [`UnnestOptions`] for more details.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#unnest",
+      "aliases": [
+        "datafusion::logical_expr::Unnest",
+        "datafusion_expr::Unnest",
+        "datafusion_expr::logical_plan::Unnest"
+      ],
+      "fields": [
+        "input",
+        "exec_columns",
+        "list_type_columns",
+        "struct_type_columns",
+        "dependency_indices",
+        "schema",
+        "options"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(input: Arc<LogicalPlan>, exec_columns: Vec<Column>, options: UnnestOptions) -> Result<Self>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Values",
+      "name": "Values",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Values",
+      "summary": "Values expression. See [Postgres VALUES](https://www.postgresql.org/docs/current/queries-values.html) documentation for more details.",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#values",
+      "aliases": [
+        "datafusion::logical_expr::Values",
+        "datafusion_expr::Values",
+        "datafusion_expr::logical_plan::Values"
+      ],
+      "fields": [
+        "schema",
+        "values"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::logical_plan::plan::Window",
+      "name": "Window",
+      "kind": "struct",
+      "crate": "datafusion-expr",
+      "signature": "struct Window",
+      "summary": "Window its input based on a set of window spec and window function (e.g. SUM or RANK)",
+      "doc": "api/datafusion_expr.logical_plan.plan.md#window",
+      "aliases": [
+        "datafusion::logical_expr::Window",
+        "datafusion_expr::Window",
+        "datafusion_expr::logical_plan::Window"
+      ],
+      "fields": [
+        "input",
+        "window_expr",
+        "schema"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(window_expr: Vec<Expr>, input: Arc<LogicalPlan>) -> Result<Self>",
+          "summary": "Create a new window operator."
+        },
+        {
+          "name": "try_new_with_schema",
+          "signature": "fn try_new_with_schema(window_expr: Vec<Expr>, input: Arc<LogicalPlan>, schema: DFSchemaRef) -> Result<Self>",
+          "summary": "Create a new window function using the provided schema to avoid the overhead of building the schema again when the schema is already known."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+{
+  "module": "datafusion_common::error",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.error.md",
+  "items": [
+    {
+      "path": "datafusion_common::error::DataFusionError",
+      "name": "DataFusionError",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum DataFusionError",
+      "summary": "DataFusion error",
+      "doc": "api/datafusion_common.error.md#datafusionerror",
+      "aliases": [
+        "datafusion::common::DataFusionError",
+        "datafusion::error::DataFusionError",
+        "datafusion_common::DataFusionError"
+      ],
+      "variants": [
+        "ArrowError",
+        "ParquetError",
+        "ObjectStore",
+        "IoError",
+        "SQL",
+        "NotImplemented",
+        "Internal",
+        "Plan",
+        "Configuration",
+        "SchemaError",
+        "Execution",
+        "ExecutionJoin",
+        "ResourcesExhausted",
+        "External",
+        "Context",
+        "Substrait",
+        "Diagnostic",
+        "Collection",
+        "Shared",
+        "Ffi"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> DataFusionErrorBuilder",
+          "summary": "Return a [`DataFusionErrorBuilder`] to build a [`DataFusionError`]"
+        },
+        {
+          "name": "context",
+          "signature": "fn context(self, description: impl Into<String>) -> Self",
+          "summary": "wraps self in Self::Context with a description"
+        },
+        {
+          "name": "diagnostic",
+          "signature": "fn diagnostic(&self) -> Option<&Diagnostic>",
+          "summary": "Gets the [`Diagnostic`] associated with the error, if any. If there is more than one, only the outermost [`Diagnostic`] is returned."
+        },
+        {
+          "name": "find_root",
+          "signature": "fn find_root(&self) -> &Self",
+          "summary": "Get deepest underlying [`DataFusionError`]"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(e: ArrowError) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_back_trace",
+          "signature": "fn get_back_trace() -> String",
+          "summary": "To enable optional rust backtrace in DataFusion: - [`Setup Env Variables`]<https://doc.rust-lang.org/std/backtrace/index.html#environment-variables> - Enable `backtrace` cargo feature"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = &DataFusionError>",
+          "summary": "Return an iterator over this [`DataFusionError`] and any other [`DataFusionError`]s in a [`DataFusionError::Collection`]."
+        },
+        {
+          "name": "message",
+          "signature": "fn message(&self) -> Cow<'_, str>"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> Option<&dyn Error + 'static>",
+          "via_trait": "core::error::Error"
+        },
+        {
+          "name": "strip_backtrace",
+          "signature": "fn strip_backtrace(&self) -> String",
+          "summary": "Strips backtrace out of the error message If backtrace enabled then error has a format \"message\" [`Self::BACK_TRACE_SEP`] \"backtrace\" The method strips the backtrace and outputs \"message\""
+        },
+        {
+          "name": "with_diagnostic",
+          "signature": "fn with_diagnostic(self, diagnostic: Diagnostic) -> Self",
+          "summary": "Wraps the error with contextual information intended for end users"
+        },
+        {
+          "name": "with_diagnostic_fn",
+          "signature": "fn with_diagnostic_fn<F: FnOnce(&DataFusionError) -> Diagnostic>(self, f: F) -> Self",
+          "summary": "Wraps the error with contextual information intended for end users. Takes a function that inspects the error and returns the diagnostic to wrap it with."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::error::SchemaError",
+      "name": "SchemaError",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum SchemaError",
+      "summary": "Schema-related errors",
+      "doc": "api/datafusion_common.error.md#schemaerror",
+      "aliases": [
+        "datafusion::common::SchemaError",
+        "datafusion_common::SchemaError"
+      ],
+      "variants": [
+        "AmbiguousReference",
+        "DuplicateQualifiedField",
+        "DuplicateUnqualifiedField",
+        "FieldNotFound"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::error::add_possible_columns_to_diag",
+      "name": "add_possible_columns_to_diag",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn add_possible_columns_to_diag(diagnostic: &mut Diagnostic, field: &Column, valid_fields: &[Column])",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_common::error::field_not_found",
+      "name": "field_not_found",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn field_not_found<R: Into<TableReference>>(qualifier: Option<R>, name: &str, schema: &DFSchema) -> DataFusionError",
+      "summary": "Create a \"field not found\" DataFusion::SchemaError",
+      "doc": "api/datafusion_common.error.md#field_not_found",
+      "aliases": [
+        "datafusion::common::field_not_found",
+        "datafusion_common::field_not_found"
+      ]
+    },
+    {
+      "path": "datafusion_common::error::unqualified_field_not_found",
+      "name": "unqualified_field_not_found",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn unqualified_field_not_found(name: &str, schema: &DFSchema) -> DataFusionError",
+      "summary": "Convenience wrapper over [`field_not_found`] for when there is no qualifier",
+      "doc": "api/datafusion_common.error.md#unqualified_field_not_found",
+      "aliases": [
+        "datafusion::common::unqualified_field_not_found",
+        "datafusion_common::unqualified_field_not_found"
+      ]
+    },
+    {
+      "path": "datafusion_common::error::DataFusionErrorBuilder",
+      "name": "DataFusionErrorBuilder",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct DataFusionErrorBuilder",
+      "summary": "A builder for [`DataFusionError`]",
+      "doc": "api/datafusion_common.error.md#datafusionerrorbuilder",
+      "methods": [
+        {
+          "name": "add_error",
+          "signature": "fn add_error(&mut self, error: DataFusionError)",
+          "summary": "Add an error to the in progress list"
+        },
+        {
+          "name": "error_or",
+          "signature": "fn error_or<T>(self, ok: T) -> Result<T, DataFusionError>",
+          "summary": "Returns `Ok(ok)` if no errors were added to the builder, otherwise returns a `Result::Err`"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`DataFusionErrorBuilder`]"
+        },
+        {
+          "name": "with_error",
+          "signature": "fn with_error(self, error: DataFusionError) -> Self",
+          "summary": "Add an error to the in progress list, returning the builder"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::error::GenericError",
+      "name": "GenericError",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type GenericError = Box<dyn Error + Send + Sync>",
+      "summary": "Error type for generic operations that could result in DataFusionError::External",
+      "doc": "api/datafusion_common.error.md#genericerror"
+    },
+    {
+      "path": "datafusion_common::error::Result",
+      "name": "Result",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type Result<T, E = DataFusionError> = result::Result<T, E>",
+      "summary": "Result type for operations that could result in an [DataFusionError]",
+      "doc": "api/datafusion_common.error.md#result",
+      "aliases": [
+        "datafusion::common::Result",
+        "datafusion::error::Result",
+        "datafusion_common::Result"
+      ],
+      "implements": [
+        "datafusion_common::tree_node::TransformedResult",
+        "datafusion_physical_expr_common::metrics::baseline::RecordOutput"
+      ],
+      "methods": [
+        {
+          "name": "data",
+          "signature": "fn data(self) -> Result<T>",
+          "via_trait": "datafusion_common::tree_node::TransformedResult"
+        },
+        {
+          "name": "tnr",
+          "signature": "fn tnr(self) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_common::tree_node::TransformedResult"
+        },
+        {
+          "name": "transformed",
+          "signature": "fn transformed(self) -> Result<bool>",
+          "via_trait": "datafusion_common::tree_node::TransformedResult"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::error::SharedResult",
+      "name": "SharedResult",
+      "kind": "type_alias",
+      "crate": "datafusion-common",
+      "signature": "type SharedResult<T> = result::Result<T, std::sync::Arc<DataFusionError>>",
+      "summary": "Result type for operations that could result in an [DataFusionError] and needs to be shared (wrapped into `Arc`).",
+      "doc": "api/datafusion_common.error.md#sharedresult",
+      "aliases": [
+        "datafusion::common::SharedResult",
+        "datafusion::error::SharedResult",
+        "datafusion_common::SharedResult"
+      ]
+    }
+  ]
+}

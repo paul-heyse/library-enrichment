@@ -1,0 +1,103 @@
+{
+  "module": "object_store::upload",
+  "crate": "object_store",
+  "api": "api/object_store.upload.md",
+  "items": [
+    {
+      "path": "object_store::upload::WriteMultipart",
+      "name": "WriteMultipart",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct WriteMultipart",
+      "summary": "A synchronous write API for uploading data in parallel in fixed size chunks",
+      "doc": "api/object_store.upload.md#writemultipart",
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(self) -> Result<()>",
+          "summary": "Abort this upload, attempting to clean up any successfully uploaded parts"
+        },
+        {
+          "name": "finish",
+          "signature": "async fn finish(self) -> Result<PutResult>",
+          "summary": "Flush final chunk, and await completion of all in-flight requests"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(upload: Box<dyn MultipartUpload>) -> Self",
+          "summary": "Create a new [`WriteMultipart`] that will upload using 5MB chunks"
+        },
+        {
+          "name": "new_with_chunk_size",
+          "signature": "fn new_with_chunk_size(upload: Box<dyn MultipartUpload>, chunk_size: usize) -> Self",
+          "summary": "Create a new [`WriteMultipart`] that will upload in fixed `chunk_size` sized chunks"
+        },
+        {
+          "name": "poll_for_capacity",
+          "signature": "fn poll_for_capacity(&mut self, cx: &mut Context<'_>, max_concurrency: usize) -> Poll<Result<()>>",
+          "summary": "Polls for there to be less than `max_concurrency` [`UploadPart`] in progress"
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&mut self, bytes: bytes::Bytes)",
+          "summary": "Put a chunk of data into this [`WriteMultipart`] without copying"
+        },
+        {
+          "name": "wait_for_capacity",
+          "signature": "async fn wait_for_capacity(&mut self, max_concurrency: usize) -> Result<()>",
+          "summary": "Wait until there are less than `max_concurrency` [`UploadPart`] in progress"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8])",
+          "summary": "Write data to this [`WriteMultipart`]"
+        }
+      ]
+    },
+    {
+      "path": "object_store::upload::MultipartUpload",
+      "name": "MultipartUpload",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait MultipartUpload: Send + std::fmt::Debug",
+      "summary": "A trait allowing writing an object in fixed size chunks",
+      "doc": "api/object_store.upload.md#multipartupload",
+      "implementors": [
+        "alloc::boxed::Box",
+        "object_store::limit::LimitUpload"
+      ],
+      "required_methods": [
+        "abort",
+        "complete",
+        "put_part"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(&mut self) -> Result<()>",
+          "summary": "Abort the multipart upload"
+        },
+        {
+          "name": "complete",
+          "signature": "async fn complete(&mut self) -> Result<PutResult>",
+          "summary": "Complete the multipart upload"
+        },
+        {
+          "name": "put_part",
+          "signature": "fn put_part(&mut self, data: PutPayload) -> UploadPart",
+          "summary": "Upload the next part"
+        }
+      ]
+    },
+    {
+      "path": "object_store::upload::UploadPart",
+      "name": "UploadPart",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type UploadPart = futures_util::future::BoxFuture<'static, Result<()>>",
+      "summary": "An upload part request",
+      "doc": "api/object_store.upload.md#uploadpart"
+    }
+  ]
+}

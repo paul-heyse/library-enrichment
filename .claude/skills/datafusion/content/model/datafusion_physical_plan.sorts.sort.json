@@ -1,0 +1,205 @@
+{
+  "module": "datafusion_physical_plan::sorts::sort",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.sorts.sort.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::sorts::sort::sort_batch",
+      "name": "sort_batch",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn sort_batch(batch: &arrow::array::RecordBatch, expressions: &datafusion_physical_expr::LexOrdering, fetch: Option<usize>) -> datafusion_common::Result<arrow::array::RecordBatch>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_physical_plan::sorts::sort::sort_batch_chunked",
+      "name": "sort_batch_chunked",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn sort_batch_chunked(batch: &arrow::array::RecordBatch, expressions: &datafusion_physical_expr::LexOrdering, batch_size: usize) -> datafusion_common::Result<Vec<arrow::array::RecordBatch>>",
+      "summary": "Sort a batch and return the result as multiple batches of size `batch_size`. This is useful when you want to avoid creating one large sorted batch in memory, and instead want to process the sorted data in smaller chunks.",
+      "doc": "api/datafusion_physical_plan.sorts.sort.md#sort_batch_chunked"
+    },
+    {
+      "path": "datafusion_physical_plan::sorts::sort::SortExec",
+      "name": "SortExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct SortExec",
+      "summary": "Sort execution plan.",
+      "doc": "api/datafusion_physical_plan.sorts.sort.md#sortexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "benefits_from_input_partitioning",
+          "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "dynamic_filter_expr",
+          "signature": "fn dynamic_filter_expr(&self) -> Option<Arc<DynamicFilterPhysicalExpr>>",
+          "summary": "Returns the dynamic filter expression for this sort (TopK), if set."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "expr",
+          "signature": "fn expr(&self) -> &LexOrdering",
+          "summary": "Sort expressions"
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "summary": "If `Some(fetch)`, limits output to only the first \"fetch\" items"
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, config: &datafusion_common::config::ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &datafusion_common::config::ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "Input schema"
+        },
+        {
+          "name": "input_distribution_requirements",
+          "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: LexOrdering, input: Arc<dyn ExecutionPlan>) -> Self",
+          "summary": "Create a new sort execution plan that produces a single, sorted output partition."
+        },
+        {
+          "name": "preserve_partitioning",
+          "signature": "fn preserve_partitioning(&self) -> bool",
+          "summary": "Whether this `SortExec` preserves partitioning of the children"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "required_input_distribution",
+          "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(Arc<self>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>"
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Tries to swap the projection with its input [`SortExec`]. If it can be done, it returns the new swapped version having the [`SortExec`] as the top plan. Otherwise, it returns None."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_dynamic_filter_expr",
+          "signature": "fn with_dynamic_filter_expr(self, filter: Arc<DynamicFilterPhysicalExpr>) -> Result<Self>",
+          "summary": "Replace the dynamic filter expression for this sort."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, fetch: Option<usize>) -> Self",
+          "summary": "Modify how many rows to include in the result"
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_preserve_partitioning",
+          "signature": "fn with_preserve_partitioning(self, preserve_partitioning: bool) -> Self",
+          "summary": "Specify the partitioning behavior of this sort exec"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+id: corpus-session-registration
+language: rust
+severity: hint
+message: Something registered on a SessionContext. This is the plug-in surface in practice.
+note: |
+  DataFusion is extended almost entirely through `register_*` and `add_*` calls on SessionContext:
+  UDFs, UDAFs, UDWFs, table functions, object stores, catalogs, optimizer and analyzer rules,
+  relation planners. Enumerating the ones an example demonstrates is the fastest route from
+  "I want to do X" to working code.
+metadata:
+  record: registration
+  reads: content/corpus/examples
+rule:
+  kind: call_expression
+  has:
+    field: function
+    kind: field_expression
+    has:
+      field: field
+      regex: '^(register_|add_|enable_)\w+$'

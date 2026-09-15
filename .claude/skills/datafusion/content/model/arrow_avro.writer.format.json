@@ -1,0 +1,110 @@
+{
+  "module": "arrow_avro::writer::format",
+  "crate": "arrow-avro",
+  "api": "api/arrow_avro.writer.format.md",
+  "items": [
+    {
+      "path": "arrow_avro::writer::format::AvroBinaryFormat",
+      "name": "AvroBinaryFormat",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct AvroBinaryFormat",
+      "summary": "Unframed Avro binary streaming format (\"raw Avro record body bytes (no prefix, no OCF header)\").",
+      "doc": "api/arrow_avro.writer.format.md#avrobinaryformat",
+      "implements": [
+        "arrow_avro::writer::format::AvroFormat"
+      ],
+      "methods": [
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&mut self, _writer: &mut W, _schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        },
+        {
+          "name": "sync_marker",
+          "signature": "fn sync_marker(&self) -> Option<&[u8; 16]>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::format::AvroOcfFormat",
+      "name": "AvroOcfFormat",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct AvroOcfFormat",
+      "summary": "Avro Object Container File (OCF) format writer.",
+      "doc": "api/arrow_avro.writer.format.md#avroocfformat",
+      "implements": [
+        "arrow_avro::writer::format::AvroFormat"
+      ],
+      "methods": [
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&mut self, writer: &mut W, schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        },
+        {
+          "name": "sync_marker",
+          "signature": "fn sync_marker(&self) -> Option<&[u8; 16]>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::format::AvroSoeFormat",
+      "name": "AvroSoeFormat",
+      "kind": "struct",
+      "crate": "arrow-avro",
+      "signature": "struct AvroSoeFormat",
+      "summary": "Raw Avro binary streaming format using **Single-Object Encoding** per record.",
+      "doc": "api/arrow_avro.writer.format.md#avrosoeformat",
+      "implements": [
+        "arrow_avro::writer::format::AvroFormat"
+      ],
+      "methods": [
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&mut self, _writer: &mut W, _schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        },
+        {
+          "name": "sync_marker",
+          "signature": "fn sync_marker(&self) -> Option<&[u8; 16]>",
+          "via_trait": "arrow_avro::writer::format::AvroFormat"
+        }
+      ]
+    },
+    {
+      "path": "arrow_avro::writer::format::AvroFormat",
+      "name": "AvroFormat",
+      "kind": "trait",
+      "crate": "arrow-avro",
+      "signature": "trait AvroFormat: Debug + Default",
+      "summary": "Format abstraction implemented by each container‐level writer.",
+      "doc": "api/arrow_avro.writer.format.md#avroformat",
+      "implementors": [
+        "arrow_avro::writer::format::AvroBinaryFormat",
+        "arrow_avro::writer::format::AvroOcfFormat",
+        "arrow_avro::writer::format::AvroSoeFormat"
+      ],
+      "required_methods": [
+        "start_stream",
+        "sync_marker"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "start_stream",
+          "signature": "fn start_stream<W: Write>(&mut self, writer: &mut W, schema: &Schema, compression: Option<CompressionCodec>) -> Result<(), AvroError>",
+          "summary": "Write any bytes required at the very beginning of the output stream (file header, etc.). Implementations **must not** write any record data."
+        },
+        {
+          "name": "sync_marker",
+          "signature": "fn sync_marker(&self) -> Option<&[u8; 16]>",
+          "summary": "Return the 16‑byte sync marker (OCF) or `None` (binary stream)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+{
+  "module": "arrow_array::record_batch",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.record_batch.md",
+  "items": [
+    {
+      "path": "arrow_array::record_batch::RecordBatch",
+      "name": "RecordBatch",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct RecordBatch",
+      "summary": "A two-dimensional batch of column-oriented data with a defined [schema](arrow_schema::Schema).",
+      "doc": "api/arrow_array.record_batch.md#recordbatch",
+      "aliases": [
+        "arrow::array::RecordBatch",
+        "arrow::record_batch::RecordBatch",
+        "arrow_array::RecordBatch"
+      ],
+      "implements": [
+        "arrow_pyarrow::FromPyArrow",
+        "arrow_pyarrow::ToPyArrow",
+        "core::convert::From",
+        "core::ops::index::Index",
+        "datafusion_physical_expr_common::metrics::baseline::RecordOutput",
+        "datafusion_physical_plan::buffer::SizedMessage"
+      ],
+      "methods": [
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn arrow_buffer::MemoryPool)",
+          "summary": "Registers all buffers in this record batch with the provided [`MemoryPool`]."
+        },
+        {
+          "name": "column",
+          "signature": "fn column(&self, index: usize) -> &ArrayRef",
+          "summary": "Get a reference to a column's array by index."
+        },
+        {
+          "name": "column_by_name",
+          "signature": "fn column_by_name(&self, name: &str) -> Option<&ArrayRef>",
+          "summary": "Get a reference to a column's array by name."
+        },
+        {
+          "name": "columns",
+          "signature": "fn columns(&self) -> &[ArrayRef]",
+          "summary": "Get a reference to all columns in the record batch."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(struct_array: &StructArray) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_array_memory_size",
+          "signature": "fn get_array_memory_size(&self) -> usize",
+          "summary": "Returns the total number of bytes of memory occupied physically by this batch."
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self, name: &str) -> &Self::Output",
+          "via_trait": "core::ops::index::Index",
+          "summary": "Get a reference to a column's array by name."
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (SchemaRef, Vec<ArrayRef>, usize)",
+          "summary": "Return the schema, columns and row count of this [`RecordBatch`]"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty(schema: SchemaRef) -> Self",
+          "summary": "Creates a new empty [`RecordBatch`]."
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "unsafe fn new_unchecked(schema: SchemaRef, columns: Vec<Arc<dyn Array>>, row_count: usize) -> Self",
+          "summary": "Creates a `RecordBatch` from a schema and columns, without validation."
+        },
+        {
+          "name": "normalize",
+          "signature": "fn normalize(&self, separator: &str, max_level: Option<usize>) -> Result<Self, ArrowError>",
+          "summary": "Normalize a semi-structured [`RecordBatch`] into a flat table."
+        },
+        {
+          "name": "num_columns",
+          "signature": "fn num_columns(&self) -> usize",
+          "summary": "Returns the number of columns in the record batch."
+        },
+        {
+          "name": "num_rows",
+          "signature": "fn num_rows(&self) -> usize",
+          "summary": "Returns the number of rows in each column."
+        },
+        {
+          "name": "project",
+          "signature": "fn project(&self, indices: &[usize]) -> Result<RecordBatch, ArrowError>",
+          "summary": "Projects the schema onto the specified columns"
+        },
+        {
+          "name": "remove_column",
+          "signature": "fn remove_column(&mut self, index: usize) -> ArrayRef",
+          "summary": "Remove column by index and return it."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the [`Schema`] of the record batch."
+        },
+        {
+          "name": "schema_metadata_mut",
+          "signature": "fn schema_metadata_mut(&mut self) -> &mut std::collections::HashMap<String, String>",
+          "summary": "Mutable access to the metadata of the schema."
+        },
+        {
+          "name": "schema_ref",
+          "signature": "fn schema_ref(&self) -> &SchemaRef",
+          "summary": "Returns a reference to the [`Schema`] of the record batch."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize, length: usize) -> RecordBatch",
+          "summary": "Return a new RecordBatch where each column is sliced according to `offset` and `length`"
+        },
+        {
+          "name": "try_from_iter",
+          "signature": "fn try_from_iter<I, F>(value: I) -> Result<Self, ArrowError> where I: IntoIterator<Item = (F, ArrayRef)>, F: AsRef<str>",
+          "summary": "Create a `RecordBatch` from an iterable list of pairs of the form `(field_name, array)`, with the same requirements on fields and arrays as [`RecordBatch::try_new`]. This method is often used to create a single `RecordBatch` from arrays, e…"
+        },
+        {
+          "name": "try_from_iter_with_nullable",
+          "signature": "fn try_from_iter_with_nullable<I, F>(value: I) -> Result<Self, ArrowError> where I: IntoIterator<Item = (F, ArrayRef, bool)>, F: AsRef<str>",
+          "summary": "Create a `RecordBatch` from an iterable list of tuples of the form `(field_name, array, nullable)`, with the same requirements on fields and arrays as [`RecordBatch::try_new`]. This method is often used to create a single `RecordBatch` fro…"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(schema: SchemaRef, columns: Vec<ArrayRef>) -> Result<Self, ArrowError>",
+          "summary": "Creates a `RecordBatch` from a schema and columns."
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(schema: SchemaRef, columns: Vec<ArrayRef>, options: &RecordBatchOptions) -> Result<Self, ArrowError>",
+          "summary": "Creates a `RecordBatch` from a schema and columns, with additional options, such as whether to strictly validate field names."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Result<Self, ArrowError>",
+          "summary": "Override the schema of this [`RecordBatch`]"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::record_batch::RecordBatchIterator",
+      "name": "RecordBatchIterator",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct RecordBatchIterator<I> where I: IntoIterator<Item = Result<RecordBatch, arrow_schema::ArrowError>>",
+      "summary": "Generic implementation of [RecordBatchReader] that wraps an iterator.",
+      "doc": "api/arrow_array.record_batch.md#recordbatchiterator",
+      "aliases": [
+        "arrow::array::RecordBatchIterator",
+        "arrow::record_batch::RecordBatchIterator",
+        "arrow_array::RecordBatchIterator"
+      ],
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(iter: I, schema: SchemaRef) -> Self",
+          "summary": "Create a new [RecordBatchIterator]."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::record_batch::RecordBatchOptions",
+      "name": "RecordBatchOptions",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct RecordBatchOptions",
+      "summary": "Options that control the behaviour used when creating a [`RecordBatch`].",
+      "doc": "api/arrow_array.record_batch.md#recordbatchoptions",
+      "aliases": [
+        "arrow::array::RecordBatchOptions",
+        "arrow::record_batch::RecordBatchOptions",
+        "arrow_array::RecordBatchOptions"
+      ],
+      "fields": [
+        "match_field_names",
+        "row_count"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new `RecordBatchOptions`"
+        },
+        {
+          "name": "with_match_field_names",
+          "signature": "fn with_match_field_names(self, match_field_names: bool) -> Self",
+          "summary": "Sets the match_field_names of RecordBatchOptions and returns self"
+        },
+        {
+          "name": "with_row_count",
+          "signature": "fn with_row_count(self, row_count: Option<usize>) -> Self",
+          "summary": "Sets the row_count of RecordBatchOptions and returns self"
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::record_batch::RecordBatchReader",
+      "name": "RecordBatchReader",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait RecordBatchReader: Iterator<Item = Result<RecordBatch, arrow_schema::ArrowError>>",
+      "summary": "Trait for types that can read `RecordBatch`'s.",
+      "doc": "api/arrow_array.record_batch.md#recordbatchreader",
+      "aliases": [
+        "arrow::array::RecordBatchReader",
+        "arrow::record_batch::RecordBatchReader",
+        "arrow_array::RecordBatchReader"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "arrow_array::ffi_stream::ArrowArrayStreamReader",
+        "arrow_array::record_batch::RecordBatchIterator",
+        "arrow_avro::reader::Reader",
+        "arrow_csv::reader::BufReader",
+        "arrow_ipc::reader::FileReader",
+        "arrow_ipc::reader::StreamReader",
+        "arrow_json::reader::Reader",
+        "parquet::arrow::arrow_reader::ParquetRecordBatchReader"
+      ],
+      "required_methods": [
+        "schema"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Returns the schema of this `RecordBatchReader`."
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::record_batch::RecordBatchWriter",
+      "name": "RecordBatchWriter",
+      "kind": "trait",
+      "crate": "arrow-array",
+      "signature": "trait RecordBatchWriter",
+      "summary": "Trait for types that can write `RecordBatch`'s.",
+      "doc": "api/arrow_array.record_batch.md#recordbatchwriter",
+      "aliases": [
+        "arrow::array::RecordBatchWriter",
+        "arrow::record_batch::RecordBatchWriter",
+        "arrow_array::RecordBatchWriter"
+      ],
+      "implementors": [
+        "arrow_csv::writer::Writer",
+        "arrow_ipc::writer::FileWriter",
+        "arrow_ipc::writer::StreamWriter",
+        "arrow_json::writer::Writer",
+        "parquet::arrow::arrow_writer::ArrowWriter"
+      ],
+      "required_methods": [
+        "close",
+        "write"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<(), ArrowError>",
+          "summary": "Write footer or termination data, then mark the writer as done."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "summary": "Write a single batch to the writer."
+        }
+      ]
+    }
+  ]
+}

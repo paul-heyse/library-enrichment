@@ -14,7 +14,7 @@ pytestmark = daemon.requires_daemon_binary
 
 
 async def raw(client, tool, **params):
-    return (await client.call_tool(tool, params)).structured_content
+    return (await client.call_tool(tool, params, raise_on_error=False)).structured_content
 
 
 async def test_cold_comparison_cancellation_preserves_shared_acquisition_and_restarts(
@@ -88,7 +88,7 @@ async def test_cold_comparison_cancellation_preserves_shared_acquisition_and_res
                         client, await raw(client, "job_control", job_id=comparison["job"]["job_id"])
                     )
                     assert replay["data"]["state"] == "cancelled", replay
-                    assert replay["data"]["result"] == terminal
+                    assert await daemon.read_terminal_answer(client, replay) == terminal
                     assert upstream.request_log == before
         finally:
             released.set()
@@ -121,7 +121,7 @@ async def test_one_side_failure_is_durable_and_a_new_comparison_uses_the_retaine
             async with Client(daemon.transport(env)) as client:
                 record = await raw(client, "job_control", job_id=pending["job"]["job_id"])
                 assert record["data"]["state"] == "failed", record
-                assert record["data"]["result"] == failed
+                assert await daemon.read_terminal_answer(client, record) == failed
                 assert upstream.request_log == before
                 result = await daemon.wait_for_answer(
                     client,

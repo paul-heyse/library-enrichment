@@ -8,6 +8,7 @@ mod handoff;
 mod inventory;
 pub(crate) mod ownership;
 mod python_closure;
+pub(crate) mod readiness;
 pub mod resources;
 pub mod rustdoc;
 use cleanup::{ContainerGuard, Supervisor};

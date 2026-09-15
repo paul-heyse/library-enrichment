@@ -1,0 +1,163 @@
+{
+  "module": "arrow_buffer::buffer::immutable",
+  "crate": "arrow-buffer",
+  "api": "api/arrow_buffer.buffer.immutable.md",
+  "items": [
+    {
+      "path": "arrow_buffer::buffer::immutable::Buffer",
+      "name": "Buffer",
+      "kind": "struct",
+      "crate": "arrow-buffer",
+      "signature": "struct Buffer",
+      "summary": "A contiguous memory region that can be shared with other buffers and across  thread boundaries that stores Arrow data.",
+      "doc": "api/arrow_buffer.buffer.immutable.md#buffer",
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "advance",
+          "signature": "fn advance(&mut self, offset: usize)",
+          "summary": "Increases the offset of this buffer by `offset`"
+        },
+        {
+          "name": "as_ptr",
+          "signature": "fn as_ptr(&self) -> *const u8",
+          "summary": "Returns a pointer to the start of this buffer."
+        },
+        {
+          "name": "as_slice",
+          "signature": "fn as_slice(&self) -> &[u8]",
+          "summary": "Returns the byte slice stored in this buffer"
+        },
+        {
+          "name": "bit_chunks",
+          "signature": "fn bit_chunks(&self, offset: usize, len: usize) -> BitChunks<'_>",
+          "summary": "Returns a `BitChunks` instance which can be used to iterate over this buffers bits in larger chunks and starting at arbitrary bit offsets. Note that both `offset` and `length` are measured in bits."
+        },
+        {
+          "name": "bit_slice",
+          "signature": "fn bit_slice(&self, offset: usize, len: usize) -> Self",
+          "summary": "Returns a slice of this buffer starting at a certain bit offset. If the offset is byte-aligned the returned buffer is a shallow clone, otherwise a new buffer is allocated and filled with a copy of the bits in the range."
+        },
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "summary": "Returns the capacity of this buffer. For externally owned buffers, this returns zero"
+        },
+        {
+          "name": "claim",
+          "signature": "fn claim(&self, pool: &dyn MemoryPool)",
+          "summary": "Register this [`Buffer`] with the provided [`MemoryPool`]"
+        },
+        {
+          "name": "count_set_bits_offset",
+          "signature": "fn count_set_bits_offset(&self, offset: usize, len: usize) -> usize",
+          "summary": "Returns the number of 1-bits in this buffer, starting from `offset` with `length` bits inspected. Note that both `offset` and `length` are measured in bits."
+        },
+        {
+          "name": "data_ptr",
+          "signature": "fn data_ptr(&self) -> NonNull<u8>",
+          "summary": "Returns the pointer to the start of the buffer without the offset."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &[u8]",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(bytes: bytes::Bytes) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_custom_allocation",
+          "signature": "unsafe fn from_custom_allocation(ptr: NonNull<u8>, len: usize, owner: Arc<dyn Allocation>) -> Self",
+          "summary": "Creates a buffer from an existing memory region."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_slice_ref",
+          "signature": "fn from_slice_ref<U: ArrowNativeType, T: AsRef<[U]>>(items: T) -> Self",
+          "summary": "Initializes a [Buffer] from a slice of items."
+        },
+        {
+          "name": "from_trusted_len_iter",
+          "signature": "unsafe fn from_trusted_len_iter<T: ArrowNativeType, I: Iterator<Item = T>>(iterator: I) -> Self",
+          "summary": "Creates a [`Buffer`] from an [`Iterator`] with a trusted (upper) length."
+        },
+        {
+          "name": "from_vec",
+          "signature": "fn from_vec<T: ArrowNativeType>(vec: Vec<T>) -> Self",
+          "summary": "Create a [`Buffer`] from the provided [`Vec`] without copying"
+        },
+        {
+          "name": "into_mutable",
+          "signature": "fn into_mutable(self) -> Result<MutableBuffer, Self>",
+          "summary": "Returns `MutableBuffer` for mutating the buffer if this buffer is not shared or sliced. Returns `Err` if this is shared or the [`Self::ptr_offset`] is greater than 0 or its allocation is from an external source or it is not allocated with…"
+        },
+        {
+          "name": "into_vec",
+          "signature": "fn into_vec<T: ArrowNativeType>(self) -> Result<Vec<T>, Self>",
+          "summary": "Converts self into a `Vec`, if possible."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if the buffer is empty."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of bytes in the buffer"
+        },
+        {
+          "name": "ptr_eq",
+          "signature": "fn ptr_eq(&self, other: &Self) -> bool",
+          "summary": "Returns true if this [`Buffer`] is equal to `other`, using pointer comparisons to determine buffer equality. This is cheaper than `PartialEq::eq` but may return false when the arrays are logically equal"
+        },
+        {
+          "name": "ptr_offset",
+          "signature": "fn ptr_offset(&self) -> usize",
+          "summary": "Returns the offset, in bytes, of `Self::ptr` to `Self::data`"
+        },
+        {
+          "name": "shrink_to_fit",
+          "signature": "fn shrink_to_fit(&mut self)",
+          "summary": "Tries to shrink the capacity of the buffer as much as possible, freeing unused memory."
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice(&self, offset: usize) -> Self",
+          "summary": "Returns a new [Buffer] that is a slice of this buffer starting at `offset`."
+        },
+        {
+          "name": "slice_with_length",
+          "signature": "fn slice_with_length(&self, offset: usize, length: usize) -> Self",
+          "summary": "Returns a new [Buffer] that is a slice of this buffer starting at `offset`, with `length` bytes."
+        },
+        {
+          "name": "strong_count",
+          "signature": "fn strong_count(&self) -> usize",
+          "summary": "Returns the number of strong references to the buffer."
+        },
+        {
+          "name": "try_from_trusted_len_iter",
+          "signature": "unsafe fn try_from_trusted_len_iter<E, T: ArrowNativeType, I: Iterator<Item = Result<T, E>>>(iterator: I) -> Result<Self, E>",
+          "summary": "Creates a [`Buffer`] from an [`Iterator`] with a trusted (upper) length or errors if any of the items of the iterator is an error. Prefer this to `collect` whenever possible, as it is ~60% faster. # Safety This method assumes that the iter…"
+        },
+        {
+          "name": "typed_data",
+          "signature": "fn typed_data<T: ArrowNativeType>(&self) -> &[T]",
+          "summary": "View buffer as a slice of a specific type."
+        }
+      ]
+    }
+  ]
+}

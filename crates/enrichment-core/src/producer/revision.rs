@@ -1,5 +1,67 @@
 //! Immutable repository acquisition identity; no subprocess or network access.
 use crate::{identity::Ecosystem, request::ResolveRequest};
+mod inputs;
+
+/// Declared input reachability is distinct from a proof of complete generated/build inputs.
+#[derive(
+    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+)]
+#[serde(deny_unknown_fields)]
+pub struct RevisionExtraction {
+    pub archive_sha256: String,
+    pub policy: String,
+    pub omissions: Vec<crate::archive::ArchiveOmission>,
+    pub selected_package: String,
+    pub declared_inputs: Vec<String>,
+    /// Candidate source directories from the selected package and declared local dependencies.
+    pub source_roots: Vec<String>,
+    pub missing_inputs: Vec<String>,
+    pub affected_omissions: Vec<String>,
+    pub source_closure: SourceClosure,
+}
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum SourceClosure {
+    Unknown,
+    Incomplete,
+}
+
+/// Filesystem observations collected without deciding the selected package's coverage.
+/// The store lowers these facts into its native requested-domain assessment before publication.
+#[derive(Debug, Clone)]
+pub struct RevisionInputs {
+    pub archive_sha256: String,
+    pub policy: String,
+    pub omissions: Vec<crate::archive::ArchiveOmission>,
+    pub selected_package: String,
+    pub declared_inputs: Vec<String>,
+    /// Candidate source directories from the selected package and declared local dependencies.
+    pub source_roots: Vec<String>,
+    pub missing_inputs: Vec<String>,
+}
+
+impl RevisionInputs {
+    /// Account for the selected package and ancestor Cargo configuration without following
+    /// links. Static archive presence never establishes generated, submodule or LFS closure.
+    pub fn collect(
+        archive_sha256: String,
+        extracted: &crate::archive::Extracted,
+        package_subdir: &str,
+        ecosystem: Ecosystem,
+        manifest: &str,
+    ) -> Result<Self, String> {
+        inputs::collect(
+            archive_sha256,
+            extracted,
+            package_subdir,
+            ecosystem,
+            manifest,
+        )
+    }
+}
 
 /// The validated initial Git provider and package selection.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,6 +135,31 @@ impl Revision {
     #[must_use]
     pub fn registry(&self) -> String {
         format!("git:{}#path={}", self.repository, self.package_subdir)
+    }
+
+    /// A usable immutable citation, separate from the package's registry identity.
+    /// Encode source path segments so spaces, Unicode and fragment characters remain data.
+    pub fn source_uri(&self, path: &str) -> Result<String, String> {
+        if path
+            .split('/')
+            .any(|part| part.is_empty() || matches!(part, "." | ".."))
+            || path.contains('\\')
+            || path.chars().any(char::is_control)
+        {
+            return Err("revision source requires a safe relative file path".into());
+        }
+        let mut uri = url::Url::parse(&self.repository).map_err(|error| error.to_string())?;
+        uri.path_segments_mut()
+            .map_err(|()| "revision repository cannot contain paths")?
+            .push("blob")
+            .push(&self.commit)
+            .extend(
+                self.package_subdir
+                    .split('/')
+                    .filter(|part| !part.is_empty()),
+            )
+            .extend(path.split('/'));
+        Ok(uri.into())
     }
 }
 
@@ -238,5 +325,28 @@ mod tests {
             !error.contains("package_subdir"),
             "the package root is not the problem: {error}"
         );
+    }
+
+    #[test]
+    fn source_citations_keep_commit_package_and_encoded_file_path() {
+        let revision = Revision {
+            repository: "https://github.com/org/repo".into(),
+            repository_path: "org/repo".into(),
+            commit: "a".repeat(40),
+            package_subdir: "crates/demo".into(),
+        };
+        let citation = revision.source_uri("docs/é #notes.md").unwrap();
+        assert_eq!(
+            citation,
+            format!(
+                "https://github.com/org/repo/blob/{}/crates/demo/docs/%C3%A9%20%23notes.md",
+                "a".repeat(40)
+            )
+        );
+        let parsed = url::Url::parse(&citation).unwrap();
+        assert!(parsed.fragment().is_none() && parsed.query().is_none());
+        for path in ["", "/outside", "../outside", "a/../outside", "a\\b"] {
+            assert!(revision.source_uri(path).is_err());
+        }
     }
 }

@@ -1,0 +1,104 @@
+{
+  "module": "object_store::util",
+  "crate": "object_store",
+  "api": "api/object_store.util.md",
+  "items": [
+    {
+      "path": "object_store::util::OBJECT_STORE_COALESCE_DEFAULT",
+      "name": "OBJECT_STORE_COALESCE_DEFAULT",
+      "kind": "constant",
+      "crate": "object_store",
+      "signature": "const OBJECT_STORE_COALESCE_DEFAULT: u64 = _",
+      "summary": "Range requests with a gap less than or equal to this, will be coalesced into a single request by [`coalesce_ranges`]",
+      "doc": "api/object_store.util.md#object_store_coalesce_default",
+      "aliases": [
+        "datafusion::object_store::OBJECT_STORE_COALESCE_DEFAULT",
+        "object_store::OBJECT_STORE_COALESCE_DEFAULT"
+      ]
+    },
+    {
+      "path": "object_store::util::GetRange",
+      "name": "GetRange",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum GetRange",
+      "summary": "Request only a portion of an object's bytes",
+      "doc": "api/object_store.util.md#getrange",
+      "aliases": [
+        "datafusion::object_store::GetRange",
+        "object_store::GetRange"
+      ],
+      "variants": [
+        "Bounded",
+        "Offset",
+        "Suffix"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_range",
+          "signature": "fn as_range(&self, len: u64) -> Result<Range<u64>, InvalidGetRange>",
+          "summary": "Convert to a [`Range`] if [valid](Self::is_valid)."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: T) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self) -> Result<(), InvalidGetRange>",
+          "summary": "Check if the range is valid."
+        }
+      ]
+    },
+    {
+      "path": "object_store::util::InvalidGetRange",
+      "name": "InvalidGetRange",
+      "kind": "enum",
+      "crate": "object_store",
+      "signature": "enum InvalidGetRange",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "StartTooLarge",
+        "Inconsistent",
+        "TooLarge"
+      ]
+    },
+    {
+      "path": "object_store::util::coalesce_ranges",
+      "name": "coalesce_ranges",
+      "kind": "function",
+      "crate": "object_store",
+      "signature": "async fn coalesce_ranges<F, E, Fut>(ranges: &[std::ops::Range<u64>], fetch: F, coalesce: u64) -> super::Result<Vec<bytes::Bytes>, E> where F: Send + FnMut(std::ops::Range<u64>) -> Fut, E: Send, Fut: std::future::Future<Output = super::Result<bytes::Bytes, E>> + Send",
+      "summary": "Takes a function `fetch` that can fetch a range of bytes and uses this to fetch the provided byte `ranges`",
+      "doc": "api/object_store.util.md#coalesce_ranges",
+      "aliases": [
+        "datafusion::object_store::coalesce_ranges",
+        "object_store::coalesce_ranges"
+      ]
+    },
+    {
+      "path": "object_store::util::collect_bytes",
+      "name": "collect_bytes",
+      "kind": "function",
+      "crate": "object_store",
+      "signature": "async fn collect_bytes<S, E>(stream: S, size_hint: Option<u64>) -> super::Result<bytes::Bytes, E> where E: Send, S: Stream<Item = super::Result<bytes::Bytes, E>> + Send + Unpin",
+      "summary": "Collect a stream into [`Bytes`] avoiding copying in the event of a single chunk",
+      "doc": "api/object_store.util.md#collect_bytes",
+      "aliases": [
+        "datafusion::object_store::collect_bytes",
+        "object_store::collect_bytes"
+      ]
+    }
+  ]
+}

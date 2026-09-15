@@ -1,0 +1,185 @@
+{
+  "module": "datafusion_physical_plan::coop",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.coop.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::coop::cooperative",
+      "name": "cooperative",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn cooperative<T>(stream: T) -> CooperativeStream<T> where T: RecordBatchStream + Unpin + Send + 'static",
+      "summary": "Creates a [`CooperativeStream`] wrapper around the given [`RecordBatchStream`]. This wrapper collaborates with the Tokio cooperative scheduler by consuming a unit of scheduling budget for each returned record batch.",
+      "doc": "api/datafusion_physical_plan.coop.md#cooperative"
+    },
+    {
+      "path": "datafusion_physical_plan::coop::make_cooperative",
+      "name": "make_cooperative",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn make_cooperative(stream: SendableRecordBatchStream) -> SendableRecordBatchStream",
+      "summary": "Wraps a `SendableRecordBatchStream` inside a [`CooperativeStream`] to enable cooperative multitasking. Since `SendableRecordBatchStream` is a `dyn RecordBatchStream` this requires the use of dynamic method dispatch. When the stream type is…",
+      "doc": "api/datafusion_physical_plan.coop.md#make_cooperative"
+    },
+    {
+      "path": "datafusion_physical_plan::coop::CooperativeExec",
+      "name": "CooperativeExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct CooperativeExec",
+      "summary": "An execution plan decorator that enables cooperative multitasking. It wraps the streams produced by its input execution plan using the [`make_cooperative`] function, which makes the stream participate in Tokio cooperative scheduling.",
+      "doc": "api/datafusion_physical_plan.coop.md#cooperativeexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, _f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, task_ctx: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, _t: DisplayFormatType, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "Returns a reference to the wrapped input execution plan."
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(input: Arc<dyn ExecutionPlan>) -> Self",
+          "summary": "Creates a new `CooperativeExec` operator that wraps the given input execution plan."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> Arc<Schema>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstruct a [`CooperativeExec`] from its protobuf representation."
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::coop::CooperativeStream",
+      "name": "CooperativeStream",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct CooperativeStream<T> where T: RecordBatchStream + Unpin",
+      "summary": "A stream that passes record batches through unchanged while cooperating with the Tokio runtime. It consumes cooperative scheduling budget for each returned [`RecordBatch`], allowing other tasks to execute when the budget is exhausted.",
+      "doc": "api/datafusion_physical_plan.coop.md#cooperativestream",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: T) -> Self",
+          "summary": "Creates a new `CooperativeStream` that wraps the provided stream. The resulting stream will cooperate with the Tokio scheduler by consuming a unit of scheduling budget when the wrapped `Stream` returns a record batch."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> Arc<Schema>",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    }
+  ]
+}

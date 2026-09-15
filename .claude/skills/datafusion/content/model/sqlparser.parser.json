@@ -1,0 +1,1821 @@
+{
+  "module": "sqlparser::parser",
+  "crate": "sqlparser",
+  "api": "api/sqlparser.parser.md",
+  "items": [
+    {
+      "path": "sqlparser::parser::IsLateral",
+      "name": "IsLateral",
+      "kind": "enum",
+      "crate": "sqlparser",
+      "signature": "enum IsLateral",
+      "summary": "Indicates if a table expression is lateral.",
+      "doc": "api/sqlparser.parser.md#islateral",
+      "variants": [
+        "Lateral",
+        "NotLateral"
+      ]
+    },
+    {
+      "path": "sqlparser::parser::IsOptional",
+      "name": "IsOptional",
+      "kind": "enum",
+      "crate": "sqlparser",
+      "signature": "enum IsOptional",
+      "summary": "Indicates whether a parser element is optional or mandatory.",
+      "doc": "api/sqlparser.parser.md#isoptional",
+      "variants": [
+        "Optional",
+        "Mandatory"
+      ],
+      "methods": []
+    },
+    {
+      "path": "sqlparser::parser::ParserError",
+      "name": "ParserError",
+      "kind": "enum",
+      "crate": "sqlparser",
+      "signature": "enum ParserError",
+      "summary": "Errors produced by the SQL parser.",
+      "doc": "api/sqlparser.parser.md#parsererror",
+      "variants": [
+        "TokenizerError",
+        "ParserError",
+        "RecursionLimitExceeded"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(e: TokenizerError) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "sqlparser::parser::WildcardExpr",
+      "name": "WildcardExpr",
+      "kind": "enum",
+      "crate": "sqlparser",
+      "signature": "enum WildcardExpr",
+      "summary": "Represents a wildcard expression used in SELECT lists.",
+      "doc": "api/sqlparser.parser.md#wildcardexpr",
+      "variants": [
+        "Expr",
+        "QualifiedWildcard",
+        "Wildcard"
+      ]
+    },
+    {
+      "path": "sqlparser::parser::Parser",
+      "name": "Parser",
+      "kind": "struct",
+      "crate": "sqlparser",
+      "signature": "struct Parser<'a>",
+      "summary": "A SQL Parser",
+      "doc": "api/sqlparser.parser.md#parser",
+      "methods": [
+        {
+          "name": "advance_token",
+          "signature": "fn advance_token(&mut self)",
+          "summary": "Advances the current token to the next non-whitespace token"
+        },
+        {
+          "name": "consume_token",
+          "signature": "fn consume_token(&mut self, expected: &Token) -> bool",
+          "summary": "Consume the next token if it matches the expected token, otherwise return false"
+        },
+        {
+          "name": "consume_tokens",
+          "signature": "fn consume_tokens(&mut self, tokens: &[Token]) -> bool",
+          "summary": "If the current and subsequent tokens exactly match the `tokens` sequence, consume them and returns true. Otherwise, no tokens are consumed and returns false"
+        },
+        {
+          "name": "expect_keyword",
+          "signature": "fn expect_keyword(&mut self, expected: Keyword) -> Result<TokenWithSpan, ParserError>",
+          "summary": "If the current token is the `expected` keyword, consume the token. Otherwise, return an error."
+        },
+        {
+          "name": "expect_keyword_is",
+          "signature": "fn expect_keyword_is(&mut self, expected: Keyword) -> Result<(), ParserError>",
+          "summary": "If the current token is the `expected` keyword, consume the token. Otherwise, return an error."
+        },
+        {
+          "name": "expect_keywords",
+          "signature": "fn expect_keywords(&mut self, expected: &[Keyword]) -> Result<(), ParserError>",
+          "summary": "If the current and subsequent tokens exactly match the `keywords` sequence, consume them and returns Ok. Otherwise, return an Error."
+        },
+        {
+          "name": "expect_one_of_keywords",
+          "signature": "fn expect_one_of_keywords(&mut self, keywords: &[Keyword]) -> Result<Keyword, ParserError>",
+          "summary": "If the current token is one of the expected keywords, consume the token and return the keyword that matches. Otherwise, return an error."
+        },
+        {
+          "name": "expect_token",
+          "signature": "fn expect_token(&mut self, expected: &Token) -> Result<TokenWithSpan, ParserError>",
+          "summary": "Bail out if the current token is not an expected keyword, or consume it if it is"
+        },
+        {
+          "name": "expected",
+          "signature": "fn expected<T>(&self, expected: &str, found: TokenWithSpan) -> Result<T, ParserError>",
+          "summary": "Report `found` was encountered instead of `expected`"
+        },
+        {
+          "name": "expected_at",
+          "signature": "fn expected_at<T>(&self, expected: &str, index: usize) -> Result<T, ParserError>",
+          "summary": "Report that the token at `index` was found instead of `expected`."
+        },
+        {
+          "name": "expected_ref",
+          "signature": "fn expected_ref<T>(&self, expected: &str, found: &TokenWithSpan) -> Result<T, ParserError>",
+          "summary": "report `found` was encountered instead of `expected`"
+        },
+        {
+          "name": "get_current_index",
+          "signature": "fn get_current_index(&self) -> usize",
+          "summary": "Returns the index of the current token"
+        },
+        {
+          "name": "get_current_token",
+          "signature": "fn get_current_token(&self) -> &TokenWithSpan",
+          "summary": "Returns a reference to the current token"
+        },
+        {
+          "name": "get_next_precedence",
+          "signature": "fn get_next_precedence(&self) -> Result<u8, ParserError>",
+          "summary": "Get the precedence of the next token"
+        },
+        {
+          "name": "get_next_token",
+          "signature": "fn get_next_token(&self) -> &TokenWithSpan",
+          "summary": "Returns a reference to the next token"
+        },
+        {
+          "name": "get_previous_token",
+          "signature": "fn get_previous_token(&self) -> &TokenWithSpan",
+          "summary": "Returns a reference to the previous token"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> usize",
+          "summary": "The index of the first unprocessed token."
+        },
+        {
+          "name": "into_tokens",
+          "signature": "fn into_tokens(self) -> Vec<TokenWithSpan>",
+          "summary": "Consume the parser and return its underlying token buffer"
+        },
+        {
+          "name": "maybe_parse",
+          "signature": "fn maybe_parse<T, F>(&mut self, f: F) -> Result<Option<T>, ParserError> where F: FnMut(&mut Parser<'_>) -> Result<T, ParserError>",
+          "summary": "Run a parser method `f`, reverting back to the current position if unsuccessful. Returns `ParserError::RecursionLimitExceeded` if `f` returns a `RecursionLimitExceeded`. Returns `Ok(None)` if `f` returns any other error."
+        },
+        {
+          "name": "maybe_parse_connect_by",
+          "signature": "fn maybe_parse_connect_by(&mut self) -> Result<Vec<ConnectByKind>, ParserError>",
+          "summary": "Parse a `CONNECT BY` clause (Oracle-style hierarchical query support)."
+        },
+        {
+          "name": "maybe_parse_options",
+          "signature": "fn maybe_parse_options(&mut self, keyword: Keyword) -> Result<Option<Vec<SqlOption>>, ParserError>",
+          "summary": "Optionally parse a parenthesized list of `SqlOption`s introduced by `keyword`."
+        },
+        {
+          "name": "maybe_parse_table_alias",
+          "signature": "fn maybe_parse_table_alias(&mut self) -> Result<Option<TableAlias>, ParserError>",
+          "summary": "Optionally parses an alias for a table like in `... FROM generate_series(1, 10) AS t (col)`. In this case, the alias is allowed to optionally name the columns in the table, in addition to the table itself."
+        },
+        {
+          "name": "maybe_parse_table_version",
+          "signature": "fn maybe_parse_table_version(&mut self) -> Result<Option<TableVersion>, ParserError>",
+          "summary": "Parses a the timestamp version specifier (i.e. query historical data)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(dialect: &'a dyn Dialect) -> Self",
+          "summary": "Create a parser for a [`Dialect`]"
+        },
+        {
+          "name": "next_token",
+          "signature": "fn next_token(&mut self) -> TokenWithSpan",
+          "summary": "Advances to the next non-whitespace token and returns a copy."
+        },
+        {
+          "name": "next_token_is_temporal_unit",
+          "signature": "fn next_token_is_temporal_unit(&mut self) -> bool",
+          "summary": "Peek at the next token and determine if it is a temporal unit like `second`."
+        },
+        {
+          "name": "next_token_no_skip",
+          "signature": "fn next_token_no_skip(&mut self) -> Option<&TokenWithSpan>",
+          "summary": "Return the next unprocessed token, possibly whitespace."
+        },
+        {
+          "name": "parse_actions_list",
+          "signature": "fn parse_actions_list(&mut self) -> Result<Vec<Action>, ParserError>",
+          "summary": "Parse a list of actions for `GRANT` statements."
+        },
+        {
+          "name": "parse_all_or_distinct",
+          "signature": "fn parse_all_or_distinct(&mut self) -> Result<Option<Distinct>, ParserError>",
+          "summary": "Parse either `ALL`, `DISTINCT` or `DISTINCT ON (...)`. Returns [`None`] if `ALL` is parsed and results in a [`ParserError`] if both `ALL` and `DISTINCT` are found."
+        },
+        {
+          "name": "parse_alter",
+          "signature": "fn parse_alter(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse an `ALTER <object>` statement and dispatch to the appropriate alter handler."
+        },
+        {
+          "name": "parse_alter_collation",
+          "signature": "fn parse_alter_collation(&mut self) -> Result<AlterCollation, ParserError>",
+          "summary": "Parse a [Statement::AlterCollation]."
+        },
+        {
+          "name": "parse_alter_connector",
+          "signature": "fn parse_alter_connector(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse an `ALTER CONNECTOR` statement ```sql ALTER CONNECTOR connector_name SET DCPROPERTIES(property_name=property_value, ...);"
+        },
+        {
+          "name": "parse_alter_function",
+          "signature": "fn parse_alter_function(&mut self, kind: AlterFunctionKind) -> Result<Statement, ParserError>",
+          "summary": "Parse an `ALTER FUNCTION` or `ALTER AGGREGATE` statement."
+        },
+        {
+          "name": "parse_alter_operator",
+          "signature": "fn parse_alter_operator(&mut self) -> Result<AlterOperator, ParserError>",
+          "summary": "Parse a [Statement::AlterOperator]"
+        },
+        {
+          "name": "parse_alter_operator_class",
+          "signature": "fn parse_alter_operator_class(&mut self) -> Result<AlterOperatorClass, ParserError>",
+          "summary": "Parse an `ALTER OPERATOR CLASS` statement."
+        },
+        {
+          "name": "parse_alter_operator_family",
+          "signature": "fn parse_alter_operator_family(&mut self) -> Result<AlterOperatorFamily, ParserError>",
+          "summary": "Parse a [Statement::AlterOperatorFamily] See <https://www.postgresql.org/docs/current/sql-alteropfamily.html>"
+        },
+        {
+          "name": "parse_alter_policy",
+          "signature": "fn parse_alter_policy(&mut self) -> Result<AlterPolicy, ParserError>",
+          "summary": "Parse ALTER POLICY statement ```sql ALTER POLICY policy_name ON table_name [ RENAME TO new_name ] or ALTER POLICY policy_name ON table_name [ TO { role_name | PUBLIC | CURRENT_ROLE | CURRENT_USER | SESSION_USER } [, ...] ] [ USING ( using_…"
+        },
+        {
+          "name": "parse_alter_role",
+          "signature": "fn parse_alter_role(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `ALTER ROLE` statement"
+        },
+        {
+          "name": "parse_alter_schema",
+          "signature": "fn parse_alter_schema(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse an `ALTER SCHEMA` statement."
+        },
+        {
+          "name": "parse_alter_table",
+          "signature": "fn parse_alter_table(&mut self, iceberg: bool) -> Result<Statement, ParserError>",
+          "summary": "Parse a [Statement::AlterTable]"
+        },
+        {
+          "name": "parse_alter_table_add_projection",
+          "signature": "fn parse_alter_table_add_projection(&mut self) -> Result<AlterTableOperation, ParserError>",
+          "summary": "Parse `ALTER TABLE ... ADD PROJECTION ...` operation."
+        },
+        {
+          "name": "parse_alter_table_operation",
+          "signature": "fn parse_alter_table_operation(&mut self) -> Result<AlterTableOperation, ParserError>",
+          "summary": "Parse a single `ALTER TABLE` operation and return an `AlterTableOperation`."
+        },
+        {
+          "name": "parse_alter_type",
+          "signature": "fn parse_alter_type(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [Statement::AlterType]"
+        },
+        {
+          "name": "parse_alter_user",
+          "signature": "fn parse_alter_user(&mut self) -> Result<AlterUser, ParserError>",
+          "summary": "Parse an `ALTER USER` statement ```sql ALTER USER [ IF EXISTS ] [ <name> ] [ OPTIONS ] ```"
+        },
+        {
+          "name": "parse_alter_view",
+          "signature": "fn parse_alter_view(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse an `ALTER VIEW` statement."
+        },
+        {
+          "name": "parse_analyze",
+          "signature": "fn parse_analyze(&mut self) -> Result<Analyze, ParserError>",
+          "summary": "Parse `ANALYZE` statement."
+        },
+        {
+          "name": "parse_analyze_format",
+          "signature": "fn parse_analyze_format(&mut self) -> Result<AnalyzeFormat, ParserError>",
+          "summary": "Parse an `ANALYZE FORMAT`."
+        },
+        {
+          "name": "parse_array_expr",
+          "signature": "fn parse_array_expr(&mut self, named: bool) -> Result<Expr, ParserError>",
+          "summary": "Parses an array expression `[ex1, ex2, ..]` if `named` is `true`, came from an expression like  `ARRAY[ex1, ex2]`"
+        },
+        {
+          "name": "parse_as_query",
+          "signature": "fn parse_as_query(&mut self) -> Result<(bool, Box<Query>), ParserError>",
+          "summary": "Parse 'AS' before as query,such as `WITH XXX AS SELECT XXX` oer `CACHE TABLE AS SELECT XXX`"
+        },
+        {
+          "name": "parse_as_table",
+          "signature": "fn parse_as_table(&mut self) -> Result<Table, ParserError>",
+          "summary": "Parse `CREATE TABLE x AS TABLE y`"
+        },
+        {
+          "name": "parse_asc_desc",
+          "signature": "fn parse_asc_desc(&mut self) -> Option<bool>",
+          "summary": "Parse ASC or DESC, returns an Option with true if ASC, false of DESC or `None` if none of them."
+        },
+        {
+          "name": "parse_assert",
+          "signature": "fn parse_assert(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `ASSERT` statement."
+        },
+        {
+          "name": "parse_assignment",
+          "signature": "fn parse_assignment(&mut self) -> Result<Assignment, ParserError>",
+          "summary": "Parse a `var = expr` assignment, used in an UPDATE statement"
+        },
+        {
+          "name": "parse_assignment_target",
+          "signature": "fn parse_assignment_target(&mut self) -> Result<AssignmentTarget, ParserError>",
+          "summary": "Parse the left-hand side of an assignment, used in an UPDATE statement"
+        },
+        {
+          "name": "parse_attach_database",
+          "signature": "fn parse_attach_database(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `ATTACH DATABASE` statement."
+        },
+        {
+          "name": "parse_attach_duckdb_database",
+          "signature": "fn parse_attach_duckdb_database(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `ATTACH DUCKDB DATABASE` statement."
+        },
+        {
+          "name": "parse_attach_duckdb_database_options",
+          "signature": "fn parse_attach_duckdb_database_options(&mut self) -> Result<Vec<AttachDuckDBDatabaseOption>, ParserError>",
+          "summary": "Parse options for `ATTACH DUCKDB DATABASE` statement."
+        },
+        {
+          "name": "parse_begin",
+          "signature": "fn parse_begin(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'BEGIN' statement"
+        },
+        {
+          "name": "parse_begin_exception_end",
+          "signature": "fn parse_begin_exception_end(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'BEGIN ... EXCEPTION ... END' block"
+        },
+        {
+          "name": "parse_between",
+          "signature": "fn parse_between(&mut self, expr: Expr, negated: bool) -> Result<Expr, ParserError>",
+          "summary": "Parses `BETWEEN <low> AND <high>`, assuming the `BETWEEN` keyword was already consumed."
+        },
+        {
+          "name": "parse_big_query_declare",
+          "signature": "fn parse_big_query_declare(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [BigQuery] `DECLARE` statement."
+        },
+        {
+          "name": "parse_binary_length",
+          "signature": "fn parse_binary_length(&mut self) -> Result<BinaryLength, ParserError>",
+          "summary": "Parse a binary length specification, returning `BinaryLength`."
+        },
+        {
+          "name": "parse_cache_table",
+          "signature": "fn parse_cache_table(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a CACHE TABLE statement"
+        },
+        {
+          "name": "parse_call",
+          "signature": "fn parse_call(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CALL procedure_name(arg1, arg2, ...)` or `CALL procedure_name` statement"
+        },
+        {
+          "name": "parse_case_expr",
+          "signature": "fn parse_case_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a `CASE` expression and return an [`Expr::Case`]."
+        },
+        {
+          "name": "parse_case_stmt",
+          "signature": "fn parse_case_stmt(&mut self) -> Result<CaseStatement, ParserError>",
+          "summary": "Parse a `CASE` statement."
+        },
+        {
+          "name": "parse_cast_expr",
+          "signature": "fn parse_cast_expr(&mut self, kind: CastKind) -> Result<Expr, ParserError>",
+          "summary": "Parse a SQL CAST function e.g. `CAST(expr AS FLOAT)`"
+        },
+        {
+          "name": "parse_ceil_floor_expr",
+          "signature": "fn parse_ceil_floor_expr(&mut self, is_ceil: bool) -> Result<Expr, ParserError>",
+          "summary": "Parse a `CEIL` or `FLOOR` expression."
+        },
+        {
+          "name": "parse_character_length",
+          "signature": "fn parse_character_length(&mut self) -> Result<CharacterLength, ParserError>",
+          "summary": "Parse a character length, handling `MAX` or integer lengths with optional units."
+        },
+        {
+          "name": "parse_close",
+          "signature": "fn parse_close(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CLOSE` cursor statement."
+        },
+        {
+          "name": "parse_column_def",
+          "signature": "fn parse_column_def(&mut self) -> Result<ColumnDef, ParserError>",
+          "summary": "Parse column definition."
+        },
+        {
+          "name": "parse_columns",
+          "signature": "fn parse_columns(&mut self) -> Result<(Vec<ColumnDef>, Vec<TableConstraint>), ParserError>",
+          "summary": "Parse columns and constraints."
+        },
+        {
+          "name": "parse_comma_separated",
+          "signature": "fn parse_comma_separated<T, F>(&mut self, f: F) -> Result<Vec<T>, ParserError> where F: FnMut(&mut Parser<'a>) -> Result<T, ParserError>",
+          "summary": "Parse a comma-separated list of 1+ items accepted by `F`"
+        },
+        {
+          "name": "parse_comma_separated0",
+          "signature": "fn parse_comma_separated0<T, F>(&mut self, f: F, end_token: Token) -> Result<Vec<T>, ParserError> where F: FnMut(&mut Parser<'a>) -> Result<T, ParserError>",
+          "summary": "Parse a comma-separated list of 0+ items accepted by `F` * `end_token` - expected end token for the closure (e.g. [Token::RParen], [Token::RBrace] ...)"
+        },
+        {
+          "name": "parse_comment",
+          "signature": "fn parse_comment(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a COMMENT statement."
+        },
+        {
+          "name": "parse_comment_value",
+          "signature": "fn parse_comment_value(&mut self) -> Result<String, ParserError>",
+          "summary": "Parse comment value."
+        },
+        {
+          "name": "parse_commit",
+          "signature": "fn parse_commit(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'COMMIT' statement"
+        },
+        {
+          "name": "parse_commit_rollback_chain",
+          "signature": "fn parse_commit_rollback_chain(&mut self) -> Result<bool, ParserError>",
+          "summary": "Parse an optional `AND [NO] CHAIN` clause for `COMMIT` and `ROLLBACK` statements"
+        },
+        {
+          "name": "parse_compound_expr",
+          "signature": "fn parse_compound_expr(&mut self, root: Expr, chain: Vec<AccessExpr>) -> Result<Expr, ParserError>",
+          "summary": "Try to parse an [Expr::CompoundFieldAccess] like `a.b.c` or `a.b[1].c`. If all the fields are `Expr::Identifier`s, return an [Expr::CompoundIdentifier] instead. If only the root exists, return the root. Parses compound expressions which ma…"
+        },
+        {
+          "name": "parse_constraint_characteristics",
+          "signature": "fn parse_constraint_characteristics(&mut self) -> Result<Option<ConstraintCharacteristics>, ParserError>",
+          "summary": "Parse optional constraint characteristics such as `DEFERRABLE`, `INITIALLY` and `ENFORCED`."
+        },
+        {
+          "name": "parse_convert_expr",
+          "signature": "fn parse_convert_expr(&mut self, is_try: bool) -> Result<Expr, ParserError>",
+          "summary": "Parse a SQL CONVERT function:  - `CONVERT('héhé' USING utf8mb4)` (MySQL)  - `CONVERT('héhé', CHAR CHARACTER SET utf8mb4)` (MySQL)  - `CONVERT(DECIMAL(10, 5), 42)` (MSSQL) - the type comes first"
+        },
+        {
+          "name": "parse_copy",
+          "signature": "fn parse_copy(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a copy statement"
+        },
+        {
+          "name": "parse_create",
+          "signature": "fn parse_create(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL CREATE statement"
+        },
+        {
+          "name": "parse_create_collation",
+          "signature": "fn parse_create_collation(&mut self) -> Result<CreateCollation, ParserError>",
+          "summary": "Parse a PostgreSQL-specific [Statement::CreateCollation] statement."
+        },
+        {
+          "name": "parse_create_connector",
+          "signature": "fn parse_create_connector(&mut self) -> Result<CreateConnector, ParserError>",
+          "summary": "```sql CREATE CONNECTOR [IF NOT EXISTS] connector_name [TYPE datasource_type] [URL datasource_url] [COMMENT connector_comment] [WITH DCPROPERTIES(property_name=property_value, ...)] ```"
+        },
+        {
+          "name": "parse_create_database",
+          "signature": "fn parse_create_database(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CREATE DATABASE` statement."
+        },
+        {
+          "name": "parse_create_extension",
+          "signature": "fn parse_create_extension(&mut self) -> Result<CreateExtension, ParserError>",
+          "summary": "Parse a `CREATE EXTENSION` statement."
+        },
+        {
+          "name": "parse_create_external_table",
+          "signature": "fn parse_create_external_table(&mut self, or_replace: bool) -> Result<CreateTable, ParserError>",
+          "summary": "Parse a `CREATE EXTERNAL TABLE` statement."
+        },
+        {
+          "name": "parse_create_function",
+          "signature": "fn parse_create_function(&mut self, or_alter: bool, or_replace: bool, temporary: bool) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CREATE FUNCTION` statement."
+        },
+        {
+          "name": "parse_create_index",
+          "signature": "fn parse_create_index(&mut self, unique: bool) -> Result<CreateIndex, ParserError>",
+          "summary": "Parse a `CREATE INDEX` statement."
+        },
+        {
+          "name": "parse_create_index_expr",
+          "signature": "fn parse_create_index_expr(&mut self) -> Result<IndexColumn, ParserError>",
+          "summary": "Parse an [IndexColumn]."
+        },
+        {
+          "name": "parse_create_macro",
+          "signature": "fn parse_create_macro(&mut self, or_replace: bool, temporary: bool) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CREATE MACRO` statement."
+        },
+        {
+          "name": "parse_create_operator",
+          "signature": "fn parse_create_operator(&mut self) -> Result<CreateOperator, ParserError>",
+          "summary": "Parse a [Statement::CreateOperator]"
+        },
+        {
+          "name": "parse_create_operator_class",
+          "signature": "fn parse_create_operator_class(&mut self) -> Result<CreateOperatorClass, ParserError>",
+          "summary": "Parse a [Statement::CreateOperatorClass]"
+        },
+        {
+          "name": "parse_create_operator_family",
+          "signature": "fn parse_create_operator_family(&mut self) -> Result<CreateOperatorFamily, ParserError>",
+          "summary": "Parse a [Statement::CreateOperatorFamily]"
+        },
+        {
+          "name": "parse_create_policy",
+          "signature": "fn parse_create_policy(&mut self) -> Result<CreatePolicy, ParserError>",
+          "summary": "```sql     CREATE POLICY name ON table_name [ AS { PERMISSIVE | RESTRICTIVE } ]     [ FOR { ALL | SELECT | INSERT | UPDATE | DELETE } ]     [ TO { role_name | PUBLIC | CURRENT_USER | CURRENT_ROLE | SESSION_USER } [, ...] ]     [ USING ( us…"
+        },
+        {
+          "name": "parse_create_procedure",
+          "signature": "fn parse_create_procedure(&mut self, or_alter: bool) -> Result<Statement, ParserError>",
+          "summary": "Parse `CREATE PROCEDURE` statement."
+        },
+        {
+          "name": "parse_create_role",
+          "signature": "fn parse_create_role(&mut self) -> Result<CreateRole, ParserError>",
+          "summary": "Parse a `CREATE ROLE` statement."
+        },
+        {
+          "name": "parse_create_schema",
+          "signature": "fn parse_create_schema(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CREATE SCHEMA` statement."
+        },
+        {
+          "name": "parse_create_secret",
+          "signature": "fn parse_create_secret(&mut self, or_replace: bool, temporary: bool, persistent: bool) -> Result<Statement, ParserError>",
+          "summary": "See [DuckDB Docs](https://duckdb.org/docs/sql/statements/create_secret.html) for more details."
+        },
+        {
+          "name": "parse_create_sequence",
+          "signature": "fn parse_create_sequence(&mut self, temporary: bool) -> Result<Statement, ParserError>",
+          "summary": "```sql CREATE [ { TEMPORARY | TEMP } ] SEQUENCE [ IF NOT EXISTS ] <sequence_name> ```"
+        },
+        {
+          "name": "parse_create_snapshot_table",
+          "signature": "fn parse_create_snapshot_table(&mut self) -> Result<CreateTable, ParserError>",
+          "summary": "Parse `CREATE SNAPSHOT TABLE` statement."
+        },
+        {
+          "name": "parse_create_table",
+          "signature": "fn parse_create_table(&mut self, or_replace: bool, temporary: bool, global: Option<bool>, transient: bool) -> Result<CreateTable, ParserError>",
+          "summary": "Parse `CREATE TABLE` statement."
+        },
+        {
+          "name": "parse_create_trigger",
+          "signature": "fn parse_create_trigger(&mut self, temporary: bool, or_alter: bool, or_replace: bool, is_constraint: bool) -> Result<CreateTrigger, ParserError>",
+          "summary": "Parse a `CREATE TRIGGER` statement."
+        },
+        {
+          "name": "parse_create_type",
+          "signature": "fn parse_create_type(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `CREATE TYPE` statement."
+        },
+        {
+          "name": "parse_create_type_enum",
+          "signature": "fn parse_create_type_enum(&mut self, name: ObjectName) -> Result<Statement, ParserError>",
+          "summary": "Parse remainder of `CREATE TYPE AS ENUM` statement (see [Statement::CreateType] and [Self::parse_create_type])"
+        },
+        {
+          "name": "parse_create_view",
+          "signature": "fn parse_create_view(&mut self, or_alter: bool, or_replace: bool, temporary: bool, create_view_params: Option<CreateViewParams>) -> Result<CreateView, ParserError>",
+          "summary": "Parse a `CREATE VIEW` statement."
+        },
+        {
+          "name": "parse_create_virtual_table",
+          "signature": "fn parse_create_virtual_table(&mut self) -> Result<Statement, ParserError>",
+          "summary": "SQLite-specific `CREATE VIRTUAL TABLE`"
+        },
+        {
+          "name": "parse_cte",
+          "signature": "fn parse_cte(&mut self) -> Result<Cte, ParserError>",
+          "summary": "Parse a CTE (`alias [( col1, col2, ... )] [AS] (subquery)`)"
+        },
+        {
+          "name": "parse_data_type",
+          "signature": "fn parse_data_type(&mut self) -> Result<DataType, ParserError>",
+          "summary": "Parse a SQL datatype (in the context of a CREATE TABLE statement for example)"
+        },
+        {
+          "name": "parse_date_time_field",
+          "signature": "fn parse_date_time_field(&mut self) -> Result<DateTimeField, ParserError>",
+          "summary": "Parse a date/time field for `EXTRACT`, interval qualifiers, and ceil/floor operations."
+        },
+        {
+          "name": "parse_datetime_64",
+          "signature": "fn parse_datetime_64(&mut self) -> Result<(u64, Option<String>), ParserError>",
+          "summary": "Parse datetime64 [1] Syntax ```sql DateTime64(precision[, timezone]) ```"
+        },
+        {
+          "name": "parse_deallocate",
+          "signature": "fn parse_deallocate(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL `DEALLOCATE` statement"
+        },
+        {
+          "name": "parse_declare",
+          "signature": "fn parse_declare(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `DECLARE` statement."
+        },
+        {
+          "name": "parse_delete",
+          "signature": "fn parse_delete(&mut self, delete_token: TokenWithSpan) -> Result<Statement, ParserError>",
+          "summary": "Parse a `DELETE` statement and return `Statement::Delete`."
+        },
+        {
+          "name": "parse_deny",
+          "signature": "fn parse_deny(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse [`Statement::Deny`]"
+        },
+        {
+          "name": "parse_derived_table_factor",
+          "signature": "fn parse_derived_table_factor(&mut self, lateral: IsLateral) -> Result<TableFactor, ParserError>",
+          "summary": "Parse a derived table factor (a parenthesized subquery), handling optional LATERAL."
+        },
+        {
+          "name": "parse_detach_duckdb_database",
+          "signature": "fn parse_detach_duckdb_database(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `DETACH DUCKDB DATABASE` statement."
+        },
+        {
+          "name": "parse_discard",
+          "signature": "fn parse_discard(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `DISCARD` statement."
+        },
+        {
+          "name": "parse_drop",
+          "signature": "fn parse_drop(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `DROP` statement."
+        },
+        {
+          "name": "parse_drop_extension",
+          "signature": "fn parse_drop_extension(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a PostgreSQL-specific [Statement::DropExtension] statement."
+        },
+        {
+          "name": "parse_drop_operator",
+          "signature": "fn parse_drop_operator(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a[Statement::DropOperator] statement."
+        },
+        {
+          "name": "parse_drop_operator_class",
+          "signature": "fn parse_drop_operator_class(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [Statement::DropOperatorClass]"
+        },
+        {
+          "name": "parse_drop_operator_family",
+          "signature": "fn parse_drop_operator_family(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [Statement::DropOperatorFamily]"
+        },
+        {
+          "name": "parse_drop_trigger",
+          "signature": "fn parse_drop_trigger(&mut self) -> Result<DropTrigger, ParserError>",
+          "summary": "Parse statements of the DropTrigger type such as:"
+        },
+        {
+          "name": "parse_end",
+          "signature": "fn parse_end(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse an 'END' statement"
+        },
+        {
+          "name": "parse_enum_values",
+          "signature": "fn parse_enum_values(&mut self) -> Result<Vec<EnumMember>, ParserError>",
+          "summary": "Parse parenthesized enum members, used with `ENUM(...)` type definitions."
+        },
+        {
+          "name": "parse_escape_char",
+          "signature": "fn parse_escape_char(&mut self) -> Result<Option<ValueWithSpan>, ParserError>",
+          "summary": "Parse the `ESCAPE CHAR` portion of `LIKE`, `ILIKE`, and `SIMILAR TO`"
+        },
+        {
+          "name": "parse_exact_number_optional_precision_scale",
+          "signature": "fn parse_exact_number_optional_precision_scale(&mut self) -> Result<ExactNumberInfo, ParserError>",
+          "summary": "Parse exact-number precision/scale info like `(precision[, scale])` for decimal types."
+        },
+        {
+          "name": "parse_execute",
+          "signature": "fn parse_execute(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL `EXECUTE` statement"
+        },
+        {
+          "name": "parse_exists_expr",
+          "signature": "fn parse_exists_expr(&mut self, negated: bool) -> Result<Expr, ParserError>",
+          "summary": "Parse a SQL EXISTS expression e.g. `WHERE EXISTS(SELECT ...)`."
+        },
+        {
+          "name": "parse_explain",
+          "signature": "fn parse_explain(&mut self, describe_alias: DescribeAlias) -> Result<Statement, ParserError>",
+          "summary": "Parse an `EXPLAIN` statement, handling dialect-specific options and modifiers."
+        },
+        {
+          "name": "parse_expr",
+          "signature": "fn parse_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a new expression."
+        },
+        {
+          "name": "parse_expr_with_alias",
+          "signature": "fn parse_expr_with_alias(&mut self) -> Result<ExprWithAlias, ParserError>",
+          "summary": "Parses an expression with an optional alias"
+        },
+        {
+          "name": "parse_expr_with_alias_and_order_by",
+          "signature": "fn parse_expr_with_alias_and_order_by(&mut self) -> Result<ExprWithAliasAndOrderBy, ParserError>",
+          "summary": "Parse expression with optional alias and order by."
+        },
+        {
+          "name": "parse_extract_expr",
+          "signature": "fn parse_extract_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a SQL `EXTRACT` expression e.g. `EXTRACT(YEAR FROM date)`."
+        },
+        {
+          "name": "parse_fetch",
+          "signature": "fn parse_fetch(&mut self) -> Result<Fetch, ParserError>",
+          "summary": "Parse a FETCH clause"
+        },
+        {
+          "name": "parse_fetch_statement",
+          "signature": "fn parse_fetch_statement(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `FETCH [direction] { FROM | IN } cursor INTO target;` statement."
+        },
+        {
+          "name": "parse_file_format",
+          "signature": "fn parse_file_format(&mut self) -> Result<FileFormat, ParserError>",
+          "summary": "Parse a file format for external tables."
+        },
+        {
+          "name": "parse_flush",
+          "signature": "fn parse_flush(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `FLUSH` statement."
+        },
+        {
+          "name": "parse_for_clause",
+          "signature": "fn parse_for_clause(&mut self) -> Result<Option<ForClause>, ParserError>",
+          "summary": "Parse a mssql `FOR [XML | JSON | BROWSE]` clause"
+        },
+        {
+          "name": "parse_for_json",
+          "signature": "fn parse_for_json(&mut self) -> Result<ForClause, ParserError>",
+          "summary": "Parse a mssql `FOR JSON` clause"
+        },
+        {
+          "name": "parse_for_xml",
+          "signature": "fn parse_for_xml(&mut self) -> Result<ForClause, ParserError>",
+          "summary": "Parse a mssql `FOR XML` clause"
+        },
+        {
+          "name": "parse_function",
+          "signature": "fn parse_function(&mut self, name: ObjectName) -> Result<Expr, ParserError>",
+          "summary": "Parse a function call expression named by `name` and return it as an `Expr`."
+        },
+        {
+          "name": "parse_function_args",
+          "signature": "fn parse_function_args(&mut self) -> Result<FunctionArg, ParserError>",
+          "summary": "Parse a single function argument, handling named and unnamed variants."
+        },
+        {
+          "name": "parse_grant",
+          "signature": "fn parse_grant(&mut self) -> Result<Grant, ParserError>",
+          "summary": "Parse a GRANT statement."
+        },
+        {
+          "name": "parse_grant_deny_revoke_privileges_objects",
+          "signature": "fn parse_grant_deny_revoke_privileges_objects(&mut self) -> Result<(Privileges, Option<GrantObjects>), ParserError>",
+          "summary": "Parse privileges and optional target objects for GRANT/DENY/REVOKE statements."
+        },
+        {
+          "name": "parse_grant_permission",
+          "signature": "fn parse_grant_permission(&mut self) -> Result<Action, ParserError>",
+          "summary": "Parse a single grantable permission/action (used within GRANT statements)."
+        },
+        {
+          "name": "parse_grantee_name",
+          "signature": "fn parse_grantee_name(&mut self) -> Result<GranteeName, ParserError>",
+          "summary": "Parse a grantee name, possibly with a host qualifier (user@host)."
+        },
+        {
+          "name": "parse_hive_distribution",
+          "signature": "fn parse_hive_distribution(&mut self) -> Result<HiveDistributionStyle, ParserError>",
+          "summary": "Parse Hive distribution style."
+        },
+        {
+          "name": "parse_hive_formats",
+          "signature": "fn parse_hive_formats(&mut self) -> Result<Option<HiveFormat>, ParserError>",
+          "summary": "Parse Hive formats."
+        },
+        {
+          "name": "parse_identifier",
+          "signature": "fn parse_identifier(&mut self) -> Result<Ident, ParserError>",
+          "summary": "Parse a simple one-word identifier (possibly quoted, possibly a keyword)"
+        },
+        {
+          "name": "parse_identifier_with_alias",
+          "signature": "fn parse_identifier_with_alias(&mut self) -> Result<IdentWithAlias, ParserError>",
+          "summary": "Strictly parse `identifier AS identifier`"
+        },
+        {
+          "name": "parse_identifiers",
+          "signature": "fn parse_identifiers(&mut self) -> Result<Vec<Ident>, ParserError>",
+          "summary": "Parse identifiers"
+        },
+        {
+          "name": "parse_if_stmt",
+          "signature": "fn parse_if_stmt(&mut self) -> Result<IfStatement, ParserError>",
+          "summary": "Parse an `IF` statement."
+        },
+        {
+          "name": "parse_in",
+          "signature": "fn parse_in(&mut self, expr: Expr, negated: bool) -> Result<Expr, ParserError>",
+          "summary": "Parses the parens following the `[ NOT ] IN` operator."
+        },
+        {
+          "name": "parse_index_options",
+          "signature": "fn parse_index_options(&mut self) -> Result<Vec<IndexOption>, ParserError>",
+          "summary": "Parse zero or more index options and return them as a vector."
+        },
+        {
+          "name": "parse_index_type",
+          "signature": "fn parse_index_type(&mut self) -> Result<IndexType, ParserError>",
+          "summary": "Parse an index type token (e.g. `BTREE`, `HASH`, or a custom identifier)."
+        },
+        {
+          "name": "parse_index_type_display",
+          "signature": "fn parse_index_type_display(&mut self) -> KeyOrIndexDisplay",
+          "summary": "Parse optional `KEY` or `INDEX` display tokens used in index/constraint declarations."
+        },
+        {
+          "name": "parse_infix",
+          "signature": "fn parse_infix(&mut self, expr: Expr, precedence: u8) -> Result<Expr, ParserError>",
+          "summary": "Parse an operator following an expression"
+        },
+        {
+          "name": "parse_input_format_clause",
+          "signature": "fn parse_input_format_clause(&mut self) -> Result<InputFormatClause, ParserError>",
+          "summary": "Parses input format clause used for ClickHouse."
+        },
+        {
+          "name": "parse_insert",
+          "signature": "fn parse_insert(&mut self, insert_token: TokenWithSpan) -> Result<Statement, ParserError>",
+          "summary": "Parse an INSERT statement"
+        },
+        {
+          "name": "parse_insert_partition",
+          "signature": "fn parse_insert_partition(&mut self) -> Result<Option<Vec<Expr>>, ParserError>",
+          "summary": "Parse an optional `PARTITION (...)` clause for INSERT statements."
+        },
+        {
+          "name": "parse_install",
+          "signature": "fn parse_install(&mut self) -> Result<Statement, ParserError>",
+          "summary": "`INSTALL [extension_name]`"
+        },
+        {
+          "name": "parse_interpolation",
+          "signature": "fn parse_interpolation(&mut self) -> Result<InterpolateExpr, ParserError>",
+          "summary": "Parse a INTERPOLATE expression (ClickHouse dialect)"
+        },
+        {
+          "name": "parse_interpolations",
+          "signature": "fn parse_interpolations(&mut self) -> Result<Option<Interpolate>, ParserError>",
+          "summary": "Parse a set of comma separated INTERPOLATE expressions (ClickHouse dialect) that follow the INTERPOLATE keyword in an ORDER BY clause with the WITH FILL modifier"
+        },
+        {
+          "name": "parse_interval",
+          "signature": "fn parse_interval(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse an `INTERVAL` expression."
+        },
+        {
+          "name": "parse_join_constraint",
+          "signature": "fn parse_join_constraint(&mut self, natural: bool) -> Result<JoinConstraint, ParserError>",
+          "summary": "Parse a JOIN constraint (`NATURAL`, `ON <expr>`, `USING (...)`, or no constraint)."
+        },
+        {
+          "name": "parse_json_table_column_def",
+          "signature": "fn parse_json_table_column_def(&mut self) -> Result<JsonTableColumn, ParserError>",
+          "summary": "Parses MySQL's JSON_TABLE column definition. For example: `id INT EXISTS PATH '$' DEFAULT '0' ON EMPTY ERROR ON ERROR`"
+        },
+        {
+          "name": "parse_keyword",
+          "signature": "fn parse_keyword(&mut self, expected: Keyword) -> bool",
+          "summary": "If the current token is the `expected` keyword, consume it and returns true. Otherwise, no tokens are consumed and returns false."
+        },
+        {
+          "name": "parse_keyword_separated",
+          "signature": "fn parse_keyword_separated<T, F>(&mut self, keyword: Keyword, f: F) -> Result<Vec<T>, ParserError> where F: FnMut(&mut Parser<'a>) -> Result<T, ParserError>",
+          "summary": "Parse a keyword-separated list of 1+ items accepted by `F`"
+        },
+        {
+          "name": "parse_keyword_with_tokens",
+          "signature": "fn parse_keyword_with_tokens(&mut self, expected: Keyword, tokens: &[Token]) -> bool",
+          "summary": "If the current token is the `expected` keyword followed by specified tokens, consume them and returns true. Otherwise, no tokens are consumed and returns false."
+        },
+        {
+          "name": "parse_keywords",
+          "signature": "fn parse_keywords(&mut self, keywords: &[Keyword]) -> bool",
+          "summary": "If the current and subsequent tokens exactly match the `keywords` sequence, consume them and returns true. Otherwise, no tokens are consumed and returns false"
+        },
+        {
+          "name": "parse_kill",
+          "signature": "fn parse_kill(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `KILL` statement, optionally specifying `CONNECTION`, `QUERY`, or `MUTATION`. KILL [CONNECTION | QUERY | MUTATION] processlist_id"
+        },
+        {
+          "name": "parse_limit",
+          "signature": "fn parse_limit(&mut self) -> Result<Option<Expr>, ParserError>",
+          "summary": "Parse a LIMIT clause"
+        },
+        {
+          "name": "parse_listagg_on_overflow",
+          "signature": "fn parse_listagg_on_overflow(&mut self) -> Result<Option<ListAggOnOverflow>, ParserError>",
+          "summary": "Parse the `ON OVERFLOW` clause for `LISTAGG`."
+        },
+        {
+          "name": "parse_listen",
+          "signature": "fn parse_listen(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `LISTEN` statement."
+        },
+        {
+          "name": "parse_literal_string",
+          "signature": "fn parse_literal_string(&mut self) -> Result<String, ParserError>",
+          "summary": "Parse a literal string"
+        },
+        {
+          "name": "parse_literal_uint",
+          "signature": "fn parse_literal_uint(&mut self) -> Result<u64, ParserError>",
+          "summary": "Parse an unsigned literal integer/long"
+        },
+        {
+          "name": "parse_load",
+          "signature": "fn parse_load(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL LOAD statement"
+        },
+        {
+          "name": "parse_load_data_table_format",
+          "signature": "fn parse_load_data_table_format(&mut self) -> Result<Option<HiveLoadDataFormat>, ParserError>",
+          "summary": "Parse optional Hive `INPUTFORMAT ... SERDE ...` clause used by LOAD DATA."
+        },
+        {
+          "name": "parse_lock",
+          "signature": "fn parse_lock(&mut self) -> Result<LockClause, ParserError>",
+          "summary": "Parse a FOR UPDATE/FOR SHARE clause"
+        },
+        {
+          "name": "parse_lock_statement",
+          "signature": "fn parse_lock_statement(&mut self) -> Result<Lock, ParserError>",
+          "summary": "Parse a PostgreSQL `LOCK` statement."
+        },
+        {
+          "name": "parse_match_against",
+          "signature": "fn parse_match_against(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parses fulltext expressions [`sqlparser::ast::Expr::MatchAgainst`]"
+        },
+        {
+          "name": "parse_match_kind",
+          "signature": "fn parse_match_kind(&mut self) -> Result<ConstraintReferenceMatchKind, ParserError>",
+          "summary": "Parse a `MATCH` kind for constraint references: `FULL`, `PARTIAL`, or `SIMPLE`."
+        },
+        {
+          "name": "parse_merge",
+          "signature": "fn parse_merge(&mut self, merge_token: TokenWithSpan) -> Result<Merge, ParserError>",
+          "summary": "Parse a `MERGE` statement"
+        },
+        {
+          "name": "parse_msck",
+          "signature": "fn parse_msck(&mut self) -> Result<Msck, ParserError>",
+          "summary": "Parse `MSCK` statement."
+        },
+        {
+          "name": "parse_mssql_declare",
+          "signature": "fn parse_mssql_declare(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [MsSql] `DECLARE` statement."
+        },
+        {
+          "name": "parse_mssql_declare_stmt",
+          "signature": "fn parse_mssql_declare_stmt(&mut self) -> Result<Declare, ParserError>",
+          "summary": "Parse the body of a [MsSql] `DECLARE`statement."
+        },
+        {
+          "name": "parse_mssql_variable_declaration_expression",
+          "signature": "fn parse_mssql_variable_declaration_expression(&mut self) -> Result<Option<DeclareAssignment>, ParserError>",
+          "summary": "Parses the assigned expression in a variable declaration."
+        },
+        {
+          "name": "parse_multi_dim_subscript",
+          "signature": "fn parse_multi_dim_subscript(&mut self, chain: &mut Vec<AccessExpr>) -> Result<(), ParserError>",
+          "summary": "Parse a multi-dimension array accessing like `[1:3][1][1]`"
+        },
+        {
+          "name": "parse_multipart_identifier",
+          "signature": "fn parse_multipart_identifier(&mut self) -> Result<Vec<Ident>, ParserError>",
+          "summary": "Parse identifiers of form ident1[.identN]*"
+        },
+        {
+          "name": "parse_named_window",
+          "signature": "fn parse_named_window(&mut self) -> Result<NamedWindowDefinition, ParserError>",
+          "summary": "Parse a named window definition."
+        },
+        {
+          "name": "parse_not",
+          "signature": "fn parse_not(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a `NOT` expression."
+        },
+        {
+          "name": "parse_notify",
+          "signature": "fn parse_notify(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `NOTIFY` statement."
+        },
+        {
+          "name": "parse_number",
+          "signature": "fn parse_number(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a numeric literal as an expression. Returns a [`Expr::UnaryOp`] if the number is signed, otherwise returns a [`Expr::Value`]"
+        },
+        {
+          "name": "parse_number_value",
+          "signature": "fn parse_number_value(&mut self) -> Result<ValueWithSpan, ParserError>",
+          "summary": "Parse an unsigned numeric literal"
+        },
+        {
+          "name": "parse_object_name",
+          "signature": "fn parse_object_name(&mut self, in_table_clause: bool) -> Result<ObjectName, ParserError>",
+          "summary": "Parse a possibly qualified, possibly quoted identifier, e.g. `foo` or `myschema.\"table\""
+        },
+        {
+          "name": "parse_offset",
+          "signature": "fn parse_offset(&mut self) -> Result<Offset, ParserError>",
+          "summary": "Parse an OFFSET clause"
+        },
+        {
+          "name": "parse_one_of_keywords",
+          "signature": "fn parse_one_of_keywords(&mut self, keywords: &[Keyword]) -> Option<Keyword>",
+          "summary": "If the current token is one of the given `keywords`, consume the token and return the keyword that matches. Otherwise, no tokens are consumed and returns [`None`]."
+        },
+        {
+          "name": "parse_openjson_table_column_def",
+          "signature": "fn parse_openjson_table_column_def(&mut self) -> Result<OpenJsonTableColumn, ParserError>",
+          "summary": "Parses MSSQL's `OPENJSON WITH` column definition."
+        },
+        {
+          "name": "parse_optimize_table",
+          "signature": "fn parse_optimize_table(&mut self) -> Result<Statement, ParserError>",
+          "summary": "ClickHouse: ```sql OPTIMIZE TABLE [db.]name [ON CLUSTER cluster] [PARTITION partition | PARTITION ID 'partition_id'] [FINAL] [DEDUPLICATE [BY expression]] ``` [ClickHouse](https://clickhouse.com/docs/en/sql-reference/statements/optimize)"
+        },
+        {
+          "name": "parse_option_clustered",
+          "signature": "fn parse_option_clustered(&mut self) -> Result<SqlOption, ParserError>",
+          "summary": "Parse a `CLUSTERED` table option (MSSQL-specific syntaxes supported)."
+        },
+        {
+          "name": "parse_option_partition",
+          "signature": "fn parse_option_partition(&mut self) -> Result<SqlOption, ParserError>",
+          "summary": "Parse a `PARTITION(...) FOR VALUES(...)` table option."
+        },
+        {
+          "name": "parse_optional_alias",
+          "signature": "fn parse_optional_alias(&mut self, reserved_kwds: &[Keyword]) -> Result<Option<Ident>, ParserError>",
+          "summary": "Wrapper for parse_optional_alias_inner, left for backwards-compatibility but new flows should use the context-specific methods such as `maybe_parse_select_item_alias` and `maybe_parse_table_alias`."
+        },
+        {
+          "name": "parse_optional_args",
+          "signature": "fn parse_optional_args(&mut self) -> Result<Vec<FunctionArg>, ParserError>",
+          "summary": "Parse an optional, comma-separated list of function arguments (consumes closing paren)."
+        },
+        {
+          "name": "parse_optional_binary_length",
+          "signature": "fn parse_optional_binary_length(&mut self) -> Result<Option<BinaryLength>, ParserError>",
+          "summary": "Parse an optional binary length specification like `(n)`."
+        },
+        {
+          "name": "parse_optional_cast_format",
+          "signature": "fn parse_optional_cast_format(&mut self) -> Result<Option<CastFormat>, ParserError>",
+          "summary": "Parse an optional `FORMAT` clause for `CAST` expressions."
+        },
+        {
+          "name": "parse_optional_character_length",
+          "signature": "fn parse_optional_character_length(&mut self) -> Result<Option<CharacterLength>, ParserError>",
+          "summary": "Parse an optional character length specification `(n | MAX [CHARACTERS|OCTETS])`."
+        },
+        {
+          "name": "parse_optional_clustered_by",
+          "signature": "fn parse_optional_clustered_by(&mut self) -> Result<Option<ClusteredBy>, ParserError>",
+          "summary": "Parse optional `CLUSTERED BY` clause for Hive/Generic dialects."
+        },
+        {
+          "name": "parse_optional_column_option",
+          "signature": "fn parse_optional_column_option(&mut self) -> Result<Option<ColumnOption>, ParserError>",
+          "summary": "Parse optional column option."
+        },
+        {
+          "name": "parse_optional_create_function_using",
+          "signature": "fn parse_optional_create_function_using(&mut self) -> Result<Option<CreateFunctionUsing>, ParserError>",
+          "summary": "Parse an optional `USING` clause for `CREATE FUNCTION`."
+        },
+        {
+          "name": "parse_optional_group_by",
+          "signature": "fn parse_optional_group_by(&mut self) -> Result<Option<GroupByExpr>, ParserError>",
+          "summary": "Parse an optional `GROUP BY` clause, returning `Some(GroupByExpr)` when present."
+        },
+        {
+          "name": "parse_optional_ident",
+          "signature": "fn parse_optional_ident(&mut self) -> Result<Option<Ident>, ParserError>",
+          "summary": "Parse `[ident]`, mostly `ident` is name, like: `window_name`, `index_name`, ... Parse an optional identifier, returning `Some(Ident)` if present."
+        },
+        {
+          "name": "parse_optional_index_option",
+          "signature": "fn parse_optional_index_option(&mut self) -> Result<Option<IndexOption>, ParserError>",
+          "summary": "Parse an optional index option such as `USING <type>` or `COMMENT <string>`."
+        },
+        {
+          "name": "parse_optional_inline_comment",
+          "signature": "fn parse_optional_inline_comment(&mut self) -> Result<Option<CommentDef>, ParserError>",
+          "summary": "Parse optional inline comment."
+        },
+        {
+          "name": "parse_optional_order_by",
+          "signature": "fn parse_optional_order_by(&mut self) -> Result<Option<OrderBy>, ParserError>",
+          "summary": "Parse an optional `ORDER BY` clause, returning `Some(OrderBy)` when present."
+        },
+        {
+          "name": "parse_optional_precision",
+          "signature": "fn parse_optional_precision(&mut self) -> Result<Option<u64>, ParserError>",
+          "summary": "Parse an optional precision `(n)` and return it as `Some(n)` when present."
+        },
+        {
+          "name": "parse_optional_precision_scale",
+          "signature": "fn parse_optional_precision_scale(&mut self) -> Result<(Option<u64>, Option<u64>), ParserError>",
+          "summary": "Parse an optional `(precision[, scale])` and return `(Option<precision>, Option<scale>)`."
+        },
+        {
+          "name": "parse_optional_procedure_parameters",
+          "signature": "fn parse_optional_procedure_parameters(&mut self) -> Result<Option<Vec<ProcedureParam>>, ParserError>",
+          "summary": "Parse optional procedure parameters."
+        },
+        {
+          "name": "parse_optional_select_item_except",
+          "signature": "fn parse_optional_select_item_except(&mut self) -> Result<Option<ExceptSelectItem>, ParserError>",
+          "summary": "Parse an [`Except`](ExceptSelectItem) information for wildcard select items."
+        },
+        {
+          "name": "parse_optional_select_item_exclude",
+          "signature": "fn parse_optional_select_item_exclude(&mut self) -> Result<Option<ExcludeSelectItem>, ParserError>",
+          "summary": "Parse an [`Exclude`](ExcludeSelectItem) information for wildcard select items."
+        },
+        {
+          "name": "parse_optional_select_item_ilike",
+          "signature": "fn parse_optional_select_item_ilike(&mut self) -> Result<Option<IlikeSelectItem>, ParserError>",
+          "summary": "Parse an [`Ilike`](IlikeSelectItem) information for wildcard select items."
+        },
+        {
+          "name": "parse_optional_select_item_rename",
+          "signature": "fn parse_optional_select_item_rename(&mut self) -> Result<Option<RenameSelectItem>, ParserError>",
+          "summary": "Parse a [`Rename`](RenameSelectItem) information for wildcard select items."
+        },
+        {
+          "name": "parse_optional_select_item_replace",
+          "signature": "fn parse_optional_select_item_replace(&mut self) -> Result<Option<ReplaceSelectItem>, ParserError>",
+          "summary": "Parse a [`Replace`](ReplaceSelectItem) information for wildcard select items."
+        },
+        {
+          "name": "parse_optional_table_constraint",
+          "signature": "fn parse_optional_table_constraint(&mut self) -> Result<Option<TableConstraint>, ParserError>",
+          "summary": "Parse an optional table constraint (e.g. `PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK`)."
+        },
+        {
+          "name": "parse_optional_time_zone",
+          "signature": "fn parse_optional_time_zone(&mut self) -> Result<Option<ValueWithSpan>, ParserError>",
+          "summary": "Parse an optional `AT TIME ZONE` clause."
+        },
+        {
+          "name": "parse_optional_type_modifiers",
+          "signature": "fn parse_optional_type_modifiers(&mut self) -> Result<Option<Vec<String>>, ParserError>",
+          "summary": "Parse optional type modifiers appearing in parentheses e.g. `(UNSIGNED, ZEROFILL)`."
+        },
+        {
+          "name": "parse_optional_using_then_index_type",
+          "signature": "fn parse_optional_using_then_index_type(&mut self) -> Result<Option<IndexType>, ParserError>",
+          "summary": "Optionally parse the `USING` keyword, followed by an [IndexType] Example: ```sql ``` Optionally parse `USING <index_type>` and return the parsed `IndexType` if present."
+        },
+        {
+          "name": "parse_options",
+          "signature": "fn parse_options(&mut self, keyword: Keyword) -> Result<Vec<SqlOption>, ParserError>",
+          "summary": "Parse a parenthesized list of `SqlOption`s following `keyword`, or return an empty vec."
+        },
+        {
+          "name": "parse_options_with_keywords",
+          "signature": "fn parse_options_with_keywords(&mut self, keywords: &[Keyword]) -> Result<Vec<SqlOption>, ParserError>",
+          "summary": "Parse options introduced by one of `keywords` followed by a parenthesized list."
+        },
+        {
+          "name": "parse_order_by_expr",
+          "signature": "fn parse_order_by_expr(&mut self) -> Result<OrderByExpr, ParserError>",
+          "summary": "Parse an [OrderByExpr] expression."
+        },
+        {
+          "name": "parse_overlay_expr",
+          "signature": "fn parse_overlay_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse an OVERLAY expression."
+        },
+        {
+          "name": "parse_owner",
+          "signature": "fn parse_owner(&mut self) -> Result<Owner, ParserError>",
+          "summary": "Parse an `OWNER` clause."
+        },
+        {
+          "name": "parse_parenthesized",
+          "signature": "fn parse_parenthesized<T, F>(&mut self, f: F) -> Result<T, ParserError> where F: FnMut(&mut Parser<'a>) -> Result<T, ParserError>",
+          "summary": "Parse an expression enclosed in parentheses."
+        },
+        {
+          "name": "parse_parenthesized_column_list",
+          "signature": "fn parse_parenthesized_column_list(&mut self, optional: IsOptional, allow_empty: bool) -> Result<Vec<Ident>, ParserError>",
+          "summary": "Parses a parenthesized comma-separated list of unqualified, possibly quoted identifiers. For example: `(col1, \"col 2\", ...)`"
+        },
+        {
+          "name": "parse_parenthesized_compound_identifier_list",
+          "signature": "fn parse_parenthesized_compound_identifier_list(&mut self, optional: IsOptional, allow_empty: bool) -> Result<Vec<Expr>, ParserError>",
+          "summary": "Parse a parenthesized list of compound identifiers as expressions."
+        },
+        {
+          "name": "parse_parenthesized_qualified_column_list",
+          "signature": "fn parse_parenthesized_qualified_column_list(&mut self, optional: IsOptional, allow_empty: bool) -> Result<Vec<ObjectName>, ParserError>",
+          "summary": "Parses a parenthesized comma-separated list of qualified, possibly quoted identifiers. For example: `(db1.sc1.tbl1.col1, db1.sc1.tbl1.\"col 2\", ...)`"
+        },
+        {
+          "name": "parse_partition",
+          "signature": "fn parse_partition(&mut self) -> Result<Partition, ParserError>",
+          "summary": "Parse a parenthesized list of partition expressions and return a `Partition` value."
+        },
+        {
+          "name": "parse_pg_cast",
+          "signature": "fn parse_pg_cast(&mut self, expr: Expr) -> Result<Expr, ParserError>",
+          "summary": "Parse a PostgreSQL casting style which is in the form of `expr::datatype`."
+        },
+        {
+          "name": "parse_pg_create_server",
+          "signature": "fn parse_pg_create_server(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `CREATE SERVER` statement."
+        },
+        {
+          "name": "parse_pivot_table_factor",
+          "signature": "fn parse_pivot_table_factor(&mut self, table: TableFactor) -> Result<TableFactor, ParserError>",
+          "summary": "Parse a PIVOT table factor (ClickHouse/Oracle style pivot), returning a TableFactor."
+        },
+        {
+          "name": "parse_plain_options",
+          "signature": "fn parse_plain_options(&mut self) -> Result<Vec<SqlOption>, ParserError>",
+          "summary": "Parse plain options."
+        },
+        {
+          "name": "parse_position_expr",
+          "signature": "fn parse_position_expr(&mut self, ident: Ident) -> Result<Expr, ParserError>",
+          "summary": "Parse a `POSITION` expression."
+        },
+        {
+          "name": "parse_pragma",
+          "signature": "fn parse_pragma(&mut self) -> Result<Statement, ParserError>",
+          "summary": "PRAGMA [schema-name '.'] pragma-name [('=' pragma-value) | '(' pragma-value ')']"
+        },
+        {
+          "name": "parse_precision",
+          "signature": "fn parse_precision(&mut self) -> Result<u64, ParserError>",
+          "summary": "Parse an unsigned precision value enclosed in parentheses, e.g. `(10)`."
+        },
+        {
+          "name": "parse_prefix",
+          "signature": "fn parse_prefix(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse an expression prefix."
+        },
+        {
+          "name": "parse_prepare",
+          "signature": "fn parse_prepare(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL `PREPARE` statement"
+        },
+        {
+          "name": "parse_procedure_param",
+          "signature": "fn parse_procedure_param(&mut self) -> Result<ProcedureParam, ParserError>",
+          "summary": "Parse procedure parameter."
+        },
+        {
+          "name": "parse_projection",
+          "signature": "fn parse_projection(&mut self) -> Result<Vec<SelectItem>, ParserError>",
+          "summary": "Parse a comma-separated list of 1+ SelectItem"
+        },
+        {
+          "name": "parse_projection_select",
+          "signature": "fn parse_projection_select(&mut self) -> Result<ProjectionSelect, ParserError>",
+          "summary": "Parse a parenthesized `SELECT` projection used for projection-based operations."
+        },
+        {
+          "name": "parse_query",
+          "signature": "fn parse_query(&mut self) -> Result<Box<Query>, ParserError>",
+          "summary": "Parse a query expression, i.e. a `SELECT` statement optionally preceded with some `WITH` CTE declarations and optionally followed by `ORDER BY`. Unlike some other parse_... methods, this one doesn't expect the initial keyword to be already…"
+        },
+        {
+          "name": "parse_query_body",
+          "signature": "fn parse_query_body(&mut self, precedence: u8) -> Result<Box<SetExpr>, ParserError>",
+          "summary": "Parse a \"query body\", which is an expression with roughly the following grammar: ```sql   query_body ::= restricted_select | '(' subquery ')' | set_operation   restricted_select ::= 'SELECT' [expr_list] [ from ] [ where ] [ groupby_having…"
+        },
+        {
+          "name": "parse_raise_stmt",
+          "signature": "fn parse_raise_stmt(&mut self) -> Result<RaiseStatement, ParserError>",
+          "summary": "Parse a `RAISE` statement."
+        },
+        {
+          "name": "parse_raiserror",
+          "signature": "fn parse_raiserror(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'RAISERROR' statement"
+        },
+        {
+          "name": "parse_raiserror_option",
+          "signature": "fn parse_raiserror_option(&mut self) -> Result<RaisErrorOption, ParserError>",
+          "summary": "Parse a single `RAISERROR` option"
+        },
+        {
+          "name": "parse_referential_action",
+          "signature": "fn parse_referential_action(&mut self) -> Result<ReferentialAction, ParserError>",
+          "summary": "Parse a referential action used in foreign key clauses."
+        },
+        {
+          "name": "parse_release",
+          "signature": "fn parse_release(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `RELEASE` statement."
+        },
+        {
+          "name": "parse_rename",
+          "signature": "fn parse_rename(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parses a `RENAME TABLE` statement. See [Statement::RenameTable]"
+        },
+        {
+          "name": "parse_replace",
+          "signature": "fn parse_replace(&mut self, replace_token: TokenWithSpan) -> Result<Statement, ParserError>",
+          "summary": "Parse an REPLACE statement"
+        },
+        {
+          "name": "parse_replace_elements",
+          "signature": "fn parse_replace_elements(&mut self) -> Result<ReplaceSelectElement, ParserError>",
+          "summary": "Parse a single element of a `REPLACE (...)` select-item clause."
+        },
+        {
+          "name": "parse_revoke",
+          "signature": "fn parse_revoke(&mut self) -> Result<Revoke, ParserError>",
+          "summary": "Parse a REVOKE statement"
+        },
+        {
+          "name": "parse_rollback",
+          "signature": "fn parse_rollback(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'ROLLBACK' statement"
+        },
+        {
+          "name": "parse_rollback_savepoint",
+          "signature": "fn parse_rollback_savepoint(&mut self) -> Result<Option<Ident>, ParserError>",
+          "summary": "Parse an optional 'TO SAVEPOINT savepoint_name' clause for ROLLBACK statements"
+        },
+        {
+          "name": "parse_row_format",
+          "signature": "fn parse_row_format(&mut self) -> Result<HiveRowFormat, ParserError>",
+          "summary": "Parse Hive row format."
+        },
+        {
+          "name": "parse_savepoint",
+          "signature": "fn parse_savepoint(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `SAVEPOINT` statement."
+        },
+        {
+          "name": "parse_select",
+          "signature": "fn parse_select(&mut self) -> Result<Select, ParserError>",
+          "summary": "Parse a restricted `SELECT` statement (no CTEs / `UNION` / `ORDER BY`)"
+        },
+        {
+          "name": "parse_select_item",
+          "signature": "fn parse_select_item(&mut self) -> Result<SelectItem, ParserError>",
+          "summary": "Parse a comma-delimited list of projections after SELECT"
+        },
+        {
+          "name": "parse_set_operator",
+          "signature": "fn parse_set_operator(&mut self, token: &Token) -> Option<SetOperator>",
+          "summary": "Parse a set operator token into its `SetOperator` variant."
+        },
+        {
+          "name": "parse_set_quantifier",
+          "signature": "fn parse_set_quantifier(&mut self, op: &Option<SetOperator>) -> SetQuantifier",
+          "summary": "Parse a set quantifier (e.g., `ALL`, `DISTINCT BY NAME`) for the given set operator."
+        },
+        {
+          "name": "parse_set_session_params",
+          "signature": "fn parse_set_session_params(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse session parameter assignments after `SET` when no `=` or `TO` is present."
+        },
+        {
+          "name": "parse_show",
+          "signature": "fn parse_show(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `SHOW` statement and dispatch to specific SHOW handlers."
+        },
+        {
+          "name": "parse_show_collation",
+          "signature": "fn parse_show_collation(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `SHOW COLLATION` and optional filter."
+        },
+        {
+          "name": "parse_show_columns",
+          "signature": "fn parse_show_columns(&mut self, extended: bool, full: bool) -> Result<Statement, ParserError>",
+          "summary": "Parse `SHOW COLUMNS`/`SHOW FIELDS` and return a `ShowColumns` statement."
+        },
+        {
+          "name": "parse_show_create",
+          "signature": "fn parse_show_create(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `SHOW CREATE <object>` returning the corresponding `ShowCreate` statement."
+        },
+        {
+          "name": "parse_show_functions",
+          "signature": "fn parse_show_functions(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `SHOW FUNCTIONS` and optional filter."
+        },
+        {
+          "name": "parse_show_statement_filter",
+          "signature": "fn parse_show_statement_filter(&mut self) -> Result<Option<ShowStatementFilter>, ParserError>",
+          "summary": "Parse an optional filter used by `SHOW` statements (LIKE, ILIKE, WHERE, or literal)."
+        },
+        {
+          "name": "parse_snowflake_declare",
+          "signature": "fn parse_snowflake_declare(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a [Snowflake] `DECLARE` statement."
+        },
+        {
+          "name": "parse_snowflake_variable_declaration_expression",
+          "signature": "fn parse_snowflake_variable_declaration_expression(&mut self) -> Result<Option<DeclareAssignment>, ParserError>",
+          "summary": "Parses the assigned expression in a variable declaration."
+        },
+        {
+          "name": "parse_sql",
+          "signature": "fn parse_sql(dialect: &dyn Dialect, sql: &str) -> Result<Vec<Statement>, ParserError>",
+          "summary": "Convenience method to parse a string with one or more SQL statements into produce an Abstract Syntax Tree (AST)."
+        },
+        {
+          "name": "parse_sql_option",
+          "signature": "fn parse_sql_option(&mut self) -> Result<SqlOption, ParserError>",
+          "summary": "Parse a single `SqlOption` used by various dialect-specific DDL statements."
+        },
+        {
+          "name": "parse_sql_with_comments",
+          "signature": "fn parse_sql_with_comments(dialect: &'a dyn Dialect, sql: &str) -> Result<(Vec<Statement>, comments::Comments), ParserError>",
+          "summary": "Parses the given `sql` into an Abstract Syntax Tree (AST), returning also encountered source code comments."
+        },
+        {
+          "name": "parse_start_transaction",
+          "signature": "fn parse_start_transaction(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a 'START TRANSACTION' statement"
+        },
+        {
+          "name": "parse_statement",
+          "signature": "fn parse_statement(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a single top-level statement (such as SELECT, INSERT, CREATE, etc.), stopping before the statement separator, if any."
+        },
+        {
+          "name": "parse_statements",
+          "signature": "fn parse_statements(&mut self) -> Result<Vec<Statement>, ParserError>",
+          "summary": "Parse potentially multiple statements"
+        },
+        {
+          "name": "parse_string_values",
+          "signature": "fn parse_string_values(&mut self) -> Result<Vec<String>, ParserError>",
+          "summary": "Parse a parenthesized, comma-separated list of single-quoted strings."
+        },
+        {
+          "name": "parse_subexpr",
+          "signature": "fn parse_subexpr(&mut self, precedence: u8) -> Result<Expr, ParserError>",
+          "summary": "Parse tokens until the precedence changes."
+        },
+        {
+          "name": "parse_substring",
+          "signature": "fn parse_substring(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse `SUBSTRING`/`SUBSTR` expressions: `SUBSTRING(expr FROM start FOR length)` or `SUBSTR(expr, start, length)`."
+        },
+        {
+          "name": "parse_tab_value",
+          "signature": "fn parse_tab_value(&mut self) -> Vec<Option<String>>",
+          "summary": "Parse a single tab-separated value row used by `COPY` payload parsing."
+        },
+        {
+          "name": "parse_table_and_joins",
+          "signature": "fn parse_table_and_joins(&mut self) -> Result<TableWithJoins, ParserError>",
+          "summary": "Parse a table factor followed by any join clauses, returning `TableWithJoins`."
+        },
+        {
+          "name": "parse_table_factor",
+          "signature": "fn parse_table_factor(&mut self) -> Result<TableFactor, ParserError>",
+          "summary": "A table name or a parenthesized subquery, followed by optional `[AS] alias`"
+        },
+        {
+          "name": "parse_table_object",
+          "signature": "fn parse_table_object(&mut self) -> Result<TableObject, ParserError>",
+          "summary": "Parse a table object for insertion e.g. `some_database.some_table` or `FUNCTION some_table_func(...)`"
+        },
+        {
+          "name": "parse_throw",
+          "signature": "fn parse_throw(&mut self) -> Result<ThrowStatement, ParserError>",
+          "summary": "Parse a MSSQL `THROW` statement."
+        },
+        {
+          "name": "parse_time_functions",
+          "signature": "fn parse_time_functions(&mut self, name: ObjectName) -> Result<Expr, ParserError>",
+          "summary": "Parse time-related function `name` possibly followed by `(...)` arguments."
+        },
+        {
+          "name": "parse_top",
+          "signature": "fn parse_top(&mut self) -> Result<Top, ParserError>",
+          "summary": "Parse a TOP clause, MSSQL equivalent of LIMIT, that follows after `SELECT [DISTINCT]`."
+        },
+        {
+          "name": "parse_transaction_modes",
+          "signature": "fn parse_transaction_modes(&mut self) -> Result<Vec<TransactionMode>, ParserError>",
+          "summary": "Parse a list of transaction modes"
+        },
+        {
+          "name": "parse_trigger_event",
+          "signature": "fn parse_trigger_event(&mut self) -> Result<TriggerEvent, ParserError>",
+          "summary": "Parse the event part of a trigger (`INSERT`, `UPDATE`, etc.)."
+        },
+        {
+          "name": "parse_trigger_exec_body",
+          "signature": "fn parse_trigger_exec_body(&mut self) -> Result<TriggerExecBody, ParserError>",
+          "summary": "Parse the execution body of a trigger (`FUNCTION` or `PROCEDURE`)."
+        },
+        {
+          "name": "parse_trigger_period",
+          "signature": "fn parse_trigger_period(&mut self) -> Result<TriggerPeriod, ParserError>",
+          "summary": "Parse the period part of a trigger (`BEFORE`, `AFTER`, etc.)."
+        },
+        {
+          "name": "parse_trigger_referencing",
+          "signature": "fn parse_trigger_referencing(&mut self) -> Result<Option<TriggerReferencing>, ParserError>",
+          "summary": "Parse the `REFERENCING` clause of a trigger."
+        },
+        {
+          "name": "parse_trim_expr",
+          "signature": "fn parse_trim_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "```sql TRIM ([WHERE] ['text' FROM] 'text') TRIM ('text') TRIM(<expr>, [, characters]) -- PostgreSQL, DuckDB, Snowflake, BigQuery, Generic ```"
+        },
+        {
+          "name": "parse_trim_where",
+          "signature": "fn parse_trim_where(&mut self) -> Result<TrimWhereField, ParserError>",
+          "summary": "Parse the `WHERE` field for a `TRIM` expression."
+        },
+        {
+          "name": "parse_truncate",
+          "signature": "fn parse_truncate(&mut self) -> Result<Truncate, ParserError>",
+          "summary": "Parse `TRUNCATE` statement."
+        },
+        {
+          "name": "parse_tsv",
+          "signature": "fn parse_tsv(&mut self) -> Vec<Option<String>>",
+          "summary": "Parse a tab separated values in COPY payload"
+        },
+        {
+          "name": "parse_uncache_table",
+          "signature": "fn parse_uncache_table(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a UNCACHE TABLE statement"
+        },
+        {
+          "name": "parse_unicode_is_normalized",
+          "signature": "fn parse_unicode_is_normalized(&mut self, expr: Expr) -> Result<Expr, ParserError>",
+          "summary": "Parse a literal unicode normalization clause"
+        },
+        {
+          "name": "parse_unlisten",
+          "signature": "fn parse_unlisten(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse `UNLISTEN` statement."
+        },
+        {
+          "name": "parse_unload",
+          "signature": "fn parse_unload(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a SQL `UNLOAD` statement"
+        },
+        {
+          "name": "parse_unpivot_table_factor",
+          "signature": "fn parse_unpivot_table_factor(&mut self, table: TableFactor) -> Result<TableFactor, ParserError>",
+          "summary": "Parse an UNPIVOT table factor, returning a TableFactor."
+        },
+        {
+          "name": "parse_update",
+          "signature": "fn parse_update(&mut self, update_token: TokenWithSpan) -> Result<Statement, ParserError>",
+          "summary": "Parse an `UPDATE` statement and return `Statement::Update`."
+        },
+        {
+          "name": "parse_use",
+          "signature": "fn parse_use(&mut self) -> Result<Statement, ParserError>",
+          "summary": "Parse a `USE` statement (database/catalog/schema/warehouse/role selection)."
+        },
+        {
+          "name": "parse_utility_options",
+          "signature": "fn parse_utility_options(&mut self) -> Result<Vec<UtilityOption>, ParserError>",
+          "summary": "Parse utility options in the form of `(option1, option2 arg2, option3 arg3, ...)`"
+        },
+        {
+          "name": "parse_value",
+          "signature": "fn parse_value(&mut self) -> Result<ValueWithSpan, ParserError>",
+          "summary": "Parse a literal value (numbers, strings, date/time, booleans)"
+        },
+        {
+          "name": "parse_values",
+          "signature": "fn parse_values(&mut self, allow_empty: bool, value_keyword: bool) -> Result<Values, ParserError>",
+          "summary": "Parse a VALUES clause"
+        },
+        {
+          "name": "parse_wildcard_additional_options",
+          "signature": "fn parse_wildcard_additional_options(&mut self, wildcard_token: TokenWithSpan) -> Result<WildcardAdditionalOptions, ParserError>",
+          "summary": "Parse an [`WildcardAdditionalOptions`] information for wildcard select items."
+        },
+        {
+          "name": "parse_wildcard_expr",
+          "signature": "fn parse_wildcard_expr(&mut self) -> Result<Expr, ParserError>",
+          "summary": "Parse a new expression including wildcard & qualified wildcard."
+        },
+        {
+          "name": "parse_window_frame",
+          "signature": "fn parse_window_frame(&mut self) -> Result<WindowFrame, ParserError>",
+          "summary": "Parse a `WINDOW` frame definition (units and bounds)."
+        },
+        {
+          "name": "parse_window_frame_bound",
+          "signature": "fn parse_window_frame_bound(&mut self) -> Result<WindowFrameBound, ParserError>",
+          "summary": "Parse a window frame bound: `CURRENT ROW` or `<n> PRECEDING|FOLLOWING`."
+        },
+        {
+          "name": "parse_window_frame_units",
+          "signature": "fn parse_window_frame_units(&mut self) -> Result<WindowFrameUnits, ParserError>",
+          "summary": "Parse window frame `UNITS` clause: `ROWS`, `RANGE`, or `GROUPS`."
+        },
+        {
+          "name": "parse_window_spec",
+          "signature": "fn parse_window_spec(&mut self) -> Result<WindowSpec, ParserError>",
+          "summary": "Parse a window specification."
+        },
+        {
+          "name": "parse_with_fill",
+          "signature": "fn parse_with_fill(&mut self) -> Result<WithFill, ParserError>",
+          "summary": "Parse a `WITH FILL` clause used in ORDER BY (ClickHouse dialect)."
+        },
+        {
+          "name": "peek_keyword",
+          "signature": "fn peek_keyword(&self, expected: Keyword) -> bool",
+          "summary": "Check if the current token is the expected keyword without consuming it."
+        },
+        {
+          "name": "peek_nth_token",
+          "signature": "fn peek_nth_token(&self, n: usize) -> TokenWithSpan",
+          "summary": "Return nth non-whitespace token that has not yet been processed"
+        },
+        {
+          "name": "peek_nth_token_no_skip",
+          "signature": "fn peek_nth_token_no_skip(&self, n: usize) -> TokenWithSpan",
+          "summary": "Return nth token, possibly whitespace, that has not yet been processed."
+        },
+        {
+          "name": "peek_nth_token_ref",
+          "signature": "fn peek_nth_token_ref(&self, n: usize) -> &TokenWithSpan",
+          "summary": "Return nth non-whitespace token that has not yet been processed"
+        },
+        {
+          "name": "peek_one_of_keywords",
+          "signature": "fn peek_one_of_keywords(&self, keywords: &[Keyword]) -> Option<Keyword>",
+          "summary": "If the current token is one of the given `keywords`, returns the keyword that matches, without consuming the token. Otherwise, returns [`None`]."
+        },
+        {
+          "name": "peek_token",
+          "signature": "fn peek_token(&self) -> TokenWithSpan",
+          "summary": "Return the first non-whitespace token that has not yet been processed or Token::EOF"
+        },
+        {
+          "name": "peek_token_no_skip",
+          "signature": "fn peek_token_no_skip(&self) -> TokenWithSpan",
+          "summary": "Return the first token, possibly whitespace, that has not yet been processed (or None if reached end-of-file)."
+        },
+        {
+          "name": "peek_token_ref",
+          "signature": "fn peek_token_ref(&self) -> &TokenWithSpan",
+          "summary": "Return a reference to the first non-whitespace token that has not yet been processed or Token::EOF"
+        },
+        {
+          "name": "peek_tokens",
+          "signature": "fn peek_tokens<const N: usize>(&self) -> [Token; N]",
+          "summary": "Returns the `N` next non-whitespace tokens that have not yet been processed."
+        },
+        {
+          "name": "peek_tokens_ref",
+          "signature": "fn peek_tokens_ref<const N: usize>(&self) -> [&TokenWithSpan; N]",
+          "summary": "Returns references to the `N` next non-whitespace tokens that have not yet been processed."
+        },
+        {
+          "name": "peek_tokens_with_location",
+          "signature": "fn peek_tokens_with_location<const N: usize>(&self) -> [TokenWithSpan; N]",
+          "summary": "Returns the `N` next non-whitespace tokens with locations that have not yet been processed."
+        },
+        {
+          "name": "prev_token",
+          "signature": "fn prev_token(&mut self)",
+          "summary": "Seek back the last one non-whitespace token."
+        },
+        {
+          "name": "token_at",
+          "signature": "fn token_at(&self, index: usize) -> &TokenWithSpan",
+          "summary": "Return the token at the given location, or EOF if the index is beyond the length of the current set of tokens."
+        },
+        {
+          "name": "try_parse",
+          "signature": "fn try_parse<T, F>(&mut self, f: F) -> Result<T, ParserError> where F: FnMut(&mut Parser<'_>) -> Result<T, ParserError>",
+          "summary": "Run a parser method `f`, reverting back to the current position if unsuccessful."
+        },
+        {
+          "name": "try_with_sql",
+          "signature": "fn try_with_sql(self, sql: &str) -> Result<Self, ParserError>",
+          "summary": "Tokenize the sql string and sets this [`Parser`]'s state to parse the resulting tokens"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: ParserOptions) -> Self",
+          "summary": "Specify additional parser options"
+        },
+        {
+          "name": "with_recursion_limit",
+          "signature": "fn with_recursion_limit(self, recursion_limit: usize) -> Self",
+          "summary": "Specify the maximum recursion limit while parsing."
+        },
+        {
+          "name": "with_tokens",
+          "signature": "fn with_tokens(self, tokens: Vec<Token>) -> Self",
+          "summary": "Reset this parser state to parse the specified tokens"
+        },
+        {
+          "name": "with_tokens_with_locations",
+          "signature": "fn with_tokens_with_locations(self, tokens: Vec<TokenWithSpan>) -> Self",
+          "summary": "Reset this parser to parse the specified token stream"
+        }
+      ]
+    },
+    {
+      "path": "sqlparser::parser::ParserOptions",
+      "name": "ParserOptions",
+      "kind": "struct",
+      "crate": "sqlparser",
+      "signature": "struct ParserOptions",
+      "summary": "Options that control how the [`Parser`] parses SQL text",
+      "doc": "api/sqlparser.parser.md#parseroptions",
+      "fields": [
+        "trailing_commas",
+        "unescape",
+        "require_semicolon_stmt_delimiter"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new [`ParserOptions`]"
+        },
+        {
+          "name": "with_trailing_commas",
+          "signature": "fn with_trailing_commas(self, trailing_commas: bool) -> Self",
+          "summary": "Set if trailing commas are allowed."
+        },
+        {
+          "name": "with_unescape",
+          "signature": "fn with_unescape(self, unescape: bool) -> Self",
+          "summary": "Set if literal values are unescaped. Defaults to true. See [`Tokenizer::with_unescape`] for more details."
+        }
+      ]
+    }
+  ]
+}

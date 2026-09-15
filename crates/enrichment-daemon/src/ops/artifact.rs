@@ -10,9 +10,8 @@ use enrichment_core::evidence::{Artifact, ArtifactKind, is_artifact_id};
 use enrichment_core::request::ReadArtifactRequest;
 use enrichment_core::search::{Cursor, CursorError};
 use enrichment_core::wire::data::{ArtifactSliceData, SliceEncoding};
-use enrichment_core::wire::{
-    Coverage, Envelope, ErrorCode, Freshness, Pagination, SourceVersionMatch,
-};
+use enrichment_core::wire::research::ArtifactSection;
+use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Freshness, Page, SourceVersionMatch};
 
 use super::common;
 use crate::envelope::{self, Research};
@@ -23,9 +22,11 @@ const SORT: &str = "bytes";
 /// Read a slice of an artifact.
 pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
     let service = service.clone();
-    tokio::task::spawn_blocking(move || read_blocking(&service, request))
+    let runtime = service.repository.runtime.clone();
+    runtime
+        .blocking(move || read_blocking(&service, request))
         .await
-        .unwrap_or_else(|error| common::store_error(&error))
+        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
 }
 
 fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
@@ -50,11 +51,11 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
                 false,
             );
         }
-        Err(err) => return common::store_error(&err),
+        Err(err) => return common::operation_error(&err, "artifact_read"),
     };
     let mut file = match service.blobs.capture(&artifact, 256 * 1024 * 1024) {
         Ok(b) => b,
-        Err(err) => return common::store_error(&err),
+        Err(err) => return common::operation_error(&err, "artifact_read"),
     };
     let total = artifact.size_bytes;
     let is_text = artifact.media_type.starts_with("text/")
@@ -66,41 +67,64 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
     let mut window_start = 0usize;
     let mut window_end = match usize::try_from(total) {
         Ok(n) => n,
-        Err(e) => return common::store_error(&e),
+        Err(e) => return common::operation_error(&e, "artifact_read"),
     };
     let mut section_name = None;
-    if let Some(section) = request
-        .section
-        .as_deref()
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-    {
-        if !is_text {
-            return envelope::error(
-                ErrorCode::UnsupportedFormat,
-                format!(
-                    "artifact {id} is {} and has no sections",
-                    artifact.media_type
-                ),
-                "Omit `section` for binary artifacts.",
-                false,
-            );
-        }
-        match super::artifact_window::section(&mut file, section) {
-            Ok(Some((start, end, heading))) => {
-                window_start = start;
-                window_end = end;
-                section_name = Some(heading);
+    if let Some(section) = &request.section {
+        match section {
+            ArtifactSection::Result { name } => {
+                match enrichment_store::result::index(&mut file, total) {
+                    Ok((index, base)) => match index.sections.get(name.as_str()) {
+                        Some(window) => {
+                            window_start = (base + window.start) as usize;
+                            window_end = (base + window.end) as usize;
+                            section_name = Some(name.as_str().to_owned());
+                        }
+                        None => {
+                            return envelope::error(
+                                ErrorCode::ArtifactUnavailable,
+                                format!("result has no {} section", name.as_str()),
+                                "Choose a section listed in delivery.sections, or read the data section.",
+                                false,
+                            );
+                        }
+                    },
+                    Err(error) => {
+                        return envelope::error(
+                            ErrorCode::UnsupportedFormat,
+                            error.to_string(),
+                            "Result sections require an indexed research-result/2 artifact. Use a Markdown selector for text headings.",
+                            false,
+                        );
+                    }
+                }
             }
-            Ok(None) => {
-                return envelope::error(
-                    ErrorCode::ArtifactUnavailable,
-                    format!("artifact {id} has no section named `{section}`"),
-                    "Read the artifact without section to inspect its headings.",
-                    false,
-                );
+            ArtifactSection::Markdown { heading } => {
+                if !is_text || heading.trim().is_empty() || heading.len() > 512 {
+                    return envelope::error(
+                        ErrorCode::UnsupportedFormat,
+                        "Markdown selection requires text and a nonempty heading of at most 512 bytes",
+                        "Use a valid Markdown heading or omit section for byte reading.",
+                        false,
+                    );
+                }
+                match super::artifact_window::section(&mut file, heading.trim()) {
+                    Ok(Some((start, end, heading))) => {
+                        window_start = start;
+                        window_end = end;
+                        section_name = Some(heading);
+                    }
+                    Ok(None) => {
+                        return envelope::error(
+                            ErrorCode::ArtifactUnavailable,
+                            format!("artifact {id} has no heading {heading}"),
+                            "Read the artifact without section to inspect its headings.",
+                            false,
+                        );
+                    }
+                    Err(error) => return common::operation_error(&error, "artifact_read"),
+                }
             }
-            Err(error) => return common::store_error(&error),
         }
     }
 
@@ -149,7 +173,7 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
         (end - start).saturating_add(1).min(window_end - start),
     ) {
         Ok(bytes) => bytes,
-        Err(error) => return common::store_error(&error),
+        Err(error) => return common::operation_error(&error, "artifact_read"),
     };
     if is_text {
         // Back off to a UTF-8 boundary: a continuation byte is `10xxxxxx`.
@@ -157,7 +181,7 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             end -= 1;
         }
     }
-    loop {
+    let render = |end: usize| -> std::io::Result<Envelope> {
         let slice = &bytes[..end - start];
         let (content, encoding) = if is_text {
             match std::str::from_utf8(slice) {
@@ -168,15 +192,13 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             (base64(slice), SliceEncoding::Base64)
         };
         let remaining = (window_end - end) as u64;
-        let next_cursor = match (remaining > 0)
+        let next_cursor = (remaining > 0)
             .then(|| Cursor::new(id, &digest, SORT, (end - window_start) as u64).encode())
             .transpose()
-        {
-            Ok(value) => value,
-            Err(error) => return common::store_error(&error),
-        };
+            .map_err(std::io::Error::other)?;
 
         let data = ArtifactSliceData {
+            page: Page::default(),
             artifact: artifact.clone(),
             encoding,
             start: start as u64,
@@ -196,12 +218,12 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             ArtifactKind::CrateTarball => vec![
                 "This is the compressed source archive; its README, changelog and examples are \
                  stored as their own text artifacts and its source is reachable through \
-                 `inspect_symbol` at depth=source."
+                 `inspect_symbol` with an explicit source aspect."
                     .to_owned(),
             ],
             _ => Vec::new(),
         };
-        let result = Research {
+        let mut result = Research {
             summary: format!(
                 "{} bytes {start}..{end} of {total} from artifact {id}{}",
                 match encoding {
@@ -215,6 +237,8 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             ),
             data: common::to_object(&data),
             coverage: Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: format!("bytes {start}..{end} of artifact {id}"),
                 indexed: ["artifact_bytes".to_owned()].into_iter().collect(),
                 missing: std::collections::BTreeSet::new(),
@@ -238,30 +262,57 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             evidence: Vec::new(),
             artifacts: handle.into_iter().collect(),
         }
-        .ok_with_pagination(Pagination {
-            returned: 1,
-            total_matches: None,
-            truncated: remaining > 0,
-            next_cursor,
-        });
+        .ok_with_page(Page::new(1, None, remaining > 0, next_cursor));
+        result.delivery.set_limits(request.max_bytes, budget);
+        Ok(result)
+    };
+    let full = match render(end) {
+        Ok(result) => result,
+        Err(error) => return common::operation_error(&error, "artifact_read"),
+    };
+    if common::json_size(&full) <= budget {
+        return full;
+    }
+    // Search actual encoded sizes over valid byte boundaries; retain the largest fitting
+    // prefix instead of repeatedly discarding half a page. The full/end-of-window candidate
+    // is tested separately because dropping its cursor reduces framing size discontinuously.
+    let boundaries: Vec<usize> = (0..=end - start)
+        .filter(|offset| {
+            !is_text
+                || *offset == 0
+                || start + offset == window_end
+                || (bytes[*offset] & 0xC0) != 0x80
+        })
+        .collect();
+    let mut low = 0usize;
+    let mut high = boundaries.len();
+    let mut best = None;
+    while low < high {
+        let mid = low + (high - low) / 2;
+        let result = match render(start + boundaries[mid]) {
+            Ok(result) => result,
+            Err(error) => return common::operation_error(&error, "artifact_read"),
+        };
         if common::json_size(&result) <= budget {
-            return result;
-        }
-        if end <= start + 4 {
-            return envelope::error(
-                ErrorCode::BudgetExceeded,
-                "Artifact metadata exceeds this page budget",
-                "Increase max_bytes or the configured inline_result_bytes to read this artifact.",
-                false,
-            );
-        }
-        end = start + (end - start) / 2;
-        if is_text {
-            while end > start && end < window_end && (bytes[end - start] & 0xC0) == 0x80 {
-                end -= 1;
+            if boundaries[mid] > 0 {
+                best = Some(result);
             }
+            low = mid + 1;
+        } else {
+            high = mid;
         }
     }
+    best.unwrap_or_else(|| {
+        let minimum = boundaries
+            .iter()
+            .copied()
+            .find(|n| *n > 0)
+            .and_then(|n| render(start + n).ok())
+            .map_or(budget.saturating_add(1), |result| {
+                common::json_size(&result)
+            });
+        crate::delivery::budget_failure(request.max_bytes, budget, minimum)
+    })
 }
 
 /// Standard base64 without a dependency: artifacts are the only binary the service returns.
@@ -294,6 +345,84 @@ fn base64(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn indexed_unicode_sections_page_exactly_with_high_encoded_utilization() {
+        use enrichment_core::wire::research::ResultSectionName;
+        let dir = tempfile::tempdir().unwrap();
+        let service = Service::open(
+            enrichment_core::config::Config::default(),
+            enrichment_store::StatePaths::explicit(
+                dir.path().join("cache"),
+                dir.path().join("data"),
+            ),
+        )
+        .unwrap();
+        let changes = serde_json::json!([{"text": "é😀\n\"\\".repeat(3000)}]);
+        let answer = envelope::ok(
+            "indexed Unicode result",
+            common::to_object(&serde_json::json!({"changes": changes})),
+            Coverage {
+                details: None,
+                assessments: Vec::new(),
+                scope: "section fixture".into(),
+                indexed: Default::default(),
+                missing: Default::default(),
+                limitations: Vec::new(),
+            },
+        );
+        let (artifact, _) =
+            enrichment_store::result::store(&service.blobs, &answer, "service:bounded-result/2")
+                .unwrap();
+        let mut request = ReadArtifactRequest {
+            artifact_id: artifact.artifact_id.clone(),
+            section: Some(ArtifactSection::Result {
+                name: ResultSectionName::Changes,
+            }),
+            max_bytes: Some(4096),
+            ..Default::default()
+        };
+        let mut content = String::new();
+        let mut last_end = None;
+        let mut pages = 0;
+        loop {
+            let result = read(&service, request.clone()).await;
+            assert_eq!(
+                result.status(),
+                enrichment_core::wire::Status::Ok,
+                "{}",
+                result.summary
+            );
+            let size = common::json_size(&result);
+            assert!(size <= 4096);
+            let data: ArtifactSliceData =
+                serde_json::from_value(serde_json::Value::Object(result.data)).unwrap();
+            assert_eq!(data.encoding, SliceEncoding::Utf8);
+            if let Some(end) = last_end {
+                assert_eq!(data.start, end);
+            }
+            assert!(data.end > data.start);
+            last_end = Some(data.end);
+            assert_eq!(
+                data.content_digest,
+                canonical::sha256_hex(data.content.as_bytes())
+            );
+            content.push_str(&data.content);
+            pages += 1;
+            assert!(pages < 100);
+            if !data.page.has_more {
+                assert!(data.page.next_cursor.is_none());
+                break;
+            }
+            assert!(size >= 4096 - 16, "underfilled encoded page: {size}");
+            request.cursor = data.page.next_cursor;
+        }
+        assert!(pages > 1);
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&content).unwrap(),
+            changes
+        );
+    }
 
     #[test]
     fn base64_matches_the_standard_vectors() {

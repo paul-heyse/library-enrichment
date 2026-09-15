@@ -1,0 +1,99 @@
+{
+  "module": "datafusion_datasource::file_compression_type",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_compression_type.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_compression_type::FileCompressionType",
+      "name": "FileCompressionType",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileCompressionType",
+      "summary": "Readable file compression type",
+      "doc": "api/datafusion_datasource.file_compression_type.md#filecompressiontype",
+      "aliases": [
+        "datafusion::datasource::file_format::file_compression_type::FileCompressionType"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::str::traits::FromStr",
+        "datafusion_common::file_options::file_type::GetExt"
+      ],
+      "methods": [
+        {
+          "name": "convert_async_writer",
+          "signature": "fn convert_async_writer(&self, w: BufWriter) -> Result<Box<dyn AsyncWrite + Send + Unpin>>",
+          "summary": "Wrap the given `BufWriter` so that it performs compressed writes according to this `FileCompressionType` using the default compression level."
+        },
+        {
+          "name": "convert_async_writer_with_level",
+          "signature": "fn convert_async_writer_with_level(&self, w: BufWriter, compression_level: Option<u32>) -> Result<Box<dyn AsyncWrite + Send + Unpin>>",
+          "summary": "Wrap the given `BufWriter` so that it performs compressed writes according to this `FileCompressionType`."
+        },
+        {
+          "name": "convert_read",
+          "signature": "fn convert_read<T: std::io::Read + Send + 'static>(&self, r: T) -> Result<Box<dyn std::io::Read + Send>>",
+          "summary": "Given a `Read`, create a `Read` which data are decompressed with `FileCompressionType`."
+        },
+        {
+          "name": "convert_stream",
+          "signature": "fn convert_stream<'a>(&self, s: BoxStream<'a, Result<Bytes>>) -> Result<BoxStream<'a, Result<Bytes>>>",
+          "summary": "Given a `Stream`, create a `Stream` which data are decompressed with `FileCompressionType`."
+        },
+        {
+          "name": "convert_to_compress_stream",
+          "signature": "fn convert_to_compress_stream<'a>(&self, s: BoxStream<'a, Result<Bytes>>) -> Result<BoxStream<'a, Result<Bytes>>>",
+          "summary": "Given a `Stream`, create a `Stream` which data are compressed with `FileCompressionType`."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(t: CompressionTypeVariant) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "get_ext",
+          "signature": "fn get_ext(&self) -> String",
+          "via_trait": "datafusion_common::file_options::file_type::GetExt"
+        },
+        {
+          "name": "get_variant",
+          "signature": "fn get_variant(&self) -> &CompressionTypeVariant",
+          "summary": "Read only access to self.variant"
+        },
+        {
+          "name": "is_compressed",
+          "signature": "const fn is_compressed(&self) -> bool",
+          "summary": "The file is compressed or not"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_compression_type::FileTypeExt",
+      "name": "FileTypeExt",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileTypeExt",
+      "summary": "Trait for extending the functionality of the `FileType` enum.",
+      "doc": "api/datafusion_datasource.file_compression_type.md#filetypeext",
+      "aliases": [
+        "datafusion::datasource::file_format::file_compression_type::FileTypeExt"
+      ],
+      "required_methods": [
+        "get_ext_with_compression"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_ext_with_compression",
+          "signature": "fn get_ext_with_compression(&self, c: FileCompressionType) -> Result<String>",
+          "summary": "Given a `FileCompressionType`, return the `FileType`'s extension with compression suffix"
+        }
+      ]
+    }
+  ]
+}

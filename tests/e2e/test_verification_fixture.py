@@ -88,22 +88,13 @@ worker_python={json.dumps(sys.executable)}
 
 async def call(client, tool, **params):
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, params)).structured_content
+        client, (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 
 
 async def finish(client, pending):
-    if pending["status"] != "pending":
-        return pending
-    for _ in range(20):
-        result = await call(
-            client, "job_control", job_id=pending["job"]["job_id"], action="wait", wait_seconds=5
-        )
-        assert result["status"] == "ok", result
-        if result["data"]["result"] is not None:
-            return result["data"]["result"]
-    pytest.fail("verification exceeded bounded job polling")
+    return await daemon.wait_for_answer(client, pending)
 
 
 async def test_verification_fixture_typecheck_runtime_and_derived_environment(tmp_path: Path):
@@ -189,9 +180,9 @@ async def test_verification_fixture_typecheck_runtime_and_derived_environment(tm
             async with Client(daemon.transport(env)) as client:
                 persisted = await call(client, "job_control", job_id=job_id)
                 assert persisted["data"]["state"] == "succeeded"
+                recovered = await daemon.read_terminal_answer(client, persisted)
                 assert (
-                    persisted["data"]["result"]["data"]["result_artifact_id"]
-                    == valid["data"]["result_artifact_id"]
+                    recovered["data"]["result_artifact_id"] == valid["data"]["result_artifact_id"]
                 )
     assert hashlib.sha256((canary / "keep.py").read_bytes()).hexdigest() == before
     assert list((tmp_path / "state/cache/capsules").iterdir()) == []

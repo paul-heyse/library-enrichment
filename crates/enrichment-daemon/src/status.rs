@@ -61,6 +61,7 @@ pub fn from_config(config: &Config) -> ServiceStatus {
             accepts: vec![enrichment_core::SNAPSHOT_SCHEMA_VERSION.to_owned()],
         },
         sandbox: Sandbox {
+            execution_routes: Vec::new(),
             enabled_profiles: config.policy.enabled_profiles.clone(),
             enabled_profiles_source: config.source.describe(),
             available_runtimes: detect_runtimes(),
@@ -120,6 +121,7 @@ pub fn from_service(service: &Service) -> ServiceStatus {
         &service.config.execution,
         &service.paths.cache_root,
     );
+    status.sandbox.execution_routes = crate::execution::readiness::routes(service, &qualification);
     status.sandbox.execution_qualified = qualification.is_qualified();
     status.sandbox.execution_readiness = qualification.detail();
     status.sandbox.admitted_images = qualification.admitted_images();
@@ -356,6 +358,8 @@ pub fn status_envelope(service: Option<&Service>, component: Option<&str>) -> En
             "Service status as reported by the daemon.",
             data,
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: "installed components and their availability".to_owned(),
                 indexed: ["daemon", "producers", "features", "sandbox"]
                     .into_iter()
@@ -388,6 +392,8 @@ pub fn status_envelope(service: Option<&Service>, component: Option<&str>) -> En
             format!("Status for `{name}`."),
             data,
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: format!("components matching `{name}`"),
                 indexed: ["daemon", "producers", "features"]
                     .into_iter()
@@ -405,6 +411,8 @@ pub fn status_envelope(service: Option<&Service>, component: Option<&str>) -> En
             format!("No component named `{name}` is known to this build."),
             data,
             Coverage {
+                details: None,
+                assessments: Vec::new(),
                 scope: format!("components matching `{name}`"),
                 indexed: ["daemon"].into_iter().map(str::to_owned).collect(),
                 missing: [

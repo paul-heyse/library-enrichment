@@ -1,0 +1,103 @@
+{
+  "module": "datafusion_common_runtime::trace_utils",
+  "crate": "datafusion-common-runtime",
+  "api": "api/datafusion_common_runtime.trace_utils.md",
+  "items": [
+    {
+      "path": "datafusion_common_runtime::trace_utils::JoinSetTracerError",
+      "name": "JoinSetTracerError",
+      "kind": "enum",
+      "crate": "datafusion-common-runtime",
+      "signature": "enum JoinSetTracerError",
+      "summary": "A custom error type for tracer injection failures.",
+      "doc": "api/datafusion_common_runtime.trace_utils.md#joinsettracererror",
+      "aliases": [
+        "datafusion::common::runtime::JoinSetTracerError",
+        "datafusion_common_runtime::JoinSetTracerError"
+      ],
+      "variants": [
+        "AlreadySet"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common_runtime::trace_utils::set_join_set_tracer",
+      "name": "set_join_set_tracer",
+      "kind": "function",
+      "crate": "datafusion-common-runtime",
+      "signature": "fn set_join_set_tracer(tracer: &'static dyn JoinSetTracer) -> Result<(), JoinSetTracerError>",
+      "summary": "Set the custom tracer for both futures and blocking closures.",
+      "doc": "api/datafusion_common_runtime.trace_utils.md#set_join_set_tracer",
+      "aliases": [
+        "datafusion::common::runtime::set_join_set_tracer",
+        "datafusion_common_runtime::set_join_set_tracer"
+      ]
+    },
+    {
+      "path": "datafusion_common_runtime::trace_utils::trace_block",
+      "name": "trace_block",
+      "kind": "function",
+      "crate": "datafusion-common-runtime",
+      "signature": "fn trace_block<T, F>(f: F) -> Box<dyn FnOnce() -> T + Send> where F: FnOnce() -> T + Send + 'static, T: Send + 'static",
+      "summary": "Optionally instruments a blocking closure with custom tracing.",
+      "doc": "api/datafusion_common_runtime.trace_utils.md#trace_block",
+      "aliases": [
+        "datafusion::common::runtime::trace_block",
+        "datafusion_common_runtime::trace_block"
+      ]
+    },
+    {
+      "path": "datafusion_common_runtime::trace_utils::trace_future",
+      "name": "trace_future",
+      "kind": "function",
+      "crate": "datafusion-common-runtime",
+      "signature": "fn trace_future<T, F>(future: F) -> futures::future::BoxFuture<'static, T> where F: Future<Output = T> + Send + 'static, T: Send + 'static",
+      "summary": "Optionally instruments a future with custom tracing.",
+      "doc": "api/datafusion_common_runtime.trace_utils.md#trace_future",
+      "aliases": [
+        "datafusion::common::runtime::trace_future",
+        "datafusion_common_runtime::trace_future"
+      ]
+    },
+    {
+      "path": "datafusion_common_runtime::trace_utils::JoinSetTracer",
+      "name": "JoinSetTracer",
+      "kind": "trait",
+      "crate": "datafusion-common-runtime",
+      "signature": "trait JoinSetTracer: Send + Sync + 'static",
+      "summary": "A trait for injecting instrumentation into either asynchronous futures or blocking closures at runtime.",
+      "doc": "api/datafusion_common_runtime.trace_utils.md#joinsettracer",
+      "aliases": [
+        "datafusion::common::runtime::JoinSetTracer",
+        "datafusion_common_runtime::JoinSetTracer"
+      ],
+      "required_methods": [
+        "trace_block",
+        "trace_future"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "trace_block",
+          "signature": "fn trace_block(&self, f: Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>) -> Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>",
+          "summary": "Function pointer type for tracing a blocking closure."
+        },
+        {
+          "name": "trace_future",
+          "signature": "fn trace_future(&self, fut: BoxFuture<'static, Box<dyn Any + Send>>) -> BoxFuture<'static, Box<dyn Any + Send>>",
+          "summary": "Function pointer type for tracing a future."
+        }
+      ]
+    }
+  ]
+}

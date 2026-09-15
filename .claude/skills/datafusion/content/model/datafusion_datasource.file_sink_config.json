@@ -1,0 +1,120 @@
+{
+  "module": "datafusion_datasource::file_sink_config",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_sink_config.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_sink_config::FileOutputMode",
+      "name": "FileOutputMode",
+      "kind": "enum",
+      "crate": "datafusion-datasource",
+      "signature": "enum FileOutputMode",
+      "summary": "Determines how `FileSink` output paths are interpreted.",
+      "doc": "api/datafusion_datasource.file_sink_config.md#fileoutputmode",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileOutputMode"
+      ],
+      "variants": [
+        "Automatic",
+        "SingleFile",
+        "Directory"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: Option<bool>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "single_file_output",
+          "signature": "fn single_file_output(self, base_output_path: &ListingTableUrl) -> bool",
+          "summary": "Resolve this mode into a `single_file_output` boolean for the demuxer."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_sink_config::FileSinkConfig",
+      "name": "FileSinkConfig",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileSinkConfig",
+      "summary": "The base configurations to provide when creating a physical plan for writing to any given file format.",
+      "doc": "api/datafusion_datasource.file_sink_config.md#filesinkconfig",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileSinkConfig"
+      ],
+      "fields": [
+        "original_url",
+        "object_store_url",
+        "file_group",
+        "table_paths",
+        "output_schema",
+        "table_partition_cols",
+        "insert_op",
+        "keep_partition_by_columns",
+        "file_extension",
+        "file_output_mode"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "output_schema",
+          "signature": "fn output_schema(&self) -> &SchemaRef",
+          "summary": "Get output schema"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(conf: &protobuf::FileSinkConfig) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom",
+          "summary": "Reconstruct a shared file-sink configuration from protobuf."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_sink_config::FileSink",
+      "name": "FileSink",
+      "kind": "trait",
+      "crate": "datafusion-datasource",
+      "signature": "trait FileSink: DataSink",
+      "summary": "General behaviors for files that do `DataSink` operations",
+      "doc": "api/datafusion_datasource.file_sink_config.md#filesink",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileSink"
+      ],
+      "implementors": [
+        "datafusion_datasource_csv::file_format::CsvSink",
+        "datafusion_datasource_json::file_format::JsonSink",
+        "datafusion_datasource_parquet::sink::ParquetSink"
+      ],
+      "required_methods": [
+        "config",
+        "spawn_writer_tasks_and_join"
+      ],
+      "provided_methods": [
+        "write_all"
+      ],
+      "methods": [
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &FileSinkConfig",
+          "summary": "Retrieves the file sink configuration."
+        },
+        {
+          "name": "spawn_writer_tasks_and_join",
+          "signature": "async fn spawn_writer_tasks_and_join(&self, context: &Arc<TaskContext>, demux_task: SpawnedTask<Result<()>>, file_stream_rx: DemuxedStreamReceiver, object_store: Arc<dyn ObjectStore>) -> Result<u64>",
+          "summary": "Spawns writer tasks and joins them to perform file writing operations. Is a critical part of `FileSink` trait, since it's the very last step for `write_all`."
+        },
+        {
+          "name": "write_all",
+          "signature": "async fn write_all(&self, data: SendableRecordBatchStream, context: &Arc<TaskContext>) -> Result<u64>",
+          "summary": "File sink implementation of the [`DataSink::write_all`] method."
+        }
+      ]
+    }
+  ]
+}

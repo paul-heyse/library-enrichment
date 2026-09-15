@@ -1,0 +1,126 @@
+{
+  "module": "datafusion_execution::object_store",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.object_store.md",
+  "items": [
+    {
+      "path": "datafusion_execution::object_store::DefaultObjectStoreRegistry",
+      "name": "DefaultObjectStoreRegistry",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct DefaultObjectStoreRegistry",
+      "summary": "The default [`ObjectStoreRegistry`]",
+      "doc": "api/datafusion_execution.object_store.md#defaultobjectstoreregistry",
+      "aliases": [
+        "datafusion::datasource::object_store::DefaultObjectStoreRegistry"
+      ],
+      "implements": [
+        "datafusion_execution::object_store::ObjectStoreRegistry"
+      ],
+      "methods": [
+        {
+          "name": "deregister_store",
+          "signature": "fn deregister_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "via_trait": "datafusion_execution::object_store::ObjectStoreRegistry"
+        },
+        {
+          "name": "get_store",
+          "signature": "fn get_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "via_trait": "datafusion_execution::object_store::ObjectStoreRegistry"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "This will register [`LocalFileSystem`] to handle `file://` paths"
+        },
+        {
+          "name": "register_store",
+          "signature": "fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "via_trait": "datafusion_execution::object_store::ObjectStoreRegistry"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::object_store::ObjectStoreUrl",
+      "name": "ObjectStoreUrl",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct ObjectStoreUrl",
+      "summary": "A parsed URL identifying a particular [`ObjectStore`] instance",
+      "doc": "api/datafusion_execution.object_store.md#objectstoreurl",
+      "aliases": [
+        "datafusion::datasource::object_store::ObjectStoreUrl"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns this [`ObjectStoreUrl`] as a string"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "local_filesystem",
+          "signature": "fn local_filesystem() -> Self",
+          "summary": "An [`ObjectStoreUrl`] for the local filesystem (`file://`)"
+        },
+        {
+          "name": "parse",
+          "signature": "fn parse(s: impl AsRef<str>) -> Result<Self>",
+          "summary": "Parse an [`ObjectStoreUrl`] from a string"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::object_store::ObjectStoreRegistry",
+      "name": "ObjectStoreRegistry",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait ObjectStoreRegistry: Send + Sync + std::fmt::Debug + 'static",
+      "summary": "[`ObjectStoreRegistry`] maps a URL to an [`ObjectStore`] instance, and allows DataFusion to read from different [`ObjectStore`] instances. For example DataFusion might be configured so that",
+      "doc": "api/datafusion_execution.object_store.md#objectstoreregistry",
+      "aliases": [
+        "datafusion::datasource::object_store::ObjectStoreRegistry"
+      ],
+      "implementors": [
+        "datafusion_execution::object_store::DefaultObjectStoreRegistry"
+      ],
+      "required_methods": [
+        "get_store",
+        "register_store"
+      ],
+      "provided_methods": [
+        "deregister_store"
+      ],
+      "methods": [
+        {
+          "name": "deregister_store",
+          "signature": "fn deregister_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "summary": "Deregister the store previously registered with the same key. Returns the deregistered store if it existed."
+        },
+        {
+          "name": "get_store",
+          "signature": "fn get_store(&self, url: &Url) -> Result<Arc<dyn ObjectStore>>",
+          "summary": "Get a suitable store for the provided URL. For example:"
+        },
+        {
+          "name": "register_store",
+          "signature": "fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "summary": "If a store with the same key existed before, it is replaced and returned"
+        }
+      ]
+    }
+  ]
+}

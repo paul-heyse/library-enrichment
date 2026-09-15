@@ -1,0 +1,293 @@
+{
+  "module": "datafusion_physical_plan::repartition",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.repartition.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::repartition::REPARTITION_RANDOM_STATE",
+      "name": "REPARTITION_RANDOM_STATE",
+      "kind": "constant",
+      "crate": "datafusion-physical-plan",
+      "signature": "const REPARTITION_RANDOM_STATE: joins::SeededRandomState = _",
+      "summary": "Fixed RandomState used for hash repartitioning to ensure consistent behavior across executions and runs.",
+      "doc": "api/datafusion_physical_plan.repartition.md#repartition_random_state"
+    },
+    {
+      "path": "datafusion_physical_plan::repartition::BatchPartitioner",
+      "name": "BatchPartitioner",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct BatchPartitioner",
+      "summary": "A utility that can be used to partition batches based on [`Partitioning`]",
+      "doc": "api/datafusion_physical_plan.repartition.md#batchpartitioner",
+      "methods": [
+        {
+          "name": "new_hash_partitioner",
+          "signature": "fn new_hash_partitioner(exprs: Vec<Arc<dyn PhysicalExpr>>, num_partitions: usize, timer: metrics::Time) -> Result<Self>",
+          "summary": "Create a new [`BatchPartitioner`] for hash-based repartitioning."
+        },
+        {
+          "name": "new_range_partitioner",
+          "signature": "fn new_range_partitioner(range_partitioning: &RangePartitioning, timer: metrics::Time) -> Self",
+          "summary": "Create a new [`BatchPartitioner`] for range-based repartitioning."
+        },
+        {
+          "name": "new_round_robin_partitioner",
+          "signature": "fn new_round_robin_partitioner(num_partitions: usize, timer: metrics::Time, input_partition: usize, num_input_partitions: usize) -> Self",
+          "summary": "Create a new [`BatchPartitioner`] for round-robin repartitioning."
+        },
+        {
+          "name": "partition",
+          "signature": "fn partition<F>(&mut self, batch: RecordBatch, f: F) -> Result<()> where F: FnMut(usize, RecordBatch) -> Result<()>",
+          "summary": "Partition the provided [`RecordBatch`] into one or more partitioned [`RecordBatch`] based on the [`Partitioning`] specified on construction"
+        },
+        {
+          "name": "partition_iter",
+          "signature": "fn partition_iter(&mut self, batch: RecordBatch) -> Result<impl Iterator<Item = Result<(usize, RecordBatch)>> + Send + '_>",
+          "summary": "Returns an iterator of `(partition_index, RecordBatch)` pairs for the given batch."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(partitioning: Partitioning, timer: metrics::Time, input_partition: usize, num_input_partitions: usize) -> Result<Self>",
+          "summary": "Create a new [`BatchPartitioner`] based on the provided [`Partitioning`] scheme."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::repartition::RangeExpr",
+      "name": "RangeExpr",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct RangeExpr",
+      "summary": "Physical expression that returns the Range partition for each input row.",
+      "doc": "api/datafusion_physical_plan.repartition.md#rangeexpr",
+      "implements": [
+        "core::fmt::Display",
+        "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+      ],
+      "methods": [
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&PhysicalExprRef>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self, _input_schema: &Schema) -> Result<DataType>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &RecordBatch) -> Result<ColumnarValue>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_sql",
+          "signature": "fn fmt_sql(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self, _input_schema: &Schema) -> Result<bool>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "on_columns",
+          "signature": "fn on_columns(&self) -> &[PhysicalExprRef]",
+          "summary": "Get the columns used to compute Range partition IDs."
+        },
+        {
+          "name": "sort_options",
+          "signature": "fn sort_options(&self) -> &[SortOptions]",
+          "summary": "Returns the per-key sort options used for routing."
+        },
+        {
+          "name": "split_points",
+          "signature": "fn split_points(&self) -> &[SplitPoint]",
+          "summary": "Returns the Range split points used for routing."
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &protobuf::PhysicalExprNode, ctx: &datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> Result<PhysicalExprRef>",
+          "summary": "Reconstructs a [`RangeExpr`] from its protobuf representation."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(on_columns: Vec<PhysicalExprRef>, range_partitioning: &RangePartitioning) -> Result<Self>",
+          "summary": "Creates a Range expression for `on_columns` using the supplied routing metadata."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &datafusion_physical_expr_common::physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<Option<protobuf::PhysicalExprNode>>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<PhysicalExprRef>) -> Result<PhysicalExprRef>",
+          "via_trait": "datafusion_physical_expr_common::physical_expr::PhysicalExpr"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::repartition::RepartitionExec",
+      "name": "RepartitionExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct RepartitionExec",
+      "summary": "Maps `N` input partitions to `M` output partitions based on a [`Partitioning`] scheme.",
+      "doc": "api/datafusion_physical_plan.repartition.md#repartitionexec",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "benefits_from_input_partitioning",
+          "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, _partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, _phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, _config: &ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input",
+          "signature": "fn input(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "Input execution plan"
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Get name used to display this Exec"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "partitioning",
+          "signature": "fn partitioning(&self) -> &Partitioning",
+          "summary": "Partitioning scheme to use"
+        },
+        {
+          "name": "preserve_order",
+          "signature": "fn preserve_order(&self) -> bool",
+          "summary": "Get preserve_order flag of the RepartitionExec `true` means `SortPreservingRepartitionExec`, `false` means `RepartitionExec`"
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Return a reference to Any that can be used for downcasting"
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, _config: &ConfigOptions) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstruct a [`RepartitionExec`] from its protobuf representation."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(input: Arc<dyn ExecutionPlan>, partitioning: Partitioning) -> Result<Self>",
+          "summary": "Create a new RepartitionExec, that produces output `partitioning`, and does not preserve the order of the input (see [`Self::with_preserve_order`] for more details)"
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(self) -> Self",
+          "summary": "Specify if this repartitioning operation should preserve the order of rows from its input when producing output. Preserving order is more expensive at runtime, so should only be set if the output of this operator can take advantage of it."
+        }
+      ]
+    }
+  ]
+}

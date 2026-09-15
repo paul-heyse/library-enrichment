@@ -1,0 +1,107 @@
+{
+  "module": "parquet::bloom_filter",
+  "crate": "parquet",
+  "api": "api/parquet.bloom_filter.md",
+  "items": [
+    {
+      "path": "parquet::bloom_filter::BITSET_MAX_LENGTH",
+      "name": "BITSET_MAX_LENGTH",
+      "kind": "constant",
+      "crate": "parquet",
+      "signature": "const BITSET_MAX_LENGTH: usize = _",
+      "summary": "The maximum number of bytes for a bloom filter bitset.",
+      "doc": "api/parquet.bloom_filter.md#bitset_max_length"
+    },
+    {
+      "path": "parquet::bloom_filter::BITSET_MIN_LENGTH",
+      "name": "BITSET_MIN_LENGTH",
+      "kind": "constant",
+      "crate": "parquet",
+      "signature": "const BITSET_MIN_LENGTH: usize = 32",
+      "summary": "The minimum number of bytes for a bloom filter bitset.",
+      "doc": "api/parquet.bloom_filter.md#bitset_min_length"
+    },
+    {
+      "path": "parquet::bloom_filter::BloomFilterHeader",
+      "name": "BloomFilterHeader",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct BloomFilterHeader",
+      "summary": "Bloom filter header is stored at beginning of Bloom filter data of each column and followed by its bitset.",
+      "doc": "api/parquet.bloom_filter.md#bloomfilterheader",
+      "fields": [
+        "num_bytes",
+        "algorithm",
+        "hash",
+        "compression"
+      ],
+      "methods": []
+    },
+    {
+      "path": "parquet::bloom_filter::Sbbf",
+      "name": "Sbbf",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct Sbbf",
+      "summary": "A split block Bloom filter (SBBF).",
+      "doc": "api/parquet.bloom_filter.md#sbbf",
+      "methods": [
+        {
+          "name": "check",
+          "signature": "fn check<T: AsBytes + ?Sized>(&self, value: &T) -> bool",
+          "summary": "Check if an [AsBytes] value is probably present or definitely absent in the filter"
+        },
+        {
+          "name": "fold_to_target_fpp",
+          "signature": "fn fold_to_target_fpp(&mut self, target_fpp: f64)",
+          "summary": "Fold the bloom filter down to the smallest size that still meets the target FPP (False Positive Percentage)."
+        },
+        {
+          "name": "from_bytes",
+          "signature": "fn from_bytes(bytes: &[u8]) -> Result<Self, ParquetError>",
+          "summary": "Reads a Sbff from Thrift encoded bytes"
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<T: AsBytes + ?Sized>(&mut self, value: &T)",
+          "summary": "Insert an [AsBytes] value into the filter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(bitset: &[u8]) -> Self",
+          "summary": "Creates a new [Sbbf] from a raw byte slice."
+        },
+        {
+          "name": "new_with_ndv_fpp",
+          "signature": "fn new_with_ndv_fpp(ndv: u64, fpp: f64) -> Result<Self, ParquetError>",
+          "summary": "Create a new [Sbbf] with given number of distinct values and false positive probability. Will return an error if `fpp` is greater than or equal to 1.0 or less than 0.0."
+        },
+        {
+          "name": "new_with_num_of_bytes",
+          "signature": "fn new_with_num_of_bytes(num_bytes: usize) -> Self",
+          "summary": "Create a new [Sbbf] with given number of bytes, the exact number of bytes will be adjusted to the next power of two bounded by [BITSET_MIN_LENGTH] and [BITSET_MAX_LENGTH]."
+        },
+        {
+          "name": "num_blocks",
+          "signature": "fn num_blocks(&self) -> usize",
+          "summary": "Returns the number of blocks in this bloom filter."
+        },
+        {
+          "name": "read_from_column_chunk",
+          "signature": "fn read_from_column_chunk<R: ChunkReader>(column_metadata: &ColumnChunkMetaData, reader: &R) -> Result<Option<Self>, ParquetError>",
+          "summary": "Read a new bloom filter from the given offset in the given reader."
+        },
+        {
+          "name": "write",
+          "signature": "fn write<W: Write>(&self, writer: W) -> Result<(), ParquetError>",
+          "summary": "Write the bloom filter data (header and then bitset) to the output. This doesn't flush the writer in order to boost performance of bulk writing all blocks. Caller must remember to flush the writer. This method usually is used in conjunctio…"
+        },
+        {
+          "name": "write_bitset",
+          "signature": "fn write_bitset<W: Write>(&self, writer: W) -> Result<(), ParquetError>",
+          "summary": "Write the bitset in serialized form to the writer."
+        }
+      ]
+    }
+  ]
+}

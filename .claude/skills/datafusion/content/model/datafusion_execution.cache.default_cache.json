@@ -1,0 +1,153 @@
+{
+  "module": "datafusion_execution::cache::default_cache",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.cache.default_cache.md",
+  "items": [
+    {
+      "path": "datafusion_execution::cache::default_cache::DefaultCache",
+      "name": "DefaultCache",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct DefaultCache<K: CacheKey, V: CacheValue>",
+      "summary": "In-memory [`Cache`] with an LRU eviction policy, byte-based memory limit, and optional per-entry TTL.",
+      "doc": "api/datafusion_execution.cache.default_cache.md#defaultcache",
+      "implements": [
+        "datafusion_execution::cache::Cache"
+      ],
+      "methods": [
+        {
+          "name": "cache_limit",
+          "signature": "fn cache_limit(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "cache_ttl",
+          "signature": "fn cache_ttl(&self) -> Option<Duration>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "clear",
+          "signature": "fn clear(&self)",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "contains_key",
+          "signature": "fn contains_key(&self, k: &K) -> bool",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "drop_table_entries",
+          "signature": "fn drop_table_entries(&self, table_ref: &TableReference) -> Result<()>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, key: &K) -> Option<V>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "list_entries",
+          "signature": "fn list_entries(&self) -> HashMap<K, CacheEntryInfo<V>>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "memory_used",
+          "signature": "fn memory_used(&self) -> usize",
+          "summary": "Number of bytes currently accounted for by live entries."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> String",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(memory_limit: usize) -> Self",
+          "summary": "Create a cache with the given memory budget in bytes and no TTL."
+        },
+        {
+          "name": "new_with_ttl",
+          "signature": "fn new_with_ttl(memory_limit: usize, ttl: Option<Duration>) -> Self",
+          "summary": "Create a cache with the given memory budget in bytes and an optional TTL applied to every newly inserted entry."
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&self, key: &K, value: V) -> Option<V>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove(&self, k: &K) -> Option<V>",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "update_cache_limit",
+          "signature": "fn update_cache_limit(&self, limit: usize)",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "update_cache_ttl",
+          "signature": "fn update_cache_ttl(&self, ttl: Option<Duration>)",
+          "via_trait": "datafusion_execution::cache::Cache"
+        },
+        {
+          "name": "with_name",
+          "signature": "fn with_name(self, name: impl Into<String>) -> Self",
+          "summary": "Override the cache name."
+        },
+        {
+          "name": "with_time_provider",
+          "signature": "fn with_time_provider(self, provider: Arc<dyn TimeProvider>) -> Self",
+          "summary": "Override the time source used to stamp and check TTLs."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::default_cache::SystemTimeProvider",
+      "name": "SystemTimeProvider",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct SystemTimeProvider",
+      "summary": "[`TimeProvider`] backed by [`Instant::now`].",
+      "doc": "api/datafusion_execution.cache.default_cache.md#systemtimeprovider",
+      "implements": [
+        "datafusion_execution::cache::default_cache::TimeProvider"
+      ],
+      "methods": [
+        {
+          "name": "now",
+          "signature": "fn now(&self) -> Instant",
+          "via_trait": "datafusion_execution::cache::default_cache::TimeProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::default_cache::TimeProvider",
+      "name": "TimeProvider",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait TimeProvider: Send + Sync",
+      "summary": "Source of the current time used by a [`DefaultCache`] when applying TTLs.",
+      "doc": "api/datafusion_execution.cache.default_cache.md#timeprovider",
+      "implementors": [
+        "datafusion_execution::cache::default_cache::SystemTimeProvider"
+      ],
+      "required_methods": [
+        "now"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "now",
+          "signature": "fn now(&self) -> Instant",
+          "summary": "Return the current instant."
+        }
+      ]
+    }
+  ]
+}

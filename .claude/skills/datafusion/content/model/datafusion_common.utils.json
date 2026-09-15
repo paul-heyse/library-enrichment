@@ -1,0 +1,405 @@
+{
+  "module": "datafusion_common::utils",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.utils.md",
+  "items": [
+    {
+      "path": "datafusion_common::utils::ListCoercion",
+      "name": "ListCoercion",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum ListCoercion",
+      "summary": "Information about how to coerce lists.",
+      "doc": "api/datafusion_common.utils.md#listcoercion",
+      "variants": [
+        "FixedSizedListToList"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_common::utils::adjust_offsets_for_slice",
+      "name": "adjust_offsets_for_slice",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn adjust_offsets_for_slice<O: OffsetSizeTrait>(list: &arrow::array::GenericListArray<O>) -> arrow::buffer::OffsetBuffer<O>",
+      "summary": "If `list` is sliced, returns an adjusted offset buffer so that it points to the sliced portion of the list values, and not the whole list values",
+      "doc": "api/datafusion_common.utils.md#adjust_offsets_for_slice"
+    },
+    {
+      "path": "datafusion_common::utils::arrays_into_list_array",
+      "name": "arrays_into_list_array",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn arrays_into_list_array(arr: impl IntoIterator<Item = arrow::array::ArrayRef>) -> Result<arrow::array::ListArray>",
+      "summary": "Wrap arrays into a single element `ListArray`.",
+      "doc": "api/datafusion_common.utils.md#arrays_into_list_array"
+    },
+    {
+      "path": "datafusion_common::utils::base_type",
+      "name": "base_type",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn base_type(data_type: &arrow::datatypes::DataType) -> arrow::datatypes::DataType",
+      "summary": "Get the base type of a data type.",
+      "doc": "api/datafusion_common.utils.md#base_type"
+    },
+    {
+      "path": "datafusion_common::utils::bisect",
+      "name": "bisect",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn bisect<const SIDE: bool>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<usize>",
+      "summary": "This function searches for a tuple of given values (`target`) among the given rows (`item_columns`) using the bisection algorithm. It assumes that `item_columns` is sorted according to `sort_options` and returns the insertion index of `tar…",
+      "doc": "api/datafusion_common.utils.md#bisect"
+    },
+    {
+      "path": "datafusion_common::utils::coerced_fixed_size_list_to_list",
+      "name": "coerced_fixed_size_list_to_list",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn coerced_fixed_size_list_to_list(data_type: &arrow::datatypes::DataType) -> arrow::datatypes::DataType",
+      "summary": "Recursively coerce and `FixedSizeList` elements to `List`",
+      "doc": "api/datafusion_common.utils.md#coerced_fixed_size_list_to_list"
+    },
+    {
+      "path": "datafusion_common::utils::coerced_type_with_base_type_only",
+      "name": "coerced_type_with_base_type_only",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn coerced_type_with_base_type_only(data_type: &arrow::datatypes::DataType, base_type: &arrow::datatypes::DataType, array_coercion: Option<&ListCoercion>) -> arrow::datatypes::DataType",
+      "summary": "A helper function to coerce base type in List.",
+      "doc": "api/datafusion_common.utils.md#coerced_type_with_base_type_only"
+    },
+    {
+      "path": "datafusion_common::utils::combine_limit",
+      "name": "combine_limit",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn combine_limit(parent_skip: usize, parent_fetch: Option<usize>, child_skip: usize, child_fetch: Option<usize>) -> (usize, Option<usize>)",
+      "summary": "Computes the `skip` and `fetch` parameters of a single limit that would be equivalent to two consecutive limits with the given `skip`/`fetch` parameters.",
+      "doc": "api/datafusion_common.utils.md#combine_limit"
+    },
+    {
+      "path": "datafusion_common::utils::compare_rows",
+      "name": "compare_rows",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn compare_rows(x: &[ScalarValue], y: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<std::cmp::Ordering>",
+      "summary": "This function compares two tuples depending on the given sort options.",
+      "doc": "api/datafusion_common.utils.md#compare_rows"
+    },
+    {
+      "path": "datafusion_common::utils::evaluate_partition_ranges",
+      "name": "evaluate_partition_ranges",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn evaluate_partition_ranges(num_rows: usize, partition_columns: &[arrow::compute::SortColumn]) -> Result<Vec<std::ops::Range<usize>>>",
+      "summary": "Given a list of 0 or more already sorted columns, finds the partition ranges that would partition equally across columns.",
+      "doc": "api/datafusion_common.utils.md#evaluate_partition_ranges"
+    },
+    {
+      "path": "datafusion_common::utils::extract_row_at_idx_to_buf",
+      "name": "extract_row_at_idx_to_buf",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn extract_row_at_idx_to_buf(columns: &[arrow::array::ArrayRef], idx: usize, buf: &mut Vec<ScalarValue>) -> Result<()>",
+      "summary": "Extracts a row at the specified index from a set of columns and stores it in the provided buffer.",
+      "doc": "api/datafusion_common.utils.md#extract_row_at_idx_to_buf"
+    },
+    {
+      "path": "datafusion_common::utils::find_bisect_point",
+      "name": "find_bisect_point",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn find_bisect_point<F>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], compare_fn: F, low: usize, high: usize) -> Result<usize> where F: Fn(&[ScalarValue], &[ScalarValue]) -> Result<bool>",
+      "summary": "This function searches for a tuple of given values (`target`) among a slice of the given rows (`item_columns`) using the bisection algorithm. The slice starts at the index `low` and ends at the index `high`. The boolean-valued function `co…",
+      "doc": "api/datafusion_common.utils.md#find_bisect_point"
+    },
+    {
+      "path": "datafusion_common::utils::find_indices",
+      "name": "find_indices",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn find_indices<T: PartialEq, S: Borrow<T>>(items: &[T], targets: impl IntoIterator<Item = S>) -> Result<Vec<usize>>",
+      "summary": "Find indices of each element in `targets` inside `items`. If one of the elements is absent in `items`, returns an error.",
+      "doc": "api/datafusion_common.utils.md#find_indices"
+    },
+    {
+      "path": "datafusion_common::utils::fixed_size_list_to_arrays",
+      "name": "fixed_size_list_to_arrays",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn fixed_size_list_to_arrays(a: &arrow::array::ArrayRef) -> Vec<arrow::array::ArrayRef>",
+      "summary": "Helper function to convert a FixedSizeListArray into a vector of ArrayRefs.",
+      "doc": "api/datafusion_common.utils.md#fixed_size_list_to_arrays"
+    },
+    {
+      "path": "datafusion_common::utils::get_at_indices",
+      "name": "get_at_indices",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_at_indices<T: Clone, I: Borrow<usize>>(items: &[T], indices: impl IntoIterator<Item = I>) -> Result<Vec<T>>",
+      "summary": "This function \"takes\" the elements at `indices` from the slice `items`.",
+      "doc": "api/datafusion_common.utils.md#get_at_indices"
+    },
+    {
+      "path": "datafusion_common::utils::get_available_parallelism",
+      "name": "get_available_parallelism",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_available_parallelism() -> usize",
+      "summary": "Returns the estimated number of threads available for parallel execution.",
+      "doc": "api/datafusion_common.utils.md#get_available_parallelism"
+    },
+    {
+      "path": "datafusion_common::utils::get_row_at_idx",
+      "name": "get_row_at_idx",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_row_at_idx(columns: &[arrow::array::ArrayRef], idx: usize) -> Result<Vec<ScalarValue>>",
+      "summary": "Given column vectors, returns row at `idx`.",
+      "doc": "api/datafusion_common.utils.md#get_row_at_idx"
+    },
+    {
+      "path": "datafusion_common::utils::linear_search",
+      "name": "linear_search",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn linear_search<const SIDE: bool>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], sort_options: &[arrow::compute::SortOptions]) -> Result<usize>",
+      "summary": "This function searches for a tuple of given values (`target`) among the given rows (`item_columns`) via a linear scan. It assumes that `item_columns` is sorted according to `sort_options` and returns the insertion index of `target`. Templa…",
+      "doc": "api/datafusion_common.utils.md#linear_search"
+    },
+    {
+      "path": "datafusion_common::utils::list_ndims",
+      "name": "list_ndims",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn list_ndims(data_type: &arrow::datatypes::DataType) -> u64",
+      "summary": "Compute the number of dimensions in a list data type.",
+      "doc": "api/datafusion_common.utils.md#list_ndims"
+    },
+    {
+      "path": "datafusion_common::utils::list_to_arrays",
+      "name": "list_to_arrays",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn list_to_arrays<O: OffsetSizeTrait>(a: &arrow::array::ArrayRef) -> Vec<arrow::array::ArrayRef>",
+      "summary": "Helper function to convert a ListArray into a vector of ArrayRefs.",
+      "doc": "api/datafusion_common.utils.md#list_to_arrays"
+    },
+    {
+      "path": "datafusion_common::utils::list_values",
+      "name": "list_values",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn list_values(array: &dyn Array) -> Result<arrow::array::ArrayRef>",
+      "summary": "Returns the inner values of a list, or an error otherwise For [`ListArray`] and [`LargeListArray`], if it's sliced, it returns a sliced array too. Therefore, too reconstruct a list using it, you must adjust the offsets using [`adjust_offse…",
+      "doc": "api/datafusion_common.utils.md#list_values"
+    },
+    {
+      "path": "datafusion_common::utils::list_values_row_number",
+      "name": "list_values_row_number",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn list_values_row_number(array: &dyn Array) -> Result<arrow::array::ArrayRef>",
+      "summary": "If `array` is a list or a map, returns a new array of the same length as it's inner values where each value is the 1-based index of the sublist it's contained. Example:",
+      "doc": "api/datafusion_common.utils.md#list_values_row_number"
+    },
+    {
+      "path": "datafusion_common::utils::longest_consecutive_prefix",
+      "name": "longest_consecutive_prefix",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn longest_consecutive_prefix<T: Borrow<usize>>(sequence: impl IntoIterator<Item = T>) -> usize",
+      "summary": "This function finds the longest prefix of the form 0, 1, 2, ... within the collection `sequence`. Examples: - For 0, 1, 2, 4, 5; we would produce 3, meaning 0, 1, 2 is the longest satisfying   prefix. - For 1, 2, 3, 4; we would produce 0,…",
+      "doc": "api/datafusion_common.utils.md#longest_consecutive_prefix"
+    },
+    {
+      "path": "datafusion_common::utils::merge_and_order_indices",
+      "name": "merge_and_order_indices",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn merge_and_order_indices<T: Borrow<usize>, S: Borrow<usize>>(first: impl IntoIterator<Item = T>, second: impl IntoIterator<Item = S>) -> Vec<usize>",
+      "summary": "Merges collections `first` and `second`, removes duplicates and sorts the result, returning it as a [`Vec`].",
+      "doc": "api/datafusion_common.utils.md#merge_and_order_indices"
+    },
+    {
+      "path": "datafusion_common::utils::normalize_float_zero",
+      "name": "normalize_float_zero",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn normalize_float_zero(array: &arrow::array::ArrayRef) -> arrow::array::ArrayRef",
+      "summary": "Replace `-0.0` with `+0.0` in any `Float16`, `Float32`, or `Float64` array. For non-float arrays returns the input unchanged. NaN payloads are preserved.",
+      "doc": "api/datafusion_common.utils.md#normalize_float_zero"
+    },
+    {
+      "path": "datafusion_common::utils::normalize_float_zero_scalar",
+      "name": "normalize_float_zero_scalar",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn normalize_float_zero_scalar(scalar: ScalarValue) -> ScalarValue",
+      "summary": "Replace `-0.0` with `+0.0` in `Float16`, `Float32`, or `Float64` scalar values. Other variants are returned unchanged. See [`normalize_float_zero`] for context.",
+      "doc": "api/datafusion_common.utils.md#normalize_float_zero_scalar"
+    },
+    {
+      "path": "datafusion_common::utils::project_schema",
+      "name": "project_schema",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn project_schema(schema: &arrow::datatypes::SchemaRef, projection: Option<&impl AsRef<[usize]>>) -> Result<arrow::datatypes::SchemaRef>",
+      "summary": "Applies an optional projection to a [`SchemaRef`], returning the projected schema",
+      "doc": "api/datafusion_common.utils.md#project_schema",
+      "aliases": [
+        "datafusion::common::project_schema",
+        "datafusion::physical_plan::project_schema",
+        "datafusion_common::project_schema",
+        "datafusion_physical_plan::execution_plan::project_schema",
+        "datafusion_physical_plan::project_schema"
+      ]
+    },
+    {
+      "path": "datafusion_common::utils::quote_identifier",
+      "name": "quote_identifier",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn quote_identifier(s: &str) -> std::borrow::Cow<'_, str>",
+      "summary": "Wraps identifier string in double quotes, escaping any double quotes in the identifier by replacing it with two double quotes",
+      "doc": "api/datafusion_common.utils.md#quote_identifier"
+    },
+    {
+      "path": "datafusion_common::utils::remove_list_null_values",
+      "name": "remove_list_null_values",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn remove_list_null_values(array: &arrow::array::ArrayRef) -> Result<arrow::array::ArrayRef>",
+      "summary": "For lists and large lists, truncates the sublist of null values Otherwise returns an error",
+      "doc": "api/datafusion_common.utils.md#remove_list_null_values"
+    },
+    {
+      "path": "datafusion_common::utils::search_in_slice",
+      "name": "search_in_slice",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn search_in_slice<F>(item_columns: &[arrow::array::ArrayRef], target: &[ScalarValue], compare_fn: F, low: usize, high: usize) -> Result<usize> where F: Fn(&[ScalarValue], &[ScalarValue]) -> Result<bool>",
+      "summary": "This function searches for a tuple of given values (`target`) among a slice of the given rows (`item_columns`) via a linear scan. The slice starts at the index `low` and ends at the index `high`. The boolean-valued function `compare_fn` sp…",
+      "doc": "api/datafusion_common.utils.md#search_in_slice"
+    },
+    {
+      "path": "datafusion_common::utils::set_difference",
+      "name": "set_difference",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn set_difference<T: Borrow<usize>, S: Borrow<usize>>(first: impl IntoIterator<Item = T>, second: impl IntoIterator<Item = S>) -> Vec<usize>",
+      "summary": "Calculates the set difference between sequences `first` and `second`, returning the result as a [`Vec`]. Preserves the ordering of `first`.",
+      "doc": "api/datafusion_common.utils.md#set_difference"
+    },
+    {
+      "path": "datafusion_common::utils::split_vec_min_alloc",
+      "name": "split_vec_min_alloc",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn split_vec_min_alloc<T>(vec: &mut Vec<T>, n: usize) -> Vec<T>",
+      "summary": "Splits `vec` at index `n`, returning the first `n` elements and leaving the remaining `vec.len() - n` elements in `vec`.",
+      "doc": "api/datafusion_common.utils.md#split_vec_min_alloc"
+    },
+    {
+      "path": "datafusion_common::utils::take_function_args",
+      "name": "take_function_args",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn take_function_args<const N: usize, T>(function_name: &str, args: impl IntoIterator<Item = T>) -> Result<[T; N]>",
+      "summary": "Converts a collection of function arguments into a fixed-size array of length N producing a reasonable error message in case of unexpected number of arguments.",
+      "doc": "api/datafusion_common.utils.md#take_function_args"
+    },
+    {
+      "path": "datafusion_common::utils::transpose",
+      "name": "transpose",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn transpose<T>(original: Vec<Vec<T>>) -> Vec<Vec<T>>",
+      "summary": "Transposes the given vector of vectors.",
+      "doc": "api/datafusion_common.utils.md#transpose"
+    },
+    {
+      "path": "datafusion_common::utils::SingleRowListArrayBuilder",
+      "name": "SingleRowListArrayBuilder",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct SingleRowListArrayBuilder",
+      "summary": "Creates single element [`ListArray`], [`LargeListArray`] and [`FixedSizeListArray`] from other arrays",
+      "doc": "api/datafusion_common.utils.md#singlerowlistarraybuilder",
+      "methods": [
+        {
+          "name": "build_fixed_size_list_array",
+          "signature": "fn build_fixed_size_list_array(self, list_size: usize) -> FixedSizeListArray",
+          "summary": "Build a single element [`FixedSizeListArray`]"
+        },
+        {
+          "name": "build_fixed_size_list_scalar",
+          "signature": "fn build_fixed_size_list_scalar(self, list_size: usize) -> ScalarValue",
+          "summary": "Build a single element [`FixedSizeListArray`] and wrap as [`ScalarValue::FixedSizeList`]"
+        },
+        {
+          "name": "build_large_list_array",
+          "signature": "fn build_large_list_array(self) -> LargeListArray",
+          "summary": "Build a single element [`LargeListArray`]"
+        },
+        {
+          "name": "build_large_list_scalar",
+          "signature": "fn build_large_list_scalar(self) -> ScalarValue",
+          "summary": "Build a single element [`LargeListArray`] and wrap as [`ScalarValue::LargeList`]"
+        },
+        {
+          "name": "build_large_list_view_array",
+          "signature": "fn build_large_list_view_array(self) -> LargeListViewArray",
+          "summary": "Build a single element [`LargeListViewArray`]"
+        },
+        {
+          "name": "build_large_list_view_scalar",
+          "signature": "fn build_large_list_view_scalar(self) -> ScalarValue",
+          "summary": "Build a single element [`LargeListViewArray`] and wrap as [`ScalarValue::LargeListView`]"
+        },
+        {
+          "name": "build_list_array",
+          "signature": "fn build_list_array(self) -> ListArray",
+          "summary": "Build a single element [`ListArray`]"
+        },
+        {
+          "name": "build_list_scalar",
+          "signature": "fn build_list_scalar(self) -> ScalarValue",
+          "summary": "Build a single element [`ListArray`] and wrap as [`ScalarValue::List`]"
+        },
+        {
+          "name": "build_list_view_array",
+          "signature": "fn build_list_view_array(self) -> ListViewArray",
+          "summary": "Build a single element [`ListViewArray`]"
+        },
+        {
+          "name": "build_list_view_scalar",
+          "signature": "fn build_list_view_scalar(self) -> ScalarValue",
+          "summary": "Build a single element [`ListViewArray`] and wrap as [`ScalarValue::ListView`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(arr: ArrayRef) -> Self",
+          "summary": "Create a new instance of [`SingleRowListArrayBuilder`]"
+        },
+        {
+          "name": "with_field",
+          "signature": "fn with_field(self, field: &Field) -> Self",
+          "summary": "Copies field name and nullable from the specified field"
+        },
+        {
+          "name": "with_field_name",
+          "signature": "fn with_field_name(self, field_name: Option<String>) -> Self",
+          "summary": "sets the field name for the resulting array"
+        },
+        {
+          "name": "with_nullable",
+          "signature": "fn with_nullable(self, nullable: bool) -> Self",
+          "summary": "Set the nullable flag"
+        }
+      ]
+    }
+  ]
+}

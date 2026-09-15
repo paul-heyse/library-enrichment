@@ -1,0 +1,219 @@
+{
+  "module": "datafusion_common::pruning",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.pruning.md",
+  "items": [
+    {
+      "path": "datafusion_common::pruning::CompositePruningStatistics",
+      "name": "CompositePruningStatistics",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct CompositePruningStatistics",
+      "summary": "Combine multiple [`PruningStatistics`] into a single [`CompositePruningStatistics`]. This can be used to combine statistics from different sources, for example partition values and file statistics. This allows pruning with filters that dep…",
+      "doc": "api/datafusion_common.pruning.md#compositepruningstatistics",
+      "deprecated": "since 52.0.0: This struct is no longer used internally. It may be removed in 58.0.0 or 6 months after 52.0.0 is released, whichever comes first. Please open an issue if you have a use case for it.",
+      "fields": [
+        "statistics"
+      ],
+      "implements": [
+        "datafusion_common::pruning::PruningStatistics"
+      ],
+      "methods": [
+        {
+          "name": "contained",
+          "signature": "fn contained(&self, column: &Column, values: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "max_values",
+          "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "min_values",
+          "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(statistics: Vec<Box<dyn PruningStatistics>>) -> Self",
+          "summary": "Create a new instance of [`CompositePruningStatistics`] from a vector of [`PruningStatistics`]."
+        },
+        {
+          "name": "null_counts",
+          "signature": "fn null_counts(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "num_containers",
+          "signature": "fn num_containers(&self) -> usize",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "row_counts",
+          "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::pruning::PartitionPruningStatistics",
+      "name": "PartitionPruningStatistics",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct PartitionPruningStatistics",
+      "summary": "Prune files based on their partition values.",
+      "doc": "api/datafusion_common.pruning.md#partitionpruningstatistics",
+      "deprecated": "since 52.0.0: This struct is no longer used internally. Use `replace_columns_with_literals` from `datafusion-physical-expr-adapter` to substitute partition column values before pruning. It will be removed in 58.0.0 or 6 months after 52.0.0 is released, whichever comes first.",
+      "implements": [
+        "datafusion_common::pruning::PruningStatistics"
+      ],
+      "methods": [
+        {
+          "name": "contained",
+          "signature": "fn contained(&self, column: &Column, values: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "max_values",
+          "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "min_values",
+          "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "null_counts",
+          "signature": "fn null_counts(&self, _column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "num_containers",
+          "signature": "fn num_containers(&self) -> usize",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "row_counts",
+          "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(partition_values: Vec<Vec<ScalarValue>>, partition_fields: Vec<FieldRef>) -> Result<Self, DataFusionError>",
+          "summary": "Create a new instance of [`PartitionPruningStatistics`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::pruning::PrunableStatistics",
+      "name": "PrunableStatistics",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct PrunableStatistics",
+      "summary": "Prune a set of containers represented by their statistics.",
+      "doc": "api/datafusion_common.pruning.md#prunablestatistics",
+      "implements": [
+        "datafusion_common::pruning::PruningStatistics"
+      ],
+      "methods": [
+        {
+          "name": "contained",
+          "signature": "fn contained(&self, _column: &Column, _values: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "max_values",
+          "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "min_values",
+          "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(statistics: Vec<Arc<Statistics>>, schema: SchemaRef) -> Self",
+          "summary": "Create a new instance of [`PrunableStatistics`]. Each [`Statistics`] represents a container (e.g. a file or a partition of files). The `schema` is the schema of the data in the containers and should apply to all files."
+        },
+        {
+          "name": "null_counts",
+          "signature": "fn null_counts(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "num_containers",
+          "signature": "fn num_containers(&self) -> usize",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "row_counts",
+          "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::pruning::PruningStatistics",
+      "name": "PruningStatistics",
+      "kind": "trait",
+      "crate": "datafusion-common",
+      "signature": "trait PruningStatistics",
+      "summary": "A source of runtime statistical information to [`PruningPredicate`]s.",
+      "doc": "api/datafusion_common.pruning.md#pruningstatistics",
+      "aliases": [
+        "datafusion_physical_optimizer::pruning::PruningStatistics",
+        "datafusion_pruning::PruningStatistics"
+      ],
+      "implementors": [
+        "datafusion_common::pruning::CompositePruningStatistics",
+        "datafusion_common::pruning::PartitionPruningStatistics",
+        "datafusion_common::pruning::PrunableStatistics",
+        "datafusion_datasource_parquet::bloom_filter::BloomFilterStatistics"
+      ],
+      "required_methods": [
+        "contained",
+        "max_values",
+        "min_values",
+        "null_counts",
+        "num_containers",
+        "row_counts"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "contained",
+          "signature": "fn contained(&self, column: &Column, values: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+          "summary": "Returns [`BooleanArray`] where each row represents information known about specific literal `values` in a column."
+        },
+        {
+          "name": "max_values",
+          "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+          "summary": "Return the maximum values for the named column, if known."
+        },
+        {
+          "name": "min_values",
+          "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+          "summary": "Return the minimum values for the named column, if known."
+        },
+        {
+          "name": "null_counts",
+          "signature": "fn null_counts(&self, column: &Column) -> Option<ArrayRef>",
+          "summary": "Return the number of null values for the named column as an [`UInt64Array`]"
+        },
+        {
+          "name": "num_containers",
+          "signature": "fn num_containers(&self) -> usize",
+          "summary": "Return the number of containers (e.g. Row Groups) being pruned with these statistics."
+        },
+        {
+          "name": "row_counts",
+          "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+          "summary": "Return the number of rows in each container as an [`UInt64Array`]."
+        }
+      ]
+    }
+  ]
+}

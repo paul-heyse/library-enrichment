@@ -1,0 +1,415 @@
+{
+  "module": "datafusion_physical_expr_common::sort_expr",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.sort_expr.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::OrderingRequirements",
+      "name": "OrderingRequirements",
+      "kind": "enum",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "enum OrderingRequirements",
+      "summary": "Represents a plan's input ordering requirements. Vector elements represent alternative ordering requirements in the order of preference. The list of alternatives can be either hard or soft, depending on whether the operator can work withou…",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#orderingrequirements",
+      "aliases": [
+        "datafusion::physical_expr::OrderingRequirements",
+        "datafusion_physical_expr::OrderingRequirements"
+      ],
+      "variants": [
+        "Hard",
+        "Soft"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut"
+      ],
+      "methods": [
+        {
+          "name": "add_alternative",
+          "signature": "fn add_alternative(&mut self, requirement: LexRequirement)",
+          "summary": "Adds an alternative requirement to the list of alternatives."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut Self::Target",
+          "via_trait": "core::ops::deref::DerefMut"
+        },
+        {
+          "name": "first",
+          "signature": "fn first(&self) -> &LexRequirement",
+          "summary": "Returns a reference to the first (i.e. most preferred) `LexRequirement` among alternative requirements."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(requirement: LexRequirement) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_alternatives",
+          "signature": "fn into_alternatives(self) -> (Vec<LexRequirement>, bool)",
+          "summary": "Returns all alternatives as a vector of `LexRequirement` objects and a boolean value indicating softness/hardness of the requirements."
+        },
+        {
+          "name": "into_single",
+          "signature": "fn into_single(self) -> LexRequirement",
+          "summary": "Returns the first (i.e. most preferred) `LexRequirement` among alternative requirements."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(requirement: LexRequirement) -> Self",
+          "summary": "Creates a new instance with a single hard requirement."
+        },
+        {
+          "name": "new_alternatives",
+          "signature": "fn new_alternatives(alternatives: impl IntoIterator<Item = LexRequirement>, soft: bool) -> Option<Self>",
+          "summary": "Creates a new instance from the given alternatives. If an empty list of alternatives are given, returns `None`."
+        },
+        {
+          "name": "new_soft",
+          "signature": "fn new_soft(requirement: LexRequirement) -> Self",
+          "summary": "Creates a new instance with a single soft requirement."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::format_physical_sort_requirement_list",
+      "name": "format_physical_sort_requirement_list",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn format_physical_sort_requirement_list(exprs: &[PhysicalSortRequirement]) -> impl Display + '_",
+      "summary": "Writes a list of [`PhysicalSortRequirement`]s to a `std::fmt::Formatter`.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#format_physical_sort_requirement_list"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::is_reversed_sort_options",
+      "name": "is_reversed_sort_options",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn is_reversed_sort_options(lhs: &arrow::compute::kernels::sort::SortOptions, rhs: &arrow::compute::kernels::sort::SortOptions) -> bool",
+      "summary": "Check if two SortOptions represent reversed orderings.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#is_reversed_sort_options"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::optional_ordering_try_from_proto",
+      "name": "optional_ordering_try_from_proto",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn optional_ordering_try_from_proto(nodes: &[datafusion_proto_models::protobuf::PhysicalSortExprNode], ctx: &physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> datafusion_common::Result<Option<LexOrdering>>",
+      "summary": "Counterpart of [`optional_ordering_try_to_proto`]: an empty list decodes as `None`.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#optional_ordering_try_from_proto"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::optional_ordering_try_to_proto",
+      "name": "optional_ordering_try_to_proto",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn optional_ordering_try_to_proto(ordering: Option<&LexOrdering>, ctx: &physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> datafusion_common::Result<Vec<datafusion_proto_models::protobuf::PhysicalSortExprNode>>",
+      "summary": "Serialize an optional [`LexOrdering`], encoding `None` as an empty list.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#optional_ordering_try_to_proto"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::options_compatible",
+      "name": "options_compatible",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn options_compatible(options_lhs: &arrow::compute::kernels::sort::SortOptions, options_rhs: &arrow::compute::kernels::sort::SortOptions, nullable: bool) -> bool",
+      "summary": "Returns whether the given two [`SortOptions`] are compatible. Here, compatibility means that they are either exactly equal, or they differ only in whether NULL values come in first/last, which is immaterial because the column in question i…",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#options_compatible"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::sort_exprs_try_from_proto",
+      "name": "sort_exprs_try_from_proto",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn sort_exprs_try_from_proto(nodes: &[datafusion_proto_models::protobuf::PhysicalSortExprNode], ctx: &physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> datafusion_common::Result<Vec<PhysicalSortExpr>>",
+      "summary": "Reconstruct a sequence of sort expressions from the flat [`PhysicalSortExprNode`] list, the counterpart of [`sort_exprs_try_to_proto`].",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#sort_exprs_try_from_proto"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::sort_exprs_try_to_proto",
+      "name": "sort_exprs_try_to_proto",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn sort_exprs_try_to_proto<E: std::borrow::Borrow<PhysicalSortExpr>>(exprs: impl IntoIterator<Item = E>, ctx: &physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> datafusion_common::Result<Vec<datafusion_proto_models::protobuf::PhysicalSortExprNode>>",
+      "summary": "Serialize a sequence of sort expressions into the flat [`PhysicalSortExprNode`] list the wire format uses for an ordering.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#sort_exprs_try_to_proto"
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::LexOrdering",
+      "name": "LexOrdering",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct LexOrdering",
+      "summary": "This object represents a lexicographical ordering and contains a vector of `PhysicalSortExpr` objects.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#lexordering",
+      "aliases": [
+        "datafusion::physical_expr::LexOrdering",
+        "datafusion_physical_expr::LexOrdering"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::iter::traits::collect::IntoIterator",
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "capacity",
+          "signature": "fn capacity(&self) -> usize",
+          "summary": "Returns the number of elements that can be stored in the `LexOrdering` without reallocating."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, sort_exprs: impl IntoIterator<Item = PhysicalSortExpr>)",
+          "summary": "Add all elements from `iter` to the `LexOrdering`."
+        },
+        {
+          "name": "first",
+          "signature": "fn first(&self) -> &PhysicalSortExpr",
+          "summary": "Returns the leading `PhysicalSortExpr` of the `LexOrdering`. Note that this function does not return an `Option`, as a `LexOrdering` is always non-degenerate (i.e. it contains at least one element)."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: [PhysicalSortExpr; N]) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_sort_options",
+          "signature": "fn get_sort_options(&self, expr: &dyn PhysicalExpr) -> Option<SortOptions>",
+          "summary": "Returns the sort options for the given expression if one is defined in this `LexOrdering`."
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "is_reverse",
+          "signature": "fn is_reverse(&self, other: &LexOrdering) -> bool",
+          "summary": "Check if reversing this ordering would satisfy another ordering requirement."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(exprs: impl IntoIterator<Item = PhysicalSortExpr>) -> Option<Self>",
+          "summary": "Creates a new [`LexOrdering`] from the given vector of sort expressions. If the vector is empty, returns `None`."
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, sort_expr: PhysicalSortExpr)",
+          "summary": "Appends an element to the back of the `LexOrdering`."
+        },
+        {
+          "name": "truncate",
+          "signature": "fn truncate(&mut self, len: usize) -> bool",
+          "summary": "Truncates the `LexOrdering`, keeping only the first `len` elements. Returns `true` if truncation made a change, `false` otherwise. Negative cases happen in two scenarios: (1) When `len` is greater than or equal to the number of expressions…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::LexRequirement",
+      "name": "LexRequirement",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct LexRequirement",
+      "summary": "This object represents a lexicographical ordering requirement and contains a vector of `PhysicalSortRequirement` objects.",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#lexrequirement",
+      "aliases": [
+        "datafusion::physical_expr::LexRequirement",
+        "datafusion_physical_expr::LexRequirement"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::IntoIterator",
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "first",
+          "signature": "fn first(&self) -> &PhysicalSortRequirement",
+          "summary": "Returns the leading `PhysicalSortRequirement` of the `LexRequirement`. Note that this function does not return an `Option`, as a `LexRequirement` is always non-degenerate (i.e. it contains at least one element)."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: [PhysicalSortRequirement; N]) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(reqs: impl IntoIterator<Item = PhysicalSortRequirement>) -> Option<Self>",
+          "summary": "Creates a new [`LexRequirement`] from the given vector of sort expressions. If the vector is empty, returns `None`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::PhysicalSortExpr",
+      "name": "PhysicalSortExpr",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct PhysicalSortExpr",
+      "summary": "Represents Sort operation for a column in a RecordBatch",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#physicalsortexpr",
+      "aliases": [
+        "datafusion::physical_expr::PhysicalSortExpr",
+        "datafusion_physical_expr::PhysicalSortExpr",
+        "datafusion_physical_expr::expressions::PhysicalSortExpr",
+        "datafusion_physical_plan::execution_plan::expressions::PhysicalSortExpr",
+        "datafusion_physical_plan::expressions::PhysicalSortExpr"
+      ],
+      "fields": [
+        "expr",
+        "options"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "asc",
+          "signature": "fn asc(self) -> Self",
+          "summary": "Set the sort sort options to ASC"
+        },
+        {
+          "name": "desc",
+          "signature": "fn desc(self) -> Self",
+          "summary": "Set the sort sort options to DESC"
+        },
+        {
+          "name": "evaluate_to_sort_column",
+          "signature": "fn evaluate_to_sort_column(&self, batch: &RecordBatch) -> Result<SortColumn>",
+          "summary": "Evaluates the sort expression into a `SortColumn` that can be passed into the arrow sort kernel."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_sql",
+          "signature": "fn fmt_sql(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "summary": "Like [`PhysicalExpr::fmt_sql`] prints a [`PhysicalSortExpr`] in a SQL-like format."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: PhysicalSortRequirement) -> Self",
+          "via_trait": "core::convert::From",
+          "summary": "The default sort options `ASC, NULLS LAST` when the requirement does not specify sort options. This default is consistent with PostgreSQL."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: Arc<dyn PhysicalExpr>, options: SortOptions) -> Self",
+          "summary": "Create a new PhysicalSortExpr"
+        },
+        {
+          "name": "new_default",
+          "signature": "fn new_default(expr: Arc<dyn PhysicalExpr>) -> Self",
+          "summary": "Create a new PhysicalSortExpr with default [`SortOptions`]"
+        },
+        {
+          "name": "nulls_first",
+          "signature": "fn nulls_first(self) -> Self",
+          "summary": "Set the sort sort options to NULLS FIRST"
+        },
+        {
+          "name": "nulls_last",
+          "signature": "fn nulls_last(self) -> Self",
+          "summary": "Set the sort sort options to NULLS LAST"
+        },
+        {
+          "name": "reverse",
+          "signature": "fn reverse(&self) -> Self",
+          "summary": "Reverses the sort expression. For instance, `[a ASC NULLS LAST]` turns into `[a DESC NULLS FIRST]`. Such reversals are useful in planning, e.g. when constructing equivalent window expressions."
+        },
+        {
+          "name": "satisfy",
+          "signature": "fn satisfy(&self, requirement: &PhysicalSortRequirement, schema: &Schema) -> bool",
+          "summary": "Checks whether this sort expression satisfies the given `requirement`. If sort options are unspecified in `requirement`, only expressions are compared for inequality. See [`options_compatible`] for details on how sort options compare with…"
+        },
+        {
+          "name": "satisfy_expr",
+          "signature": "fn satisfy_expr(&self, sort_expr: &Self, schema: &Schema) -> bool",
+          "summary": "Checks whether this sort expression satisfies the given `sort_expr`. See [`options_compatible`] for details on how sort options compare with one another."
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalSortExprNode, ctx: &physical_expr::proto_decode::PhysicalExprDecodeCtx<'_>) -> Result<Self>",
+          "summary": "Reconstruct a [`PhysicalSortExpr`] from its protobuf representation."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &physical_expr::proto_encode::PhysicalExprEncodeCtx<'_>) -> Result<datafusion_proto_models::protobuf::PhysicalSortExprNode>",
+          "summary": "Serialize this sort expression, encoding its child expression through `ctx`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::sort_expr::PhysicalSortRequirement",
+      "name": "PhysicalSortRequirement",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct PhysicalSortRequirement",
+      "summary": "Represents sort requirement associated with a plan",
+      "doc": "api/datafusion_physical_expr_common.sort_expr.md#physicalsortrequirement",
+      "aliases": [
+        "datafusion::physical_expr::PhysicalSortRequirement",
+        "datafusion_physical_expr::PhysicalSortRequirement"
+      ],
+      "fields": [
+        "expr",
+        "options"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "compatible",
+          "signature": "fn compatible(&self, other: &Self) -> bool",
+          "summary": "Returns whether this requirement is equal or more specific than `other`."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: PhysicalSortExpr) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(expr: Arc<dyn PhysicalExpr>, options: Option<SortOptions>) -> Self",
+          "summary": "Creates a new requirement."
+        }
+      ]
+    }
+  ]
+}

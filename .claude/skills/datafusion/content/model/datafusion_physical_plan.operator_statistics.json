@@ -1,0 +1,351 @@
+{
+  "module": "datafusion_physical_plan::operator_statistics",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.operator_statistics.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::operator_statistics::StatisticsResult",
+      "name": "StatisticsResult",
+      "kind": "enum",
+      "crate": "datafusion-physical-plan",
+      "signature": "enum StatisticsResult",
+      "summary": "Result of attempting to compute statistics with a [`StatisticsProvider`].",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#statisticsresult",
+      "variants": [
+        "Computed",
+        "Delegate"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::ndv_after_selectivity",
+      "name": "ndv_after_selectivity",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn ndv_after_selectivity(original_ndv: usize, original_rows: usize, selectivity: f64) -> usize",
+      "summary": "Estimate NDV after applying a selectivity factor (filtering).",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#ndv_after_selectivity"
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::num_distinct_vals",
+      "name": "num_distinct_vals",
+      "kind": "function",
+      "crate": "datafusion-physical-plan",
+      "signature": "fn num_distinct_vals(domain_size: usize, num_selected: usize) -> usize",
+      "summary": "Estimate the number of distinct values when sampling from a population.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#num_distinct_vals"
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::AggregateStatisticsProvider",
+      "name": "AggregateStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct AggregateStatisticsProvider",
+      "summary": "Statistics provider for [`AggregateExec`](crate::aggregates::AggregateExec) that estimates output cardinality from the NDV of GROUP BY columns.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#aggregatestatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+      "name": "ClosureStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ClosureStatisticsProvider",
+      "summary": "A [`StatisticsProvider`] backed by a user-supplied closure.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#closurestatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(f: impl Fn(&dyn ExecutionPlan, &[ExtendedStatistics]) -> Result<StatisticsResult> + Send + Sync + 'static) -> Self",
+          "summary": "Create a new provider from a closure."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::DefaultStatisticsProvider",
+      "name": "DefaultStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct DefaultStatisticsProvider",
+      "summary": "Default statistics provider that delegates to each operator's built-in `partition_statistics` implementation.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#defaultstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, _child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::ExtendedStatistics",
+      "name": "ExtendedStatistics",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ExtendedStatistics",
+      "summary": "Statistics with support for custom extensions.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#extendedstatistics",
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "base",
+          "signature": "fn base(&self) -> &Statistics",
+          "summary": "Returns a reference to the base [`Statistics`]."
+        },
+        {
+          "name": "base_arc",
+          "signature": "fn base_arc(&self) -> &Arc<Statistics>",
+          "summary": "Returns a reference to the underlying [`Arc<Statistics>`]."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(base: Statistics) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_extension",
+          "signature": "fn get_extension<T: 'static + Send + Sync>(&self) -> Option<&T>",
+          "summary": "Get a reference to a custom statistics extension by type."
+        },
+        {
+          "name": "has_extension",
+          "signature": "fn has_extension<T: 'static + Send + Sync>(&self) -> bool",
+          "summary": "Check if an extension of the given type exists."
+        },
+        {
+          "name": "merge_extensions",
+          "signature": "fn merge_extensions(&mut self, other: &ExtendedStatistics)",
+          "summary": "Merge extensions from another ExtendedStatistics (other's extensions take precedence)."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(base: Statistics) -> Self",
+          "summary": "Create new ExtendedStatistics wrapping owned statistics."
+        },
+        {
+          "name": "new_arc",
+          "signature": "fn new_arc(base: Arc<Statistics>) -> Self",
+          "summary": "Create new ExtendedStatistics from an [`Arc<Statistics>`]."
+        },
+        {
+          "name": "set_extension",
+          "signature": "fn set_extension<T: 'static + Send + Sync>(&mut self, value: T)",
+          "summary": "Set a custom statistics extension."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::FilterStatisticsProvider",
+      "name": "FilterStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct FilterStatisticsProvider",
+      "summary": "Statistics provider for [`FilterExec`](crate::filter::FilterExec) that uses pre-computed enhanced child statistics from the registry walk.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#filterstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+      "name": "JoinStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct JoinStatisticsProvider",
+      "summary": "Statistics provider for equi-joins (hash join, sort-merge join) and cross joins.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#joinstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::LimitStatisticsProvider",
+      "name": "LimitStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct LimitStatisticsProvider",
+      "summary": "Statistics provider for [`LocalLimitExec`](crate::limit::LocalLimitExec) and [`GlobalLimitExec`](crate::limit::GlobalLimitExec).",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#limitstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::PassthroughStatisticsProvider",
+      "name": "PassthroughStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct PassthroughStatisticsProvider",
+      "summary": "Statistics provider for single-input operators with [`CardinalityEffect::Equal`](crate::execution_plan::CardinalityEffect::Equal).",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#passthroughstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::ProjectionStatisticsProvider",
+      "name": "ProjectionStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct ProjectionStatisticsProvider",
+      "summary": "Statistics provider for [`ProjectionExec`](crate::projection::ProjectionExec) that uses pre-computed enhanced child statistics from the registry walk.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#projectionstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::StatisticsRegistry",
+      "name": "StatisticsRegistry",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct StatisticsRegistry",
+      "summary": "Registry that chains [`StatisticsProvider`] implementations.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#statisticsregistry",
+      "methods": [
+        {
+          "name": "compute",
+          "signature": "fn compute(&self, plan: &dyn ExecutionPlan) -> Result<ExtendedStatistics>",
+          "summary": "Compute extended statistics for a plan through the provider chain."
+        },
+        {
+          "name": "compute_base",
+          "signature": "fn compute_base(&self, plan: &dyn ExecutionPlan) -> Result<Statistics>",
+          "summary": "Compute statistics and return only the base Statistics (no extensions)."
+        },
+        {
+          "name": "default_with_builtin_providers",
+          "signature": "fn default_with_builtin_providers() -> Self",
+          "summary": "Create a registry pre-loaded with the standard built-in providers."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new empty registry."
+        },
+        {
+          "name": "providers",
+          "signature": "fn providers(&self) -> &[Arc<dyn StatisticsProvider>]",
+          "summary": "Returns the current provider chain."
+        },
+        {
+          "name": "register",
+          "signature": "fn register(&mut self, provider: Arc<dyn StatisticsProvider>)",
+          "summary": "Register a provider at the front of the chain (higher priority)."
+        },
+        {
+          "name": "with_providers",
+          "signature": "fn with_providers(providers: Vec<Arc<dyn StatisticsProvider>>) -> Self",
+          "summary": "Create a registry with the given provider chain."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::UnionStatisticsProvider",
+      "name": "UnionStatisticsProvider",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct UnionStatisticsProvider",
+      "summary": "Statistics provider for [`UnionExec`](crate::union::UnionExec).",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#unionstatisticsprovider",
+      "implements": [
+        "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+      ],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "via_trait": "datafusion_physical_plan::operator_statistics::StatisticsProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::operator_statistics::StatisticsProvider",
+      "name": "StatisticsProvider",
+      "kind": "trait",
+      "crate": "datafusion-physical-plan",
+      "signature": "trait StatisticsProvider: Debug + Send + Sync",
+      "summary": "Customize statistics computation for [`ExecutionPlan`] nodes.",
+      "doc": "api/datafusion_physical_plan.operator_statistics.md#statisticsprovider",
+      "implementors": [
+        "datafusion_physical_plan::operator_statistics::AggregateStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::ClosureStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::DefaultStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::FilterStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::JoinStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::LimitStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::PassthroughStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::ProjectionStatisticsProvider",
+        "datafusion_physical_plan::operator_statistics::UnionStatisticsProvider"
+      ],
+      "required_methods": [
+        "compute_statistics"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "compute_statistics",
+          "signature": "fn compute_statistics(&self, plan: &dyn ExecutionPlan, child_stats: &[ExtendedStatistics]) -> Result<StatisticsResult>",
+          "summary": "Compute statistics for an [`ExecutionPlan`] node."
+        }
+      ]
+    }
+  ]
+}

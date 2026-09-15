@@ -1,0 +1,83 @@
+{
+  "module": "datafusion_optimizer::analyzer::type_coercion",
+  "crate": "datafusion-optimizer",
+  "api": "api/datafusion_optimizer.analyzer.type_coercion.md",
+  "items": [
+    {
+      "path": "datafusion_optimizer::analyzer::type_coercion::coerce_union_schema",
+      "name": "coerce_union_schema",
+      "kind": "function",
+      "crate": "datafusion-optimizer",
+      "signature": "fn coerce_union_schema(inputs: &[std::sync::Arc<datafusion_expr::LogicalPlan>]) -> datafusion_common::Result<datafusion_common::DFSchema>",
+      "summary": "Get a common schema that is compatible with all inputs of UNION.",
+      "doc": "api/datafusion_optimizer.analyzer.type_coercion.md#coerce_union_schema"
+    },
+    {
+      "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercion",
+      "name": "TypeCoercion",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct TypeCoercion",
+      "summary": "Performs type coercion by determining the schema and performing the expression rewrites.",
+      "doc": "api/datafusion_optimizer.analyzer.type_coercion.md#typecoercion",
+      "implements": [
+        "datafusion_optimizer::analyzer::AnalyzerRule"
+      ],
+      "methods": [
+        {
+          "name": "analyze",
+          "signature": "fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPlan>",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::analyzer::type_coercion::TypeCoercionRewriter",
+      "name": "TypeCoercionRewriter",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct TypeCoercionRewriter<'a>",
+      "summary": "Rewrite expressions to apply type coercion.",
+      "doc": "api/datafusion_optimizer.analyzer.type_coercion.md#typecoercionrewriter",
+      "implements": [
+        "datafusion_common::tree_node::TreeNodeRewriter"
+      ],
+      "methods": [
+        {
+          "name": "coerce_join",
+          "signature": "fn coerce_join(&mut self, join: Join) -> Result<LogicalPlan>",
+          "summary": "Coerce join equality expressions and join filter"
+        },
+        {
+          "name": "coerce_plan",
+          "signature": "fn coerce_plan(&mut self, plan: LogicalPlan) -> Result<LogicalPlan>",
+          "summary": "Coerce the [`LogicalPlan`]."
+        },
+        {
+          "name": "coerce_union",
+          "signature": "fn coerce_union(union_plan: Union) -> Result<LogicalPlan>",
+          "summary": "Coerce the union’s inputs to a common schema compatible with all inputs. This occurs after wildcard expansion and the coercion of the input expressions."
+        },
+        {
+          "name": "f_up",
+          "signature": "fn f_up(&mut self, expr: Expr) -> Result<Transformed<Expr>>",
+          "via_trait": "datafusion_common::tree_node::TreeNodeRewriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: &'a DFSchema) -> Self",
+          "summary": "Create a new [`TypeCoercionRewriter`] with a provided schema representing both the inputs and output of the [`LogicalPlan`] node."
+        }
+      ]
+    }
+  ]
+}

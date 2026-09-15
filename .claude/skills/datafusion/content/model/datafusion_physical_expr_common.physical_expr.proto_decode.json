@@ -1,0 +1,75 @@
+{
+  "module": "datafusion_physical_expr_common::physical_expr::proto_decode",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.physical_expr.proto_decode.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::proto_decode::require_proto_field",
+      "name": "require_proto_field",
+      "kind": "function",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "fn require_proto_field<T>(opt: Option<T>, expr_name: &str, field: &str) -> datafusion_common::Result<T>",
+      "summary": "Unwrap a required non-expression proto field.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.proto_decode.md#require_proto_field"
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecodeCtx",
+      "name": "PhysicalExprDecodeCtx",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct PhysicalExprDecodeCtx<'a>",
+      "summary": "Decoder context handed to per-expression `try_from_proto` constructors.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.proto_decode.md#physicalexprdecodectx",
+      "methods": [
+        {
+          "name": "decode",
+          "signature": "fn decode(&self, node: &PhysicalExprNode) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Decode an expression node, recursing into child sub-expressions."
+        },
+        {
+          "name": "decode_children_expressions",
+          "signature": "fn decode_children_expressions<'b, I>(&self, nodes: I) -> Result<Vec<Arc<dyn PhysicalExpr>>> where I: IntoIterator<Item = &'b PhysicalExprNode>",
+          "summary": "Decode a sequence of child nodes, preserving order."
+        },
+        {
+          "name": "decode_required_expression",
+          "signature": "fn decode_required_expression(&self, node: Option<&PhysicalExprNode>, expr_name: &str, field: &str) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Decode a required child node, erroring if it is absent."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema: &'a Schema, decoder: &'a dyn PhysicalExprDecode) -> Self",
+          "summary": "Construct a new decode context. Typically called by `datafusion-proto`; expression authors receive `&PhysicalExprDecodeCtx`."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &Schema",
+          "summary": "The schema bound to this decode context. Use it for column lookups, data-type resolution, etc."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::physical_expr::proto_decode::PhysicalExprDecode",
+      "name": "PhysicalExprDecode",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "trait PhysicalExprDecode",
+      "summary": "Internal dispatch trait. Implementors live in `datafusion-proto`. Expression authors should use [`PhysicalExprDecodeCtx`] instead of calling this directly.",
+      "doc": "api/datafusion_physical_expr_common.physical_expr.proto_decode.md#physicalexprdecode",
+      "implementors": [
+        "datafusion_physical_plan::proto::ExecutionPlanDecodeCtx"
+      ],
+      "required_methods": [
+        "decode"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "decode",
+          "signature": "fn decode(&self, node: &PhysicalExprNode, schema: &Schema) -> Result<Arc<dyn PhysicalExpr>>",
+          "summary": "Decode a proto node into a concrete `PhysicalExpr`. The schema is passed alongside so implementations can support recursive children and rebind the context per call (e.g. for nested plans)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "module": "datafusion::physical_planner",
+  "crate": "datafusion",
+  "api": "api/datafusion.physical_planner.md",
+  "items": [
+    {
+      "path": "datafusion::physical_planner::create_aggregate_expr_and_maybe_filter",
+      "name": "create_aggregate_expr_and_maybe_filter",
+      "kind": "function",
+      "crate": "datafusion",
+      "signature": "fn create_aggregate_expr_and_maybe_filter(e: &logical_expr::Expr, logical_input_schema: &datafusion_common::DFSchema, physical_input_schema: &arrow::datatypes::Schema, execution_props: &execution::context::ExecutionProps) -> error::Result<(std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>, Option<std::sync::Arc<dyn PhysicalExpr>>, Vec<datafusion_physical_expr::PhysicalSortExpr>)>",
+      "summary": "Create an aggregate expression from a logical expression or an alias",
+      "doc": "api/datafusion.physical_planner.md#create_aggregate_expr_and_maybe_filter",
+      "deprecated": "use LoweredAggregateBuilder"
+    },
+    {
+      "path": "datafusion::physical_planner::create_aggregate_expr_with_name_and_maybe_filter",
+      "name": "create_aggregate_expr_with_name_and_maybe_filter",
+      "kind": "function",
+      "crate": "datafusion",
+      "signature": "fn create_aggregate_expr_with_name_and_maybe_filter(e: &logical_expr::Expr, name: Option<String>, human_display: String, logical_input_schema: &datafusion_common::DFSchema, physical_input_schema: &arrow::datatypes::Schema, execution_props: &execution::context::ExecutionProps) -> error::Result<(std::sync::Arc<datafusion_physical_expr::aggregate::AggregateFunctionExpr>, Option<std::sync::Arc<dyn PhysicalExpr>>, Vec<datafusion_physical_expr::PhysicalSortExpr>)>",
+      "summary": "Create an aggregate expression with a name from a logical expression",
+      "doc": "api/datafusion.physical_planner.md#create_aggregate_expr_with_name_and_maybe_filter",
+      "deprecated": "use LoweredAggregateBuilder"
+    },
+    {
+      "path": "datafusion::physical_planner::create_window_expr",
+      "name": "create_window_expr",
+      "kind": "function",
+      "crate": "datafusion",
+      "signature": "fn create_window_expr(e: &logical_expr::Expr, logical_schema: &datafusion_common::DFSchema, execution_props: &execution::context::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> error::Result<std::sync::Arc<dyn WindowExpr>>",
+      "summary": "Create a window expression from a logical expression or an alias",
+      "doc": "api/datafusion.physical_planner.md#create_window_expr"
+    },
+    {
+      "path": "datafusion::physical_planner::create_window_expr_with_name",
+      "name": "create_window_expr_with_name",
+      "kind": "function",
+      "crate": "datafusion",
+      "signature": "fn create_window_expr_with_name(e: &logical_expr::Expr, name: impl Into<String>, logical_schema: &datafusion_common::DFSchema, execution_props: &execution::context::ExecutionProps, planning_ctx: &datafusion_expr::physical_planning_context::PhysicalPlanningContext) -> error::Result<std::sync::Arc<dyn WindowExpr>>",
+      "summary": "Create a window expression with a name from a logical expression",
+      "doc": "api/datafusion.physical_planner.md#create_window_expr_with_name"
+    },
+    {
+      "path": "datafusion::physical_planner::is_window_frame_bound_valid",
+      "name": "is_window_frame_bound_valid",
+      "kind": "function",
+      "crate": "datafusion",
+      "signature": "fn is_window_frame_bound_valid(window_frame: &datafusion_expr::WindowFrame) -> bool",
+      "summary": "Check if window bounds are valid after schema information is available, and window_frame bounds are casted to the corresponding column type. queries like: OVER (ORDER BY a RANGES BETWEEN 3 PRECEDING AND 5 PRECEDING) OVER (ORDER BY a RANGES…",
+      "doc": "api/datafusion.physical_planner.md#is_window_frame_bound_valid"
+    },
+    {
+      "path": "datafusion::physical_planner::DefaultPhysicalPlanner",
+      "name": "DefaultPhysicalPlanner",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct DefaultPhysicalPlanner",
+      "summary": "Default single node physical query planner that converts a `LogicalPlan` to an `ExecutionPlan` suitable for execution.",
+      "doc": "api/datafusion.physical_planner.md#defaultphysicalplanner",
+      "implements": [
+        "datafusion_session::planner::PhysicalPlanner"
+      ],
+      "methods": [
+        {
+          "name": "create_physical_expr",
+          "signature": "fn create_physical_expr(&self, expr: &Expr, input_dfschema: &DFSchema, session_state: &dyn Session, planning_ctx: &PhysicalPlanningContext) -> Result<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_session::planner::PhysicalPlanner",
+          "summary": "Create a physical expression from a logical expression suitable for evaluation"
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self, logical_plan: &LogicalPlan, session_state: &dyn Session) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_session::planner::PhysicalPlanner",
+          "summary": "Create a physical plan from a logical plan"
+        },
+        {
+          "name": "optimize_physical_plan",
+          "signature": "fn optimize_physical_plan<F>(&self, plan: Arc<dyn ExecutionPlan>, session_state: &dyn Session, observer: F) -> Result<Arc<dyn ExecutionPlan>> where F: FnMut(&dyn ExecutionPlan, &dyn PhysicalOptimizerRule)",
+          "summary": "Optimize a physical plan by applying each physical optimizer, calling observer(plan, optimizer after each one)"
+        },
+        {
+          "name": "with_extension_planners",
+          "signature": "fn with_extension_planners(extension_planners: Vec<Arc<dyn ExtensionPlanner + Send + Sync>>) -> Self",
+          "summary": "Create a physical planner that uses `extension_planners` to plan user-defined logical nodes [`LogicalPlan::Extension`] or user-defined table sources in [`LogicalPlan::TableScan`]. The planner uses the first [`ExtensionPlanner`] to return a…"
+        }
+      ]
+    }
+  ]
+}

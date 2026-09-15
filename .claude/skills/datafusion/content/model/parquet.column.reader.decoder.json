@@ -1,0 +1,156 @@
+{
+  "module": "parquet::column::reader::decoder",
+  "crate": "parquet",
+  "api": "api/parquet.column.reader.decoder.md",
+  "items": [
+    {
+      "path": "parquet::column::reader::decoder::ColumnValueDecoderImpl",
+      "name": "ColumnValueDecoderImpl",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ColumnValueDecoderImpl<T: DataType>",
+      "summary": "An implementation of [`ColumnValueDecoder`] for `[T::T]`",
+      "doc": "api/parquet.column.reader.decoder.md#columnvaluedecoderimpl"
+    },
+    {
+      "path": "parquet::column::reader::decoder::DefinitionLevelDecoderImpl",
+      "name": "DefinitionLevelDecoderImpl",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct DefinitionLevelDecoderImpl",
+      "summary": "An implementation of [`DefinitionLevelDecoder`] for `[i16]`",
+      "doc": "api/parquet.column.reader.decoder.md#definitionleveldecoderimpl"
+    },
+    {
+      "path": "parquet::column::reader::decoder::RepetitionLevelDecoderImpl",
+      "name": "RepetitionLevelDecoderImpl",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct RepetitionLevelDecoderImpl",
+      "summary": "An implementation of [`RepetitionLevelDecoder`] for `[i16]`",
+      "doc": "api/parquet.column.reader.decoder.md#repetitionleveldecoderimpl"
+    },
+    {
+      "path": "parquet::column::reader::decoder::ColumnLevelDecoder",
+      "name": "ColumnLevelDecoder",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ColumnLevelDecoder",
+      "summary": "Decodes level data",
+      "doc": "api/parquet.column.reader.decoder.md#columnleveldecoder",
+      "required_methods": [
+        "set_data"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "set_data",
+          "signature": "fn set_data(&mut self, encoding: Encoding, data: Bytes) -> Result<()>",
+          "summary": "Set data for this [`ColumnLevelDecoder`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::reader::decoder::ColumnValueDecoder",
+      "name": "ColumnValueDecoder",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait ColumnValueDecoder",
+      "summary": "Decodes value data",
+      "doc": "api/parquet.column.reader.decoder.md#columnvaluedecoder",
+      "required_methods": [
+        "new",
+        "read",
+        "set_data",
+        "set_dict",
+        "skip_values"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(col: &ColumnDescPtr) -> Self",
+          "summary": "Create a new [`ColumnValueDecoder`]"
+        },
+        {
+          "name": "read",
+          "signature": "fn read(&mut self, out: &mut Self::Buffer, num_values: usize) -> Result<usize>",
+          "summary": "Read up to `num_values` values into `out`"
+        },
+        {
+          "name": "set_data",
+          "signature": "fn set_data(&mut self, encoding: Encoding, data: Bytes, num_levels: usize, num_values: Option<usize>) -> Result<()>",
+          "summary": "Set the current data page"
+        },
+        {
+          "name": "set_dict",
+          "signature": "fn set_dict(&mut self, buf: Bytes, num_values: u32, encoding: Encoding, is_sorted: bool) -> Result<()>",
+          "summary": "Set the current dictionary page"
+        },
+        {
+          "name": "skip_values",
+          "signature": "fn skip_values(&mut self, num_values: usize) -> Result<usize>",
+          "summary": "Skips over `num_values` values"
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::reader::decoder::DefinitionLevelDecoder",
+      "name": "DefinitionLevelDecoder",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait DefinitionLevelDecoder: ColumnLevelDecoder",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "read_def_levels",
+        "skip_def_levels"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "read_def_levels",
+          "signature": "fn read_def_levels(&mut self, out: &mut Self::Buffer, num_levels: usize) -> Result<(usize, usize)>",
+          "summary": "Read up to `num_levels` definition levels into `out`."
+        },
+        {
+          "name": "skip_def_levels",
+          "signature": "fn skip_def_levels(&mut self, num_levels: usize) -> Result<(usize, usize)>",
+          "summary": "Skips over `num_levels` definition levels."
+        }
+      ]
+    },
+    {
+      "path": "parquet::column::reader::decoder::RepetitionLevelDecoder",
+      "name": "RepetitionLevelDecoder",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait RepetitionLevelDecoder: ColumnLevelDecoder",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "flush_partial",
+        "read_rep_levels",
+        "skip_rep_levels"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "flush_partial",
+          "signature": "fn flush_partial(&mut self) -> bool",
+          "summary": "Flush any partially read or skipped record"
+        },
+        {
+          "name": "read_rep_levels",
+          "signature": "fn read_rep_levels(&mut self, out: &mut Self::Buffer, num_records: usize, num_levels: usize) -> Result<(usize, usize)>",
+          "summary": "Read up to `max_records` of repetition level data into `out` returning the number of complete records and levels read"
+        },
+        {
+          "name": "skip_rep_levels",
+          "signature": "fn skip_rep_levels(&mut self, num_records: usize, num_levels: usize) -> Result<(usize, usize)>",
+          "summary": "Skips over up to `num_levels` repetition levels corresponding to `num_records` records, where a record is delimited by a repetition level of 0"
+        }
+      ]
+    }
+  ]
+}

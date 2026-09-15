@@ -1,0 +1,341 @@
+{
+  "module": "datafusion_physical_plan::joins::hash_join::exec",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.joins.hash_join.exec.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::joins::hash_join::exec::HashJoinExec",
+      "name": "HashJoinExec",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct HashJoinExec",
+      "summary": "Join execution plan: Evaluates equijoin predicates in parallel on multiple partitions using a hash table and an optional filter list to apply post join.",
+      "doc": "api/datafusion_physical_plan.joins.hash_join.exec.md#hashjoinexec",
+      "aliases": [
+        "datafusion_physical_plan::joins::HashJoinExec"
+      ],
+      "fields": [
+        "left",
+        "right",
+        "on",
+        "filter",
+        "join_type",
+        "mode",
+        "projection",
+        "null_equality",
+        "null_aware"
+      ],
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan",
+        "datafusion_physical_plan::projection::EmbeddedProjection"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(&self) -> HashJoinExecBuilder",
+          "summary": "Create a builder based on the existing [`HashJoinExec`]."
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "contains_projection",
+          "signature": "fn contains_projection(&self) -> bool",
+          "summary": "Return whether the join contains a projection"
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "dynamic_filter_expr",
+          "signature": "fn dynamic_filter_expr(&self) -> Option<&Arc<DynamicFilterPhysicalExpr>>",
+          "summary": "Returns the dynamic filter expression produced by this hash join, if set."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(&self) -> Option<&JoinFilter>",
+          "summary": "Filters applied before join output"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, t: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, config: &ConfigOptions) -> Result<FilterDescription>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, _phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, _config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "input_distribution_requirements",
+          "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "join_schema",
+          "signature": "fn join_schema(&self) -> &SchemaRef",
+          "summary": "The schema after join. Please be careful when using this schema, if there is a projection, the schema isn't the same as the output schema."
+        },
+        {
+          "name": "join_type",
+          "signature": "fn join_type(&self) -> &JoinType",
+          "summary": "How the join is performed"
+        },
+        {
+          "name": "left",
+          "signature": "fn left(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "left (build) side which gets hashed"
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "null_equality",
+          "signature": "fn null_equality(&self) -> NullEquality",
+          "summary": "Get null_equality"
+        },
+        {
+          "name": "on",
+          "signature": "fn on(&self) -> &[(PhysicalExprRef, PhysicalExprRef)]",
+          "summary": "Set of common columns used to join on"
+        },
+        {
+          "name": "partition_mode",
+          "signature": "fn partition_mode(&self) -> &PartitionMode",
+          "summary": "The partitioning mode of this hash join"
+        },
+        {
+          "name": "probe_side",
+          "signature": "fn probe_side() -> JoinSide",
+          "summary": "Get probe side information for the hash join."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Creates a new HashJoinExec with different children while preserving configuration."
+        },
+        {
+          "name": "required_input_distribution",
+          "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(Arc<self>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "right",
+          "signature": "fn right(&self) -> &Arc<dyn ExecutionPlan>",
+          "summary": "right (probe) side which are filtered by the hash table"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], _args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "swap_inputs",
+          "signature": "fn swap_inputs(&self, partition_mode: PartitionMode) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Returns a new `ExecutionPlan` that computes the same join as this one, with the left and right inputs swapped using the  specified `partition_mode`."
+        },
+        {
+          "name": "try_from_proto",
+          "signature": "fn try_from_proto(node: &datafusion_proto_models::protobuf::PhysicalPlanNode, ctx: &proto::ExecutionPlanDecodeCtx<'_>) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Reconstruct a [`HashJoinExec`] from its protobuf representation."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(left: Arc<dyn ExecutionPlan>, right: Arc<dyn ExecutionPlan>, on: JoinOn, filter: Option<JoinFilter>, join_type: &JoinType, projection: Option<Vec<usize>>, partition_mode: PartitionMode, null_equality: NullEquality, null_aware: bool) -> Result<Self>",
+          "summary": "Tries to create a new [`HashJoinExec`]."
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Tries to push `projection` down through `hash_join`. If possible, performs the pushdown and returns a new [`HashJoinExec`] as the top plan which has projections as its children. Otherwise, returns `None`."
+        },
+        {
+          "name": "try_to_proto",
+          "signature": "fn try_to_proto(&self, ctx: &proto::ExecutionPlanEncodeCtx<'_>) -> Result<Option<datafusion_proto_models::protobuf::PhysicalPlanNode>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_dynamic_filter_expr",
+          "signature": "fn with_dynamic_filter_expr(self, filter: Arc<DynamicFilterPhysicalExpr>) -> Result<Self>",
+          "summary": "Set the dynamic filter on this hash join."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>",
+          "summary": "Return new instance of [HashJoinExec] with the given projection."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(&self, projection: Option<Vec<usize>>) -> Result<Self>",
+          "via_trait": "datafusion_physical_plan::projection::EmbeddedProjection"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_plan::joins::hash_join::exec::HashJoinExecBuilder",
+      "name": "HashJoinExecBuilder",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct HashJoinExecBuilder",
+      "summary": "Helps to build [`HashJoinExec`].",
+      "doc": "api/datafusion_physical_plan.joins.hash_join.exec.md#hashjoinexecbuilder",
+      "aliases": [
+        "datafusion_physical_plan::joins::HashJoinExecBuilder"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<HashJoinExec>",
+          "summary": "Build resulting execution plan."
+        },
+        {
+          "name": "build_exec",
+          "signature": "fn build_exec(self) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Build result as a dyn execution plan."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(exec: &HashJoinExec) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(left: Arc<dyn ExecutionPlan>, right: Arc<dyn ExecutionPlan>, on: Vec<(PhysicalExprRef, PhysicalExprRef)>, join_type: JoinType) -> Self",
+          "summary": "Make a new [`HashJoinExecBuilder`]."
+        },
+        {
+          "name": "recompute_properties",
+          "signature": "fn recompute_properties(self) -> Self",
+          "summary": "Require to recompute plan properties."
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(self) -> Self",
+          "summary": "Reset runtime state."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(self, fetch: Option<usize>) -> Self",
+          "summary": "Set fetch property."
+        },
+        {
+          "name": "with_filter",
+          "signature": "fn with_filter(self, filter: Option<JoinFilter>) -> Self",
+          "summary": "Set optional filter."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(self, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Self>",
+          "summary": "Replace children."
+        },
+        {
+          "name": "with_null_aware",
+          "signature": "fn with_null_aware(self, null_aware: bool) -> Self",
+          "summary": "Set null aware property."
+        },
+        {
+          "name": "with_null_equality",
+          "signature": "fn with_null_equality(self, null_equality: NullEquality) -> Self",
+          "summary": "Set null equality property."
+        },
+        {
+          "name": "with_on",
+          "signature": "fn with_on(self, on: Vec<(PhysicalExprRef, PhysicalExprRef)>) -> Self",
+          "summary": "Set expressions to join on."
+        },
+        {
+          "name": "with_partition_mode",
+          "signature": "fn with_partition_mode(self, mode: PartitionMode) -> Self",
+          "summary": "Set partition mode."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: Option<Vec<usize>>) -> Self",
+          "summary": "Set projection from the vector."
+        },
+        {
+          "name": "with_projection_ref",
+          "signature": "fn with_projection_ref(self, projection: Option<ProjectionRef>) -> Self",
+          "summary": "Set projection from the shared reference."
+        },
+        {
+          "name": "with_type",
+          "signature": "fn with_type(self, join_type: JoinType) -> Self",
+          "summary": "Set join type."
+        }
+      ]
+    }
+  ]
+}

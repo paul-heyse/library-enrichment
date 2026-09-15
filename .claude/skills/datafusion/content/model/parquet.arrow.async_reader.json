@@ -1,0 +1,87 @@
+{
+  "module": "parquet::arrow::async_reader",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.async_reader.md",
+  "items": [
+    {
+      "path": "parquet::arrow::async_reader::ParquetRecordBatchStream",
+      "name": "ParquetRecordBatchStream",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct ParquetRecordBatchStream<T>",
+      "summary": "An asynchronous [`Stream`]of [`RecordBatch`] constructed using [`ParquetRecordBatchStreamBuilder`] to read parquet files.",
+      "doc": "api/parquet.arrow.async_reader.md#parquetrecordbatchstream",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "next_row_group",
+          "signature": "async fn next_row_group(&mut self) -> Result<Option<ParquetRecordBatchReader>>",
+          "summary": "Fetches the next row group from the stream."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Returns the projected [`SchemaRef`] for reading the parquet file."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::async_reader::AsyncFileReader",
+      "name": "AsyncFileReader",
+      "kind": "trait",
+      "crate": "parquet",
+      "signature": "trait AsyncFileReader: Send",
+      "summary": "The asynchronous interface used by [`ParquetRecordBatchStream`] to read parquet files",
+      "doc": "api/parquet.arrow.async_reader.md#asyncfilereader",
+      "implementors": [
+        "alloc::boxed::Box",
+        "datafusion_datasource_parquet::reader::ParquetFileReader",
+        "parquet::arrow::async_reader::spawn::SpawnedReader",
+        "parquet::arrow::async_reader::store::ParquetObjectReader"
+      ],
+      "required_methods": [
+        "get_bytes",
+        "get_metadata"
+      ],
+      "provided_methods": [
+        "get_byte_ranges"
+      ],
+      "methods": [
+        {
+          "name": "get_byte_ranges",
+          "signature": "fn get_byte_ranges(&mut self, ranges: Vec<Range<u64>>) -> BoxFuture<'_, Result<Vec<Bytes>>>",
+          "summary": "Retrieve multiple byte ranges. The default implementation will call `get_bytes` sequentially"
+        },
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&mut self, range: Range<u64>) -> BoxFuture<'_, Result<Bytes>>",
+          "summary": "Retrieve the bytes in `range`"
+        },
+        {
+          "name": "get_metadata",
+          "signature": "fn get_metadata<'a>(&'a mut self, options: Option<&'a ArrowReaderOptions>) -> BoxFuture<'a, Result<Arc<ParquetMetaData>>>",
+          "summary": "Return a future which results in the [`ParquetMetaData`] for this Parquet file."
+        }
+      ]
+    },
+    {
+      "path": "parquet::arrow::async_reader::ParquetRecordBatchStreamBuilder",
+      "name": "ParquetRecordBatchStreamBuilder",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type ParquetRecordBatchStreamBuilder<T> = arrow::arrow_reader::ArrowReaderBuilder<AsyncReader<T>>",
+      "summary": "A builder for reading parquet files from an `async` source as  [`ParquetRecordBatchStream`]",
+      "doc": "api/parquet.arrow.async_reader.md#parquetrecordbatchstreambuilder",
+      "aliases": [
+        "parquet::arrow::ParquetRecordBatchStreamBuilder"
+      ]
+    }
+  ]
+}

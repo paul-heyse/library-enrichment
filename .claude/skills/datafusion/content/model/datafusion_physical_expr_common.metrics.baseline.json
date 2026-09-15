@@ -1,0 +1,157 @@
+{
+  "module": "datafusion_physical_expr_common::metrics::baseline",
+  "crate": "datafusion-physical-expr-common",
+  "api": "api/datafusion_physical_expr_common.metrics.baseline.md",
+  "items": [
+    {
+      "path": "datafusion_physical_expr_common::metrics::baseline::BaselineMetrics",
+      "name": "BaselineMetrics",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct BaselineMetrics",
+      "summary": "Helper for creating and tracking common \"baseline\" metrics for each operator",
+      "doc": "api/datafusion_physical_expr_common.metrics.baseline.md#baselinemetrics",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::BaselineMetrics",
+        "datafusion_physical_plan::metrics::BaselineMetrics"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "done",
+          "signature": "fn done(&self)",
+          "summary": "Records the fact that this operator's execution is complete (recording the `end_time` metric)."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "elapsed_compute",
+          "signature": "fn elapsed_compute(&self) -> &Time",
+          "summary": "return the metric for cpu time spend in this operator"
+        },
+        {
+          "name": "intermediate",
+          "signature": "fn intermediate(&self) -> BaselineMetrics",
+          "summary": "Returns a [`BaselineMetrics`] that updates the same `elapsed_compute` ignoring all other metrics"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self",
+          "summary": "Create a new BaselineMetric structure, and set `start_time` to now"
+        },
+        {
+          "name": "output_batches",
+          "signature": "fn output_batches(&self) -> &Count",
+          "summary": "return the metric for the total number of output batches produced"
+        },
+        {
+          "name": "output_rows",
+          "signature": "fn output_rows(&self) -> &Count",
+          "summary": "return the metric for the total number of output rows produced"
+        },
+        {
+          "name": "output_rows_skew_metric",
+          "signature": "fn output_rows_skew_metric(metrics: &MetricsSet) -> Option<Arc<Metric>>",
+          "summary": "Returns a derived metric that summarizes how unevenly `output_rows` are distributed across partitions."
+        },
+        {
+          "name": "record_output",
+          "signature": "fn record_output(&self, num_rows: usize)",
+          "summary": "Record that some number of rows have been produced as output"
+        },
+        {
+          "name": "record_poll",
+          "signature": "fn record_poll(&self, poll: Poll<Option<Result<RecordBatch>>>) -> Poll<Option<Result<RecordBatch>>>",
+          "summary": "Process a poll result of a stream producing output for an operator."
+        },
+        {
+          "name": "try_done",
+          "signature": "fn try_done(&self)",
+          "summary": "If not previously recorded `done()`, record"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::baseline::SpillMetrics",
+      "name": "SpillMetrics",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct SpillMetrics",
+      "summary": "Helper for creating and tracking spill-related metrics for each operator",
+      "doc": "api/datafusion_physical_expr_common.metrics.baseline.md#spillmetrics",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::SpillMetrics",
+        "datafusion_physical_plan::metrics::SpillMetrics"
+      ],
+      "fields": [
+        "spill_file_count",
+        "spilled_bytes",
+        "spilled_rows"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self",
+          "summary": "Create a new SpillMetrics structure"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::baseline::SplitMetrics",
+      "name": "SplitMetrics",
+      "kind": "struct",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "struct SplitMetrics",
+      "summary": "Metrics for tracking batch splitting activity",
+      "doc": "api/datafusion_physical_expr_common.metrics.baseline.md#splitmetrics",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::SplitMetrics",
+        "datafusion_physical_plan::metrics::SplitMetrics"
+      ],
+      "fields": [
+        "batches_split"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(metrics: &ExecutionPlanMetricsSet, partition: usize) -> Self",
+          "summary": "Create a new [`SplitMetrics`]"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_physical_expr_common::metrics::baseline::RecordOutput",
+      "name": "RecordOutput",
+      "kind": "trait",
+      "crate": "datafusion-physical-expr-common",
+      "signature": "trait RecordOutput",
+      "summary": "Trait for things that produce output rows as a result of execution.",
+      "doc": "api/datafusion_physical_expr_common.metrics.baseline.md#recordoutput",
+      "aliases": [
+        "datafusion_physical_expr_common::metrics::RecordOutput",
+        "datafusion_physical_plan::metrics::RecordOutput"
+      ],
+      "implementors": [
+        "arrow_array::record_batch::RecordBatch",
+        "core::option::Option",
+        "datafusion_common::error::Result"
+      ],
+      "required_methods": [
+        "record_output"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "record_output",
+          "signature": "fn record_output(self, bm: &BaselineMetrics) -> Self",
+          "summary": "Record that some number of output rows have been produced"
+        }
+      ]
+    }
+  ]
+}

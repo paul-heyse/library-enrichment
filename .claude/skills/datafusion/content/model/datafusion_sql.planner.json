@@ -1,0 +1,303 @@
+{
+  "module": "datafusion_sql::planner",
+  "crate": "datafusion-sql",
+  "api": "api/datafusion_sql.planner.md",
+  "items": [
+    {
+      "path": "datafusion_sql::planner::NullOrdering",
+      "name": "NullOrdering",
+      "kind": "enum",
+      "crate": "datafusion-sql",
+      "signature": "enum NullOrdering",
+      "summary": "Represents the null ordering for sorting expressions.",
+      "doc": "api/datafusion_sql.planner.md#nullordering",
+      "variants": [
+        "NullsMax",
+        "NullsMin",
+        "NullsFirst",
+        "NullsLast"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(s: &str) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "nulls_first",
+          "signature": "fn nulls_first(&self, asc: bool) -> bool",
+          "summary": "Evaluates the null ordering based on the given ascending flag."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::planner::object_name_to_qualifier",
+      "name": "object_name_to_qualifier",
+      "kind": "function",
+      "crate": "datafusion-sql",
+      "signature": "fn object_name_to_qualifier(sql_table_name: &sqlparser::ast::ObjectName, enable_normalization: bool) -> datafusion_common::Result<String>",
+      "summary": "Construct a WHERE qualifier suitable for e.g. information_schema filtering from the provided object identifiers (catalog, schema and table names).",
+      "doc": "api/datafusion_sql.planner.md#object_name_to_qualifier"
+    },
+    {
+      "path": "datafusion_sql::planner::object_name_to_table_reference",
+      "name": "object_name_to_table_reference",
+      "kind": "function",
+      "crate": "datafusion-sql",
+      "signature": "fn object_name_to_table_reference(object_name: sqlparser::ast::ObjectName, enable_normalization: bool) -> datafusion_common::Result<datafusion_common::TableReference>",
+      "summary": "Create a [`TableReference`] after normalizing the specified ObjectName",
+      "doc": "api/datafusion_sql.planner.md#object_name_to_table_reference"
+    },
+    {
+      "path": "datafusion_sql::planner::IdentNormalizer",
+      "name": "IdentNormalizer",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct IdentNormalizer",
+      "summary": "Ident Normalizer",
+      "doc": "api/datafusion_sql.planner.md#identnormalizer",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(normalize: bool) -> Self"
+        },
+        {
+          "name": "normalize",
+          "signature": "fn normalize(&self, ident: Ident) -> String"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::planner::ParserOptions",
+      "name": "ParserOptions",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct ParserOptions",
+      "summary": "SQL parser options",
+      "doc": "api/datafusion_sql.planner.md#parseroptions",
+      "fields": [
+        "parse_float_as_decimal",
+        "enable_ident_normalization",
+        "support_varchar_with_length",
+        "enable_options_value_normalization",
+        "collect_spans",
+        "map_string_types_to_utf8view",
+        "default_null_ordering"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(options: &SqlParserOptions) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new `ParserOptions` instance with default values."
+        },
+        {
+          "name": "with_collect_spans",
+          "signature": "fn with_collect_spans(self, value: bool) -> Self",
+          "summary": "Sets the `collect_spans` option."
+        },
+        {
+          "name": "with_default_null_ordering",
+          "signature": "fn with_default_null_ordering(self, value: NullOrdering) -> Self",
+          "summary": "Sets the `default_null_ordering` option."
+        },
+        {
+          "name": "with_enable_ident_normalization",
+          "signature": "fn with_enable_ident_normalization(self, value: bool) -> Self",
+          "summary": "Sets the `enable_ident_normalization` option."
+        },
+        {
+          "name": "with_enable_options_value_normalization",
+          "signature": "fn with_enable_options_value_normalization(self, value: bool) -> Self",
+          "summary": "Sets the `enable_options_value_normalization` option."
+        },
+        {
+          "name": "with_map_string_types_to_utf8view",
+          "signature": "fn with_map_string_types_to_utf8view(self, value: bool) -> Self",
+          "summary": "Sets the `map_string_types_to_utf8view` option."
+        },
+        {
+          "name": "with_parse_float_as_decimal",
+          "signature": "fn with_parse_float_as_decimal(self, value: bool) -> Self",
+          "summary": "Sets the `parse_float_as_decimal` option."
+        },
+        {
+          "name": "with_support_varchar_with_length",
+          "signature": "fn with_support_varchar_with_length(self, value: bool) -> Self",
+          "summary": "Sets the `support_varchar_with_length` option."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::planner::PlannerContext",
+      "name": "PlannerContext",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct PlannerContext",
+      "summary": "Struct to store the states used by the Planner. The Planner will leverage the states to resolve CTEs, Views, subqueries and PREPARE statements. The states include Common Table Expression (CTE) provided with WITH clause and Parameter Data T…",
+      "doc": "api/datafusion_sql.planner.md#plannercontext",
+      "methods": [
+        {
+          "name": "append_outer_query_schema",
+          "signature": "fn append_outer_query_schema(&mut self, schema: DFSchemaRef)",
+          "summary": "Sets the outer query schema, returning the existing one, if any"
+        },
+        {
+          "name": "contains_cte",
+          "signature": "fn contains_cte(&self, cte_name: &str) -> bool",
+          "summary": "Returns true if there is a Common Table Expression (CTE) / Subquery for the specified name"
+        },
+        {
+          "name": "extend_outer_from_schema",
+          "signature": "fn extend_outer_from_schema(&mut self, schema: &DFSchemaRef) -> Result<()>",
+          "summary": "Extends the FROM schema, returning the existing one, if any"
+        },
+        {
+          "name": "get_cte",
+          "signature": "fn get_cte(&self, cte_name: &str) -> Option<&LogicalPlan>",
+          "summary": "Return a plan for the Common Table Expression (CTE) / Subquery for the specified name"
+        },
+        {
+          "name": "insert_cte",
+          "signature": "fn insert_cte(&mut self, cte_name: impl Into<String>, plan: LogicalPlan)",
+          "summary": "Inserts a LogicalPlan for the Common Table Expression (CTE) / Subquery for the specified name"
+        },
+        {
+          "name": "lambda_parameters",
+          "signature": "fn lambda_parameters(&self) -> &HashMap<String, FieldRef>"
+        },
+        {
+          "name": "latest_outer_query_schema",
+          "signature": "fn latest_outer_query_schema(&self) -> Option<&DFSchemaRef>",
+          "summary": "The schema of the adjacent outer relation"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create an empty PlannerContext"
+        },
+        {
+          "name": "outer_from_schema",
+          "signature": "fn outer_from_schema(&self) -> Option<Arc<DFSchema>>"
+        },
+        {
+          "name": "outer_queries_schemas",
+          "signature": "fn outer_queries_schemas(&self) -> &[DFSchemaRef]",
+          "summary": "Return the stack of outer relations' schemas, the outer most relation are at the first entry"
+        },
+        {
+          "name": "outer_schemas_iter",
+          "signature": "fn outer_schemas_iter(&self) -> impl Iterator<Item = &DFSchemaRef>",
+          "summary": "Return an iterator of the subquery relations' schemas, innermost relation is returned first."
+        },
+        {
+          "name": "pop_outer_query_schema",
+          "signature": "fn pop_outer_query_schema(&mut self) -> Option<DFSchemaRef>",
+          "summary": "Remove the schema of the adjacent outer relation"
+        },
+        {
+          "name": "prepare_param_data_types",
+          "signature": "fn prepare_param_data_types(&self) -> &[Option<FieldRef>]",
+          "summary": "Return the types of parameters (`$1`, `$2`, etc) if known"
+        },
+        {
+          "name": "set_outer_from_schema",
+          "signature": "fn set_outer_from_schema(&mut self, schema: Option<DFSchemaRef>) -> Option<DFSchemaRef>",
+          "summary": "Sets the outer FROM schema, returning the existing one, if any"
+        },
+        {
+          "name": "set_table_schema",
+          "signature": "fn set_table_schema(&mut self, schema: Option<DFSchemaRef>) -> Option<DFSchemaRef>"
+        },
+        {
+          "name": "table_schema",
+          "signature": "fn table_schema(&self) -> Option<DFSchemaRef>"
+        },
+        {
+          "name": "with_lambda_parameters",
+          "signature": "fn with_lambda_parameters(self, parameters: impl IntoIterator<Item = FieldRef>) -> Self"
+        },
+        {
+          "name": "with_prepare_param_data_types",
+          "signature": "fn with_prepare_param_data_types(self, prepare_param_data_types: Vec<Option<FieldRef>>) -> Self",
+          "summary": "Update the PlannerContext with provided prepare_param_data_types"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_sql::planner::SqlToRel",
+      "name": "SqlToRel",
+      "kind": "struct",
+      "crate": "datafusion-sql",
+      "signature": "struct SqlToRel<'a, S: ContextProvider>",
+      "summary": "SQL query planner and binder",
+      "doc": "api/datafusion_sql.planner.md#sqltorel",
+      "methods": [
+        {
+          "name": "build_schema",
+          "signature": "fn build_schema(&self, columns: Vec<SQLColumnDef>) -> Result<Schema>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(context_provider: &'a S) -> Self",
+          "summary": "Create a new query planner."
+        },
+        {
+          "name": "new_constraint_from_table_constraints",
+          "signature": "fn new_constraint_from_table_constraints(&self, constraints: &[TableConstraint], df_schema: &DFSchemaRef) -> Result<Constraints>",
+          "summary": "Convert each [TableConstraint] to corresponding [Constraint]"
+        },
+        {
+          "name": "new_with_options",
+          "signature": "fn new_with_options(context_provider: &'a S, options: ParserOptions) -> Self",
+          "summary": "Create a new query planner with the given parser options."
+        },
+        {
+          "name": "sql_statement_to_plan",
+          "signature": "fn sql_statement_to_plan(&self, statement: Statement) -> Result<LogicalPlan>",
+          "summary": "Generate a logical plan from an SQL statement"
+        },
+        {
+          "name": "sql_statement_to_plan_with_context",
+          "signature": "fn sql_statement_to_plan_with_context(&self, statement: Statement, planner_context: &mut PlannerContext) -> Result<LogicalPlan>",
+          "summary": "Generate a logical plan from an SQL statement"
+        },
+        {
+          "name": "sql_to_expr",
+          "signature": "fn sql_to_expr(&self, sql: SQLExpr, schema: &DFSchema, planner_context: &mut PlannerContext) -> Result<Expr>",
+          "summary": "Generate a relational expression from a SQL expression"
+        },
+        {
+          "name": "sql_to_expr_with_alias",
+          "signature": "fn sql_to_expr_with_alias(&self, sql: SQLExprWithAlias, schema: &DFSchema, planner_context: &mut PlannerContext) -> Result<Expr>"
+        },
+        {
+          "name": "statement_to_plan",
+          "signature": "fn statement_to_plan(&self, statement: DFStatement) -> Result<LogicalPlan>",
+          "summary": "Generate a logical plan from an DataFusion SQL statement"
+        },
+        {
+          "name": "take_warnings",
+          "signature": "fn take_warnings(&self) -> Vec<Diagnostic>",
+          "summary": "Drain and return non-fatal warnings collected during SQL planning."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,338 @@
+{
+  "module": "datafusion_execution::cache::cache_manager",
+  "crate": "datafusion-execution",
+  "api": "api/datafusion_execution.cache.cache_manager.md",
+  "items": [
+    {
+      "path": "datafusion_execution::cache::cache_manager::DEFAULT_FILE_STATISTICS_MEMORY_LIMIT",
+      "name": "DEFAULT_FILE_STATISTICS_MEMORY_LIMIT",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_FILE_STATISTICS_MEMORY_LIMIT: usize = _",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT",
+      "name": "DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_LIST_FILES_CACHE_MEMORY_LIMIT: usize = _",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::DEFAULT_LIST_FILES_CACHE_TTL",
+      "name": "DEFAULT_LIST_FILES_CACHE_TTL",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_LIST_FILES_CACHE_TTL: Option<std::time::Duration> = None",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::DEFAULT_METADATA_CACHE_LIMIT",
+      "name": "DEFAULT_METADATA_CACHE_LIMIT",
+      "kind": "constant",
+      "crate": "datafusion-execution",
+      "signature": "const DEFAULT_METADATA_CACHE_LIMIT: usize = _",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::meta_heap_bytes",
+      "name": "meta_heap_bytes",
+      "kind": "function",
+      "crate": "datafusion-execution",
+      "signature": "fn meta_heap_bytes(object_meta: &object_store::ObjectMeta) -> usize",
+      "summary": "Calculates the number of bytes an [`ObjectMeta`] occupies in the heap.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#meta_heap_bytes"
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::CacheManager",
+      "name": "CacheManager",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct CacheManager",
+      "summary": "Manages various caches used in DataFusion.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#cachemanager",
+      "methods": [
+        {
+          "name": "get_file_metadata_cache",
+          "signature": "fn get_file_metadata_cache(&self) -> Arc<FileMetadataCache>",
+          "summary": "Get the file embedded metadata cache."
+        },
+        {
+          "name": "get_file_statistic_cache",
+          "signature": "fn get_file_statistic_cache(&self) -> Option<Arc<FileStatisticsCache>>",
+          "summary": "Get the file statistics cache."
+        },
+        {
+          "name": "get_file_statistic_cache_limit",
+          "signature": "fn get_file_statistic_cache_limit(&self) -> usize",
+          "summary": "Get the memory limit of the file statistics cache."
+        },
+        {
+          "name": "get_list_files_cache",
+          "signature": "fn get_list_files_cache(&self) -> Option<Arc<ListFilesCache>>",
+          "summary": "Get the cache for storing the result of listing [`ObjectMeta`]s under the same path."
+        },
+        {
+          "name": "get_list_files_cache_limit",
+          "signature": "fn get_list_files_cache_limit(&self) -> usize",
+          "summary": "Get the memory limit of the list files cache."
+        },
+        {
+          "name": "get_list_files_cache_ttl",
+          "signature": "fn get_list_files_cache_ttl(&self) -> Option<Duration>",
+          "summary": "Get the TTL (time-to-live) of the list files cache."
+        },
+        {
+          "name": "get_metadata_cache_limit",
+          "signature": "fn get_metadata_cache_limit(&self) -> usize",
+          "summary": "Get the limit of the file embedded metadata cache."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(config: &CacheManagerConfig) -> Result<Arc<Self>>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::CacheManagerConfig",
+      "name": "CacheManagerConfig",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct CacheManagerConfig",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "file_statistics_cache",
+        "file_statistics_cache_limit",
+        "list_files_cache",
+        "list_files_cache_limit",
+        "list_files_cache_ttl",
+        "file_metadata_cache",
+        "metadata_cache_limit"
+      ],
+      "methods": [
+        {
+          "name": "with_file_metadata_cache",
+          "signature": "fn with_file_metadata_cache(self, cache: Option<Arc<FileMetadataCache>>) -> Self",
+          "summary": "Sets the cache for file-embedded metadata."
+        },
+        {
+          "name": "with_file_statistics_cache",
+          "signature": "fn with_file_statistics_cache(self, cache: Option<Arc<FileStatisticsCache>>) -> Self",
+          "summary": "Set the cache for file statistics."
+        },
+        {
+          "name": "with_file_statistics_cache_limit",
+          "signature": "fn with_file_statistics_cache_limit(self, limit: usize) -> Self",
+          "summary": "Specifies the memory limit for the file statistics cache, in bytes."
+        },
+        {
+          "name": "with_list_files_cache",
+          "signature": "fn with_list_files_cache(self, cache: Option<Arc<ListFilesCache>>) -> Self",
+          "summary": "Set the cache for listing files."
+        },
+        {
+          "name": "with_list_files_cache_limit",
+          "signature": "fn with_list_files_cache_limit(self, limit: usize) -> Self",
+          "summary": "Sets the limit of the list files cache, in bytes."
+        },
+        {
+          "name": "with_list_files_cache_ttl",
+          "signature": "fn with_list_files_cache_ttl(self, ttl: Option<Duration>) -> Self",
+          "summary": "Sets the TTL (time-to-live) for entries in the list files cache."
+        },
+        {
+          "name": "with_metadata_cache_limit",
+          "signature": "fn with_metadata_cache_limit(self, limit: usize) -> Self",
+          "summary": "Sets the limit of the file-embedded metadata cache, in bytes."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::CachedFileList",
+      "name": "CachedFileList",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct CachedFileList",
+      "summary": "Cached file listing.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#cachedfilelist",
+      "fields": [
+        "files"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::ops::deref::Deref",
+        "datafusion_execution::cache::CacheValue"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "files_matching_prefix",
+          "signature": "fn files_matching_prefix(&self, prefix: &Option<Path>) -> Arc<Vec<ObjectMeta>>",
+          "summary": "Returns files matching the given prefix."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(files: Vec<ObjectMeta>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(files: Vec<ObjectMeta>) -> Self",
+          "summary": "Create a new cached file list."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::CacheValue"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::CachedFileMetadata",
+      "name": "CachedFileMetadata",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct CachedFileMetadata",
+      "summary": "Cached metadata for a file, including statistics and ordering.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#cachedfilemetadata",
+      "fields": [
+        "meta",
+        "schema_fingerprint",
+        "statistics",
+        "ordering"
+      ],
+      "implements": [
+        "datafusion_common::heap_size::DFHeapSize",
+        "datafusion_execution::cache::CacheValue"
+      ],
+      "methods": [
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize",
+          "via_trait": "datafusion_common::heap_size::DFHeapSize"
+        },
+        {
+          "name": "is_valid_for",
+          "signature": "fn is_valid_for(&self, current_meta: &ObjectMeta, current_schema_fingerprint: &Arc<SchemaFingerprint>) -> bool",
+          "summary": "Check if this cached entry is still valid for the given metadata."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(meta: ObjectMeta, schema_fingerprint: Arc<SchemaFingerprint>, statistics: Arc<Statistics>, ordering: Option<LexOrdering>) -> Self",
+          "summary": "Create a new cached file metadata entry."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::CacheValue"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::CachedFileMetadataEntry",
+      "name": "CachedFileMetadataEntry",
+      "kind": "struct",
+      "crate": "datafusion-execution",
+      "signature": "struct CachedFileMetadataEntry",
+      "summary": "Cached file metadata entry with validation information.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#cachedfilemetadataentry",
+      "fields": [
+        "meta",
+        "file_metadata"
+      ],
+      "implements": [
+        "datafusion_execution::cache::CacheValue"
+      ],
+      "methods": [
+        {
+          "name": "is_valid_for",
+          "signature": "fn is_valid_for(&self, current_meta: &ObjectMeta) -> bool",
+          "summary": "Check if this cached entry is still valid for the given metadata."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(meta: ObjectMeta, file_metadata: Arc<dyn FileMetadata>) -> Self",
+          "summary": "Create a new cached file metadata entry."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::CacheValue"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::FileMetadata",
+      "name": "FileMetadata",
+      "kind": "trait",
+      "crate": "datafusion-execution",
+      "signature": "trait FileMetadata: Any + Send + Sync",
+      "summary": "Generic file-embedded metadata used with [`FileMetadataCache`].",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#filemetadata",
+      "implementors": [
+        "datafusion_datasource_parquet::metadata::CachedParquetMetaData",
+        "datafusion_datasource_parquet::reader::CachedParquetMetaData"
+      ],
+      "required_methods": [
+        "as_any",
+        "extra_info",
+        "memory_size"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "summary": "Returns the file metadata as [`Any`] so that it can be downcast to a specific implementation."
+        },
+        {
+          "name": "extra_info",
+          "signature": "fn extra_info(&self) -> HashMap<String, String>",
+          "summary": "Returns extra information about this entry"
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "summary": "Returns the size of the metadata in bytes."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::FileMetadataCache",
+      "name": "FileMetadataCache",
+      "kind": "type_alias",
+      "crate": "datafusion-execution",
+      "signature": "type FileMetadataCache = dyn Cache<object_store::path::Path, CachedFileMetadataEntry>",
+      "summary": "A cache for storing file-embedded metadata.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#filemetadatacache"
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::FileStatisticsCache",
+      "name": "FileStatisticsCache",
+      "kind": "type_alias",
+      "crate": "datafusion-execution",
+      "signature": "type FileStatisticsCache = dyn Cache<TableScopedPath, CachedFileMetadata>",
+      "summary": "A cache for file statistics and orderings.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#filestatisticscache"
+    },
+    {
+      "path": "datafusion_execution::cache::cache_manager::ListFilesCache",
+      "name": "ListFilesCache",
+      "kind": "type_alias",
+      "crate": "datafusion-execution",
+      "signature": "type ListFilesCache = dyn Cache<TableScopedPath, CachedFileList>",
+      "summary": "A cache for storing the [`ObjectMeta`]s that result from listing a path.",
+      "doc": "api/datafusion_execution.cache.cache_manager.md#listfilescache"
+    }
+  ]
+}

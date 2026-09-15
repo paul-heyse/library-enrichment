@@ -29,17 +29,22 @@ pub const JSONRPC_VERSION: &str = "2.0";
 
 /// A request frame.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Request {
     /// Always `"2.0"`.
     pub jsonrpc: String,
     /// The method name, e.g. `service.status`.
     pub method: String,
     /// Method parameters. Absent is equivalent to `{}`.
-    #[serde(default)]
+    #[serde(default = "empty_params")]
     pub params: serde_json::Value,
     /// Correlation id. `None` makes this a notification, which gets no response.
     #[serde(default)]
     pub id: Option<serde_json::Value>,
+}
+
+fn empty_params() -> serde_json::Value {
+    serde_json::Value::Object(Default::default())
 }
 
 /// A response frame. Exactly one of `result`/`error` is present.
@@ -121,10 +126,28 @@ impl RpcError {
     /// code. The `service_code` values come from the frozen thirteen.
     #[must_use]
     pub fn new(code: i32, message: impl Into<String>, service_code: &str, next: &str) -> Self {
+        use enrichment_core::wire::{Diagnostic, DiagnosticCause, ErrorCode, RecoveryAction};
+        let service_error = serde_json::from_value::<ErrorCode>(serde_json::json!(service_code))
+            .unwrap_or(ErrorCode::InternalError);
+        let mut diagnostic = Diagnostic::for_error(service_error, next.to_owned());
+        diagnostic.stage = "rpc_admission".into();
+        diagnostic.correlation_id = Some(crate::envelope::new_request_id().as_str().to_owned());
+        if matches!(
+            code,
+            codes::PARSE_ERROR | codes::INVALID_REQUEST | codes::INVALID_PARAMS
+        ) {
+            diagnostic.cause = DiagnosticCause::InvalidInput;
+            diagnostic.actions = vec![RecoveryAction::ChangeRequest {
+                reason: next.to_owned(),
+            }];
+        }
         Self {
             code,
             message: message.into(),
-            data: Some(serde_json::json!({ "code": service_code, "next_action": next })),
+            data: Some(serde_json::json!({
+                "code": service_error, "next_action": next,
+                "retryable": false, "diagnostic": diagnostic
+            })),
         }
     }
 }
@@ -161,8 +184,10 @@ where
             return if buf.is_empty() {
                 Ok(None)
             } else {
-                // A final frame without a trailing newline is still a frame.
-                Ok(Some(decode(buf)?))
+                Err(FrameError::Io(std::io::Error::new(
+                    std::io::ErrorKind::UnexpectedEof,
+                    "RPC frame ended before its newline delimiter",
+                )))
             };
         }
 
@@ -228,6 +253,16 @@ mod tests {
     #[tokio::test]
     async fn an_empty_stream_is_a_clean_end() {
         assert_eq!(read("", 1024).await.expect("reads"), None);
+    }
+
+    #[tokio::test]
+    async fn a_partial_frame_is_never_dispatched() {
+        let error = read("{\"method\":\"service.status\"}", 1024)
+            .await
+            .expect_err("delimiter required");
+        assert!(
+            matches!(error, FrameError::Io(e) if e.kind() == std::io::ErrorKind::UnexpectedEof)
+        );
     }
 
     #[tokio::test]

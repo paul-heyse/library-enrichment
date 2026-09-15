@@ -1,0 +1,118 @@
+{
+  "module": "datafusion_common::spans",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.spans.md",
+  "items": [
+    {
+      "path": "datafusion_common::spans::Location",
+      "name": "Location",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Location",
+      "summary": "Represents a location, determined by a line and a column number, in the original SQL query.",
+      "doc": "api/datafusion_common.spans.md#location",
+      "aliases": [
+        "datafusion::common::Location",
+        "datafusion_common::Location"
+      ],
+      "fields": [
+        "line",
+        "column"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: sqlparser::tokenizer::Location) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::spans::Span",
+      "name": "Span",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Span",
+      "summary": "Represents an interval of characters in the original SQL query.",
+      "doc": "api/datafusion_common.spans.md#span",
+      "aliases": [
+        "datafusion::common::Span",
+        "datafusion_common::Span"
+      ],
+      "fields": [
+        "start",
+        "end"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(start: Location, end: Location) -> Self",
+          "summary": "Creates a new [`Span`] from a start and an end [`Location`]."
+        },
+        {
+          "name": "try_from_sqlparser_span",
+          "signature": "fn try_from_sqlparser_span(span: sqlparser::tokenizer::Span) -> Option<Span>",
+          "summary": "Convert a [`Span`](sqlparser::tokenizer::Span) from the parser, into a DataFusion [`Span`]. If the input span is empty (line 0 column 0, to line 0 column 0), then [`None`] is returned."
+        },
+        {
+          "name": "union",
+          "signature": "fn union(&self, other: &Span) -> Span",
+          "summary": "Returns the smallest Span that contains both `self` and `other`"
+        },
+        {
+          "name": "union_iter",
+          "signature": "fn union_iter<I: IntoIterator<Item = Span>>(iter: I) -> Option<Span>",
+          "summary": "Return the [Span::union] of all spans in the iterator."
+        },
+        {
+          "name": "union_opt",
+          "signature": "fn union_opt(&self, other: &Option<Span>) -> Span",
+          "summary": "Same as [Span::union] for `Option<Span>`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::spans::Spans",
+      "name": "Spans",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Spans",
+      "summary": "A collection of [`Span`], meant to be used as a field of entities whose location in the original SQL query is desired to be tracked. Sometimes an entity can have multiple spans. e.g. if you want to track the position of the column a that c…",
+      "doc": "api/datafusion_common.spans.md#spans",
+      "aliases": [
+        "datafusion::common::Spans",
+        "datafusion_common::Spans"
+      ],
+      "methods": [
+        {
+          "name": "add_span",
+          "signature": "fn add_span(&mut self, span: Span)",
+          "summary": "Adds a [`Span`] to the collection."
+        },
+        {
+          "name": "first",
+          "signature": "fn first(&self) -> Option<Span>",
+          "summary": "Returns the first [`Span`], if any. This is useful when you know that there's gonna be only one [`Span`] at most."
+        },
+        {
+          "name": "get_spans",
+          "signature": "fn get_spans(&self) -> &[Span]",
+          "summary": "Returns a slice of the [`Span`]s."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = &Span>",
+          "summary": "Iterates over the [`Span`]s."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new empty [`Spans`] with no [`Span`]."
+        }
+      ]
+    }
+  ]
+}

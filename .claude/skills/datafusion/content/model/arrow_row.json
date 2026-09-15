@@ -1,0 +1,310 @@
+{
+  "module": "arrow_row",
+  "crate": "arrow-row",
+  "api": "api/arrow_row.md",
+  "items": [
+    {
+      "path": "arrow_row::encode_dictionary_values",
+      "name": "encode_dictionary_values",
+      "kind": "function",
+      "crate": "arrow-row",
+      "signature": "fn encode_dictionary_values<K: ArrowDictionaryKeyType>(data: &mut [u8], offsets: &mut [usize], column: &DictionaryArray<K>, values: &Rows, null: &Row<'_>)",
+      "summary": "Encode dictionary values not preserving the dictionary encoding",
+      "doc": "api/arrow_row.md#encode_dictionary_values",
+      "aliases": [
+        "arrow::row::encode_dictionary_values"
+      ]
+    },
+    {
+      "path": "arrow_row::OwnedRow",
+      "name": "OwnedRow",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct OwnedRow",
+      "summary": "Owned version of a [`Row`] that can be moved/cloned freely.",
+      "doc": "api/arrow_row.md#ownedrow",
+      "aliases": [
+        "arrow::row::OwnedRow"
+      ],
+      "implements": [
+        "core::convert::AsRef"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[u8]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "row",
+          "signature": "fn row(&self) -> Row<'_>",
+          "summary": "Get borrowed [`Row`] from owned version."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::Row",
+      "name": "Row",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct Row<'a>",
+      "summary": "A comparable representation of a row.",
+      "doc": "api/arrow_row.md#row",
+      "aliases": [
+        "arrow::row::Row"
+      ],
+      "implements": [
+        "core::convert::AsRef"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &[u8]",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &'a [u8]",
+          "summary": "The row's bytes, with the lifetime of the underlying data."
+        },
+        {
+          "name": "owned",
+          "signature": "fn owned(&self) -> OwnedRow",
+          "summary": "Create owned version of the row to detach it from the shared [`Rows`]."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::RowConverter",
+      "name": "RowConverter",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct RowConverter",
+      "summary": "Converts [`ArrayRef`] columns into a [row-oriented](self) format.",
+      "doc": "api/arrow_row.md#rowconverter",
+      "aliases": [
+        "arrow::row::RowConverter"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(&self, rows: &mut Rows, columns: &[ArrayRef]) -> Result<(), ArrowError>",
+          "summary": "Convert [`ArrayRef`] columns appending to an existing [`Rows`]"
+        },
+        {
+          "name": "convert_columns",
+          "signature": "fn convert_columns(&self, columns: &[ArrayRef]) -> Result<Rows, ArrowError>",
+          "summary": "Convert [`ArrayRef`] columns into [`Rows`]"
+        },
+        {
+          "name": "convert_rows",
+          "signature": "fn convert_rows<'a, I>(&self, rows: I) -> Result<Vec<ArrayRef>, ArrowError> where I: IntoIterator<Item = Row<'a>>",
+          "summary": "Convert [`Rows`] columns into [`ArrayRef`]"
+        },
+        {
+          "name": "empty_rows",
+          "signature": "fn empty_rows(&self, row_capacity: usize, data_capacity: usize) -> Rows",
+          "summary": "Returns an empty [`Rows`] with capacity for `row_capacity` rows with a total length of `data_capacity`"
+        },
+        {
+          "name": "from_binary",
+          "signature": "fn from_binary(&self, array: BinaryArray) -> Rows",
+          "summary": "Create a new [Rows] instance from the given binary data."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(fields: Vec<SortField>) -> Result<Self, ArrowError>",
+          "summary": "Create a new [`RowConverter`] with the provided schema"
+        },
+        {
+          "name": "parser",
+          "signature": "fn parser(&self) -> RowParser",
+          "summary": "Returns a [`RowParser`] that can be used to parse [`Row`] from bytes"
+        },
+        {
+          "name": "parser_skip_utf8_validation",
+          "signature": "unsafe fn parser_skip_utf8_validation(&self) -> RowParser",
+          "summary": "Like [`Self::parser`] but skips UTF-8 validation on decode."
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the size of this instance in bytes"
+        },
+        {
+          "name": "supports_fields",
+          "signature": "fn supports_fields(fields: &[SortField]) -> bool",
+          "summary": "Check if the given fields are supported by the row format."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::RowParser",
+      "name": "RowParser",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct RowParser",
+      "summary": "A [`RowParser`] can be created from a [`RowConverter`] and used to parse bytes to [`Row`]",
+      "doc": "api/arrow_row.md#rowparser",
+      "aliases": [
+        "arrow::row::RowParser"
+      ],
+      "methods": [
+        {
+          "name": "parse",
+          "signature": "fn parse<'a>(&'a self, bytes: &'a [u8]) -> Row<'a>",
+          "summary": "Creates a [`Row`] from the provided `bytes`."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::Rows",
+      "name": "Rows",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct Rows",
+      "summary": "A row-oriented representation of arrow data, that is normalized for comparison.",
+      "doc": "api/arrow_row.md#rows",
+      "aliases": [
+        "arrow::row::Rows"
+      ],
+      "methods": [
+        {
+          "name": "clear",
+          "signature": "fn clear(&mut self)",
+          "summary": "Sets the length of this [`Rows`] to 0"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> RowsIter<'_>",
+          "summary": "Returns an iterator over the [`Row`] in this [`Rows`]"
+        },
+        {
+          "name": "lengths",
+          "signature": "fn lengths(&self) -> RowLengthIter<'_>",
+          "summary": "Get an iterator over the lengths of each row in this [`Rows`]"
+        },
+        {
+          "name": "num_rows",
+          "signature": "fn num_rows(&self) -> usize",
+          "summary": "Returns the number of [`Row`] in this [`Rows`]"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, row: Row<'_>)",
+          "summary": "Append a [`Row`] to this [`Rows`]"
+        },
+        {
+          "name": "reserve",
+          "signature": "fn reserve(&mut self, row_capacity: usize, data_capacity: usize)",
+          "summary": "Reserve capacity for `row_capacity` rows with a total length of `data_capacity`"
+        },
+        {
+          "name": "row",
+          "signature": "fn row(&self, row: usize) -> Row<'_>",
+          "summary": "Returns the row at index `row`"
+        },
+        {
+          "name": "row_len",
+          "signature": "fn row_len(&self, row: usize) -> usize",
+          "summary": "Returns the number of bytes the row at index `row` is occupying, that is, what is the length of the returned [`Row::data`] will be."
+        },
+        {
+          "name": "row_unchecked",
+          "signature": "unsafe fn row_unchecked(&self, index: usize) -> Row<'_>",
+          "summary": "Returns the row at `index` without bounds checking"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Returns the size of this instance in bytes"
+        },
+        {
+          "name": "try_into_binary",
+          "signature": "fn try_into_binary(self) -> Result<BinaryArray, ArrowError>",
+          "summary": "Create a [BinaryArray] from the [Rows] data without reallocating the underlying bytes."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::RowsIter",
+      "name": "RowsIter",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct RowsIter<'a>",
+      "summary": "An iterator over [`Rows`]",
+      "doc": "api/arrow_row.md#rowsiter",
+      "aliases": [
+        "arrow::row::RowsIter"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::SortField",
+      "name": "SortField",
+      "kind": "struct",
+      "crate": "arrow-row",
+      "signature": "struct SortField",
+      "summary": "Configure the data type and sort order for a given column",
+      "doc": "api/arrow_row.md#sortfield",
+      "aliases": [
+        "arrow::row::SortField"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(data_type: DataType) -> Self",
+          "summary": "Create a new column with the given data type"
+        },
+        {
+          "name": "new_with_options",
+          "signature": "fn new_with_options(data_type: DataType, options: SortOptions) -> Self",
+          "summary": "Create a new column with the given data type and [`SortOptions`]"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "summary": "Return size of this instance in bytes."
+        }
+      ]
+    },
+    {
+      "path": "arrow_row::RowLengthIter",
+      "name": "RowLengthIter",
+      "kind": "type_alias",
+      "crate": "arrow-row",
+      "signature": "type RowLengthIter<'a> = std::iter::Map<std::slice::Windows<'a, usize>, fn(&'a [usize]) -> usize>",
+      "summary": "The iterator type for [`Rows::lengths`]",
+      "doc": "api/arrow_row.md#rowlengthiter",
+      "aliases": [
+        "arrow::row::RowLengthIter"
+      ]
+    }
+  ]
+}

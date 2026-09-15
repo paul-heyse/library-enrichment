@@ -1,0 +1,362 @@
+{
+  "module": "datafusion::dataframe",
+  "crate": "datafusion",
+  "api": "api/datafusion.dataframe.md",
+  "items": [
+    {
+      "path": "datafusion::dataframe::DataFrame",
+      "name": "DataFrame",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct DataFrame",
+      "summary": "Represents a logical set of rows with the same named columns.",
+      "doc": "api/datafusion.dataframe.md#dataframe",
+      "aliases": [
+        "datafusion::prelude::DataFrame"
+      ],
+      "methods": [
+        {
+          "name": "aggregate",
+          "signature": "fn aggregate(self, group_expr: Vec<Expr>, aggr_expr: Vec<Expr>) -> Result<DataFrame>",
+          "summary": "Return a new `DataFrame` that aggregates the rows of the current `DataFrame`, first optionally grouping by the given expressions."
+        },
+        {
+          "name": "alias",
+          "signature": "fn alias(self, alias: &str) -> Result<DataFrame>",
+          "summary": "Apply an alias to the DataFrame."
+        },
+        {
+          "name": "cache",
+          "signature": "async fn cache(self) -> Result<DataFrame>",
+          "summary": "Cache DataFrame as a memory table."
+        },
+        {
+          "name": "collect",
+          "signature": "async fn collect(self) -> Result<Vec<RecordBatch>>",
+          "summary": "Execute this `DataFrame` and buffer all resulting `RecordBatch`es  into memory."
+        },
+        {
+          "name": "collect_partitioned",
+          "signature": "async fn collect_partitioned(self) -> Result<Vec<Vec<RecordBatch>>>",
+          "summary": "Executes this DataFrame and collects all results into a vector of vector of RecordBatch maintaining the input partitioning."
+        },
+        {
+          "name": "count",
+          "signature": "async fn count(self) -> Result<usize>",
+          "summary": "Return the total number of rows in this `DataFrame`."
+        },
+        {
+          "name": "create_physical_plan",
+          "signature": "async fn create_physical_plan(&self) -> Result<Arc<dyn ExecutionPlan>>",
+          "summary": "Create a physical plan from this DataFrame."
+        },
+        {
+          "name": "describe",
+          "signature": "async fn describe(self) -> Result<Self>",
+          "summary": "Return a new `DataFrame` that has statistics for a DataFrame."
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(self) -> Result<DataFrame>",
+          "summary": "Return a new `DataFrame` with all duplicated rows removed."
+        },
+        {
+          "name": "distinct_on",
+          "signature": "fn distinct_on(self, on_expr: Vec<Expr>, select_expr: Vec<Expr>, sort_expr: Option<Vec<SortExpr>>) -> Result<DataFrame>",
+          "summary": "Return a new `DataFrame` with duplicated rows removed as per the specified expression list according to the provided sorting expressions grouped by the `DISTINCT ON` clause expressions."
+        },
+        {
+          "name": "drop_columns",
+          "signature": "fn drop_columns<T>(self, columns: &[T]) -> Result<DataFrame> where T: Into<Column> + Clone",
+          "summary": "Returns a new DataFrame containing all columns except the specified columns."
+        },
+        {
+          "name": "except",
+          "signature": "fn except(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the exception of two [`DataFrame`]s.  The two [`DataFrame`]s must have exactly the same schema"
+        },
+        {
+          "name": "except_distinct",
+          "signature": "fn except_distinct(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the distinct exception of two [`DataFrame`]s.  The two [`DataFrame`]s must have exactly the same schema"
+        },
+        {
+          "name": "execute_stream",
+          "signature": "async fn execute_stream(self) -> Result<SendableRecordBatchStream>",
+          "summary": "Executes this DataFrame and returns a stream over a single partition"
+        },
+        {
+          "name": "execute_stream_partitioned",
+          "signature": "async fn execute_stream_partitioned(self) -> Result<Vec<SendableRecordBatchStream>>",
+          "summary": "Executes this DataFrame and returns one stream per partition."
+        },
+        {
+          "name": "explain",
+          "signature": "fn explain(self, verbose: bool, analyze: bool) -> Result<DataFrame>",
+          "summary": "Return a DataFrame with the explanation of its plan so far."
+        },
+        {
+          "name": "explain_with_options",
+          "signature": "fn explain_with_options(self, explain_option: ExplainOption) -> Result<DataFrame>",
+          "summary": "Return a DataFrame with the explanation of its plan so far."
+        },
+        {
+          "name": "fill_nan",
+          "signature": "fn fill_nan(&self, value: &ScalarValue, columns: &[&str]) -> Result<DataFrame>",
+          "summary": "Fill NaN values in specified floating-point columns with a given value If no columns are specified (empty slice), applies to all columns Only floating-point columns are affected; other columns are left unchanged Only fills if the value can…"
+        },
+        {
+          "name": "fill_null",
+          "signature": "fn fill_null(&self, value: &ScalarValue, columns: &[&str]) -> Result<DataFrame>",
+          "summary": "Fill null values in specified columns with a given value If no columns are specified (empty slice), applies to all columns Only fills if the value can be cast to the column's type"
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(self, predicate: Expr) -> Result<DataFrame>",
+          "summary": "Return a DataFrame with only rows for which `predicate` evaluates to `true`."
+        },
+        {
+          "name": "find_qualified_columns",
+          "signature": "fn find_qualified_columns(&self, names: &[&str]) -> Result<Vec<(Option<&TableReference>, &FieldRef)>>",
+          "summary": "Find qualified columns for this dataframe from names"
+        },
+        {
+          "name": "from_columns",
+          "signature": "fn from_columns(columns: Vec<(&str, ArrayRef)>) -> Result<Self>",
+          "summary": "Helper for creating DataFrame. # Example ``` use arrow::array::{ArrayRef, Int32Array, StringArray}; use datafusion::prelude::DataFrame; use std::sync::Arc; let id: ArrayRef = Arc::new(Int32Array::from(vec![1, 2, 3])); let name: ArrayRef =…"
+        },
+        {
+          "name": "intersect",
+          "signature": "fn intersect(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the intersection of two [`DataFrame`]s.  The two [`DataFrame`]s must have exactly the same schema"
+        },
+        {
+          "name": "intersect_distinct",
+          "signature": "fn intersect_distinct(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the distinct intersection of two [`DataFrame`]s.  The two [`DataFrame`]s must have exactly the same schema"
+        },
+        {
+          "name": "into_optimized_plan",
+          "signature": "fn into_optimized_plan(self) -> Result<LogicalPlan>",
+          "summary": "Return the optimized [`LogicalPlan`] represented by this DataFrame."
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (SessionState, LogicalPlan)",
+          "summary": "Returns both the [`LogicalPlan`] and [`SessionState`] that comprise this [`DataFrame`]"
+        },
+        {
+          "name": "into_temporary_view",
+          "signature": "fn into_temporary_view(self) -> Arc<dyn TableProvider>",
+          "summary": "See [`Self::into_view`]. The returned [`TableProvider`] will create a transient table."
+        },
+        {
+          "name": "into_unoptimized_plan",
+          "signature": "fn into_unoptimized_plan(self) -> LogicalPlan",
+          "summary": "Return the [`LogicalPlan`] represented by this DataFrame without running any optimizers"
+        },
+        {
+          "name": "into_view",
+          "signature": "fn into_view(self) -> Arc<dyn TableProvider>",
+          "summary": "Converts this [`DataFrame`] into a [`TableProvider`] that can be registered as a table view using [`SessionContext::register_table`]."
+        },
+        {
+          "name": "join",
+          "signature": "fn join(self, right: DataFrame, join_type: JoinType, left_cols: &[&str], right_cols: &[&str], filter: Option<Expr>) -> Result<DataFrame>",
+          "summary": "Join this `DataFrame` with another `DataFrame` using explicitly specified columns and an optional filter expression."
+        },
+        {
+          "name": "join_on",
+          "signature": "fn join_on(self, right: DataFrame, join_type: JoinType, on_exprs: impl IntoIterator<Item = Expr>) -> Result<DataFrame>",
+          "summary": "Join this `DataFrame` with another `DataFrame` using the specified expressions."
+        },
+        {
+          "name": "limit",
+          "signature": "fn limit(self, skip: usize, fetch: Option<usize>) -> Result<DataFrame>",
+          "summary": "Returns a new `DataFrame` with a limited number of rows."
+        },
+        {
+          "name": "logical_plan",
+          "signature": "fn logical_plan(&self) -> &LogicalPlan",
+          "summary": "Return a reference to the unoptimized [`LogicalPlan`] that comprises this DataFrame."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(session_state: SessionState, plan: LogicalPlan) -> Self",
+          "summary": "Create a new `DataFrame ` based on an existing `LogicalPlan`"
+        },
+        {
+          "name": "parse_sql_expr",
+          "signature": "fn parse_sql_expr(&self, sql: &str) -> Result<Expr>",
+          "summary": "Creates logical expression from a SQL query text. The expression is created and processed against the current schema."
+        },
+        {
+          "name": "registry",
+          "signature": "fn registry(&self) -> &dyn FunctionRegistry",
+          "summary": "Return a `FunctionRegistry` used to plan udf's calls"
+        },
+        {
+          "name": "repartition",
+          "signature": "fn repartition(self, partitioning_scheme: Partitioning) -> Result<DataFrame>",
+          "summary": "Repartition a DataFrame based on a logical partitioning scheme."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &DFSchema",
+          "summary": "Returns the `DFSchema` describing the output of this DataFrame."
+        },
+        {
+          "name": "select",
+          "signature": "fn select(self, expr_list: impl IntoIterator<Item = impl Into<SelectExpr>>) -> Result<DataFrame>",
+          "summary": "Project arbitrary expressions (like SQL SELECT expressions) into a new `DataFrame`."
+        },
+        {
+          "name": "select_columns",
+          "signature": "fn select_columns(self, columns: &[&str]) -> Result<DataFrame>",
+          "summary": "Filter the DataFrame by column. Returns a new DataFrame only containing the specified columns."
+        },
+        {
+          "name": "select_exprs",
+          "signature": "fn select_exprs(self, exprs: &[&str]) -> Result<DataFrame>",
+          "summary": "Project arbitrary list of expression strings into a new `DataFrame`. Method will parse string expressions into logical plan expressions."
+        },
+        {
+          "name": "show",
+          "signature": "async fn show(self) -> Result<()>",
+          "summary": "Execute the `DataFrame` and print the results to the console."
+        },
+        {
+          "name": "show_limit",
+          "signature": "async fn show_limit(self, num: usize) -> Result<()>",
+          "summary": "Execute the `DataFrame` and print only the first `num` rows of the result to the console."
+        },
+        {
+          "name": "sort",
+          "signature": "fn sort(self, expr: Vec<SortExpr>) -> Result<DataFrame>",
+          "summary": "Sort the DataFrame by the specified sorting expressions."
+        },
+        {
+          "name": "sort_by",
+          "signature": "fn sort_by(self, expr: Vec<Expr>) -> Result<DataFrame>",
+          "summary": "Apply a sort by provided expressions with default direction"
+        },
+        {
+          "name": "task_ctx",
+          "signature": "fn task_ctx(&self) -> TaskContext",
+          "summary": "Return a new [`TaskContext`] which would be used to execute this DataFrame"
+        },
+        {
+          "name": "to_string",
+          "signature": "async fn to_string(self) -> Result<String>",
+          "summary": "Execute the `DataFrame` and return a string representation of the results."
+        },
+        {
+          "name": "union",
+          "signature": "fn union(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the union of two [`DataFrame`]s, preserving duplicate rows."
+        },
+        {
+          "name": "union_by_name",
+          "signature": "fn union_by_name(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the union of two [`DataFrame`]s using column names, preserving duplicate rows."
+        },
+        {
+          "name": "union_by_name_distinct",
+          "signature": "fn union_by_name_distinct(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the union of two [`DataFrame`]s using column names with all duplicated rows removed."
+        },
+        {
+          "name": "union_distinct",
+          "signature": "fn union_distinct(self, dataframe: DataFrame) -> Result<DataFrame>",
+          "summary": "Calculate the distinct union of two [`DataFrame`]s."
+        },
+        {
+          "name": "unnest_columns",
+          "signature": "fn unnest_columns(self, columns: &[&str]) -> Result<DataFrame>",
+          "summary": "Expand multiple list/struct columns into a set of rows and new columns."
+        },
+        {
+          "name": "unnest_columns_with_options",
+          "signature": "fn unnest_columns_with_options(self, columns: &[&str], options: UnnestOptions) -> Result<DataFrame>",
+          "summary": "Expand multiple list columns into a set of rows, with behavior controlled by [`UnnestOptions`]."
+        },
+        {
+          "name": "window",
+          "signature": "fn window(self, window_exprs: Vec<Expr>) -> Result<DataFrame>",
+          "summary": "Return a new DataFrame that adds the result of evaluating one or more window functions ([`Expr::WindowFunction`]) to the existing columns"
+        },
+        {
+          "name": "with_column",
+          "signature": "fn with_column(self, name: &str, expr: Expr) -> Result<DataFrame>",
+          "summary": "Add or replace a column in the DataFrame."
+        },
+        {
+          "name": "with_column_renamed",
+          "signature": "fn with_column_renamed(self, old_name: impl Into<String>, new_name: &str) -> Result<DataFrame>",
+          "summary": "Rename one column by applying a new projection. This is a no-op if the column to be renamed does not exist."
+        },
+        {
+          "name": "with_param_values",
+          "signature": "fn with_param_values(self, query_values: impl Into<ParamValues>) -> Result<Self>",
+          "summary": "Replace all parameters in logical plan with the specified values, in preparation for execution."
+        },
+        {
+          "name": "write_csv",
+          "signature": "async fn write_csv(self, path: &str, options: DataFrameWriteOptions, writer_options: Option<CsvOptions>) -> Result<Vec<RecordBatch>, DataFusionError>",
+          "summary": "Execute the `DataFrame` and write the results to CSV file(s)."
+        },
+        {
+          "name": "write_json",
+          "signature": "async fn write_json(self, path: &str, options: DataFrameWriteOptions, writer_options: Option<JsonOptions>) -> Result<Vec<RecordBatch>, DataFusionError>",
+          "summary": "Execute the `DataFrame` and write the results to JSON file(s)."
+        },
+        {
+          "name": "write_parquet",
+          "signature": "async fn write_parquet(self, path: &str, options: DataFrameWriteOptions, writer_options: Option<TableParquetOptions>) -> Result<Vec<RecordBatch>, DataFusionError>",
+          "summary": "Execute the `DataFrame` and write the results to Parquet file(s)."
+        },
+        {
+          "name": "write_table",
+          "signature": "async fn write_table(self, table_name: &str, write_options: DataFrameWriteOptions) -> Result<Vec<RecordBatch>, DataFusionError>",
+          "summary": "Execute this `DataFrame` and write the results to `table_name`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion::dataframe::DataFrameWriteOptions",
+      "name": "DataFrameWriteOptions",
+      "kind": "struct",
+      "crate": "datafusion",
+      "signature": "struct DataFrameWriteOptions",
+      "summary": "Contains options that control how data is written out from a DataFrame",
+      "doc": "api/datafusion.dataframe.md#dataframewriteoptions",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new DataFrameWriteOptions with default values"
+        },
+        {
+          "name": "with_insert_operation",
+          "signature": "fn with_insert_operation(self, insert_op: InsertOp) -> Self",
+          "summary": "Set the insert operation"
+        },
+        {
+          "name": "with_partition_by",
+          "signature": "fn with_partition_by(self, partition_by: Vec<String>) -> Self",
+          "summary": "Sets the partition_by columns for output partitioning"
+        },
+        {
+          "name": "with_single_file_output",
+          "signature": "fn with_single_file_output(self, single_file_output: bool) -> Self",
+          "summary": "Set the single_file_output value to true or false"
+        },
+        {
+          "name": "with_sort_by",
+          "signature": "fn with_sort_by(self, sort_by: Vec<SortExpr>) -> Self",
+          "summary": "Sets the sort_by columns for output sorting"
+        }
+      ]
+    }
+  ]
+}

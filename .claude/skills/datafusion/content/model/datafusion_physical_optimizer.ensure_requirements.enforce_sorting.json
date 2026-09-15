@@ -1,0 +1,67 @@
+{
+  "module": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting",
+  "crate": "datafusion-physical-optimizer",
+  "api": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md",
+  "items": [
+    {
+      "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::ensure_sorting",
+      "name": "ensure_sorting",
+      "kind": "function",
+      "crate": "datafusion-physical-optimizer",
+      "signature": "fn ensure_sorting(requirements: PlanWithCorrespondingSort) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<PlanWithCorrespondingSort>>",
+      "summary": "This function enforces sorting requirements and makes optimizations without violating these requirements whenever possible. Requires a bottom-up traversal.",
+      "doc": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md#ensure_sorting",
+      "aliases": [
+        "datafusion_physical_optimizer::enforce_sorting::ensure_sorting"
+      ]
+    },
+    {
+      "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::parallelize_sorts",
+      "name": "parallelize_sorts",
+      "kind": "function",
+      "crate": "datafusion-physical-optimizer",
+      "signature": "fn parallelize_sorts(requirements: PlanWithCorrespondingCoalescePartitions) -> datafusion_common::Result<datafusion_common::tree_node::Transformed<PlanWithCorrespondingCoalescePartitions>>",
+      "summary": "Transform [`CoalescePartitionsExec`] + [`SortExec`] cascades into [`SortExec`] + [`SortPreservingMergeExec`] cascades, as illustrated below.",
+      "doc": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md#parallelize_sorts",
+      "aliases": [
+        "datafusion_physical_optimizer::enforce_sorting::parallelize_sorts"
+      ]
+    },
+    {
+      "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::replace_with_partial_sort",
+      "name": "replace_with_partial_sort",
+      "kind": "function",
+      "crate": "datafusion-physical-optimizer",
+      "signature": "fn replace_with_partial_sort(plan: std::sync::Arc<dyn ExecutionPlan>) -> datafusion_common::Result<std::sync::Arc<dyn ExecutionPlan>>",
+      "summary": "Only interested with [`SortExec`]s and their unbounded children. If the plan is not a [`SortExec`] or its child is not unbounded, returns the original plan. Otherwise, by checking the requirement satisfaction searches for a replacement cha…",
+      "doc": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md#replace_with_partial_sort",
+      "aliases": [
+        "datafusion_physical_optimizer::enforce_sorting::replace_with_partial_sort"
+      ]
+    },
+    {
+      "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::PlanWithCorrespondingCoalescePartitions",
+      "name": "PlanWithCorrespondingCoalescePartitions",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-optimizer",
+      "signature": "type PlanWithCorrespondingCoalescePartitions = datafusion_physical_plan::tree_node::PlanContext<bool>",
+      "summary": "Tracks the closest [`CoalescePartitionsExec`] descendant(s) for every child of a plan. The data attribute stores whether the plan is a `CoalescePartitionsExec` or is connected to a `CoalescePartitionsExec` via its children.",
+      "doc": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md#planwithcorrespondingcoalescepartitions",
+      "aliases": [
+        "datafusion_physical_optimizer::enforce_sorting::PlanWithCorrespondingCoalescePartitions"
+      ]
+    },
+    {
+      "path": "datafusion_physical_optimizer::ensure_requirements::enforce_sorting::PlanWithCorrespondingSort",
+      "name": "PlanWithCorrespondingSort",
+      "kind": "type_alias",
+      "crate": "datafusion-physical-optimizer",
+      "signature": "type PlanWithCorrespondingSort = datafusion_physical_plan::tree_node::PlanContext<bool>",
+      "summary": "Context object used by sort enforcement to track the closest [`SortExec`] descendant(s) for every child of a plan. The data attribute stores whether the plan is a `SortExec` or is connected to a `SortExec` via its children.",
+      "doc": "api/datafusion_physical_optimizer.ensure_requirements.enforce_sorting.md#planwithcorrespondingsort",
+      "aliases": [
+        "datafusion_physical_optimizer::enforce_sorting::PlanWithCorrespondingSort"
+      ]
+    }
+  ]
+}

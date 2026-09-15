@@ -1,7 +1,7 @@
 ---
 id: ADR-0029
 title: Distinguish selected API projections from complete retained observations
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§7.1, §7.3]
 review: docs/design_review/reviews/design_review_native-architecture-completion_2026-09-14.md
 evidence: Proposed
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0036
 revisit: A caller needs a paged selection of additional observation payload fields.
 verification: signature_projection_retains_qualified_ids_without_documentation; artifacts_are_read_by_handle_in_bounded_slices; escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievable
 ---
@@ -107,3 +107,4 @@ a second evidence store nor a legacy data path is introduced.
 
 - 2026-09-14 — accepted after scoped native architecture review; remaining actual producer,
   client and final performance qualification stays in Plan 12.
+- 2026-09-15 — superseded by ADR-0036.

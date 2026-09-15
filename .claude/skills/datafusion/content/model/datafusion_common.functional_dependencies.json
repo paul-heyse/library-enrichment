@@ -1,0 +1,251 @@
+{
+  "module": "datafusion_common::functional_dependencies",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.functional_dependencies.md",
+  "items": [
+    {
+      "path": "datafusion_common::functional_dependencies::Constraint",
+      "name": "Constraint",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum Constraint",
+      "summary": "This object defines a constraint on a table.",
+      "doc": "api/datafusion_common.functional_dependencies.md#constraint",
+      "aliases": [
+        "datafusion::common::Constraint",
+        "datafusion_common::Constraint"
+      ],
+      "variants": [
+        "PrimaryKey",
+        "Unique"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::Dependency",
+      "name": "Dependency",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum Dependency",
+      "summary": "Describes functional dependency mode.",
+      "doc": "api/datafusion_common.functional_dependencies.md#dependency",
+      "aliases": [
+        "datafusion::common::Dependency",
+        "datafusion_common::Dependency"
+      ],
+      "variants": [
+        "Single",
+        "Multi"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::aggregate_functional_dependencies",
+      "name": "aggregate_functional_dependencies",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn aggregate_functional_dependencies(aggr_input_schema: &DFSchema, group_by_expr_names: &[String], aggr_schema: &DFSchema) -> FunctionalDependencies",
+      "summary": "Calculates functional dependencies for aggregate output, when there is a GROUP BY expression.",
+      "doc": "api/datafusion_common.functional_dependencies.md#aggregate_functional_dependencies",
+      "aliases": [
+        "datafusion::common::aggregate_functional_dependencies",
+        "datafusion_common::aggregate_functional_dependencies"
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::get_required_group_by_exprs_indices",
+      "name": "get_required_group_by_exprs_indices",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_required_group_by_exprs_indices(schema: &DFSchema, group_by_expr_names: &[String]) -> Option<Vec<usize>>",
+      "summary": "Returns indices for the minimal subset of GROUP BY expressions that are functionally equivalent to the original set of GROUP BY expressions.",
+      "doc": "api/datafusion_common.functional_dependencies.md#get_required_group_by_exprs_indices",
+      "aliases": [
+        "datafusion::common::get_required_group_by_exprs_indices",
+        "datafusion_common::get_required_group_by_exprs_indices"
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::get_required_sort_exprs_indices",
+      "name": "get_required_sort_exprs_indices",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_required_sort_exprs_indices(schema: &DFSchema, sort_expr_names: &[String]) -> Vec<usize>",
+      "summary": "Returns indices for the minimal subset of ORDER BY expressions that are functionally equivalent to the original set of ORDER BY expressions.",
+      "doc": "api/datafusion_common.functional_dependencies.md#get_required_sort_exprs_indices",
+      "aliases": [
+        "datafusion::common::get_required_sort_exprs_indices",
+        "datafusion_common::get_required_sort_exprs_indices"
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::get_target_functional_dependencies",
+      "name": "get_target_functional_dependencies",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn get_target_functional_dependencies(schema: &DFSchema, group_by_expr_names: &[String]) -> Option<Vec<usize>>",
+      "summary": "Returns target indices, for the determinant keys that are inside group by expressions.",
+      "doc": "api/datafusion_common.functional_dependencies.md#get_target_functional_dependencies",
+      "aliases": [
+        "datafusion::common::get_target_functional_dependencies",
+        "datafusion_common::get_target_functional_dependencies"
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::Constraints",
+      "name": "Constraints",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Constraints",
+      "summary": "This object encapsulates a list of functional constraints:",
+      "doc": "api/datafusion_common.functional_dependencies.md#constraints",
+      "aliases": [
+        "datafusion::common::Constraints",
+        "datafusion_common::Constraints"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "core::iter::traits::collect::IntoIterator",
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, other: Constraints)",
+          "summary": "Extends the current constraints with the given `other` constraints."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "new_unverified",
+          "signature": "fn new_unverified(constraints: Vec<Constraint>) -> Self",
+          "summary": "Create a new [`Constraints`] object from the given `constraints`. Users should use the [`Constraints::default`] or [`SqlToRel::new_constraint_from_table_constraints`] functions for constructing [`Constraints`] instances. This constructor i…"
+        },
+        {
+          "name": "project",
+          "signature": "fn project(&self, proj_indices: &[usize]) -> Option<Self>",
+          "summary": "Projects constraints using the given projection indices. Returns `None` if any of the constraint columns are not included in the projection."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::FunctionalDependence",
+      "name": "FunctionalDependence",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct FunctionalDependence",
+      "summary": "This object defines a functional dependence in the schema. A functional dependence defines a relationship between determinant keys and dependent columns. A determinant key is a column, or a set of columns, whose value uniquely determines v…",
+      "doc": "api/datafusion_common.functional_dependencies.md#functionaldependence",
+      "aliases": [
+        "datafusion::common::FunctionalDependence",
+        "datafusion_common::FunctionalDependence"
+      ],
+      "fields": [
+        "source_indices",
+        "target_indices",
+        "nullable",
+        "mode"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(source_indices: Vec<usize>, target_indices: Vec<usize>, nullable: bool) -> Self"
+        },
+        {
+          "name": "with_mode",
+          "signature": "fn with_mode(self, mode: Dependency) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::functional_dependencies::FunctionalDependencies",
+      "name": "FunctionalDependencies",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct FunctionalDependencies",
+      "summary": "This object encapsulates all functional dependencies in a given relation.",
+      "doc": "api/datafusion_common.functional_dependencies.md#functionaldependencies",
+      "aliases": [
+        "datafusion::common::FunctionalDependencies",
+        "datafusion_common::FunctionalDependencies"
+      ],
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "add_offset",
+          "signature": "fn add_offset(&mut self, offset: usize)",
+          "summary": "Adds the `offset` value to `source_indices` and `target_indices` for each functional dependency."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Creates an empty `FunctionalDependencies` object."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, other: FunctionalDependencies)",
+          "summary": "Merges the given functional dependencies with these."
+        },
+        {
+          "name": "extend_target_indices",
+          "signature": "fn extend_target_indices(&mut self, n_out: usize)",
+          "summary": "This function ensures that functional dependencies involving uniquely occurring determinant keys cover their entire table in terms of dependent columns."
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, n_field: usize) -> bool",
+          "summary": "Sanity checks if functional dependencies are valid. For example, if there are 10 fields, we cannot receive any index further than 9."
+        },
+        {
+          "name": "join",
+          "signature": "fn join(&self, other: &FunctionalDependencies, join_type: &JoinType, left_cols_len: usize) -> FunctionalDependencies",
+          "summary": "This function joins this set of functional dependencies with the `other` according to the given `join_type`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(dependencies: Vec<FunctionalDependence>) -> Self",
+          "summary": "Creates a new `FunctionalDependencies` object from a vector of `FunctionalDependence` objects."
+        },
+        {
+          "name": "new_from_constraints",
+          "signature": "fn new_from_constraints(constraints: Option<&Constraints>, n_field: usize) -> Self",
+          "summary": "Creates a new `FunctionalDependencies` object from the given constraints."
+        },
+        {
+          "name": "project_functional_dependencies",
+          "signature": "fn project_functional_dependencies(&self, proj_indices: &[usize], n_out: usize) -> FunctionalDependencies",
+          "summary": "Updates `source_indices` and `target_indices` of each functional dependence using the index mapping given in `proj_indices`."
+        },
+        {
+          "name": "with_dependency",
+          "signature": "fn with_dependency(self, mode: Dependency) -> Self"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "module": "datafusion_datasource_parquet::metadata",
+  "crate": "datafusion-datasource-parquet",
+  "api": "api/datafusion_datasource_parquet.metadata.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_parquet::metadata::ordering_from_parquet_metadata",
+      "name": "ordering_from_parquet_metadata",
+      "kind": "function",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "fn ordering_from_parquet_metadata(metadata: &parquet::file::metadata::ParquetMetaData, schema: &arrow::datatypes::SchemaRef) -> datafusion_common::Result<Option<datafusion_physical_expr_common::sort_expr::LexOrdering>>",
+      "summary": "Extracts ordering information from Parquet metadata.",
+      "doc": "api/datafusion_datasource_parquet.metadata.md#ordering_from_parquet_metadata"
+    },
+    {
+      "path": "datafusion_datasource_parquet::metadata::CachedParquetMetaData",
+      "name": "CachedParquetMetaData",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct CachedParquetMetaData",
+      "summary": "Wrapper to implement [`FileMetadata`] for [`ParquetMetaData`].",
+      "doc": "api/datafusion_datasource_parquet.metadata.md#cachedparquetmetadata",
+      "implements": [
+        "datafusion_execution::cache::cache_manager::FileMetadata"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn Any",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "extra_info",
+          "signature": "fn extra_info(&self) -> HashMap<String, String>",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "memory_size",
+          "signature": "fn memory_size(&self) -> usize",
+          "via_trait": "datafusion_execution::cache::cache_manager::FileMetadata"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(metadata: Arc<ParquetMetaData>) -> Self"
+        },
+        {
+          "name": "parquet_metadata",
+          "signature": "fn parquet_metadata(&self) -> &Arc<ParquetMetaData>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_parquet::metadata::DFParquetMetadata",
+      "name": "DFParquetMetadata",
+      "kind": "struct",
+      "crate": "datafusion-datasource-parquet",
+      "signature": "struct DFParquetMetadata<'a>",
+      "summary": "Handles fetching Parquet file schema, metadata and statistics from object store.",
+      "doc": "api/datafusion_datasource_parquet.metadata.md#dfparquetmetadata",
+      "fields": [
+        "coerce_int96",
+        "coerce_int96_tz"
+      ],
+      "methods": [
+        {
+          "name": "fetch_metadata",
+          "signature": "async fn fetch_metadata(&self) -> Result<Arc<ParquetMetaData>>",
+          "summary": "Fetch the [`ParquetMetaData`] for this file."
+        },
+        {
+          "name": "fetch_schema",
+          "signature": "async fn fetch_schema(&self) -> Result<Schema>",
+          "summary": "Fetch this file's [`ParquetMetaData`] and convert its embedded Thrift schema into an Arrow [`Schema`]."
+        },
+        {
+          "name": "fetch_statistics",
+          "signature": "async fn fetch_statistics(&self, table_schema: &SchemaRef) -> Result<Statistics>",
+          "summary": "Fetch the metadata from the Parquet file via [`Self::fetch_metadata`] and convert the statistics in the metadata using [`Self::statistics_from_parquet_metadata`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: &'a dyn ObjectStore, object_meta: &'a ObjectMeta) -> Self",
+          "summary": "Create a new `DFParquetMetadata` for the given file."
+        },
+        {
+          "name": "statistics_from_parquet_metadata",
+          "signature": "fn statistics_from_parquet_metadata(metadata: &ParquetMetaData, logical_file_schema: &SchemaRef) -> Result<Statistics>",
+          "summary": "Convert statistics in [`ParquetMetaData`] into [`Statistics`] using [`StatisticsConverter`]"
+        },
+        {
+          "name": "with_coerce_int96",
+          "signature": "fn with_coerce_int96(self, time_unit: Option<TimeUnit>) -> Self",
+          "summary": "Set the [`TimeUnit`] that INT96 timestamp columns should be coerced to when reading the schema."
+        },
+        {
+          "name": "with_coerce_int96_tz",
+          "signature": "fn with_coerce_int96_tz(self, timezone: Option<Arc<str>>) -> Self",
+          "summary": "Set the optional timezone applied to INT96-coerced timestamps."
+        },
+        {
+          "name": "with_decryption_properties",
+          "signature": "fn with_decryption_properties(self, decryption_properties: Option<Arc<FileDecryptionProperties>>) -> Self",
+          "summary": "Set the decryption properties used to read an encrypted Parquet file, equivalent to [`ParquetMetaDataReader::with_decryption_properties`]."
+        },
+        {
+          "name": "with_file_metadata_cache",
+          "signature": "fn with_file_metadata_cache(self, file_metadata_cache: Option<Arc<FileMetadataCache>>) -> Self",
+          "summary": "Set an optional [`FileMetadataCache`] used to avoid re-fetching [`ParquetMetaData`] for files that have already been read."
+        },
+        {
+          "name": "with_metadata_size_hint",
+          "signature": "fn with_metadata_size_hint(self, metadata_size_hint: Option<usize>) -> Self",
+          "summary": "Set a hint for the number of trailing bytes to prefetch from the end of the file, equivalent to [`ParquetMetaDataReader::with_prefetch_hint`]."
+        },
+        {
+          "name": "with_page_index_policy",
+          "signature": "fn with_page_index_policy(self, page_index_policy: Option<PageIndexPolicy>) -> Self",
+          "summary": "Sets the policy for loading parquet page index structures (column and offset indexes), equivalent to [`ParquetMetaDataReader::with_page_index_policy`]."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,336 @@
+{
+  "module": "arrow_ipc::writer",
+  "crate": "arrow-ipc",
+  "api": "api/arrow_ipc.writer.md",
+  "items": [
+    {
+      "path": "arrow_ipc::writer::DictionaryHandling",
+      "name": "DictionaryHandling",
+      "kind": "enum",
+      "crate": "arrow-ipc",
+      "signature": "enum DictionaryHandling",
+      "summary": "Controls how dictionaries are handled in Arrow IPC messages",
+      "doc": "api/arrow_ipc.writer.md#dictionaryhandling",
+      "variants": [
+        "Resend",
+        "Delta"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_ipc::writer::DictionaryUpdate",
+      "name": "DictionaryUpdate",
+      "kind": "enum",
+      "crate": "arrow-ipc",
+      "signature": "enum DictionaryUpdate",
+      "summary": "Describes what kind of update took place after a call to [`DictionaryTracker::insert`].",
+      "doc": "api/arrow_ipc.writer.md#dictionaryupdate",
+      "variants": [
+        "None",
+        "New",
+        "Replaced",
+        "Delta"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_ipc::writer::write_message",
+      "name": "write_message",
+      "kind": "function",
+      "crate": "arrow-ipc",
+      "signature": "fn write_message<W: Write>(writer: W, encoded: EncodedData, write_options: &IpcWriteOptions) -> Result<(usize, usize), ArrowError>",
+      "summary": "Write a message's IPC data and buffers, returning metadata and buffer data lengths written",
+      "doc": "api/arrow_ipc.writer.md#write_message"
+    },
+    {
+      "path": "arrow_ipc::writer::DictionaryTracker",
+      "name": "DictionaryTracker",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct DictionaryTracker",
+      "summary": "Keeps track of dictionaries that have been written, to avoid emitting the same dictionary multiple times.",
+      "doc": "api/arrow_ipc.writer.md#dictionarytracker",
+      "methods": [
+        {
+          "name": "clear",
+          "signature": "fn clear(&mut self)",
+          "summary": "Clears the state of the dictionary tracker."
+        },
+        {
+          "name": "dict_id",
+          "signature": "fn dict_id(&mut self) -> &[i64]",
+          "summary": "Return the sequence of dictionary IDs in the order they should be observed while traversing the schema"
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(&mut self, dict_id: i64, column: &ArrayRef) -> Result<bool, ArrowError>",
+          "summary": "Keep track of the dictionary with the given ID and values. Behavior:"
+        },
+        {
+          "name": "insert_column",
+          "signature": "fn insert_column(&mut self, dict_id: i64, column: &ArrayRef, dict_handling: DictionaryHandling) -> Result<DictionaryUpdate, ArrowError>",
+          "summary": "Keep track of the dictionary with the given ID and values. The return value indicates what, if any, update to the internal map took place and how it should be interpreted based on the `dict_handling` parameter."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(error_on_replacement: bool) -> Self",
+          "summary": "Create a new [`DictionaryTracker`]."
+        },
+        {
+          "name": "next_dict_id",
+          "signature": "fn next_dict_id(&mut self) -> i64",
+          "summary": "Record and return the next dictionary ID."
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::EncodedData",
+      "name": "EncodedData",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct EncodedData",
+      "summary": "Stores the encoded data, which is an crate::Message, and optional Arrow data",
+      "doc": "api/arrow_ipc.writer.md#encodeddata",
+      "fields": [
+        "ipc_message",
+        "arrow_data"
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::FileWriter",
+      "name": "FileWriter",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct FileWriter<W>",
+      "summary": "Arrow File Writer",
+      "doc": "api/arrow_ipc.writer.md#filewriter",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchWriter"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<(), ArrowError>",
+          "summary": "Write footer and closing tag, then mark the writer as done"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<(), ArrowError>",
+          "summary": "Flush the underlying writer."
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Gets a mutable reference to the underlying writer."
+        },
+        {
+          "name": "get_ref",
+          "signature": "fn get_ref(&self) -> &W",
+          "summary": "Gets a reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Result<W, ArrowError>",
+          "summary": "Unwraps the underlying writer."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Returns the arrow [`SchemaRef`] for this arrow file."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new writer, with the schema written as part of the header"
+        },
+        {
+          "name": "try_new_buffered",
+          "signature": "fn try_new_buffered(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new file writer with the writer wrapped in a BufWriter."
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(writer: W, schema: &Schema, write_options: IpcWriteOptions) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new writer with IpcWriteOptions"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "summary": "Write a record batch to the file"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "write_metadata",
+          "signature": "fn write_metadata(&mut self, key: impl Into<String>, value: impl Into<String>)",
+          "summary": "Adds a key-value pair to the [FileWriter]'s custom metadata"
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::IpcDataGenerator",
+      "name": "IpcDataGenerator",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct IpcDataGenerator",
+      "summary": "Handles low level details of encoding [`Array`] and [`Schema`] into the [Arrow IPC Format].",
+      "doc": "api/arrow_ipc.writer.md#ipcdatagenerator",
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&self, batch: &RecordBatch, dictionary_tracker: &mut DictionaryTracker, write_options: &IpcWriteOptions, ipc_write_context: &mut IpcWriteContext) -> Result<(Vec<EncodedData>, EncodedData), ArrowError>",
+          "summary": "Encodes a batch to a number of [EncodedData] items (dictionary batches + the record batch). The [DictionaryTracker] keeps track of dictionaries with new `dict_id`s  (so they are only sent once) Make sure the [DictionaryTracker] is initiali…"
+        },
+        {
+          "name": "encoded_batch",
+          "signature": "fn encoded_batch(&self, batch: &RecordBatch, dictionary_tracker: &mut DictionaryTracker, write_options: &IpcWriteOptions) -> Result<(Vec<EncodedData>, EncodedData), ArrowError>",
+          "summary": "Encodes a batch to a number of [EncodedData] items (dictionary batches + the record batch). The [DictionaryTracker] keeps track of dictionaries with new `dict_id`s  (so they are only sent once) Make sure the [DictionaryTracker] is initiali…"
+        },
+        {
+          "name": "schema_to_bytes_with_dictionary_tracker",
+          "signature": "fn schema_to_bytes_with_dictionary_tracker(&self, schema: &Schema, dictionary_tracker: &mut DictionaryTracker, write_options: &IpcWriteOptions) -> EncodedData",
+          "summary": "Converts a schema to an IPC message along with `dictionary_tracker` and returns it encoded inside [EncodedData] as a flatbuffer."
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::IpcWriteOptions",
+      "name": "IpcWriteOptions",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct IpcWriteOptions",
+      "summary": "IPC write options used to control the behaviour of the [`IpcDataGenerator`]",
+      "doc": "api/arrow_ipc.writer.md#ipcwriteoptions",
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(alignment: usize, write_legacy_ipc_format: bool, metadata_version: MetadataVersion) -> Result<Self, ArrowError>",
+          "summary": "Try to create IpcWriteOptions, checking for incompatible settings"
+        },
+        {
+          "name": "try_with_compression",
+          "signature": "fn try_with_compression(self, batch_compression_type: Option<CompressionType>) -> Result<Self, ArrowError>",
+          "summary": "Configures compression when writing IPC files."
+        },
+        {
+          "name": "try_with_compression_level",
+          "signature": "fn try_with_compression_level(self, batch_compression_level: Option<i32>) -> Result<Self, ArrowError>",
+          "summary": "Configures the compression level used when writing compressed IPC batches."
+        },
+        {
+          "name": "with_dictionary_handling",
+          "signature": "fn with_dictionary_handling(self, dictionary_handling: DictionaryHandling) -> Self",
+          "summary": "Configure how dictionaries are handled in IPC messages"
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::StreamEncoder",
+      "name": "StreamEncoder",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct StreamEncoder",
+      "summary": "Arrow IPC stream encoder.",
+      "doc": "api/arrow_ipc.writer.md#streamencoder",
+      "methods": [
+        {
+          "name": "encode",
+          "signature": "fn encode(&mut self, batch: &RecordBatch) -> Result<Vec<Buffer>, ArrowError>",
+          "summary": "Encode a [`RecordBatch`] into buffers."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> Result<Vec<Buffer>, ArrowError>",
+          "summary": "Encode the end-of-stream marker."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(schema: &Schema) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new stream encoder."
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(schema: &Schema, write_options: IpcWriteOptions) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new stream encoder with [`IpcWriteOptions`]."
+        }
+      ]
+    },
+    {
+      "path": "arrow_ipc::writer::StreamWriter",
+      "name": "StreamWriter",
+      "kind": "struct",
+      "crate": "arrow-ipc",
+      "signature": "struct StreamWriter<W>",
+      "summary": "Arrow Stream Writer",
+      "doc": "api/arrow_ipc.writer.md#streamwriter",
+      "implements": [
+        "arrow_array::record_batch::RecordBatchWriter"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<(), ArrowError>",
+          "summary": "Write continuation bytes, and mark the stream as done"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> Result<(), ArrowError>",
+          "summary": "Flush the underlying writer."
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut W",
+          "summary": "Gets a mutable reference to the underlying writer."
+        },
+        {
+          "name": "get_ref",
+          "signature": "fn get_ref(&self) -> &W",
+          "summary": "Gets a reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Result<W, ArrowError>",
+          "summary": "Unwraps the the underlying writer."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new writer, with the schema written as part of the header."
+        },
+        {
+          "name": "try_new_buffered",
+          "signature": "fn try_new_buffered(writer: W, schema: &Schema) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new stream writer with the writer wrapped in a BufWriter."
+        },
+        {
+          "name": "try_new_with_options",
+          "signature": "fn try_new_with_options(writer: W, schema: &Schema, write_options: IpcWriteOptions) -> Result<Self, ArrowError>",
+          "summary": "Try to create a new writer with [`IpcWriteOptions`]."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "summary": "Write a record batch to the stream"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, batch: &RecordBatch) -> Result<(), ArrowError>",
+          "via_trait": "arrow_array::record_batch::RecordBatchWriter"
+        }
+      ]
+    }
+  ]
+}

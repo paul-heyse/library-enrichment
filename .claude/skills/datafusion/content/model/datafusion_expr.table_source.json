@@ -1,0 +1,120 @@
+{
+  "module": "datafusion_expr::table_source",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.table_source.md",
+  "items": [
+    {
+      "path": "datafusion_expr::table_source::TableProviderFilterPushDown",
+      "name": "TableProviderFilterPushDown",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum TableProviderFilterPushDown",
+      "summary": "Indicates how a filter expression is handled by [`TableProvider::scan`].",
+      "doc": "api/datafusion_expr.table_source.md#tableproviderfilterpushdown",
+      "aliases": [
+        "datafusion::datasource::provider::TableProviderFilterPushDown",
+        "datafusion::logical_expr::TableProviderFilterPushDown",
+        "datafusion_expr::TableProviderFilterPushDown"
+      ],
+      "variants": [
+        "Unsupported",
+        "Inexact",
+        "Exact"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr::table_source::TableType",
+      "name": "TableType",
+      "kind": "enum",
+      "crate": "datafusion-expr",
+      "signature": "enum TableType",
+      "summary": "Indicates the type of this table for metadata/catalog purposes.",
+      "doc": "api/datafusion_expr.table_source.md#tabletype",
+      "aliases": [
+        "datafusion::datasource::TableType",
+        "datafusion::datasource::provider::TableType",
+        "datafusion::logical_expr::TableType",
+        "datafusion_expr::TableType"
+      ],
+      "variants": [
+        "Base",
+        "View",
+        "Temporary"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr::table_source::TableSource",
+      "name": "TableSource",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait TableSource: Any + Sync + Send",
+      "summary": "Planning time information about a table.",
+      "doc": "api/datafusion_expr.table_source.md#tablesource",
+      "aliases": [
+        "datafusion::logical_expr::TableSource",
+        "datafusion_expr::TableSource"
+      ],
+      "implementors": [
+        "datafusion_catalog::default_table_source::DefaultTableSource",
+        "datafusion_expr::logical_plan::builder::LogicalTableSource"
+      ],
+      "required_methods": [
+        "schema"
+      ],
+      "provided_methods": [
+        "constraints",
+        "get_column_default",
+        "get_logical_plan",
+        "supports_filters_pushdown",
+        "table_type"
+      ],
+      "methods": [
+        {
+          "name": "constraints",
+          "signature": "fn constraints(&self) -> Option<&Constraints>",
+          "summary": "Get primary key indices, if any"
+        },
+        {
+          "name": "get_column_default",
+          "signature": "fn get_column_default(&self, _column: &str) -> Option<&Expr>",
+          "summary": "Get the default value for a column, if available."
+        },
+        {
+          "name": "get_logical_plan",
+          "signature": "fn get_logical_plan(&self) -> Option<Cow<'_, LogicalPlan>>",
+          "summary": "Get the Logical plan of this table provider, if available."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Get a reference to the schema for this table"
+        },
+        {
+          "name": "supports_filters_pushdown",
+          "signature": "fn supports_filters_pushdown(&self, filters: &[&Expr]) -> Result<Vec<TableProviderFilterPushDown>>",
+          "summary": "Tests whether the table provider can make use of any or all filter expressions to optimize data retrieval. Only non-volatile expressions are passed to this function."
+        },
+        {
+          "name": "table_type",
+          "signature": "fn table_type(&self) -> TableType",
+          "summary": "Get the type of this table for metadata/catalog purposes."
+        }
+      ]
+    }
+  ]
+}

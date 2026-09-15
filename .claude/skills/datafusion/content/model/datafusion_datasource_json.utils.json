@@ -1,0 +1,76 @@
+{
+  "module": "datafusion_datasource_json::utils",
+  "crate": "datafusion-datasource-json",
+  "api": "api/datafusion_datasource_json.utils.md",
+  "items": [
+    {
+      "path": "datafusion_datasource_json::utils::ChannelReader",
+      "name": "ChannelReader",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct ChannelReader",
+      "summary": "A synchronous `Read` implementation that receives bytes from an async channel.",
+      "doc": "api/datafusion_datasource_json.utils.md#channelreader",
+      "implements": [
+        "alloc::io::read::Read"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(rx: tokio::sync::mpsc::Receiver<Bytes>) -> Self",
+          "summary": "Create a new ChannelReader from a tokio mpsc receiver."
+        },
+        {
+          "name": "read",
+          "signature": "fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize>",
+          "via_trait": "alloc::io::read::Read"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource_json::utils::JsonArrayToNdjsonReader",
+      "name": "JsonArrayToNdjsonReader",
+      "kind": "struct",
+      "crate": "datafusion-datasource-json",
+      "signature": "struct JsonArrayToNdjsonReader<R: Read>",
+      "summary": "A streaming reader that converts JSON array format to NDJSON format.",
+      "doc": "api/datafusion_datasource_json.utils.md#jsonarraytondjsonreader",
+      "implements": [
+        "alloc::io::buf_read::BufRead",
+        "alloc::io::read::Read"
+      ],
+      "methods": [
+        {
+          "name": "consume",
+          "signature": "fn consume(&mut self, amt: usize)",
+          "via_trait": "alloc::io::buf_read::BufRead"
+        },
+        {
+          "name": "fill_buf",
+          "signature": "fn fill_buf(&mut self) -> std::io::Result<&[u8]>",
+          "via_trait": "alloc::io::buf_read::BufRead"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(reader: R) -> Self",
+          "summary": "Create a new streaming reader that converts JSON array to NDJSON."
+        },
+        {
+          "name": "read",
+          "signature": "fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize>",
+          "via_trait": "alloc::io::read::Read"
+        },
+        {
+          "name": "validate_complete",
+          "signature": "fn validate_complete(&self) -> std::io::Result<()>",
+          "summary": "Check if the JSON array was properly terminated."
+        },
+        {
+          "name": "with_capacity",
+          "signature": "fn with_capacity(reader: R, capacity: usize) -> Self",
+          "summary": "Create a new streaming reader with custom buffer size."
+        }
+      ]
+    }
+  ]
+}

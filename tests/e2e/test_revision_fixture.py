@@ -59,7 +59,7 @@ def configuration(path, base):
 
 async def call(client, tool, **arguments):
     result = await daemon.read_complete_answer(
-        client, (await client.call_tool(tool, arguments)).structured_content
+        client, (await client.call_tool(tool, arguments, raise_on_error=False)).structured_content
     )
     return await daemon.wait_for_answer(client, result) if tool == "resolve_library" else result
 

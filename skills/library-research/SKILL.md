@@ -31,7 +31,7 @@ Do not silently turn an implementation question into a dependency upgrade. A Rus
 
 Call `resolve_library` with the selected mode and available environment constraints. Use the returned `context_id`. Preserve exact version/artifact identity and the environment's resolution status. If dependencies/features are incompletely known, say so; do not describe the context as verified.
 
-Use `revalidate` for explicit latest/upstream questions. A cache hit alone does not establish that a release is still latest. For repeated reads, reuse a `snapshot_id` when reproducibility matters. Never combine snapshots/contexts without identifying the difference.
+Use `freshness="revalidate"` for explicit latest/upstream questions. A cache hit alone does not establish that a release is still latest. For repeated reads, reuse a `snapshot_id` when reproducibility matters. Never combine snapshots/contexts without identifying the difference.
 
 ### 3. Choose breadth or depth
 
@@ -49,17 +49,17 @@ Use official documentation through enrichment when Context7 lacks the relevant p
 
 ### 5. Characterize candidate deployment
 
-Use `search_evidence` and `inspect_symbol` to establish the concrete mechanism, signature, required features/extras, initialization/configuration, relevant relationships, examples, and constraints. Request source/LSP depth only when public API and documentation leave a material question unanswered.
+Use `search_evidence` and `inspect_symbol` to establish the concrete mechanism, signature, required features/extras, initialization/configuration, relevant relationships, examples, and constraints. Use explicit source, semantics or runtime aspects only when signature and documentation leave a material question unanswered. Retained inspection does not execute; execution requires an explicit intent and an enabled profile.
 
 For Rust, separate docs.rs' observed build configuration from the project's feature/target configuration. For Python, separate distribution/import identity, inline or stub types, static API observations, and runtime behavior. An unresolved alias, unsupported LSP method, or missing native signature is an evidence gap, not proof of absence.
 
-Read bounded artifact sections when needed. Observe `coverage`, `limitations`, `truncated`, and `next_cursor`. Do not treat a first page as the entire result set.
+Read `coverage.assessments` and any `coverage.details` action. Each collection carries its own `page` with `count`, `has_more` and `next_cursor`; inspection aspects have independent pages. `text_complete=false` identifies a preview and supplies its complete-text action. Artifact delivery preserves the research outcome and offers direct result sections. Do not treat a first page as the entire result set.
 
 ### 6. Verify consequential assumptions
 
 For uncertain or version-sensitive deployment, propose a minimal snippet and use `verify_usage` with the appropriate mode. Compile/typecheck and runtime verification establish different claims. Execute only through an authorized profile; do not weaken policy or import unfamiliar libraries into the working environment to bypass it.
 
-A `pending` result is a submitted job, not finished evidence. Use `job_control` with bounded waits and the suggested polling interval. If blocked, failed, or unverified, carry that limitation into the brief.
+A `pending` result is a submitted job, not finished evidence. Use `job_control` with bounded waits and the suggested polling interval. Terminal `data.result` is a compact outcome plus delivery descriptor; follow that descriptor to the retained answer. If blocked, failed, or unverified, carry that limitation into the brief.
 
 ### 7. Synthesize and stop
 

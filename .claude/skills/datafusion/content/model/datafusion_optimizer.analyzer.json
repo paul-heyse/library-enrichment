@@ -1,0 +1,86 @@
+{
+  "module": "datafusion_optimizer::analyzer",
+  "crate": "datafusion-optimizer",
+  "api": "api/datafusion_optimizer.analyzer.md",
+  "items": [
+    {
+      "path": "datafusion_optimizer::analyzer::Analyzer",
+      "name": "Analyzer",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct Analyzer",
+      "summary": "Rule-based Analyzer.",
+      "doc": "api/datafusion_optimizer.analyzer.md#analyzer",
+      "aliases": [
+        "datafusion::optimizer::Analyzer",
+        "datafusion_optimizer::Analyzer"
+      ],
+      "fields": [
+        "function_rewrites",
+        "rules"
+      ],
+      "methods": [
+        {
+          "name": "add_function_rewrite",
+          "signature": "fn add_function_rewrite(&mut self, rewrite: Arc<dyn FunctionRewrite + Send + Sync>)",
+          "summary": "Add a function rewrite rule"
+        },
+        {
+          "name": "execute_and_check",
+          "signature": "fn execute_and_check<F>(&self, plan: LogicalPlan, config: &ConfigOptions, observer: F) -> Result<LogicalPlan> where F: FnMut(&LogicalPlan, &dyn AnalyzerRule)",
+          "summary": "Analyze the logical plan by applying analyzer rules, and do necessary check and fail the invalid plans"
+        },
+        {
+          "name": "function_rewrites",
+          "signature": "fn function_rewrites(&self) -> &[Arc<dyn FunctionRewrite + Send + Sync>]",
+          "summary": "return the list of function rewrites in this analyzer"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new analyzer using the recommended list of rules"
+        },
+        {
+          "name": "with_rules",
+          "signature": "fn with_rules(rules: Vec<Arc<dyn AnalyzerRule + Send + Sync>>) -> Self",
+          "summary": "Create a new analyzer with the given rules"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::analyzer::AnalyzerRule",
+      "name": "AnalyzerRule",
+      "kind": "trait",
+      "crate": "datafusion-optimizer",
+      "signature": "trait AnalyzerRule: Debug",
+      "summary": "[`AnalyzerRule`]s transform [`LogicalPlan`]s in some way to make the plan valid prior to the rest of the DataFusion optimization process.",
+      "doc": "api/datafusion_optimizer.analyzer.md#analyzerrule",
+      "aliases": [
+        "datafusion::optimizer::AnalyzerRule",
+        "datafusion_optimizer::AnalyzerRule"
+      ],
+      "implementors": [
+        "datafusion_optimizer::analyzer::function_rewrite::ApplyFunctionRewrites",
+        "datafusion_optimizer::analyzer::resolve_grouping_function::ResolveGroupingFunction",
+        "datafusion_optimizer::analyzer::type_coercion::TypeCoercion"
+      ],
+      "required_methods": [
+        "analyze",
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "analyze",
+          "signature": "fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPlan>",
+          "summary": "Rewrite `plan`"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "A human readable name for this analyzer rule"
+        }
+      ]
+    }
+  ]
+}

@@ -1387,3 +1387,32 @@ worker feature union and is no longer the preparation path. The strict before/af
 check remains enabled; the corrected 389-test run passed with matching hashes.
 Primary references: [nextest running tests](https://nexte.st/docs/running/) and
 [Cargo test target selection](https://doc.rust-lang.org/cargo/commands/cargo-test.html).
+
+## Plan 13 W7: tar metadata preflight — 2026-09-15
+
+Exact installed/locked pin: **tar 0.4.46**, upstream commit
+`fc459c149f83bf4daceaa52e17d351989002e1a9`. Context7 resolution returned no relevant
+Rust tar library in three attempts; pinned source and an isolated compiled probe
+establish these claims. Full context and probe output are in
+[Plan 13 upstream verification](plan13-upstream-verification.md#w7-follow-up-bounded-tar-metadata-before-native-path-decoding).
+
+| Claim | Source | Retrieved | Exact quote | Verdict | Selected pin / reference |
+|---|---|---|---|---|---|
+| Raw iteration exposes extension headers before reading their metadata payload. | [archive.rs, pinned commit](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/archive.rs#L261), installed lines 261–272, 386–389 | 2026-09-15 | `return self.next_entry_raw(None);` | verified (source and executed counting-reader probe: 512 bytes before yielding 32-KiB GNU metadata) | tar 0.4.46; Plan 13 W7 / blueprint §10 |
+| Normal iteration consumes GNU/local PAX metadata and resolves extended names; raw extraction alone loses those semantics. | [archive.rs, pinned commit](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/archive.rs#L411), installed lines 411–447 | 2026-09-15 | `fields.long_pathname = gnu_longname;` | verified (source and exact GNU/PAX path/link roundtrips; same-reader two-pass rewind at offset 37 preserved path and payload) | tar 0.4.46; Plan 13 W7 |
+| PAX parsing itself must happen after a metadata size check. | [entry.rs, pinned commit](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/entry.rs#L368), installed lines 368–380 | 2026-09-15 | `self.pax_extensions = Some(self.read_all()?);` | verified (source); preflight caps and complete framing checks are required service policy | tar 0.4.46; Plan 13 W7 / blueprint §10 |
+| Effective link targets may come from GNU/PAX metadata rather than the fixed header. | [entry.rs, pinned commit](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/entry.rs#L342), installed lines 342–365 | 2026-09-15 | `b"linkpath"` | verified (source and probe: 157-byte effective target with an empty fixed header field) | tar 0.4.46; Plan 13 W7 |
+| Local path/linkpath are decoded; mtime can remain inert for this non-preserving extractor; unknown semantic overrides must be refused. | [entry.rs, pinned commit](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/entry.rs#L307); [PAX parser](https://github.com/composefs/tar-rs/blob/fc459c149f83bf4daceaa52e17d351989002e1a9/src/pax.rs#L88) | 2026-09-15 | `Some([]) => return None` | verified (source and path/linkpath/mtime probe); reject duplicate keys, size/uid/gid/sparse/unknown overrides and malformed/partially parsed metadata | tar 0.4.46; Plan 13 W7 / blueprint §10 |
+
+### Plan 13 typed research and MCP presentation — verified 2026-09-15
+
+Exact installed evidence and executed upstream probes are recorded in
+[Plan 13 upstream verification](plan13-upstream-verification.md). Context7 FastMCP results were
+3.2.x/general; installed 4.0.3 source established the selected APIs. No dependency pin changed.
+
+| Claim | Primary source | Retrieved | Exact evidence | Consequence |
+|---|---|---|---|---|
+| Explicit structured errors retain protocol error status | [FastMCP 4.0.3 ToolResult](https://github.com/PrefectHQ/fastmcp/blob/v4.0.3/fastmcp_slim/fastmcp/tools/base.py) | 2026-09-15 | `is_error=self.is_error` | Validate every outcome before explicit ToolResult emission; do not rely on client validation of errors. |
+| Authored Pydantic views can compose generated domain DTOs | [Pydantic serialization](https://docs.pydantic.dev/latest/concepts/serialization/) and installed 2.13.5 probe in the verification record | 2026-09-15 | `model_json_schema(mode='serialization', by_alias=True)` | Match advertised schema to JSON-mode serialization; keep semantic lowering and native bounds explicit. |
+| Distinct difference uses null-equal anti joins | [DataFusion 55.1.0 logical builder](https://github.com/apache/datafusion/blob/55.1.0/datafusion/expr/src/logical_plan/builder.rs) | 2026-09-15 | `JoinType::LeftAnti`; `NullEquality::NullEqualsNull` | Flat set reconciliation is valid; EXCEPT ALL is not assumed to subtract multiplicities. |
+| Result field inference supports precise nullability | [DataFusion 55.1.0 UDF](https://github.com/apache/datafusion/blob/55.1.0/datafusion/expr/src/udf.rs) | 2026-09-15 | `fn return_field_from_args` | Identity UDF is nonnullable; scoring retains nullable nonmatches and captured query identity. |

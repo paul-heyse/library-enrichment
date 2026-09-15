@@ -1,0 +1,241 @@
+{
+  "module": "datafusion_optimizer::optimizer",
+  "crate": "datafusion-optimizer",
+  "api": "api/datafusion_optimizer.optimizer.md",
+  "items": [
+    {
+      "path": "datafusion_optimizer::optimizer::ApplyOrder",
+      "name": "ApplyOrder",
+      "kind": "enum",
+      "crate": "datafusion-optimizer",
+      "signature": "enum ApplyOrder",
+      "summary": "Specifies how recursion for an `OptimizerRule` should be handled.",
+      "doc": "api/datafusion_optimizer.optimizer.md#applyorder",
+      "aliases": [
+        "datafusion::optimizer::ApplyOrder",
+        "datafusion_optimizer::ApplyOrder"
+      ],
+      "variants": [
+        "TopDown",
+        "BottomUp"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_optimizer::optimizer::Optimizer",
+      "name": "Optimizer",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct Optimizer",
+      "summary": "A rule-based optimizer.",
+      "doc": "api/datafusion_optimizer.optimizer.md#optimizer",
+      "aliases": [
+        "datafusion::optimizer::Optimizer",
+        "datafusion_optimizer::Optimizer"
+      ],
+      "fields": [
+        "rules"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new optimizer using the recommended list of rules"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize<F>(&self, plan: LogicalPlan, config: &dyn OptimizerConfig, observer: F) -> Result<LogicalPlan> where F: FnMut(&LogicalPlan, &dyn OptimizerRule)",
+          "summary": "Optimizes the logical plan by applying optimizer rules, and invoking observer function after each call"
+        },
+        {
+          "name": "with_rules",
+          "signature": "fn with_rules(rules: Vec<Arc<dyn OptimizerRule + Send + Sync>>) -> Self",
+          "summary": "Create a new optimizer with the given rules"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::optimizer::OptimizerContext",
+      "name": "OptimizerContext",
+      "kind": "struct",
+      "crate": "datafusion-optimizer",
+      "signature": "struct OptimizerContext",
+      "summary": "A standalone [`OptimizerConfig`] that can be used independently of DataFusion's config management",
+      "doc": "api/datafusion_optimizer.optimizer.md#optimizercontext",
+      "aliases": [
+        "datafusion::optimizer::OptimizerContext",
+        "datafusion_optimizer::OptimizerContext"
+      ],
+      "implements": [
+        "datafusion_optimizer::optimizer::OptimizerConfig"
+      ],
+      "methods": [
+        {
+          "name": "alias_generator",
+          "signature": "fn alias_generator(&self) -> &Arc<AliasGenerator>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "filter_null_keys",
+          "signature": "fn filter_null_keys(self, filter_null_keys: bool) -> Self",
+          "summary": "Specify whether to enable the filter_null_keys rule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create optimizer config"
+        },
+        {
+          "name": "new_with_config_options",
+          "signature": "fn new_with_config_options(options: Arc<ConfigOptions>) -> Self",
+          "summary": "Create a optimizer config with provided [ConfigOptions]."
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> Arc<ConfigOptions>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "query_execution_start_time",
+          "signature": "fn query_execution_start_time(&self) -> Option<DateTime<Utc>>",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerConfig"
+        },
+        {
+          "name": "with_max_passes",
+          "signature": "fn with_max_passes(self, v: u8) -> Self",
+          "summary": "Specify how many times to attempt to optimize the plan"
+        },
+        {
+          "name": "with_query_execution_start_time",
+          "signature": "fn with_query_execution_start_time(self, query_execution_start_time: DateTime<Utc>) -> Self",
+          "summary": "Set the query execution start time"
+        },
+        {
+          "name": "with_skip_failing_rules",
+          "signature": "fn with_skip_failing_rules(self, b: bool) -> Self",
+          "summary": "Specify whether the optimizer should skip rules that produce errors, or fail the query"
+        },
+        {
+          "name": "without_query_execution_start_time",
+          "signature": "fn without_query_execution_start_time(self) -> Self",
+          "summary": "Clear the query execution start time. When `None`, time-dependent functions like `now()` will not be simplified during optimization."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::optimizer::OptimizerConfig",
+      "name": "OptimizerConfig",
+      "kind": "trait",
+      "crate": "datafusion-optimizer",
+      "signature": "trait OptimizerConfig",
+      "summary": "Options to control the DataFusion Optimizer.",
+      "doc": "api/datafusion_optimizer.optimizer.md#optimizerconfig",
+      "aliases": [
+        "datafusion::optimizer::OptimizerConfig",
+        "datafusion_optimizer::OptimizerConfig"
+      ],
+      "implementors": [
+        "datafusion::execution::session_state::SessionState",
+        "datafusion_optimizer::optimizer::OptimizerContext"
+      ],
+      "required_methods": [
+        "alias_generator",
+        "options",
+        "query_execution_start_time"
+      ],
+      "provided_methods": [
+        "function_registry"
+      ],
+      "methods": [
+        {
+          "name": "alias_generator",
+          "signature": "fn alias_generator(&self) -> &Arc<AliasGenerator>",
+          "summary": "Return alias generator used to generate unique aliases for subqueries"
+        },
+        {
+          "name": "function_registry",
+          "signature": "fn function_registry(&self) -> Option<&dyn FunctionRegistry>"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> Arc<ConfigOptions>"
+        },
+        {
+          "name": "query_execution_start_time",
+          "signature": "fn query_execution_start_time(&self) -> Option<DateTime<Utc>>",
+          "summary": "Return the time at which the query execution started. This time is used as the value for `now()`. If `None`, time-dependent functions like `now()` will not be simplified during optimization."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_optimizer::optimizer::OptimizerRule",
+      "name": "OptimizerRule",
+      "kind": "trait",
+      "crate": "datafusion-optimizer",
+      "signature": "trait OptimizerRule: Debug",
+      "summary": "Transforms one [`LogicalPlan`] into another which computes the same results, but in a potentially more efficient way.",
+      "doc": "api/datafusion_optimizer.optimizer.md#optimizerrule",
+      "aliases": [
+        "datafusion::optimizer::OptimizerRule",
+        "datafusion_optimizer::OptimizerRule"
+      ],
+      "implementors": [
+        "datafusion_optimizer::common_subexpr_eliminate::CommonSubexprEliminate",
+        "datafusion_optimizer::decorrelate_lateral_join::DecorrelateLateralJoin",
+        "datafusion_optimizer::decorrelate_predicate_subquery::DecorrelatePredicateSubquery",
+        "datafusion_optimizer::eliminate_cross_join::EliminateCrossJoin",
+        "datafusion_optimizer::eliminate_duplicated_expr::EliminateDuplicatedExpr",
+        "datafusion_optimizer::eliminate_filter::EliminateFilter",
+        "datafusion_optimizer::eliminate_group_by_constant::EliminateGroupByConstant",
+        "datafusion_optimizer::eliminate_join::EliminateJoin",
+        "datafusion_optimizer::eliminate_limit::EliminateLimit",
+        "datafusion_optimizer::eliminate_outer_join::EliminateOuterJoin",
+        "datafusion_optimizer::extract_equijoin_predicate::ExtractEquijoinPredicate",
+        "datafusion_optimizer::extract_leaf_expressions::ExtractLeafExpressions",
+        "datafusion_optimizer::extract_leaf_expressions::PushDownLeafProjections",
+        "datafusion_optimizer::filter_null_join_keys::FilterNullJoinKeys",
+        "datafusion_optimizer::optimize_projections::OptimizeProjections",
+        "datafusion_optimizer::optimize_unions::OptimizeUnions",
+        "datafusion_optimizer::propagate_empty_relation::PropagateEmptyRelation",
+        "datafusion_optimizer::push_down_filter::PushDownFilter",
+        "datafusion_optimizer::push_down_limit::PushDownLimit",
+        "datafusion_optimizer::replace_distinct_aggregate::ReplaceDistinctWithAggregate",
+        "datafusion_optimizer::rewrite_set_comparison::RewriteSetComparison",
+        "datafusion_optimizer::scalar_subquery_to_join::ScalarSubqueryToJoin",
+        "datafusion_optimizer::simplify_expressions::simplify_exprs::SimplifyExpressions",
+        "datafusion_optimizer::single_distinct_to_groupby::SingleDistinctToGroupBy",
+        "datafusion_optimizer::unions_to_filter::UnionsToFilter"
+      ],
+      "required_methods": [
+        "name"
+      ],
+      "provided_methods": [
+        "apply_order",
+        "rewrite",
+        "supports_rewrite"
+      ],
+      "methods": [
+        {
+          "name": "apply_order",
+          "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+          "summary": "How should the rule be applied by the optimizer? See comments on [`ApplyOrder`] for details."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "A human readable name for this optimizer rule"
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite(&self, _plan: LogicalPlan, _config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>",
+          "summary": "Try to rewrite `plan` to an optimized form, returning [`Transformed::yes`] if the plan was rewritten and [`Transformed::no`] if it was not."
+        },
+        {
+          "name": "supports_rewrite",
+          "signature": "fn supports_rewrite(&self) -> bool",
+          "summary": "Does this rule support rewriting owned plans (rather than by reference)?"
+        }
+      ]
+    }
+  ]
+}

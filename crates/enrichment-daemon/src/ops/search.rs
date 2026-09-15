@@ -1,7 +1,7 @@
 //! Native planned lexical search with complete-key pagination and bounded wire rendering.
 use super::common;
 use crate::{
-    envelope::{self, IntoPartial, Research},
+    envelope::{self, Research},
     service::Service,
 };
 use enrichment_core::{
@@ -9,20 +9,13 @@ use enrichment_core::{
     request::SearchRequest,
     search::{self, page::SearchCursor, spec::SearchSpec},
     wire::{
-        Coverage, Envelope, ErrorCode, Evidence, Freshness, Pagination, SourceVersionMatch,
+        Envelope, ErrorCode, Evidence, Freshness, Page, SourceVersionMatch,
         data::{ScoreFactor, SearchData, SearchHit},
     },
 };
 use enrichment_store::search_plan::{self, RankedEvidence, SearchOptions};
 
-pub const FAMILIES: &[&str] = &[
-    "api",
-    "docs",
-    "examples",
-    "release_notes",
-    "features",
-    "source",
-];
+pub const FAMILIES: &[&str] = &["api", "docs", "examples", "release_notes", "features"];
 
 pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
     let query = request.query.trim().to_owned();
@@ -35,19 +28,24 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             false,
         );
     }
-    let mut kinds = request.kinds.clone().unwrap_or_else(|| {
-        FAMILIES
-            .iter()
-            .filter(|k| **k != "source")
-            .map(|k| (*k).into())
-            .collect()
-    });
+    let mut kinds = request
+        .kinds
+        .clone()
+        .unwrap_or_else(|| FAMILIES.iter().map(|k| (*k).into()).collect());
     kinds.sort();
     kinds.dedup();
-    if kinds.iter().any(|k| !FAMILIES.contains(&k.as_str())) {
+    if kinds.iter().any(|k| k == "source") {
+        return envelope::error(
+            ErrorCode::UnsupportedCapability,
+            "Full source text is not an indexed lexical search family",
+            "Use inspect_symbol with an explicit source aspect for a selected symbol; search api or docs to discover symbol paths.",
+            false,
+        );
+    }
+    if kinds.is_empty() || kinds.iter().any(|k| !FAMILIES.contains(&k.as_str())) {
         return envelope::error(
             ErrorCode::UnsupportedFormat,
-            "Unknown evidence family",
+            "Select at least one supported evidence family",
             format!("Use any of: {}", FAMILIES.join(", ")),
             false,
         );
@@ -137,7 +135,6 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             false,
         );
     }
-    let source_requested = want("source");
     let searched: Vec<String> = kinds
         .iter()
         .filter(|k| k.as_str() != "source")
@@ -150,12 +147,13 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         keys.push(row.key.clone());
         let (hit, citation) = match render(row, service.config.limits.excerpt_characters) {
             Ok(value) => value,
-            Err(e) => return common::store_error(&e),
+            Err(e) => return common::operation_error(&e, "search_projection"),
         };
         hits.push(hit);
         evidence.push(citation);
     }
     let mut data = SearchData {
+        page: Page::default(),
         query: query.clone(),
         tokens,
         kinds,
@@ -172,32 +170,41 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         offset,
     };
     let manifest = opened.reader.manifest();
-    let mut missing: std::collections::BTreeSet<_> = manifest
-        .missing
+    let requested_kinds: Vec<_> = data
+        .kinds
         .iter()
-        .map(|k| k.as_str().to_owned())
+        .map(|family| match family.as_str() {
+            "api" => EvidenceKind::PublicApi,
+            "docs" => EvidenceKind::Documentation,
+            "examples" => EvidenceKind::Examples,
+            "release_notes" => EvidenceKind::ReleaseNotes,
+            "features" => EvidenceKind::RegistryMetadata,
+            _ => unreachable!("validated search family"),
+        })
         .collect();
-    if source_requested {
-        missing.insert(EvidenceKind::SourceExcerpts.as_str().into());
-    }
-    let mut limitations = vec!["Lexical matching within the pinned evidence scope; an empty result does not establish that a capability is absent.".into()];
-    if source_requested {
-        limitations.push("Source excerpts are selected through inspect_symbol at source depth; full source text is not indexed for lexical search.".into());
-    }
+    let mut coverage = match opened
+        .reader
+        .assess(
+            &requested_kinds,
+            None,
+            format!("{} in snapshot {}", searched.join(", "), opened.snapshot_id),
+        )
+        .await
+    {
+        Ok(value) => value,
+        Err(e) => return common::query_error(&e),
+    };
+    coverage.limitations.push("Lexical matching within the pinned evidence scope; an empty result does not establish that a capability is absent.".into());
+    let partial = !coverage.complete();
     let research = Research {
         summary: format!(
-            "{} matches for `{query}` in {}; {} results already returned.",
+            "{} matches for the requested lexical query in {}; {} results already returned.",
             page.total,
             searched.join(", "),
             offset
         ),
         data: common::to_object(&data),
-        coverage: Coverage {
-            scope: format!("{} in snapshot {}", searched.join(", "), opened.snapshot_id),
-            indexed: searched.into_iter().collect(),
-            missing: missing.clone(),
-            limitations,
-        },
+        coverage,
         freshness: Freshness {
             registry_checked_at: None,
             latest_verified: false,
@@ -214,12 +221,7 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         evidence,
         artifacts: vec![],
     };
-    let mut result = research.ok_with_pagination(Pagination {
-        returned: 0,
-        total_matches: Some(page.total),
-        truncated: false,
-        next_cursor: None,
-    });
+    let mut result = research.ok_with_page(Page::new(0, Some(page.total), false, None));
     loop {
         let returned = data.hits.len() as u64;
         let more = page.has_more || page.total > offset + returned;
@@ -233,19 +235,14 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             .encode()
             {
                 Ok(value) => Some(value),
-                Err(e) => return common::store_error(&e),
+                Err(e) => return common::operation_error(&e, "search_projection"),
             }
         } else {
             None
         };
-        result.pagination = Pagination {
-            returned,
-            total_matches: Some(page.total),
-            truncated: more,
-            next_cursor,
-        };
+        data.page = Page::new(returned, Some(page.total), more, next_cursor);
         result.data = common::to_object(&data);
-        if !missing.is_empty() {
+        if partial {
             result = result.into_partial();
         }
         if common::json_size(&result) <= budget || data.hits.len() <= 1 {

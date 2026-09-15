@@ -1,0 +1,336 @@
+{
+  "module": "datafusion_functions_aggregate::variance",
+  "crate": "datafusion-functions-aggregate",
+  "api": "api/datafusion_functions_aggregate.variance.md",
+  "items": [
+    {
+      "path": "datafusion_functions_aggregate::variance::var_pop",
+      "name": "var_pop",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn var_pop(expression: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "Computes the population variance.",
+      "doc": "api/datafusion_functions_aggregate.variance.md#var_pop",
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::var_pop"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::var_pop_udaf",
+      "name": "var_pop_udaf",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn var_pop_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>",
+      "summary": "AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`VariancePopulation`]",
+      "doc": "api/datafusion_functions_aggregate.variance.md#var_pop_udaf"
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::var_samp_udaf",
+      "name": "var_samp_udaf",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn var_samp_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>",
+      "summary": "AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`VarianceSample`]",
+      "doc": "api/datafusion_functions_aggregate.variance.md#var_samp_udaf"
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::var_sample",
+      "name": "var_sample",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn var_sample(expression: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "Computes the sample variance.",
+      "doc": "api/datafusion_functions_aggregate.variance.md#var_sample",
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::var_sample"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::DistinctVarianceAccumulator",
+      "name": "DistinctVarianceAccumulator",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct DistinctVarianceAccumulator",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr_common::accumulator::Accumulator"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self) -> Result<ScalarValue>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, states: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(stat_type: StatsType) -> Self"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self) -> Result<Vec<ScalarValue>>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::VarianceAccumulator",
+      "name": "VarianceAccumulator",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct VarianceAccumulator",
+      "summary": "An accumulator to compute variance The algorithm used is an online implementation and numerically stable. It is based on this paper: Welford, B. P. (1962). \"Note on a method for calculating corrected sums of squares and products\". Technome…",
+      "doc": "api/datafusion_functions_aggregate.variance.md#varianceaccumulator",
+      "implements": [
+        "datafusion_expr_common::accumulator::Accumulator"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self) -> Result<ScalarValue>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "get_count",
+          "signature": "fn get_count(&self) -> u64"
+        },
+        {
+          "name": "get_m2",
+          "signature": "fn get_m2(&self) -> f64"
+        },
+        {
+          "name": "get_mean",
+          "signature": "fn get_mean(&self) -> f64"
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, states: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "retract_batch",
+          "signature": "fn retract_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self) -> Result<Vec<ScalarValue>>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "supports_retract_batch",
+          "signature": "fn supports_retract_batch(&self) -> bool",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(s_type: StatsType) -> Result<Self>",
+          "summary": "Creates a new `VarianceAccumulator`"
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::VarianceGroupsAccumulator",
+      "name": "VarianceGroupsAccumulator",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct VarianceGroupsAccumulator",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+      ],
+      "methods": [
+        {
+          "name": "convert_to_state",
+          "signature": "fn convert_to_state(&self, values: &[ArrayRef], opt_filter: Option<&BooleanArray>) -> Result<Vec<ArrayRef>>",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self, emit_to: datafusion_expr::EmitTo) -> Result<ArrayRef>",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], total_num_groups: usize) -> Result<()>",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(s_type: StatsType) -> Self"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self, emit_to: datafusion_expr::EmitTo) -> Result<Vec<ArrayRef>>",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef], group_indices: &[usize], opt_filter: Option<&BooleanArray>, total_num_groups: usize) -> Result<()>",
+          "via_trait": "datafusion_expr_common::groups_accumulator::GroupsAccumulator"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&mut self, emit_to: datafusion_expr::EmitTo) -> (Vec<f64>, NullBuffer)"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::VariancePopulation",
+      "name": "VariancePopulation",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct VariancePopulation",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr::udaf::AggregateUDFImpl"
+      ],
+      "methods": [
+        {
+          "name": "accumulator",
+          "signature": "fn accumulator(&self, acc_args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "aliases",
+          "signature": "fn aliases(&self) -> &[String]",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "create_groups_accumulator",
+          "signature": "fn create_groups_accumulator(&self, _args: AccumulatorArgs<'_>) -> Result<Box<dyn GroupsAccumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "groups_accumulator_supported",
+          "signature": "fn groups_accumulator_supported(&self, acc_args: AccumulatorArgs<'_>) -> bool",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &Signature",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::variance::VarianceSample",
+      "name": "VarianceSample",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct VarianceSample",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr::udaf::AggregateUDFImpl"
+      ],
+      "methods": [
+        {
+          "name": "accumulator",
+          "signature": "fn accumulator(&self, acc_args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "aliases",
+          "signature": "fn aliases(&self) -> &[String]",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "create_groups_accumulator",
+          "signature": "fn create_groups_accumulator(&self, _args: AccumulatorArgs<'_>) -> Result<Box<dyn GroupsAccumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "groups_accumulator_supported",
+          "signature": "fn groups_accumulator_supported(&self, acc_args: AccumulatorArgs<'_>) -> bool",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &Signature",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "module": "object_store::multipart",
+  "crate": "object_store",
+  "api": "api/object_store.multipart.md",
+  "items": [
+    {
+      "path": "object_store::multipart::PartId",
+      "name": "PartId",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct PartId",
+      "summary": "Represents a part of a file that has been successfully uploaded in a multipart upload process.",
+      "doc": "api/object_store.multipart.md#partid",
+      "fields": [
+        "content_id"
+      ],
+      "methods": []
+    },
+    {
+      "path": "object_store::multipart::MultipartStore",
+      "name": "MultipartStore",
+      "kind": "trait",
+      "crate": "object_store",
+      "signature": "trait MultipartStore: Send + Sync + 'static",
+      "summary": "A low-level interface for interacting with multipart upload APIs",
+      "doc": "api/object_store.multipart.md#multipartstore",
+      "implementors": [
+        "object_store::aws::AmazonS3",
+        "object_store::azure::MicrosoftAzure",
+        "object_store::gcp::GoogleCloudStorage",
+        "object_store::memory::InMemory",
+        "object_store::prefix::PrefixStore",
+        "object_store::throttle::ThrottledStore"
+      ],
+      "required_methods": [
+        "abort_multipart",
+        "complete_multipart",
+        "create_multipart",
+        "put_part"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "abort_multipart",
+          "signature": "async fn abort_multipart(&self, path: &Path, id: &MultipartId) -> Result<()>",
+          "summary": "Aborts a multipart upload"
+        },
+        {
+          "name": "complete_multipart",
+          "signature": "async fn complete_multipart(&self, path: &Path, id: &MultipartId, parts: Vec<PartId>) -> Result<PutResult>",
+          "summary": "Completes a multipart upload"
+        },
+        {
+          "name": "create_multipart",
+          "signature": "async fn create_multipart(&self, path: &Path) -> Result<MultipartId>",
+          "summary": "Creates a new multipart upload, returning the [`MultipartId`]"
+        },
+        {
+          "name": "put_part",
+          "signature": "async fn put_part(&self, path: &Path, id: &MultipartId, part_idx: usize, data: PutPayload) -> Result<PartId>",
+          "summary": "Uploads a new part with index `part_idx`"
+        }
+      ]
+    }
+  ]
+}

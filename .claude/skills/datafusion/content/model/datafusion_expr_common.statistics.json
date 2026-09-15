@@ -1,0 +1,400 @@
+{
+  "module": "datafusion_expr_common::statistics",
+  "crate": "datafusion-expr-common",
+  "api": "api/datafusion_expr_common.statistics.md",
+  "items": [
+    {
+      "path": "datafusion_expr_common::statistics::Distribution",
+      "name": "Distribution",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum Distribution",
+      "summary": "This object defines probabilistic distributions that encode uncertain information about a single, scalar value. Currently, we support five core statistical distributions. New variants will be added over time.",
+      "doc": "api/datafusion_expr_common.statistics.md#distribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::Distribution"
+      ],
+      "variants": [
+        "Uniform",
+        "Exponential",
+        "Gaussian",
+        "Bernoulli",
+        "Generic"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType",
+          "summary": "Returns the data type of the statistical parameters comprising this distribution."
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> Result<ScalarValue>",
+          "summary": "Extracts the mean value of this uncertain quantity, depending on its distribution: - A [`Uniform`] distribution's interval determines its mean value, which   is the arithmetic average of the interval endpoints. - An [`Exponential`] distrib…"
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> Result<ScalarValue>",
+          "summary": "Extracts the median value of this uncertain quantity, depending on its distribution: - A [`Uniform`] distribution's interval determines its median value, which   is the arithmetic average of the interval endpoints. - An [`Exponential`] dis…"
+        },
+        {
+          "name": "new_bernoulli",
+          "signature": "fn new_bernoulli(p: ScalarValue) -> Result<Self>",
+          "summary": "Constructs a new [`Bernoulli`] distribution from the given success probability, and validates the given parameters."
+        },
+        {
+          "name": "new_exponential",
+          "signature": "fn new_exponential(rate: ScalarValue, offset: ScalarValue, positive_tail: bool) -> Result<Self>",
+          "summary": "Constructs a new [`Exponential`] distribution from the given rate/offset pair, and validates the given parameters."
+        },
+        {
+          "name": "new_from_interval",
+          "signature": "fn new_from_interval(range: Interval) -> Result<Self>",
+          "summary": "Constructs a new [`Generic`] distribution from the given range. Other parameters (mean, median and variance) are initialized with null values."
+        },
+        {
+          "name": "new_gaussian",
+          "signature": "fn new_gaussian(mean: ScalarValue, variance: ScalarValue) -> Result<Self>",
+          "summary": "Constructs a new [`Gaussian`] distribution from the given mean/variance pair, and validates the given parameters."
+        },
+        {
+          "name": "new_generic",
+          "signature": "fn new_generic(mean: ScalarValue, median: ScalarValue, variance: ScalarValue, range: Interval) -> Result<Self>",
+          "summary": "Constructs a new [`Generic`] distribution from the given mean, median, variance, and range values after validating the given parameters."
+        },
+        {
+          "name": "new_uniform",
+          "signature": "fn new_uniform(interval: Interval) -> Result<Self>",
+          "summary": "Constructs a new [`Uniform`] distribution from the given [`Interval`]."
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Result<Interval>",
+          "summary": "Extracts the range of this uncertain quantity, depending on its distribution: - A [`Uniform`] distribution's range is simply its interval. - An [`Exponential`] distribution's range is `[offset, +∞)`. - A [`Gaussian`] distribution's range i…"
+        },
+        {
+          "name": "target_type",
+          "signature": "fn target_type(args: &[&ScalarValue]) -> Result<DataType>"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> Result<ScalarValue>",
+          "summary": "Extracts the variance value of this uncertain quantity, depending on its distribution: - A [`Uniform`] distribution's interval determines its variance value, which   is calculable by the formula `(upper - lower) ^ 2 / 12`. - An [`Exponenti…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::StatisticsRequest",
+      "name": "StatisticsRequest",
+      "kind": "enum",
+      "crate": "datafusion-expr-common",
+      "signature": "enum StatisticsRequest",
+      "summary": "A statistic a caller would like a provider to supply, if it can do so cheaply.",
+      "doc": "api/datafusion_expr_common.statistics.md#statisticsrequest",
+      "aliases": [
+        "datafusion_expr::statistics::StatisticsRequest"
+      ],
+      "variants": [
+        "Min",
+        "Max",
+        "NullCount",
+        "DistinctCount",
+        "Sum",
+        "ByteSize",
+        "RowCount",
+        "TotalByteSize"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_expr_common::statistics::combine_bernoullis",
+      "name": "combine_bernoullis",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn combine_bernoullis(op: &operator::Operator, left: &BernoulliDistribution, right: &BernoulliDistribution) -> datafusion_common::Result<BernoulliDistribution>",
+      "summary": "This function takes a logical operator and two Bernoulli distributions, and it returns a new Bernoulli distribution that represents the result of the operation. Currently, only `AND` and `OR` operations are supported.",
+      "doc": "api/datafusion_expr_common.statistics.md#combine_bernoullis",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::combine_bernoullis"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::combine_gaussians",
+      "name": "combine_gaussians",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn combine_gaussians(op: &operator::Operator, left: &GaussianDistribution, right: &GaussianDistribution) -> datafusion_common::Result<Option<GaussianDistribution>>",
+      "summary": "Applies the given operation to the given Gaussian distributions. Currently, this function handles only addition and subtraction operations. If the result is not a Gaussian random variable, it returns `None`. For details, see:",
+      "doc": "api/datafusion_expr_common.statistics.md#combine_gaussians",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::combine_gaussians"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::compute_mean",
+      "name": "compute_mean",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn compute_mean(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>",
+      "summary": "Computes the mean value for the result of the given binary operation on two unknown quantities represented by their [`Distribution`] objects.",
+      "doc": "api/datafusion_expr_common.statistics.md#compute_mean",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::compute_mean"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::compute_median",
+      "name": "compute_median",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn compute_median(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>",
+      "summary": "Computes the median value for the result of the given binary operation on two unknown quantities represented by its [`Distribution`] objects. Currently, the median is calculable only for addition and subtraction operations on: - [`Uniform`…",
+      "doc": "api/datafusion_expr_common.statistics.md#compute_median",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::compute_median"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::compute_variance",
+      "name": "compute_variance",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn compute_variance(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<datafusion_common::ScalarValue>",
+      "summary": "Computes the variance value for the result of the given binary operation on two unknown quantities represented by their [`Distribution`] objects.",
+      "doc": "api/datafusion_expr_common.statistics.md#compute_variance",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::compute_variance"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::create_bernoulli_from_comparison",
+      "name": "create_bernoulli_from_comparison",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn create_bernoulli_from_comparison(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<Distribution>",
+      "summary": "Creates a new `Bernoulli` distribution by computing the resulting probability. Expects `op` to be a comparison operator, with `left` and `right` having numeric distributions. The resulting distribution has the `Float64` data type.",
+      "doc": "api/datafusion_expr_common.statistics.md#create_bernoulli_from_comparison",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::create_bernoulli_from_comparison"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::new_generic_from_binary_op",
+      "name": "new_generic_from_binary_op",
+      "kind": "function",
+      "crate": "datafusion-expr-common",
+      "signature": "fn new_generic_from_binary_op(op: &operator::Operator, left: &Distribution, right: &Distribution) -> datafusion_common::Result<Distribution>",
+      "summary": "Creates a new [`Generic`] distribution that represents the result of the given binary operation on two unknown quantities represented by their [`Distribution`] objects. The function computes the mean, median and variance if possible.",
+      "doc": "api/datafusion_expr_common.statistics.md#new_generic_from_binary_op",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::new_generic_from_binary_op"
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::BernoulliDistribution",
+      "name": "BernoulliDistribution",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct BernoulliDistribution",
+      "summary": "Bernoulli distribution with success probability `p`. If `p` has a null value, the success probability is unknown. For a more in-depth discussion, see:",
+      "doc": "api/datafusion_expr_common.statistics.md#bernoullidistribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::BernoulliDistribution"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> &ScalarValue"
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> Result<ScalarValue>",
+          "summary": "Computes the median value of this distribution. In case of an unknown success probability, the function returns a `NULL` `ScalarValue`."
+        },
+        {
+          "name": "p_value",
+          "signature": "fn p_value(&self) -> &ScalarValue"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Interval"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> Result<ScalarValue>",
+          "summary": "Computes the variance value of this distribution. In case of an unknown success probability, the function returns a `NULL` `ScalarValue`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::ExponentialDistribution",
+      "name": "ExponentialDistribution",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct ExponentialDistribution",
+      "summary": "Exponential distribution with an optional shift. The probability density function (PDF) is defined as follows:",
+      "doc": "api/datafusion_expr_common.statistics.md#exponentialdistribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::ExponentialDistribution"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> Result<ScalarValue>"
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> Result<ScalarValue>"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> &ScalarValue"
+        },
+        {
+          "name": "positive_tail",
+          "signature": "fn positive_tail(&self) -> bool"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Result<Interval>"
+        },
+        {
+          "name": "rate",
+          "signature": "fn rate(&self) -> &ScalarValue"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> Result<ScalarValue>"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::GaussianDistribution",
+      "name": "GaussianDistribution",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct GaussianDistribution",
+      "summary": "Gaussian (normal) distribution, represented by its mean and variance. For a more in-depth discussion, see:",
+      "doc": "api/datafusion_expr_common.statistics.md#gaussiandistribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::GaussianDistribution"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> &ScalarValue"
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> &ScalarValue"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Result<Interval>"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> &ScalarValue"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::GenericDistribution",
+      "name": "GenericDistribution",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct GenericDistribution",
+      "summary": "A generic distribution whose functional form is not available, which is approximated via some summary statistics. For a more in-depth discussion, see:",
+      "doc": "api/datafusion_expr_common.statistics.md#genericdistribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::GenericDistribution"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> &ScalarValue"
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> &ScalarValue"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> &Interval"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> &ScalarValue"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_expr_common::statistics::UniformDistribution",
+      "name": "UniformDistribution",
+      "kind": "struct",
+      "crate": "datafusion-expr-common",
+      "signature": "struct UniformDistribution",
+      "summary": "Uniform distribution, represented by its range. If the given range extends towards infinity, the distribution will be improper -- which is OK. For a more in-depth discussion, see:",
+      "doc": "api/datafusion_expr_common.statistics.md#uniformdistribution",
+      "deprecated": "since 54.0.0: Part of the unused Statistics V2 framework; see https://github.com/apache/datafusion/pull/22071",
+      "aliases": [
+        "datafusion_expr::statistics::UniformDistribution"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType"
+        },
+        {
+          "name": "mean",
+          "signature": "fn mean(&self) -> Result<ScalarValue>",
+          "summary": "Computes the mean value of this distribution. In case of improper distributions (i.e. when the range is unbounded), the function returns a `NULL` `ScalarValue`."
+        },
+        {
+          "name": "median",
+          "signature": "fn median(&self) -> Result<ScalarValue>"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> &Interval"
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> Result<ScalarValue>",
+          "summary": "Computes the variance value of this distribution. In case of improper distributions (i.e. when the range is unbounded), the function returns a `NULL` `ScalarValue`."
+        }
+      ]
+    }
+  ]
+}

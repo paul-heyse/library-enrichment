@@ -1,0 +1,59 @@
+{
+  "module": "datafusion_physical_plan::spill::spill_manager",
+  "crate": "datafusion-physical-plan",
+  "api": "api/datafusion_physical_plan.spill.spill_manager.md",
+  "items": [
+    {
+      "path": "datafusion_physical_plan::spill::spill_manager::SpillManager",
+      "name": "SpillManager",
+      "kind": "struct",
+      "crate": "datafusion-physical-plan",
+      "signature": "struct SpillManager",
+      "summary": "The `SpillManager` is responsible for the following tasks: - Reading and writing `RecordBatch`es to raw files based on the provided configurations. - Updating the associated metrics.",
+      "doc": "api/datafusion_physical_plan.spill.spill_manager.md#spillmanager",
+      "aliases": [
+        "datafusion::physical_plan::SpillManager",
+        "datafusion_physical_plan::SpillManager"
+      ],
+      "methods": [
+        {
+          "name": "create_in_progress_file",
+          "signature": "fn create_in_progress_file(&self, request_msg: &str) -> Result<InProgressSpillFile>",
+          "summary": "Creates a temporary file for in-progress operations, returning an error message if file creation fails. The file can be used to append batches incrementally and then finish the file when done."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(env: Arc<RuntimeEnv>, metrics: SpillMetrics, schema: SchemaRef) -> Self"
+        },
+        {
+          "name": "read_spill_as_stream",
+          "signature": "fn read_spill_as_stream(&self, spill_file_path: Arc<dyn SpillFile>, max_record_batch_memory: Option<usize>) -> Result<SendableRecordBatchStream>",
+          "summary": "Reads a spill file as a stream. The file must be created by the current `SpillManager`; otherwise an error will be returned."
+        },
+        {
+          "name": "read_spill_as_stream_unbuffered",
+          "signature": "fn read_spill_as_stream_unbuffered(&self, spill_file_path: Arc<dyn SpillFile>, max_record_batch_memory: Option<usize>) -> Result<SendableRecordBatchStream>",
+          "summary": "Same as `read_spill_as_stream`, but without buffering."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> &SchemaRef",
+          "summary": "Returns the schema for batches managed by this SpillManager"
+        },
+        {
+          "name": "spill_record_batch_and_finish",
+          "signature": "fn spill_record_batch_and_finish(&self, batches: &[RecordBatch], request_msg: &str) -> Result<Option<Arc<dyn SpillFile>>>",
+          "summary": "Spill input `batches` into a single file in a atomic operation. If it is intended to incrementally write in-memory batches into the same spill file, use [`Self::create_in_progress_file`] instead. None is returned if no batches are spilled."
+        },
+        {
+          "name": "with_batch_read_buffer_capacity",
+          "signature": "fn with_batch_read_buffer_capacity(self, batch_read_buffer_capacity: usize) -> Self"
+        },
+        {
+          "name": "with_compression_type",
+          "signature": "fn with_compression_type(self, spill_compression: SpillCompression) -> Self"
+        }
+      ]
+    }
+  ]
+}

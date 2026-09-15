@@ -1,0 +1,24 @@
+id: project-collect-over-stream
+language: rust
+severity: hint
+message: Whole result collected into memory; a streaming execution path exists.
+note: |
+  `collect()` materializes every RecordBatch before returning. `execute_stream()` and
+  `execute_stream_partitioned()` yield batches as they are produced, which bounds memory and lets
+  a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+  to check, not a defect.
+
+  Anchored to an awaited call, because DataFusion's `collect` is async and `Iterator::collect`
+  is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+  instead of the handful that concern DataFusion.
+metadata:
+  record: capability-gap
+  capability: streaming
+rule:
+  kind: await_expression
+  has:
+    kind: call_expression
+    has:
+      field: function
+      kind: field_expression
+      has: { field: field, regex: '^collect$' }

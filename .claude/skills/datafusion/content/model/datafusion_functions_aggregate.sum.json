@@ -1,0 +1,183 @@
+{
+  "module": "datafusion_functions_aggregate::sum",
+  "crate": "datafusion-functions-aggregate",
+  "api": "api/datafusion_functions_aggregate.sum.md",
+  "items": [
+    {
+      "path": "datafusion_functions_aggregate::sum::sum",
+      "name": "sum",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn sum(expression: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "Returns the sum of a group of values.",
+      "doc": "api/datafusion_functions_aggregate.sum.md#sum",
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::sum"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::sum::sum_distinct",
+      "name": "sum_distinct",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn sum_distinct(expr: datafusion_expr::Expr) -> datafusion_expr::Expr",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "datafusion_functions_aggregate::expr_fn::sum_distinct"
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::sum::sum_udaf",
+      "name": "sum_udaf",
+      "kind": "function",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "fn sum_udaf() -> std::sync::Arc<datafusion_expr::AggregateUDF>",
+      "summary": "AggregateFunction that returns a [`AggregateUDF`](datafusion_expr::AggregateUDF) for [`Sum`]",
+      "doc": "api/datafusion_functions_aggregate.sum.md#sum_udaf"
+    },
+    {
+      "path": "datafusion_functions_aggregate::sum::SlidingDistinctSumAccumulator",
+      "name": "SlidingDistinctSumAccumulator",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct SlidingDistinctSumAccumulator",
+      "summary": "A sliding‐window accumulator for `SUM(DISTINCT)` over Int64 columns. Maintains a running sum so that `evaluate()` is O(1).",
+      "doc": "api/datafusion_functions_aggregate.sum.md#slidingdistinctsumaccumulator",
+      "implements": [
+        "datafusion_expr_common::accumulator::Accumulator"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self) -> Result<ScalarValue>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "merge_batch",
+          "signature": "fn merge_batch(&mut self, states: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "retract_batch",
+          "signature": "fn retract_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "size",
+          "signature": "fn size(&self) -> usize",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&mut self) -> Result<Vec<ScalarValue>>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "supports_retract_batch",
+          "signature": "fn supports_retract_batch(&self) -> bool",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(data_type: &DataType) -> Result<Self>",
+          "summary": "Create a new accumulator; only `DataType::Int64` is supported."
+        },
+        {
+          "name": "update_batch",
+          "signature": "fn update_batch(&mut self, values: &[ArrayRef]) -> Result<()>",
+          "via_trait": "datafusion_expr_common::accumulator::Accumulator"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_functions_aggregate::sum::Sum",
+      "name": "Sum",
+      "kind": "struct",
+      "crate": "datafusion-functions-aggregate",
+      "signature": "struct Sum",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "datafusion_expr::udaf::AggregateUDFImpl"
+      ],
+      "methods": [
+        {
+          "name": "accumulator",
+          "signature": "fn accumulator(&self, args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "create_groups_accumulator",
+          "signature": "fn create_groups_accumulator(&self, args: AccumulatorArgs<'_>) -> Result<Box<dyn GroupsAccumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "create_sliding_accumulator",
+          "signature": "fn create_sliding_accumulator(&self, args: AccumulatorArgs<'_>) -> Result<Box<dyn Accumulator>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "documentation",
+          "signature": "fn documentation(&self) -> Option<&Documentation>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "groups_accumulator_supported",
+          "signature": "fn groups_accumulator_supported(&self, args: AccumulatorArgs<'_>) -> bool",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "order_sensitivity",
+          "signature": "fn order_sensitivity(&self) -> AggregateOrderSensitivity",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "return_type",
+          "signature": "fn return_type(&self, arg_types: &[DataType]) -> Result<DataType>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "reverse_expr",
+          "signature": "fn reverse_expr(&self) -> ReversedUDAF",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "set_monotonicity",
+          "signature": "fn set_monotonicity(&self, data_type: &DataType) -> SetMonotonicity",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "signature",
+          "signature": "fn signature(&self) -> &Signature",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "simplify_expr_op_literal",
+          "signature": "fn simplify_expr_op_literal(&self, agg_function: &AggregateFunction, arg: &Expr, op: Operator, lit: &Expr, _arg_is_left: bool) -> Result<Option<Expr>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl",
+          "summary": "Implement ClickBench Q29 specific optimization: `SUM(arg + constant)` --> `SUM(arg) + constant * COUNT(arg)`"
+        },
+        {
+          "name": "state_fields",
+          "signature": "fn state_fields(&self, args: StateFieldsArgs<'_>) -> Result<Vec<FieldRef>>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        },
+        {
+          "name": "value_from_stats",
+          "signature": "fn value_from_stats(&self, statistics_args: &StatisticsArgs<'_>) -> Option<ScalarValue>",
+          "via_trait": "datafusion_expr::udaf::AggregateUDFImpl"
+        }
+      ]
+    }
+  ]
+}

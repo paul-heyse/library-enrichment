@@ -1,0 +1,304 @@
+{
+  "module": "parquet_variant::builder",
+  "crate": "parquet-variant",
+  "api": "api/parquet_variant.builder.md",
+  "items": [
+    {
+      "path": "parquet_variant::builder::ParentState",
+      "name": "ParentState",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ParentState<'a, S: BuilderSpecificState>",
+      "summary": "Tracks information needed to correctly finalize a nested builder.",
+      "doc": "api/parquet_variant.builder.md#parentstate",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self)",
+          "summary": "Marks the insertion as having succeeded and invokes [`BuilderSpecificState::finish`]. Internal state will no longer roll back on drop."
+        },
+        {
+          "name": "list",
+          "signature": "fn list(value_builder: &'a mut ValueBuilder, metadata_builder: &'a mut dyn MetadataBuilder, offsets: &'a mut Vec<usize>, saved_parent_value_builder_offset: usize) -> Self",
+          "summary": "Creates a new instance suitable for a [`ListBuilder`]. The value and metadata builder state is checkpointed and will roll back on drop, unless [`Self::finish`] is called. The new element's offset is also captured eagerly and will also roll…"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(value_builder: &'a mut ValueBuilder, metadata_builder: &'a mut dyn MetadataBuilder, builder_state: S) -> Self",
+          "summary": "Creates a new ParentState instance. The value and metadata builder state is checkpointed and will roll back on drop, unless [`Self::finish`] is called. The builder-specific state is governed by its own `finish` and `rollback` calls."
+        },
+        {
+          "name": "try_object",
+          "signature": "fn try_object(value_builder: &'a mut ValueBuilder, metadata_builder: &'a mut dyn MetadataBuilder, fields: &'a mut IndexMap<u32, usize>, saved_parent_value_builder_offset: usize, field_name: &str, validate_unique_fields: bool) -> Result<Self, ArrowError>",
+          "summary": "Creates a new instance suitable for an [`ObjectBuilder`]. The value and metadata builder state is checkpointed and will roll back on drop, unless [`Self::finish`] is called. The new field's name and offset are also captured eagerly and wil…"
+        },
+        {
+          "name": "variant",
+          "signature": "fn variant(value_builder: &'a mut ValueBuilder, metadata_builder: &'a mut dyn MetadataBuilder) -> Self",
+          "summary": "Creates a new instance suitable for a top-level variant builder (e.g. [`VariantBuilder`]). The value and metadata builder state is checkpointed and will roll back on drop, unless [`Self::finish`] is called."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::ValueBuilder",
+      "name": "ValueBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct ValueBuilder",
+      "summary": "Wrapper around a `Vec<u8>` that provides methods for appending primitive values, variant types, and metadata.",
+      "doc": "api/parquet_variant.builder.md#valuebuilder",
+      "methods": [
+        {
+          "name": "append_variant",
+          "signature": "fn append_variant<S: BuilderSpecificState>(state: ParentState<'_, S>, variant: Variant<'_, '_>)",
+          "summary": "Appends a variant to the builder."
+        },
+        {
+          "name": "append_variant_bytes",
+          "signature": "fn append_variant_bytes<S: BuilderSpecificState>(state: ParentState<'_, S>, variant: Variant<'_, '_>)",
+          "summary": "Appends a variant to the buffer by copying raw bytes when possible."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Vec<u8>",
+          "summary": "Returns the underlying buffer, consuming self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Construct a ValueBuffer that will write to a new underlying `Vec`"
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> usize",
+          "summary": "Returns the current size of the underlying buffer"
+        },
+        {
+          "name": "try_append_variant",
+          "signature": "fn try_append_variant<S: BuilderSpecificState>(state: ParentState<'_, S>, variant: Variant<'_, '_>) -> Result<(), ArrowError>",
+          "summary": "Tries to append a variant to the provided [`ParentState`] instance."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::VariantBuilder",
+      "name": "VariantBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant",
+      "signature": "struct VariantBuilder",
+      "summary": "Top level builder for [`Variant`] values",
+      "doc": "api/parquet_variant.builder.md#variantbuilder",
+      "implements": [
+        "parquet_variant::builder::VariantBuilderExt"
+      ],
+      "methods": [
+        {
+          "name": "add_field_name",
+          "signature": "fn add_field_name(&mut self, field_name: &str)",
+          "summary": "Adds a single field name to the field name directory in the Variant metadata."
+        },
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt",
+          "summary": "Variant values cannot encode NULL, only [`Variant::Null`]. This is different from the column that holds variant values being NULL at some positions."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, value: T)",
+          "summary": "Append a value to the builder."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "append_value_bytes",
+          "signature": "fn append_value_bytes<'m, 'd>(&mut self, value: impl Into<Variant<'m, 'd>>)",
+          "summary": "Appends a variant value to the builder by copying raw bytes when possible."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> (Vec<u8>, Vec<u8>)",
+          "summary": "Finish the builder and return the metadata and value buffers."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new VariantBuilder with new underlying buffers"
+        },
+        {
+          "name": "new_list",
+          "signature": "fn new_list(&mut self) -> ListBuilder<'_, ()>",
+          "summary": "Create an [`ListBuilder`] for creating [`Variant::List`] values."
+        },
+        {
+          "name": "new_object",
+          "signature": "fn new_object(&mut self) -> ObjectBuilder<'_, ()>",
+          "summary": "Create an [`ObjectBuilder`] for creating [`Variant::Object`] values."
+        },
+        {
+          "name": "reserve",
+          "signature": "fn reserve(&mut self, capacity: usize)",
+          "summary": "This method reserves capacity for field names in the Variant metadata, which can improve performance when you know the approximate number of unique field names that will be used across all objects in the [`Variant`]."
+        },
+        {
+          "name": "try_append_value",
+          "signature": "fn try_append_value<'m, 'd, T: Into<Variant<'m, 'd>>>(&mut self, value: T) -> Result<(), ArrowError>",
+          "summary": "Append a value to the builder."
+        },
+        {
+          "name": "try_append_value_bytes",
+          "signature": "fn try_append_value_bytes<'m, 'd>(&mut self, value: impl Into<Variant<'m, 'd>>) -> Result<(), ArrowError>",
+          "summary": "Tries to append a variant value to the builder by copying raw bytes when possible."
+        },
+        {
+          "name": "try_finish",
+          "signature": "fn try_finish(self) -> Result<(Vec<u8>, Vec<u8>), ArrowError>",
+          "summary": "Finish the builder and return the metadata and value buffers."
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, ()>, ArrowError>",
+          "summary": "Create an [`ListBuilder`] for creating [`Variant::List`] values."
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, ()>, ArrowError>",
+          "summary": "Create an [`ObjectBuilder`] for creating [`Variant::Object`] values."
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "try_with_value",
+          "signature": "fn try_with_value<'m, 'd, T: Into<Variant<'m, 'd>>>(self, value: T) -> Result<Self, ArrowError>",
+          "summary": "Builder-style API for appending a value to the list and returns self for method chaining."
+        },
+        {
+          "name": "with_field_names",
+          "signature": "fn with_field_names<'a>(self, field_names: impl IntoIterator<Item = &'a str>) -> Self",
+          "summary": "This method pre-populates the field name directory in the Variant metadata with the specific field names, in order."
+        },
+        {
+          "name": "with_metadata",
+          "signature": "fn with_metadata(self, metadata: VariantMetadata<'_>) -> Self",
+          "summary": "Create a new VariantBuilder with pre-existing [`VariantMetadata`]."
+        },
+        {
+          "name": "with_validate_unique_fields",
+          "signature": "fn with_validate_unique_fields(self, validate_unique_fields: bool) -> Self",
+          "summary": "Enables validation of unique field keys in nested objects."
+        },
+        {
+          "name": "with_value",
+          "signature": "fn with_value<'m, 'd, T: Into<Variant<'m, 'd>>>(self, value: T) -> Self",
+          "summary": "Builder-style API for appending a value to the list and returning self to enable method chaining."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::BuilderSpecificState",
+      "name": "BuilderSpecificState",
+      "kind": "trait",
+      "crate": "parquet-variant",
+      "signature": "trait BuilderSpecificState: std::fmt::Debug",
+      "summary": "A trait for managing state specific to different builder types.",
+      "doc": "api/parquet_variant.builder.md#builderspecificstate",
+      "implementors": [
+        "parquet_variant::builder::list::ListState",
+        "parquet_variant::builder::object::ObjectState"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "finish",
+        "rollback"
+      ],
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self, _metadata_builder: &mut dyn MetadataBuilder, _value_builder: &mut ValueBuilder)",
+          "summary": "Called by [`ParentState::finish`] to apply any pending builder-specific changes."
+        },
+        {
+          "name": "rollback",
+          "signature": "fn rollback(&mut self)",
+          "summary": "Called by [`ParentState::drop`] to revert any changes that were eagerly applied, if [`ParentState::finish`] was never invoked."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant::builder::VariantBuilderExt",
+      "name": "VariantBuilderExt",
+      "kind": "trait",
+      "crate": "parquet-variant",
+      "signature": "trait VariantBuilderExt",
+      "summary": "Extends [`VariantBuilder`] to help building nested [`Variant`]s",
+      "doc": "api/parquet_variant.builder.md#variantbuilderext",
+      "implementors": [
+        "parquet_variant::builder::VariantBuilder",
+        "parquet_variant::builder::list::ListBuilder",
+        "parquet_variant::builder::object::ObjectFieldBuilder",
+        "parquet_variant_compute::variant_array_builder::VariantArrayBuilder"
+      ],
+      "required_methods": [
+        "append_null",
+        "append_value",
+        "try_new_list",
+        "try_new_object"
+      ],
+      "provided_methods": [
+        "new_list",
+        "new_object"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "summary": "Appends a NULL value to this builder. The semantics depend on the implementation, but will often translate to appending a [`Variant::Null`] value."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)",
+          "summary": "Appends a new variant value to this builder. See e.g. [`VariantBuilder::append_value`]."
+        },
+        {
+          "name": "new_list",
+          "signature": "fn new_list(&mut self) -> ListBuilder<'_, Self::State<'_>>",
+          "summary": "Creates a nested list builder. See e.g. [`VariantBuilder::new_list`]. Panics if the nested builder cannot be created, see e.g. [`ObjectBuilder::new_list`]."
+        },
+        {
+          "name": "new_object",
+          "signature": "fn new_object(&mut self) -> ObjectBuilder<'_, Self::State<'_>>",
+          "summary": "Creates a nested object builder. See e.g. [`VariantBuilder::new_object`]. Panics if the nested builder cannot be created, see e.g. [`ObjectBuilder::new_object`]."
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>",
+          "summary": "Creates a nested list builder. See e.g. [`VariantBuilder::new_list`]. Returns an error if the nested builder cannot be created, see e.g. [`ObjectBuilder::try_new_list`]."
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>",
+          "summary": "Creates a nested object builder. See e.g. [`VariantBuilder::new_object`]. Returns an error if the nested builder cannot be created, see e.g. [`ObjectBuilder::try_new_object`]."
+        }
+      ]
+    }
+  ]
+}

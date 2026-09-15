@@ -1,0 +1,76 @@
+{
+  "module": "datafusion_session::schema",
+  "crate": "datafusion-session",
+  "api": "api/datafusion_session.schema.md",
+  "items": [
+    {
+      "path": "datafusion_session::schema::SchemaProvider",
+      "name": "SchemaProvider",
+      "kind": "trait",
+      "crate": "datafusion-session",
+      "signature": "trait SchemaProvider: Any + Debug + Sync + Send",
+      "summary": "Represents a schema, comprising a number of named tables.",
+      "doc": "api/datafusion_session.schema.md#schemaprovider",
+      "aliases": [
+        "datafusion_session::SchemaProvider",
+        "datafusion_session::catalog::SchemaProvider"
+      ],
+      "implementors": [
+        "datafusion_catalog::dynamic_file::catalog::DynamicFileSchemaProvider",
+        "datafusion_catalog::information_schema::InformationSchemaProvider",
+        "datafusion_catalog::listing_schema::ListingSchemaProvider",
+        "datafusion_catalog::memory::schema::MemorySchemaProvider",
+        "datafusion_ffi::schema_provider::ForeignSchemaProvider",
+        "datafusion_ffi::tests::catalog::FixedSchemaProvider"
+      ],
+      "required_methods": [
+        "table",
+        "table_exist",
+        "table_names"
+      ],
+      "provided_methods": [
+        "deregister_table",
+        "owner_name",
+        "register_table",
+        "table_type"
+      ],
+      "methods": [
+        {
+          "name": "deregister_table",
+          "signature": "fn deregister_table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "If supported by the implementation, removes the `name` table from this schema and returns the previously registered [`TableProvider`], if any."
+        },
+        {
+          "name": "owner_name",
+          "signature": "fn owner_name(&self) -> Option<&str>",
+          "summary": "Returns the owner of the Schema, default is None. This value is reported as part of `information_schema.schemata`."
+        },
+        {
+          "name": "register_table",
+          "signature": "fn register_table(&self, name: String, table: Arc<dyn TableProvider>) -> Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "If supported by the implementation, adds a new table named `name` to this schema."
+        },
+        {
+          "name": "table",
+          "signature": "async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>, DataFusionError>",
+          "summary": "Retrieves a specific table from the schema by name, if it exists, otherwise returns `None`."
+        },
+        {
+          "name": "table_exist",
+          "signature": "fn table_exist(&self, name: &str) -> bool",
+          "summary": "Returns true if table exist in the schema provider, false otherwise."
+        },
+        {
+          "name": "table_names",
+          "signature": "fn table_names(&self) -> Vec<String>",
+          "summary": "Retrieves the list of available table names in this schema."
+        },
+        {
+          "name": "table_type",
+          "signature": "async fn table_type(&self, name: &str) -> Result<Option<TableType>>",
+          "summary": "Retrieves the type of a specific table from the schema by name, if it exists, otherwise returns `None`.  Implementations for which this operation is cheap but [Self::table] is expensive can override this to improve operations that only nee…"
+        }
+      ]
+    }
+  ]
+}

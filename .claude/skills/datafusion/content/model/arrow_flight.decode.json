@@ -1,0 +1,152 @@
+{
+  "module": "arrow_flight::decode",
+  "crate": "arrow-flight",
+  "api": "api/arrow_flight.decode.md",
+  "items": [
+    {
+      "path": "arrow_flight::decode::DecodedPayload",
+      "name": "DecodedPayload",
+      "kind": "enum",
+      "crate": "arrow-flight",
+      "signature": "enum DecodedPayload",
+      "summary": "The result of decoding [`FlightData`]",
+      "doc": "api/arrow_flight.decode.md#decodedpayload",
+      "variants": [
+        "None",
+        "Schema",
+        "RecordBatch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "arrow_flight::decode::DecodedFlightData",
+      "name": "DecodedFlightData",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct DecodedFlightData",
+      "summary": "FlightData and the decoded payload (Schema, RecordBatch), if any",
+      "doc": "api/arrow_flight.decode.md#decodedflightdata",
+      "fields": [
+        "inner",
+        "payload"
+      ],
+      "methods": [
+        {
+          "name": "app_metadata",
+          "signature": "fn app_metadata(&self) -> Bytes",
+          "summary": "Return the metadata field of the inner flight data"
+        },
+        {
+          "name": "new_none",
+          "signature": "fn new_none(inner: FlightData) -> Self",
+          "summary": "Create a new DecodedFlightData with no payload"
+        },
+        {
+          "name": "new_record_batch",
+          "signature": "fn new_record_batch(inner: FlightData, batch: RecordBatch) -> Self",
+          "summary": "Create a new [`DecodedFlightData`] with a [`RecordBatch`] payload"
+        },
+        {
+          "name": "new_schema",
+          "signature": "fn new_schema(inner: FlightData, schema: SchemaRef) -> Self",
+          "summary": "Create a new DecodedFlightData with a [`Schema`] payload"
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::decode::FlightDataDecoder",
+      "name": "FlightDataDecoder",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightDataDecoder",
+      "summary": "Wrapper around a stream of [`FlightData`] that handles the details of decoding low level Flight messages into [`Schema`] and [`RecordBatch`]es, including details such as dictionaries.",
+      "doc": "api/arrow_flight.decode.md#flightdatadecoder",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new<S>(response: S) -> Self where S: Stream<Item = Result<FlightData>> + Send + 'static",
+          "summary": "Create a new wrapper around the stream of [`FlightData`]"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream",
+          "summary": "Returns the result of decoding the next [`FlightData`] message from the server, or `None` if there are no further results available."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> Option<&SchemaRef>",
+          "summary": "Returns the current schema for this stream"
+        },
+        {
+          "name": "with_skip_validation",
+          "signature": "unsafe fn with_skip_validation(self) -> Self",
+          "summary": "# Safety Invalid data may cause undefined behavior. Only use for trusted senders."
+        }
+      ]
+    },
+    {
+      "path": "arrow_flight::decode::FlightRecordBatchStream",
+      "name": "FlightRecordBatchStream",
+      "kind": "struct",
+      "crate": "arrow-flight",
+      "signature": "struct FlightRecordBatchStream",
+      "summary": "Decodes a [Stream] of [`FlightData`] back into [`RecordBatch`]es. This can be used to decode the response from an Arrow Flight server",
+      "doc": "api/arrow_flight.decode.md#flightrecordbatchstream",
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "headers",
+          "signature": "fn headers(&self) -> &MetadataMap",
+          "summary": "Headers attached to this stream."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> FlightDataDecoder",
+          "summary": "Consume self and return the wrapped [`FlightDataDecoder`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: FlightDataDecoder) -> Self",
+          "summary": "Create a new [`FlightRecordBatchStream`] from a decoded stream"
+        },
+        {
+          "name": "new_from_flight_data",
+          "signature": "fn new_from_flight_data<S>(inner: S) -> Self where S: Stream<Item = Result<FlightData>> + Send + 'static",
+          "summary": "Create a new [`FlightRecordBatchStream`] from a stream of [`FlightData`]"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Result<RecordBatch>>>",
+          "via_trait": "futures_core::stream::Stream",
+          "summary": "Returns the next [`RecordBatch`] available in this stream, or `None` if there are no further results available."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> Option<&SchemaRef>",
+          "summary": "Return schema for the stream, if it has been received"
+        },
+        {
+          "name": "trailers",
+          "signature": "fn trailers(&self) -> Option<MetadataMap>",
+          "summary": "Trailers attached to this stream."
+        },
+        {
+          "name": "with_headers",
+          "signature": "fn with_headers(self, headers: MetadataMap) -> Self",
+          "summary": "Record response headers."
+        },
+        {
+          "name": "with_trailers",
+          "signature": "fn with_trailers(self, trailers: LazyTrailers) -> Self",
+          "summary": "Record response trailers."
+        }
+      ]
+    }
+  ]
+}

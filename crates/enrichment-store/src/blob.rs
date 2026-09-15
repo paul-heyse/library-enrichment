@@ -74,6 +74,99 @@ impl BlobStore {
         &self.root
     }
 
+    /// Stream bounded output to private staging, then admit its digest and metadata together.
+    /// Failed writers leave no readable artifact or persistent staging file.
+    /// # Errors
+    /// I/O failures, excess bytes and inconsistent descriptors fail before publication.
+    pub fn put_stream(
+        &self,
+        limit: u64,
+        write: impl FnOnce(&mut dyn io::Write) -> io::Result<()>,
+        describe: impl FnOnce(&str, u64) -> Artifact,
+    ) -> io::Result<StoredBlob> {
+        use io::{Seek, Write};
+        struct Bounded<'a> {
+            writer: io::BufWriter<&'a mut fs::File>,
+            bytes: u64,
+            limit: u64,
+        }
+        impl Write for Bounded<'_> {
+            fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+                let total = self
+                    .bytes
+                    .checked_add(bytes.len() as u64)
+                    .filter(|n| *n <= self.limit)
+                    .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::OutOfMemory,
+                            "streamed artifact exceeds byte bound",
+                        )
+                    })?;
+                self.writer.write_all(bytes)?;
+                self.bytes = total;
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> io::Result<()> {
+                self.writer.flush()
+            }
+        }
+        let mut staging = tempfile::NamedTempFile::new_in(self.root.join(".staging"))?;
+        {
+            let mut bounded = Bounded {
+                writer: io::BufWriter::new(staging.as_file_mut()),
+                bytes: 0,
+                limit,
+            };
+            write(&mut bounded)?;
+            bounded.flush()?;
+        }
+        staging.as_file().sync_all()?;
+        staging.as_file_mut().rewind()?;
+        let (digest, bytes) = canonical::sha256_reader(staging.as_file_mut(), limit)?;
+        let acquired = describe(&digest, bytes);
+        if acquired.sha256 != digest
+            || acquired.size_bytes != bytes
+            || acquired.artifact_id != artifact_id_for(&digest)
+        {
+            return Err(io::Error::other(
+                "stream descriptor differs from retained bytes",
+            ));
+        }
+        let path = self.path_for(&digest);
+        let parent = path
+            .parent()
+            .ok_or_else(|| io::Error::other("missing blob shard"))?;
+        fs::create_dir_all(parent)?;
+        let newly_written = match staging.persist_noclobber(&path) {
+            Ok(_) => true,
+            Err(error) if error.error.kind() == io::ErrorKind::AlreadyExists => {
+                let existing = canonical::sha256_reader(fs::File::open(&path)?, bytes)?;
+                if existing != (digest.clone(), bytes) {
+                    return Err(io::Error::other("existing artifact failed identity check"));
+                }
+                false
+            }
+            Err(error) => return Err(error.error),
+        };
+        let artifact = match self.artifact(&digest)? {
+            Some(artifact) => artifact,
+            None => {
+                crate::atomic::write_atomic(
+                    &self.meta_path(&digest),
+                    &serde_json::to_vec(&acquired)?,
+                )?;
+                acquired.clone()
+            }
+        };
+        fs::File::open(parent)?.sync_all()?;
+        Ok(StoredBlob {
+            artifact,
+            acquired,
+            path,
+            newly_written,
+        })
+    }
+
     /// Store bytes, describing them with `describe(sha256_hex)`.
     ///
     /// The closure receives the digest so the caller can build the [`Artifact`] record with
@@ -283,18 +376,104 @@ impl BlobStore {
         artifact: &Artifact,
         request_id: &str,
     ) -> io::Result<enrichment_core::wire::Envelope> {
-        use std::io::Read;
-        let file = self.open_input(artifact, 32 * 1024 * 1024)?;
-        canonical::verified_read(file, &artifact.sha256, artifact.size_bytes, |reader| {
-            let mut first = [0u8];
-            reader.read_exact(&mut first)?;
-            if first != *b"{" {
-                return Err(io::Error::other("delivery must be a canonical JSON object"));
+        let document: crate::result::Document<enrichment_core::wire::Envelope> =
+            self.read_json(artifact, crate::result::MAX_BYTES)?;
+        document.index.validate_result(&document.result)?;
+        let mut result = document.result;
+        result.request_id = request_id.to_owned().try_into().map_err(io::Error::other)?;
+        Ok(result)
+    }
+
+    /// Read selected verified result sections without scratch writes or full JSON decoding.
+    pub fn read_result_sections(
+        &self,
+        artifact: &Artifact,
+        names: &[&str],
+        limit: u64,
+    ) -> io::Result<(
+        crate::result::Index,
+        std::collections::BTreeMap<String, serde_json::Value>,
+    )> {
+        crate::result::verified_sections(
+            &mut self.open_input(artifact, crate::result::MAX_BYTES)?,
+            artifact,
+            names,
+            limit,
+        )
+    }
+
+    /// Resolve and verify every artifact referenced by a retained result before publication,
+    /// recovery or export. The artifacts section is indexed; data values are never decoded.
+    pub fn result_dependencies(&self, result: &Artifact) -> io::Result<Vec<Artifact>> {
+        use std::collections::BTreeMap;
+        let mut found = BTreeMap::new();
+        let mut pending = vec![result.clone()];
+        let mut bytes = result.size_bytes;
+        while let Some(parent) = pending.pop() {
+            let (_, mut fields) =
+                self.read_result_sections(&parent, &["artifacts"], 1024 * 1024)?;
+            let handles: Vec<enrichment_core::wire::ArtifactHandle> =
+                serde_json::from_value(fields.remove("artifacts").ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidData, "result lacks artifacts section")
+                })?)?;
+            for handle in handles {
+                if handle.artifact_id == result.artifact_id
+                    || found.contains_key(&handle.artifact_id)
+                {
+                    continue;
+                }
+                if found.len() == 1024 {
+                    return Err(io::Error::new(
+                        io::ErrorKind::OutOfMemory,
+                        "result artifact closure exceeds 1024 members",
+                    ));
+                }
+                let artifact = self.find(&handle.artifact_id)?.ok_or_else(|| {
+                    io::Error::new(
+                        io::ErrorKind::NotFound,
+                        format!("missing result dependency {}", handle.artifact_id),
+                    )
+                })?;
+                if artifact.artifact_id != handle.artifact_id
+                    || artifact.artifact_id != artifact_id_for(&artifact.sha256)
+                    || artifact.media_type != handle.media_type
+                {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "result dependency media type mismatch",
+                    ));
+                }
+                bytes = bytes
+                    .checked_add(artifact.size_bytes)
+                    .filter(|n| *n <= 512 * 1024 * 1024)
+                    .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::OutOfMemory,
+                            "result artifact closure exceeds 512 MiB",
+                        )
+                    })?;
+                let actual = canonical::sha256_reader(
+                    self.open_input(&artifact, 512 * 1024 * 1024)?,
+                    artifact.size_bytes,
+                )?;
+                if actual != (artifact.sha256.clone(), artifact.size_bytes) {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "result dependency digest mismatch",
+                    ));
+                }
+                if matches!(
+                    artifact.source_uri.as_str(),
+                    crate::result::JOB_URI
+                        | "service:terminal-result/2"
+                        | "service:bounded-result/2"
+                ) {
+                    pending.push(artifact.clone());
+                }
+                found.insert(artifact.artifact_id.clone(), artifact);
             }
-            let prefix = format!("{{\"request_id\":{},", serde_json::to_string(request_id)?);
-            serde_json::from_reader(std::io::Cursor::new(prefix.as_bytes()).chain(reader))
-                .map_err(Into::into)
-        })
+        }
+        Ok(found.into_values().collect())
     }
 
     fn open_input(&self, artifact: &Artifact, limit: u64) -> io::Result<fs::File> {
@@ -431,6 +610,25 @@ mod tests {
         let dir = tempfile::tempdir().expect("temp dir");
         let store = BlobStore::open(dir.path()).expect("open");
         (dir, store)
+    }
+
+    #[test]
+    fn failed_streams_do_not_publish_or_leak_staging() {
+        let (_dir, blobs) = store();
+        let result = blobs.put_stream(
+            5,
+            |writer| {
+                writer.write_all(b"123")?;
+                writer.write_all(b"456")
+            },
+            |_, _| panic!("failed write must not describe a result"),
+        );
+        assert_eq!(result.unwrap_err().kind(), io::ErrorKind::OutOfMemory);
+        assert_eq!(
+            fs::read_dir(blobs.root.join(".staging")).unwrap().count(),
+            0
+        );
+        assert_eq!(fs::read_dir(blobs.root.join("sha256")).unwrap().count(), 0);
     }
 
     fn describe(kind: ArtifactKind) -> impl FnOnce(&str) -> Artifact {

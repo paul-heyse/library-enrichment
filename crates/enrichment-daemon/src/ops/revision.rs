@@ -163,20 +163,32 @@ async fn acquire(
     let package_subdir = identity.package_subdir.clone();
     let ecosystem = request.ecosystem;
     let name = request.name.clone();
-    let (root, text, declared_version, wrapper) = tokio::task::spawn_blocking(move || -> Result<_, String> {
+    let archive_digest = stored.sha256.clone();
+    let (root, text, declared_version, wrapper, extraction_inputs) = tokio::task::spawn_blocking(move || -> Result<_, String> {
         let extracted = enrichment_core::archive::extract_revision_tar_gz(
-            archive_bytes.as_slice(), &destination, &policy, &commit_identity).map_err(|e| e.to_string())?;
-        let wrapper = extracted.top_level.ok_or("Revision archive must have one common wrapper directory")?;
+            std::io::Cursor::new(archive_bytes.as_slice()), &destination, &policy, &commit_identity).map_err(|e| e.to_string())?;
+        let wrapper = extracted.top_level.clone().ok_or("Revision archive must have one common wrapper directory")?;
         if !destination.join(&wrapper).is_dir() { return Err("Archive wrapper is not a directory".into()); }
-        let root = destination.join(&wrapper).join(package_subdir);
+        let root = destination.join(&wrapper).join(&package_subdir);
         let manifest_name = match ecosystem { Ecosystem::Rust => "Cargo.toml", Ecosystem::Python => "pyproject.toml" };
         let bytes = source::read_file(&root.join(manifest_name)).map_err(|_| format!("Selected package root lacks a bounded {manifest_name}; supply package_subdir explicitly"))?;
         let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
         let declared = enrichment_core::producer::revision::project_identity(&text, ecosystem, &name)?;
-        Ok((root, text, declared, wrapper))
+        let disposition = enrichment_core::producer::revision::RevisionInputs::collect(
+            archive_digest, &extracted, &package_subdir, ecosystem, &text)?;
+        Ok((root, text, declared, wrapper, disposition))
     }).await.map_err(|e| e.to_string())??;
+    let extraction = match enrichment_store::coverage::assess_revision_inputs(
+        &service.repository.runtime,
+        extraction_inputs,
+    )
+    .await
+    {
+        Ok(extraction) => extraction,
+        Err(error) => return Ok(common::query_error(&error.into())),
+    };
     let acquisition_id = uuid::Uuid::new_v4().to_string();
-    let receipt = json!({"acquisition_id":acquisition_id,"repository":identity.repository,"package_subdir":identity.package_subdir,"source_revision":identity.commit,"tree":tree,"declared_project_version":declared_version,"archive_sha256":stored.sha256,"archive_request":archive_url.as_str(),"archive_http":archive,"commit_request":commit_url.as_str(),"commit_http":commit});
+    let receipt = json!({"acquisition_id":acquisition_id,"repository":identity.repository,"package_subdir":identity.package_subdir,"source_revision":identity.commit,"tree":tree,"declared_project_version":declared_version,"archive_sha256":stored.sha256,"extraction":extraction,"archive_request":archive_url.as_str(),"archive_http":archive,"commit_request":commit_url.as_str(),"commit_http":commit});
     let receipt_bytes = canonical::to_canonical_string(&receipt).into_bytes();
     let receipt_artifact = service
         .blobs
@@ -213,9 +225,15 @@ async fn acquire(
         environment.environment_id.clone(),
         request.effective_mode(),
     );
+    if extraction.source_closure == enrichment_core::producer::revision::SourceClosure::Incomplete {
+        acq.gaps.push(gap(if request.ecosystem == Ecosystem::Rust { EvidenceKind::CrateSource }
+            else { EvidenceKind::DistributionSource }, format!(
+            "Revision source closure is incomplete; missing declared inputs: {:?}; omitted potentially required inputs: {:?}. See extraction receipt {}.",
+            extraction.missing_inputs, extraction.affected_omissions, receipt_artifact.artifact_id)));
+    }
     acq.run(
         "github-revision",
-        "1",
+        "2",
         acq.semantic_inputs(),
         started.clone(),
         RunOutcome::Succeeded,
@@ -273,7 +291,7 @@ struct RustSources {
 async fn rust_sources(
     acq: &mut Acquisition<'_>,
     root: &Path,
-    release: &Release,
+    revision: &Revision,
     manifest: &str,
 ) -> Result<RustSources, String> {
     let facts = docsrs::manifest_facts(manifest).map_err(|e| e.to_string())?;
@@ -294,7 +312,7 @@ async fn rust_sources(
                 root.join(&path),
                 ArtifactKind::SourceFile,
                 "text/plain",
-                format!("{}@{}#{path}", release.key.registry, release.key.version),
+                revision.source_uri(&path)?,
             )
             .await
             .map_err(|e| e.to_string())?
@@ -335,7 +353,7 @@ async fn publish_rust(
     let RustSources {
         documents,
         mut inputs,
-    } = rust_sources(acq, root, release, text).await?;
+    } = rust_sources(acq, root, &Revision::from_request(request)?, text).await?;
     inputs.extend(acq.semantic_inputs());
     acq.indexed.extend([
         EvidenceKind::RegistryMetadata,
@@ -349,10 +367,10 @@ async fn publish_rust(
             _ => EvidenceKind::Documentation,
         });
     }
-    acq.run("revision-source","2",inputs,clock::now_rfc3339(),RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")]);
+    acq.run("revision-source","5",inputs,clock::now_rfc3339(),RunOutcome::Partial,vec![gap(EvidenceKind::PublicApi,"Rust revision API requires an explicitly enabled isolated build; no released rustdoc JSON is substituted"),gap(EvidenceKind::CrateSource,"Archive contents may exclude generated files, export-ignored files, LFS objects and submodules; manifest version does not establish a published release association")]);
     let producers = BTreeMap::from([
-        ("github-revision".into(), "1".into()),
-        ("revision-source".into(), "2".into()),
+        ("github-revision".into(), "2".into()),
+        ("revision-source".into(), "5".into()),
     ]);
     let data = ResolveData {
         release: release.clone(),
@@ -369,6 +387,8 @@ async fn publish_rust(
         answered_from_cache: false,
     };
     let coverage = Coverage {
+        details: None,
+        assessments: Vec::new(),
         scope: format!(
             "Immutable repository source {} {}",
             request.name, release.key.version
@@ -415,7 +435,7 @@ async fn publish_rust(
             symbol_package: request.name.replace('-', "_"),
             crate_name: request.name.replace('-', "_"),
             crate_version: None,
-            normalizer_version: "revision-source-2".into(),
+            normalizer_version: "revision-source-5".into(),
             observed_configuration: None,
             producer_items: 0,
         },

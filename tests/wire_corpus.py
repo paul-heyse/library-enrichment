@@ -16,13 +16,23 @@ from pathlib import Path
 # e2e tiers submit identical documents to different boundaries and compare verdicts -- rather
 # than each tier inventing its own cases and agreeing only by coincidence.
 
-_CONTRACTS = Path(__file__).resolve().parent.parent / "contracts"
+_CONTRACTS = Path(__file__).resolve().parent.parent / "contracts/research-v2"
 
 _ERROR_OBJECT = {
     "code": "POLICY_DENIED",
     "message": "m",
     "retryable": False,
     "next_action": "n",
+    "diagnostic": {
+        "cause": "policy_denied",
+        "stage": "admission",
+        "affected_ids": [],
+        "rule": None,
+        "observed": None,
+        "allowed": None,
+        "correlation_id": None,
+        "actions": [{"kind": "operator_setup", "reason": "n"}],
+    },
 }
 _JOB_OBJECT = {"job_id": "job_x", "state": "queued", "stage": "s", "poll_after_ms": 1000}
 
@@ -77,7 +87,30 @@ def wire_corpus() -> list[tuple[str, str, bool]]:
             False,
         ),
         ("missing_required_root_field", _without("coverage"), False),
-        ("wrong_schema_version", _mutate(schema_version="2.0"), False),
+        ("wrong_schema_version", _mutate(schema_version="1.0"), False),
         ("not_an_object", json.dumps([]), False),
     ]
+    artifact = {
+        "mode": "artifact",
+        "artifact_id": "art_0123456789abcdef",
+        "sections": [],
+        "read": {
+            "kind": "read_artifact",
+            "artifact_id": "art_0123456789abcdef",
+            "section": None,
+            "cursor": None,
+        },
+        "limits": {"requested_max_bytes": None, "effective_max_bytes": 4096},
+    }
+    cases += [
+        ("artifact_receipt", _mutate(delivery=artifact, data={}), True),
+        ("artifact_with_inline_data", _mutate(delivery=artifact, data={"rows": []}), False),
+        (
+            "pending_artifact",
+            _mutate(delivery=artifact, data={}, status="pending", job=_JOB_OBJECT),
+            False,
+        ),
+    ]
+    for field in ("context_id", "snapshot_id", "job", "error"):
+        cases.append((f"missing_nullable_{field}", _without(field), False))
     return cases

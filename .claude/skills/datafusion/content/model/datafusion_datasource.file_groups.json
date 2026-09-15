@@ -1,0 +1,154 @@
+{
+  "module": "datafusion_datasource::file_groups",
+  "crate": "datafusion-datasource",
+  "api": "api/datafusion_datasource.file_groups.md",
+  "items": [
+    {
+      "path": "datafusion_datasource::file_groups::FileGroup",
+      "name": "FileGroup",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileGroup",
+      "summary": "Represents a group of partitioned files that'll be processed by a single thread. Maintains optional statistics across all files in the group.",
+      "doc": "api/datafusion_datasource.file_groups.md#filegroup",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileGroup"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::index::Index",
+        "core::ops::index::IndexMut"
+      ],
+      "methods": [
+        {
+          "name": "file_statistics",
+          "signature": "fn file_statistics(&self, index: Option<usize>) -> Option<&Statistics>",
+          "summary": "Get the specific file statistics for the given index If the index is None, return the `FileGroup` statistics"
+        },
+        {
+          "name": "files",
+          "signature": "fn files(&self) -> &[PartitionedFile]",
+          "summary": "Returns a slice of the files in this group"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(files: Vec<PartitionedFile>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = PartitionedFile>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "group_by_partition_values",
+          "signature": "fn group_by_partition_values(self, max_target_partitions: usize) -> Vec<FileGroup>",
+          "summary": "Groups files by their partition values, ensuring all files with same partition values are in the same group."
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self, index: usize) -> &Self::Output",
+          "via_trait": "core::ops::index::Index"
+        },
+        {
+          "name": "index_mut",
+          "signature": "fn index_mut(&mut self, index: usize) -> &mut Self::Output",
+          "via_trait": "core::ops::index::IndexMut"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Vec<PartitionedFile>"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = &PartitionedFile>"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of files in this group"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(files: Vec<PartitionedFile>) -> Self",
+          "summary": "Creates a new FileGroup from a vector of PartitionedFile objects"
+        },
+        {
+          "name": "pop",
+          "signature": "fn pop(&mut self) -> Option<PartitionedFile>",
+          "summary": "Removes the last element from the files vector and returns it, or None if empty"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, partitioned_file: PartitionedFile)",
+          "summary": "Adds a file to the group"
+        },
+        {
+          "name": "split_files",
+          "signature": "fn split_files(self, n: usize) -> Vec<FileGroup>",
+          "summary": "Partition the list of files into `n` groups"
+        },
+        {
+          "name": "statistics_mut",
+          "signature": "fn statistics_mut(&mut self) -> Option<&mut Statistics>",
+          "summary": "Get the mutable reference to the statistics for this group"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(group: &protobuf::FileGroup) -> Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "with_statistics",
+          "signature": "fn with_statistics(self, statistics: Arc<Statistics>) -> Self",
+          "summary": "Set the statistics for this group"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_datasource::file_groups::FileGroupPartitioner",
+      "name": "FileGroupPartitioner",
+      "kind": "struct",
+      "crate": "datafusion-datasource",
+      "signature": "struct FileGroupPartitioner",
+      "summary": "Repartition input files into `target_partitions` partitions, if total file size exceed `repartition_file_min_size`",
+      "doc": "api/datafusion_datasource.file_groups.md#filegrouppartitioner",
+      "aliases": [
+        "datafusion::datasource::physical_plan::FileGroupPartitioner"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new [`FileGroupPartitioner`] with default values: 1. `target_partitions = 1` 2. `repartition_file_min_size = 10MB` 3. `preserve_order_within_groups = false`"
+        },
+        {
+          "name": "repartition_file_groups",
+          "signature": "fn repartition_file_groups(&self, file_groups: &[FileGroup]) -> Option<Vec<FileGroup>>",
+          "summary": "Repartition input files according to the settings on this [`FileGroupPartitioner`]."
+        },
+        {
+          "name": "with_preserve_order_within_groups",
+          "signature": "fn with_preserve_order_within_groups(self, preserve_order_within_groups: bool) -> Self",
+          "summary": "Set whether the order of tuples within a file must be preserved"
+        },
+        {
+          "name": "with_repartition_file_min_size",
+          "signature": "fn with_repartition_file_min_size(self, repartition_file_min_size: usize) -> Self",
+          "summary": "Set the minimum size at which to repartition a file"
+        },
+        {
+          "name": "with_target_partitions",
+          "signature": "fn with_target_partitions(self, target_partitions: usize) -> Self",
+          "summary": "Set the target partitions"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,7 @@
-//! Catalog domains remain typed Arrow fields, including optional environment knowledge.
+pub use super::comparison_publication::{
+    decode as comparison_publications_from_batch, encode as comparison_publications,
+};
+// Catalog domains remain typed Arrow fields, including optional environment knowledge.
 
 use super::cells::{RowSet, batch, column, invalid, list, optional, text};
 use arrow::{

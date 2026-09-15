@@ -1,0 +1,59 @@
+{
+  "module": "datafusion_common_runtime::common",
+  "crate": "datafusion-common-runtime",
+  "api": "api/datafusion_common_runtime.common.md",
+  "items": [
+    {
+      "path": "datafusion_common_runtime::common::SpawnedTask",
+      "name": "SpawnedTask",
+      "kind": "struct",
+      "crate": "datafusion-common-runtime",
+      "signature": "struct SpawnedTask<R>",
+      "summary": "Helper that  provides a simple API to spawn a single task and join it. Provides guarantees of aborting on `Drop` to keep it cancel-safe. Note that if the task was spawned with `spawn_blocking`, it will only be aborted if it hasn't started…",
+      "doc": "api/datafusion_common_runtime.common.md#spawnedtask",
+      "aliases": [
+        "datafusion::common::runtime::SpawnedTask",
+        "datafusion_common_runtime::SpawnedTask"
+      ],
+      "implements": [
+        "core::future::future::Future",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "join",
+          "signature": "async fn join(self) -> Result<R, JoinError>",
+          "summary": "Joins the task, returning the result of join (`Result<R, JoinError>`). Same as awaiting the spawned task, but left for backwards compatibility."
+        },
+        {
+          "name": "join_unwind",
+          "signature": "async fn join_unwind(self) -> Result<R, JoinError>",
+          "summary": "Joins the task and unwinds the panic if it happens."
+        },
+        {
+          "name": "join_unwind_mut",
+          "signature": "async fn join_unwind_mut(&mut self) -> Result<R, JoinError>",
+          "summary": "Joins the task using a mutable reference and unwinds the panic if it happens."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<T>(task: T) -> Self where T: Future<Output = R> + Send + 'static, R: Send"
+        },
+        {
+          "name": "spawn_blocking",
+          "signature": "fn spawn_blocking<T>(task: T) -> Self where T: FnOnce() -> R + Send + 'static, R: Send"
+        }
+      ]
+    }
+  ]
+}

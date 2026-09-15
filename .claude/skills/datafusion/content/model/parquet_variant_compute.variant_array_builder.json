@@ -1,0 +1,148 @@
+{
+  "module": "parquet_variant_compute::variant_array_builder",
+  "crate": "parquet-variant-compute",
+  "api": "api/parquet_variant_compute.variant_array_builder.md",
+  "items": [
+    {
+      "path": "parquet_variant_compute::variant_array_builder::ArrayBuilderState",
+      "name": "ArrayBuilderState",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct ArrayBuilderState<'a>",
+      "summary": "Builder-specific state for array building that manages array-level offsets and nulls. See [`VariantBuilderExt`] for details.",
+      "doc": "api/parquet_variant_compute.variant_array_builder.md#arraybuilderstate"
+    },
+    {
+      "path": "parquet_variant_compute::variant_array_builder::ValueArrayBuilderState",
+      "name": "ValueArrayBuilderState",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct ValueArrayBuilderState<'a>",
+      "summary": "Builder-specific state for array building that manages array-level offsets and nulls. See [`VariantBuilderExt`] for details.",
+      "doc": "api/parquet_variant_compute.variant_array_builder.md#valuearraybuilderstate"
+    },
+    {
+      "path": "parquet_variant_compute::variant_array_builder::VariantArrayBuilder",
+      "name": "VariantArrayBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantArrayBuilder",
+      "summary": "A builder for [`VariantArray`]",
+      "doc": "api/parquet_variant_compute.variant_array_builder.md#variantarraybuilder",
+      "aliases": [
+        "parquet::variant::VariantArrayBuilder",
+        "parquet_variant_compute::VariantArrayBuilder"
+      ],
+      "implements": [
+        "core::iter::traits::collect::Extend",
+        "parquet_variant::builder::VariantBuilderExt"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "summary": "Appends a null row to the builder."
+        },
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt",
+          "summary": "Appending NULL to a variant array produces an actual NULL value"
+        },
+        {
+          "name": "append_nulls",
+          "signature": "fn append_nulls(&mut self, n: usize)",
+          "summary": "Appends `n` null rows to the builder."
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value<'m, 'v>(&mut self, value: impl Into<Variant<'m, 'v>>)",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "append_variant",
+          "signature": "fn append_variant(&mut self, variant: Variant<'_, '_>)",
+          "summary": "Append the [`Variant`] to the builder as the next row"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> VariantArray",
+          "summary": "Build the final builder"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<T: IntoIterator<Item = Option<Variant<'m, 'v>>>>(&mut self, iter: T)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(row_capacity: usize) -> Self"
+        },
+        {
+          "name": "try_new_list",
+          "signature": "fn try_new_list(&mut self) -> Result<ListBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        },
+        {
+          "name": "try_new_object",
+          "signature": "fn try_new_object(&mut self) -> Result<ObjectBuilder<'_, Self::State<'_>>, ArrowError>",
+          "via_trait": "parquet_variant::builder::VariantBuilderExt"
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant_compute::variant_array_builder::VariantValueArrayBuilder",
+      "name": "VariantValueArrayBuilder",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantValueArrayBuilder",
+      "summary": "A builder for creating only the value column of a [`VariantArray`]",
+      "doc": "api/parquet_variant_compute.variant_array_builder.md#variantvaluearraybuilder",
+      "aliases": [
+        "parquet::variant::VariantValueArrayBuilder",
+        "parquet_variant_compute::VariantValueArrayBuilder"
+      ],
+      "methods": [
+        {
+          "name": "append_null",
+          "signature": "fn append_null(&mut self)",
+          "summary": "Append a null row to the builder"
+        },
+        {
+          "name": "append_value",
+          "signature": "fn append_value(&mut self, value: Variant<'_, '_>)",
+          "summary": "Append a variant value with its corresponding metadata"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Result<BinaryViewArray, ArrowError>",
+          "summary": "Build the final value array"
+        },
+        {
+          "name": "builder_ext",
+          "signature": "fn builder_ext<'a>(&'a mut self, metadata: &'a VariantMetadata<'a>) -> VariantValueArrayBuilderExt<'a>",
+          "summary": "Creates a thin [`VariantBuilderExt`] wrapper for this builder, which hides the `metadata` parameter (similar to the way [`parquet_variant::ObjectFieldBuilder`] hides field names)."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(row_capacity: usize) -> Self",
+          "summary": "Create a new `VariantValueArrayBuilder` with the specified row capacity"
+        },
+        {
+          "name": "parent_state",
+          "signature": "fn parent_state<'a>(&'a mut self, metadata_builder: &'a mut dyn MetadataBuilder) -> ParentState<'a, ValueArrayBuilderState<'a>>",
+          "summary": "Creates a builder-specific parent state."
+        }
+      ]
+    },
+    {
+      "path": "parquet_variant_compute::variant_array_builder::VariantValueArrayBuilderExt",
+      "name": "VariantValueArrayBuilderExt",
+      "kind": "struct",
+      "crate": "parquet-variant-compute",
+      "signature": "struct VariantValueArrayBuilderExt<'a>",
+      "summary": "A thin [`VariantBuilderExt`] wrapper that hides the short-lived (per-row) [`ReadOnlyMetadataBuilder`] instances that [`VariantValueArrayBuilder`] requires.",
+      "doc": "api/parquet_variant_compute.variant_array_builder.md#variantvaluearraybuilderext"
+    }
+  ]
+}

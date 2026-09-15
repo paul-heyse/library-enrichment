@@ -1,0 +1,92 @@
+{
+  "module": "datafusion_ffi::proto::physical_extension_codec",
+  "crate": "datafusion-ffi",
+  "api": "api/datafusion_ffi.proto.physical_extension_codec.md",
+  "items": [
+    {
+      "path": "datafusion_ffi::proto::physical_extension_codec::FFI_PhysicalExtensionCodec",
+      "name": "FFI_PhysicalExtensionCodec",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct FFI_PhysicalExtensionCodec",
+      "summary": "A stable struct for sharing [`PhysicalExtensionCodec`] across FFI boundaries.",
+      "doc": "api/datafusion_ffi.proto.physical_extension_codec.md#ffi_physicalextensioncodec",
+      "fields": [
+        "clone",
+        "release",
+        "version",
+        "private_data",
+        "library_marker_id"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(codec: Arc<dyn PhysicalExtensionCodec>, runtime: Option<Handle>, task_ctx_provider: impl Into<FFI_TaskContextProvider>) -> Self",
+          "summary": "Creates a new [`FFI_PhysicalExtensionCodec`]."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_ffi::proto::physical_extension_codec::ForeignPhysicalExtensionCodec",
+      "name": "ForeignPhysicalExtensionCodec",
+      "kind": "struct",
+      "crate": "datafusion-ffi",
+      "signature": "struct ForeignPhysicalExtensionCodec",
+      "summary": "This wrapper struct exists on the receiver side of the FFI interface, so it has no guarantees about being able to access the data in `private_data`. Any functions defined on this struct must only use the stable functions provided in FFI_Ph…",
+      "doc": "api/datafusion_ffi.proto.physical_extension_codec.md#foreignphysicalextensioncodec",
+      "implements": [
+        "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+      ],
+      "methods": [
+        {
+          "name": "try_decode",
+          "signature": "fn try_decode(&self, buf: &[u8], inputs: &[Arc<dyn ExecutionPlan>], _ctx: &TaskContext, _proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<Arc<dyn ExecutionPlan>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_udaf",
+          "signature": "fn try_decode_udaf(&self, name: &str, buf: &[u8]) -> Result<Arc<AggregateUDF>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_udf",
+          "signature": "fn try_decode_udf(&self, name: &str, buf: &[u8]) -> Result<Arc<ScalarUDF>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_decode_udwf",
+          "signature": "fn try_decode_udwf(&self, name: &str, buf: &[u8]) -> Result<Arc<WindowUDF>>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode",
+          "signature": "fn try_encode(&self, node: Arc<dyn ExecutionPlan>, buf: &mut Vec<u8>, _proto_converter: &dyn PhysicalProtoConverterExtension) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_udaf",
+          "signature": "fn try_encode_udaf(&self, node: &AggregateUDF, buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_udf",
+          "signature": "fn try_encode_udf(&self, node: &ScalarUDF, buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        },
+        {
+          "name": "try_encode_udwf",
+          "signature": "fn try_encode_udwf(&self, node: &WindowUDF, buf: &mut Vec<u8>) -> Result<()>",
+          "via_trait": "datafusion_proto::physical_plan::PhysicalExtensionCodec"
+        }
+      ]
+    }
+  ]
+}

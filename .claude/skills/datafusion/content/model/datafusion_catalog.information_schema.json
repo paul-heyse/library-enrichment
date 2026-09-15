@@ -1,0 +1,99 @@
+{
+  "module": "datafusion_catalog::information_schema",
+  "crate": "datafusion-catalog",
+  "api": "api/datafusion_catalog.information_schema.md",
+  "items": [
+    {
+      "path": "datafusion_catalog::information_schema::INFORMATION_SCHEMA",
+      "name": "INFORMATION_SCHEMA",
+      "kind": "constant",
+      "crate": "datafusion-catalog",
+      "signature": "const INFORMATION_SCHEMA: &str = \"information_schema\"",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "datafusion_catalog::information_schema::INFORMATION_SCHEMA_TABLES",
+      "name": "INFORMATION_SCHEMA_TABLES",
+      "kind": "constant",
+      "crate": "datafusion-catalog",
+      "signature": "const INFORMATION_SCHEMA_TABLES: &[&str] = _",
+      "summary": "All information schema tables",
+      "doc": "api/datafusion_catalog.information_schema.md#information_schema_tables"
+    },
+    {
+      "path": "datafusion_catalog::information_schema::schemata_schema",
+      "name": "schemata_schema",
+      "kind": "function",
+      "crate": "datafusion-catalog",
+      "signature": "fn schemata_schema() -> arrow::datatypes::SchemaRef",
+      "summary": "The Arrow schema of [`information_schema.schemata`] rows.",
+      "doc": "api/datafusion_catalog.information_schema.md#schemata_schema"
+    },
+    {
+      "path": "datafusion_catalog::information_schema::InformationSchemaProvider",
+      "name": "InformationSchemaProvider",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "signature": "struct InformationSchemaProvider",
+      "summary": "Implements the `information_schema` virtual schema and tables",
+      "doc": "api/datafusion_catalog.information_schema.md#informationschemaprovider",
+      "implements": [
+        "datafusion_session::schema::SchemaProvider"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(catalog_list: Arc<dyn CatalogProviderList>) -> Self",
+          "summary": "Creates a new [`InformationSchemaProvider`] for the provided `catalog_list`"
+        },
+        {
+          "name": "table",
+          "signature": "async fn table(&self, name: &str) -> Result<Option<Arc<dyn TableProvider>>, DataFusionError>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table_exist",
+          "signature": "fn table_exist(&self, name: &str) -> bool",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table_names",
+          "signature": "fn table_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "with_table_functions",
+          "signature": "fn with_table_functions(self, table_functions: HashMap<String, Arc<TableFunction>>) -> Self",
+          "summary": "Attach the session's table (UDTF) functions so that they appear in `information_schema.routines` / `SHOW FUNCTIONS`."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_catalog::information_schema::InformationSchemataBuilder",
+      "name": "InformationSchemataBuilder",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "signature": "struct InformationSchemataBuilder",
+      "summary": "Builder that produces [`RecordBatch`] values matching the schema of `information_schema.schemata` (see [`schemata_schema`]).",
+      "doc": "api/datafusion_catalog.information_schema.md#informationschematabuilder",
+      "methods": [
+        {
+          "name": "add_schemata",
+          "signature": "fn add_schemata(&mut self, catalog_name: &str, schema_name: &str, schema_owner: Option<&str>)",
+          "summary": "Append one row to the builder. `schema_owner` is the optional SQL schema owner; the three `default_character_set_*` columns and `sql_path` are written as null (DataFusion does not model those concepts; see the PostgreSQL docs link on [`sch…"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<RecordBatch>",
+          "summary": "Finalize the builder into a [`RecordBatch`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Construct an empty builder."
+        }
+      ]
+    }
+  ]
+}

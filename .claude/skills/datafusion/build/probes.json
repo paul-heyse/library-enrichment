@@ -1,0 +1,188 @@
+{
+  "_comment": [
+    "Capability questions an agent plausibly gets wrong, each checked against the index file the",
+    "documented recipe would search. These are navigation tests, not content tests: they prove the",
+    "answer is findable by the route reference.md describes, which is the only property that makes",
+    "a static repository useful. Seeded from real blind spots -- async UDFs, spill configuration,",
+    "DML on TableProvider, dynamic filter pushdown, FFI, extension types.",
+    "",
+    "`expect` is a Python regular expression matched against the whole file in MULTILINE mode."
+  ],
+  "probes": [
+    {
+      "question": "Can a scalar UDF be async?",
+      "file": "index/symbols.tsv",
+      "expect": "^datafusion_expr::async_udf::AsyncScalarUDF\\ttrait|^datafusion_expr::async_udf::AsyncScalarUDF\\t"
+    },
+    {
+      "question": "Can DataFusion spill to disk under memory pressure?",
+      "file": "index/methods.tsv",
+      "expect": "\\twith_temp_file_path\\t"
+    },
+    {
+      "question": "Is there a memory pool that reserves fairly across spilling operators?",
+      "file": "index/symbols.tsv",
+      "expect": "FairSpillPool\\tstruct"
+    },
+    {
+      "question": "Can a TableProvider support DELETE, UPDATE and MERGE, not just SELECT?",
+      "file": "traits/TableProvider.md",
+      "expect": "async fn merge_into"
+    },
+    {
+      "question": "Can a TableProvider report which filters it can evaluate itself?",
+      "file": "traits/TableProvider.md",
+      "expect": "fn supports_filters_pushdown"
+    },
+    {
+      "question": "Does ExecutionPlan participate in filter pushdown at the physical level?",
+      "file": "index/methods.tsv",
+      "expect": "\\tgather_filters_for_pushdown\\t|\\thandle_child_pushdown_result\\t"
+    },
+    {
+      "question": "Can a table be registered directly from a URL?",
+      "file": "index/methods.tsv",
+      "expect": "\\tenable_url_table\\t"
+    },
+    {
+      "question": "Can the SQL relation planner be extended with custom relations?",
+      "file": "index/methods.tsv",
+      "expect": "\\tregister_relation_planner\\t"
+    },
+    {
+      "question": "Are user-defined table functions supported?",
+      "file": "index/methods.tsv",
+      "expect": "\\tregister_udtf\\t"
+    },
+    {
+      "question": "Does DataFusion expose information_schema?",
+      "file": "index/methods.tsv",
+      "expect": "\\twith_information_schema\\t"
+    },
+    {
+      "question": "Can a catalog be resolved asynchronously?",
+      "file": "index/symbols.tsv",
+      "expect": "AsyncCatalogProvider\\ttrait|AsyncSchemaProvider\\ttrait"
+    },
+    {
+      "question": "Can table providers be shared across an FFI boundary?",
+      "file": "index/symbols.tsv",
+      "expect": "^datafusion_ffi::table_provider::FFI_TableProvider\\t"
+    },
+    {
+      "question": "Are Arrow canonical extension types usable in schemas?",
+      "file": "index/symbols.tsv",
+      "expect": "ExtensionType\\ttrait|CanonicalExtensionType\\t"
+    },
+    {
+      "question": "Can a logical plan round-trip through Substrait?",
+      "file": "index/symbols.tsv",
+      "expect": "^datafusion_substrait::"
+    },
+    {
+      "question": "Can a physical plan be serialized to protobuf?",
+      "file": "index/symbols.tsv",
+      "expect": "PhysicalExtensionCodec\\ttrait"
+    },
+    {
+      "question": "Is there a Spark-compatible function set?",
+      "file": "index/symbols.tsv",
+      "expect": "^datafusion_spark::"
+    },
+    {
+      "question": "Can Parquet row groups be pruned from statistics before reading?",
+      "file": "index/symbols.tsv",
+      "expect": "PruningPredicate\\tstruct"
+    },
+    {
+      "question": "Can a custom optimizer rule be added to a session?",
+      "file": "index/methods.tsv",
+      "expect": "\\tadd_optimizer_rule\\t"
+    },
+    {
+      "question": "Can an analyzer rule run before optimization?",
+      "file": "index/methods.tsv",
+      "expect": "\\tadd_analyzer_rule\\t"
+    },
+    {
+      "question": "Can an aggregate use a grouping-aware accumulator for speed?",
+      "file": "traits/AggregateUDFImpl.md",
+      "expect": "groups_accumulator_supported|create_groups_accumulator"
+    },
+    {
+      "question": "Can a scalar UDF tell the optimizer it preserves ordering?",
+      "file": "traits/ScalarUDFImpl.md",
+      "expect": "set_monotonicity|preserves_lex_ordering|output_ordering"
+    },
+    {
+      "question": "Can a scalar UDF simplify itself at plan time?",
+      "file": "traits/ScalarUDFImpl.md",
+      "expect": "fn simplify"
+    },
+    {
+      "question": "Can a scalar UDF propagate interval constraints for pruning?",
+      "file": "traits/ScalarUDFImpl.md",
+      "expect": "evaluate_bounds|propagate_constraints"
+    },
+    {
+      "question": "Is a custom object store registerable per session?",
+      "file": "index/methods.tsv",
+      "expect": "\\tregister_object_store\\t"
+    },
+    {
+      "question": "Does the prelude alias resolve to a different defining crate?",
+      "file": "index/aliases.tsv",
+      "expect": "^datafusion::prelude::Expr\\tdatafusion_expr::expr::Expr\\t"
+    },
+    {
+      "question": "Are feature flags recorded separately from the API surface?",
+      "file": "index/features.tsv",
+      "expect": "^datafusion\\t"
+    },
+    {
+      "question": "Is there an upstream example implementing a custom TableProvider?",
+      "file": "traits/TableProvider.md",
+      "expect": "corpus/examples/"
+    },
+    {
+      "question": "Does the capability map list every topic page?",
+      "file": "topics/00-map.md",
+      "expect": "custom-table-providers\\.md"
+    },
+    {
+      "question": "Does the sessions topic surface RuntimeEnvBuilder's spill settings?",
+      "file": "topics/sessions-and-runtime.md",
+      "expect": "with_max_temp_directory_size"
+    },
+    {
+      "question": "Does the UDF topic surface the optimizer hooks, not just invoke?",
+      "file": "topics/user-defined-functions.md",
+      "expect": "groups_accumulator|simplify"
+    },
+    {
+      "question": "Does the provider topic show the required/provided split?",
+      "file": "topics/custom-table-providers.md",
+      "expect": "\\| 3 \\| 12 \\|"
+    },
+    {
+      "question": "Does the config catalog join a setting to its Rust setter?",
+      "file": "catalogs/config-options.md",
+      "expect": "RuntimeEnvBuilder::with_memory_limit"
+    },
+    {
+      "question": "Does the function catalog index window functions?",
+      "file": "catalogs/sql-functions.md",
+      "expect": "^## Window"
+    },
+    {
+      "question": "Does the crate map name the crate that defines TableProvider?",
+      "file": "catalogs/crate-map.md",
+      "expect": "`datafusion-session`.*TableProvider"
+    },
+    {
+      "question": "Does the physical execution topic cover statistics reporting?",
+      "file": "topics/physical-execution.md",
+      "expect": "partition_statistics"
+    }
+  ]
+}

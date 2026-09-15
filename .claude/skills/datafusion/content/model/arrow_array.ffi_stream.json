@@ -1,0 +1,91 @@
+{
+  "module": "arrow_array::ffi_stream",
+  "crate": "arrow-array",
+  "api": "api/arrow_array.ffi_stream.md",
+  "items": [
+    {
+      "path": "arrow_array::ffi_stream::ArrowArrayStreamReader",
+      "name": "ArrowArrayStreamReader",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct ArrowArrayStreamReader",
+      "summary": "A `RecordBatchReader` which imports Arrays from `FFI_ArrowArrayStream`.",
+      "doc": "api/arrow_array.ffi_stream.md#arrowarraystreamreader",
+      "aliases": [
+        "arrow::ffi_stream::ArrowArrayStreamReader"
+      ],
+      "implements": [
+        "arrow_array::record_batch::RecordBatchReader",
+        "arrow_pyarrow::FromPyArrow",
+        "arrow_pyarrow::IntoPyArrow",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "from_raw",
+          "signature": "unsafe fn from_raw(raw_stream: *mut FFI_ArrowArrayStream) -> std::result::Result<Self, arrow_schema::ArrowError>",
+          "summary": "Creates a new `ArrowArrayStreamReader` from a raw pointer of `FFI_ArrowArrayStream`."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "via_trait": "arrow_array::record_batch::RecordBatchReader"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(stream: FFI_ArrowArrayStream) -> std::result::Result<Self, arrow_schema::ArrowError>",
+          "summary": "Creates a new `ArrowArrayStreamReader` from a `FFI_ArrowArrayStream`. This is used to import from the C Stream Interface."
+        }
+      ]
+    },
+    {
+      "path": "arrow_array::ffi_stream::FFI_ArrowArrayStream",
+      "name": "FFI_ArrowArrayStream",
+      "kind": "struct",
+      "crate": "arrow-array",
+      "signature": "struct FFI_ArrowArrayStream",
+      "summary": "ABI-compatible struct for `ArrayStream` from C Stream Interface See <https://arrow.apache.org/docs/format/CStreamInterface.html#structure-definitions> This was created by bindgen",
+      "doc": "api/arrow_array.ffi_stream.md#ffi_arrowarraystream",
+      "aliases": [
+        "arrow::ffi_stream::FFI_ArrowArrayStream"
+      ],
+      "fields": [
+        "get_schema",
+        "get_next",
+        "get_last_error",
+        "release",
+        "private_data"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self",
+          "summary": "Creates a new empty [FFI_ArrowArrayStream]. Used to import from the C Stream Interface."
+        },
+        {
+          "name": "from_raw",
+          "signature": "unsafe fn from_raw(raw_stream: *mut FFI_ArrowArrayStream) -> Self",
+          "summary": "Takes ownership of the pointed to [`FFI_ArrowArrayStream`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(batch_reader: Box<dyn RecordBatchReader + Send>) -> Self",
+          "summary": "Creates a new [`FFI_ArrowArrayStream`]."
+        }
+      ]
+    }
+  ]
+}

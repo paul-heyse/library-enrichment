@@ -103,6 +103,18 @@ SCENARIOS: dict[str, dict[str, str]] = {
 
 
 for selected_client in ("codex", "claude"):
+    SCENARIOS[f"discovery-{selected_client}"] = SCENARIOS["A03"] | {
+        "client": selected_client,
+    }
+    SCENARIOS[f"recovery-{selected_client}"] = {
+        "client": selected_client,
+        "intent": "Recover from an unavailable exact release",
+        "prompt": "Use library-enrichment to request Rust enr-fixture exactly 9.9.9. "
+        "If that release is unavailable, explain the actual service diagnosis, then recover "
+        "by resolving exactly 0.2.0 and retrieving enr_fixture::Shape's signature. "
+        "Report evidence identities and distinguish the failed request from the usable result. "
+        "Do not edit files.",
+    }
     SCENARIOS[f"upgrade-{selected_client}"] = {
         "client": selected_client,
         "intent": "Two-release upgrade research",
@@ -124,7 +136,7 @@ for selected_client in ("codex", "claude"):
 for scenario in SCENARIOS.values():
     scenario["prompt"] += (
         " Complete pending service jobs using job_control wait and retrieve every page of any "
-        "BUDGET_EXCEEDED result artifact before drawing conclusions. Use only observed evidence; "
+        "artifact-delivered result before drawing conclusions. Use only observed evidence; "
         "report limitations explicitly."
     )
 
@@ -162,7 +174,9 @@ def available(command: str) -> str | None:
     return shutil.which(command)
 
 
-def prerequisites(client: str, adopt: bool, service: bool) -> list[str]:
+def prerequisites(
+    client: str, adopt: bool, service: bool, installation: Path | None = None
+) -> list[str]:
     """Each client has its own authentication and service prerequisites."""
     missing = []
     if not available(client):
@@ -178,7 +192,14 @@ def prerequisites(client: str, adopt: bool, service: bool) -> list[str]:
     if not any(os.environ.get(key) for key in keys) and not (adopt and credential.is_file()):
         missing.append(f"{client} requires an exported credential or explicit existing-login reuse")
     if service:
-        for path in (ADAPTER, DAEMON, DAEMON.with_name("library-enrichment-native-worker")):
+        adapter = installation / ".venv/bin/library-enrichment-mcp" if installation else ADAPTER
+        daemon = installation / "target/release/library-enrichmentd" if installation else DAEMON
+        for path in (
+            adapter,
+            daemon,
+            daemon.with_name("library-enrichment-native-worker"),
+            daemon.with_name("library-enrichment-executor"),
+        ):
             if not path.is_file():
                 missing.append(f"required executable is missing: {path}")
     return missing
@@ -245,13 +266,14 @@ def register(sandbox: Sandbox, out: Path, client: str, launch: dict | None) -> N
     if added.returncode:
         raise ValueError(f"{client} registration failed; inspect setup trace")
     if client == "codex":
-        # This scenario explicitly authorizes contained inspection. Approve only that MCP
-        # tool while preserving Codex's read-only filesystem sandbox and truthful annotations.
+        # These research scenarios authorize acquisition, derived comparison and contained
+        # inspection in this disposable service. Keep filesystem access read-only and retain
+        # the tools' truthful effect annotations. Approvals never reach the operator's config.
         with (sandbox.root / ".codex/config.toml").open("a") as config:
-            config.write(
-                '\n[mcp_servers."library-enrichment".tools.inspect_symbol]\n'
-                'approval_mode="approve"\n'
-            )
+            for tool in ("resolve_library", "inspect_symbol", "compare_releases", "job_control"):
+                config.write(
+                    f'\n[mcp_servers."library-enrichment".tools.{tool}]\napproval_mode="approve"\n'
+                )
 
 
 def drive(
@@ -348,6 +370,9 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="actually install, register and run")
     parser.add_argument("--out", help="where traces are written")
     parser.add_argument(
+        "--installed", type=Path, help="select one installed release and its adapter"
+    )
+    parser.add_argument(
         "--gate",
         action="append",
         choices=tuple(SCENARIOS),
@@ -372,7 +397,9 @@ def main() -> int:
     for gate in gates:
         scenario = SCENARIOS[gate]
         client = scenario["client"]
-        missing = prerequisites(client, args.use_operator_credentials, gate != "A06")
+        missing = prerequisites(
+            client, args.use_operator_credentials, gate != "A06", args.installed
+        )
         if gate.startswith("runtime-") and not all(
             os.environ.get(name)
             for name in ("LIBENR_EXECUTION_TEST_ROOT", "LIBENR_EXECUTION_TEST_PYTHON")
@@ -395,10 +422,10 @@ def main() -> int:
             sandbox.client = client
             if args.use_operator_credentials:
                 sandbox.adopt_operator_credentials(client)
-            with service(sandbox.root, gate != "A06") as launch:
+            with service(sandbox.root, gate != "A06", installation=args.installed) as launch:
                 register(sandbox, out / gate, client, launch)
                 entry = drive(sandbox, out / gate, gate, scenario, launch)
-            for name in ("daemon.log", "requests.json"):
+            for name in ("daemon.log", "requests.json", "launch.json"):
                 path = sandbox.root / name
                 if path.is_file():
                     shutil.copyfile(path, out / gate / name)

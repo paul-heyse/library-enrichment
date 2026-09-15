@@ -444,29 +444,52 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
     )
     .unwrap();
     let job_id = format!("job_{}", "1".repeat(32));
+    let dependency_bytes = br#"{"observed":"complete indivisible value","optional":null}"#;
+    let dependency = blobs
+        .put(dependency_bytes, |_| {
+            Artifact::describe(
+                dependency_bytes,
+                ArtifactKind::Other,
+                "application/json",
+                "service:comparison-value/2",
+                "2026-09-15T00:00:00Z",
+            )
+        })
+        .unwrap()
+        .acquired;
+    let delivery_dependency = dependency.clone();
     let delivery_blobs = blobs.clone();
-    let prepare_delivery: enrichment_store::repository::JobDeliveryFactory = std::sync::Arc::new(
-        move |manifest| {
-            let bytes = serde_json::to_vec(
-                &serde_json::json!({"context_id":manifest.context_id,"snapshot_id":manifest.snapshot_id,"status":"error",
-            "schema_version":"1.0", "summary":"probe failed", "data":{}, "coverage":{"scope":"fixture","indexed":[],"missing":[],"limitations":[]},
-            "freshness":{"registry_checked_at":null,"source_version_match":"exact","latest_verified":false},"evidence":[],"artifacts":[],
-            "pagination":{"returned":0,"total_matches":null,"truncated":false,"next_cursor":null},"job":null,
-            "error":{"code":"VERIFICATION_FAILED","message":"probe failed","next_action":"inspect evidence","retryable":false}}),
-            )?;
-            Ok(delivery_blobs
-                .put(&bytes, |_| {
-                    Artifact::describe(
-                        &bytes,
-                        ArtifactKind::Other,
-                        "application/json",
-                        "service:job-delivery/1",
-                        "2026-09-14T00:00:00Z",
+    let prepare_delivery: enrichment_store::repository::JobDeliveryFactory =
+        std::sync::Arc::new(move |manifest, _coverage| {
+            let mut result: enrichment_core::wire::Envelope = serde_json::from_str(include_str!(
+                "../../../contracts/research-v2/examples/error.fixture.json"
+            ))?;
+            result.context_id = Some(manifest.context_id.to_string());
+            result.snapshot_id = Some(manifest.snapshot_id.to_string());
+            result.summary = "probe failed".into();
+            let error = result.error_mut().expect("error fixture");
+            error.code = enrichment_core::wire::ErrorCode::VerificationFailed;
+            error.message = "probe failed".into();
+            result
+                .artifacts
+                .push(enrichment_core::wire::ArtifactHandle {
+                    artifact_id: delivery_dependency.artifact_id.clone(),
+                    uri: format!(
+                        "library-evidence://artifacts/{}",
+                        delivery_dependency.artifact_id
                     )
-                })?
-                .acquired)
-        },
-    );
+                    .try_into()
+                    .unwrap(),
+                    media_type: delivery_dependency.media_type.clone(),
+                    description: "Complete observed value".into(),
+                });
+            Ok(enrichment_store::result::store(
+                &delivery_blobs,
+                &result,
+                enrichment_store::result::JOB_URI,
+            )?
+            .0)
+        });
     let completion = JobCompletion {
         job_id: job_id.clone(),
         prepare_delivery,
@@ -546,7 +569,16 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             !bundle.join("data/blobs/.staging").exists(),
             "bundle verification is read-only"
         );
-        std::fs::remove_file(delivery_file).unwrap();
+        let offline = BlobStore::read_only(&bundle.join("data")).unwrap();
+        let copied = offline.find(&dependency.artifact_id).unwrap().unwrap();
+        assert_eq!(offline.read(&copied.sha256).unwrap(), dependency_bytes);
+        assert_eq!(
+            offline.result_dependencies(&publication.delivery).unwrap(),
+            vec![copied.clone()]
+        );
+        // The result is still present; removing only its referenced value breaks the closure.
+        std::fs::remove_file(offline.path_for(&copied.sha256)).unwrap();
+        assert!(offline.result_dependencies(&publication.delivery).is_err());
         assert!(
             !enrichment_store::bundle::verify(&bundle)
                 .await
@@ -719,4 +751,81 @@ async fn repeated_environment_derivation_preserves_child_execution_observations(
         reader.execution_observations(None, None).await.unwrap(),
         expected
     );
+}
+
+#[tokio::test]
+async fn execution_coverage_does_not_borrow_a_different_query_on_the_same_subject() {
+    use enrichment_core::evidence::{
+        EvidenceKind, Gap, GapReason,
+        relational::{CoverageFact, CoverageOutcome},
+    };
+    let root = tempfile::tempdir().unwrap();
+    let paths = StatePaths::explicit(root.path().join("cache"), root.path().join("data"));
+    let blobs = BlobStore::open(&paths.data_root).unwrap();
+    let metadata = metadata();
+    let mut evidence = evidence(&blobs, &metadata);
+    for (index, outcome) in [(0, CoverageOutcome::Indexed), (1, CoverageOutcome::Partial)] {
+        let observation = &evidence.execution_observations[index];
+        let gaps = if outcome == CoverageOutcome::Indexed {
+            vec![]
+        } else {
+            vec![Gap {
+                kind: EvidenceKind::SemanticQueries,
+                reason: GapReason::ExtractionFailed,
+                detail: "one selected query has incomplete external evidence".into(),
+                planned_fallback: None,
+            }]
+        };
+        evidence.coverage.push(
+            CoverageFact::new(
+                observation.source.producer_binding_id.clone(),
+                observation.subject.clone(),
+                EvidenceKind::SemanticQueries,
+                outcome,
+                gaps,
+            )
+            .unwrap(),
+        );
+    }
+    let ids = evidence.execution_observations[..2]
+        .iter()
+        .map(|fact| fact.source.artifact_id.clone())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        evidence.execution_observations[0].subject,
+        evidence.execution_observations[1].subject
+    );
+    let runtime =
+        QueryRuntime::new(&paths.cache_root.join("spill"), QueryLimits::default()).unwrap();
+    let repository = EvidenceRepository::new(
+        paths,
+        runtime,
+        WriteLimits::default(),
+        AdmissionLimits::default(),
+    )
+    .unwrap();
+    let manifest = repository.publish(metadata, evidence, None).await.unwrap();
+    let reader = SnapshotReader::open(
+        &repository,
+        repository.catalog.pin().await.unwrap(),
+        &manifest.snapshot_id,
+    )
+    .await
+    .unwrap();
+    let successful = reader.assess_execution(&ids[..1]).await.unwrap();
+    assert!(successful.complete());
+    let limited = reader.assess_execution(&ids[1..]).await.unwrap();
+    assert!(!limited.complete());
+    assert_eq!(
+        limited.assessments[0].state,
+        enrichment_core::wire::ScopeState::Partial
+    );
+    assert_ne!(
+        successful.assessments[0].witness_id,
+        limited.assessments[0].witness_id
+    );
+    let both = reader.assess_execution(&ids).await.unwrap();
+    assert_eq!(both.assessments.len(), 2);
+    assert!(!both.complete());
+    assert!(both.indexed.is_empty());
 }

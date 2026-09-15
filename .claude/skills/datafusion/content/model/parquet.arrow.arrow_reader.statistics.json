@@ -1,0 +1,93 @@
+{
+  "module": "parquet::arrow::arrow_reader::statistics",
+  "crate": "parquet",
+  "api": "api/parquet.arrow.arrow_reader.statistics.md",
+  "items": [
+    {
+      "path": "parquet::arrow::arrow_reader::statistics::StatisticsConverter",
+      "name": "StatisticsConverter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct StatisticsConverter<'a>",
+      "summary": "Extracts Parquet statistics as Arrow arrays",
+      "doc": "api/parquet.arrow.arrow_reader.statistics.md#statisticsconverter",
+      "methods": [
+        {
+          "name": "arrow_field",
+          "signature": "fn arrow_field(&self) -> &'a Field",
+          "summary": "Return the arrow schema's [`Field]` of the column in the Arrow schema"
+        },
+        {
+          "name": "data_page_maxes",
+          "signature": "fn data_page_maxes<I>(&self, column_page_index: &ParquetColumnIndex, column_offset_index: &ParquetOffsetIndex, row_group_indices: I) -> Result<ArrayRef> where I: IntoIterator<Item = &'a usize>",
+          "summary": "Extract the maximum values from Data Page statistics."
+        },
+        {
+          "name": "data_page_mins",
+          "signature": "fn data_page_mins<I>(&self, column_page_index: &ParquetColumnIndex, column_offset_index: &ParquetOffsetIndex, row_group_indices: I) -> Result<ArrayRef> where I: IntoIterator<Item = &'a usize>",
+          "summary": "Extract the minimum values from Data Page statistics."
+        },
+        {
+          "name": "data_page_null_counts",
+          "signature": "fn data_page_null_counts<I>(&self, column_page_index: &ParquetColumnIndex, column_offset_index: &ParquetOffsetIndex, row_group_indices: I) -> Result<UInt64Array> where I: IntoIterator<Item = &'a usize>",
+          "summary": "Returns a [`UInt64Array`] with null counts for each data page."
+        },
+        {
+          "name": "data_page_row_counts",
+          "signature": "fn data_page_row_counts<I>(&self, column_offset_index: &ParquetOffsetIndex, row_group_metadatas: &'a [RowGroupMetaData], row_group_indices: I) -> Result<Option<UInt64Array>> where I: IntoIterator<Item = &'a usize>",
+          "summary": "Returns a [`UInt64Array`] with row counts for each data page."
+        },
+        {
+          "name": "from_column_index",
+          "signature": "fn from_column_index(parquet_column_index: usize, arrow_field: &'a Field, parquet_schema: &'a SchemaDescriptor) -> Result<Self>",
+          "summary": "Create a new `StatisticsConverter` from a Parquet leaf column index directly."
+        },
+        {
+          "name": "parquet_column_index",
+          "signature": "fn parquet_column_index(&self) -> Option<usize>",
+          "summary": "Return the index of the column in the Parquet schema, if any"
+        },
+        {
+          "name": "row_group_is_max_value_exact",
+          "signature": "fn row_group_is_max_value_exact<I>(&self, metadatas: I) -> Result<BooleanArray> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Extract the `is_max_value_exact` flags from row group statistics in [`RowGroupMetaData`]"
+        },
+        {
+          "name": "row_group_is_min_value_exact",
+          "signature": "fn row_group_is_min_value_exact<I>(&self, metadatas: I) -> Result<BooleanArray> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Extract the `is_min_value_exact` flags from row group statistics in [`RowGroupMetaData`]"
+        },
+        {
+          "name": "row_group_maxes",
+          "signature": "fn row_group_maxes<I>(&self, metadatas: I) -> Result<ArrayRef> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Extract the maximum values from row group statistics in [`RowGroupMetaData`]"
+        },
+        {
+          "name": "row_group_mins",
+          "signature": "fn row_group_mins<I>(&self, metadatas: I) -> Result<ArrayRef> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Extract the minimum values from row group statistics in [`RowGroupMetaData`]"
+        },
+        {
+          "name": "row_group_null_counts",
+          "signature": "fn row_group_null_counts<I>(&self, metadatas: I) -> Result<UInt64Array> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Extract the null counts from row group statistics in [`RowGroupMetaData`]"
+        },
+        {
+          "name": "row_group_row_counts",
+          "signature": "fn row_group_row_counts<I>(&self, metadatas: I) -> Result<Option<UInt64Array>> where I: IntoIterator<Item = &'a RowGroupMetaData>",
+          "summary": "Returns a [`UInt64Array`] with row counts for each row group"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new<'b>(column_name: &'b str, arrow_schema: &'a Schema, parquet_schema: &'a SchemaDescriptor) -> Result<Self>",
+          "summary": "Create a new `StatisticsConverter` to extract statistics for a column"
+        },
+        {
+          "name": "with_missing_null_counts_as_zero",
+          "signature": "fn with_missing_null_counts_as_zero(self, missing_null_counts_as_zero: bool) -> Self",
+          "summary": "Set the statistics converter to treat missing null counts as missing"
+        }
+      ]
+    }
+  ]
+}

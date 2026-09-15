@@ -1,0 +1,107 @@
+{
+  "module": "datafusion_catalog::dynamic_file::catalog",
+  "crate": "datafusion-catalog",
+  "api": "api/datafusion_catalog.dynamic_file.catalog.md",
+  "items": [
+    {
+      "path": "datafusion_catalog::dynamic_file::catalog::DynamicFileCatalog",
+      "name": "DynamicFileCatalog",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "signature": "struct DynamicFileCatalog",
+      "summary": "Wrap another catalog provider list",
+      "doc": "api/datafusion_catalog.dynamic_file.catalog.md#dynamicfilecatalog",
+      "implements": [
+        "datafusion_session::catalog::CatalogProviderList"
+      ],
+      "methods": [
+        {
+          "name": "catalog",
+          "signature": "fn catalog(&self, name: &str) -> Option<Arc<dyn CatalogProvider>>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        },
+        {
+          "name": "catalog_names",
+          "signature": "fn catalog_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn CatalogProviderList>, factory: Arc<dyn UrlTableFactory>) -> Self"
+        },
+        {
+          "name": "register_catalog",
+          "signature": "fn register_catalog(&self, name: String, catalog: Arc<dyn CatalogProvider>) -> Option<Arc<dyn CatalogProvider>>",
+          "via_trait": "datafusion_session::catalog::CatalogProviderList"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_catalog::dynamic_file::catalog::DynamicFileSchemaProvider",
+      "name": "DynamicFileSchemaProvider",
+      "kind": "struct",
+      "crate": "datafusion-catalog",
+      "signature": "struct DynamicFileSchemaProvider",
+      "summary": "Implements the [DynamicFileSchemaProvider] that can create tables provider from the file path.",
+      "doc": "api/datafusion_catalog.dynamic_file.catalog.md#dynamicfileschemaprovider",
+      "implements": [
+        "datafusion_session::schema::SchemaProvider"
+      ],
+      "methods": [
+        {
+          "name": "deregister_table",
+          "signature": "fn deregister_table(&self, name: &str) -> datafusion_common::Result<Option<Arc<dyn TableProvider>>>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn SchemaProvider>, factory: Arc<dyn UrlTableFactory>) -> Self",
+          "summary": "Create a new [DynamicFileSchemaProvider] with the given inner schema provider."
+        },
+        {
+          "name": "register_table",
+          "signature": "fn register_table(&self, name: String, table: Arc<dyn TableProvider>) -> datafusion_common::Result<Option<Arc<dyn TableProvider>>>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table",
+          "signature": "async fn table(&self, name: &str) -> datafusion_common::Result<Option<Arc<dyn TableProvider>>>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table_exist",
+          "signature": "fn table_exist(&self, name: &str) -> bool",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        },
+        {
+          "name": "table_names",
+          "signature": "fn table_names(&self) -> Vec<String>",
+          "via_trait": "datafusion_session::schema::SchemaProvider"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_catalog::dynamic_file::catalog::UrlTableFactory",
+      "name": "UrlTableFactory",
+      "kind": "trait",
+      "crate": "datafusion-catalog",
+      "signature": "trait UrlTableFactory: Debug + Sync + Send",
+      "summary": "[UrlTableFactory] is a factory that can create a table provider from the given url.",
+      "doc": "api/datafusion_catalog.dynamic_file.catalog.md#urltablefactory",
+      "implementors": [
+        "datafusion::datasource::dynamic_file::DynamicListTableFactory"
+      ],
+      "required_methods": [
+        "try_new"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(&self, url: &str) -> datafusion_common::Result<Option<Arc<dyn TableProvider>>>",
+          "summary": "create a new table provider from the provided url"
+        }
+      ]
+    }
+  ]
+}

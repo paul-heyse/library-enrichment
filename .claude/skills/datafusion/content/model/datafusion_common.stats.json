@@ -1,0 +1,305 @@
+{
+  "module": "datafusion_common::stats",
+  "crate": "datafusion-common",
+  "api": "api/datafusion_common.stats.md",
+  "items": [
+    {
+      "path": "datafusion_common::stats::NdvFallback",
+      "name": "NdvFallback",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum NdvFallback",
+      "summary": "Fallback to use when NDV overlap can not be estimated from column bounds.",
+      "doc": "api/datafusion_common.stats.md#ndvfallback",
+      "variants": [
+        "Max",
+        "Sum"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_common::stats::Precision",
+      "name": "Precision",
+      "kind": "enum",
+      "crate": "datafusion-common",
+      "signature": "enum Precision<T: Debug + Clone + PartialEq + Eq + PartialOrd>",
+      "summary": "Represents a value with a degree of certainty. `Precision` is used to propagate information the precision of statistical values.",
+      "doc": "api/datafusion_common.stats.md#precision",
+      "variants": [
+        "Exact",
+        "Inexact",
+        "Absent"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "datafusion_common::heap_size::DFHeapSize"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&self, other: &Precision<ScalarValue>) -> Precision<ScalarValue>",
+          "summary": "Calculates the sum of two (possibly inexact) [`ScalarValue`] values, conservatively propagating exactness information. If one of the input values is [`Precision::Absent`], the result is `Absent` too."
+        },
+        {
+          "name": "add_for_sum",
+          "signature": "fn add_for_sum(&self, other: &Precision<ScalarValue>) -> Precision<ScalarValue>",
+          "summary": "SUM-style addition with integer widening to match SQL `SUM` return types for smaller integral inputs."
+        },
+        {
+          "name": "cast_to",
+          "signature": "fn cast_to(&self, data_type: &DataType) -> Result<Precision<ScalarValue>>",
+          "summary": "Casts the value to the given data type, propagating exactness information."
+        },
+        {
+          "name": "cast_to_sum_type",
+          "signature": "fn cast_to_sum_type(&self) -> Precision<ScalarValue>",
+          "summary": "Casts integer values to the wider SQL `SUM` return type."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(option: Option<T>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_value",
+          "signature": "fn get_value(&self) -> Option<&T>",
+          "summary": "If we have some value (exact or inexact), it returns that value. Otherwise, it returns `None`."
+        },
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize",
+          "via_trait": "datafusion_common::heap_size::DFHeapSize"
+        },
+        {
+          "name": "is_exact",
+          "signature": "fn is_exact(&self) -> Option<bool>",
+          "summary": "Returns `Some(true)` if we have an exact value, `Some(false)` if we have an inexact value, and `None` if there is no value."
+        },
+        {
+          "name": "map",
+          "signature": "fn map<U, F>(self, f: F) -> Precision<U> where F: Fn(T) -> U, U: Debug + Clone + PartialEq + Eq + PartialOrd",
+          "summary": "Transform the value in this [`Precision`] object, if one exists, using the given function. Preserves the exactness state."
+        },
+        {
+          "name": "max",
+          "signature": "fn max(&self, other: &Precision<T>) -> Precision<T>",
+          "summary": "Returns the maximum of two (possibly inexact) values, conservatively propagating exactness information. If one of the input values is [`Precision::Absent`], the result is `Absent` too."
+        },
+        {
+          "name": "min",
+          "signature": "fn min(&self, other: &Precision<T>) -> Precision<T>",
+          "summary": "Returns the minimum of two (possibly inexact) values, conservatively propagating exactness information. If one of the input values is [`Precision::Absent`], the result is `Absent` too."
+        },
+        {
+          "name": "multiply",
+          "signature": "fn multiply(&self, other: &Precision<ScalarValue>) -> Precision<ScalarValue>",
+          "summary": "Calculates the multiplication of two (possibly inexact) [`ScalarValue`] values, conservatively propagating exactness information. If one of the input values is [`Precision::Absent`], the result is `Absent` too."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(&self, other: &Precision<ScalarValue>) -> Precision<ScalarValue>",
+          "summary": "Calculates the difference of two (possibly inexact) [`ScalarValue`] values, conservatively propagating exactness information. If one of the input values is [`Precision::Absent`], the result is `Absent` too."
+        },
+        {
+          "name": "to_inexact",
+          "signature": "fn to_inexact(self) -> Self",
+          "summary": "Demotes the precision state from exact to inexact (if present)."
+        },
+        {
+          "name": "with_estimated_selectivity",
+          "signature": "fn with_estimated_selectivity(self, selectivity: f64) -> Self",
+          "summary": "Return the estimate of applying a filter with estimated selectivity `selectivity` to this Precision. A selectivity of `1.0` means that all rows are selected. A selectivity of `0.5` means half the rows are selected. An exact zero is preserv…"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::stats::estimate_ndv_with_overlap",
+      "name": "estimate_ndv_with_overlap",
+      "kind": "function",
+      "crate": "datafusion-common",
+      "signature": "fn estimate_ndv_with_overlap(left: &ColumnStatistics, right: &ColumnStatistics, ndv_left: usize, ndv_right: usize) -> Option<usize>",
+      "summary": "Estimates the combined number of distinct values (NDV) when merging two column statistics, using range overlap to avoid double-counting shared values.",
+      "doc": "api/datafusion_common.stats.md#estimate_ndv_with_overlap"
+    },
+    {
+      "path": "datafusion_common::stats::ColumnStatistics",
+      "name": "ColumnStatistics",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct ColumnStatistics",
+      "summary": "Statistics for a column within a relation",
+      "doc": "api/datafusion_common.stats.md#columnstatistics",
+      "aliases": [
+        "datafusion::common::ColumnStatistics",
+        "datafusion::physical_plan::ColumnStatistics",
+        "datafusion_common::ColumnStatistics",
+        "datafusion_physical_plan::ColumnStatistics",
+        "datafusion_physical_plan::execution_plan::ColumnStatistics"
+      ],
+      "fields": [
+        "null_count",
+        "max_value",
+        "min_value",
+        "sum_value",
+        "distinct_count",
+        "byte_size"
+      ],
+      "implements": [
+        "core::convert::From",
+        "datafusion_common::heap_size::DFHeapSize"
+      ],
+      "methods": [
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize",
+          "via_trait": "datafusion_common::heap_size::DFHeapSize"
+        },
+        {
+          "name": "is_singleton",
+          "signature": "fn is_singleton(&self) -> bool",
+          "summary": "Column contains a single non null value (e.g constant)."
+        },
+        {
+          "name": "new_unknown",
+          "signature": "fn new_unknown() -> Self",
+          "summary": "Returns a [`ColumnStatistics`] instance having all [`Precision::Absent`] parameters."
+        },
+        {
+          "name": "to_inexact",
+          "signature": "fn to_inexact(self) -> Self",
+          "summary": "If the exactness of a [`ColumnStatistics`] instance is lost, this function relaxes the exactness of all information by converting them [`Precision::Inexact`]."
+        },
+        {
+          "name": "with_byte_size",
+          "signature": "fn with_byte_size(self, byte_size: Precision<usize>) -> Self",
+          "summary": "Set the scan byte size This should initially be set to the total size of the column."
+        },
+        {
+          "name": "with_distinct_count",
+          "signature": "fn with_distinct_count(self, distinct_count: Precision<usize>) -> Self",
+          "summary": "Set the distinct count"
+        },
+        {
+          "name": "with_max_value",
+          "signature": "fn with_max_value(self, max_value: Precision<ScalarValue>) -> Self",
+          "summary": "Set the max value"
+        },
+        {
+          "name": "with_min_value",
+          "signature": "fn with_min_value(self, min_value: Precision<ScalarValue>) -> Self",
+          "summary": "Set the min value"
+        },
+        {
+          "name": "with_null_count",
+          "signature": "fn with_null_count(self, null_count: Precision<usize>) -> Self",
+          "summary": "Set the null count"
+        },
+        {
+          "name": "with_sum_value",
+          "signature": "fn with_sum_value(self, sum_value: Precision<ScalarValue>) -> Self",
+          "summary": "Set the sum value"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_common::stats::Statistics",
+      "name": "Statistics",
+      "kind": "struct",
+      "crate": "datafusion-common",
+      "signature": "struct Statistics",
+      "summary": "Statistics for a relation Fields are optional and can be inexact because the sources sometimes provide approximate estimates for performance reasons and the transformations output are not always predictable.",
+      "doc": "api/datafusion_common.stats.md#statistics",
+      "aliases": [
+        "datafusion::common::Statistics",
+        "datafusion::physical_plan::Statistics",
+        "datafusion_common::Statistics",
+        "datafusion_physical_plan::Statistics",
+        "datafusion_physical_plan::execution_plan::Statistics"
+      ],
+      "fields": [
+        "num_rows",
+        "total_byte_size",
+        "column_statistics"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "datafusion_common::heap_size::DFHeapSize"
+      ],
+      "methods": [
+        {
+          "name": "add_column_statistics",
+          "signature": "fn add_column_statistics(self, column_stats: ColumnStatistics) -> Self",
+          "summary": "Add a column to the column statistics"
+        },
+        {
+          "name": "calculate_total_byte_size",
+          "signature": "fn calculate_total_byte_size(&mut self, schema: &Schema)",
+          "summary": "Calculates `total_byte_size` based on the schema and `num_rows`. If any of the columns has non-primitive width, or `num_rows` is unknown, the previous `total_byte_size` is kept but downgraded to inexact rather than discarded."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(&self, ctx: &mut DFHeapSizeCtx) -> usize",
+          "via_trait": "datafusion_common::heap_size::DFHeapSize"
+        },
+        {
+          "name": "new_unknown",
+          "signature": "fn new_unknown(schema: &Schema) -> Self",
+          "summary": "Returns a [`Statistics`] instance for the given schema by assigning unknown statistics to each column in the schema."
+        },
+        {
+          "name": "project",
+          "signature": "fn project(self, projection: Option<&impl AsRef<[usize]>>) -> Self",
+          "summary": "Project the statistics to the given column indices."
+        },
+        {
+          "name": "to_inexact",
+          "signature": "fn to_inexact(self) -> Self",
+          "summary": "If the exactness of a [`Statistics`] instance is lost, this function relaxes the exactness of all information by converting them [`Precision::Inexact`]."
+        },
+        {
+          "name": "try_merge_iter",
+          "signature": "fn try_merge_iter<'a, I>(items: I, schema: &Schema) -> Result<Statistics> where I: IntoIterator<Item = &'a Statistics>",
+          "summary": "Summarize zero or more statistics into a single `Statistics` instance."
+        },
+        {
+          "name": "try_merge_iter_with_ndv_fallback",
+          "signature": "fn try_merge_iter_with_ndv_fallback<'a, I>(items: I, schema: &Schema, ndv_fallback: NdvFallback) -> Result<Statistics> where I: IntoIterator<Item = &'a Statistics>",
+          "summary": "Same as [`Statistics::try_merge_iter`], but lets callers choose the fallback used when `distinct_count` overlap can not be estimated."
+        },
+        {
+          "name": "unknown_column",
+          "signature": "fn unknown_column(schema: &Schema) -> Vec<ColumnStatistics>",
+          "summary": "Returns an unbounded `ColumnStatistics` for each field in the schema."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(self, fetch: Option<usize>, skip: usize, n_partitions: usize) -> Result<Self>",
+          "summary": "Calculates the statistics after applying `fetch` and `skip` operations."
+        },
+        {
+          "name": "with_num_rows",
+          "signature": "fn with_num_rows(self, num_rows: Precision<usize>) -> Self",
+          "summary": "Set the number of rows"
+        },
+        {
+          "name": "with_total_byte_size",
+          "signature": "fn with_total_byte_size(self, total_byte_size: Precision<usize>) -> Self",
+          "summary": "Set the total size, in bytes"
+        }
+      ]
+    }
+  ]
+}

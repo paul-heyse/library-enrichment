@@ -57,8 +57,9 @@ async def _call(
     env: dict[str, str], tool: str, cwd: Path | None = None, **arguments: Any
 ) -> dict[str, Any]:
     async with Client(daemon.transport(env, cwd=cwd)) as client:
-        result = await client.call_tool(tool, arguments)
+        result = await client.call_tool(tool, arguments, raise_on_error=False)
         payload = await daemon.read_complete_answer(client, result.structured_content)
+        payload = await daemon.wait_for_answer(client, payload)
     assert isinstance(payload, dict)
     return payload
 
@@ -66,11 +67,11 @@ async def _call(
 async def _read(env: dict[str, str], uri: str) -> dict[str, Any]:
     async with Client(daemon.transport(env)) as client:
         contents = await client.read_resource(uri)
-    text = getattr(contents[0], "text", None)
-    assert isinstance(text, str), contents
-    payload = json.loads(text)
-    assert isinstance(payload, dict)
-    return payload
+        text = getattr(contents[0], "text", None)
+        assert isinstance(text, str), contents
+        payload = await daemon.read_complete_answer(client, json.loads(text))
+        assert isinstance(payload, dict)
+        return payload
 
 
 async def _round(env: dict[str, str], context_id: str, readme_id: str) -> list[dict[str, Any]]:

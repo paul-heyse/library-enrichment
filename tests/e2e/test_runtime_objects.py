@@ -66,7 +66,7 @@ def upstream_fixture(root, extra=""):
 
 
 async def call(client, tool, **params):
-    result = (await client.call_tool(tool, params)).structured_content
+    result = (await client.call_tool(tool, params, raise_on_error=False)).structured_content
     result = await daemon.read_complete_answer(client, result)
     return await daemon.wait_for_answer(client, result)
 
@@ -105,15 +105,18 @@ simple_url="{upstream.base_url}/simple"
                 )
                 assert not static["data"]["execution_observations"]
                 if attributes:
-                    declarations = static["data"]["symbol"]["python"]["observations"]
+                    declarations = static["data"]["observations"]
                     assert {o["origin"] for o in declarations} == {"source", "stub"}
-                    assert static["data"]["symbol"]["python"]["signature_conflict"]
+                    assert len({o["payload"]["signature"] for o in declarations}) > 1
                 observed = await call(
                     client,
                     "inspect_symbol",
                     context_id=resolved["context_id"],
                     symbol_path=symbol,
-                    aspects=["runtime"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["runtime"]],
+                    },
                     execution={
                         "intent": "execute_on_miss",
                         "profile": "runtime",
@@ -135,18 +138,47 @@ simple_url="{upstream.base_url}/simple"
                 if attributes:
                     assert "int" in runtime["signature"] and "str" in runtime["signature"]
                     assert "bytes" not in runtime["signature"]
-                    qualified = observed["data"]["symbol"]["python"]["observations"]
-                    assert [
-                        {k: v for k, v in item.items() if k != "docs"} for item in qualified
-                    ] == [{k: v for k, v in item.items() if k != "docs"} for item in declarations]
+                    assert observed["data"]["observations"] == []
                     documented = await call(
                         client,
                         "inspect_symbol",
                         context_id=observed["context_id"],
                         symbol_path=symbol,
-                        aspects=["signature", "documentation"],
+                        selection={
+                            "mode": "explicit",
+                            "aspects": [
+                                {"aspect": name} for name in ["signature", "documentation"]
+                            ],
+                        },
                     )
-                    assert documented["data"]["symbol"]["python"]["observations"] == declarations
+                    # Execution derives an exact environment, so its copied static facts
+                    # have new environment-bound observation IDs. Content and provenance
+                    # survive intact; the original snapshot retains its original identities.
+                    preserved = documented["data"]["observations"]
+                    identity_fields = {"observation_id", "environment_id"}
+
+                    def contents(rows):
+                        return sorted(
+                            [
+                                {
+                                    key: value
+                                    for key, value in row.items()
+                                    if key not in identity_fields
+                                }
+                                for row in rows
+                            ],
+                            key=lambda value: json.dumps(value, sort_keys=True),
+                        )
+
+                    assert contents(preserved) == contents(declarations)
+                    original = await call(
+                        client,
+                        "inspect_symbol",
+                        context_id=static["context_id"],
+                        snapshot_id=static["snapshot_id"],
+                        symbol_path=symbol,
+                    )
+                    assert original["data"]["observations"] == declarations
                 else:
                     assert "choose" in runtime["attributes"]
                     assert runtime["signature"] is None
@@ -163,7 +195,10 @@ simple_url="{upstream.base_url}/simple"
                     "inspect_symbol",
                     context_id=observed["context_id"],
                     symbol_path=symbol,
-                    aspects=["runtime"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["runtime"]],
+                    },
                     execution={
                         "intent": intent,
                         "profile": "runtime",
@@ -219,7 +254,10 @@ simple_url="{upstream.base_url}/simple"
                     "inspect_symbol",
                     context_id=resolved["context_id"],
                     symbol_path="runtime_demo.choose",
-                    aspects=["runtime"],
+                    selection={
+                        "mode": "explicit",
+                        "aspects": [{"aspect": name} for name in ["runtime"]],
+                    },
                     execution={
                         "intent": "execute_on_miss",
                         "profile": "runtime",
@@ -239,12 +277,12 @@ simple_url="{upstream.base_url}/simple"
                 run = observed["data"]["producer_runs"][0]
                 receipt = await call(client, "read_artifact", artifact_id=run["log"])
                 parts = [receipt["data"]["content"]]
-                while receipt["pagination"]["next_cursor"] is not None:
+                while receipt["data"]["page"]["next_cursor"] is not None:
                     receipt = await call(
                         client,
                         "read_artifact",
                         artifact_id=run["log"],
-                        cursor=receipt["pagination"]["next_cursor"],
+                        cursor=receipt["data"]["page"]["next_cursor"],
                     )
                     parts.append(receipt["data"]["content"])
                 process = json.loads("".join(parts))["transcript"]["runtime"]

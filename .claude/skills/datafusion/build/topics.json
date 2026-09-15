@@ -1,0 +1,644 @@
+{
+  "_comment": [
+    "Topic definitions. Seeds are leaf names resolved against the pinned model at build time; an",
+    "unresolved seed fails the build rather than silently vanishing from a page.",
+    "",
+    "Curated prose is kept thin and factual on purpose. These pages exist to map a capability to",
+    "its entry points, not to argue an architecture. Anything stated here should be checkable",
+    "against the model or the corpus."
+  ],
+  "preamble": "Fifteen capability axes. Each page maps a capability to the types that provide it, the traits that extend it, the settings that tune it, and the upstream examples that demonstrate it. Everything below the mental model is generated from the pinned model, so the mapping cannot drift from the API.",
+  "topics": [
+    {
+      "slug": "sessions-and-runtime",
+      "title": "Sessions and runtime",
+      "covers": "SessionContext, SessionConfig, RuntimeEnv, memory pools, spilling, task context",
+      "mental_model": "A `SessionContext` is a handle over a `SessionState`, which pairs a `SessionConfig` (planning and execution settings) with a `RuntimeEnv` (memory pool, disk manager, object store registry, caches). `SessionContext::new()` takes the defaults for both, and the default `RuntimeEnv` has **no memory limit and no spill path** — a sort or aggregation larger than RAM aborts rather than spilling. Anything you want bounded is configured before the context exists, not after.",
+      "entry_points": [
+        "SessionContext",
+        "SessionState",
+        "SessionStateBuilder",
+        "SessionConfig",
+        "RuntimeEnv",
+        "RuntimeEnvBuilder",
+        "TaskContext",
+        "DiskManager"
+      ],
+      "builder_types": [
+        "SessionConfig",
+        "RuntimeEnvBuilder",
+        "SessionStateBuilder"
+      ],
+      "config_prefixes": [
+        "datafusion.runtime",
+        "datafusion.execution.batch_size",
+        "datafusion.execution.target_partitions"
+      ],
+      "example_dirs": [
+        "execution_monitoring"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/crate-configuration.md",
+        "corpus/guides/user-guide/configs.md"
+      ],
+      "decision_rules": [
+        "Bounded work needs `RuntimeEnvBuilder` with a memory pool (`FairSpillPool` or `GreedyMemoryPool`), `with_temp_file_path`, and `with_max_temp_directory_size`; pass the result to `SessionContext::new_with_config_rt`.",
+        "`SessionStateBuilder::new_from_existing` is the way to install a custom query planner, optimizer rule or analyzer rule while keeping everything else.",
+        "A `SessionContext` is cheap to clone and shares its state; build one per service, not per query."
+      ],
+      "anti_patterns": [
+        "`SessionContext::new()` in anything that touches user-sized data — the default runtime is unbounded.",
+        "Reading only the constructor. `SessionConfig` carries 64 methods and none of them appear in `new()`."
+      ],
+      "checklist": [
+        "Is there a memory pool, and does it match whether the operators can spill?",
+        "Is a temp file path set, and is its size capped?",
+        "Are target partitions matched to the deployment rather than left at the core count?"
+      ]
+    },
+    {
+      "slug": "reading-data",
+      "title": "Reading data",
+      "covers": "File formats, listing tables, object stores, schema inference, read options",
+      "mental_model": "Reading is three separable decisions: where the bytes are (`ObjectStore`), how they are laid out (`FileFormat` and a `FileSource` such as `ParquetSource`), and how a set of files becomes a table (`ListingTable` plus `ListingOptions`, or your own `TableProvider`). The `ctx.read_*` and `ctx.register_*` helpers collapse all three into one call with defaults; reach past them when a default is wrong rather than reimplementing the stack.",
+      "entry_points": [
+        "SessionContext",
+        "ListingTable",
+        "ListingOptions",
+        "ListingTableConfig",
+        "ParquetReadOptions",
+        "CsvReadOptions",
+        "FileScanConfig",
+        "FileScanConfigBuilder",
+        "ParquetSource"
+      ],
+      "extension_points": [
+        "TableProvider",
+        "datafusion_datasource::file_format::FileFormat",
+        "ObjectStore",
+        "FileOpener"
+      ],
+      "builder_types": [
+        "ListingOptions",
+        "ParquetSource",
+        "FileScanConfigBuilder"
+      ],
+      "config_prefixes": [
+        "datafusion.execution.parquet",
+        "datafusion.execution.collect_statistics",
+        "datafusion.execution.listing_table"
+      ],
+      "example_dirs": [
+        "data_io"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/cli/datasources.md",
+        "corpus/guides/library-user-guide/custom-table-providers.md",
+        "corpus/guides/user-guide/parquet-content-defined-chunking.md"
+      ],
+      "decision_rules": [
+        "A non-local store is registered per session with `register_object_store`, keyed by URL scheme and authority.",
+        "Schema inference costs a read. Supply a schema through `ListingOptions`/`ParquetReadOptions` when you already know it.",
+        "`enable_url_table` lets SQL address a path directly, which removes the registration step for ad-hoc queries."
+      ],
+      "anti_patterns": [
+        "Writing a `TableProvider` for something a `ListingTable` with the right `ListingOptions` already does.",
+        "Assuming a directory listing is cheap on object storage — it is a network operation per prefix."
+      ],
+      "checklist": [
+        "Is the schema supplied or inferred, and is the inference cost acceptable?",
+        "Are partition columns declared so partition pruning can happen?",
+        "Is statistics collection on, and does the format actually provide them?"
+      ]
+    },
+    {
+      "slug": "writing-data",
+      "title": "Writing data",
+      "covers": "COPY, INSERT, DML on table providers, sinks, write options",
+      "mental_model": "There are two write paths and they are not interchangeable. SQL-level `COPY` and `INSERT INTO` plan through the provider's `insert_into`, producing an `ExecutionPlan` that writes as it executes. The DataFrame path (`write_parquet`, `write_csv`, `write_json`, `write_table`) goes through `DataFrameWriteOptions`. A provider that does not override the DML methods supports neither: the defaults return an error, not a no-op.",
+      "entry_points": [
+        "DataFrame",
+        "DataFrameWriteOptions",
+        "SessionContext"
+      ],
+      "extension_points": [
+        "TableProvider",
+        "DataSink",
+        "datafusion_datasource::file_format::FileFormat"
+      ],
+      "builder_types": [
+        "DataFrameWriteOptions"
+      ],
+      "config_prefixes": [
+        "datafusion.execution.soft_max_rows_per_output_file",
+        "datafusion.execution.minimum_parallel_output_files",
+        "datafusion.format"
+      ],
+      "example_dirs": [
+        "data_io"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/sql/dml.md",
+        "corpus/guides/user-guide/sql/format_options.md",
+        "corpus/guides/library-user-guide/custom-table-providers.md"
+      ],
+      "decision_rules": [
+        "`TableProvider` carries `insert_into`, `delete_from`, `update`, `merge_into` and `truncate` as provided methods — full DML is available to a custom provider, not just scans.",
+        "Output file count and size are controlled by settings, not by the call site; see the settings table below."
+      ],
+      "anti_patterns": [
+        "Assuming a custom provider is read-only because the trait's required methods only cover scanning.",
+        "Collecting a result and writing it yourself when `write_parquet` would stream it."
+      ],
+      "checklist": [
+        "Does the provider override the DML method the query will actually use?",
+        "Is the output partitioned the way the reader will want it?"
+      ]
+    },
+    {
+      "slug": "dataframe-api",
+      "title": "DataFrame API",
+      "covers": "Building and executing plans programmatically without SQL",
+      "mental_model": "A `DataFrame` is a `LogicalPlan` plus the `SessionState` that will execute it. Every transformation returns a new `DataFrame`; nothing runs until a terminal method is called. `collect()` materializes everything, `execute_stream()` yields batches as they are produced. The 63 methods include a great deal that is not obvious from the common examples — `join_on`, `unnest_columns`, `repartition`, `cache`, `describe`, `write_table`.",
+      "entry_points": [
+        "DataFrame",
+        "DataFrameWriteOptions",
+        "SessionContext"
+      ],
+      "example_dirs": [
+        "dataframe"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/dataframe.md",
+        "corpus/guides/library-user-guide/using-the-dataframe-api.md"
+      ],
+      "decision_rules": [
+        "Prefer `execute_stream()` over `collect()` whenever the result is not known to be small.",
+        "`into_parts()` drops to the `LogicalPlan` and `SessionState` when you need to run the analyzer, optimizer and physical planner yourself.",
+        "`cache()` materializes an intermediate result when a plan reuses it several times."
+      ],
+      "anti_patterns": [
+        "`collect()` followed by iteration that could have been a streaming consumer.",
+        "Rebuilding a plan per row group instead of expressing the whole thing once and letting the optimizer partition it."
+      ],
+      "checklist": [
+        "Is the terminal method streaming or materializing, and is that deliberate?",
+        "Has `EXPLAIN` been read for a plan that will run more than once?"
+      ]
+    },
+    {
+      "slug": "expressions",
+      "title": "Expressions",
+      "covers": "Expr, expression construction, simplification, schema typing",
+      "mental_model": "`Expr` is the logical expression tree — 101 methods and a large variant set covering columns, literals, binary operations, CASE, casts, subqueries, window and aggregate calls, and lambdas. Most are built through the `expr_fn` modules rather than by constructing variants directly, and `datafusion::prelude` re-exports many of those, so the path you write is rarely the path where the function is defined.",
+      "entry_points": [
+        "datafusion_expr::expr::Expr",
+        "datafusion_common::column::Column",
+        "Operator",
+        "ExprSchemable",
+        "datafusion_common::scalar::ScalarValue",
+        "DFSchema"
+      ],
+      "extension_points": [
+        "ExprPlanner",
+        "TypePlanner"
+      ],
+      "example_dirs": [
+        "builtin_functions",
+        "sql_ops"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/expressions.md",
+        "corpus/guides/library-user-guide/working-with-exprs.md",
+        "corpus/guides/library-user-guide/building-logical-plans.md"
+      ],
+      "decision_rules": [
+        "Search `content/index/symbols.tsv` for `expr_fn` to find the builder function for a SQL function; resolve the access path through `aliases.tsv`.",
+        "`ExprSchemable` gives an expression's type and nullability against a schema without planning.",
+        "`ScalarValue` has 107 methods; a conversion you need probably exists already."
+      ],
+      "anti_patterns": [
+        "Constructing `Expr` variants by hand where an `expr_fn` helper exists — the helper applies coercion rules you would otherwise have to repeat.",
+        "Assuming `datafusion::prelude::X` tells you which crate owns `X`."
+      ],
+      "checklist": [
+        "Was the expression's output type checked against the schema, rather than assumed?",
+        "Is a literal a `ScalarValue` of the right type, including its timezone or precision?"
+      ]
+    },
+    {
+      "slug": "sql",
+      "title": "SQL surface",
+      "covers": "Dialect, parsing, prepared statements, DDL, information_schema",
+      "mental_model": "SQL text becomes a `LogicalPlan` through sqlparser (pinned at 0.62.0) and then DataFusion's SQL planner. The dialect, identifier normalization and several parsing behaviours are settings rather than code. `information_schema` is off by default and must be enabled before the schema-introspection tables exist.",
+      "entry_points": [
+        "SessionContext",
+        "datafusion_common::table_reference::TableReference",
+        "LogicalPlan"
+      ],
+      "extension_points": [
+        "ExprPlanner",
+        "RelationPlanner",
+        "TypePlanner",
+        "FunctionFactory"
+      ],
+      "config_prefixes": [
+        "datafusion.sql_parser",
+        "datafusion.catalog.information_schema"
+      ],
+      "example_dirs": [
+        "sql_ops",
+        "relation_planner"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/sql/select.md",
+        "corpus/guides/user-guide/sql/ddl.md",
+        "corpus/guides/user-guide/sql/information_schema.md",
+        "corpus/guides/user-guide/sql/prepared_statements.md",
+        "corpus/guides/user-guide/sql/subqueries.md",
+        "corpus/guides/library-user-guide/extending-sql.md",
+        "corpus/guides/library-user-guide/using-the-sql-api.md"
+      ],
+      "decision_rules": [
+        "Parameterize with `$1` placeholders and `with_param_values` rather than interpolating into SQL text.",
+        "`register_relation_planner` extends the planner with custom relation syntax; `FunctionFactory` handles `CREATE FUNCTION`.",
+        "`with_information_schema(true)` is required before `information_schema` queries resolve."
+      ],
+      "anti_patterns": [
+        "Formatting values into a SQL string when placeholders are available.",
+        "Assuming identifier case handling without checking the `sql_parser` settings below."
+      ],
+      "checklist": [
+        "Are parameters bound rather than interpolated?",
+        "Does the dialect setting match the SQL being fed in?"
+      ]
+    },
+    {
+      "slug": "logical-planning",
+      "title": "Logical planning",
+      "covers": "LogicalPlan, LogicalPlanBuilder, analysis, plan inspection",
+      "mental_model": "`LogicalPlan` is the relational algebra layer: what to compute, not how. `LogicalPlanBuilder` (52 methods) constructs one directly, which is the route when the source is neither SQL nor a DataFrame. Analysis runs before optimization and is where type coercion happens; a plan that fails here fails before any data is read.",
+      "entry_points": [
+        "LogicalPlan",
+        "LogicalPlanBuilder",
+        "DFSchema",
+        "datafusion_expr::expr::Expr"
+      ],
+      "extension_points": [
+        "AnalyzerRule",
+        "UserDefinedLogicalNode",
+        "UserDefinedLogicalNodeCore",
+        "ExtensionPlanner"
+      ],
+      "example_dirs": [
+        "query_planning"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/building-logical-plans.md",
+        "corpus/guides/user-guide/sql/explain.md",
+        "corpus/guides/user-guide/explain-usage.md"
+      ],
+      "decision_rules": [
+        "A custom logical operator is a `UserDefinedLogicalNodeCore` plus an `ExtensionPlanner` that lowers it to a physical plan.",
+        "`LogicalPlan` exposes tree traversal (`apply`, `transform`, `apply_with_subqueries`) — walk it rather than pattern-matching a rendered string.",
+        "Read `EXPLAIN` output before optimizing anything; it names the rules that fired."
+      ],
+      "anti_patterns": [
+        "Parsing `display_indent()` output to make a decision. Use the tree API.",
+        "Adding an optimizer rule for something type coercion in the analyzer already handles."
+      ],
+      "checklist": [
+        "Does the plan's schema match what the consumer expects, including nullability?",
+        "Were subqueries traversed, or only the top-level plan?"
+      ]
+    },
+    {
+      "slug": "optimizer",
+      "title": "Optimizer",
+      "covers": "Logical and physical optimizer rules, pushdown, statistics-driven planning",
+      "mental_model": "Two optimizer stages run in sequence. `OptimizerRule` rewrites the `LogicalPlan`; `PhysicalOptimizerRule` rewrites the `ExecutionPlan` after physical planning, which is where partitioning, sort removal and filter pushdown into sources happen. Both stages depend on statistics: a node that reports none forces the planner to guess.",
+      "entry_points": [
+        "LogicalPlan",
+        "ExecutionPlan",
+        "datafusion_common::stats::Statistics",
+        "PruningPredicate",
+        "datafusion_common::functional_dependencies::Constraints"
+      ],
+      "extension_points": [
+        "OptimizerRule",
+        "PhysicalOptimizerRule",
+        "AnalyzerRule",
+        "QueryPlanner",
+        "PruningStatistics"
+      ],
+      "config_prefixes": [
+        "datafusion.optimizer",
+        "datafusion.explain"
+      ],
+      "example_dirs": [
+        "query_planning"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/query-optimizer.md",
+        "corpus/guides/user-guide/explain-usage.md"
+      ],
+      "decision_rules": [
+        "Add a logical rule with `add_optimizer_rule` and a physical one through `SessionStateBuilder`; ordering against the built-in rules matters.",
+        "`PruningStatistics` lets a source skip whole row groups or files from min/max statistics before reading them.",
+        "Reporting statistics from a custom `ExecutionPlan` is usually worth more than any rule you could write."
+      ],
+      "anti_patterns": [
+        "Writing a rule that duplicates a built-in one; check the 25 existing `OptimizerRule` implementors first.",
+        "Optimizing a plan whose sources report no statistics — fix the statistics instead."
+      ],
+      "checklist": [
+        "Does every custom plan node report statistics?",
+        "Did `EXPLAIN` confirm the rule actually fired?"
+      ]
+    },
+    {
+      "slug": "physical-execution",
+      "title": "Physical execution",
+      "covers": "ExecutionPlan, partitioning, streaming, ordering, metrics",
+      "mental_model": "An `ExecutionPlan` produces a `SendableRecordBatchStream` per partition. Its `PlanProperties` — partitioning, equivalence, ordering, boundedness — are what the optimizer reasons about, so a node that reports them badly gets planned badly. Execution is pull-based and streaming by default; materialization is something a specific operator does, not the norm.",
+      "entry_points": [
+        "ExecutionPlan",
+        "TaskContext",
+        "datafusion_common::stats::Statistics",
+        "SortExec",
+        "AggregateExec",
+        "HashJoinExec"
+      ],
+      "extension_points": [
+        "ExecutionPlan",
+        "DataSink"
+      ],
+      "config_prefixes": [
+        "datafusion.execution.target_partitions",
+        "datafusion.execution.coalesce_batches",
+        "datafusion.execution.sort",
+        "datafusion.execution.enforce_batch_size_in_joins"
+      ],
+      "example_dirs": [
+        "execution_monitoring",
+        "custom_data_source"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/metrics.md",
+        "corpus/guides/library-user-guide/extending-operators.md",
+        "corpus/guides/user-guide/explain-usage.md"
+      ],
+      "decision_rules": [
+        "A wrapper operator must forward `statistics`, ordering and filter-pushdown participation, or it becomes an optimization barrier.",
+        "`execute_stream_partitioned` preserves parallelism; `execute_stream` coalesces to one partition first.",
+        "Metrics are opt-in per operator and are what `EXPLAIN ANALYZE` reports."
+      ],
+      "anti_patterns": [
+        "Implementing `ExecutionPlan` without `partition_statistics`; the optimizer then plans that subtree blind.",
+        "Buffering a whole partition inside an operator that could yield batches."
+      ],
+      "checklist": [
+        "Are `PlanProperties` accurate, especially output ordering and partitioning?",
+        "Does the operator participate in filter pushdown, or silently block it?",
+        "Are metrics recorded so `EXPLAIN ANALYZE` is useful?"
+      ]
+    },
+    {
+      "slug": "user-defined-functions",
+      "title": "User-defined functions",
+      "covers": "Scalar, aggregate and window UDFs, async UDFs, table functions",
+      "mental_model": "Three trait families, each with a registration call on `SessionContext`. Beyond `invoke`, every one carries optimizer-facing hooks — `simplify`, `evaluate_bounds`, `propagate_constraints`, `set_monotonicity`, `short_circuits`, `groups_accumulator_supported` — and those are the difference between a function that works and one the planner can reason about. Scalar UDFs can also be async, which is what makes remote calls from an expression viable.",
+      "entry_points": [
+        "ScalarUDF",
+        "AggregateUDF",
+        "WindowUDF",
+        "datafusion_common::scalar::ScalarValue"
+      ],
+      "extension_points": [
+        "ScalarUDFImpl",
+        "AggregateUDFImpl",
+        "WindowUDFImpl",
+        "Accumulator",
+        "GroupsAccumulator",
+        "PartitionEvaluator",
+        "TableFunctionImpl",
+        "FunctionFactory"
+      ],
+      "example_dirs": [
+        "udf"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/functions/adding-udfs.md",
+        "corpus/guides/user-guide/sql/scalar_functions.md",
+        "corpus/guides/user-guide/sql/aggregate_functions.md",
+        "corpus/guides/user-guide/sql/window_functions.md"
+      ],
+      "decision_rules": [
+        "Implement `groups_accumulator_supported` and `create_groups_accumulator` for any aggregate that will run over many groups; the row-at-a-time `Accumulator` path is much slower.",
+        "`simplify` lets a UDF rewrite itself at plan time, which is often cheaper than evaluating it.",
+        "Declare `Volatility` honestly — marking a volatile function `Immutable` lets the optimizer fold it away."
+      ],
+      "anti_patterns": [
+        "Implementing only `invoke_with_args` and leaving every optimizer hook at its default.",
+        "Registering a UDF globally when it is only needed for one session or one query."
+      ],
+      "checklist": [
+        "Is the signature's coercion behaviour what you meant, or did it default to exact matching?",
+        "Is volatility correct?",
+        "For aggregates: is there a groups accumulator?"
+      ]
+    },
+    {
+      "slug": "custom-table-providers",
+      "title": "Custom table providers",
+      "covers": "Implementing TableProvider, pushdown, statistics, DML",
+      "mental_model": "`TableProvider` has 3 required methods and 12 provided ones. An implementation that supplies only the required three is correct and slow: no filter pushdown, no statistics, no DML, no limit pushdown. The provided methods are the capability surface, and each one you leave at its default is a planning decision made blind.",
+      "entry_points": [
+        "TableProvider",
+        "ScanArgs",
+        "datafusion_common::stats::Statistics",
+        "datafusion_common::functional_dependencies::Constraints",
+        "MemTable",
+        "ViewTable",
+        "ListingTable"
+      ],
+      "extension_points": [
+        "TableProvider",
+        "TableFunctionImpl",
+        "PruningStatistics"
+      ],
+      "example_dirs": [
+        "custom_data_source"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/custom-table-providers.md",
+        "corpus/guides/library-user-guide/table-constraints.md"
+      ],
+      "decision_rules": [
+        "`supports_filters_pushdown` returning `Inexact` is almost always better than the `Unsupported` default — DataFusion re-applies the filter, so an approximate answer is safe.",
+        "`scan_with_args` is the newer entry point and carries statistics requests the older `scan` cannot express.",
+        "Read an existing implementor before writing one; there are ten in-tree."
+      ],
+      "anti_patterns": [
+        "Leaving `supports_filters_pushdown` at the default, which forces every filter to run after a full scan.",
+        "Returning `None` from `statistics` when the source knows its row count."
+      ],
+      "checklist": [
+        "Does it push down filters, and limits?",
+        "Does it report statistics and constraints?",
+        "Are the DML methods implemented if the table is writable?"
+      ]
+    },
+    {
+      "slug": "catalogs",
+      "title": "Catalogs and schemas",
+      "covers": "CatalogProvider, SchemaProvider, async catalogs, information_schema",
+      "mental_model": "Three nested levels — catalog list, catalog, schema — each a trait you can implement. The default implementations are in-memory maps. Async variants exist for catalogs backed by a remote service, which matters because the synchronous traits give you nowhere to await.",
+      "entry_points": [
+        "datafusion_common::table_reference::TableReference",
+        "SessionContext"
+      ],
+      "extension_points": [
+        "CatalogProvider",
+        "CatalogProviderList",
+        "SchemaProvider",
+        "TableProvider"
+      ],
+      "config_prefixes": [
+        "datafusion.catalog"
+      ],
+      "example_dirs": [
+        "custom_data_source"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/catalogs.md",
+        "corpus/guides/user-guide/sql/information_schema.md"
+      ],
+      "decision_rules": [
+        "Use the async catalog traits when table resolution requires I/O; the synchronous ones force a block-on.",
+        "`information_schema` must be enabled explicitly before schema introspection works."
+      ],
+      "anti_patterns": [
+        "Blocking inside a synchronous `SchemaProvider` to do a network lookup.",
+        "Registering every table eagerly when a lazy schema provider would resolve on demand."
+      ],
+      "checklist": [
+        "Is table resolution I/O-bound, and if so is it on the async path?",
+        "Does `table_names` stay cheap?"
+      ]
+    },
+    {
+      "slug": "arrow-interop",
+      "title": "Arrow interop",
+      "covers": "Arrays, schemas, extension types, compute kernels, type conversion",
+      "mental_model": "DataFusion's data model is Arrow's, so every signature is saturated with Arrow types. `DFSchema` wraps `Schema` with table qualifiers. The Arrow compute kernels are a large surface of their own and are often the right answer inside a UDF rather than writing element-wise code. Extension types carry semantic meaning in field metadata that survives through a plan.",
+      "entry_points": [
+        "DFSchema",
+        "datafusion_common::scalar::ScalarValue"
+      ],
+      "config_prefixes": [
+        "datafusion.execution.batch_size"
+      ],
+      "example_dirs": [
+        "extension_types"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/arrow-introduction.md",
+        "corpus/guides/user-guide/sql/data_types.md",
+        "corpus/guides/user-guide/sql/struct_coercion.md"
+      ],
+      "decision_rules": [
+        "Inside a UDF, reach for an Arrow compute kernel before writing a loop; search `content/index/symbols.tsv` for `arrow_` crates.",
+        "Extension type metadata lives on the `Field`, so it propagates only where field metadata is preserved — check that the operators in the plan do."
+      ],
+      "anti_patterns": [
+        "Converting an Arrow array to a Vec to operate on it.",
+        "Assuming field metadata survives every operator; DataFusion 55 differs between logical and physical UNION on this point."
+      ],
+      "checklist": [
+        "Is the array accessed through a typed accessor rather than a downcast-and-hope?",
+        "Does the null handling match Arrow's semantics rather than the host language's?"
+      ]
+    },
+    {
+      "slug": "parquet",
+      "title": "Parquet",
+      "covers": "Reading, writing, pruning, metadata, encryption, statistics",
+      "mental_model": "Parquet is the format with the most tuning surface in DataFusion, and most of it is settings rather than code: page indexes, bloom filters, pruning, metadata caching, encryption, and the whole writer configuration. `ParquetSource` is the physical source; `ParquetFormat` and `ParquetReadOptions` configure it from above.",
+      "entry_points": [
+        "ParquetSource",
+        "datafusion_datasource_parquet::file_format::ParquetFormat",
+        "ParquetReadOptions",
+        "PruningPredicate",
+        "datafusion_common::stats::Statistics"
+      ],
+      "extension_points": [
+        "PruningStatistics",
+        "datafusion_datasource::file_format::FileFormat"
+      ],
+      "builder_types": [
+        "ParquetSource"
+      ],
+      "config_prefixes": [
+        "datafusion.execution.parquet"
+      ],
+      "example_dirs": [
+        "data_io"
+      ],
+      "guides": [
+        "corpus/guides/user-guide/parquet-content-defined-chunking.md",
+        "corpus/guides/user-guide/sql/format_options.md"
+      ],
+      "decision_rules": [
+        "Row-group and page pruning depend on statistics being written; a reader cannot prune what the writer omitted.",
+        "Bloom filters help equality predicates on high-cardinality columns and cost space everywhere else.",
+        "Metadata caching matters when the same files are queried repeatedly; it is a `RuntimeEnv` setting."
+      ],
+      "anti_patterns": [
+        "Disabling statistics on write and then wondering why pruning does nothing.",
+        "Assuming the default writer settings suit the query pattern."
+      ],
+      "checklist": [
+        "Are page index and bloom filter settings deliberate?",
+        "Is pruning actually happening — confirm with `EXPLAIN ANALYZE`, not by assumption?"
+      ]
+    },
+    {
+      "slug": "interop",
+      "title": "Cross-process interop",
+      "covers": "Substrait, protobuf serialization, FFI, Flight, Spark compatibility",
+      "mental_model": "Four separate mechanisms for getting a plan or a provider across a boundary. Substrait is the cross-engine plan format; `datafusion-proto` is DataFusion's own plan serialization; `datafusion-ffi` moves providers and UDFs across a stable ABI so a plugin can be compiled separately; Flight carries record batches over the network. Custom nodes need an explicit codec in the serialization paths — they do not round-trip for free.",
+      "entry_points": [
+        "LogicalPlan",
+        "ExecutionPlan"
+      ],
+      "extension_points": [
+        "PhysicalExtensionCodec",
+        "UserDefinedLogicalNode"
+      ],
+      "config_prefixes": [
+        "datafusion.spark"
+      ],
+      "example_dirs": [
+        "ffi",
+        "flight",
+        "proto"
+      ],
+      "guides": [
+        "corpus/guides/library-user-guide/extensions.md"
+      ],
+      "decision_rules": [
+        "A custom logical or physical node needs a `PhysicalExtensionCodec` registered before it can be serialized.",
+        "FFI is the route for a plugin compiled against a different DataFusion build; in-process extension traits are not ABI-stable."
+      ],
+      "anti_patterns": [
+        "Expecting a custom extension node to survive a proto or Substrait round trip without a codec.",
+        "Treating Substrait as lossless for DataFusion-specific constructs."
+      ],
+      "checklist": [
+        "Do all custom nodes in the plan have codecs?",
+        "Was the round trip tested, rather than assumed?"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "module": "datafusion_expr::partition_evaluator",
+  "crate": "datafusion-expr",
+  "api": "api/datafusion_expr.partition_evaluator.md",
+  "items": [
+    {
+      "path": "datafusion_expr::partition_evaluator::PartitionEvaluator",
+      "name": "PartitionEvaluator",
+      "kind": "trait",
+      "crate": "datafusion-expr",
+      "signature": "trait PartitionEvaluator: Debug + Send + std::any::Any",
+      "summary": "Partition evaluator for Window Functions",
+      "doc": "api/datafusion_expr.partition_evaluator.md#partitionevaluator",
+      "aliases": [
+        "datafusion::logical_expr::PartitionEvaluator",
+        "datafusion_expr::PartitionEvaluator"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "evaluate",
+        "evaluate_all",
+        "evaluate_all_with_rank",
+        "get_range",
+        "include_rank",
+        "is_causal",
+        "memoize",
+        "supports_bounded_execution",
+        "uses_window_frame"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&mut self, _values: &[ArrayRef], _range: &Range<usize>) -> Result<ScalarValue>",
+          "summary": "Evaluate window function on a range of rows in an input partition."
+        },
+        {
+          "name": "evaluate_all",
+          "signature": "fn evaluate_all(&mut self, values: &[ArrayRef], num_rows: usize) -> Result<ArrayRef>",
+          "summary": "Evaluate a window function on an entire input partition."
+        },
+        {
+          "name": "evaluate_all_with_rank",
+          "signature": "fn evaluate_all_with_rank(&self, _num_rows: usize, _ranks_in_partition: &[Range<usize>]) -> Result<ArrayRef>",
+          "summary": "[`PartitionEvaluator::evaluate_all_with_rank`] is called for window functions that only need the rank of a row within its window frame."
+        },
+        {
+          "name": "get_range",
+          "signature": "fn get_range(&self, idx: usize, _n_rows: usize) -> Result<Range<usize>>",
+          "summary": "If `uses_window_frame` flag is `false`. This method is used to calculate required range for the window function during stateful execution."
+        },
+        {
+          "name": "include_rank",
+          "signature": "fn include_rank(&self) -> bool",
+          "summary": "Can this function be evaluated with (only) rank"
+        },
+        {
+          "name": "is_causal",
+          "signature": "fn is_causal(&self) -> bool",
+          "summary": "Get whether evaluator needs future data for its result (if so returns `false`) or not"
+        },
+        {
+          "name": "memoize",
+          "signature": "fn memoize(&mut self, _state: &mut WindowAggState) -> Result<()>",
+          "summary": "When the window frame has a fixed beginning (e.g UNBOUNDED PRECEDING), some functions such as FIRST_VALUE, LAST_VALUE and NTH_VALUE do not need the (unbounded) input once they have seen a certain amount of input."
+        },
+        {
+          "name": "supports_bounded_execution",
+          "signature": "fn supports_bounded_execution(&self) -> bool",
+          "summary": "Can the window function be incrementally computed using bounded memory?"
+        },
+        {
+          "name": "uses_window_frame",
+          "signature": "fn uses_window_frame(&self) -> bool",
+          "summary": "Does the window function use the values from the window frame, if one is specified?"
+        }
+      ]
+    }
+  ]
+}

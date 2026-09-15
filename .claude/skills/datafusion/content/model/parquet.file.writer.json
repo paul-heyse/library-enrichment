@@ -1,0 +1,256 @@
+{
+  "module": "parquet::file::writer",
+  "crate": "parquet",
+  "api": "api/parquet.file.writer.md",
+  "items": [
+    {
+      "path": "parquet::file::writer::SerializedColumnWriter",
+      "name": "SerializedColumnWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct SerializedColumnWriter<'a>",
+      "summary": "A wrapper around a [`ColumnWriter`] that invokes a callback on [`Self::close`]",
+      "doc": "api/parquet.file.writer.md#serializedcolumnwriter",
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<()>",
+          "summary": "Close this [`SerializedColumnWriter`]"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: ColumnWriter<'a>, on_close: Option<OnCloseColumnChunk<'a>>) -> Self",
+          "summary": "Create a new [`SerializedColumnWriter`] from a [`ColumnWriter`] and an optional callback to be invoked on [`Self::close`]"
+        },
+        {
+          "name": "typed",
+          "signature": "fn typed<T: DataType>(&mut self) -> &mut ColumnWriterImpl<'a, T>",
+          "summary": "Returns a reference to a typed [`ColumnWriterImpl`]"
+        },
+        {
+          "name": "untyped",
+          "signature": "fn untyped(&mut self) -> &mut ColumnWriter<'a>",
+          "summary": "Returns a reference to an untyped [`ColumnWriter`]"
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::writer::SerializedFileWriter",
+      "name": "SerializedFileWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct SerializedFileWriter<W: Write>",
+      "summary": "Parquet file writer API.",
+      "doc": "api/parquet.file.writer.md#serializedfilewriter",
+      "methods": [
+        {
+          "name": "append_key_value_metadata",
+          "signature": "fn append_key_value_metadata(&mut self, kv_metadata: KeyValue)",
+          "summary": "Add a [`KeyValue`] to the file writer's metadata"
+        },
+        {
+          "name": "bytes_written",
+          "signature": "fn bytes_written(&self) -> usize",
+          "summary": "Returns the number of bytes written to this instance"
+        },
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<ParquetMetaData>",
+          "summary": "Closes and finalises file writer, returning the file metadata."
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(&mut self) -> Result<ParquetMetaData>",
+          "summary": "Close and finalize the underlying Parquet writer"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> std::io::Result<()>",
+          "summary": "Flushes underlying writer"
+        },
+        {
+          "name": "flushed_row_groups",
+          "signature": "fn flushed_row_groups(&self) -> &[RowGroupMetaData]",
+          "summary": "Returns metadata for any flushed row groups"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &W",
+          "summary": "Returns a reference to the underlying writer."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut W",
+          "summary": "Returns a mutable reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Result<W>",
+          "summary": "Writes the file footer and returns the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(buf: W, schema: TypePtr, properties: WriterPropertiesPtr) -> Result<Self>",
+          "summary": "Creates new file writer."
+        },
+        {
+          "name": "next_row_group",
+          "signature": "fn next_row_group(&mut self) -> Result<SerializedRowGroupWriter<'_, W>>",
+          "summary": "Creates new row group from this file writer."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &WriterPropertiesPtr",
+          "summary": "Returns a reference to the writer properties"
+        },
+        {
+          "name": "schema_descr",
+          "signature": "fn schema_descr(&self) -> &SchemaDescriptor",
+          "summary": "Returns a reference to schema descriptor."
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>",
+          "summary": "Writes the given buf bytes to the internal buffer."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::writer::SerializedPageWriter",
+      "name": "SerializedPageWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct SerializedPageWriter<'a, W: Write>",
+      "summary": "A serialized implementation for Parquet [`PageWriter`]. Writes and serializes pages and metadata into output stream.",
+      "doc": "api/parquet.file.writer.md#serializedpagewriter",
+      "implements": [
+        "parquet::column::page::PageWriter"
+      ],
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(&mut self) -> Result<()>",
+          "via_trait": "parquet::column::page::PageWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(sink: &'a mut TrackedWrite<W>) -> Self",
+          "summary": "Creates new page writer."
+        },
+        {
+          "name": "write_page",
+          "signature": "fn write_page(&mut self, page: CompressedPage) -> Result<PageWriteSpec>",
+          "via_trait": "parquet::column::page::PageWriter"
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::writer::SerializedRowGroupWriter",
+      "name": "SerializedRowGroupWriter",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct SerializedRowGroupWriter<'a, W: Write>",
+      "summary": "Parquet row group writer API.",
+      "doc": "api/parquet.file.writer.md#serializedrowgroupwriter",
+      "methods": [
+        {
+          "name": "append_column",
+          "signature": "fn append_column<R: ChunkReader>(&mut self, reader: &R, close: ColumnCloseResult) -> Result<()>",
+          "summary": "Append an encoded column chunk from `reader` directly to the underlying writer."
+        },
+        {
+          "name": "close",
+          "signature": "fn close(self) -> Result<RowGroupMetaDataPtr>",
+          "summary": "Closes this row group writer and returns row group metadata."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(schema_descr: SchemaDescPtr, properties: WriterPropertiesPtr, buf: &'a mut TrackedWrite<W>, row_group_index: i16, on_close: Option<OnCloseRowGroup<'a, W>>) -> Self",
+          "summary": "Creates a new `SerializedRowGroupWriter` with:"
+        },
+        {
+          "name": "next_column",
+          "signature": "fn next_column(&mut self) -> Result<Option<SerializedColumnWriter<'_>>>",
+          "summary": "Returns the next column writer, if available; otherwise returns `None`. In case of any IO error or Thrift error, or if row group writer has already been closed returns `Err`."
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::writer::TrackedWrite",
+      "name": "TrackedWrite",
+      "kind": "struct",
+      "crate": "parquet",
+      "signature": "struct TrackedWrite<W: Write>",
+      "summary": "A wrapper around a [`Write`] that keeps track of the number of bytes that have been written. The given [`Write`] is wrapped with a [`BufWriter`] to optimize writing performance.",
+      "doc": "api/parquet.file.writer.md#trackedwrite",
+      "implements": [
+        "core::io::write::Write"
+      ],
+      "methods": [
+        {
+          "name": "bytes_written",
+          "signature": "fn bytes_written(&self) -> usize",
+          "summary": "Returns the number of bytes written to this instance"
+        },
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> std::io::Result<()>",
+          "via_trait": "core::io::write::Write"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &W",
+          "summary": "Returns a reference to the underlying writer."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut W",
+          "summary": "Returns a mutable reference to the underlying writer."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Result<W>",
+          "summary": "Returns the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: W) -> Self",
+          "summary": "Create a new [`TrackedWrite`] from a [`Write`]"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> std::io::Result<usize>",
+          "via_trait": "core::io::write::Write"
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()>",
+          "via_trait": "core::io::write::Write"
+        },
+        {
+          "name": "write_vectored",
+          "signature": "fn write_vectored(&mut self, bufs: &[IoSlice<'_>]) -> std::io::Result<usize>",
+          "via_trait": "core::io::write::Write"
+        }
+      ]
+    },
+    {
+      "path": "parquet::file::writer::OnCloseColumnChunk",
+      "name": "OnCloseColumnChunk",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type OnCloseColumnChunk<'a> = Box<dyn FnOnce(column::writer::ColumnCloseResult) -> errors::Result<()> + 'a>",
+      "summary": "Callback invoked on closing a column chunk",
+      "doc": "api/parquet.file.writer.md#onclosecolumnchunk"
+    },
+    {
+      "path": "parquet::file::writer::OnCloseRowGroup",
+      "name": "OnCloseRowGroup",
+      "kind": "type_alias",
+      "crate": "parquet",
+      "signature": "type OnCloseRowGroup<'a, W> = Box<dyn FnOnce(&'a mut TrackedWrite<W>, RowGroupMetaData, Vec<Option<bloom_filter::Sbbf>>, Vec<Option<file::page_index::column_index::ColumnIndexMetaData>>, Vec<Option<file::page_index::offset_index::OffsetIndexMetaData>>) -> errors::Result<()> + Send + 'a>",
+      "summary": "Callback invoked on closing a row group, arguments are:",
+      "doc": "api/parquet.file.writer.md#oncloserowgroup"
+    }
+  ]
+}

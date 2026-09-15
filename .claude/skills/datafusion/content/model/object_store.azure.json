@@ -1,0 +1,120 @@
+{
+  "module": "object_store::azure",
+  "crate": "object_store",
+  "api": "api/object_store.azure.md",
+  "items": [
+    {
+      "path": "object_store::azure::MicrosoftAzure",
+      "name": "MicrosoftAzure",
+      "kind": "struct",
+      "crate": "object_store",
+      "signature": "struct MicrosoftAzure",
+      "summary": "Interface for [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/).",
+      "doc": "api/object_store.azure.md#microsoftazure",
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore",
+        "object_store::list::PaginatedListStore",
+        "object_store::multipart::MultipartStore",
+        "object_store::signer::Signer"
+      ],
+      "methods": [
+        {
+          "name": "abort_multipart",
+          "signature": "async fn abort_multipart(&self, _: &Path, _: &MultipartId) -> Result<()>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "complete_multipart",
+          "signature": "async fn complete_multipart(&self, path: &Path, _: &MultipartId, parts: Vec<PartId>) -> Result<PutResult>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "create_multipart",
+          "signature": "async fn create_multipart(&self, _: &Path) -> Result<MultipartId>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "credentials",
+          "signature": "fn credentials(&self) -> &AzureCredentialProvider",
+          "summary": "Returns the [`AzureCredentialProvider`] used by [`MicrosoftAzure`]"
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_paginated",
+          "signature": "async fn list_paginated(&self, prefix: Option<&str>, opts: PaginatedListOptions) -> Result<PaginatedListResult>",
+          "via_trait": "object_store::list::PaginatedListStore"
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_part",
+          "signature": "async fn put_part(&self, path: &Path, _: &MultipartId, part_idx: usize, data: PutPayload) -> Result<PartId>",
+          "via_trait": "object_store::multipart::MultipartStore"
+        },
+        {
+          "name": "signed_url",
+          "signature": "async fn signed_url(&self, method: Method, path: &Path, expires_in: Duration) -> Result<Url>",
+          "via_trait": "object_store::signer::Signer",
+          "summary": "Create a URL containing the relevant [Service SAS] query parameters that authorize a request via `method` to the resource at `path` valid for the duration specified in `expires_in`."
+        },
+        {
+          "name": "signed_urls",
+          "signature": "async fn signed_urls(&self, method: Method, paths: &[Path], expires_in: Duration) -> Result<Vec<Url>>",
+          "via_trait": "object_store::signer::Signer"
+        }
+      ]
+    },
+    {
+      "path": "object_store::azure::AzureCredentialProvider",
+      "name": "AzureCredentialProvider",
+      "kind": "type_alias",
+      "crate": "object_store",
+      "signature": "type AzureCredentialProvider = std::sync::Arc<dyn CredentialProvider<Credential = AzureCredential>>",
+      "summary": "[`CredentialProvider`] for [`MicrosoftAzure`]",
+      "doc": "api/object_store.azure.md#azurecredentialprovider"
+    }
+  ]
+}
