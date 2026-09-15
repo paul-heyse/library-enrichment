@@ -510,7 +510,7 @@ async fn diagnostics_observe_the_executed_scan_and_bound_failed_query_history() 
     }
     assert_eq!(runtime.diagnostics().len(), 8);
     assert!(serde_json::to_vec(&runtime.diagnostics()).unwrap().len() < 8 * 512 * 1024);
-    let retained = dir.path().join("spill/query-failures.json");
+    let retained = dir.path().join("spill/query-failures-v2.json");
     let failure: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&retained).unwrap()).unwrap();
     assert_eq!(failure.as_array().unwrap().len(), 1);
@@ -711,7 +711,7 @@ async fn invariant_witnesses_are_bounded_and_retained_with_the_owning_operation(
         Some("witness-operation")
     );
     let saved: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(dir.path().join("spill/query-failures.json")).unwrap(),
+        &std::fs::read(dir.path().join("spill/query-failures-v2.json")).unwrap(),
     )
     .unwrap();
     assert_eq!(

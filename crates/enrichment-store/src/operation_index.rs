@@ -153,13 +153,37 @@ impl PartitionStream for IndexPartition {
     }
 }
 
+#[derive(Debug)]
+pub(crate) struct CompletedIndex {
+    provider: Arc<dyn TableProvider>,
+    pub(crate) rows: u64,
+    family: QueryFamily,
+    operation_id: Option<String>,
+}
+
+impl CompletedIndex {
+    pub(crate) fn register(
+        self,
+        session: &datafusion::prelude::SessionContext,
+        name: &str,
+    ) -> Result<()> {
+        if self.operation_id != crate::runtime::operation_id() {
+            return Err(datafusion::error::DataFusionError::Execution(
+                "completed index belongs to another operation".into(),
+            ));
+        }
+        self.family.require(&self.provider.schema())?;
+        crate::native_catalog::work(session, name, self.provider)
+    }
+}
+
 /// Materialize only a declared operation index, not evidence payloads or an arbitrary table.
 /// Upstream plans, all scan batches, writer work and readers retain the operation deadline.
 pub(crate) async fn materialize(
     runtime: &QueryRuntime,
     frame: DataFrame,
     family: QueryFamily,
-) -> Result<Arc<dyn TableProvider>> {
+) -> Result<CompletedIndex> {
     if !matches!(
         family,
         QueryFamily::SearchIndex
@@ -173,10 +197,7 @@ pub(crate) async fn materialize(
     }
     // Declare exact native output fields across Parquet string-view adaptation before IPC.
     let session = runtime.session();
-    let frame = session.read_table(Arc::new(crate::provider::DerivedRelation::new(
-        frame.into_view(),
-        "operation_index",
-    )))?;
+    let frame = crate::provider::derived(frame, "operation_index")?;
     let schema = Arc::new(frame.schema().as_arrow().clone());
     let env = session.runtime_env();
     let file = env
@@ -197,7 +218,7 @@ pub(crate) async fn materialize(
         })
         .await??;
     let pool = Arc::clone(&env.memory_pool);
-    let (writer, max_batch_bytes) = runtime
+    let completed = runtime
         .fold_blocking(
             frame,
             family,
@@ -212,6 +233,7 @@ pub(crate) async fn materialize(
             },
         )
         .await?;
+    let (writer, max_batch_bytes) = completed.value;
     runtime
         .blocking(move || -> Result<()> { writer.into_inner()?.finish() })
         .await??;
@@ -229,10 +251,34 @@ pub(crate) async fn materialize(
         operation: crate::runtime::capture_operation(),
         history: runtime.index_history(),
     };
-    Ok(Arc::new(StreamingTable::try_new(
-        schema,
-        vec![Arc::new(partition)],
-    )?))
+    // Publish only properties of the completed native stream. Complex physical sort
+    // expressions stay unknown until a supported logical representation is established.
+    let ordering = completed
+        .properties
+        .output_ordering()
+        .and_then(|order| {
+            order
+                .iter()
+                .map(|sort| {
+                    sort.expr
+                        .downcast_ref::<datafusion::physical_expr::expressions::Column>()
+                        .map(|column| {
+                            datafusion::prelude::col(column.name())
+                                .sort(!sort.options.descending, sort.options.nulls_first)
+                        })
+                })
+                .collect::<Option<Vec<_>>>()
+        })
+        .unwrap_or_default();
+    let provider = StreamingTable::try_new(schema, vec![Arc::new(partition)])?
+        .with_sort_order(ordering)
+        .with_output_partitioning(completed.properties.partitioning.clone());
+    Ok(CompletedIndex {
+        provider: Arc::new(provider),
+        rows: completed.rows as u64,
+        family,
+        operation_id: crate::runtime::operation_id(),
+    })
 }
 
 #[cfg(test)]
@@ -252,10 +298,16 @@ mod tests {
         let index = materialize(&runtime, input(&runtime).await, QueryFamily::ComparisonKeys)
             .await
             .unwrap();
+        assert_eq!(index.rows, 3);
+        assert_eq!(
+            runtime.diagnostic_summary().index_reads,
+            0,
+            "count is completion metadata, not an IPC replay"
+        );
         assert!(env.disk_manager.used_disk_space() > 0);
         let session = runtime.session();
-        let frame = session.read_table(Arc::clone(&index)).unwrap();
-        session.register_table("keys", frame.into_view()).unwrap();
+        let frame = session.read_table(Arc::clone(&index.provider)).unwrap();
+        crate::native_catalog::work(&session, "keys", frame.into_view()).unwrap();
         let result = runtime.execute(session.sql("SELECT key, label, count(*) AS count FROM keys GROUP BY key, label ORDER BY key").await.unwrap()).await.unwrap();
         let text = arrow::util::pretty::pretty_format_batches(&result.batches)
             .unwrap()
@@ -277,6 +329,48 @@ mod tests {
         assert_eq!(runtime.execute(frame).await.unwrap().rows, 1);
         assert_eq!(env.disk_manager.used_disk_space(), 0);
         assert_eq!(env.memory_pool.reserved(), 0);
+    }
+
+    #[tokio::test]
+    async fn completed_ordering_has_real_ties_nulls_and_projection_behavior() {
+        use datafusion::{physical_plan::ExecutionPlanProperties, prelude::col};
+        let dir = tempfile::tempdir().unwrap();
+        let runtime = QueryRuntime::new(dir.path(), QueryLimits::default()).unwrap();
+        for sorted in [false, true] {
+            let frame = input(&runtime).await;
+            let order = vec![col("label").sort(true, true), col("key").sort(false, false)];
+            let frame = if sorted {
+                frame.sort(order.clone()).unwrap()
+            } else {
+                frame
+            };
+            let index = materialize(&runtime, frame, QueryFamily::ComparisonKeys)
+                .await
+                .unwrap();
+            assert_eq!(index.rows, 3);
+            let session = runtime.session();
+            let frame = session.read_table(index.provider).unwrap();
+            let physical = frame.clone().create_physical_plan().await.unwrap();
+            assert_eq!(physical.output_ordering().is_some(), sorted);
+            assert_eq!(physical.output_partitioning().partition_count(), 1);
+            let selected = frame
+                .clone()
+                .select(vec![col("key")])
+                .unwrap()
+                .create_physical_plan()
+                .await
+                .unwrap();
+            assert!(
+                selected.output_ordering().is_none(),
+                "dropping the leading key cannot preserve its order"
+            );
+            let rows = runtime.execute(frame.sort(order).unwrap()).await.unwrap();
+            let labels =
+                crate::projection::TextColumn::new(rows.batches[0].column(2).as_ref()).unwrap();
+            assert_eq!(labels.get(0), None);
+            assert_eq!(labels.get(1), Some("one"));
+            assert_eq!(labels.get(2), Some("one"));
+        }
     }
 
     #[tokio::test]
@@ -305,9 +399,11 @@ mod tests {
                 );
             } else {
                 let index = result.unwrap();
+                assert_eq!(index.rows, 0);
+                assert_eq!(runtime.diagnostic_summary().index_reads, 0);
                 assert_eq!(
                     runtime
-                        .execute(runtime.session().read_table(index).unwrap())
+                        .execute(runtime.session().read_table(index.provider).unwrap())
                         .await
                         .unwrap()
                         .rows,
@@ -319,3 +415,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "index_measurements.rs"]
+mod measurements;

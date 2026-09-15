@@ -56,7 +56,7 @@ pub async fn folded(
     spec: &SearchSpec,
     options: &SearchOptions,
 ) -> Result<DataFrame> {
-    let mut symbols = session.table("api_surface").await?.filter(
+    let mut symbols = session.table("snapshot.domain.api_surface").await?.filter(
         lit(options.include_api)
             .and(col("observation_id").is_not_null())
             .and(scoring::eligibility(&spec.symbol_clauses)),
@@ -98,9 +98,9 @@ pub async fn folded(
         )?
         .filter(col("ranking").is_not_null())?
         .with_column("rank_score", col("ranking").field("score"))?;
-    session.register_table("eligible_symbols", symbols.into_view())?;
-    session.register_table("matching_aliases", session.sql("SELECT definition_id, array_agg(DISTINCT path ORDER BY path) AS paths FROM eligible_symbols GROUP BY definition_id").await?.into_view())?;
-    session.register_table("folded_symbols", session.sql(r"
+    crate::native_catalog::work(session, "eligible_symbols", symbols.into_view())?;
+    crate::native_catalog::work(session, "matching_aliases", session.sql("SELECT definition_id, array_agg(DISTINCT path ORDER BY path) AS paths FROM eligible_symbols GROUP BY definition_id").await?.into_view())?;
+    crate::native_catalog::work(session, "folded_symbols", session.sql(r"
         SELECT * FROM (
             SELECT e.*, row_number() OVER (PARTITION BY definition_id ORDER BY rank_score DESC, is_reexport ASC, path ASC, observation_id ASC, symbol_id ASC) AS position
             FROM eligible_symbols e
@@ -112,27 +112,30 @@ pub async fn folded(
         .iter()
         .map(|k| lit(k.as_str()))
         .collect::<Vec<_>>();
-    let mut fragments = session.table("fragment_surface").await?;
+    let mut fragments = session.table("snapshot.domain.fragment_surface").await?;
     if let Some(area) = &options.area {
         let members = session
-            .table("fragment_paths")
+            .table("snapshot.domain.fragment_paths")
             .await?
             .filter(views::ecosystem(area.ecosystem()).and(views::namespace("components", area)))?
             .select(vec![col("fragment_id")])?
             .distinct()?;
-        session.register_table("scoped_fragment_ids", members.into_view())?;
-        let scoped = session.sql("SELECT f.* FROM fragment_surface f LEFT SEMI JOIN scoped_fragment_ids m ON f.fragment_id = m.fragment_id").await?;
+        crate::native_catalog::work(session, "scoped_fragment_ids", members.into_view())?;
+        let scoped = session.sql("SELECT f.* FROM snapshot.domain.fragment_surface f LEFT SEMI JOIN scoped_fragment_ids m ON f.fragment_id = m.fragment_id").await?;
         fragments = if area.components().len() == 1 {
             scoped.union(
-                session.table("fragment_surface").await?.filter(
-                    col("subject_ref").field("kind").in_list(
-                        ["library", "feature", "document", "example"]
-                            .into_iter()
-                            .map(lit)
-                            .collect(),
-                        false,
-                    ),
-                )?,
+                session
+                    .table("snapshot.domain.fragment_surface")
+                    .await?
+                    .filter(
+                        col("subject_ref").field("kind").in_list(
+                            ["library", "feature", "document", "example"]
+                                .into_iter()
+                                .map(lit)
+                                .collect(),
+                            false,
+                        ),
+                    )?,
             )?
         } else {
             scoped
@@ -165,10 +168,11 @@ pub async fn folded(
         )?
         .filter(col("ranking").is_not_null())?
         .with_column("rank_score", col("ranking").field("score"))?;
-    session.register_table("eligible_fragments", fragments.into_view())?;
+    crate::native_catalog::work(session, "eligible_fragments", fragments.into_view())?;
     // Fold only qualified aliases of the same definition. Full source equality retains
     // producer, artifact, locator and epistemic distinctions even when text is identical.
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "fragment_aliases",
         session
             .sql(
@@ -181,7 +185,8 @@ pub async fn folded(
             .await?
             .into_view(),
     )?;
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "folded_fragments",
         session
             .sql(
@@ -211,19 +216,15 @@ pub async fn folded(
           ON coalesce(f.definition_id, f.fragment_id) = a.fold_key AND f.kind = a.kind
           AND f.text = a.text AND f.source IS NOT DISTINCT FROM a.source
     ").await?;
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "search_api_candidates",
-        std::sync::Arc::new(crate::provider::DerivedRelation::new(
-            api.into_view(),
-            "search_candidates",
-        )),
+        crate::provider::derived(api, "search_candidates")?.into_view(),
     )?;
-    session.register_table(
+    crate::native_catalog::work(
+        session,
         "search_fragment_candidates",
-        std::sync::Arc::new(crate::provider::DerivedRelation::new(
-            fragments.into_view(),
-            "search_candidates",
-        )),
+        crate::provider::derived(fragments, "search_candidates")?.into_view(),
     )?;
     let result = session
         .table("search_api_candidates")
@@ -265,25 +266,15 @@ pub async fn page(
         .into_iter()
         .map(col),
     )?;
-    session.register_table(
-        "search_candidates",
-        crate::operation_index::materialize(
-            runtime,
-            index,
-            crate::preparation::QueryFamily::SearchIndex,
-        )
-        .await?,
-    )?;
+    let completed = crate::operation_index::materialize(
+        runtime,
+        index,
+        crate::preparation::QueryFamily::SearchIndex,
+    )
+    .await?;
+    let total = completed.rows;
+    completed.register(session, "search_candidates")?;
     let folded = session.table("search_candidates").await?;
-    let count = runtime
-        .execute_family(
-            session
-                .sql("SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM search_candidates")
-                .await?,
-            Some(crate::preparation::QueryFamily::CountUnsigned),
-        )
-        .await?;
-    let total = projection::search::count(&count.batches)?;
     let filtered = if let Some(key) = &options.after {
         folded.filter(after(key))?
     } else {
@@ -297,7 +288,7 @@ pub async fn page(
             col("candidate_id").sort(true, false),
         ])?
         .limit(0, Some(options.page_size + 1))?;
-    session.register_table("search_page", sorted.into_view())?;
+    crate::native_catalog::work(session, "search_page", sorted.into_view())?;
     let hydrated = session
         .sql(
             r"
@@ -306,8 +297,8 @@ pub async fn page(
             CASE p.hit_order WHEN 0 THEN coalesce(a.payload.signature, a.payload.doc_summary, a.payload.docs, '') ELSE f.text END AS excerpt,
             CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source
         FROM search_page p
-        LEFT JOIN api_observations a ON p.fact_id = a.observation_id AND p.hit_order = 0
-        LEFT JOIN fragments f ON p.fact_id = f.fragment_id AND p.hit_order = 1
+        LEFT JOIN snapshot.evidence.api_observations a ON p.fact_id = a.observation_id AND p.hit_order = 0
+        LEFT JOIN snapshot.evidence.fragments f ON p.fact_id = f.fragment_id AND p.hit_order = 1
         ORDER BY p.rank_score DESC, p.hit_order ASC, p.label ASC, p.candidate_id ASC
     ",
         )

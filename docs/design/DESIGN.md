@@ -460,6 +460,8 @@ one. No producer emits `agent_inferred`, which is correct: that class is the cal
 
 ### 6.3 Schema ownership
 
+> Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
+
 > Decision: ADR-0037 — Rust domain DTOs generate schemas and Python models; authored Pydantic presentation composes tool output variants without owning domain policy.
 
 > Decision: ADR-0035 makes same-path ambiguity actionable with typed candidates and an exact definition selector.
@@ -678,6 +680,8 @@ marked interrupted with an actionable error; restart does not silently re-execut
 of precommit work, cleanup supervision and retained leases through confirmed resource removal.*
 
 ### 8.4 Cache invalidation
+
+> Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
 
 > Decision: ADR-0023 — coherent catalog and snapshot lifetimes; cleanup honors read/export leases.
 > Decision: ADR-0024 — bounded reusable admission/providers over exact content dependencies.
@@ -932,6 +936,8 @@ source-bound integrated acceptance is recorded in `STATUS.md`, the Plan 12 ledge
 
 ### 14.3 Operational metrics
 
+> Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
+
 > Decision: ADR-0038 — Preparation attempts receive early query identities, stage diagnostics and native rule failures; metrics describe actual execution only.
 
 > Decision: ADR-0034 exposes bounded native query status.
@@ -1038,6 +1044,7 @@ decided it. See [`README.md`](README.md) for the amendment rule.
 
 | 21 | 2026-09-15 | Research/2.0 selection, coverage, delivery, native preparation, adapter presentation and revision omission contracts; scoped design acceptance with final qualification open. | ADR-0036, ADR-0037, ADR-0038, ADR-0039 |
 | 22 | 2026-09-15 | Record implemented Arrow value streaming, indexed artifact dependency closure and operation-owned input/permit lifetimes. | ADR-0037, ADR-0038 |
+| 23 | 2026-09-15 | Immutable catalog/schema binding, one native policy/discovery path and consumed physical facts; final native and installed consumer evidence recorded. | ADR-0040 |
 
 
 ### Plan 13 derived comparison publication refinement (2026-09-15)
@@ -1127,3 +1134,24 @@ records J01–J20, D01–D12, exact component hashes and the 47 active acceptanc
 is preserved inactive with no compatibility reader. Production execution permissions remain
 static-only; separately qualified execution does not silently change that policy. Explicit source,
 semantic, budget and measurement limits remain part of the accepted design.
+
+### Plan 14 immutable native binding (2026-09-15)
+
+**Tested — final native and installed consumers.** Existing finite relation declarations and codec schemas feed
+an immutable captured inventory. Native catalog/schema providers expose admitted evidence,
+transparent domain views and folded service records; raw history and candidates have explicit
+internal scopes. Temporary operation tables have a separate mutable schema. Comparison uses
+qualified independent pins. Construction succeeds completely before an inventory is installed.
+
+Validated configuration feeds one immutable native policy and its read-only ConfigExtension.
+The actual Parquet format consumes that policy; bounded structural/domain metadata describes the
+same resolved objects. Exact physical statistics require admitted facts. Completed indexes retain
+counts and only established ordering/partitioning. Native string coercion preserves supported
+encodings. Rule transitions and managed-pool peaks have bounded storage and truthful scope.
+
+Plan 14's deletion and functional oracles are mapped to the final source in
+[the qualification report](../reports/plan14-final-qualification-2026-09-15.md). The measured policy
+selects decoder/reorder, observation-ID Bloom, capped whole-file groups and independent storage
+layout. Query diagnostics use v2 derived history; canonical state formats remain target-compatible.
+No compatibility namespace,
+legacy reader, second policy interpreter or speculative remote/catalog platform is selected.

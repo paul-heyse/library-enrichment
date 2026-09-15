@@ -16,7 +16,8 @@ async fn actual_rustdoc_produces_admitted_relations_in_bounded_row_groups() {
         &dir.path().join("evidence"),
         &evidence,
         &WriteLimits {
-            batch_rows: 2,
+            batch_rows: 3,
+            row_group_rows: 2,
             ..WriteLimits::default()
         },
     )
@@ -67,9 +68,8 @@ async fn actual_rustdoc_produces_admitted_relations_in_bounded_row_groups() {
         )
         .await
         .expect("full relational admission");
-    let session = runtime.session();
-    admitted.register(&session).expect("register");
-    let result = runtime.execute(session.sql("SELECT o.observation_id, s.path, d.kind, i.artifact_id FROM api_observations o JOIN symbols s ON o.subject.symbol_id = s.symbol_id JOIN definitions d ON s.definition_id = d.definition_id JOIN input_artifacts i ON o.source.producer_binding_id = i.producer_binding_id AND o.source.artifact_id = i.artifact_id ORDER BY o.observation_id").await.expect("plan")).await.expect("execute");
+    let session = admitted.session(&runtime, None).expect("bound catalog");
+    let result = runtime.execute(session.sql("SELECT o.observation_id, s.path, d.kind, i.artifact_id FROM snapshot.evidence.api_observations o JOIN snapshot.evidence.symbols s ON o.subject.symbol_id = s.symbol_id JOIN snapshot.evidence.definitions d ON s.definition_id = d.definition_id JOIN snapshot.evidence.input_artifacts i ON o.source.producer_binding_id = i.producer_binding_id AND o.source.artifact_id = i.artifact_id ORDER BY o.observation_id").await.expect("plan")).await.expect("execute");
     assert_eq!(result.rows, evidence.api_observations.len());
 }
 
@@ -91,7 +91,8 @@ fn semantic_components_ignore_order_attempt_clocks_and_file_layout() {
         &dir.path().join("two"),
         &evidence,
         &WriteLimits {
-            batch_rows: 2,
+            batch_rows: 3,
+            row_group_rows: 2,
             ..WriteLimits::default()
         },
     )
@@ -147,6 +148,7 @@ fn empty_relations_have_schemas_and_resource_excess_is_an_error() {
             "metadata",
             WriteLimits {
                 batch_rows: 1,
+                row_group_rows: 1,
                 row_groups: 1,
                 ..WriteLimits::default()
             },

@@ -40,6 +40,55 @@ const MAX_MANIFEST_BYTES: u64 = 4 * 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
 const MAX_DELTA_ROWS: usize = 1024;
+const MAX_FILE_ROWS: usize = 1_000_000;
+
+pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
+    crate::native_catalog::SqlRule {
+        id: "selection_snapshot_context",
+        relation: "selections",
+        sql: "SELECT s.context_id FROM state.records.selections s LEFT ANTI JOIN state.records.snapshots p ON s.snapshot_id = p.snapshot_id AND s.context_id = p.context_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "selection_generation_unique",
+        relation: "selections",
+        sql: "SELECT context_id FROM state.history.selections GROUP BY context_id, generation HAVING count(DISTINCT snapshot_id) > 1 LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "comparison_before",
+        relation: "comparison_publications",
+        sql: "SELECT j.job_id FROM state.records.comparison_publications j LEFT ANTI JOIN state.records.snapshots s ON j.before_snapshot_id = s.snapshot_id AND j.before_context_id = s.context_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "comparison_after",
+        relation: "comparison_publications",
+        sql: "SELECT j.job_id FROM state.records.comparison_publications j LEFT ANTI JOIN state.records.snapshots s ON j.after_snapshot_id = s.snapshot_id AND j.after_context_id = s.context_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "publication_kind_exclusive",
+        relation: "comparison_publications",
+        sql: "SELECT j.job_id FROM state.records.comparison_publications j JOIN state.records.job_publications p ON j.job_id = p.job_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "comparison_package_scope",
+        relation: "comparison_publications",
+        sql: "SELECT j.job_id FROM state.records.comparison_publications j JOIN state.records.contexts b ON b.context_id = j.before_context_id JOIN state.records.contexts a ON a.context_id = j.after_context_id JOIN state.records.releases br ON br.release_id = b.release_id JOIN state.records.releases ar ON ar.release_id = a.release_id WHERE br.ecosystem != ar.ecosystem OR br.registry != ar.registry OR br.package != ar.package LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "job_snapshot_context",
+        relation: "job_publications",
+        sql: "SELECT j.job_id FROM state.records.job_publications j LEFT ANTI JOIN state.records.snapshots s ON j.snapshot_id = s.snapshot_id AND j.context_id = s.context_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "job_attempt_snapshot",
+        relation: "job_publications",
+        sql: "SELECT j.job_id FROM state.records.job_publications j LEFT ANTI JOIN state.records.attempts a ON j.snapshot_id = a.snapshot_id AND j.attempt_id = a.attempt_id LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "job_result_acquisition",
+        relation: "job_publications",
+        sql: "WITH results AS (SELECT job_id,snapshot_id,attempt_id,unnest(result_artifact_ids) AS artifact_id FROM state.records.job_publications), acquisitions AS (SELECT snapshot_id,attempt_id,unnest(acquisitions) AS artifact FROM state.records.attempts) SELECT r.job_id FROM results r LEFT ANTI JOIN acquisitions a ON r.snapshot_id = a.snapshot_id AND r.attempt_id = a.attempt_id AND r.artifact_id = a.artifact.artifact_id LIMIT 1",
+    },
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -55,7 +104,7 @@ pub enum Table {
 }
 
 impl Table {
-    const ALL: [Self; 8] = [
+    pub(crate) const ALL: [Self; 8] = [
         Self::Releases,
         Self::Environments,
         Self::Contexts,
@@ -77,7 +126,10 @@ impl Table {
             Self::ComparisonPublications => "comparison_publications",
         }
     }
-    fn key(self) -> &'static str {
+    pub(crate) fn reference(self) -> datafusion::common::TableReference {
+        datafusion::common::TableReference::full("state", "records", self.name())
+    }
+    pub(crate) fn key(self) -> &'static str {
         match self {
             Self::Releases => "release_id",
             Self::Environments => "environment_id",
@@ -270,7 +322,7 @@ impl PinnedCatalog {
                 Table::ComparisonPublications => col("after_snapshot_id")
                     .in_list(snapshots.iter().map(|s| lit(s.as_str())).collect(), false),
             };
-            let frame = session.table(table.name()).await?.filter(predicate)?;
+            let frame = session.table(table.reference()).await?.filter(predicate)?;
             runtime
                 .visit(frame, 1_000_000, |batch| {
                     if files.len() == MAX_FILES {
@@ -280,7 +332,12 @@ impl PinnedCatalog {
                         // Reconstruct the canonical table schema after projection/selection.
                         let batch =
                             RecordBatch::try_new(table.schema()?, batch.columns().to_vec())?;
-                        files.push(stage_file(&target.root, table, batch)?);
+                        files.push(stage_file(
+                            &target.root,
+                            table,
+                            batch,
+                            target.runtime.native_layout(),
+                        )?);
                     }
                     Ok(())
                 })
@@ -342,47 +399,61 @@ impl PinnedCatalog {
     /// # Errors
     /// Changed files or failed planning remain errors.
     pub async fn session(&self, runtime: &QueryRuntime) -> Result<SessionContext> {
+        self.bind(runtime, false).await
+    }
+
+    fn history(&self) -> Result<crate::native_catalog::Tables> {
         self.unchanged()?;
+        Table::ALL
+            .into_iter()
+            .map(|table| {
+                let input: Arc<dyn datafusion::catalog::TableProvider> =
+                    match self.providers.get(&table) {
+                        Some(provider) => provider.clone(),
+                        None => Arc::new(MemTable::try_new(table.schema()?, vec![vec![]])?),
+                    };
+                Ok((table.name().to_owned(), input))
+            })
+            .collect()
+    }
+
+    async fn bind(&self, runtime: &QueryRuntime, include_history: bool) -> Result<SessionContext> {
+        use crate::native_catalog::{BoundCatalog, Tables};
+        let history = self.history()?;
         let views = self.views.get_or_try_init(|| async {
-            let staging = runtime.session();
-            let mut views = BTreeMap::new();
+            let catalog = BoundCatalog::default().with_schema(crate::native_catalog::BindingKind::ValidatedHistory, history.clone());
+            let staging = runtime.bound_session(BTreeMap::from([("state".into(), Arc::new(catalog) as Arc<dyn datafusion::catalog::CatalogProvider>)]))?;
+            let mut views = Tables::new();
             for table in Table::ALL {
-                let raw = format!("raw_{}", table.name());
-                if let Some(p) = self.providers.get(&table) {
-                    staging.register_table(raw.as_str(), p.clone())?;
-                } else {
-                    staging.register_table(raw.as_str(), Arc::new(MemTable::try_new(table.schema()?, vec![vec![]])?))?;
-                }
+                let raw = datafusion::common::TableReference::full("state", "history", table.name());
                 let sql = if table == Table::Selections {
-                    "SELECT context_id, snapshot_id, generation FROM (SELECT *, row_number() OVER (PARTITION BY context_id ORDER BY generation DESC) AS position FROM raw_selections) WHERE position = 1".to_owned()
+                    "SELECT context_id, snapshot_id, generation FROM (SELECT *, row_number() OVER (PARTITION BY context_id ORDER BY generation DESC) AS position FROM state.history.selections) WHERE position = 1".to_owned()
                 } else { format!("SELECT DISTINCT * FROM {raw}") };
                 views.insert(table.name().to_owned(), staging.sql(&sql).await?.into_view());
             }
             Ok::<_, DataFusionError>(views)
         }).await?;
-        let session = runtime.session();
-        for table in Table::ALL {
-            let input: Arc<dyn datafusion::catalog::TableProvider> =
-                match self.providers.get(&table) {
-                    Some(provider) => provider.clone(),
-                    None => Arc::new(MemTable::try_new(table.schema()?, vec![vec![]])?),
-                };
-            let provider: Arc<dyn datafusion::catalog::TableProvider> = match &self.lease {
-                Some(lease) => {
-                    Arc::new(crate::leases::LeasedProvider::new(input, Arc::clone(lease)))
-                }
-                None => input,
-            };
-            session.register_table(format!("raw_{}", table.name()).as_str(), provider)?;
-        }
+        let staging = runtime.session();
+        let mut records = Tables::new();
         for (name, view) in views {
-            let provider: Arc<dyn datafusion::catalog::TableProvider> = match &self.lease {
-                Some(lease) => crate::leases::leased_view(view, &session, lease)?,
+            let provider = match &self.lease {
+                Some(lease) => crate::leases::leased_view(view, &staging, lease)?,
                 None => Arc::clone(view),
             };
-            session.register_table(name.as_str(), provider)?;
+            records.insert(name.clone(), provider);
         }
-        Ok(session)
+        let mut catalog = BoundCatalog::default()
+            .with_schema(crate::native_catalog::BindingKind::FoldedRecords, records);
+        if include_history {
+            catalog = catalog.with_schema(
+                crate::native_catalog::BindingKind::ValidatedHistory,
+                history,
+            );
+        }
+        runtime.bound_session(BTreeMap::from([(
+            "state".into(),
+            Arc::new(catalog) as Arc<dyn datafusion::catalog::CatalogProvider>,
+        )]))
     }
 
     /// # Errors
@@ -396,7 +467,7 @@ impl PinnedCatalog {
         one(
             runtime,
             session
-                .table("job_publications")
+                .table("state.records.job_publications")
                 .await?
                 .filter(col("job_id").eq(lit(id)))?,
             Table::JobPublications,
@@ -415,10 +486,13 @@ impl PinnedCatalog {
         let mut frontier = vec![snapshot.clone()];
         let session = self.session(runtime).await?;
         while !frontier.is_empty() {
-            let frame = session.table("comparison_publications").await?.filter(
-                col("after_snapshot_id")
-                    .in_list(frontier.iter().map(|s| lit(s.as_str())).collect(), false),
-            )?;
+            let frame = session
+                .table("state.records.comparison_publications")
+                .await?
+                .filter(
+                    col("after_snapshot_id")
+                        .in_list(frontier.iter().map(|s| lit(s.as_str())).collect(), false),
+                )?;
             let output = runtime
                 .execute_family(
                     frame,
@@ -454,7 +528,7 @@ impl PinnedCatalog {
         one(
             runtime,
             session
-                .table("comparison_publications")
+                .table("state.records.comparison_publications")
                 .await?
                 .filter(col("job_id").eq(lit(id)))?,
             Table::ComparisonPublications,
@@ -485,7 +559,7 @@ impl PinnedCatalog {
         one(
             runtime,
             session
-                .table("snapshots")
+                .table("state.records.snapshots")
                 .await?
                 .filter(col("snapshot_id").eq(lit(id.as_str())))?,
             Table::Snapshots,
@@ -501,7 +575,7 @@ impl PinnedCatalog {
         one(
             runtime,
             session
-                .table("releases")
+                .table("state.records.releases")
                 .await?
                 .filter(col("release_id").eq(lit(id.as_str())))?,
             Table::Releases,
@@ -538,7 +612,10 @@ impl PinnedCatalog {
         }
         one(
             runtime,
-            session.table("releases").await?.filter(predicate)?,
+            session
+                .table("state.records.releases")
+                .await?
+                .filter(predicate)?,
             Table::Releases,
             projection::releases_from_batch,
         )
@@ -556,7 +633,7 @@ impl PinnedCatalog {
         let Some(context) = one(
             runtime,
             session
-                .table("contexts")
+                .table("state.records.contexts")
                 .await?
                 .filter(col("context_id").eq(lit(id.as_str())))?,
             Table::Contexts,
@@ -569,7 +646,7 @@ impl PinnedCatalog {
         let environment = one(
             runtime,
             session
-                .table("environments")
+                .table("state.records.environments")
                 .await?
                 .filter(col("environment_id").eq(lit(context.environment_id.as_str())))?,
             Table::Environments,
@@ -587,7 +664,7 @@ impl PinnedCatalog {
         let output = runtime
             .execute_family(
                 session
-                    .table("contexts")
+                    .table("state.records.contexts")
                     .await?
                     .filter(
                         col("parent_context_id")
@@ -777,7 +854,18 @@ impl RelationalCatalog {
             providers.insert(
                 table,
                 Arc::new(
-                    ExactParquet::new_many(files, table.schema()?, Constraints::default()).await?,
+                    ExactParquet::new_many(files, table.schema()?, Constraints::default())
+                        .await?
+                        .with_verified_rows(
+                            manifest
+                                .files
+                                .iter()
+                                .filter(|file| file.table == table)
+                                .try_fold(0u64, |rows, file| {
+                                    rows.checked_add(file.rows)
+                                        .ok_or_else(|| invalid("catalog row count overflow"))
+                                })?,
+                        )?,
                 ),
             );
         }
@@ -804,9 +892,10 @@ impl RelationalCatalog {
                 .ok_or_else(|| invalid("catalog has no data root"))?,
         )?;
         let root = self.root.clone();
+        let layout = self.runtime.native_layout().clone();
         let staged = self
             .runtime
-            .blocking(move || stage_delta(&root, delta))
+            .blocking(move || stage_delta(&root, delta, &layout))
             .await
             .map_err(external)??;
         let _guard = self.commit.lock().await;
@@ -837,10 +926,16 @@ impl RelationalCatalog {
                     snapshot_id: change.snapshot_id,
                     generation,
                 };
+                let layout = self.runtime.native_layout().clone();
                 let file = self
                     .runtime
                     .blocking(move || {
-                        stage_file(&root, Table::Selections, projection::selections(&[row])?)
+                        stage_file(
+                            &root,
+                            Table::Selections,
+                            projection::selections(&[row])?,
+                            &layout,
+                        )
                     })
                     .await
                     .map_err(external)??;
@@ -851,6 +946,7 @@ impl RelationalCatalog {
             && let Some(publication) = staged.publication
         {
             let root = self.root.clone();
+            let layout = self.runtime.native_layout().clone();
             let file = self
                 .runtime
                 .blocking(move || {
@@ -858,6 +954,7 @@ impl RelationalCatalog {
                         &root,
                         Table::JobPublications,
                         projection::job_publications(&[publication])?,
+                        &layout,
                     )
                 })
                 .await
@@ -906,11 +1003,12 @@ impl RelationalCatalog {
         for table in Table::ALL {
             let schema = table.schema()?;
             let plan = session
-                .table(table.name())
+                .table(table.reference())
                 .await?
                 .sort(vec![col(table.key()).sort(true, false)])?;
+            let mut pending = CompactionFile::new(&self.root, table, &self.runtime);
             self.runtime
-                .visit(plan, 1_000_000, |batch| {
+                .visit(plan, MAX_FILE_ROWS, |batch| {
                     let columns = schema
                         .fields()
                         .iter()
@@ -923,20 +1021,11 @@ impl RelationalCatalog {
                         })
                         .collect::<Result<Vec<_>>>()?;
                     let canonical = RecordBatch::try_new(schema.clone(), columns)?;
-                    for offset in (0..canonical.num_rows()).step_by(MAX_DELTA_ROWS) {
-                        if files.len() >= MAX_FILES {
-                            return Err(invalid("compacted catalog exceeds file budget"));
-                        }
-                        files.push(stage_file(
-                            &self.root,
-                            table,
-                            canonical
-                                .slice(offset, MAX_DELTA_ROWS.min(canonical.num_rows() - offset)),
-                        )?);
-                    }
+                    pending.push(canonical, &mut files)?;
                     Ok(())
                 })
                 .await?;
+            pending.flush(&mut files)?;
         }
         let generation = base
             .generation()
@@ -993,56 +1082,38 @@ impl RelationalCatalog {
     }
 
     async fn validate(&self, pin: &PinnedCatalog) -> Result<()> {
-        let session = pin.session(&self.runtime).await?;
+        let session = pin.bind(&self.runtime, true).await?;
         for table in Table::ALL {
-            let sql = format!(
-                "SELECT {} FROM {} GROUP BY {} HAVING count(*) > 1 LIMIT 1",
-                table.key(),
-                table.name(),
-                table.key()
-            );
-            self.require_empty(
-                &session,
-                &sql,
-                "conflicting catalog records for one identity",
-            )
-            .await?;
+            use crate::native_catalog::RelationContract;
+            let duplicates = table.duplicate_keys(&session, table.reference()).await?;
+            if self.runtime.execute(duplicates).await?.rows != 0 {
+                return Err(invalid(&format!(
+                    "conflicting catalog records: {}.unique",
+                    table.name()
+                )));
+            }
         }
-        for sql in [
-            "SELECT context_id FROM contexts c LEFT ANTI JOIN releases r ON c.release_id = r.release_id LIMIT 1",
-            "SELECT context_id FROM contexts c LEFT ANTI JOIN environments e ON c.environment_id = e.environment_id LIMIT 1",
-            "SELECT c.context_id FROM contexts c LEFT ANTI JOIN contexts p ON c.parent_context_id = p.context_id WHERE c.parent_context_id IS NOT NULL LIMIT 1",
-            "SELECT snapshot_id FROM snapshots s LEFT ANTI JOIN contexts c ON s.context_id = c.context_id LIMIT 1",
-            "SELECT s.context_id FROM selections s LEFT ANTI JOIN snapshots p ON s.snapshot_id = p.snapshot_id AND s.context_id = p.context_id LIMIT 1",
-            "SELECT context_id FROM raw_selections GROUP BY context_id, generation HAVING count(DISTINCT snapshot_id) > 1 LIMIT 1",
-            "SELECT association_id FROM attempts a LEFT ANTI JOIN snapshots s ON a.snapshot_id = s.snapshot_id LIMIT 1",
-            "SELECT j.job_id FROM comparison_publications j LEFT ANTI JOIN snapshots s ON j.before_snapshot_id = s.snapshot_id AND j.before_context_id = s.context_id LIMIT 1",
-            "SELECT j.job_id FROM comparison_publications j LEFT ANTI JOIN snapshots s ON j.after_snapshot_id = s.snapshot_id AND j.after_context_id = s.context_id LIMIT 1",
-            "SELECT j.job_id FROM comparison_publications j JOIN job_publications p ON j.job_id = p.job_id LIMIT 1",
-            "SELECT j.job_id FROM comparison_publications j JOIN contexts b ON b.context_id = j.before_context_id JOIN contexts a ON a.context_id = j.after_context_id JOIN releases br ON br.release_id = b.release_id JOIN releases ar ON ar.release_id = a.release_id WHERE br.ecosystem != ar.ecosystem OR br.registry != ar.registry OR br.package != ar.package LIMIT 1",
-            "SELECT j.job_id FROM job_publications j LEFT ANTI JOIN snapshots s ON j.snapshot_id = s.snapshot_id AND j.context_id = s.context_id LIMIT 1",
-            "SELECT j.job_id FROM job_publications j LEFT ANTI JOIN attempts a ON j.snapshot_id = a.snapshot_id AND j.attempt_id = a.attempt_id LIMIT 1",
-            "WITH results AS (SELECT job_id,snapshot_id,attempt_id,unnest(result_artifact_ids) AS artifact_id FROM job_publications), acquisitions AS (SELECT snapshot_id,attempt_id,unnest(acquisitions) AS artifact FROM attempts) SELECT r.job_id FROM results r LEFT ANTI JOIN acquisitions a ON r.snapshot_id = a.snapshot_id AND r.attempt_id = a.attempt_id AND r.artifact_id = a.artifact.artifact_id LIMIT 1",
-        ] {
-            self.require_empty(&session, sql, "catalog reference or selection violation")
+        for table in Table::ALL {
+            use crate::native_catalog::RelationContract;
+            for rule in table.references() {
+                self.runtime
+                    .require_empty(
+                        rule.violations(&session, table.reference(), table.key())
+                            .await?,
+                        rule.id,
+                        "catalog_admission",
+                    )
+                    .await?;
+            }
+        }
+        for rule in CONDITIONAL_RULES {
+            self.runtime
+                .require_empty(
+                    rule.violations(&session).await?,
+                    rule.id,
+                    "catalog_admission",
+                )
                 .await?;
-        }
-        Ok(())
-    }
-
-    async fn require_empty(
-        &self,
-        session: &SessionContext,
-        sql: &str,
-        message: &str,
-    ) -> Result<()> {
-        let output = self.runtime.execute(session.sql(sql).await?).await?;
-        if output.rows != 0 {
-            return Err(crate::preparation::InvariantFailure::error(
-                message,
-                "catalog_admission",
-                crate::preparation::witnesses(&output.batches),
-            ));
         }
         Ok(())
     }
@@ -1056,7 +1127,7 @@ async fn current(
     let output = runtime
         .execute_family(
             session
-                .table("selections")
+                .table("state.records.selections")
                 .await?
                 .filter(col("context_id").eq(lit(id.as_str())))?
                 .limit(0, Some(2))?,
@@ -1108,7 +1179,11 @@ struct PendingDelta {
     selection: Option<SelectionChange>,
     publication: Option<JobPublication>,
 }
-fn stage_delta(root: &Path, delta: CatalogDelta) -> Result<PendingDelta> {
+fn stage_delta(
+    root: &Path,
+    delta: CatalogDelta,
+    layout: &enrichment_core::config::NativeQueryConfig,
+) -> Result<PendingDelta> {
     if let Some(publication) = &delta.publication {
         publication.validate().map_err(|e| invalid(&e))?;
         if delta.selection.as_ref().is_none_or(|s| {
@@ -1142,6 +1217,7 @@ fn stage_delta(root: &Path, delta: CatalogDelta) -> Result<PendingDelta> {
             root,
             Table::ComparisonPublications,
             projection::comparison_publications(&[comparison])?,
+            layout,
         )?);
     }
     for (table, batch) in [
@@ -1155,7 +1231,7 @@ fn stage_delta(root: &Path, delta: CatalogDelta) -> Result<PendingDelta> {
         (Table::Attempts, projection::attempts(&delta.attempts)?),
     ] {
         if batch.num_rows() > 0 {
-            files.push(stage_file(root, table, batch)?);
+            files.push(stage_file(root, table, batch, layout)?);
         }
     }
     Ok(PendingDelta {
@@ -1165,13 +1241,92 @@ fn stage_delta(root: &Path, delta: CatalogDelta) -> Result<PendingDelta> {
     })
 }
 
-fn stage_file(root: &Path, table: Table, batch: RecordBatch) -> Result<CatalogFile> {
+/// Bounded compaction buffer; transaction admission and scan batch sizing do not
+/// determine physical file boundaries. Reservations cover input plus concatenation.
+struct CompactionFile<'a> {
+    root: &'a Path,
+    table: Table,
+    layout: &'a enrichment_core::config::NativeQueryConfig,
+    batches: Vec<RecordBatch>,
+    rows: usize,
+    bytes: usize,
+    reservation: datafusion::execution::memory_pool::MemoryReservation,
+}
+impl<'a> CompactionFile<'a> {
+    fn new(root: &'a Path, table: Table, runtime: &'a QueryRuntime) -> Self {
+        let pool = runtime.session().runtime_env().memory_pool.clone();
+        Self {
+            root,
+            table,
+            layout: runtime.native_layout(),
+            batches: vec![],
+            rows: 0,
+            bytes: 0,
+            reservation: datafusion::execution::memory_pool::MemoryConsumer::new(
+                "catalog_compaction",
+            )
+            .register(&pool),
+        }
+    }
+    fn push(&mut self, batch: RecordBatch, files: &mut Vec<CatalogFile>) -> Result<()> {
+        let mut offset = 0;
+        while offset < batch.num_rows() {
+            let count = (self.layout.catalog_file_rows - self.rows).min(batch.num_rows() - offset);
+            let part = batch.slice(offset, count);
+            let bytes = part.get_array_memory_size();
+            if !self.batches.is_empty()
+                && self.bytes.saturating_add(bytes) > MAX_FILE_BYTES as usize / 2
+            {
+                self.flush(files)?;
+                continue;
+            }
+            if bytes > MAX_FILE_BYTES as usize {
+                return Err(invalid("compaction batch exceeds file budget"));
+            }
+            self.reservation.try_grow(bytes.saturating_mul(2))?;
+            self.bytes += bytes;
+            self.rows += count;
+            self.batches.push(part);
+            offset += count;
+            if self.rows == self.layout.catalog_file_rows {
+                self.flush(files)?;
+            }
+        }
+        Ok(())
+    }
+    fn flush(&mut self, files: &mut Vec<CatalogFile>) -> Result<()> {
+        if self.batches.is_empty() {
+            return Ok(());
+        }
+        if files.len() >= MAX_FILES {
+            return Err(invalid("compacted catalog exceeds file budget"));
+        }
+        let batch = arrow::compute::concat_batches(&self.table.schema()?, &self.batches)?;
+        files.push(stage_file(self.root, self.table, batch, self.layout)?);
+        self.batches.clear();
+        self.rows = 0;
+        self.bytes = 0;
+        self.reservation.free();
+        Ok(())
+    }
+}
+
+fn stage_file(
+    root: &Path,
+    table: Table,
+    batch: RecordBatch,
+    layout: &enrichment_core::config::NativeQueryConfig,
+) -> Result<CatalogFile> {
     if batch.get_array_memory_size() as u64 > MAX_FILE_BYTES {
         return Err(invalid("catalog Arrow batch exceeds byte budget"));
     }
     table.validate(&batch)?;
     let temporary = tempfile::NamedTempFile::new_in(root.join("files"))?;
-    let mut writer = ArrowWriter::try_new(temporary.reopen()?, batch.schema(), None)?;
+    if batch.num_rows() > MAX_FILE_ROWS {
+        return Err(invalid("catalog physical file row bound exceeded"));
+    }
+    let properties = crate::native_policy::writer_properties(layout.row_group_rows, None)?;
+    let mut writer = ArrowWriter::try_new(temporary.reopen()?, batch.schema(), Some(properties))?;
     writer.write(&batch)?;
     writer.finish()?;
     writer.inner().sync_all()?;
@@ -1209,7 +1364,7 @@ fn validate_file_cancellable(
     cancelled: &std::sync::atomic::AtomicBool,
 ) -> Result<()> {
     let (digest, bytes) = canonical::sha256_reader(File::open(path)?, MAX_FILE_BYTES)?;
-    if digest != record.digest || bytes != record.bytes || record.rows > MAX_DELTA_ROWS as u64 {
+    if digest != record.digest || bytes != record.bytes || record.rows > MAX_FILE_ROWS as u64 {
         return Err(invalid("catalog file manifest mismatch"));
     }
     crate::parquet_admission::validate_cancellable(
@@ -1222,7 +1377,7 @@ fn validate_file_cancellable(
             limits: crate::admission::AdmissionLimits {
                 file_bytes: MAX_FILE_BYTES,
                 row_group_bytes: MAX_FILE_BYTES as i64,
-                table_rows: MAX_DELTA_ROWS,
+                table_rows: MAX_FILE_ROWS,
                 batch_rows: 128,
                 ..Default::default()
             },

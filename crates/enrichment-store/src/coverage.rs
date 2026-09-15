@@ -136,7 +136,7 @@ pub(crate) async fn assess_execution(
         "SELECT DISTINCT CASE payload.kind
         WHEN 'semantic_query' THEN 'semantic_queries' WHEN 'runtime_object' THEN 'runtime_api'
         WHEN 'usage_probe' THEN 'usage_probes' END AS kind, subject, source.producer_binding_id
-        FROM execution_observations WHERE source.artifact_id IN ({placeholders})"
+        FROM snapshot.evidence.execution_observations WHERE source.artifact_id IN ({placeholders})"
     );
     evaluate(
         session,
@@ -170,7 +170,7 @@ async fn evaluate(
              MIN(CASE WHEN c.outcome = 'indexed' THEN c.coverage_id END) AS indexed_id,
              MIN(CASE WHEN c.outcome = 'partial' THEN c.coverage_id END) AS partial_id,
              MIN(CASE WHEN c.outcome = 'missing' THEN c.coverage_id END) AS missing_id
-           FROM requested r LEFT JOIN coverage c ON r.kind = c.kind
+           FROM requested r LEFT JOIN snapshot.evidence.coverage c ON r.kind = c.kind
              AND ((r.subject IS NOT DISTINCT FROM c.subject) {compatibility})
              AND (r.producer_binding_id IS NULL OR r.producer_binding_id = c.producer_binding_id)
            GROUP BY r.kind, r.subject, r.producer_binding_id)
@@ -276,7 +276,8 @@ pub async fn assess_revision_inputs(
         ),
     ])?;
     let session = runtime.session();
-    session.register_table(
+    crate::native_catalog::work(
+        &session,
         "revision_inputs",
         Arc::new(MemTable::try_new(batch.schema(), vec![vec![batch]])?),
     )?;

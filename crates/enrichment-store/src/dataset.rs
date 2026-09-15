@@ -10,8 +10,6 @@ use std::path::Path;
 use arrow::record_batch::RecordBatch;
 use enrichment_core::{canonical, evidence::ingest::EvidenceBatch};
 use parquet::arrow::ArrowWriter;
-use parquet::basic::{Compression, ZstdLevel};
-use parquet::file::properties::WriterProperties;
 use serde::Serialize;
 
 use crate::admission::{EvidenceFile, Relation};
@@ -19,6 +17,8 @@ use crate::admission::{EvidenceFile, Relation};
 /// Conservative input/output limits independent of the query memory pool.
 #[derive(Debug, Clone)]
 pub struct WriteLimits {
+    pub row_group_rows: usize,
+    pub observation_bloom: bool,
     pub record_bytes: usize,
     pub batch_rows: usize,
     pub batch_bytes: usize,
@@ -30,6 +30,9 @@ pub struct WriteLimits {
 impl Default for WriteLimits {
     fn default() -> Self {
         Self {
+            row_group_rows: enrichment_core::config::NativeQueryConfig::default().row_group_rows,
+            observation_bloom: enrichment_core::config::NativeQueryConfig::default()
+                .observation_bloom,
             record_bytes: 1024 * 1024,
             batch_rows: 1024,
             batch_bytes: 16 * 1024 * 1024,
@@ -41,7 +44,8 @@ impl Default for WriteLimits {
 }
 
 pub(crate) fn validate_limits(limits: &WriteLimits) -> io::Result<()> {
-    if limits.record_bytes == 0
+    if limits.row_group_rows == 0
+        || limits.record_bytes == 0
         || limits.batch_rows == 0
         || limits.batch_bytes < limits.record_bytes
         || limits.file_bytes == 0
@@ -185,6 +189,41 @@ pub async fn write_transformed_plan(
     }
 }
 
+/// Bound both the decoded row-group working set and footer growth independently
+/// of the processing batch and row target. A failed writer is never published.
+pub(crate) fn write_bounded(
+    writer: &mut ArrowWriter<BoundedFile>,
+    batch: &arrow::record_batch::RecordBatch,
+    limits: &WriteLimits,
+    group_bytes: &mut usize,
+) -> io::Result<()> {
+    let bytes = batch.get_array_memory_size();
+    if bytes > limits.batch_bytes {
+        return Err(io::Error::other("Arrow batch byte limit exceeded"));
+    }
+    if writer.in_progress_rows() > 0 && group_bytes.saturating_add(bytes) > limits.batch_bytes {
+        writer.flush().map_err(io::Error::other)?;
+        *group_bytes = 0;
+    }
+    let groups = writer.flushed_row_groups().len();
+    writer.write(batch).map_err(io::Error::other)?;
+    *group_bytes = if writer.flushed_row_groups().len() > groups {
+        bytes
+    } else {
+        group_bytes.saturating_add(bytes)
+    };
+    if writer.memory_size() >= limits.batch_bytes {
+        writer.flush().map_err(io::Error::other)?;
+        *group_bytes = 0;
+    }
+    if writer.flushed_row_groups().len() + usize::from(writer.in_progress_rows() > 0)
+        > limits.row_groups
+    {
+        return Err(io::Error::other("row-group metadata limit exceeded"));
+    }
+    Ok(())
+}
+
 fn write_stream(
     root: &Path,
     relation: Relation,
@@ -200,10 +239,10 @@ fn write_stream(
         .write(true)
         .create_new(true)
         .open(&path)?;
-    let properties = WriterProperties::builder()
-        .set_compression(Compression::ZSTD(ZstdLevel::try_new(3)?))
-        .set_max_row_group_row_count(Some(limits.batch_rows))
-        .build();
+    let properties = crate::native_policy::writer_properties(
+        limits.row_group_rows,
+        crate::native_policy::bloom_key(relation, limits.observation_bloom),
+    )?;
     let mut writer = ArrowWriter::try_new(
         BoundedFile {
             file,
@@ -214,6 +253,7 @@ fn write_stream(
         Some(properties),
     )?;
     let mut rows = 0u64;
+    let mut group_bytes = 0;
     loop {
         let message = receive.blocking_recv();
         if cancelled.load(std::sync::atomic::Ordering::Acquire) {
@@ -266,8 +306,7 @@ fn write_stream(
                 .ok_or_else(|| {
                     DataFusionError::ResourcesExhausted("assembly row budget exceeded".into())
                 })?;
-            writer.write(&canonical)?;
-            writer.flush()?;
+            write_bounded(&mut writer, &canonical, limits, &mut group_bytes)?;
         }
     }
     writer.finish()?;

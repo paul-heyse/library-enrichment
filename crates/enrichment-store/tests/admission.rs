@@ -143,12 +143,11 @@ async fn valid_aliases_share_a_definition_and_warm_admission_reuses_the_binding(
         .await
         .expect("warm admission");
     assert!(Arc::ptr_eq(&first, &second));
-    let session = runtime.session();
-    first.register(&session).expect("register");
+    let session = first.session(&runtime, None).expect("bound catalog");
     let result = runtime
         .execute(
             session
-                .sql("SELECT symbol_id FROM symbols WHERE name = 'f' ORDER BY symbol_id LIMIT 1")
+                .sql("SELECT symbol_id FROM snapshot.evidence.symbols WHERE name = 'f' ORDER BY symbol_id LIMIT 1")
                 .await
                 .expect("plan"),
         )
@@ -157,14 +156,14 @@ async fn valid_aliases_share_a_definition_and_warm_admission_reuses_the_binding(
     assert_eq!(result.rows, 1);
     assert!(
         session
-            .table_provider("symbols")
+            .table_provider("snapshot.evidence.symbols")
             .await
             .expect("table")
             .constraints()
             .is_some_and(|c| !c.is_empty())
     );
     let other = runtime.session();
-    assert!(!other.table_exist("symbols").expect("isolated namespace"));
+    assert!(other.catalog("snapshot").is_none());
 }
 
 #[tokio::test]
@@ -191,7 +190,7 @@ async fn duplicate_keys_and_conditional_foreign_keys_are_rejected_before_constra
         .err()
         .expect("reject dangling")
         .to_string();
-    assert!(error.contains("dangling symbol definition"), "{error}");
+    assert!(error.contains("symbol_definition"), "{error}");
 }
 
 #[tokio::test]
@@ -204,15 +203,19 @@ async fn missing_or_mutated_exact_files_fail_closed_on_warm_and_cold_opens() {
         .admit("manifest", &scope(), &input)
         .await
         .expect("admission");
-    let session = runtime.session();
-    admitted.register(&session).expect("register");
+    let session = admitted.session(&runtime, None).expect("bound catalog");
     let missing = &input[1].path;
     std::fs::rename(missing, missing.with_extension("parquet.extra"))
         .expect("replace by misleading prefix");
     assert!(cache.admit("manifest", &scope(), &input).await.is_err());
     assert!(
         runtime
-            .execute(session.sql("SELECT * FROM symbols").await.expect("plan"))
+            .execute(
+                session
+                    .sql("SELECT * FROM snapshot.evidence.symbols")
+                    .await
+                    .expect("plan")
+            )
             .await
             .is_err()
     );
@@ -250,4 +253,96 @@ async fn resource_exhaustion_is_an_error_and_never_a_successful_empty_result() {
             .rows,
         0
     );
+}
+
+#[tokio::test]
+async fn physical_counts_eliminate_scans_without_losing_admission_or_retention() {
+    let dir = tempfile::tempdir().unwrap();
+    let runtime = runtime(dir.path());
+    let inputs = files(dir.path(), &definitions(), &symbols());
+    let cache = AdmissionCache::new(runtime.clone(), AdmissionLimits::default()).unwrap();
+    let admitted = cache.admit("counts", &scope(), &inputs).await.unwrap();
+    enrichment_store::leases::initialize(dir.path()).unwrap();
+    let lease = enrichment_store::leases::shared(dir.path()).unwrap();
+    let session = admitted.session(&runtime, Some(lease.clone())).unwrap();
+    let metadata = runtime
+        .execute(
+            session
+                .sql("SELECT verified_rows FROM operation.metadata.relations WHERE catalog_name = 'snapshot' AND schema_name = 'evidence' AND table_name = 'symbols'")
+                .await
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(metadata.rows, 1);
+    assert_eq!(
+        metadata.batches[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::UInt64Array>()
+            .unwrap()
+            .value(0),
+        2
+    );
+    let plan = session
+        .sql("SELECT count(*) FROM snapshot.evidence.symbols")
+        .await
+        .unwrap();
+    let result = runtime.execute(plan).await.unwrap();
+    let diagnostic = runtime.diagnostics().pop().unwrap();
+    assert!(
+        diagnostic.physical.contains("PlaceholderRowExec"),
+        "{}",
+        diagnostic.physical
+    );
+    assert!(
+        !diagnostic.physical.contains("DataSourceExec"),
+        "{}",
+        diagnostic.physical
+    );
+    assert_eq!(
+        result.batches[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .unwrap()
+            .value(0),
+        2
+    );
+    assert!(enrichment_store::leases::exclusive(dir.path()).is_err());
+    let filtered = runtime
+        .execute(
+            session
+                .sql("SELECT count(*) FROM snapshot.evidence.symbols WHERE is_reexport")
+                .await
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        filtered.batches[0]
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::Int64Array>()
+            .unwrap()
+            .value(0),
+        1
+    );
+    assert!(!runtime.diagnostics().pop().unwrap().rules.is_empty());
+    let retained = session
+        .sql("SELECT count(*) FROM snapshot.evidence.symbols")
+        .await
+        .unwrap();
+    std::fs::remove_file(
+        &inputs
+            .iter()
+            .find(|file| file.relation == Relation::Symbols)
+            .unwrap()
+            .path,
+    )
+    .unwrap();
+    assert!(admitted.session(&runtime, None).is_err());
+    assert!(runtime.execute(retained).await.is_err());
+    drop((session, result, filtered, metadata, lease));
+    assert!(enrichment_store::leases::exclusive(dir.path()).is_ok());
 }

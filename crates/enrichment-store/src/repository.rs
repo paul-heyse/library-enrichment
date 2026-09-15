@@ -64,25 +64,26 @@ impl OpenedSnapshot {
     /// # Errors
     /// Physical changes and view planning failures are explicit.
     pub async fn research_session(&self, runtime: &QueryRuntime) -> Result<SessionContext> {
-        let session = self.session(runtime)?;
+        self.bind_operation()?;
         self.binding
-            .register_views(&session, runtime, Arc::clone(&self._lease))
-            .await?;
-        Ok(session)
+            .research_session(runtime, Some(Arc::clone(&self._lease)))
+            .await
     }
+
     /// # Errors
     /// Any file changed since admission is refused.
     pub fn session(&self, runtime: &QueryRuntime) -> Result<SessionContext> {
+        self.bind_operation()?;
+        self.binding
+            .session(runtime, Some(Arc::clone(&self._lease)))
+    }
+    fn bind_operation(&self) -> Result<()> {
         crate::runtime::bind_snapshot(
             &self.manifest,
             &self.manifest_digest,
             self.catalog.generation(),
             Arc::clone(&self._lease),
-        )?;
-        let session = runtime.session();
-        self.binding
-            .register_leased(&session, Arc::clone(&self._lease))?;
-        Ok(session)
+        )
     }
 }
 
@@ -188,7 +189,7 @@ impl EvidenceRepository {
             .tempdir_in(self.paths.staging())?;
         let mut files = Vec::new();
         for relation in Relation::ALL {
-            let mut plan = session.table(relation.name()).await?;
+            let mut plan = session.table(relation.reference()).await?;
             if relation == Relation::ExecutionObservations {
                 plan = plan.filter(lit(false))?;
             } else if relation == Relation::ApiObservations {
@@ -520,8 +521,7 @@ impl EvidenceRepository {
                 let directory = self.paths.snapshots().join(manifest.snapshot_id.as_str());
                 let (_, bytes) = read_manifest(&directory)?;
                 let binding = self.admit_manifest(&directory, &manifest, &bytes).await?;
-                let session = self.runtime.session();
-                binding.register(&session)?;
+                let session = binding.session(&self.runtime, None)?;
                 let coverage = if completion.kind
                     == enrichment_core::evidence::catalog::PublishedJobKind::Resolve
                 {
@@ -609,7 +609,7 @@ impl EvidenceRepository {
                     self.runtime
                         .visit(
                             session
-                                .table("attempts")
+                                .table("state.records.attempts")
                                 .await?
                                 .filter(col("snapshot_id").eq(lit(current_id.as_str())))?,
                             1024,
@@ -656,9 +656,9 @@ impl EvidenceRepository {
         let mut files = Vec::new();
         for relation in Relation::ALL {
             let plan = left_session
-                .table(relation.name())
+                .table(relation.reference())
                 .await?
-                .union_distinct(right_session.table(relation.name()).await?)?;
+                .union_distinct(right_session.table(relation.reference()).await?)?;
             files.push(
                 dataset::write_plan(
                     directory.path(),
@@ -701,15 +701,14 @@ impl EvidenceRepository {
         ));
         let binding = self.admission.admit(&physical, &scope, &files).await?;
         self.validate_blobs(&binding).await?;
-        let session = self.runtime.session();
-        binding.register(&session)?;
+        let session = binding.session(&self.runtime, None)?;
         let mut components = BTreeMap::new();
         for relation in Relation::ALL {
             components.insert(
                 relation.name().into(),
                 crate::semantic::digest(
                     relation,
-                    session.table(relation.name()).await?,
+                    session.table(relation.reference()).await?,
                     &self.runtime,
                     self.write_limits.table_rows,
                 )
@@ -726,14 +725,14 @@ impl EvidenceRepository {
             symbols: table_rows(Relation::Symbols), definitions: table_rows(Relation::Definitions),
             relationships: table_rows(Relation::Relationships), fragments: table_rows(Relation::Fragments),
             producer_items: descriptor.producer_items,
-            reexports: self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM symbols WHERE is_reexport").await?,
-            unresolved_reexports: self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM relationships WHERE relation = 'reexports' AND target.kind IN ('unresolved', 'external')").await?,
+            reexports: self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.symbols WHERE is_reexport").await?,
+            unresolved_reexports: self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.relationships WHERE relation = 'reexports' AND target.kind IN ('unresolved', 'external')").await?,
         };
         let mut indexed = BTreeSet::new();
         let mut missing = BTreeSet::new();
         self.runtime
             .visit(
-                session.table("coverage").await?,
+                session.table("snapshot.evidence.coverage").await?,
                 self.write_limits.table_rows,
                 |batch| {
                     for row in projection::coverage_from_batch(batch)? {
@@ -792,7 +791,7 @@ impl EvidenceRepository {
     ) -> Result<Staged> {
         // Private typed producer rows have no FK claims. Native distinct (and union with
         // the pinned base when present) precedes complete canonical relational admission.
-        let pending = self.runtime.session();
+        let mut candidates = crate::native_catalog::Tables::new();
         for file in &files {
             let provider = crate::provider::ExactParquet::new(
                 file.path.clone(),
@@ -801,17 +800,36 @@ impl EvidenceRepository {
                 datafusion::common::Constraints::new_unverified(vec![]),
             )
             .await?;
-            pending.register_table(file.relation.name(), Arc::new(provider))?;
+            candidates.insert(
+                file.relation.name().to_owned(),
+                Arc::new(provider) as Arc<dyn datafusion::catalog::TableProvider>,
+            );
         }
+        let pending = self.runtime.bound_session(BTreeMap::from([(
+            "candidate".into(),
+            Arc::new(crate::native_catalog::BoundCatalog::default().with_schema(
+                crate::native_catalog::BindingKind::CandidateEvidence,
+                candidates,
+            )) as Arc<dyn datafusion::catalog::CatalogProvider>,
+        )]))?;
         let parent = base.map(|base| base.session(&self.runtime)).transpose()?;
         let canonical = tempfile::Builder::new()
             .prefix("evidence-contribution-")
             .tempdir_in(self.paths.staging())?;
         let mut canonical_files = Vec::new();
         for relation in Relation::ALL {
-            let input = pending.table(relation.name()).await?;
+            let input = pending
+                .table(datafusion::common::TableReference::full(
+                    "candidate",
+                    "evidence",
+                    relation.name(),
+                ))
+                .await?;
             let plan = if let Some(parent) = &parent {
-                parent.table(relation.name()).await?.union_distinct(input)?
+                parent
+                    .table(relation.reference())
+                    .await?
+                    .union_distinct(input)?
             } else {
                 input.distinct()?
             };
@@ -1108,28 +1126,30 @@ impl EvidenceRepository {
             }
             return Ok(());
         }
-        let session = catalog.session(&self.runtime).await?;
-        binding.register(&session)?;
+        let session = self.runtime.combined_session(&[
+            &catalog.session(&self.runtime).await?,
+            &binding.session(&self.runtime, None)?,
+        ])?;
         let attempts = session
-            .table("attempts")
+            .table("state.records.attempts")
             .await?
             .filter(col("snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?;
-        session.register_table("snapshot_attempts", attempts.into_view())?;
+        crate::native_catalog::work(&session, "snapshot_attempts", attempts.into_view())?;
         for (sql, message) in [
             (
-                "SELECT a.producer_binding_id FROM snapshot_attempts a LEFT ANTI JOIN producer_runs p ON a.producer_binding_id = p.producer_binding_id LIMIT 1",
+                "SELECT a.producer_binding_id FROM snapshot_attempts a LEFT ANTI JOIN snapshot.evidence.producer_runs p ON a.producer_binding_id = p.producer_binding_id LIMIT 1",
                 "catalog attempt does not produce this snapshot",
             ),
             (
-                "SELECT p.producer_binding_id FROM producer_runs p LEFT ANTI JOIN snapshot_attempts a ON a.producer_binding_id = p.producer_binding_id LIMIT 1",
+                "SELECT p.producer_binding_id FROM snapshot.evidence.producer_runs p LEFT ANTI JOIN snapshot_attempts a ON a.producer_binding_id = p.producer_binding_id LIMIT 1",
                 "snapshot producer has no actual catalog attempt",
             ),
             (
-                "WITH acquisitions AS (SELECT producer_binding_id, unnest(acquisitions) AS artifact FROM snapshot_attempts) SELECT i.input_id FROM input_artifacts i LEFT ANTI JOIN acquisitions a ON i.producer_binding_id = a.producer_binding_id AND i.artifact_id = a.artifact.artifact_id AND i.source_uri = a.artifact.source_uri AND i.sha256 = a.artifact.sha256 AND i.size_bytes = a.artifact.size_bytes LIMIT 1",
+                "WITH acquisitions AS (SELECT producer_binding_id, unnest(acquisitions) AS artifact FROM snapshot_attempts) SELECT i.input_id FROM snapshot.evidence.input_artifacts i LEFT ANTI JOIN acquisitions a ON i.producer_binding_id = a.producer_binding_id AND i.artifact_id = a.artifact.artifact_id AND i.source_uri = a.artifact.source_uri AND i.sha256 = a.artifact.sha256 AND i.size_bytes = a.artifact.size_bytes LIMIT 1",
                 "snapshot input has no qualified acquisition attempt",
             ),
             (
-                "WITH acquisitions AS (SELECT producer_binding_id, log, unnest(acquisitions) AS artifact FROM snapshot_attempts) SELECT a.producer_binding_id FROM acquisitions a LEFT ANTI JOIN input_artifacts i ON i.producer_binding_id = a.producer_binding_id AND i.artifact_id = a.artifact.artifact_id AND i.source_uri = a.artifact.source_uri AND i.sha256 = a.artifact.sha256 AND i.size_bytes = a.artifact.size_bytes WHERE a.log IS NULL OR a.artifact.artifact_id != a.log LIMIT 1",
+                "WITH acquisitions AS (SELECT producer_binding_id, log, unnest(acquisitions) AS artifact FROM snapshot_attempts) SELECT a.producer_binding_id FROM acquisitions a LEFT ANTI JOIN snapshot.evidence.input_artifacts i ON i.producer_binding_id = a.producer_binding_id AND i.artifact_id = a.artifact.artifact_id AND i.source_uri = a.artifact.source_uri AND i.sha256 = a.artifact.sha256 AND i.size_bytes = a.artifact.size_bytes WHERE a.log IS NULL OR a.artifact.artifact_id != a.log LIMIT 1",
                 "attempt acquisition is outside snapshot input closure",
             ),
         ] {
@@ -1170,7 +1190,7 @@ impl EvidenceRepository {
             .runtime
             .execute_family(
                 session
-                    .table("job_publications")
+                    .table("state.records.job_publications")
                     .await?
                     .filter(col("snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
                 Some(crate::preparation::QueryFamily::Catalog(
@@ -1205,7 +1225,7 @@ impl EvidenceRepository {
             .runtime
             .execute_family(
                 session
-                    .table("comparison_publications")
+                    .table("state.records.comparison_publications")
                     .await?
                     .filter(col("after_snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
                 Some(crate::preparation::QueryFamily::Catalog(
@@ -1269,15 +1289,14 @@ impl EvidenceRepository {
         {
             return Ok(());
         }
-        let session = self.runtime.session();
-        binding.register(&session)?;
+        let session = binding.session(&self.runtime, None)?;
         let mut components = BTreeMap::new();
         for relation in Relation::ALL {
             components.insert(
                 relation.name().into(),
                 crate::semantic::digest(
                     relation,
-                    session.table(relation.name()).await?,
+                    session.table(relation.reference()).await?,
                     &self.runtime,
                     self.write_limits.table_rows,
                 )
@@ -1308,10 +1327,10 @@ impl EvidenceRepository {
         let reexports = self
             .count(
                 &session,
-                "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM symbols WHERE is_reexport",
+                "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.symbols WHERE is_reexport",
             )
             .await?;
-        let unresolved = self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM relationships WHERE relation = 'reexports' AND target.kind IN ('unresolved', 'external')").await?;
+        let unresolved = self.count(&session, "SELECT CAST(count(*) AS BIGINT UNSIGNED) AS count FROM snapshot.evidence.relationships WHERE relation = 'reexports' AND target.kind IN ('unresolved', 'external')").await?;
         if reexports != manifest.counts.reexports
             || unresolved != manifest.counts.unresolved_reexports
             || manifest.counts.producer_items != manifest.metadata.producer_items
@@ -1322,7 +1341,7 @@ impl EvidenceRepository {
         let mut missing = BTreeSet::new();
         self.runtime
             .visit(
-                session.table("coverage").await?,
+                session.table("snapshot.evidence.coverage").await?,
                 self.write_limits.table_rows,
                 |batch| {
                     for row in projection::coverage_from_batch(batch)? {
@@ -1393,10 +1412,9 @@ impl EvidenceRepository {
     }
 
     async fn validate_blobs(&self, binding: &AdmittedRelations) -> Result<()> {
-        let session = self.runtime.session();
-        binding.register(&session)?;
+        let session = binding.session(&self.runtime, None)?;
         let inputs = session
-            .table("input_artifacts")
+            .table("snapshot.evidence.input_artifacts")
             .await?
             .select_columns(&["sha256", "size_bytes"])?
             .distinct()?;
@@ -1482,7 +1500,7 @@ impl EvidenceRepository {
         self.runtime
             .visit(
                 session
-                    .table("attempts")
+                    .table("state.records.attempts")
                     .await?
                     .filter(col("snapshot_id").eq(lit(snapshot.manifest.snapshot_id.as_str())))?,
                 1024,

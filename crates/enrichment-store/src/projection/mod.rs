@@ -10,6 +10,7 @@ mod cells;
 pub(crate) mod comparison;
 pub(crate) mod comparison_publication;
 pub(crate) mod comparison_value;
+pub(crate) mod contracts;
 pub mod decode;
 mod encode;
 pub mod execution;

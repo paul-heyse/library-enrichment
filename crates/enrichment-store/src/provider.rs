@@ -9,9 +9,9 @@ use std::sync::Arc;
 use arrow_schema::SchemaRef;
 use async_trait::async_trait;
 use datafusion::catalog::{Session, TableProvider};
-use datafusion::common::{Constraints, DFSchema};
+use datafusion::common::{Constraints, DFSchema, Statistics, stats::Precision};
 use datafusion::datasource::{
-    file_format::{FileFormat, parquet::ParquetFormat},
+    file_format::FileFormat,
     listing::PartitionedFile,
     physical_plan::{FileGroup, FileScanConfigBuilder, ParquetSource},
     table_schema::TableSchema,
@@ -22,90 +22,67 @@ use datafusion::logical_expr::{Expr, TableProviderFilterPushDown, TableType, uti
 use datafusion::physical_plan::ExecutionPlan;
 use object_store::{ObjectStoreExt, local::LocalFileSystem};
 
-/// A derived relation has its own schema metadata. DataFusion 55 logical UNION intersects
-/// metadata while physical UNION merges it; inheriting a source table's relation identity
-/// would therefore be both semantically wrong and physically inconsistent for mixed axes.
-/// This private boundary reconstructs output metadata without changing any base provider.
-#[derive(Debug)]
-pub(crate) struct DerivedRelation {
-    input: Arc<dyn TableProvider>,
-    schema: SchemaRef,
-}
-
-impl DerivedRelation {
-    pub(crate) fn new(input: Arc<dyn TableProvider>, relation: &str) -> Self {
-        let schema = Arc::new(arrow_schema::Schema::new_with_metadata(
-            input.schema().fields().clone(),
-            std::collections::HashMap::from([
-                (
-                    "enrichment.contract".into(),
-                    crate::projection::VERSION.into(),
-                ),
-                ("enrichment.relation".into(), relation.into()),
-            ]),
-        ));
-        Self { input, schema }
-    }
-}
-
-#[async_trait]
-impl TableProvider for DerivedRelation {
-    fn schema(&self) -> SchemaRef {
-        Arc::clone(&self.schema)
-    }
-    fn table_type(&self) -> TableType {
-        TableType::View
-    }
-    async fn scan(
-        &self,
-        state: &dyn Session,
-        projection: Option<&Vec<usize>>,
-        filters: &[Expr],
-        limit: Option<usize>,
-    ) -> Result<Arc<dyn ExecutionPlan>> {
-        use datafusion::{
-            physical_expr::{
-                PhysicalExpr,
-                expressions::{CastExpr, Column},
-            },
-            physical_plan::projection::ProjectionExec,
-        };
-        let input = self.input.scan(state, projection, filters, limit).await?;
-        let schema = match projection {
-            Some(indices) => Arc::new(self.schema.project(indices)?),
-            None => Arc::clone(&self.schema),
-        };
-        let expressions = schema
+/// Native projection with an explicit derived contract. Keeping this logical removes the
+/// nested physical-planning pass that an opaque provider around a native view would cause.
+pub(crate) fn derived(
+    frame: datafusion::dataframe::DataFrame,
+    relation: &str,
+) -> Result<datafusion::dataframe::DataFrame> {
+    use datafusion::logical_expr::{Cast, LogicalPlan, Projection};
+    let (state, input) = frame.into_parts();
+    let schema = Arc::new(arrow_schema::Schema::new_with_metadata(
+        input
+            .schema()
             .fields()
             .iter()
-            .enumerate()
-            .map(|(i, field)| {
-                let column = Arc::new(Column::new(field.name(), i)) as Arc<dyn PhysicalExpr>;
-                // Parquet can return Utf8View although the logical source declares Utf8. Adapt
-                // this small derived index to its declared types, preserving explicit field
-                // metadata, rather than disabling string views for all evidence scans.
-                (
-                    Arc::new(CastExpr::new_with_target_field(
-                        column,
-                        Arc::clone(field),
-                        None,
-                    )) as Arc<dyn PhysicalExpr>,
-                    field.name().clone(),
-                )
+            .map(|field| {
+                let mut field = field.as_ref().clone();
+                if relation == "search_candidates" {
+                    let mut metadata = field.metadata().clone();
+                    metadata.insert(
+                        "enrichment.role".into(),
+                        format!("search-candidate:{}", field.name()),
+                    );
+                    field = field.with_metadata(metadata);
+                }
+                field
             })
-            .collect::<Vec<_>>();
-        Ok(Arc::new(ProjectionExec::try_new_with_schema_metadata(
-            expressions,
-            input,
-            schema.as_ref(),
-        )?))
-    }
-    fn supports_filters_pushdown(
-        &self,
-        filters: &[&Expr],
-    ) -> Result<Vec<TableProviderFilterPushDown>> {
-        self.input.supports_filters_pushdown(filters)
-    }
+            .collect::<Vec<_>>(),
+        std::collections::HashMap::from([
+            (
+                "enrichment.contract".into(),
+                crate::projection::VERSION.into(),
+            ),
+            ("enrichment.relation".into(), relation.into()),
+        ]),
+    ));
+    let expressions = input
+        .schema()
+        .columns()
+        .into_iter()
+        .zip(schema.fields())
+        .map(|(column, field)| {
+            Expr::Cast(Cast::new_from_field(
+                Box::new(Expr::Column(column)),
+                Arc::clone(field),
+            ))
+            .alias_with_metadata(
+                field.name(),
+                Some(datafusion::common::metadata::FieldMetadata::from(
+                    field.metadata().clone(),
+                )),
+            )
+        })
+        .collect();
+    let projection = Projection::try_new_with_schema(
+        expressions,
+        Arc::new(input),
+        Arc::new(DFSchema::try_from(schema)?),
+    )?;
+    Ok(datafusion::dataframe::DataFrame::new(
+        state,
+        LogicalPlan::Projection(projection),
+    ))
 }
 
 /// Cheap change witness only. Digest/schema validation establishes authority before this exists.
@@ -148,9 +125,9 @@ impl FileWitness {
 pub(crate) struct ExactParquet {
     files: Vec<(PathBuf, FileWitness)>,
     schema: SchemaRef,
-    groups: Vec<FileGroup>,
+    partitions: Vec<PartitionedFile>,
     constraints: Constraints,
-    format: Arc<ParquetFormat>,
+    verified_rows: Option<usize>,
 }
 
 impl ExactParquet {
@@ -169,6 +146,21 @@ impl ExactParquet {
             constraints,
             ..self.clone()
         }
+    }
+
+    pub(crate) fn with_verified_rows(mut self, rows: u64) -> Result<Self> {
+        self.verified_rows = Some(usize::try_from(rows).map_err(|_| {
+            DataFusionError::Execution("admitted row count exceeds native range".into())
+        })?);
+        Ok(self)
+    }
+
+    fn admitted_statistics(&self) -> Statistics {
+        let mut stats = Statistics::new_unknown(&self.schema);
+        if let Some(rows) = self.verified_rows {
+            stats.num_rows = Precision::Exact(rows);
+        }
+        stats
     }
 
     pub(crate) fn unchanged(&self) -> Result<()> {
@@ -203,13 +195,12 @@ impl ExactParquet {
             let meta = LocalFileSystem::new().head(&location).await?;
             partitions.push(PartitionedFile::new_from_meta(meta));
         }
-        let groups = vec![FileGroup::new(partitions)];
         Ok(Self {
             files,
             schema,
-            groups,
+            partitions,
             constraints,
-            format: Arc::new(ParquetFormat::default().with_skip_metadata(false)),
+            verified_rows: None,
         })
     }
 }
@@ -249,6 +240,9 @@ impl TableProvider for ExactParquet {
     fn constraints(&self) -> Option<&Constraints> {
         Some(&self.constraints)
     }
+    fn statistics(&self) -> Option<Statistics> {
+        Some(self.admitted_statistics())
+    }
 
     async fn scan(
         &self,
@@ -263,14 +257,30 @@ impl TableProvider for ExactParquet {
             let schema = DFSchema::try_from(Arc::clone(&self.schema))?;
             source = source.with_predicate(state.create_physical_expr(predicate, &schema)?);
         }
+        // FileGroupPartitioner 55.1 partitions byte ranges; its order-preserving
+        // mode does not split a multi-file group. Keep whole admitted files here.
+        let count = state
+            .config_options()
+            .execution
+            .target_partitions
+            .min(self.partitions.len())
+            .max(1);
+        let mut groups = vec![vec![]; count];
+        for (index, file) in self.partitions.iter().enumerate() {
+            groups[index % count].push(file.clone());
+        }
+        let groups = groups.into_iter().map(FileGroup::new).collect();
         let config =
             FileScanConfigBuilder::new(ObjectStoreUrl::local_filesystem(), Arc::new(source))
-                .with_file_groups(self.groups.clone())
+                .with_file_groups(groups)
+                .with_statistics(self.admitted_statistics())
                 .with_constraints(self.constraints.clone())
                 .with_projection_indices(projection.cloned())?
                 .with_limit(if filters.is_empty() { limit } else { None })
                 .build();
-        self.format.create_physical_plan(state, config).await
+        crate::native_policy::parquet_format(state)?
+            .create_physical_plan(state, config)
+            .await
     }
 
     fn supports_filters_pushdown(
@@ -280,3 +290,7 @@ impl TableProvider for ExactParquet {
         Ok(vec![TableProviderFilterPushDown::Inexact; filters.len()])
     }
 }
+
+#[cfg(test)]
+#[path = "physical_measurements.rs"]
+mod measurements;

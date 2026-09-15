@@ -75,21 +75,15 @@ async fn inspection_projection(leased: bool) {
         )
         .await
         .unwrap();
-    let session = runtime.session();
-    if leased {
+    let lease = if leased {
         enrichment_store::leases::initialize(dir.path()).unwrap();
-        let lease = enrichment_store::leases::shared(dir.path()).unwrap();
-        admitted.register_leased(&session, lease.clone()).unwrap();
-        admitted
-            .register_views(&session, &runtime, lease)
-            .await
-            .unwrap();
+        Some(enrichment_store::leases::shared(dir.path()).unwrap())
     } else {
-        admitted.register(&session).unwrap();
-        views::register(&session).await.unwrap();
-    }
+        None
+    };
+    let session = admitted.research_session(&runtime, lease).await.unwrap();
     let full = runtime
-        .execute(session.table("api_surface").await.unwrap())
+        .execute(session.table("snapshot.domain.api_surface").await.unwrap())
         .await
         .unwrap();
     let bytes = |d: &enrichment_store::query_diagnostics::QueryDiagnostics| {
@@ -105,7 +99,12 @@ async fn inspection_projection(leased: bool) {
         "full diagnostic was truncated"
     );
     let selected = runtime
-        .execute(session.table("inspection_surface").await.unwrap())
+        .execute(
+            session
+                .table("snapshot.domain.inspection_surface")
+                .await
+                .unwrap(),
+        )
         .await
         .unwrap();
     let selected_bytes = bytes(runtime.diagnostics().last().unwrap());
@@ -161,13 +160,14 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
         environment_id: "env_fixture".into(),
     };
     let admitted = cache.admit("fixture", &scope, &files).await.expect("admit");
-    let session = runtime.session();
-    admitted.register(&session).expect("register");
-    views::register(&session).await.expect("domain views");
+    let session = admitted
+        .research_session(&runtime, None)
+        .await
+        .expect("bound domain catalog");
     let api = runtime
         .execute(
             session
-                .sql("SELECT CAST(count(*) AS BIGINT UNSIGNED) FROM api_surface")
+                .sql("SELECT CAST(count(*) AS BIGINT UNSIGNED) FROM snapshot.domain.api_surface")
                 .await
                 .expect("plan"),
         )
@@ -177,7 +177,10 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
         count(&api.batches[0]),
         evidence.api_observations.len() as u64
     );
-    let ancestry = session.table("namespace_members").await.expect("view");
+    let ancestry = session
+        .table("snapshot.domain.namespace_members")
+        .await
+        .expect("view");
     let plan = ancestry
         .clone()
         .into_optimized_plan()
@@ -198,7 +201,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
     );
     let root = PublicPath::new(Ecosystem::Rust, vec!["enr_fixture".into()]).expect("root");
     let at_root = session
-        .table("api_surface")
+        .table("snapshot.domain.api_surface")
         .await
         .expect("view")
         .filter(views::namespace("components", &root))
@@ -213,7 +216,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
     );
     let impossible = PublicPath::new(Ecosystem::Rust, vec!["enr_%".into()]).expect("literal");
     let absent = session
-        .table("api_surface")
+        .table("snapshot.domain.api_surface")
         .await
         .expect("view")
         .filter(views::namespace("components", &impossible))
@@ -222,7 +225,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
     let namespaces = runtime
         .execute(
             session
-                .table("path_nodes")
+                .table("snapshot.domain.path_nodes")
                 .await
                 .expect("nodes")
                 .filter(col("depth").eq(lit(1i64)))
@@ -241,7 +244,7 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
     );
     // The catalog/view namespace is local even while sharing the same execution runtime.
     let other = runtime.session();
-    assert!(!other.table_exist("api_surface").expect("isolated"));
+    assert!(other.catalog("snapshot").is_none());
 
     let overview = enrichment_store::browse::overview(&session, &runtime, Some(&root), 1, 64)
         .await
@@ -266,9 +269,10 @@ async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_
     let mut after = None;
     let mut returned = std::collections::BTreeSet::new();
     loop {
-        let search_session = runtime.session();
-        admitted.register(&search_session).expect("register");
-        views::register(&search_session).await.expect("views");
+        let search_session = admitted
+            .research_session(&runtime, None)
+            .await
+            .expect("bound domain catalog");
         let result = enrichment_store::search_plan::page(
             &search_session,
             &runtime,
@@ -320,17 +324,14 @@ async fn overview_keeps_documentation_when_an_undocumented_observation_sorts_fir
         )
         .await
         .expect("observations");
-    session
-        .register_table("api_surface", api.clone().into_view())
-        .expect("api");
-    session
-        .register_table("namespace_children", api.into_view())
-        .expect("children");
+    let mut domain = std::collections::BTreeMap::from([
+        ("api_surface".to_owned(), api.clone().into_view()),
+        ("namespace_children".to_owned(), api.into_view()),
+    ]);
     let nodes = session.sql("SELECT 'python' AS ecosystem, make_array('sample') AS components, 'sample' AS path, 1 AS depth")
         .await.expect("nodes");
-    session
-        .register_table("navigation_nodes", nodes.into_view())
-        .expect("navigation");
+    domain.insert("navigation_nodes".into(), nodes.into_view());
+    fixture_domain(&session, domain);
     let page = enrichment_store::browse::overview(&session, &runtime, None, 8, 64)
         .await
         .expect("overview");
@@ -369,10 +370,15 @@ async fn documentation_folds_only_the_same_definition_and_source() {
         )
         .await
         .unwrap();
-    let session = runtime.session();
-    admitted.register(&session).unwrap();
-    views::register(&session).await.unwrap();
-    session.deregister_table("fragment_surface").unwrap();
+    let session = admitted
+        .research_session(&runtime, None)
+        .await
+        .expect("bound domain catalog");
+    assert!(
+        session
+            .deregister_table("snapshot.domain.fragment_surface")
+            .is_err()
+    );
     // Equal-text aliases share one exact source. Another definition and an independent
     // producer remain independent evidence even when their wording is identical.
     let fragments = session
@@ -388,9 +394,18 @@ async fn documentation_folds_only_the_same_definition_and_source() {
         )
         .await
         .unwrap();
-    session
-        .register_table("fragment_surface", fragments.into_view())
+    let source = session
+        .catalog("snapshot")
+        .unwrap()
+        .schema("domain")
         .unwrap();
+    let mut domain = std::collections::BTreeMap::new();
+    for name in source.table_names() {
+        domain.insert(name.clone(), source.table(&name).await.unwrap().unwrap());
+    }
+    domain.insert("fragment_surface".into(), fragments.into_view());
+    let session = runtime.session();
+    fixture_domain(&session, domain);
     let folded = enrichment_store::search_plan::folded(
         &session,
         &enrichment_core::search::spec::SearchSpec::new("widget"),
@@ -450,25 +465,23 @@ async fn overview_uses_one_clipped_namespace_set_across_many_index_batches() {
         )
         .await
         .unwrap();
-    session
-        .register_table("navigation_nodes", nodes.into_view())
-        .unwrap();
+    let mut domain =
+        std::collections::BTreeMap::from([("navigation_nodes".to_owned(), nodes.into_view())]);
+    fixture_domain(&session, domain.clone());
     let api = session
         .sql(
             "SELECT ecosystem, components AS namespace_components,
         array_append(components, 'Thing') AS components, path || '.Thing' AS path,
         'class' AS kind, path AS definition_id, path AS symbol_id,
         false AS is_reexport, false AS is_deprecated, path AS observation_id,
-        repeat('Qualified documentation. ', 60) AS doc_summary FROM navigation_nodes",
+        repeat('Qualified documentation. ', 60) AS doc_summary FROM snapshot.domain.navigation_nodes",
         )
         .await
         .unwrap();
-    session
-        .register_table("api_surface", api.clone().into_view())
-        .unwrap();
-    session
-        .register_table("namespace_children", api.into_view())
-        .unwrap();
+    domain.insert("api_surface".into(), api.clone().into_view());
+    domain.insert("namespace_children".into(), api.into_view());
+    let session = runtime.session();
+    fixture_domain(&session, domain);
     let page = enrichment_store::browse::overview(&session, &runtime, None, 4, 256)
         .await
         .unwrap();
@@ -502,4 +515,25 @@ async fn overview_uses_one_clipped_namespace_set_across_many_index_batches() {
         0,
         "overview indexes must drop with their operation catalog"
     );
+}
+
+// These are deliberately synthetic relational inputs for fold/selection semantics. Actual
+// admitted-catalog mutability, consistency and ownership are exercised independently.
+fn fixture_domain(
+    session: &datafusion::prelude::SessionContext,
+    tables: std::collections::BTreeMap<
+        String,
+        std::sync::Arc<dyn datafusion::catalog::TableProvider>,
+    >,
+) {
+    use datafusion::catalog::{
+        CatalogProvider, MemoryCatalogProvider, MemorySchemaProvider, SchemaProvider,
+    };
+    let schema = std::sync::Arc::new(MemorySchemaProvider::new());
+    for (name, table) in tables {
+        schema.register_table(name, table).unwrap();
+    }
+    let catalog = std::sync::Arc::new(MemoryCatalogProvider::new());
+    catalog.register_schema("domain", schema).unwrap();
+    session.register_catalog("snapshot", catalog);
 }

@@ -5,10 +5,11 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+use crate::native_catalog::{BoundCatalog, RelationContract, Tables};
 use arrow::record_batch::RecordBatch;
 use arrow_schema::SchemaRef;
 use datafusion::catalog::TableProvider;
-use datafusion::common::{Constraint, Constraints};
+use datafusion::common::{Constraints, TableReference};
 use datafusion::error::{DataFusionError, Result};
 use datafusion::functions::core::expr_ext::FieldAccessor;
 use datafusion::prelude::SessionContext;
@@ -130,6 +131,11 @@ impl Relation {
         Ok(())
     }
 
+    /// Qualified admitted source reference; candidate validation has a distinct namespace.
+    #[must_use]
+    pub fn reference(self) -> TableReference {
+        TableReference::full("snapshot", "evidence", self.name())
+    }
     pub(crate) fn key(self) -> &'static str {
         match self {
             Self::Definitions => "definition_id",
@@ -201,100 +207,99 @@ pub struct AdmittedRelations {
 }
 
 impl AdmittedRelations {
-    /// Reuse immutable logical view plans; each request wraps them with its own retention lease.
+    /// Bind admitted sources atomically, checking witnesses before any optimizer can remove a scan.
     /// # Errors
-    /// Failed view construction or registration remains explicit and is not cached as success.
-    pub async fn register_views(
+    /// Changed files cannot be rebound; cached providers never acquire request leases.
+    pub fn session(
         &self,
-        session: &SessionContext,
         runtime: &QueryRuntime,
-        lease: Arc<std::fs::File>,
-    ) -> Result<()> {
+        lease: Option<Arc<File>>,
+    ) -> Result<SessionContext> {
+        let catalog = evidence_catalog(
+            &self.providers,
+            lease.as_ref(),
+            crate::native_catalog::BindingKind::AdmittedEvidence,
+        )?;
+        runtime.bound_session(BTreeMap::from([(
+            "snapshot".into(),
+            Arc::new(catalog) as Arc<dyn datafusion::catalog::CatalogProvider>,
+        )]))
+    }
+
+    /// Bind transparent native domain views and bases through the same immutable inventory.
+    /// # Errors
+    /// Missing or changed sources and view construction failures remain explicit.
+    pub async fn research_session(
+        &self,
+        runtime: &QueryRuntime,
+        lease: Option<Arc<File>>,
+    ) -> Result<SessionContext> {
+        let bases = evidence_catalog(
+            &self.providers,
+            lease.as_ref(),
+            crate::native_catalog::BindingKind::AdmittedEvidence,
+        )?;
         let views = self
             .views
             .get_or_try_init(|| async {
-                let staging = runtime.session();
-                self.register(&staging)?;
-                let names = crate::views::register(&staging).await?;
-                let mut views = BTreeMap::new();
-                for name in names {
-                    views.insert(name.to_owned(), staging.table_provider(name).await?);
-                }
-                Ok::<_, DataFusionError>(views)
+                crate::views::build(
+                    runtime,
+                    evidence_catalog(
+                        &self.providers,
+                        None,
+                        crate::native_catalog::BindingKind::AdmittedEvidence,
+                    )?,
+                )
+                .await
             })
             .await?;
+        let mut bound = Tables::new();
+        let staging = runtime.session();
         for (name, view) in views {
-            if session.table_exist(name.as_str())? {
-                return Err(invalid("domain view already registered"));
-            }
-            session.register_table(
-                name.as_str(),
-                crate::leases::leased_view(view, session, &lease)?,
-            )?;
+            let provider = match &lease {
+                Some(lease) => crate::leases::leased_view(view, &staging, lease)?,
+                None => Arc::clone(view),
+            };
+            bound.insert(name.clone(), provider);
         }
-        Ok(())
+        runtime.bound_session(BTreeMap::from([(
+            "snapshot".into(),
+            Arc::new(bases.with_schema(crate::native_catalog::BindingKind::AdmittedDomain, bound))
+                as Arc<dyn datafusion::catalog::CatalogProvider>,
+        )]))
     }
-    /// Register ephemeral leased providers; cached admitted providers hold no cleanup lease.
-    /// # Errors
-    /// Changed files or duplicate table names are refused.
-    pub fn register_leased(
-        &self,
-        session: &SessionContext,
-        lease: std::sync::Arc<std::fs::File>,
-    ) -> Result<()> {
-        for (relation, provider) in &self.providers {
-            provider.unchanged()?;
-            if session.table_exist(relation.name())? {
-                return Err(invalid("relation already registered in request scope"));
-            }
-            session.register_table(
-                relation.name(),
-                Arc::new(crate::leases::LeasedProvider::new(
-                    Arc::clone(provider) as Arc<dyn TableProvider>,
-                    Arc::clone(&lease),
-                )),
-            )?;
-            if *relation == Relation::ApiObservations {
-                if session.table_exist("inspection_observations")? {
-                    return Err(invalid("inspection projection already registered"));
+}
+
+fn evidence_catalog(
+    providers: &BTreeMap<Relation, Arc<ExactParquet>>,
+    lease: Option<&Arc<File>>,
+    kind: crate::native_catalog::BindingKind,
+) -> Result<BoundCatalog> {
+    let mut tables = Tables::new();
+    for (relation, provider) in providers {
+        provider.unchanged()?;
+        let mut entries = vec![(
+            relation.name(),
+            Arc::clone(provider) as Arc<dyn TableProvider>,
+        )];
+        if *relation == Relation::ApiObservations {
+            entries.push((
+                "inspection_observations",
+                Arc::new(provider.inspection_projection()?),
+            ));
+        }
+        for (name, input) in entries {
+            let input = match lease {
+                Some(lease) => {
+                    Arc::new(crate::leases::LeasedProvider::new(input, Arc::clone(lease)))
+                        as Arc<dyn TableProvider>
                 }
-                session.register_table(
-                    "inspection_observations",
-                    Arc::new(crate::leases::LeasedProvider::new(
-                        Arc::new(provider.inspection_projection()?),
-                        Arc::clone(&lease),
-                    )),
-                )?;
-            }
+                None => input,
+            };
+            tables.insert(name.to_owned(), input);
         }
-        Ok(())
     }
-    /// Register into a request-local session. Admission never shares mutable table names.
-    ///
-    /// # Errors
-    /// Changed/missing files or conflicting registrations are errors.
-    pub fn register(&self, session: &SessionContext) -> Result<()> {
-        for (relation, provider) in &self.providers {
-            provider.unchanged()?;
-            if session.table_exist(relation.name())? {
-                return Err(invalid("relation already registered in request scope"));
-            }
-            session.register_table(
-                relation.name(),
-                Arc::clone(provider) as Arc<dyn TableProvider>,
-            )?;
-            if *relation == Relation::ApiObservations {
-                if session.table_exist("inspection_observations")? {
-                    return Err(invalid("inspection projection already registered"));
-                }
-                session.register_table(
-                    "inspection_observations",
-                    Arc::new(provider.inspection_projection()?),
-                )?;
-            }
-        }
-        Ok(())
-    }
+    Ok(BoundCatalog::default().with_schema(kind, tables))
 }
 
 struct CacheEntry {
@@ -314,6 +319,34 @@ pub struct AdmissionCache {
     cache: Mutex<Cache>,
     cold_permit: tokio::sync::Semaphore,
 }
+
+pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
+    crate::native_catalog::SqlRule {
+        id: "metadata worker artifact outside producer input closure",
+        relation: "release_metadata",
+        sql: "SELECT m.metadata_id FROM candidate.evidence.release_metadata m LEFT ANTI JOIN candidate.evidence.input_artifacts i ON m.python_distribution.worker_artifact_id = i.artifact_id AND m.source.producer_binding_id = i.producer_binding_id WHERE m.kind = 'python_distribution' AND m.python_distribution.worker_artifact_id IS NOT NULL LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "execution lacks actual log or correct producer policy",
+        relation: "execution_observations",
+        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o JOIN candidate.evidence.producer_runs p ON o.source.producer_binding_id = p.producer_binding_id WHERE p.log IS NULL OR ((o.payload.kind = 'runtime_object' OR o.payload.usage_probe.mode = 'runtime') AND p.profile != 'runtime') OR ((o.payload.kind = 'semantic_query' OR o.payload.usage_probe.mode IN ('compile','typecheck')) AND p.profile != 'build') LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "execution document outside its producer inputs",
+        relation: "execution_observations",
+        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.subject.artifact_id = i.artifact_id AND o.source.producer_binding_id = i.producer_binding_id WHERE o.subject.kind = 'document' LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "dangling semantic anchor",
+        relation: "execution_observations",
+        sql: "SELECT o.observation_id FROM candidate.evidence.execution_observations o LEFT ANTI JOIN candidate.evidence.symbols s ON o.payload.semantic_query.anchor_symbol_id = s.symbol_id WHERE o.payload.kind = 'semantic_query' AND o.payload.semantic_query.anchor_symbol_id IS NOT NULL LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "semantic location outside artifact closure",
+        relation: "execution_observations",
+        sql: "SELECT t.artifact_id FROM (SELECT unnest(payload.semantic_query.locations) AS t FROM candidate.evidence.execution_observations WHERE payload.kind = 'semantic_query') q LEFT ANTI JOIN candidate.evidence.input_artifacts i ON q.t.artifact_id = i.artifact_id WHERE q.t.kind = 'artifact' LIMIT 1",
+    },
+];
 
 impl AdmissionCache {
     /// One admission coordinator per daemon. Cold admission is bounded separately from queries.
@@ -429,24 +462,46 @@ impl AdmissionCache {
                 return Err(invalid(format!("missing {} relation", relation.name())));
             }
         }
-        let staging = AdmittedRelations {
-            providers,
-            views: tokio::sync::OnceCell::new(),
-        };
-        let session = self.runtime.session();
-        staging.register(&session)?;
-        for relation in staging.providers.keys() {
-            let sql = format!(
-                "SELECT {} FROM {} GROUP BY {} HAVING count(*) > 1 LIMIT 1",
-                relation.key(),
-                relation.name(),
-                relation.key()
-            );
-            self.require_empty(&session, &sql, "duplicate relation key")
+        let candidate = evidence_catalog(
+            &providers,
+            None,
+            crate::native_catalog::BindingKind::CandidateEvidence,
+        )?;
+        let session = self.runtime.bound_session(BTreeMap::from([(
+            "candidate".into(),
+            Arc::new(candidate) as Arc<dyn datafusion::catalog::CatalogProvider>,
+        )]))?;
+        for relation in providers.keys() {
+            let duplicates = relation
+                .duplicate_keys(
+                    &session,
+                    TableReference::full("candidate", "evidence", relation.name()),
+                )
                 .await?;
+            if self.runtime.execute(duplicates).await?.rows != 0 {
+                return Err(invalid(format!(
+                    "duplicate relation key: {}.unique",
+                    relation.name()
+                )));
+            }
         }
-        self.require_empty(&session, "SELECT s.symbol_id FROM symbols s LEFT ANTI JOIN definitions d ON s.definition_id = d.definition_id LIMIT 1", "dangling symbol definition").await?;
-        let joined = session.sql("SELECT s.*, d.kind AS definition_kind, d.definition_path, d.defined_in_package AS definition_package, d.qualifier AS definition_qualifier FROM symbols s JOIN definitions d ON s.definition_id = d.definition_id").await?;
+        for relation in Relation::ALL {
+            for rule in relation.references() {
+                self.runtime
+                    .require_empty(
+                        rule.violations(
+                            &session,
+                            TableReference::full("candidate", "evidence", relation.name()),
+                            relation.key(),
+                        )
+                        .await?,
+                        rule.id,
+                        "admission",
+                    )
+                    .await?;
+            }
+        }
+        let joined = session.sql("SELECT s.*, d.kind AS definition_kind, d.definition_path, d.defined_in_package AS definition_package, d.qualifier AS definition_qualifier FROM candidate.evidence.symbols s JOIN candidate.evidence.definitions d ON s.definition_id = d.definition_id").await?;
         self.runtime
             .visit(joined, self.limits.table_rows, |batch| {
                 projection::decode::validate_binding_definitions(
@@ -459,7 +514,11 @@ impl AdmissionCache {
             .await?;
         for relation in [Relation::ApiObservations, Relation::ExecutionObservations] {
             let outside_environment = session
-                .table(relation.name())
+                .table(TableReference::full(
+                    "candidate",
+                    "evidence",
+                    relation.name(),
+                ))
                 .await?
                 .filter(col("environment_id").not_eq(lit(&scope.environment_id)))?
                 .select(vec![col(relation.key())])?
@@ -473,7 +532,7 @@ impl AdmissionCache {
                 .await?;
         }
         let metadata = session
-            .table("release_metadata")
+            .table("candidate.evidence.release_metadata")
             .await?
             .filter(
                 col("release_id")
@@ -492,7 +551,7 @@ impl AdmissionCache {
                 "relation_admission",
             )
             .await?;
-        self.require_empty(&session, "SELECT m.metadata_id FROM release_metadata m LEFT ANTI JOIN input_artifacts i ON m.python_distribution.worker_artifact_id = i.artifact_id AND m.source.producer_binding_id = i.producer_binding_id WHERE m.kind = 'python_distribution' AND m.python_distribution.worker_artifact_id IS NOT NULL LIMIT 1", "metadata worker artifact outside producer input closure").await?;
+
         for relation in [
             Relation::Relationships,
             Relation::Fragments,
@@ -500,7 +559,11 @@ impl AdmissionCache {
             Relation::ExecutionObservations,
         ] {
             let outside_release = session
-                .table(relation.name())
+                .table(TableReference::full(
+                    "candidate",
+                    "evidence",
+                    relation.name(),
+                ))
                 .await?
                 .filter(
                     col("subject").field("kind").eq(lit("library")).and(
@@ -519,33 +582,12 @@ impl AdmissionCache {
                 )
                 .await?;
         }
-        self.require_empty(&session, "SELECT o.observation_id FROM api_observations o LEFT ANTI JOIN symbols s ON o.subject.symbol_id = s.symbol_id WHERE o.subject.kind = 'symbol' LIMIT 1", "dangling observation symbol").await?;
-        self.require_empty(&session, "SELECT o.observation_id FROM api_observations o LEFT ANTI JOIN definitions d ON o.subject.definition_id = d.definition_id WHERE o.subject.kind = 'definition' LIMIT 1", "dangling observation definition").await?;
-        for relation in [
-            Relation::Relationships,
-            Relation::Fragments,
-            Relation::Coverage,
-            Relation::ExecutionObservations,
-        ] {
-            for (tag, target_table, target_key) in [
-                ("symbol", "symbols", "symbol_id"),
-                ("definition", "definitions", "definition_id"),
-            ] {
-                let sql = format!(
-                    "SELECT o.{} FROM {} o LEFT ANTI JOIN {target_table} t ON o.subject.{target_key} = t.{target_key} WHERE o.subject.kind = '{tag}' LIMIT 1",
-                    relation.key(),
-                    relation.name()
-                );
-                self.require_empty(&session, &sql, "dangling typed subject")
-                    .await?;
-            }
-        }
         for (tag, table, key) in [
             ("symbol", "symbols", "symbol_id"),
             ("definition", "definitions", "definition_id"),
         ] {
             let sql = format!(
-                "SELECT o.relationship_id FROM relationships o LEFT ANTI JOIN {table} t ON o.target.{key} = t.{key} WHERE o.target.kind = '{tag}' LIMIT 1"
+                "SELECT o.relationship_id FROM candidate.evidence.relationships o LEFT ANTI JOIN candidate.evidence.{table} t ON o.target.{key} = t.{key} WHERE o.target.kind = '{tag}' LIMIT 1"
             );
             self.require_empty(&session, &sql, "dangling local relationship target")
                 .await?;
@@ -558,7 +600,7 @@ impl AdmissionCache {
             Relation::ReleaseMetadata,
         ] {
             let sql = format!(
-                "SELECT o.{} FROM {} o LEFT ANTI JOIN input_artifacts i ON o.source.producer_binding_id = i.producer_binding_id AND o.source.artifact_id = i.artifact_id AND (o.source.source_uri IS NULL OR o.source.source_uri = i.source_uri) LIMIT 1",
+                "SELECT o.{} FROM candidate.evidence.{} o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.source.producer_binding_id = i.producer_binding_id AND o.source.artifact_id = i.artifact_id AND (o.source.source_uri IS NULL OR o.source.source_uri = i.source_uri) LIMIT 1",
                 relation.key(),
                 relation.name()
             );
@@ -569,22 +611,13 @@ impl AdmissionCache {
             )
             .await?;
         }
-        for relation in [Relation::InputArtifacts, Relation::Coverage] {
-            let sql = format!(
-                "SELECT o.{} FROM {} o LEFT ANTI JOIN producer_runs p ON o.producer_binding_id = p.producer_binding_id LIMIT 1",
-                relation.key(),
-                relation.name()
-            );
-            self.require_empty(&session, &sql, "unknown semantic producer binding")
-                .await?;
-        }
         for relation in [
             Relation::Fragments,
             Relation::Coverage,
             Relation::ExecutionObservations,
         ] {
             let sql = format!(
-                "SELECT o.{} FROM {} o LEFT ANTI JOIN input_artifacts i ON o.subject.artifact_id = i.artifact_id WHERE o.subject.kind IN ('document', 'example') LIMIT 1",
+                "SELECT o.{} FROM candidate.evidence.{} o LEFT ANTI JOIN candidate.evidence.input_artifacts i ON o.subject.artifact_id = i.artifact_id WHERE o.subject.kind IN ('document', 'example') LIMIT 1",
                 relation.key(),
                 relation.name()
             );
@@ -597,10 +630,10 @@ impl AdmissionCache {
         }
         let wrong_operation = match scope.ecosystem {
             Ecosystem::Rust => {
-                "SELECT observation_id FROM execution_observations WHERE payload.kind = 'runtime_object' OR payload.usage_probe.mode = 'typecheck' OR (payload.kind = 'semantic_query' AND source.evidence_class != 'compiler_derived') LIMIT 1"
+                "SELECT observation_id FROM candidate.evidence.execution_observations WHERE payload.kind = 'runtime_object' OR payload.usage_probe.mode = 'typecheck' OR (payload.kind = 'semantic_query' AND source.evidence_class != 'compiler_derived') LIMIT 1"
             }
             Ecosystem::Python => {
-                "SELECT observation_id FROM execution_observations WHERE payload.usage_probe.mode = 'compile' OR (payload.kind = 'semantic_query' AND source.evidence_class != 'typechecker_observed') LIMIT 1"
+                "SELECT observation_id FROM candidate.evidence.execution_observations WHERE payload.usage_probe.mode = 'compile' OR (payload.kind = 'semantic_query' AND source.evidence_class != 'typechecker_observed') LIMIT 1"
             }
         };
         self.require_empty(
@@ -609,21 +642,35 @@ impl AdmissionCache {
             "execution operation disagrees with ecosystem",
         )
         .await?;
-        self.require_empty(&session, "SELECT o.observation_id FROM execution_observations o JOIN producer_runs p ON o.source.producer_binding_id = p.producer_binding_id WHERE p.log IS NULL OR ((o.payload.kind = 'runtime_object' OR o.payload.usage_probe.mode = 'runtime') AND p.profile != 'runtime') OR ((o.payload.kind = 'semantic_query' OR o.payload.usage_probe.mode IN ('compile','typecheck')) AND p.profile != 'build') LIMIT 1", "execution lacks actual log or correct producer policy").await?;
-        self.require_empty(&session, "SELECT o.observation_id FROM execution_observations o LEFT ANTI JOIN input_artifacts i ON o.subject.artifact_id = i.artifact_id AND o.source.producer_binding_id = i.producer_binding_id WHERE o.subject.kind = 'document' LIMIT 1", "execution document outside its producer inputs").await?;
-        self.require_empty(&session, "SELECT o.observation_id FROM execution_observations o LEFT ANTI JOIN symbols s ON o.payload.semantic_query.anchor_symbol_id = s.symbol_id WHERE o.payload.kind = 'semantic_query' AND o.payload.semantic_query.anchor_symbol_id IS NOT NULL LIMIT 1", "dangling semantic anchor").await?;
-        self.require_empty(&session, "SELECT t.artifact_id FROM (SELECT unnest(payload.semantic_query.locations) AS t FROM execution_observations WHERE payload.kind = 'semantic_query') q LEFT ANTI JOIN input_artifacts i ON q.t.artifact_id = i.artifact_id WHERE q.t.kind = 'artifact' LIMIT 1", "semantic location outside artifact closure").await?;
-        let providers = staging
-            .providers
+
+        for rule in CONDITIONAL_RULES {
+            self.runtime
+                .require_empty(
+                    rule.violations(&session).await?,
+                    rule.id,
+                    "relation_admission",
+                )
+                .await?;
+        }
+        let providers = providers
             .into_iter()
             .map(|(relation, provider)| {
-                let proven = Constraints::new_unverified(vec![Constraint::PrimaryKey(vec![0])]);
-                (
+                let proven = relation.validated_constraints()?;
+                let rows = files
+                    .iter()
+                    .find(|file| file.relation == relation)
+                    .ok_or_else(|| invalid("admitted file facts missing"))?
+                    .rows;
+                Ok((
                     relation,
-                    Arc::new(provider.with_validated_constraints(proven)),
-                )
+                    Arc::new(
+                        provider
+                            .with_validated_constraints(proven)
+                            .with_verified_rows(rows)?,
+                    ),
+                ))
             })
-            .collect();
+            .collect::<Result<BTreeMap<_, _>>>()?;
         let binding = Arc::new(AdmittedRelations {
             providers,
             views: tokio::sync::OnceCell::new(),

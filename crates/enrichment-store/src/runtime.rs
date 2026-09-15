@@ -9,7 +9,9 @@ use arrow::record_batch::RecordBatch;
 use datafusion::dataframe::DataFrame;
 use datafusion::error::{DataFusionError, Result};
 use datafusion::execution::{
-    SessionState, SessionStateBuilder, memory_pool::FairSpillPool, runtime_env::RuntimeEnvBuilder,
+    SessionState, SessionStateBuilder,
+    memory_pool::{FairSpillPool, PeakRecordingPool},
+    runtime_env::RuntimeEnvBuilder,
 };
 use datafusion::prelude::{SessionConfig, SessionContext};
 use futures::TryStreamExt;
@@ -282,6 +284,7 @@ fn charge_output(bytes: usize) -> Result<()> {
 /// Bounds apply to the shared daemon runtime, not independently to every request.
 #[derive(Debug, Clone)]
 pub struct QueryLimits {
+    pub native: enrichment_core::config::NativeQueryConfig,
     pub memory_bytes: usize,
     pub spill_bytes: u64,
     pub metadata_cache_bytes: usize,
@@ -296,6 +299,7 @@ pub struct QueryLimits {
 impl Default for QueryLimits {
     fn default() -> Self {
         Self {
+            native: enrichment_core::config::NativeQueryConfig::default(),
             memory_bytes: 128 * 1024 * 1024,
             spill_bytes: 512 * 1024 * 1024,
             metadata_cache_bytes: 16 * 1024 * 1024,
@@ -315,8 +319,15 @@ pub struct QueryRuntime {
     template: SessionState,
     permits: Arc<Semaphore>,
     operations: Arc<Semaphore>,
-    limits: QueryLimits,
+    limits: Arc<QueryLimits>,
     diagnostics: crate::query_diagnostics::History,
+}
+
+/// Completed native fold facts describe the stream actually consumed, before pagination reuse.
+pub struct FoldOutput<T> {
+    pub rows: usize,
+    pub value: T,
+    pub properties: Arc<datafusion::physical_plan::PlanProperties>,
 }
 
 /// Execution observations are operational diagnostics, not library evidence coverage.
@@ -448,12 +459,20 @@ impl QueryRuntime {
     pub fn deadline(&self) -> Duration {
         self.limits.deadline
     }
+    pub(crate) fn native_layout(&self) -> &enrichment_core::config::NativeQueryConfig {
+        &self.limits.native
+    }
+
     /// Construct bounded shared resources using an explicitly service-owned spill root.
     ///
     /// # Errors
     /// Invalid limits or unavailable spill storage prevent admission.
     pub fn new(spill_root: &Path, limits: QueryLimits) -> Result<Self> {
         if limits.memory_bytes == 0
+            || limits.native.row_group_rows == 0
+            || limits.native.row_group_rows > 1_000_000
+            || limits.native.catalog_file_rows == 0
+            || limits.native.catalog_file_rows > 1_000_000
             || limits.spill_bytes == 0
             || limits.batch_rows == 0
             || limits.partitions == 0
@@ -463,21 +482,29 @@ impl QueryRuntime {
             || limits.deadline.is_zero()
         {
             return Err(DataFusionError::Configuration(
-                "query limits must be positive".into(),
+                "query limits must be positive and native layout rows at most 1000000".into(),
             ));
         }
         std::fs::create_dir_all(spill_root)?;
         let runtime = RuntimeEnvBuilder::new()
-            .with_memory_pool(Arc::new(FairSpillPool::new(limits.memory_bytes)))
+            .with_memory_pool(Arc::new(PeakRecordingPool::new(Arc::new(
+                FairSpillPool::new(limits.memory_bytes),
+            ))))
             .with_temp_file_path(spill_root)
             .with_max_temp_directory_size(limits.spill_bytes)
             .with_max_spill_merge_fan_in(8)
             .with_metadata_cache_limit(limits.metadata_cache_bytes)
             .build_arc()?;
-        let config = SessionConfig::new()
+        let limits = Arc::new(limits);
+        let policy = crate::native_policy::NativePolicy::new(Arc::clone(&limits));
+        let mut config = SessionConfig::new()
             .with_batch_size(limits.batch_rows)
             .with_target_partitions(limits.partitions)
+            .with_default_catalog_and_schema("operation", "work")
+            .with_information_schema(true)
+            .with_option_extension(policy.clone())
             .set_bool("datafusion.execution.parquet.skip_metadata", false);
+        config.options_mut().execution.parquet = policy.table_options().global;
         let template = SessionContext::new_with_config_rt(config, Arc::clone(&runtime)).state();
         let planner = Arc::new(crate::leases::RetentionPlanner {
             inner: Arc::clone(template.query_planner()),
@@ -493,7 +520,7 @@ impl QueryRuntime {
             operations: Arc::new(Semaphore::new(limits.concurrency)),
             limits,
             diagnostics: crate::query_diagnostics::History::persistent(
-                spill_root.join("query-failures.json"),
+                spill_root.join("query-failures-v2.json"),
             )?,
         })
     }
@@ -501,23 +528,54 @@ impl QueryRuntime {
     /// Fresh scoped tables with shared spill, memory accounting and metadata cache.
     #[must_use]
     pub fn session(&self) -> SessionContext {
-        use datafusion::catalog::{
-            CatalogProvider, CatalogProviderList, MemoryCatalogProvider, MemoryCatalogProviderList,
-            MemorySchemaProvider,
-        };
-        // Clone only pristine defaults and shared function/runtime objects. Every request gets
-        // a new registration namespace; no request table or execution plan enters the template.
+        self.bound_session(std::collections::BTreeMap::new())
+            .expect("empty native inventory has a valid fixed schema")
+    }
+
+    pub(crate) fn bound_session(
+        &self,
+        mut bindings: std::collections::BTreeMap<
+            String,
+            Arc<dyn datafusion::catalog::CatalogProvider>,
+        >,
+    ) -> Result<SessionContext> {
+        use datafusion::catalog::{CatalogProviderList, MemoryCatalogProviderList};
         let mut state = self.template.clone();
-        let names = &state.config_options().catalog;
         let catalogs = Arc::new(MemoryCatalogProviderList::new());
-        let catalog = Arc::new(MemoryCatalogProvider::new());
-        catalog
-            .register_schema(&names.default_schema, Arc::new(MemorySchemaProvider::new()))
-            .expect("registering a fresh native memory schema cannot fail");
-        catalogs.register_catalog(names.default_catalog.clone(), catalog);
+        let (metadata, summary) = crate::native_catalog::metadata(&bindings)?;
+        bindings.insert(
+            "operation".into(),
+            Arc::new(
+                crate::native_catalog::BoundCatalog::default()
+                    .with_work()
+                    .with_metadata(metadata, summary),
+            ),
+        );
+        for (name, catalog) in bindings {
+            catalogs.register_catalog(name, catalog);
+        }
         state.register_catalog_list(catalogs);
         state.mark_start_execution();
-        SessionContext::new_with_state(state)
+        Ok(SessionContext::new_with_state(state))
+    }
+
+    pub(crate) fn combined_session(&self, sessions: &[&SessionContext]) -> Result<SessionContext> {
+        let mut bindings = std::collections::BTreeMap::new();
+        for session in sessions {
+            for name in session
+                .catalog_names()
+                .into_iter()
+                .filter(|name| name != "operation")
+            {
+                let catalog = session
+                    .catalog(&name)
+                    .ok_or_else(|| DataFusionError::Internal("bound catalog disappeared".into()))?;
+                if bindings.insert(name, catalog).is_some() {
+                    return Err(DataFusionError::Plan("duplicate bound catalog".into()));
+                }
+            }
+        }
+        self.bound_session(bindings)
     }
 
     /// Last eight executed plans, bounded independently of indefinitely retained library facts.
@@ -547,7 +605,24 @@ impl QueryRuntime {
     /// Bounded operational status copied from this runtime's actual counters and admission.
     pub fn operational_counters(&self) -> enrichment_core::wire::status::NativeQueryCounters {
         let summary = self.diagnostic_summary();
+        use datafusion::common::config::ExtensionOptions;
+        let pool = &self.template.runtime_env().memory_pool;
+        let settings = self
+            .template
+            .config_options()
+            .extensions
+            .get::<crate::native_policy::NativePolicy>()
+            .expect("runtime installs its immutable policy")
+            .entries();
         enrichment_core::wire::status::NativeQueryCounters {
+            managed_memory_reserved_bytes: pool.reserved(),
+            managed_memory_peak_bytes: PeakRecordingPool::from_pool(pool.as_ref())
+                .expect("runtime installs its peak recorder")
+                .peak_reserved(),
+            effective_native_settings: settings
+                .into_iter()
+                .filter_map(|entry| entry.value.map(|value| (entry.key, value)))
+                .collect(),
             executions: summary.executions,
             completed: summary.completed,
             incomplete: summary.executions.saturating_sub(summary.completed),
@@ -580,6 +655,7 @@ impl QueryRuntime {
         let (state, logical) = frame.into_parts();
         let mut trace =
             crate::query_diagnostics::Trace::new(&logical, self.diagnostics.clone(), start);
+        trace.bound(&state);
         if let Some(family) = family {
             trace.family(family);
             family.require(logical.schema().as_arrow())?;
@@ -587,7 +663,7 @@ impl QueryRuntime {
         let analyzed = state.analyzer().execute_and_check(
             logical.clone(),
             state.config_options(),
-            |_, _| {},
+            |plan, rule| trace.rule("analysis", rule.name(), plan),
         )?;
         crate::preparation::result(
             analyzed.schema().as_arrow(),
@@ -599,7 +675,9 @@ impl QueryRuntime {
             u64::try_from(planning.elapsed().as_micros()).unwrap_or(u64::MAX),
         );
         let optimizing = Instant::now();
-        let optimized = state.optimizer().optimize(analyzed, &state, |_, _| {})?;
+        let optimized = state.optimizer().optimize(analyzed, &state, |plan, rule| {
+            trace.rule("optimization", rule.name(), plan)
+        })?;
         trace.optimized(
             &optimized,
             u64::try_from(optimizing.elapsed().as_micros()).unwrap_or(u64::MAX),
@@ -613,11 +691,11 @@ impl QueryRuntime {
             .query_planner()
             .create_physical_plan(&optimized, &state)
             .await?;
-        crate::preparation::result(
-            &plan.schema(),
-            optimized.schema().as_arrow(),
-            "physical_plan",
-        )?;
+        // The authored contract is the boundary at every preparation stage. Logical
+        // optimization can strengthen nullability after eliminating a UNION branch;
+        // native physical operators may retain a conservative nullable field. They
+        // must still satisfy every guarantee of the original declared result.
+        crate::preparation::result(&plan.schema(), logical.schema().as_arrow(), "physical_plan")?;
         if plan.output_partitioning().partition_count() > 1 {
             plan = Arc::new(CoalescePartitionsExec::new(plan));
         }
@@ -757,7 +835,7 @@ impl QueryRuntime {
             consume(batch)
         })
         .await
-        .map(|(rows, ())| rows)
+        .map(|out| out.rows)
     }
 
     /// Fold one native batch at a time into a bounded projection or artifact sink. A blocking
@@ -770,7 +848,7 @@ impl QueryRuntime {
         max_rows: usize,
         initial: T,
         consume: F,
-    ) -> Result<T>
+    ) -> Result<FoldOutput<T>>
     where
         T: Send + 'static,
         F: Fn(T, &RecordBatch) -> Result<T> + Clone + Send + 'static,
@@ -794,7 +872,6 @@ impl QueryRuntime {
             },
         )
         .await
-        .map(|(_, state)| state)
     }
 
     async fn consume<T, F, Fut>(
@@ -804,7 +881,7 @@ impl QueryRuntime {
         max_rows: usize,
         mut state: T,
         mut consume: F,
-    ) -> Result<(usize, T)>
+    ) -> Result<FoldOutput<T>>
     where
         F: FnMut(T, RecordBatch, Arc<tokio::sync::OwnedSemaphorePermit>) -> Fut,
         Fut: Future<Output = Result<T>>,
@@ -838,7 +915,11 @@ impl QueryRuntime {
             }
             drop(stream);
             trace.completed(rows, bytes);
-            Ok((rows, state))
+            Ok(FoldOutput {
+                rows,
+                value: state,
+                properties: trace.properties()?,
+            })
         })
         .await
         .map_err(|_| deadline_budget("scan deadline"))

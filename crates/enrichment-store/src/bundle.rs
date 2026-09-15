@@ -138,7 +138,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         }
         let inputs = reader
             .session()
-            .table("input_artifacts")
+            .table("snapshot.evidence.input_artifacts")
             .await
             .map_err(error)?
             .select(vec![col("sha256"), col("size_bytes")])

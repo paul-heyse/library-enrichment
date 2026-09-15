@@ -19,6 +19,8 @@ pub mod coverage;
 pub mod dataset;
 pub mod ingest;
 pub mod leases;
+mod native_catalog;
+mod native_policy;
 pub mod native_rustdoc;
 mod operation_index;
 pub mod paths;

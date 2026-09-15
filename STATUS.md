@@ -1,118 +1,102 @@
 # Implementation handoff
 
-Updated **2026-09-15 14:02 UTC**. **Plan 13 is complete and deployed.**
-[Plan](docs/plans/13-datafusion-research-operations-hard-pivot.md),
-[execution ledger](docs/plans/13-research-operations-execution-ledger.md),
-[final qualification](docs/reports/plan13-final-qualification-2026-09-15.md),
-[accepted closing review](docs/design_review/reviews/design_review_plan13-implementation_2026-09-15.md).
+Updated **2026-09-15**. **Plan 14 is complete and activated.**
+[Plan](docs/plans/14-datafusion-catalog-policy-hard-pivot.md),
+[final qualification](docs/reports/plan14-final-qualification-2026-09-15.md),
+[physical decisions](docs/reports/plan14-physical-strategies-2026-09-15.md),
+[ADR-0040](docs/adr/0040-immutable-native-catalog-policy.md).
 
-## Architecture delivered
+## Delivered architecture
 
-- One Rust research/2.0 contract owns scope, aspect selection, independent pages, diagnostics
-  and delivery. DataFusion requested-domain assessment serves acquisition, retained resolution,
-  discovery, inspection, execution and both comparison sides.
-- Native selection precedes hydration. Observations, relationships, documents, members, children
-  and execution results have independent bounded pages. Comparison reconciles flat distinct
-  values before selecting changed keys and each side's alternatives.
-- Explicit configured analysis, optimization and physical planning preserve DataFusion defaults.
-  Independent Arrow family/role/nullability requirements and bounded offending-ID witnesses
-  carry application validity through the native pipeline.
-- Each foreground/job operation owns identities, leases, admission, deadlines and cumulative
-  output/artifact charges. Blocking workers retain ownership until actual exit. Search, namespace
-  and comparison indexes reuse operation-local native relations through managed spill, Arrow IPC
-  and streaming providers, with no persistent cache or second query engine.
-- Complete immutable result closure precedes publication. Restart reads committed indexed bytes
-  without reacquisition, query execution or replacement writes. Direct sections avoid whole-result
-  reparsing. Revision omissions and declared Cargo inputs receive native scope assessment;
-  immutable citations retain exact commit/package paths. Qualified Python class scope feeds actual
-  ty/runtime consumers while retaining separate source, stub and runtime observations.
-- FastMCP validates original arguments and actual typed output. Bounded text preserves native
-  failed-job recovery when a host hides structured errors. Optional progress/resources preserve
-  ordinary tool behavior. Rust retains semantic, policy, job and publication ownership.
-- Current formats only: research/2.0, state/6, snapshot/projection 6.0, catalog/5, jobs/5, bundle/5.
-  Previous generations reject without translation. ADR-0036–0039 and all D01–D12/J01–J20 exits
-  are closed under the recorded scope and limits.
+- One immutable DataFusion catalog/schema hierarchy binds exact snapshot evidence, native domain
+  views, folded durable records, validation candidates and independent comparison pins. Every
+  production reader uses it; procedural registration modes and legacy namespace aliases are gone.
+- Finite codec-derived declarations supply semantic keys, native duplicate/reference checks and
+  bounded nested metadata. Candidate/history bindings never inherit unsupported admitted facts.
+- One validated immutable policy feeds read-only native settings, actual Parquet scans, writers
+  and diagnostics. Operation work tables have their own controlled scope.
+- Physical scans consume exact admitted row counts; count elimination retains source validation
+  and leases. Native string coercion preserves Utf8/LargeUtf8/Utf8View scoring and metadata.
+- Completed indexes carry exact counts, identity and established physical properties. Search and
+  comparison avoid count-only IPC replay. Native views remain visible to the optimizer.
+- Rule transitions and fingerprints are capped; managed-memory peaks have shared-runtime scope
+  without resets. Independent storage layout, decoder/reorder, observation-ID Bloom and bounded
+  whole-file groups are selected from recorded measurements. Unsorted IPC and the existing pool
+  remain the sole selected production strategies.
+- Rust retains policy, semantics, evidence and publication ownership; Python remains thin.
+  Canonical research/2.0 and current evidence/catalog/job formats remain. Expanded derived query
+  diagnostics use `query-failures-v2.json`; earlier history is inactive without a converter.
 
-## Active deployment
+## Active installation
 
-`library-enrichment.service` activated the verified installation at **13:49:55 UTC**:
+Verified **2026-09-15 21:37 UTC**, activated once at **21:36:31 UTC**:
 
-- Installation: `/home/paul/.local/opt/library-enrichment/plan13-3ae079f9718a`
-- Daemon PID at verification: **818737**
+- Installation: `/home/paul/.local/opt/library-enrichment/plan14-5b2640ca15e4`
+- Daemon: `library-enrichment.service`, PID **2465957** at verification
 - State: `/home/paul/.local/state/library-enrichment-v2`
-- Config: `/home/paul/.config/library-enrichment/research-v2-3ae079f9718a.toml`
-- Python adapter/worker: the installation's non-editable locked environment
-- Policy: existing **static-only** production policy, unchanged
-- Native limits: 32 GiB managed memory, 64 GiB spill, 2 GiB metadata cache, 16 query slots
+- Config: `/home/paul/.config/library-enrichment/research-v2-plan14-5b2640ca15e4.toml`
+- Production policy: **static-only**, with 32 GiB managed memory, 64 GiB spill, 2 GiB metadata
+  cache, 16 query slots/partitions. No external execution profile was enabled.
+- Both Codex/Claude registrations point to the same installed, locked, non-editable adapter.
+  Existing interactive sessions may need to reconnect.
 
-All installed inputs and three native executable hashes match the manifest. The deployed smoke
-passed status, exact DataFusion 55.1.0 resolve, useful default SessionContext inspection, pending
-comparison completion, direct changes-section digest verification, and packaging 26.3/Version.
-The final status has no queued/running jobs, admitted queries or daemon children. Griffe completed
-qualification using the installed worker. Receipts: `.dev-state/plan13-cutover/`.
+All installed inputs and the running executable match the manifest. Activation preserved the
+existing data digest and prior configuration; retained compatible evidence serves the new runtime.
+Old adapters are stopped and parent clients remain. The deployed smoke passed eight actual MCP
+cases, including exact resolve, inspection, comparison and direct artifact reading. Final counters
+show zero queued/running jobs, admitted queries, managed reservations and daemon children.
+Receipts: `.dev-state/plan14-final/cutover/`.
 
-Both global Codex/Claude registrations select the same installed adapter launch. Both managed
-product-skill copies match the three shipped files. **Existing interactive clients may need to
-reconnect to load the new catalog.** Their parent sessions were preserved.
+## Verification and scope
 
-Old daemon PID 1885544 and its four adapter processes are stopped. Old state
-`/home/paul/.local/state/library-enrichment` and config
-`/home/paul/.config/library-enrichment/service.toml` remain inactive and byte-unchanged.
-No old journal/result/cursor migration, fallback or evidence deletion was performed. Old release
-files in the working tree remain preserved; new builds used `.dev-state/p13-release-target`.
+Current phase: **6**. Source digest:
+`5b2640ca15e4e1e6bb3355eda84edb89d4bcdab3e390897513648c0581d4026a`.
+Source archive, build, quality and candidate receipts: `.dev-state/plan14-final/`.
 
-## Final verification
-
-Source digest: `224dea96aca19e8482b6715f524ebe0b5948ba039e0c8fac00200aa933d72bf5`.
-The acceptance skill's independent auditor replayed and verified all five command receipts:
-
-| Boundary | Executed result |
+| Executed boundary | Result |
 |---|---|
-| Ordinary native workspace | 432 passed; 13 skipped |
-| Ordinary Python / raw stdio | 223 passed; 17 deselected |
-| Containment, cleanup, stable/nightly compatibility | 12 passed |
-| Live Rust/Python registries | 2 passed |
-| Installed actual Codex/Claude | 15 passed: fourteen scenarios plus preservation |
+| Ordinary native workspace, eight workers | 441 passed; 16 explicitly skipped manual/external cases |
+| Ordinary Python, excluding live/client markers | 188 passed; 35 execution-image prerequisite skips; 17 deselected |
+| Installed fresh-state raw MCP | Passed Rust/Python acquisition, discovery, inspection, comparison, paging/artifacts, offline reuse, empty/missing results |
+| Installed capacity recovery | Passed typed budget error; post-failure permits/reservations return to zero |
+| Actual installed Codex/Claude CLI | A01 and A02 passed; operator directories unchanged |
+| P8 | All nine decisions complete, with independent source/executable measurements or explicit consumer-based not-applicability |
 
-The external native cases and Python deselections ran in their separate tiers; the remaining
-manual native measurement has its own receipt. Formatting, Clippy, Ruff, ty, schemas, provenance,
-architecture, ADRs, dependency policy and final state-leak checks passed. Regenerated acceptance
-and independent audit: **47 passed / 0 failed / 0 blocked / 1 not_run of 48**. The sole not_run
-is retired P08; P08a/P08b are its ADR-0005 successors. Per-gate audit:
-`.dev-state/plan13-independent-audit/final/acceptance-audit-2026-09-15.md`.
+Formatting, workspace all-feature/all-target Clippy, doctests, Ruff, scoped ty, schemas, all eleven
+rule fixtures, architecture, dependencies, ADRs, frozen provenance and state-leak checks passed.
+`just doctor` and toolchain checks found all hard development requirements present.
 
-The earlier integrated `just ci` failed an obsolete error-summary assertion; the earlier client
-run failed observer correlation checks. Their original receipts remain diagnostic. The corrected
-raw boundary and final independent full component replays establish the current source; those
-older command exits are not relabeled. No runtime changes followed final qualification.
+Last machine-gate commands: **2026-09-15**, `just acceptance-report; just acceptance-check`:
+**28 passed / 0 failed / 11 blocked / 9 not_run of 48**. Independent audit reproduced both
+commands with identical outcomes and no source/native drift under `.dev-state/plan14-independent-audit/`.
 
-## Live evidence and deliberate limits
+Blocked IDs: C05, C16, C17, C18, C20, P08a, P08b, P09, P10, R09, R10. They require selected
+qualified Rust/Python execution images and root; this campaign selects none. `execution-env.sh`
+reports no receipt at `/nonexistent/podman/admitted-images.json`. The installed static-only
+architecture qualification does not certify those external profiles. Machine not_run: A01–A06,
+P01, P08, R02. A01/A02 actual CLI evidence passed separately; their registered pytest wrappers
+were not run. P08 remains retired. Historical Plan 13 external gates are not current-source passes.
 
-Both development and installed releases completed all forty exact DataFusion 55.1.0 crate
-resolve/overview/search/inspect/offline journeys. The installed traversal returned all 117
-SessionContext relationships; four high-fanout defaults remain useful. A 135-task one/eight-client
-experiment returned equal data digests. Native measurements support operation indexes and the
-selected endpoint semi join. See [live results](docs/reports/plan13-live-functional-outcomes-2026-09-15.md)
-and [measurements](docs/reports/plan13-native-operation-measurements-2026-09-15.md).
+Earlier diagnostic failures remain preserved: two obsolete native fixture assumptions and a
+32-worker cold-comparison deadline failure, corrected before all 441 final cases passed; a bare ty
+invocation included out-of-scope development-skill build code; a one-byte capacity probe also
+prevented status queries, so the final bounded recovery case uses 32,768 bytes. No product deadline
+or safety gate was weakened. Separate pre-plan MCP/design findings retain their original scope.
 
-Qualified execution passed in independent debug `.dev-state/p4p` and installed release
-`.dev-state/p13r` roots. Production has no enabled execution-image profile. Full revision build
-closure, universal package completeness and general compatibility are not established. Source,
-stub and runtime evidence remain distinct. Managed quotas are not an RSS guarantee; measured
-samples are not reliable p95 estimates. Broader throughput work has deferred-register trigger R43.
-Two client-prose overstatements are recorded in the final report; native evidence preserves the
-narrower registry and process-readiness observations.
+## Remaining work and preservation
 
-## Workspace preservation and next work
+No required Plan 14 work remains. P0–P9, D01–D13 and J01–J17 are closed. No task-owned
+qualification process remains running; the deployed daemon is intentionally active. Next work
+requires a new scope or an observed R44/R45 trigger. Do not restart the old architecture or
+rerun unrelated breadth to inflate the machine tally.
 
-No required Plan 13 implementation work remains. No task-owned campaign, test worker or adapter
-remains running. The deployed service is intentionally active.
+Baseline HEAD: `a78c74191d69ad82de7348c6503b58443f7f9c13`; source was clean at execution start.
+Working-tree source edits implement Plan 14. The pre-existing untracked capability review and MCP
+report remain inputs, not newly claimed implementation evidence. Additional untracked design
+reference material is preserved without claiming ownership. No reset, clean, commit, merge,
+push or evidence deletion was performed. Preserve the working tree, old installations and receipts.
 
-Baseline HEAD: `41ac67219ea39e6b085dde6273c9df08c9937bba`. The user states the original tree was
-clean; accumulated edits are Plan 13 work. Preserve the dirty tree, historical installations,
-logs and state. No reset, stash, clean, commit, merge or push was performed. Disk had about 5 GiB
-free during closure; check capacity before any new large build or image assembly.
-
-Pinned versions: DataFusion **55.1.0**, Arrow/Parquet **59.3.0**, FastMCP **4.0.3**, Python **3.14.7**,
-stable Rust **1.98.1**. Use locked/offline Cargo with `CARGO_INCREMENTAL=0`, and Python through uv.
-Exact pinned source and functional probes remain authority over Context7's main/older discovery.
+Pins verified locally: DataFusion **55.1.0**, Arrow/Parquet **59.3.0**, object_store **0.13.2**,
+FastMCP **4.0.3**, Python **3.14.7**, Rust **1.98.1**, ty **0.0.80**. Use locked/offline Cargo with
+`CARGO_INCREMENTAL=0` and Python through uv. Exact source outranks Context7 discovery for release
+claims. R44/R45 retain deliberate extension/workload triggers; they are not unfinished core work.

@@ -118,8 +118,26 @@ impl datafusion::execution::context::QueryPlanner for RetentionPlanner {
             common::tree_node::TreeNode,
             physical_plan::{ExecutionPlanProperties, coalesce_partitions::CoalescePartitionsExec},
         };
-        let mut plan = self.inner.create_physical_plan(logical, state).await?;
+        // Exact statistics may remove a physical scan. Capture its ownership from the
+        // resolved native logical leaves before physical optimization can eliminate it.
         let mut leases: Vec<Arc<File>> = Vec::new();
+        logical.apply_with_subqueries(|node| {
+            if let datafusion::logical_expr::LogicalPlan::TableScan(scan) = node {
+                let provider = datafusion::datasource::source_as_provider(&scan.source)?;
+                if let Some(owned) = provider.downcast_ref::<LeasedProvider>()
+                    && !leases.iter().any(|lease| Arc::ptr_eq(lease, &owned.lease))
+                {
+                    if leases.len() == 1024 {
+                        return Err(DataFusionError::ResourcesExhausted(
+                            "query retention ownership exceeds 1024 leases".into(),
+                        ));
+                    }
+                    leases.push(Arc::clone(&owned.lease));
+                }
+            }
+            Ok(TreeNodeRecursion::Continue)
+        })?;
+        let mut plan = self.inner.create_physical_plan(logical, state).await?;
         plan.apply(|node| {
             if let Some(owned) = node.downcast_ref::<LeasedExec>()
                 && !leases.iter().any(|lease| Arc::ptr_eq(lease, &owned.lease))

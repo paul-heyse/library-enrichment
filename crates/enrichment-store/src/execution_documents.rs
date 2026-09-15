@@ -102,7 +102,7 @@ pub async fn validate(
     let output = runtime
         .execute(
             session
-                .sql("SELECT DISTINCT artifact_id, sha256, size_bytes FROM input_artifacts")
+                .sql("SELECT DISTINCT artifact_id, sha256, size_bytes FROM snapshot.evidence.input_artifacts")
                 .await?,
         )
         .await?;
@@ -139,7 +139,9 @@ pub async fn validate(
     }));
     runtime
         .visit_async(
-            session.table("execution_observations").await?,
+            session
+                .table("snapshot.evidence.execution_observations")
+                .await?,
             max_rows,
             |batch| {
                 let documents = documents.clone();

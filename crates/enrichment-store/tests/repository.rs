@@ -647,9 +647,9 @@ async fn cleanup_is_excluded_until_catalog_plan_and_exhausted_stream_are_dropped
     let root = dir.path().join("data");
     drop(leases::exclusive(&root).expect("idle caches hold no lease"));
     for sql in [
-        "SELECT symbol_id FROM symbols ORDER BY symbol_id",
-        "SELECT symbol_id FROM api_surface ORDER BY symbol_id",
-        "SELECT context_id FROM contexts ORDER BY context_id",
+        "SELECT symbol_id FROM snapshot.evidence.symbols ORDER BY symbol_id",
+        "SELECT symbol_id FROM snapshot.domain.api_surface ORDER BY symbol_id",
+        "SELECT context_id FROM state.records.contexts ORDER BY context_id",
     ] {
         let catalog = repository.catalog.pin().await.expect("catalog");
         assert!(leases::exclusive(&root).is_err());
@@ -664,7 +664,7 @@ async fn cleanup_is_excluded_until_catalog_plan_and_exhausted_stream_are_dropped
             .session(&repository.runtime)
             .await
             .expect("catalog session");
-        let session = if sql.contains("FROM contexts") {
+        let session = if sql.contains("FROM state.records.contexts") {
             &catalog_session
         } else {
             reader.session()
@@ -815,7 +815,7 @@ async fn derived_environment_retains_static_sources_with_new_consumer_identity()
         .execute(
             reader
                 .session()
-                .table("api_observations")
+                .table("snapshot.evidence.api_observations")
                 .await
                 .expect("table"),
         )
@@ -1110,7 +1110,7 @@ async fn portable_bundle_admits_without_the_original_store_and_rejects_a_missing
         .runtime
         .execute(
             session
-                .sql("SELECT sha256 FROM input_artifacts LIMIT 1")
+                .sql("SELECT sha256 FROM snapshot.evidence.input_artifacts LIMIT 1")
                 .await
                 .expect("plan"),
         )
@@ -1188,7 +1188,7 @@ async fn actual_rustdoc_publishes_and_reopens_only_through_catalog_membership() 
         .runtime
         .execute(
             session
-                .sql("SELECT observation_id FROM api_observations")
+                .sql("SELECT observation_id FROM snapshot.evidence.api_observations")
                 .await
                 .expect("plan"),
         )
@@ -1316,7 +1316,7 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
             .runtime
             .execute(
                 session
-                    .sql("SELECT association_id FROM attempts")
+                    .sql("SELECT association_id FROM state.records.attempts")
                     .await
                     .expect("plan")
             )
@@ -1368,7 +1368,7 @@ async fn concurrent_same_context_enrichments_rebase_disjoint_observations_withou
             .runtime
             .execute(
                 session
-                    .sql("SELECT fragment_id FROM fragments")
+                    .sql("SELECT fragment_id FROM snapshot.evidence.fragments")
                     .await
                     .expect("plan")
             )
@@ -1382,7 +1382,7 @@ async fn concurrent_same_context_enrichments_rebase_disjoint_observations_withou
             .runtime
             .execute(
                 session
-                    .sql("SELECT attempt_id FROM producer_runs")
+                    .sql("SELECT attempt_id FROM snapshot.evidence.producer_runs")
                     .await
                     .expect("plan")
             )

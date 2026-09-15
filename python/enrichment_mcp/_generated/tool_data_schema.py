@@ -840,6 +840,9 @@ class NativeQueryCounters(BaseModel):
     )
     completed: int = Field(..., ge=0)
     concurrency_limit: int = Field(..., ge=0)
+    effective_native_settings: dict[str, str] = Field(
+        ..., description="The read-only values consumed by native source construction."
+    )
     elapsed_micros: int = Field(
         ...,
         description="Sum of elapsed execution durations, which overlap for concurrent queries.",
@@ -859,6 +862,14 @@ class NativeQueryCounters(BaseModel):
         ...,
         description="Configured managed memory ceiling; external parser/scan allocations are separate.",
         ge=0,
+    )
+    managed_memory_peak_bytes: int = Field(
+        ...,
+        description="Shared-runtime maximum since startup; never reset or attributed to one query.",
+        ge=0,
+    )
+    managed_memory_reserved_bytes: int = Field(
+        ..., description="Current shared-runtime managed reservations, not process RSS.", ge=0
     )
     metadata_cache_limit_bytes: int = Field(..., ge=0)
     planning_micros: int = Field(

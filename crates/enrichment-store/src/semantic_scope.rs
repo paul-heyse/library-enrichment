@@ -5,7 +5,7 @@ use datafusion::{error::DataFusionError, prelude::SessionContext};
 
 const CLASS_SCOPE: &str = r#"
     WITH observed AS (
-        SELECT o.payload FROM api_observations o LEFT SEMI JOIN bound_observations b
+        SELECT o.payload FROM snapshot.evidence.api_observations o LEFT SEMI JOIN snapshot.domain.bound_observations b
         ON o.observation_id = b.observation_id AND b.binding_id = $1
     ), declarations AS (
         SELECT count(*) AS observations,
@@ -97,24 +97,39 @@ mod tests {
             )
             .await
             .unwrap();
-        session
-            .register_table("fixtures", rows.into_view())
-            .unwrap();
+        crate::native_catalog::work(&session, "fixtures", rows.into_view()).unwrap();
         let observations = session.sql("SELECT observation_id,
             named_struct('declared_kind', declared_kind, 'python',
                 CASE WHEN has_python THEN named_struct('bases',
                     CASE WHEN has_base THEN make_array(CASE WHEN binding_id = 'unknown' THEN 'Unknown' ELSE 'object' END)
                     ELSE CAST(make_array() AS VARCHAR[]) END) ELSE NULL END) AS payload
             FROM fixtures").await.unwrap();
-        session
-            .register_table("api_observations", observations.into_view())
-            .unwrap();
+
         let bindings = session
             .sql("SELECT observation_id, binding_id FROM fixtures")
             .await
             .unwrap();
-        session
-            .register_table("bound_observations", bindings.into_view())
+        let catalog = crate::native_catalog::BoundCatalog::default()
+            .with_schema(
+                crate::native_catalog::BindingKind::AdmittedEvidence,
+                std::collections::BTreeMap::from([(
+                    "api_observations".into(),
+                    observations.into_view(),
+                )]),
+            )
+            .with_schema(
+                crate::native_catalog::BindingKind::AdmittedDomain,
+                std::collections::BTreeMap::from([(
+                    "bound_observations".into(),
+                    bindings.into_view(),
+                )]),
+            );
+        let session = runtime
+            .bound_session(std::collections::BTreeMap::from([(
+                "snapshot".into(),
+                std::sync::Arc::new(catalog)
+                    as std::sync::Arc<dyn datafusion::catalog::CatalogProvider>,
+            )]))
             .unwrap();
         for symbol in ["empty", "object"] {
             assert!(

@@ -22,13 +22,6 @@ pub(crate) fn keys(batches: &[RecordBatch]) -> Result<Vec<ComparisonKey>, ArrowE
     Ok(keys)
 }
 
-pub(crate) fn count(batches: &[RecordBatch]) -> Result<u64, ArrowError> {
-    if batches.len() != 1 || batches[0].num_rows() != 1 {
-        return Err(invalid("comparison count must have one row"));
-    }
-    RowSet::batch(&batches[0])?.row(0).number("count")
-}
-
 pub(crate) fn alternative_sources(
     batches: &[RecordBatch],
 ) -> Result<Vec<Option<FactSource>>, ArrowError> {

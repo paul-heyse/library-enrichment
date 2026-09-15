@@ -34,6 +34,9 @@ pub struct Metric {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueryDiagnostics {
+    pub catalog: crate::native_catalog::InventorySummary,
+    pub rules: Vec<RuleTransition>,
+    pub rules_truncated: bool,
     pub query_id: u64,
     pub operation_id: Option<String>,
     pub binding: Option<crate::runtime::OperationBinding>,
@@ -59,6 +62,54 @@ pub struct QueryDiagnostics {
     pub output_rows: usize,
     pub output_arrow_bytes: usize,
     pub metrics: Vec<Metric>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RuleTransition {
+    pub phase: String,
+    pub rule: String,
+    /// Unknown if the plan exceeded the bounded fingerprint traversal.
+    pub changed: Option<bool>,
+}
+
+fn fingerprint(plan: &LogicalPlan) -> Option<u64> {
+    use datafusion::common::tree_node::{TreeNode, TreeNodeRecursion};
+    use std::hash::{Hash, Hasher};
+    let mut nodes = 0;
+    let mut bounded = true;
+    let mut expressions = 0;
+    let mut literal_bytes = 0usize;
+    plan.apply_with_subqueries(|node| {
+        nodes += 1;
+        if nodes > NODES {
+            bounded = false;
+            return Ok(TreeNodeRecursion::Stop);
+        }
+        for expr in node.expressions() {
+            expr.apply(|value| {
+                expressions += 1;
+                if let datafusion::logical_expr::Expr::Literal(value, _) = value {
+                    literal_bytes = literal_bytes.saturating_add(value.size());
+                }
+                if expressions > 1024 || literal_bytes > TEXT_BYTES {
+                    bounded = false;
+                    return Ok(TreeNodeRecursion::Stop);
+                }
+                Ok(TreeNodeRecursion::Continue)
+            })?;
+            if !bounded {
+                return Ok(TreeNodeRecursion::Stop);
+            }
+        }
+        Ok(TreeNodeRecursion::Continue)
+    })
+    .ok()?;
+    if !bounded {
+        return None;
+    }
+    let mut hasher = std::hash::DefaultHasher::new();
+    plan.hash(&mut hasher);
+    Some(hasher.finish())
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -262,6 +313,7 @@ fn short(text: &str, cap: usize, truncated: &mut bool) -> String {
 
 /// Owns the executed plan until its stream has dropped, including early-return paths.
 pub(crate) struct Trace {
+    previous_fingerprint: Option<u64>,
     plan: Option<Arc<dyn ExecutionPlan>>,
     history: History,
     start: Instant,
@@ -298,11 +350,15 @@ impl Trace {
             })
             .unwrap_or(0);
         Self {
+            previous_fingerprint: fingerprint(logical),
             operation: crate::runtime::capture_operation(),
             plan: None,
             history,
             start,
             diagnostic: QueryDiagnostics {
+                catalog: crate::native_catalog::InventorySummary::default(),
+                rules: Vec::new(),
+                rules_truncated: false,
                 query_id,
                 stage: "analysis".into(),
                 family: None,
@@ -327,6 +383,27 @@ impl Trace {
                 metrics: vec![],
             },
         }
+    }
+    pub(crate) fn bound(&mut self, state: &datafusion::execution::SessionState) {
+        self.diagnostic.catalog = crate::native_catalog::summary(state);
+    }
+    pub(crate) fn rule(&mut self, phase: &str, rule: &str, plan: &LogicalPlan) {
+        if self.diagnostic.rules.len() == 128 {
+            self.diagnostic.rules_truncated = true;
+            return;
+        }
+        let current = fingerprint(plan);
+        let changed = self
+            .previous_fingerprint
+            .zip(current)
+            .map(|(before, after)| before != after);
+        self.previous_fingerprint = current;
+        let rule = short(rule, 128, &mut self.diagnostic.rules_truncated);
+        self.diagnostic.rules.push(RuleTransition {
+            phase: phase.into(),
+            rule,
+            changed,
+        });
     }
     pub(crate) fn family(&mut self, family: crate::preparation::QueryFamily) {
         self.diagnostic.family = Some(format!("{family:?}"));
@@ -420,6 +497,18 @@ impl Trace {
         self.plan = Some(plan);
         self.diagnostic.planning_micros = micros;
         self.diagnostic.stage = "execution".into();
+    }
+    pub(crate) fn properties(
+        &self,
+    ) -> datafusion::error::Result<Arc<datafusion::physical_plan::PlanProperties>> {
+        self.plan
+            .as_ref()
+            .map(|plan| Arc::clone(plan.properties()))
+            .ok_or_else(|| {
+                datafusion::error::DataFusionError::Internal(
+                    "executed fold has no physical properties".into(),
+                )
+            })
     }
     pub(crate) fn completed(&mut self, rows: usize, bytes: usize) {
         self.diagnostic.completed = true;
@@ -575,5 +664,109 @@ fn selected_metric(value: &MetricValue) -> bool {
         | MetricValue::EndTimestamp(_)
         | MetricValue::Custom { .. } => false,
         _ => true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use datafusion::execution::memory_pool::{
+        FairSpillPool, MemoryConsumer, MemoryPool, PeakRecordingPool, TrackConsumersPool,
+    };
+
+    #[tokio::test]
+    async fn rule_history_and_shared_memory_peak_are_bounded_and_do_not_reset() {
+        let dir = tempfile::tempdir().unwrap();
+        let runtime = crate::runtime::QueryRuntime::new(dir.path(), Default::default()).unwrap();
+        let session = runtime.session();
+        let frame = session.sql("SELECT 1 AS value").await.unwrap();
+        let history = History::default();
+        let mut trace = Trace::new(frame.logical_plan(), history.clone(), Instant::now());
+        for _ in 0..200 {
+            trace.rule("test", &"r".repeat(200), frame.logical_plan());
+        }
+        assert_eq!(trace.diagnostic.rules.len(), 128);
+        assert!(trace.diagnostic.rules_truncated);
+        assert!(
+            trace
+                .diagnostic
+                .rules
+                .iter()
+                .all(|rule| rule.rule.len() <= 128 && rule.changed == Some(false))
+        );
+        let pool = session.runtime_env().memory_pool.clone();
+        let first = MemoryConsumer::new("first_operation").register(&pool);
+        let second = MemoryConsumer::new("second_operation").register(&pool);
+        first.try_grow(1024).unwrap();
+        second.try_grow(2048).unwrap();
+        assert_eq!(
+            runtime.operational_counters().managed_memory_reserved_bytes,
+            3072
+        );
+        drop(first);
+        assert_eq!(
+            runtime.operational_counters().managed_memory_peak_bytes,
+            3072
+        );
+        drop(second);
+        assert_eq!(
+            runtime.operational_counters().managed_memory_reserved_bytes,
+            0
+        );
+        assert_eq!(
+            runtime.operational_counters().managed_memory_peak_bytes,
+            3072
+        );
+    }
+
+    #[test]
+    #[ignore = "manual paired P8 TrackConsumersPool overhead measurement"]
+    fn paired_consumer_pool_observation() {
+        for round in 0..3 {
+            for tracked in [false, true] {
+                let inner: Arc<dyn MemoryPool> = if tracked {
+                    Arc::new(TrackConsumersPool::new(
+                        FairSpillPool::new(8192),
+                        std::num::NonZeroUsize::new(4).unwrap(),
+                    ))
+                } else {
+                    Arc::new(FairSpillPool::new(8192))
+                };
+                let pool: Arc<dyn MemoryPool> = Arc::new(PeakRecordingPool::new(inner));
+                let start = Instant::now();
+                std::thread::scope(|scope| {
+                    for client in 0..4 {
+                        let pool = pool.clone();
+                        scope.spawn(move || {
+                            let reservation =
+                                MemoryConsumer::new(format!("query_{client}")).register(&pool);
+                            for _ in 0..10_000 {
+                                reservation.try_grow(128).unwrap();
+                                reservation.shrink(128);
+                            }
+                        });
+                    }
+                });
+                let allocation_us = start.elapsed().as_micros();
+                let first = MemoryConsumer::new("retained_index").register(&pool);
+                first.try_grow(4096).unwrap();
+                let failing = MemoryConsumer::new("query_sort").register(&pool);
+                let failure = failing.try_grow(8192).unwrap_err();
+                assert!(matches!(
+                    failure,
+                    datafusion::error::DataFusionError::ResourcesExhausted(_)
+                ));
+                let message = failure.to_string();
+                assert_eq!(message.contains("retained_index"), tracked);
+                assert!(message.len() < 2048);
+                drop(first);
+                drop(failing);
+                assert_eq!(pool.reserved(), 0);
+                eprintln!(
+                    "P14_POOL {}",
+                    serde_json::json!({"round":round,"tracked":tracked,"allocation_us":allocation_us,"error":message})
+                );
+            }
+        }
     }
 }

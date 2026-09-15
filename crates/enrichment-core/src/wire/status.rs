@@ -227,6 +227,12 @@ pub struct VerificationCounters {
 /// Process-scoped native query diagnostics; neither library coverage nor a peak-RSS claim.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct NativeQueryCounters {
+    /// Current shared-runtime managed reservations, not process RSS.
+    pub managed_memory_reserved_bytes: usize,
+    /// Shared-runtime maximum since startup; never reset or attributed to one query.
+    pub managed_memory_peak_bytes: usize,
+    /// The read-only values consumed by native source construction.
+    pub effective_native_settings: std::collections::BTreeMap<String, String>,
     /// Completed or interrupted physical executions recorded since startup.
     pub executions: u64,
     pub completed: u64,

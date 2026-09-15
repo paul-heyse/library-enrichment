@@ -18,11 +18,7 @@ use enrichment_core::{
     },
     producer::ProducerRun,
 };
-use parquet::{
-    arrow::ArrowWriter,
-    basic::{Compression, ZstdLevel},
-    file::properties::WriterProperties,
-};
+use parquet::arrow::ArrowWriter;
 use serde::Serialize;
 use std::{fs::File, io, path::Path};
 
@@ -33,6 +29,7 @@ pub(crate) struct RelationBuffer<T> {
     writer: ArrowWriter<BoundedFile>,
     pending: Vec<T>,
     pending_bytes: usize,
+    group_bytes: usize,
     rows: usize,
     limits: WriteLimits,
     encode: fn(&[T]) -> Result<RecordBatch, ArrowError>,
@@ -45,7 +42,13 @@ impl<T: Serialize> RelationBuffer<T> {
         limits: &WriteLimits,
         encode: fn(&[T]) -> Result<RecordBatch, ArrowError>,
     ) -> io::Result<Self> {
-        let mut writer = Self::staging(root, relation.name(), limits, encode)?;
+        let mut writer = Self::staging_with_key(
+            root,
+            relation.name(),
+            limits,
+            encode,
+            crate::native_policy::bloom_key(relation, limits.observation_bloom),
+        )?;
         writer.relation = Some(relation);
         Ok(writer)
     }
@@ -55,17 +58,22 @@ impl<T: Serialize> RelationBuffer<T> {
         limits: &WriteLimits,
         encode: fn(&[T]) -> Result<RecordBatch, ArrowError>,
     ) -> io::Result<Self> {
+        Self::staging_with_key(root, name, limits, encode, None)
+    }
+    fn staging_with_key(
+        root: &Path,
+        name: &str,
+        limits: &WriteLimits,
+        encode: fn(&[T]) -> Result<RecordBatch, ArrowError>,
+        bloom_key: Option<&str>,
+    ) -> io::Result<Self> {
         let path = root.join(format!("{name}.parquet"));
         let file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(&path)?;
-        let properties = WriterProperties::builder()
-            .set_compression(Compression::ZSTD(
-                ZstdLevel::try_new(3).map_err(io::Error::other)?,
-            ))
-            .set_max_row_group_row_count(Some(limits.batch_rows))
-            .build();
+        let properties = crate::native_policy::writer_properties(limits.row_group_rows, bloom_key)
+            .map_err(io::Error::other)?;
         let schema = encode(&[]).map_err(io::Error::other)?.schema();
         let schema_nodes = schema
             .fields()
@@ -89,6 +97,7 @@ impl<T: Serialize> RelationBuffer<T> {
             writer,
             pending: Vec::new(),
             pending_bytes: 0,
+            group_bytes: 0,
             rows: 0,
             limits: limits.clone(),
             encode,
@@ -148,8 +157,12 @@ impl<T: Serialize> RelationBuffer<T> {
         }
         drop(rows);
         self.pending_bytes = 0;
-        self.writer.write(&batch).map_err(io::Error::other)?;
-        self.writer.flush().map_err(io::Error::other)?;
+        crate::dataset::write_bounded(
+            &mut self.writer,
+            &batch,
+            &self.limits,
+            &mut self.group_bytes,
+        )?;
         Ok(())
     }
     fn finish(self) -> io::Result<EvidenceFile> {

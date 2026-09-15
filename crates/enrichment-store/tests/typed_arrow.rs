@@ -392,7 +392,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         .expect("register");
     }
     let runs = ctx
-        .sql("SELECT * FROM producer_runs ORDER BY attempt_id")
+        .sql("SELECT * FROM datafusion.public.producer_runs ORDER BY attempt_id")
         .await
         .expect("plan")
         .collect()
@@ -405,7 +405,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         attempts
     );
     let inputs = ctx
-        .sql("SELECT * FROM input_artifacts")
+        .sql("SELECT * FROM datafusion.public.input_artifacts")
         .await
         .expect("plan")
         .collect()
@@ -416,7 +416,7 @@ async fn attempts_inputs_and_coverage_retain_structured_provenance_through_dataf
         vec![input]
     );
     let back = ctx
-        .sql("SELECT * FROM coverage ORDER BY kind")
+        .sql("SELECT * FROM datafusion.public.coverage ORDER BY kind")
         .await
         .expect("plan")
         .collect()

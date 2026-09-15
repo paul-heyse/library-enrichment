@@ -41,6 +41,7 @@ pub struct Config {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct ArrowConfig {
+    pub native: NativeQueryConfig,
     pub memory_bytes: usize,
     pub spill_bytes: u64,
     pub metadata_cache_bytes: usize,
@@ -62,6 +63,7 @@ pub struct ArrowConfig {
 impl Default for ArrowConfig {
     fn default() -> Self {
         Self {
+            native: NativeQueryConfig::default(),
             memory_bytes: 128 * 1024 * 1024,
             spill_bytes: 512 * 1024 * 1024,
             metadata_cache_bytes: 16 * 1024 * 1024,
@@ -78,6 +80,29 @@ impl Default for ArrowConfig {
             file_bytes: 256 * 1024 * 1024,
             table_rows: 1_000_000,
             row_groups: 1024,
+        }
+    }
+}
+
+/// Effective native choices; measurements select defaults, configuration captures each run.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct NativeQueryConfig {
+    pub decoder_filter: bool,
+    pub observation_bloom: bool,
+    pub reorder_filters: bool,
+    pub row_group_rows: usize,
+    pub catalog_file_rows: usize,
+}
+
+impl Default for NativeQueryConfig {
+    fn default() -> Self {
+        Self {
+            decoder_filter: true,
+            observation_bloom: true,
+            reorder_filters: true,
+            row_group_rows: 1024,
+            catalog_file_rows: 4096,
         }
     }
 }

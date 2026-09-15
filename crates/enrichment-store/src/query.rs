@@ -147,7 +147,7 @@ impl SnapshotReader {
         } else {
             ("inspection_observations", "inspection_bound")
         };
-        let frame = self.ctx.sql(&format!("SELECT o.* FROM {base} o LEFT SEMI JOIN {bound} b ON o.observation_id = b.observation_id AND b.binding_id = $1"))
+        let frame = self.ctx.sql(&format!("SELECT o.* FROM snapshot.evidence.{base} o LEFT SEMI JOIN snapshot.domain.{bound} b ON o.observation_id = b.observation_id AND b.binding_id = $1"))
             .await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
         let out = self
             .page_rows(
@@ -175,7 +175,7 @@ impl SnapshotReader {
         let frame = self
             .ctx
             .sql(
-                "SELECT r.* FROM relationships r LEFT SEMI JOIN symbols s ON (
+                "SELECT r.* FROM snapshot.evidence.relationships r LEFT SEMI JOIN snapshot.evidence.symbols s ON (
             r.subject.symbol_id = s.symbol_id OR r.subject.definition_id = s.definition_id OR
             r.target.symbol_id = s.symbol_id OR r.target.definition_id = s.definition_id)
             AND s.symbol_id = $1",
@@ -215,14 +215,14 @@ impl SnapshotReader {
         after: Option<&str>,
     ) -> Result<NativePage<Symbol>, QueryError> {
         let sql = if members {
-            "SELECT h.* FROM symbol_headers h LEFT SEMI JOIN (
-                SELECT r.subject FROM relationships r JOIN symbols owner
+            "SELECT h.* FROM snapshot.domain.symbol_headers h LEFT SEMI JOIN (
+                SELECT r.subject FROM snapshot.evidence.relationships r JOIN snapshot.evidence.symbols owner
                 ON r.target.symbol_id = owner.symbol_id OR r.target.definition_id = owner.definition_id
                 WHERE owner.symbol_id = $1 AND r.relation = 'member_of'
             ) m ON m.subject.symbol_id = h.symbol_id OR m.subject.definition_id = h.definition_id"
         } else {
-            "SELECT h.* FROM symbol_headers h LEFT SEMI JOIN (
-                SELECT m.symbol_id FROM namespace_members m JOIN symbols owner
+            "SELECT h.* FROM snapshot.domain.symbol_headers h LEFT SEMI JOIN (
+                SELECT m.symbol_id FROM snapshot.domain.namespace_members m JOIN snapshot.evidence.symbols owner
                 ON m.namespace_components = owner.components AND m.ecosystem = owner.ecosystem
                 WHERE owner.symbol_id = $1 AND m.is_direct
             ) c ON c.symbol_id = h.symbol_id"
@@ -281,9 +281,9 @@ impl SnapshotReader {
         max_characters: Option<usize>,
     ) -> Result<NativePage<(EvidenceFragment, bool)>, QueryError> {
         let relation = if symbol.is_some() {
-            "fragment_surface f LEFT SEMI JOIN fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $2"
+            "snapshot.domain.fragment_surface f LEFT SEMI JOIN snapshot.domain.fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $2"
         } else {
-            "fragment_surface f"
+            "snapshot.domain.fragment_surface f"
         };
         let sql = format!(
             "SELECT f.fragment_id, f.kind, f.subject_ref, f.source, f.label,
@@ -374,7 +374,7 @@ impl SnapshotReader {
     /// Dependency identities of static declarations, excluding mutable registry selection
     /// and execution-only inputs. This bounded identity projection never hydrates API text.
     pub async fn static_inputs(&self) -> Result<Vec<(String, String)>, QueryError> {
-        let frame = self.ctx.sql("WITH bindings AS (SELECT source.producer_binding_id AS id FROM api_observations UNION SELECT source.producer_binding_id AS id FROM fragments WHERE source.evidence_class IN ('declared', 'statically_extracted')) SELECT DISTINCT i.sha256, i.source_uri FROM input_artifacts i LEFT SEMI JOIN bindings b ON i.producer_binding_id = b.id WHERE i.kind NOT IN ('registry_index_entry', 'registry_version_metadata') ORDER BY i.sha256, i.source_uri LIMIT 8193").await?;
+        let frame = self.ctx.sql("WITH bindings AS (SELECT source.producer_binding_id AS id FROM snapshot.evidence.api_observations UNION SELECT source.producer_binding_id AS id FROM snapshot.evidence.fragments WHERE source.evidence_class IN ('declared', 'statically_extracted')) SELECT DISTINCT i.sha256, i.source_uri FROM snapshot.evidence.input_artifacts i LEFT SEMI JOIN bindings b ON i.producer_binding_id = b.id WHERE i.kind NOT IN ('registry_index_entry', 'registry_version_metadata') ORDER BY i.sha256, i.source_uri LIMIT 8193").await?;
         let out = self
             .runtime
             .execute_family(frame, Some(crate::preparation::QueryFamily::StaticInputs))
@@ -461,7 +461,10 @@ impl SnapshotReader {
         selection: ExecutionSelection<'_>,
     ) -> Result<DataFrame, QueryError> {
         use datafusion::functions::core::expr_ext::FieldAccessor;
-        let mut plan = self.ctx.table("execution_observations").await?;
+        let mut plan = self
+            .ctx
+            .table("snapshot.evidence.execution_observations")
+            .await?;
         if let Some(image) = selection.image {
             plan = plan.filter(col("image_id").eq(lit(image)))?;
         }
@@ -569,8 +572,13 @@ impl SnapshotReader {
         if let Some(id) = definition_id {
             predicate = predicate.and(col("definition_id").eq(lit(id)));
         }
-        self.render_symbols(self.ctx.table("symbol_headers").await?.filter(predicate)?)
-            .await
+        self.render_symbols(
+            self.ctx
+                .table("snapshot.domain.symbol_headers")
+                .await?
+                .filter(predicate)?,
+        )
+        .await
     }
 
     /// # Errors
@@ -605,8 +613,13 @@ impl SnapshotReader {
         if let Some(id) = definition_id {
             predicate = predicate.and(col("definition_id").eq(lit(id)));
         }
-        self.render_symbols(self.ctx.table("symbol_headers").await?.filter(predicate)?)
-            .await
+        self.render_symbols(
+            self.ctx
+                .table("snapshot.domain.symbol_headers")
+                .await?
+                .filter(predicate)?,
+        )
+        .await
     }
 
     /// # Errors
@@ -620,7 +633,7 @@ impl SnapshotReader {
             .runtime
             .execute_family(
                 self.ctx
-                    .table("symbols")
+                    .table("snapshot.evidence.symbols")
                     .await?
                     .filter(
                         col("definition_id")
@@ -661,11 +674,11 @@ impl SnapshotReader {
             )
             .into());
         }
-        let mut frame = self.ctx.table("fragment_surface").await?;
+        let mut frame = self.ctx.table("snapshot.domain.fragment_surface").await?;
         if let Some(symbol) = selection.symbol_id {
-            frame = self.ctx.sql("SELECT f.* FROM fragment_surface f LEFT SEMI JOIN fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
+            frame = self.ctx.sql("SELECT f.* FROM snapshot.domain.fragment_surface f LEFT SEMI JOIN snapshot.domain.fragment_paths p ON f.fragment_id = p.fragment_id AND p.symbol_id = $1").await?.with_param_values(vec![datafusion::common::ScalarValue::from(symbol)])?;
         } else if let Some(path) = selection.path {
-            frame = self.ctx.sql("SELECT f.* FROM fragment_surface f LEFT SEMI JOIN (SELECT DISTINCT p.fragment_id FROM fragment_paths p JOIN symbols s ON p.symbol_id = s.symbol_id WHERE s.path = $1) m ON f.fragment_id = m.fragment_id").await?.with_param_values(vec![datafusion::common::ScalarValue::from(path)])?;
+            frame = self.ctx.sql("SELECT f.* FROM snapshot.domain.fragment_surface f LEFT SEMI JOIN (SELECT DISTINCT p.fragment_id FROM snapshot.domain.fragment_paths p JOIN snapshot.evidence.symbols s ON p.symbol_id = s.symbol_id WHERE s.path = $1) m ON f.fragment_id = m.fragment_id").await?.with_param_values(vec![datafusion::common::ScalarValue::from(path)])?;
         }
         frame = frame
             .filter(
@@ -704,7 +717,7 @@ impl SnapshotReader {
         let spec = enrichment_core::search::spec::SearchSpec::new(name);
         let frame = self
             .ctx
-            .table("fragment_surface")
+            .table("snapshot.domain.fragment_surface")
             .await?
             .filter(
                 col("kind")
@@ -746,7 +759,7 @@ impl SnapshotReader {
         let output = self
             .runtime
             .execute_family(
-                self.ctx.table("input_artifacts").await?,
+                self.ctx.table("snapshot.evidence.input_artifacts").await?,
                 Some(crate::preparation::QueryFamily::Relation(
                     crate::admission::Relation::InputArtifacts,
                 )),
@@ -771,7 +784,7 @@ impl SnapshotReader {
             .runtime
             .execute_family(
                 self.ctx
-                    .table("input_artifacts")
+                    .table("snapshot.evidence.input_artifacts")
                     .await?
                     .filter(col("kind").eq(lit(kind.as_str())))?,
                 Some(crate::preparation::QueryFamily::Relation(
@@ -795,7 +808,7 @@ impl SnapshotReader {
             .runtime
             .execute_family(
                 self.ctx
-                    .table("input_artifacts")
+                    .table("snapshot.evidence.input_artifacts")
                     .await?
                     .filter(col("role").eq(lit(role)))?,
                 Some(crate::preparation::QueryFamily::Relation(
@@ -820,7 +833,7 @@ impl SnapshotReader {
             .runtime
             .execute_family(
                 session
-                    .table("attempts")
+                    .table("state.records.attempts")
                     .await?
                     .filter(col("snapshot_id").eq(lit(self.manifest().snapshot_id.as_str())))?,
                 Some(crate::preparation::QueryFamily::Catalog(
@@ -849,7 +862,7 @@ impl SnapshotReader {
             .runtime
             .execute_family(
                 session
-                    .table("attempts")
+                    .table("state.records.attempts")
                     .await?
                     .filter(
                         col("snapshot_id")
@@ -880,7 +893,7 @@ impl SnapshotReader {
     pub async fn artifacts(&self) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
         self.catalog_artifacts(
             "WITH raw AS (
-            SELECT unnest(acquisitions) AS artifact, started_at, attempt_id FROM attempts
+            SELECT unnest(acquisitions) AS artifact, started_at, attempt_id FROM state.records.attempts
             WHERE snapshot_id = $1
         ), ranked AS (
             SELECT artifact, row_number() OVER (
@@ -903,9 +916,9 @@ impl SnapshotReader {
             SELECT delivery AS artifact, row_number() OVER (
                 PARTITION BY delivery.artifact_id ORDER BY job_id
             ) AS position FROM (
-                SELECT job_id, delivery FROM job_publications WHERE snapshot_id = $1
+                SELECT job_id, delivery FROM state.records.job_publications WHERE snapshot_id = $1
                 UNION ALL
-                SELECT job_id, delivery FROM comparison_publications WHERE after_snapshot_id = $1
+                SELECT job_id, delivery FROM state.records.comparison_publications WHERE after_snapshot_id = $1
             )
         ) WHERE position = 1 ORDER BY artifact.artifact_id",
         )
@@ -920,7 +933,7 @@ impl SnapshotReader {
         self.catalog_artifacts(
             "WITH raw AS (
             SELECT unnest(acquisitions) AS artifact, log, started_at, attempt_id
-            FROM attempts WHERE snapshot_id = $1 AND log IS NOT NULL
+            FROM state.records.attempts WHERE snapshot_id = $1 AND log IS NOT NULL
         ), ranked AS (
             SELECT artifact, row_number() OVER (
                 PARTITION BY artifact.artifact_id ORDER BY started_at, attempt_id
@@ -954,7 +967,7 @@ impl SnapshotReader {
         let output = self
             .runtime
             .execute_family(
-                self.ctx.table("coverage").await?,
+                self.ctx.table("snapshot.evidence.coverage").await?,
                 Some(crate::preparation::QueryFamily::Relation(
                     crate::admission::Relation::Coverage,
                 )),
@@ -975,7 +988,7 @@ impl SnapshotReader {
         let output = self
             .runtime
             .execute_family(
-                self.ctx.table("release_metadata").await?,
+                self.ctx.table("snapshot.evidence.release_metadata").await?,
                 Some(crate::preparation::QueryFamily::Relation(
                     crate::admission::Relation::ReleaseMetadata,
                 )),

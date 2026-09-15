@@ -7,10 +7,7 @@ use crate::{
     record_writer::RelationBuffer,
     runtime::QueryRuntime,
 };
-use datafusion::{
-    error::{DataFusionError, Result},
-    prelude::SessionContext,
-};
+use datafusion::error::{DataFusionError, Result};
 use enrichment_core::evidence::{
     Artifact,
     ingest::{EvidenceSink, IngestBudget, IngestContext, Normalizer, ProducerSource},
@@ -128,18 +125,24 @@ pub fn normalize_into(
     let declarations = declarations.finish_staging()?;
     let artifacts = artifacts.finish_staging()?;
     executor.block_on(async {
-        let session = runtime.session();
-        register(&session, "producer_bindings", &bindings.0, staging::bindings(&[])?.schema()).await?;
-        register(&session, "producer_relationships", &relationships.0, staging::relationships(&[])?.schema()).await?;
-        register(&session, "producer_fragments", &fragments.0, staging::fragments(&[])?.schema()).await?;
-        register(&session, "producer_inputs", &declarations.0, staging::declarations(&[])?.schema()).await?;
-        register(&session, "producer_artifacts", &artifacts.0, staging::artifacts(&[])?.schema()).await?;
-        let inputs = session.sql("SELECT DISTINCT d.binding_id, d.role, a.artifact FROM producer_inputs d JOIN producer_artifacts a ON d.digest = a.artifact.sha256 WHERE d.role IS NOT NULL").await?;
+        let mut tables = crate::native_catalog::Tables::new();
+        for (name, path, schema) in [
+            ("producer_bindings", &bindings.0, staging::bindings(&[])?.schema()),
+            ("producer_relationships", &relationships.0, staging::relationships(&[])?.schema()),
+            ("producer_fragments", &fragments.0, staging::fragments(&[])?.schema()),
+            ("producer_inputs", &declarations.0, staging::declarations(&[])?.schema()),
+            ("producer_artifacts", &artifacts.0, staging::artifacts(&[])?.schema()),
+        ] {
+            let provider = ExactParquet::new(path.to_owned(), FileWitness::read(path)?, schema, datafusion::common::Constraints::default()).await?;
+            tables.insert(name.to_owned(), Arc::new(provider) as Arc<dyn datafusion::catalog::TableProvider>);
+        }
+        let session = runtime.bound_session(std::collections::BTreeMap::from([("candidate".into(), Arc::new(crate::native_catalog::BoundCatalog::default().with_schema(crate::native_catalog::BindingKind::CandidateProducer, tables)) as Arc<dyn datafusion::catalog::CatalogProvider>)]))?;
+        let inputs = session.sql("SELECT DISTINCT d.binding_id, d.role, a.artifact FROM candidate.producer.producer_inputs d JOIN candidate.producer.producer_artifacts a ON d.digest = a.artifact.sha256 WHERE d.role IS NOT NULL").await?;
         runtime.visit(inputs, limits.table_rows, |batch| {
             for row in staging::resolved_inputs(batch)? { sink.input(row).map_err(invalid)?; }
             Ok(())
         }).await?;
-        let acquisitions = session.sql("SELECT DISTINCT d.attempt_id, a.artifact FROM producer_inputs d JOIN producer_artifacts a ON d.digest = a.artifact.sha256 OR d.log = a.artifact.artifact_id").await?;
+        let acquisitions = session.sql("SELECT DISTINCT d.attempt_id, a.artifact FROM candidate.producer.producer_inputs d JOIN candidate.producer.producer_artifacts a ON d.digest = a.artifact.sha256 OR d.log = a.artifact.artifact_id").await?;
         let mut attempt_bytes = 0usize;
         runtime.visit(acquisitions, limits.table_rows, |batch| {
             for (attempt, artifact) in staging::attempt_artifacts(batch)? {
@@ -149,15 +152,15 @@ pub fn normalize_into(
             }
             Ok(())
         }).await?;
-        if runtime.execute(session.sql("SELECT producer_id FROM producer_bindings GROUP BY producer_id HAVING count(*) > 1 LIMIT 1").await?).await?.rows != 0 {
+        if runtime.execute(session.sql("SELECT producer_id FROM candidate.producer.producer_bindings GROUP BY producer_id HAVING count(*) > 1 LIMIT 1").await?).await?.rows != 0 {
             return Err(invalid("duplicate producer symbol identity"));
         }
-        let relationships = session.sql("SELECT r.*, b.producer_id AS from_producer_id, b.path AS from_path, b.symbol_id AS from_symbol_id, b.definition_id AS from_definition_id, b.producer_local_id AS from_producer_local_id, b.source AS from_source, t.symbol_id AS target_symbol, d.definition_id AS target_definition FROM producer_relationships r LEFT JOIN producer_bindings b ON r.source_id = b.producer_id LEFT JOIN producer_bindings t ON r.target_id = t.producer_id LEFT JOIN (SELECT DISTINCT definition_id FROM producer_bindings) d ON r.target_id = d.definition_id").await?;
+        let relationships = session.sql("SELECT r.*, b.producer_id AS from_producer_id, b.path AS from_path, b.symbol_id AS from_symbol_id, b.definition_id AS from_definition_id, b.producer_local_id AS from_producer_local_id, b.source AS from_source, t.symbol_id AS target_symbol, d.definition_id AS target_definition FROM candidate.producer.producer_relationships r LEFT JOIN candidate.producer.producer_bindings b ON r.source_id = b.producer_id LEFT JOIN candidate.producer.producer_bindings t ON r.target_id = t.producer_id LEFT JOIN (SELECT DISTINCT definition_id FROM candidate.producer.producer_bindings) d ON r.target_id = d.definition_id").await?;
         runtime.visit(relationships, limits.table_rows, |batch| {
             for row in staging::resolved_relationships(batch, &normalizer)? { sink.relationship(row).map_err(invalid)?; }
             Ok(())
         }).await?;
-        let fragments = session.sql("WITH candidates AS (SELECT f.ordinal, count(b.producer_id) AS matches, count(DISTINCT b.definition_id) AS definitions, min(b.symbol_id) AS resolved_symbol, min(b.definition_id) AS resolved_definition FROM producer_fragments f LEFT JOIN producer_bindings b ON f.resolve AND f.display_subject = b.path AND (f.binding_id IS NULL OR f.binding_id = b.producer_id) AND (f.binding_id IS NOT NULL OR f.local_id IS NULL OR f.local_id = b.producer_local_id) GROUP BY f.ordinal), paths AS (SELECT path, count(*) AS path_count FROM producer_bindings GROUP BY path) SELECT f.*, c.matches, c.definitions, c.resolved_symbol, c.resolved_definition, p.path_count FROM producer_fragments f JOIN candidates c ON f.ordinal = c.ordinal LEFT JOIN paths p ON f.display_subject = p.path").await?;
+        let fragments = session.sql("WITH candidates AS (SELECT f.ordinal, count(b.producer_id) AS matches, count(DISTINCT b.definition_id) AS definitions, min(b.symbol_id) AS resolved_symbol, min(b.definition_id) AS resolved_definition FROM candidate.producer.producer_fragments f LEFT JOIN candidate.producer.producer_bindings b ON f.resolve AND f.display_subject = b.path AND (f.binding_id IS NULL OR f.binding_id = b.producer_id) AND (f.binding_id IS NOT NULL OR f.local_id IS NULL OR f.local_id = b.producer_local_id) GROUP BY f.ordinal), paths AS (SELECT path, count(*) AS path_count FROM candidate.producer.producer_bindings GROUP BY path) SELECT f.*, c.matches, c.definitions, c.resolved_symbol, c.resolved_definition, p.path_count FROM candidate.producer.producer_fragments f JOIN candidates c ON f.ordinal = c.ordinal LEFT JOIN paths p ON f.display_subject = p.path").await?;
         runtime.visit(fragments, limits.table_rows, |batch| {
             for row in staging::resolved_fragments(batch)? { sink.fragment(row).map_err(invalid)?; }
             Ok(())
@@ -168,22 +171,6 @@ pub fn normalize_into(
     Ok(attempts)
 }
 
-async fn register(
-    session: &SessionContext,
-    name: &str,
-    path: &Path,
-    schema: arrow::datatypes::SchemaRef,
-) -> Result<()> {
-    let provider = ExactParquet::new(
-        path.to_owned(),
-        FileWitness::read(path)?,
-        schema,
-        datafusion::common::Constraints::new_unverified(vec![]),
-    )
-    .await?;
-    session.register_table(name, Arc::new(provider))?;
-    Ok(())
-}
 fn invalid(message: impl Into<String>) -> DataFusionError {
     DataFusionError::Execution(message.into())
 }

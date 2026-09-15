@@ -235,7 +235,7 @@ Blueprint §14.3 diagnostics, scoped to one daemon process and reset by a restar
 | `single_flight` | `started`, `shared`, `inflight`, `total_millis` (producer duration) |
 | `lsp` | `started`, `reused`, `evicted`, `warm` |
 | `verification` | `succeeded`, `failed`, `unresolved` |
-| `native_queries` | recorded executions/completed/incomplete, summed planning/elapsed microseconds, admitted queries and configured concurrency/memory/spill/cache limits |
+| `native_queries` | recorded executions/completed/incomplete, summed planning/elapsed microseconds, admitted queries, current/peak managed bytes, effective native settings and configured concurrency/memory/spill/cache limits |
 | queue | `queued_jobs`, `running_jobs`, `cache_ready` |
 
 Three distinctions are load-bearing. A cache `hit` opened no socket; a `revalidated` request
@@ -247,7 +247,10 @@ code.
 
 Native query counts describe physical plans whose execution traces have settled; failures before
 plan construction are excluded. `admitted` is the current permit count. Timings can overlap;
-configured byte limits are not measured memory consumption or peak RSS. The field is null when
+`managed_memory_reserved_bytes` is current shared-pool reservation and
+`managed_memory_peak_bytes` is its lifetime high-water value. Neither is per-query usage or RSS;
+one operation cannot reset another operation's peak. Effective `enrichment.*` settings describe
+the immutable policy consumed by actual native scans. The field is null when
 no native runtime is open. No query plan text or library source is exposed by these counters.
 
 These are engineering diagnostics. They are deliberately not rolled up into a score: §13 forbids
@@ -287,6 +290,36 @@ queries. It does not eagerly allocate those maxima. Query output and malformed-i
 remain separate. `config/service.workstation.toml` is the editable resource template; execution
 permissions and qualified images are configured separately. The priority is prompt response
 latency for coding agents, with larger-corpus and concurrency measurements guiding tuning.
+
+### Native scan and storage policy
+
+The optional `[arrow.native]` section controls the same immutable Rust policy used by scans,
+writers and diagnostic settings. Plan 14 measured and selected these defaults:
+
+```toml
+[arrow.native]
+decoder_filter = true
+reorder_filters = true
+observation_bloom = true
+row_group_rows = 1024
+catalog_file_rows = 4096
+```
+
+`observation_bloom` writes Bloom filters only for the declared API-observation ID. Row-group and
+catalog file targets must be positive and at most 1,000,000 rows; existing byte/footer/admission
+bounds still apply. They are independent of `arrow.batch_rows` and the catalog transaction limit.
+Whole-file scan groups are capped by exact file count and configured partitions. A one-file
+relation retains one group. Changing configuration takes effect when the daemon runtime is
+constructed; SQL `SET enrichment.*` is explicitly refused.
+
+Native operation catalogs are immutable pinned inventories. Their bounded internal metadata
+comes from those same relations, fields, rules and admitted facts. Work tables are operation-local;
+there is no SQL MCP tool or mutable source-catalog API. Query failures persist bounded rule and
+binding context in `query-failures-v2.json`; earlier history is inactive and is not translated.
+See [the measured choices](../reports/plan14-physical-strategies-2026-09-15.md) before changing
+physical defaults.
+
+### Locked adapter startup
 
 The generated adapter uses `uv run --frozen --no-sync` with an absolute project and interpreter,
 and Python isolated mode. Run `uv sync --locked` during explicit setup; startup does not install
@@ -562,26 +595,26 @@ Each scenario retains its concrete launch description and independent snapshot/a
 
 ### Verified workstation activation — 2026-09-15
 
-Plan 13 activated `library-enrichment.service` at **13:49:55 UTC** using the installation
-`/home/paul/.local/opt/library-enrichment/plan13-3ae079f9718a`. The fresh active state is
-`/home/paul/.local/state/library-enrichment-v2`; its configuration is
-`/home/paul/.config/library-enrichment/research-v2-3ae079f9718a.toml`. The daemon, executor,
-native worker and non-editable Python adapter/worker all match the installed manifest.
+Plan 14 activated `library-enrichment.service` once at **21:36:31 UTC** using
+`/home/paul/.local/opt/library-enrichment/plan14-5b2640ca15e4`. The active state remains
+`/home/paul/.local/state/library-enrichment-v2`; the configuration is
+`/home/paul/.config/library-enrichment/research-v2-plan14-5b2640ca15e4.toml`. All installed inputs
+and the running daemon match the candidate manifest. Daemon PID at verification: **2465957**.
 
-Both global Codex/Claude registrations select that same adapter launch, and both managed
-companion-skill copies match the shipped files. Reconnect existing interactive clients to load
-the new catalog. The previous daemon and adapters are stopped; old state and `service.toml`
-remain inactive and unchanged. They are retained evidence, not runtime fallback inputs.
+Both global Codex/Claude registrations select the same installed adapter. Reconnect existing
+interactive clients to load it. The previous daemon/adapters are stopped; their installation
+and configuration remain retained. Activation verified the existing data was unchanged; the new
+runtime uses target-compatible evidence without migration or a fallback namespace.
 
-Production preserves its existing **static-only** policy. Its actual status reports 32 GiB
-managed Arrow memory, 64 GiB spill, 2 GiB metadata cache and 16 query admission slots. Qualified
-execution was verified separately against matching native artifacts in isolated roots; do not
-infer that an isolated receipt enables an unconfigured production execution profile.
+Production retains its **static-only** policy and workstation limits: 32 GiB managed Arrow
+memory, 64 GiB spill, 2 GiB metadata cache and 16 query slots. External execution-image profiles
+were not qualified in this native architecture campaign and remain unenabled in production.
 
-The deployed smoke passed exact DataFusion 55.1.0 resolution, useful default inspection, pending
-comparison completion, direct changes-section retrieval and Python extraction. Final checks
-confirmed old evidence/configuration preservation and no leftover owned workers. Exact hashes,
-receipts and scope limits are in [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
+The deployed smoke passed exact DataFusion 55.1.0 resolution, useful inspection, comparison,
+direct changes-section retrieval and Python inspection, followed by zero jobs, admitted queries,
+managed reservations and daemon children. The fresh-state installed campaign also exercised
+acquisition, paging, offline reuse, empty/missing/capacity results and real Codex/Claude clients.
+Exact identities and scope are in [Plan 14 qualification](../reports/plan14-final-qualification-2026-09-15.md).
 
 ## Final acceptance commands
 

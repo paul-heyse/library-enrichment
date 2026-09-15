@@ -139,6 +139,7 @@ impl Service {
         let runtime = QueryRuntime::new(
             &paths.cache_root.join("query-spill"),
             QueryLimits {
+                native: arrow.native.clone(),
                 memory_bytes: arrow.memory_bytes,
                 spill_bytes: arrow.spill_bytes,
                 metadata_cache_bytes: arrow.metadata_cache_bytes,
@@ -155,6 +156,8 @@ impl Service {
             paths.clone(),
             runtime,
             WriteLimits {
+                row_group_rows: arrow.native.row_group_rows,
+                observation_bloom: arrow.native.observation_bloom,
                 record_bytes: arrow.record_bytes,
                 batch_rows: arrow.batch_rows,
                 batch_bytes: arrow.batch_bytes,

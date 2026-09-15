@@ -2,7 +2,7 @@
 //!
 //! Nested Arrow values retain nulls and observational alternatives. Provenance is hydrated
 //! after selecting keys; capture clocks and artifact identities never determine a delta.
-use crate::{SnapshotReader, admission::Relation, projection};
+use crate::{SnapshotReader, projection};
 use datafusion::{
     dataframe::DataFrame,
     error::{DataFusionError, Result},
@@ -36,10 +36,10 @@ struct Axis {
     raw: String,
 }
 
-fn axes(scopes: &[Scope]) -> Vec<Axis> {
+fn axes(scopes: &[Scope], catalog: &str) -> Vec<Axis> {
     let mut axes = Vec::new();
     if scopes.contains(&Scope::Api) {
-        axes.push(Axis { id: 0, scope: Scope::Api, raw: r"
+        axes.push(Axis { id: 0, scope: Scope::Api, raw: format!(r"
             SELECT path_id AS key, path AS label,
                 named_struct('kind', kind, 'qualifier', qualifier,
                     'definition_path', definition_path, 'defined_in_package', defined_in_package,
@@ -49,8 +49,8 @@ fn axes(scopes: &[Scope]) -> Vec<Axis> {
                         'signature', signature, 'deprecated', payload.deprecated,
                         'cfg_hints', array_sort(payload.cfg_hints), 'python', payload.python) END) AS value,
                 source
-            FROM SIDE_api_surface
-        ".into() });
+            FROM {catalog}.domain.api_surface
+        ") });
     }
     for (id, scope, kinds) in [
         (1, Scope::Docs, "'doc_text', 'readme_section'"),
@@ -72,9 +72,9 @@ fn axes(scopes: &[Scope]) -> Vec<Axis> {
                         WHEN 'document' THEN f.subject.heading WHEN 'example' THEN f.subject.path END AS label,
                     named_struct('kind', f.kind, 'text', replace(f.text, chr(13) || chr(10), chr(10)),
                         'evidence_class', f.source.evidence_class) AS value, f.source
-                FROM SIDE_fragments f
-                LEFT JOIN SIDE_symbols s ON f.subject.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
-                LEFT JOIN SIDE_definitions d ON f.subject.definition_id = d.definition_id AND f.subject.kind = 'definition'
+                FROM {catalog}.evidence.fragments f
+                LEFT JOIN {catalog}.evidence.symbols s ON f.subject.symbol_id = s.symbol_id AND f.subject.kind = 'symbol'
+                LEFT JOIN {catalog}.evidence.definitions d ON f.subject.definition_id = d.definition_id AND f.subject.kind = 'definition'
                 WHERE f.kind IN ({kinds})
             ") });
         }
@@ -83,29 +83,29 @@ fn axes(scopes: &[Scope]) -> Vec<Axis> {
         axes.push(Axis {
             id: 3,
             scope: Scope::Configuration,
-            raw: r"
+            raw: format!(r"
             SELECT 'rust-documentation' AS key, 'Rust documentation configuration' AS label,
-                rust_docs AS value, source FROM SIDE_release_metadata WHERE kind = 'rust_docs'
-        "
-            .into(),
+                rust_docs AS value, source FROM {catalog}.evidence.release_metadata WHERE kind = 'rust_docs'
+        "),
         });
         axes.push(Axis {
             id: 4,
             scope: Scope::Configuration,
-            raw: r"
+            raw: format!(
+                r"
             WITH headers AS (
                 SELECT unnest(python_distribution.metadata) AS header, source
-                FROM SIDE_release_metadata WHERE kind = 'python_distribution'
+                FROM {catalog}.evidence.release_metadata WHERE kind = 'python_distribution'
             )
             SELECT header.key AS key, header.key AS label,
                 array_sort(header.values) AS value, source FROM headers
             WHERE header.key IN ('requires-python', 'requires-dist', 'provides-extra')
         "
-            .into(),
+            ),
         });
     }
     if scopes.contains(&Scope::Relationships) {
-        axes.push(Axis { id: 7, scope: Scope::Relationships, raw: r"
+        axes.push(Axis { id: 7, scope: Scope::Relationships, raw: format!(r"
             SELECT concat(r.subject.kind, ':', coalesce(s.symbol_id, r.subject.definition_id)) AS key,
                 coalesce(s.path, d.definition_path) AS label,
                 named_struct('relation', r.relation, 'qualifier', r.qualifier,
@@ -113,11 +113,11 @@ fn axes(scopes: &[Scope]) -> Vec<Axis> {
                     'target_definition_id', r.target.definition_id,
                     'target_package', r.target.package, 'target_path', r.target.path) AS value,
                 r.source
-            FROM SIDE_relationships r
-            LEFT JOIN SIDE_symbols s ON r.subject.symbol_id = s.symbol_id AND r.subject.kind = 'symbol'
-            LEFT JOIN SIDE_definitions d ON r.subject.definition_id = d.definition_id AND r.subject.kind = 'definition'
-            LEFT JOIN SIDE_symbols t ON r.target.symbol_id = t.symbol_id AND r.target.kind = 'symbol'
-        ".into() });
+            FROM {catalog}.evidence.relationships r
+            LEFT JOIN {catalog}.evidence.symbols s ON r.subject.symbol_id = s.symbol_id AND r.subject.kind = 'symbol'
+            LEFT JOIN {catalog}.evidence.definitions d ON r.subject.definition_id = d.definition_id AND r.subject.kind = 'definition'
+            LEFT JOIN {catalog}.evidence.symbols t ON r.target.symbol_id = t.symbol_id AND r.target.kind = 'symbol'
+        ") });
     }
     axes.sort_by_key(|a| a.id);
     axes
@@ -162,30 +162,23 @@ async fn page_inner(
         ));
     }
     let runtime = before.runtime();
-    let session = runtime.session();
-    for (prefix, reader) in [("before", before), ("after", after)] {
-        for name in Relation::ALL
-            .into_iter()
-            .map(Relation::name)
-            .chain(["api_surface", "fragment_surface"])
-        {
-            session.register_table(
-                format!("{prefix}_{name}"),
-                reader.session().table(name).await?.into_view(),
-            )?;
-        }
+    let mut catalogs = BTreeMap::new();
+    for (name, reader) in [("before", before), ("after", after)] {
+        let catalog = reader.session().catalog("snapshot").ok_or_else(|| {
+            DataFusionError::Internal("comparison snapshot inventory missing".into())
+        })?;
+        catalogs.insert(name.to_owned(), catalog);
     }
-    let axes = axes(scopes);
+    let session = runtime.bound_session(catalogs)?;
+    let axes = axes(scopes, "before");
+    let after_axes = self::axes(scopes, "after");
     let mut union: Option<DataFrame> = None;
-    for axis in &axes {
-        for prefix in ["before", "after"] {
-            let raw = format!("{prefix}_raw_{}", axis.id);
-            session.register_table(
-                &raw,
-                session
-                    .sql(&axis.raw.replace("SIDE_", &format!("{prefix}_")))
-                    .await?
-                    .into_view(),
+    for (axis, after_axis) in axes.iter().zip(&after_axes) {
+        for (prefix, side) in [("before", axis), ("after", after_axis)] {
+            crate::native_catalog::work(
+                &session,
+                format!("{prefix}_raw_{}", axis.id),
+                session.sql(&side.raw).await?.into_view(),
             )?;
         }
         // Flat set reconciliation excludes provenance and ordering. No per-key nested
@@ -197,19 +190,21 @@ async fn page_inner(
                  labels AS (SELECT key, label FROM before_raw_{id} UNION ALL SELECT key, label FROM after_raw_{id})
             SELECT c.key, MIN(l.label) AS label FROM changed c JOIN labels l ON c.key = l.key GROUP BY c.key
         ", id=axis.id)).await?;
-        session.register_table(format!("delta_{}", axis.id), joined.clone().into_view())?;
+        crate::native_catalog::work(
+            &session,
+            format!("delta_{}", axis.id),
+            joined.clone().into_view(),
+        )?;
         let index = joined.select(vec![
             lit(u64::from(axis.id)).alias("plan"),
             col("label"),
             col("key"),
         ])?;
         let name = format!("index_{}", axis.id);
-        session.register_table(
+        crate::native_catalog::work(
+            &session,
             &name,
-            std::sync::Arc::new(crate::provider::DerivedRelation::new(
-                index.into_view(),
-                "comparison_index",
-            )),
+            crate::provider::derived(index, "comparison_index")?.into_view(),
         )?;
         let index = session.table(&name).await?;
         union = Some(match union {
@@ -220,27 +215,15 @@ async fn page_inner(
     let union = union.ok_or_else(|| DataFusionError::Plan("no comparison scope".into()))?;
     // Reconciliation is the expensive part. Count and page scan the same operation-owned
     // changed-key index; alternative values stay in their admitted source relations.
-    session.register_table(
-        "delta_index",
-        crate::operation_index::materialize(
-            runtime,
-            union,
-            crate::preparation::QueryFamily::ComparisonKeys,
-        )
-        .await?,
-    )?;
+    let completed = crate::operation_index::materialize(
+        runtime,
+        union,
+        crate::preparation::QueryFamily::ComparisonKeys,
+    )
+    .await?;
+    let total = completed.rows;
+    completed.register(&session, "delta_index")?;
     let union = session.table("delta_index").await?;
-    let total = projection::comparison::count(
-        &runtime
-            .execute_family(
-                session
-                    .sql("SELECT count(*) AS count FROM delta_index")
-                    .await?,
-                Some(crate::preparation::QueryFamily::Count),
-            )
-            .await?
-            .batches,
-    )?;
     if total == 0 {
         return Ok(ComparisonPage {
             total,
@@ -374,7 +357,7 @@ async fn page_inner(
                         Ok((values, more, observed, remaining))
                     },
                 )
-                .await?;
+                .await?.value;
             artifact_bytes = remaining;
             if offset > 0 && !observed {
                 return Err(DataFusionError::Plan(

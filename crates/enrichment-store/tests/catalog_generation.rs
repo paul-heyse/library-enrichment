@@ -61,7 +61,19 @@ fn candidate(name: &str, revision: &str) -> (CatalogDelta, Context, SnapshotId) 
 #[tokio::test]
 async fn compaction_preserves_all_snapshot_membership_and_pinned_selections() {
     let dir = tempfile::tempdir().expect("directory");
-    let runtime = runtime(dir.path());
+    let runtime = QueryRuntime::new(
+        &dir.path().join("spill"),
+        QueryLimits {
+            batch_rows: 1,
+            native: enrichment_core::config::NativeQueryConfig {
+                row_group_rows: 2,
+                catalog_file_rows: 4,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .unwrap();
     let catalog = RelationalCatalog::open(dir.path(), runtime.clone()).expect("catalog");
     let (first, context, first_id) = candidate("library", "first");
     catalog.commit(first).await.expect("first");
@@ -80,6 +92,27 @@ async fn compaction_preserves_all_snapshot_membership_and_pinned_selections() {
     let after = catalog.pin().await.expect("after compaction");
     assert_eq!(generation, before.generation() + 1);
     assert!(after.file_count() < before.file_count());
+    let compacted = std::fs::read_dir(dir.path().join("catalog/files"))
+        .unwrap()
+        .filter_map(|file| {
+            let file = std::fs::File::open(file.unwrap().path()).unwrap();
+            let reader =
+                parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder::try_new(file)
+                    .unwrap();
+            (reader.metadata().file_metadata().num_rows() == 4).then(|| reader.metadata().clone())
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        !compacted.is_empty(),
+        "compaction must combine processing batches into the declared file target"
+    );
+    assert!(compacted.iter().all(|metadata| {
+        metadata
+            .row_groups()
+            .iter()
+            .all(|group| group.num_rows() <= 2)
+    }));
+
     assert_eq!(
         after
             .current(&runtime, &context.context_id)
@@ -151,7 +184,7 @@ async fn concurrent_distinct_context_commits_survive_and_old_readers_remain_pinn
     let reopened = RelationalCatalog::open(dir.path(), runtime.clone()).expect("reopen");
     let cold = reopened.pin().await.expect("cold pin");
     let session = cold.session(&runtime).await.expect("session");
-    let rows = runtime.execute(session.sql("SELECT r.* FROM releases r JOIN contexts c ON r.release_id = c.release_id ORDER BY r.package").await.expect("plan")).await.expect("execute");
+    let rows = runtime.execute(session.sql("SELECT r.* FROM state.records.releases r JOIN state.records.contexts c ON r.release_id = c.release_id ORDER BY r.package").await.expect("plan")).await.expect("execute");
     let releases = rows
         .batches
         .iter()
@@ -189,7 +222,7 @@ async fn stale_same_context_candidate_is_retained_without_replacing_selection() 
         runtime
             .execute(
                 session
-                    .sql("SELECT snapshot_id FROM snapshots")
+                    .sql("SELECT snapshot_id FROM state.records.snapshots")
                     .await
                     .expect("plan")
             )
@@ -244,7 +277,7 @@ async fn invalid_closure_leaves_root_unchanged_and_unreferenced_files_are_invisi
         runtime
             .execute(
                 session
-                    .sql("SELECT release_id FROM releases")
+                    .sql("SELECT release_id FROM state.records.releases")
                     .await
                     .expect("plan")
             )

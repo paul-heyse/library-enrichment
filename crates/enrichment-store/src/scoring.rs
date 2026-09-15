@@ -8,7 +8,8 @@ use arrow::{
 use datafusion::{
     error::{DataFusionError, Result},
     logical_expr::{
-        ColumnarValue, Expr, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature, Volatility,
+        Coercion, ColumnarValue, Expr, ScalarFunctionArgs, ScalarUDF, ScalarUDFImpl, Signature,
+        TypeSignatureClass, Volatility,
     },
     prelude::{col, lit},
 };
@@ -46,7 +47,20 @@ pub fn function(kind: ScoreKind, spec: SearchSpec) -> ScalarUDF {
     };
     ScalarUDF::from(ScoreUdf {
         kind,
-        signature: Signature::exact(fields, Volatility::Immutable),
+        signature: Signature::coercible(
+            fields
+                .into_iter()
+                .map(|field| {
+                    let native = if field == DataType::Boolean {
+                        datafusion::common::types::NativeType::Boolean
+                    } else {
+                        datafusion::common::types::NativeType::String
+                    };
+                    Coercion::new_exact(TypeSignatureClass::Native(std::sync::Arc::new(native)))
+                })
+                .collect(),
+            Volatility::Immutable,
+        ),
         spec,
     })
 }

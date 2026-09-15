@@ -4,6 +4,15 @@ A plan records **how work is sequenced and verified**. A decision record
 ([`../adr/`](../adr/README.md)) records **what was decided and why**. The two have different
 lifecycles, which is why they live in different directories.
 
+**Completed and activated hard pivot, 2026-09-15:**
+[Plan 14](14-datafusion-catalog-policy-hard-pivot.md) implements the DataFusion capability/catalog
+review through immutable catalog/schema providers, one declaration and policy binding path,
+native statistics/coercion/index properties, and bounded diagnostics. It selects direct replacement
+and deletion, with no compatibility program. The plan is **done**: P0–P9, D01–D13 and J01–J17 are closed;
+all nine physical decisions are recorded. The installed candidate, real clients and independent
+regression replay passed. [Qualification](../reports/plan14-final-qualification-2026-09-15.md)
+records the source and explicit external-profile limits.
+
 **Current direction, 2026-09-14:** [Plan 12](12-architecture-first-completion.md) is functionally
 complete. Native architecture and legacy decommission precede the completed Phase 4–6 capabilities.
 Full implementation CI and actual producer/client checks passed. The user stopped redundant replay
@@ -34,6 +43,7 @@ and [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
 | [11 — Complete architecture and remove legacy paths](11-arrow-datafusion-completion-and-legacy-removal.md) | Architecture work, explicit deletion ledger and independent completion exits; progress in the [execution ledger](11-arrow-datafusion-execution-ledger.md) | ADR-0022–ADR-0032 | remaining functional/deletion scope completed through Plan 12 |
 | [12 — Architecture-first completion](12-architecture-first-completion.md) | Remaining architecture gaps and legacy removal first, then Phase 4–6 functionality and integrated acceptance | ADR-0022–ADR-0035 | done; user stopped redundant registry-only replay; [execution ledger](12-architecture-first-execution-ledger.md) |
 | [13 — DataFusion research operations hard pivot](13-datafusion-research-operations-hard-pivot.md) | Shared scope/selection, native query integration, safe revision reachability, structured errors, durable delivery and faithful FastMCP; no compatibility paths | ADR-0036–ADR-0039 accepted | done and deployed; all required journeys and active gates passed |
+| [14 — DataFusion catalog and policy hard pivot](14-datafusion-catalog-policy-hard-pivot.md) | Full immutable catalog/schema binding, shared declarations/policy, physical statistics, native string coercion, completed-index facts, bounded diagnostics and measured layout choices; explicit replacement and deletion | Retains ADR-0022–0024, ADR-0031, ADR-0033–0034, ADR-0038 boundaries; ADR-0040 accepted | done; implemented, independently verified and activated |
 
 ## Norms
 

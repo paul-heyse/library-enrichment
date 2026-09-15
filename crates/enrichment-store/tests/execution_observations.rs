@@ -312,7 +312,7 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
     .unwrap();
     let retained = reader.execution_observations(None, None).await.unwrap();
     assert_eq!(retained.len(), 4);
-    assert_eq!(reader.runtime().execute(reader.session().sql("SELECT payload.runtime_object.signature FROM execution_observations WHERE payload.kind = 'runtime_object'").await.unwrap()).await.unwrap().rows,1);
+    assert_eq!(reader.runtime().execute(reader.session().sql("SELECT payload.runtime_object.signature FROM snapshot.evidence.execution_observations WHERE payload.kind = 'runtime_object'").await.unwrap()).await.unwrap().rows,1);
     use enrichment_store::query::ExecutionSelection;
     let selection = enrichment_core::request::RuntimeSelection {
         module: "fixture".into(),
