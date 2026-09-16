@@ -1,0 +1,180 @@
+{
+  "module": "ruff_source_file",
+  "crate": "ruff_source_file",
+  "api": "api/ruff_source_file.md",
+  "items": [
+    {
+      "path": "ruff_source_file::SourceRow",
+      "name": "SourceRow",
+      "kind": "enum",
+      "crate": "ruff_source_file",
+      "signature": "enum SourceRow",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Notebook",
+        "SourceFile"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::LineColumn",
+      "name": "LineColumn",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct LineColumn",
+      "summary": "The line and column of an offset in a source file.",
+      "doc": "api/ruff_source_file.md#linecolumn",
+      "fields": [
+        "line",
+        "column"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::SourceCode",
+      "name": "SourceCode",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct SourceCode<'src, 'index>",
+      "summary": "Gives access to the source code of a file and allows mapping between [`TextSize`] and [`LineColumn`].",
+      "doc": "api/ruff_source_file.md#sourcecode",
+      "methods": [
+        {
+          "name": "line_column",
+          "signature": "fn line_column(&self, offset: TextSize) -> LineColumn",
+          "summary": "Computes the one indexed line and column numbers for `offset`, skipping any potential BOM."
+        },
+        {
+          "name": "line_count",
+          "signature": "fn line_count(&self) -> usize",
+          "summary": "Returns the number of lines"
+        },
+        {
+          "name": "line_end",
+          "signature": "fn line_end(&self, line: OneIndexed) -> TextSize"
+        },
+        {
+          "name": "line_end_exclusive",
+          "signature": "fn line_end_exclusive(&self, line: OneIndexed) -> TextSize"
+        },
+        {
+          "name": "line_index",
+          "signature": "fn line_index(&self, offset: TextSize) -> OneIndexed"
+        },
+        {
+          "name": "line_start",
+          "signature": "fn line_start(&self, line: OneIndexed) -> TextSize"
+        },
+        {
+          "name": "line_text",
+          "signature": "fn line_text(&self, index: OneIndexed) -> &'src str",
+          "summary": "Returns the source text of the line with the given index"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(content: &'src str, index: &'index LineIndex) -> Self"
+        },
+        {
+          "name": "slice",
+          "signature": "fn slice<T: Ranged>(&self, ranged: T) -> &'src str",
+          "summary": "Take the source code between the given [`ruff_text_size::TextRange`]."
+        },
+        {
+          "name": "source_location",
+          "signature": "fn source_location(&self, offset: TextSize, position_encoding: PositionEncoding) -> SourceLocation"
+        },
+        {
+          "name": "text",
+          "signature": "fn text(&self) -> &'src str",
+          "summary": "Returns the source text"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::SourceFile",
+      "name": "SourceFile",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct SourceFile",
+      "summary": "A source file that is identified by its name. Optionally stores the source code and [`LineIndex`].",
+      "doc": "api/ruff_source_file.md#sourcefile",
+      "methods": [
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> &LineIndex"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns the name of the source file (filename)."
+        },
+        {
+          "name": "source_text",
+          "signature": "fn source_text(&self) -> &str",
+          "summary": "Returns the source code."
+        },
+        {
+          "name": "to_source_code",
+          "signature": "fn to_source_code(&self) -> SourceCode<'_, '_>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::SourceFileBuilder",
+      "name": "SourceFileBuilder",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct SourceFileBuilder",
+      "summary": "A Builder for constructing a [`SourceFile`]",
+      "doc": "api/ruff_source_file.md#sourcefilebuilder",
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> SourceFile",
+          "summary": "Consumes `self` and returns the [`SourceFile`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Name: Into<Box<str>>, Code: Into<Box<str>>>(name: Name, code: Code) -> Self",
+          "summary": "Creates a new builder for a file named `name`."
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::SourceLocation",
+      "name": "SourceLocation",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct SourceLocation",
+      "summary": "A position into a source file represented by the line number and the offset to that character relative to the start of that line.",
+      "doc": "api/ruff_source_file.md#sourcelocation",
+      "fields": [
+        "line",
+        "character_offset"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": []
+    }
+  ]
+}

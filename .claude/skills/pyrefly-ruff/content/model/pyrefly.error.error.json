@@ -1,0 +1,214 @@
+{
+  "module": "pyrefly::error::error",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.error.error.md",
+  "items": [
+    {
+      "path": "pyrefly::error::error::BaselineStatus",
+      "name": "BaselineStatus",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum BaselineStatus",
+      "summary": "Whether an error was compared with the configured baseline.",
+      "doc": "api/pyrefly.error.error.md#baselinestatus",
+      "variants": [
+        "NotConfigured",
+        "NotCompared",
+        "Unmatched",
+        "Matched"
+      ],
+      "methods": [
+        {
+          "name": "display_suffix",
+          "signature": "fn display_suffix(self) -> &'static str",
+          "summary": "Suffix appended in text renderers, e.g. `\" [baselined]\"`."
+        },
+        {
+          "name": "legacy_baselined_flag",
+          "signature": "fn legacy_baselined_flag(self) -> Option<bool>",
+          "summary": "Value for the legacy JSON `baselined` field. `None` omits the field (no baseline configured), `Some(true/false)` emits it."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::error::error::ErrorQuickFix",
+      "name": "ErrorQuickFix",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ErrorQuickFix",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "ReplaceWithEnumMember",
+        "AssertNotNone"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::error::error::Error",
+      "name": "Error",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Error",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "ruff_text_size::traits::Ranged"
+      ],
+      "methods": [
+        {
+          "name": "baseline_status",
+          "signature": "fn baseline_status(&self) -> BaselineStatus"
+        },
+        {
+          "name": "display_range",
+          "signature": "fn display_range(&self) -> &DisplayRange"
+        },
+        {
+          "name": "error_kind",
+          "signature": "fn error_kind(&self) -> ErrorKind"
+        },
+        {
+          "name": "get_notebook_cell",
+          "signature": "fn get_notebook_cell(&self) -> Option<usize>"
+        },
+        {
+          "name": "lined_buffer",
+          "signature": "fn lined_buffer(&self) -> &LinedBuffer"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(&self) -> &Module"
+        },
+        {
+          "name": "msg",
+          "signature": "fn msg(&self) -> String"
+        },
+        {
+          "name": "msg_details",
+          "signature": "fn msg_details(&self) -> Option<&str>"
+        },
+        {
+          "name": "msg_header",
+          "signature": "fn msg_header(&self) -> &str"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(module: Module, range: TextRange, header: String, details: Vec<String>, error_kind: ErrorKind) -> Self"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &ModulePath"
+        },
+        {
+          "name": "path_string_with_fragment",
+          "signature": "fn path_string_with_fragment(&self, project_root: &Path) -> String",
+          "summary": "Return the path with a cell fragment if the error is in a notebook cell."
+        },
+        {
+          "name": "quick_fixes",
+          "signature": "fn quick_fixes(&self) -> &[ErrorQuickFix]"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange",
+          "via_trait": "ruff_text_size::traits::Ranged"
+        },
+        {
+          "name": "secondary_annotations",
+          "signature": "fn secondary_annotations(&self) -> &[SecondaryAnnotation]",
+          "summary": "Return the secondary annotations attached to this error."
+        },
+        {
+          "name": "severity",
+          "signature": "fn severity(&self) -> Severity"
+        },
+        {
+          "name": "suppression_effect",
+          "signature": "fn suppression_effect(&self, enabled_ignores: &SmallSet<Tool>, type_ignore_unknown_tag_behavior: TypeIgnoreUnknownTagBehavior) -> SuppressionEffect"
+        },
+        {
+          "name": "to_diagnostic",
+          "signature": "fn to_diagnostic(&self) -> Diagnostic",
+          "summary": "Create a diagnostic suitable for use in LSP."
+        },
+        {
+          "name": "with_annotation",
+          "signature": "fn with_annotation(self, range: TextRange, label: String) -> Self",
+          "summary": "Add a secondary labeled annotation to this error. These appear as additional underlined spans with labels in the source snippet."
+        },
+        {
+          "name": "with_baseline_status",
+          "signature": "fn with_baseline_status(self, baseline_status: BaselineStatus) -> Self"
+        },
+        {
+          "name": "with_quick_fix",
+          "signature": "fn with_quick_fix(self, quick_fix: ErrorQuickFix) -> Self"
+        },
+        {
+          "name": "with_severity",
+          "signature": "fn with_severity(&self, severity: Severity) -> Self"
+        },
+        {
+          "name": "without_deprecated_tag",
+          "signature": "fn without_deprecated_tag(self) -> Self",
+          "summary": "Stop marking this error's range as deprecated in editors. Used when the range spans more than the deprecated symbol, so striking it through would obscure unrelated code."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::error::error::SecondaryAnnotation",
+      "name": "SecondaryAnnotation",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SecondaryAnnotation",
+      "summary": "A secondary annotation that labels a span in the same file as the primary error. Used to show additional context, e.g. the types of both operands in a binary operation.",
+      "doc": "api/pyrefly.error.error.md#secondaryannotation",
+      "fields": [
+        "range",
+        "label"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::error::error::SerializableError",
+      "name": "SerializableError",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SerializableError",
+      "summary": "An error representation that preserves the data needed for supported CLI output formats.",
+      "doc": "api/pyrefly.error.error.md#serializableerror",
+      "aliases": [
+        "pyrefly::library::library::library::library::SerializableError"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "from_error",
+          "signature": "fn from_error(relative_to: &Path, error: &Error) -> Self"
+        },
+        {
+          "name": "into_legacy_error",
+          "signature": "fn into_legacy_error(self) -> LegacyError"
+        },
+        {
+          "name": "legacy_error",
+          "signature": "fn legacy_error(&self) -> &LegacyError"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    }
+  ]
+}

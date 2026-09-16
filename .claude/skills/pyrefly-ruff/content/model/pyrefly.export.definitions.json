@@ -1,0 +1,161 @@
+{
+  "module": "pyrefly::export::definitions",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.export.definitions.md",
+  "items": [
+    {
+      "path": "pyrefly::export::definitions::DefinitionStyle",
+      "name": "DefinitionStyle",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DefinitionStyle",
+      "summary": "How a name is defined. If a name is defined outside of this module, we additionally store the module we got it from.",
+      "doc": "api/pyrefly.export.definitions.md#definitionstyle",
+      "variants": [
+        "MutableCapture",
+        "Annotated",
+        "Unannotated",
+        "ImplicitGlobal",
+        "ImportAs",
+        "ImportAsEq",
+        "Import",
+        "ImportModule",
+        "ImportInvalidRelative",
+        "Delete"
+      ],
+      "methods": [
+        {
+          "name": "is_import",
+          "signature": "fn is_import(&self) -> bool",
+          "summary": "Returns true if this definition style represents an import from another module."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::export::definitions::DunderAllEntry",
+      "name": "DunderAllEntry",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DunderAllEntry",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Name",
+        "Module",
+        "Remove"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::export::definitions::DunderAllKind",
+      "name": "DunderAllKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DunderAllKind",
+      "summary": "Whether `__all__` was explicitly defined by the user or synthesized from module definitions.",
+      "doc": "api/pyrefly.export.definitions.md#dunderallkind",
+      "variants": [
+        "Inferred",
+        "Specified",
+        "Unresolvable"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::export::definitions::MutableCaptureKind",
+      "name": "MutableCaptureKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum MutableCaptureKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Global",
+        "Nonlocal"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::export::definitions::Definition",
+      "name": "Definition",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Definition",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "style",
+        "range",
+        "needs_anywhere",
+        "docstring_range",
+        "last_range",
+        "main_guard_only",
+        "has_value_definition"
+      ],
+      "methods": [
+        {
+          "name": "annotation",
+          "signature": "fn annotation(&self) -> Option<ShortIdentifier>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::export::definitions::Definitions",
+      "name": "Definitions",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Definitions",
+      "summary": "Find the definitions available in a scope. Does not traverse inside classes/functions, since they are separate scopes.",
+      "doc": "api/pyrefly.export.definitions.md#definitions",
+      "fields": [
+        "definitions",
+        "import_all",
+        "dunder_all",
+        "implicitly_imported_submodules",
+        "deprecated",
+        "final_names",
+        "special_exports",
+        "name_reads"
+      ],
+      "methods": [
+        {
+          "name": "ensure_dunder_all",
+          "signature": "fn ensure_dunder_all(&mut self, style: ModuleStyle)",
+          "summary": "Ensure that `dunder_all` is populated, synthesising it if `__all__` isn't present or if `__all__` is present but cannot be statically analyzed."
+        },
+        {
+          "name": "extend_dunder_all",
+          "signature": "fn extend_dunder_all(&mut self, extra: &[Name])",
+          "summary": "Add these names to `dunder_all`, if they are defined in the module."
+        },
+        {
+          "name": "implicit_captures",
+          "signature": "fn implicit_captures(&self) -> SmallSet<Name>",
+          "summary": "Names that are read but not locally defined in this scope. These are implicit captures from enclosing scopes."
+        },
+        {
+          "name": "inject_implicit_globals",
+          "signature": "fn inject_implicit_globals(&mut self)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(x: &[Stmt], module_name: ModuleName, is_init: bool, sys_info: SysInfo) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::export::definitions::DunderAll",
+      "name": "DunderAll",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct DunderAll",
+      "summary": "The `__all__` variable contents with tracking of whether it was user-specified.",
+      "doc": "api/pyrefly.export.definitions.md#dunderall",
+      "fields": [
+        "kind",
+        "entries"
+      ],
+      "methods": []
+    }
+  ]
+}

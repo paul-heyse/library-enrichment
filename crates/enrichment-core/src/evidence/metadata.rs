@@ -1,10 +1,7 @@
 //! Retained, qualified release metadata used by offline resolution (ADR-0025).
 
 use super::relational::FactSource;
-use crate::{
-    canonical,
-    producer::{docsrs::DocsRsMetadata, python::Distribution},
-};
+use crate::producer::{docsrs::DocsRsMetadata, python::Distribution};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -19,6 +16,16 @@ pub enum ReleaseDetails {
     PythonDistribution(Distribution),
 }
 
+impl ReleaseDetails {
+    pub const KINDS: [&'static str; 2] = ["rust_docs", "python_distribution"];
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::RustDocs(_) => Self::KINDS[0],
+            Self::PythonDistribution(_) => Self::KINDS[1],
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReleaseMetadata {
@@ -31,21 +38,19 @@ pub struct ReleaseMetadata {
 impl ReleaseMetadata {
     #[must_use]
     pub fn new(release_id: String, details: ReleaseDetails, source: FactSource) -> Self {
-        let metadata_id = format!(
-            "metadata_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "release-metadata/1",
-                release_id,
-                details,
-                source,
-            ]))
-        );
-        Self {
-            metadata_id,
+        let mut value = Self {
+            metadata_id: String::new(),
             release_id,
             details,
             source,
-        }
+        };
+        value.metadata_id = crate::native_key::Key::ReleaseMetadata
+            .batch_value(
+                &super::arrow_model::metadata::fields(std::slice::from_ref(&value))
+                    .expect("native metadata fields"),
+            )
+            .expect("native metadata identity");
+        value
     }
 
     /// # Errors

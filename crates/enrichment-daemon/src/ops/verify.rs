@@ -50,8 +50,16 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
             Ok(v) => v,
             Err(e) => return *e,
         };
-    let readiness =
-        crate::execution::readiness::assess(service, opened.release.key.ecosystem, request.profile);
+    let readiness = match crate::execution::readiness::assess(
+        service,
+        opened.release.key.ecosystem,
+        request.profile,
+    )
+    .await
+    {
+        Ok(readiness) => readiness,
+        Err(error) => return common::operation_error(&error, "execution_policy"),
+    };
     if !readiness.available {
         return refused(service, crate::execution::readiness::refusal(&readiness));
     }
@@ -72,28 +80,8 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
             ),
         );
     }
-    // Admission is refused while an owned container's absence is unconfirmed. Queueing behind
-    // an unwatched boundary would let repeated cleanup failures exceed the worker bound.
-    if let crate::execution::cleanup::Admission::Quarantined { detail, .. } =
-        service.execution.admission()
-    {
-        return refused(
-            service,
-            envelope::error(
-                ErrorCode::PolicyDenied,
-                "New isolated execution is quarantined while owned container cleanup is unresolved.",
-                detail,
-                true,
-            ),
-        );
-    }
     request.snapshot_id = Some(opened.snapshot_id.as_str().into());
-    let mut key_request = request.clone();
-    key_request.max_bytes = None;
-    let key = canonical::digest_hex(
-        &serde_json::json!({"producer":"verification-1", "request":key_request, "image":image, "environment":opened.environment, "execution":format!("{:?}", service.config.execution)}),
-    );
-    let (record, token, new) = match service.jobs.submit(key, request.clone()) {
+    let (record, token, new) = match service.jobs.submit(request.clone()).await {
         Ok(v) => v,
         Err(e) => return common::operation_error(&e, "verification_job"),
     };
@@ -101,7 +89,9 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
         let owned = service.clone();
         let id = record.job_id.clone();
         let image = image.clone();
-        tokio::spawn(async move {
+        let jobs = std::sync::Arc::clone(&owned.jobs);
+        let runtime = owned.repository.runtime.clone();
+        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
             owned
                 .repository
                 .runtime
@@ -128,7 +118,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
                                     false,
                                 );
                                 if let Err(error) =
-                                    owned.jobs.finish(&id, JobState::Cancelled, result)
+                                    owned.jobs.finish(&id, JobState::Cancelled, result).await
                                 {
                                     eprintln!("job {id}: failed to persist cancellation: {error}");
                                 }
@@ -141,7 +131,8 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
                                     "Resolve execution cleanup or restart the daemon.",
                                     false,
                                 );
-                                if let Err(error) = owned.jobs.finish(&id, JobState::Failed, result)
+                                if let Err(error) =
+                                    owned.jobs.finish(&id, JobState::Failed, result).await
                                 {
                                     eprintln!(
                                         "job {id}: failed to persist admission failure: {error}"
@@ -150,7 +141,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
                                 return;
                             }
                         };
-                        let (state, result) = match owned.jobs.start(&id) {
+                        let (state, result) = match owned.jobs.start(&id).await {
                             Ok(true) => {
                                 execute(&owned, &id, &image, &request, &opened, cancel, lease).await
                             }
@@ -168,13 +159,15 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
                                 common::operation_error(&e, "verification_job"),
                             ),
                         };
-                        if let Err(e) = owned.jobs.finish(&id, state, result) {
+                        if let Err(e) = owned.jobs.finish(&id, state, result).await {
                             eprintln!("job {id}: failed to persist terminal result: {e}");
                         }
                     },
                 )
                 .await;
-        });
+        }) {
+            return common::operation_error(&error, "native_effect_owner");
+        }
     }
     let latest = wait(
         service,
@@ -594,7 +587,6 @@ async fn publish_completed(
     use enrichment_core::{
         evidence::{
             execution::{ExecutionObservation, ExecutionPayload, UsageProbe},
-            ingest,
             relational::{FactSource, Locator, SubjectRef},
             snapshot::SnapshotMetadata,
         },
@@ -604,20 +596,39 @@ async fn publish_completed(
     let mut data: VerificationData =
         serde_json::from_value(serde_json::Value::Object(result.data.clone()))
             .map_err(|e| e.to_string())?;
-    let find = |id: &str| {
-        service
-            .blobs
-            .find(id)
+    service
+        .repository
+        .catalog
+        .retain_artifacts(
+            &service.repository.runtime,
+            &result
+                .artifacts
+                .iter()
+                .map(|handle| handle.receipt.clone())
+                .collect::<Vec<_>>(),
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    let pin = service
+        .repository
+        .catalog
+        .pin()
+        .await
+        .map_err(|e| e.to_string())?;
+    let find = async |id: &str| {
+        pin.artifact(&service.repository.runtime, id)
+            .await
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("missing producer artifact {id}"))
     };
-    let snippet = find(&data.snippet_artifact_id)?;
+    let snippet = find(&data.snippet_artifact_id).await?;
     let lock = find(
         data.lock_artifact_id
             .as_deref()
             .ok_or("missing resolved lock")?,
-    )?;
-    let receipt = find(&data.result_artifact_id)?;
+    )
+    .await?;
+    let receipt = find(&data.result_artifact_id).await?;
     let raw: serde_json::Value = serde_json::from_slice(
         &service
             .blobs
@@ -725,8 +736,7 @@ async fn publish_completed(
     ] {
         acquisitions.insert(artifact.sha256.clone(), artifact);
     }
-    let evidence =
-        ingest::normalize_execution(fact, run.clone(), acquisitions.into_values().collect())?;
+    let publication_artifacts = acquisitions.into_values().collect();
     let context = if environment.environment_id == opened.environment.environment_id {
         opened.context.clone()
     } else {
@@ -807,10 +817,16 @@ async fn publish_completed(
     );
     let manifest = service
         .repository
-        .publish_job(
+        .publish_execution(
             metadata,
-            evidence,
+            vec![fact],
+            run.clone(),
+            publication_artifacts,
             enrichment_store::repository::JobCompletion {
+                publication_fence: service
+                    .jobs
+                    .publication_fence(job)
+                    .map_err(|error| error.to_string())?,
                 job_id: job.into(),
                 kind: enrichment_core::evidence::catalog::PublishedJobKind::Verify,
                 state,
@@ -982,7 +998,7 @@ pub async fn recover(
 pub async fn control(service: &Service, request: JobRequest) -> Envelope {
     let result = match request.action {
         JobAction::Cancel => match request.interest_token.as_deref() {
-            Some(token) => service.jobs.cancel(&request.job_id, token),
+            Some(token) => service.jobs.cancel(&request.job_id, token).await,
             None => {
                 return envelope::error(
                     ErrorCode::PolicyDenied,
@@ -1003,7 +1019,7 @@ pub async fn control(service: &Service, request: JobRequest) -> Envelope {
             )
             .await
         }
-        JobAction::Status => service.jobs.get(&request.job_id),
+        JobAction::Status => service.jobs.get(&request.job_id).await,
     };
     match result {
         Ok(record) => {
@@ -1035,7 +1051,7 @@ pub(super) async fn wait(
 ) -> std::io::Result<jobs::JobRecord> {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(seconds);
     loop {
-        let record = service.jobs.get(id)?;
+        let record = service.jobs.get(id).await?;
         if jobs::terminal(record.state) || tokio::time::Instant::now() >= deadline {
             return Ok(record);
         }

@@ -47,7 +47,7 @@ pub async fn open_context(
 /// Bind every part of a multi-snapshot operation to the same coherent catalog generation.
 pub async fn open_context_at(
     service: &Service,
-    catalog: std::sync::Arc<enrichment_store::catalog_generation::PinnedCatalog>,
+    catalog: std::sync::Arc<enrichment_store::control::ControlSnapshot>,
     context_id: &str,
     snapshot_id: Option<&str>,
 ) -> Result<Opened, Box<Envelope>> {
@@ -202,9 +202,8 @@ pub fn handle_for(artifact: &Artifact, description: String) -> Option<ArtifactHa
     envelope::artifact_uri(&format!("artifacts/{}", artifact.artifact_id))
         .ok()
         .map(|uri| ArtifactHandle {
-            artifact_id: artifact.artifact_id.clone(),
+            receipt: artifact.clone(),
             uri,
-            media_type: artifact.media_type.clone(),
             description,
         })
 }
@@ -281,17 +280,24 @@ pub fn to_object<T: serde::Serialize>(value: &T) -> enrichment_core::wire::JsonO
 
 /// Enforce the complete serialized envelope budget. Oversized answers remain available as
 /// immutable JSON artifacts; only the per-call request ID is excluded from reusable content.
-pub fn enforce_budget(service: &Service, result: Envelope, requested: Option<usize>) -> Envelope {
+pub async fn enforce_budget(
+    service: &Service,
+    result: Envelope,
+    requested: Option<usize>,
+) -> Envelope {
     let result = match enrichment_store::runtime::charge_result(json_size(&result)) {
         Ok(()) => result,
         Err(error) => query_error(&error.into()),
     };
     crate::delivery::encode(
         &service.blobs,
+        &service.repository.catalog,
+        &service.repository.runtime,
         result,
         byte_budget(service, requested),
         requested,
     )
+    .await
     .unwrap_or_else(|error| {
         if let Some(minimum) = error
             .get_ref()

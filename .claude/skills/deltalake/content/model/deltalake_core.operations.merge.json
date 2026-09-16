@@ -1,0 +1,224 @@
+{
+  "module": "deltalake_core::operations::merge",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.operations.merge.md",
+  "items": [
+    {
+      "path": "deltalake_core::operations::merge::DeleteBuilder",
+      "name": "DeleteBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeleteBuilder",
+      "summary": "Builder for delete clauses",
+      "doc": "api/deltalake_core.operations.merge.md#deletebuilder",
+      "aliases": [
+        "deltalake::operations::merge::DeleteBuilder"
+      ],
+      "methods": [
+        {
+          "name": "predicate",
+          "signature": "fn predicate<E: Into<Expression>>(self, predicate: E) -> Self",
+          "summary": "Delete a record when the predicate is satisfied"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::merge::InsertBuilder",
+      "name": "InsertBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct InsertBuilder",
+      "summary": "Builder for insert clauses",
+      "doc": "api/deltalake_core.operations.merge.md#insertbuilder",
+      "aliases": [
+        "deltalake::operations::merge::InsertBuilder"
+      ],
+      "methods": [
+        {
+          "name": "predicate",
+          "signature": "fn predicate<E: Into<Expression>>(self, predicate: E) -> Self",
+          "summary": "Perform the insert operation when the predicate is satisfied"
+        },
+        {
+          "name": "set",
+          "signature": "fn set<C: Into<DeltaColumn>, E: Into<Expression>>(self, column: C, expression: E) -> Self",
+          "summary": "Which values to insert into the target tables. If a target column is not specified then null is inserted."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeBuilder",
+      "name": "MergeBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct MergeBuilder",
+      "summary": "Merge records into a Delta Table.",
+      "doc": "api/deltalake_core.operations.merge.md#mergebuilder",
+      "aliases": [
+        "deltalake::operations::merge::MergeBuilder"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture",
+        "deltalake_core::operations::Operation"
+      ],
+      "methods": [
+        {
+          "name": "get_custom_execute_handler",
+          "signature": "fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        },
+        {
+          "name": "log_store",
+          "signature": "fn log_store(&self) -> &LogStoreRef",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<E: Into<Expression>>(log_store: LogStoreRef, snapshot: Option<EagerSnapshot>, predicate: E, source: DataFrame) -> Self",
+          "summary": "Create a new [`MergeBuilder`]"
+        },
+        {
+          "name": "when_matched_delete",
+          "signature": "fn when_matched_delete<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(DeleteBuilder) -> DeleteBuilder",
+          "summary": "Delete a target record when it matches with a source record"
+        },
+        {
+          "name": "when_matched_update",
+          "signature": "fn when_matched_update<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(UpdateBuilder) -> UpdateBuilder",
+          "summary": "Update a target record when it matches with a source record"
+        },
+        {
+          "name": "when_not_matched_by_source_delete",
+          "signature": "fn when_not_matched_by_source_delete<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(DeleteBuilder) -> DeleteBuilder",
+          "summary": "Delete a target record when it does not match with a source record"
+        },
+        {
+          "name": "when_not_matched_by_source_update",
+          "signature": "fn when_not_matched_by_source_update<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(UpdateBuilder) -> UpdateBuilder",
+          "summary": "Update a target record when it does not match with a source record"
+        },
+        {
+          "name": "when_not_matched_insert",
+          "signature": "fn when_not_matched_insert<F>(self, builder: F) -> DeltaResult<MergeBuilder> where F: FnOnce(InsertBuilder) -> InsertBuilder",
+          "summary": "Insert a source record when it does not match with a target record"
+        },
+        {
+          "name": "with_commit_properties",
+          "signature": "fn with_commit_properties(self, commit_properties: CommitProperties) -> Self",
+          "summary": "Additional metadata to be added to commit info"
+        },
+        {
+          "name": "with_custom_execute_handler",
+          "signature": "fn with_custom_execute_handler(self, handler: Arc<dyn CustomExecuteHandler>) -> Self",
+          "summary": "Set a custom execute handler, for pre and post execution"
+        },
+        {
+          "name": "with_merge_schema",
+          "signature": "fn with_merge_schema(self, merge_schema: bool) -> Self",
+          "summary": "Add Schema Write Mode"
+        },
+        {
+          "name": "with_safe_cast",
+          "signature": "fn with_safe_cast(self, safe_cast: bool) -> Self",
+          "summary": "Specify whether MERGE uses safe casts when casting update and insert expressions to the table's schema. When enabled, failed casts yield null for target columns that allow null values. When disabled, failed casts return an error. A failed…"
+        },
+        {
+          "name": "with_session_fallback_policy",
+          "signature": "fn with_session_fallback_policy(self, policy: SessionFallbackPolicy) -> Self",
+          "summary": "Control how delta-rs resolves the provided session when it is not a concrete `SessionState`."
+        },
+        {
+          "name": "with_session_state",
+          "signature": "fn with_session_state(self, state: Arc<dyn Session>) -> Self",
+          "summary": "Set the DataFusion session used for planning and execution."
+        },
+        {
+          "name": "with_source_alias",
+          "signature": "fn with_source_alias<S: ToString>(self, alias: S) -> Self",
+          "summary": "Rename columns in the source dataset to have a prefix of `alias`.`original column name`"
+        },
+        {
+          "name": "with_streaming",
+          "signature": "fn with_streaming(self, streaming: bool) -> Self",
+          "summary": "Set streaming mode execution"
+        },
+        {
+          "name": "with_target_alias",
+          "signature": "fn with_target_alias<S: ToString>(self, alias: S) -> Self",
+          "summary": "Rename columns in the target dataset to have a prefix of `alias`.`original column name`"
+        },
+        {
+          "name": "with_writer_properties",
+          "signature": "fn with_writer_properties(self, writer_properties: WriterProperties) -> Self",
+          "summary": "Writer properties passed to parquet writer for when files are rewritten"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::merge::MergeMetrics",
+      "name": "MergeMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct MergeMetrics",
+      "summary": "Metrics for the Merge Operation",
+      "doc": "api/deltalake_core.operations.merge.md#mergemetrics",
+      "aliases": [
+        "deltalake::operations::merge::MergeMetrics"
+      ],
+      "fields": [
+        "num_source_rows",
+        "num_target_rows_inserted",
+        "num_target_rows_updated",
+        "num_target_rows_deleted",
+        "num_target_rows_copied",
+        "num_output_rows",
+        "num_target_files_scanned",
+        "num_target_files_skipped_during_scan",
+        "num_target_files_added",
+        "num_target_files_removed",
+        "execution_time_ms",
+        "scan_time_ms",
+        "rewrite_time_ms"
+      ],
+      "implements": [
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::merge::UpdateBuilder",
+      "name": "UpdateBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct UpdateBuilder",
+      "summary": "Builder for update clauses",
+      "doc": "api/deltalake_core.operations.merge.md#updatebuilder",
+      "aliases": [
+        "deltalake::operations::merge::UpdateBuilder"
+      ],
+      "methods": [
+        {
+          "name": "predicate",
+          "signature": "fn predicate<E: Into<Expression>>(self, predicate: E) -> Self",
+          "summary": "Perform the update operation when the predicate is satisfied"
+        },
+        {
+          "name": "update",
+          "signature": "fn update<C: Into<DeltaColumn>, E: Into<Expression>>(self, column: C, expression: E) -> Self",
+          "summary": "How a column from the target table should be updated. In the match case the expression may contain both source and target columns. In the source not match case the expression may only contain target columns"
+        }
+      ]
+    }
+  ]
+}

@@ -59,7 +59,7 @@ pub async fn folded(
     let mut symbols = session.table("snapshot.domain.api_surface").await?.filter(
         lit(options.include_api)
             .and(col("observation_id").is_not_null())
-            .and(scoring::eligibility(&spec.symbol_clauses)),
+            .and(scoring::eligibility(spec)?),
     )?;
     if let Some(area) = &options.area {
         symbols = symbols
@@ -83,18 +83,21 @@ pub async fn folded(
         .into_iter()
         .map(col),
     )?;
-    let scorer = scoring::function(ScoreKind::Symbol, spec.clone());
     symbols = symbols
         .with_column(
             "ranking",
-            scorer.call(vec![
-                col("path"),
-                col("name"),
-                col("signature"),
-                col("doc_summary"),
-                col("docs"),
-                col("is_reexport"),
-            ]),
+            scoring::ranking(
+                ScoreKind::Symbol,
+                spec,
+                vec![
+                    col("path"),
+                    col("name"),
+                    col("signature"),
+                    col("doc_summary"),
+                    col("docs"),
+                    col("is_reexport"),
+                ],
+            )?,
         )?
         .filter(col("ranking").is_not_null())?
         .with_column("rank_score", col("ranking").field("score"))?;
@@ -147,7 +150,7 @@ pub async fn folded(
         } else {
             col("kind").in_list(kinds, false)
         })?
-        .filter(scoring::fragment_eligibility(&spec.fragment_clauses))?;
+        .filter(scoring::fragment_eligibility(spec)?)?;
     fragments = fragments.select(
         [
             "fragment_id",
@@ -163,8 +166,7 @@ pub async fn folded(
     fragments = fragments
         .with_column(
             "ranking",
-            scoring::function(ScoreKind::Fragment, spec.clone())
-                .call(vec![col("label"), col("text")]),
+            scoring::ranking(ScoreKind::Fragment, spec, vec![col("label"), col("text")])?,
         )?
         .filter(col("ranking").is_not_null())?
         .with_column("rank_score", col("ranking").field("score"))?;
@@ -294,7 +296,7 @@ pub async fn page(
             r"
         SELECT p.*,
             CASE p.hit_order WHEN 0 THEN a.payload.signature ELSE NULL END AS signature,
-            CASE p.hit_order WHEN 0 THEN coalesce(a.payload.signature, a.payload.doc_summary, a.payload.docs, '') ELSE f.text END AS excerpt,
+            CASE p.hit_order WHEN 0 THEN coalesce(a.payload.signature, a.payload.doc_summary, a.docs, '') ELSE f.text END AS excerpt,
             CASE p.hit_order WHEN 0 THEN a.source ELSE f.source END AS source
         FROM search_page p
         LEFT JOIN snapshot.evidence.api_observations a ON p.fact_id = a.observation_id AND p.hit_order = 0

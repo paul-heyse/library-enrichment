@@ -176,12 +176,11 @@ pub struct Evidence {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ArtifactHandle {
-    /// Stable handle, usable with `read_artifact`.
-    pub artifact_id: String,
+    /// Exact content identity and this acquisition's provenance. Pass receipt.artifact_id
+    /// to read_artifact; repeated bytes may have different acquisition receipts.
+    pub receipt: crate::evidence::Artifact,
     /// Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.
     pub uri: ArtifactUri,
-    /// The artifact's media type.
-    pub media_type: String,
     /// What the artifact contains, so a caller can decide whether to read it.
     pub description: String,
 }

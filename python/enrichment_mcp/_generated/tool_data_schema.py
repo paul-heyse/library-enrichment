@@ -82,6 +82,7 @@ class DeclaredKind(StrEnum):
     assoc_const = "assoc_const"
     primitive = "primitive"
     extern_crate = "extern_crate"
+    extern_type = "extern_type"
     import_ = "import"
 
 
@@ -100,7 +101,7 @@ class Kind(StrEnum):
 class Artifact(BaseModel):
     artifact_id: str = Field(
         ...,
-        description="`art_<32 hex>`, derived from the digest; the handle callers pass to `read_artifact`.",
+        description="`art_<64 hex>`, derived from the complete digest; used by `read_artifact`.",
     )
     compression: str | None = Field(
         ..., description="Transport compression that was removed before storage, e.g. `zstd`."
@@ -129,11 +130,13 @@ class ArtifactHandle(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    artifact_id: str = Field(..., description="Stable handle, usable with `read_artifact`.")
     description: str = Field(
         ..., description="What the artifact contains, so a caller can decide whether to read it."
     )
-    media_type: str = Field(..., description="The artifact's media type.")
+    receipt: Artifact = Field(
+        ...,
+        description="Exact content identity and this acquisition's provenance. Pass receipt.artifact_id\nto read_artifact; repeated bytes may have different acquisition receipts.",
+    )
     uri: str = Field(
         ...,
         description="Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.",
@@ -198,19 +201,19 @@ class Mode3(StrEnum):
 
 class Context(BaseModel):
     context_id: str = Field(
-        ..., description="Derived from release, environment and mode.", pattern="^ctx_[0-9a-f]{16}$"
+        ..., description="Derived from release, environment and mode.", pattern="^ctx_[0-9a-f]{64}$"
     )
     environment_id: str = Field(
-        ..., description="The environment it is studied in.", pattern="^env_[0-9a-f]{16}$"
+        ..., description="The environment it is studied in.", pattern="^env_[0-9a-f]{64}$"
     )
     mode: Mode3 = Field(..., description="The research mode.")
     parent_context_id: str | None = Field(
         ...,
         description="The context this one was derived from, if any.",
-        pattern="^ctx_[0-9a-f]{16}$",
+        pattern="^ctx_[0-9a-f]{64}$",
     )
     release_id: str = Field(
-        ..., description="The release under study.", pattern="^rel_[0-9a-f]{16}$"
+        ..., description="The release under study.", pattern="^rel_[0-9a-f]{64}$"
     )
 
 
@@ -220,6 +223,19 @@ class DeliveryLimits(BaseModel):
     )
     effective_max_bytes: int | None = Field(..., ge=0)
     requested_max_bytes: int | None = Field(..., ge=0)
+
+
+class DeltaBinding(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    cohort_id: str
+    contract_id: str
+    relation: str
+    rows: int = Field(..., ge=0)
+    table_id: str
+    table_uri: str
+    version: int = Field(..., ge=0)
 
 
 class Deprecated(BaseModel):
@@ -292,14 +308,13 @@ class Environment(BaseModel):
         ..., description="Whether default features are enabled. `None` when unspecified."
     )
     environment_id: str = Field(
-        ..., description="Derived from every other field.", pattern="^env_[0-9a-f]{16}$"
+        ..., description="Derived from every other field.", pattern="^env_[0-9a-f]{64}$"
     )
     features: list[str] = Field(
         ..., description="Enabled features or extras, sorted and deduplicated."
     )
     features_known: bool = Field(
-        ...,
-        description="Whether an empty feature selection was explicitly supplied. Older records did not\nretain this distinction; their empty selections remain unknown when read.",
+        ..., description="Whether an empty feature selection was explicitly supplied."
     )
     lock_digest: str | None = Field(
         ..., description="Digest of the dependency lock, when one was supplied."
@@ -345,7 +360,7 @@ class EvidenceCounters(BaseModel):
     )
 
 
-class Kind2(StrEnum):
+class Kind3(StrEnum):
     api_signature = "api_signature"
     doc_text = "doc_text"
     feature_definition = "feature_definition"
@@ -367,7 +382,7 @@ class EvidenceFragment(BaseModel):
     artifact_id: str = Field(..., description="The artifact it was read from.")
     evidence_class: EvidenceClass = Field(..., description="Which epistemic class it belongs to.")
     fragment_id: str = Field(..., description="Content-derived identity.")
-    kind: Kind2 = Field(..., description="What kind of text this is.")
+    kind: Kind3 = Field(..., description="What kind of text this is.")
     locator: dict[str, Any] = Field(
         ..., description="Position within the artifact, as a JSON object."
     )
@@ -488,7 +503,7 @@ class FetchCounters(BaseModel):
     )
 
 
-class Kind3(StrEnum):
+class Kind4(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -557,7 +572,7 @@ class InspectionAspect(StrEnum):
     members = "members"
 
 
-class Kind4(StrEnum):
+class Kind5(StrEnum):
     module = "module"
     struct = "struct"
     class_ = "class"
@@ -579,6 +594,7 @@ class Kind4(StrEnum):
     assoc_const = "assoc_const"
     primitive = "primitive"
     extern_crate = "extern_crate"
+    extern_type = "extern_type"
     import_ = "import"
 
 
@@ -587,7 +603,7 @@ class InspectionCandidate(BaseModel):
         extra="forbid",
     )
     definition_id: str
-    kind: Kind4 = Field(
+    kind: Kind5 = Field(
         ...,
         description="What kind of item a symbol is.\n\nThe values are, in order: `module`, `struct`, `union`, `enum`, `variant`, `struct_field`,\n`trait`, `trait_alias`, `type_alias`, `function`, `method`, `constant`, `static`, `macro`,\n`proc_macro`, `assoc_type`, `assoc_const`, `primitive`, `extern_crate`, `import`.",
     )
@@ -840,6 +856,7 @@ class NativeQueryCounters(BaseModel):
     )
     completed: int = Field(..., ge=0)
     concurrency_limit: int = Field(..., ge=0)
+    diagnostic_observations_dropped: int = Field(..., ge=0)
     effective_native_settings: dict[str, str] = Field(
         ..., description="The read-only values consumed by native source construction."
     )
@@ -903,7 +920,7 @@ class OverviewChild(BaseModel):
     is_reexport: bool = Field(
         ..., description="Whether this path re-exports a definition elsewhere."
     )
-    kind: Kind4 = Field(..., description="Kind.")
+    kind: Kind5 = Field(..., description="Kind.")
     path: str = Field(..., description="Public path.")
 
 
@@ -924,22 +941,36 @@ class Page(BaseModel):
     returned: int = Field(..., description="How many entries this page carries.", ge=0)
 
 
-class PhysicalTable(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    bytes: int = Field(..., ge=0)
-    file: str
-    relation: str
-    rows: int = Field(..., ge=0)
-    sha256: str
-
-
 class PlannedFallback(BaseModel):
     enabled: bool = Field(..., description="Whether configuration currently enables that profile.")
     next_action: str = Field(..., description="What a caller or operator would do to make it run.")
     producer: str = Field(..., description="Producer name.")
     profile: str = Field(..., description="The execution profile it needs.")
+
+
+class ProcessAuthority1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    effect_id: str
+    environment_id: str | None
+    grant_id: str
+    kind: Literal["command"]
+    snapshot_id: str | None
+
+
+class ProcessAuthority2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    definition_id: str
+    kind: Literal["qualification"]
+
+
+class ProcessAuthority(RootModel[ProcessAuthority1 | ProcessAuthority2]):
+    root: ProcessAuthority1 | ProcessAuthority2 = Field(
+        ..., description="Raw bounded process observation, independent of what a probe establishes."
+    )
 
 
 class End(StrEnum):
@@ -950,12 +981,14 @@ class End(StrEnum):
 
 
 class ProcessObservation(BaseModel):
+    authority: ProcessAuthority
     cleanup_confirmed: bool
     command: list[str]
     end: End
     exit_code: int | None
     finished_at: str
     image_id: str
+    operation_id: str
     started_at: str
     stderr: str
     stdout: str
@@ -1036,6 +1069,16 @@ class RecoveryAction12(BaseModel):
     reason: str
 
 
+class RelationChanges(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    inserted: int = Field(..., ge=0)
+    relation: str
+    removed: int = Field(..., ge=0)
+    updated: int = Field(..., ge=0)
+
+
 class Relation(StrEnum):
     reexports = "reexports"
     implements = "implements"
@@ -1100,7 +1143,7 @@ class Scope(StrEnum):
     relationships = "relationships"
 
 
-class Kind6(StrEnum):
+class Kind7(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -1171,6 +1214,7 @@ class SymbolKind(Enum):
     assoc_const = "assoc_const"
     primitive = "primitive"
     extern_crate = "extern_crate"
+    extern_type = "extern_type"
     import_ = "import"
     NoneType_None = None
 
@@ -1239,7 +1283,7 @@ class SnapshotDescriptor(BaseModel):
     context_id: str = Field(
         ...,
         description="Binds a release to an environment and a research mode.",
-        pattern="^ctx_[0-9a-f]{16}$",
+        pattern="^ctx_[0-9a-f]{64}$",
     )
     crate_name: str
     crate_version: str | None
@@ -1250,7 +1294,7 @@ class SnapshotDescriptor(BaseModel):
     environment_id: str = Field(
         ...,
         description="Identifies the declared or resolved environment.",
-        pattern="^env_[0-9a-f]{16}$",
+        pattern="^env_[0-9a-f]{64}$",
     )
     normalizer_version: str
     observed_configuration: ObservedConfiguration | None
@@ -1258,7 +1302,7 @@ class SnapshotDescriptor(BaseModel):
     release_id: str = Field(
         ...,
         description="Identifies the actual library release: ecosystem, registry, package, exact version and\nthe selected artifact digest.",
-        pattern="^rel_[0-9a-f]{16}$",
+        pattern="^rel_[0-9a-f]{64}$",
     )
     symbol_package: str
 
@@ -1338,7 +1382,7 @@ class SubjectRef(
     )
 
 
-class Kind7(StrEnum):
+class Kind8(StrEnum):
     module = "module"
     struct = "struct"
     class_ = "class"
@@ -1360,7 +1404,49 @@ class Kind7(StrEnum):
     assoc_const = "assoc_const"
     primitive = "primitive"
     extern_crate = "extern_crate"
+    extern_type = "extern_type"
     import_ = "import"
+
+
+class Symbol(BaseModel):
+    cfg_hints: list[str] = Field(
+        ...,
+        description="`cfg`-shaped attribute strings the producer preserved, as declared hints only. Never\na feature predicate: items compiled out are absent, not annotated (§4.3).",
+    )
+    defined_in_crate: str = Field(..., description="The crate the definition belongs to.")
+    definition_id: str = Field(..., description="Identity of the definition this path names.")
+    definition_path: str = Field(..., description="The path the item is defined at.")
+    deprecated: Deprecated | None = Field(..., description="Deprecation, when marked.")
+    doc_summary: str | None = Field(
+        ..., description="First paragraph of the documentation, bounded."
+    )
+    docs: str | None = Field(..., description="Full documentation text.")
+    is_reexport: bool = Field(
+        ..., description="Whether this path is a re-export of a definition elsewhere."
+    )
+    kind: Kind8 = Field(..., description="What kind of item this is.")
+    name: str = Field(..., description="The last path segment.")
+    parent_path: str | None = Field(..., description="The containing path, when any.")
+    path: str = Field(..., description="Canonical public path, e.g. `enr_fixture::inner::Widget`.")
+    producer_local_id: int = Field(
+        ...,
+        description="The producer's own item identifier -- local, never a cross-release identity.",
+        ge=0,
+    )
+    qualifier: str | None = Field(
+        ..., description="Trait or declaration qualifier included in symbol/definition identity."
+    )
+    signature: str | None = Field(
+        ..., description="Rendered signature, when the producer rendered one."
+    )
+    span_file: str | None = Field(..., description="Source file as the producer recorded it.")
+    span_line: int | None = Field(
+        ..., description="1-based source line as the producer recorded it.", ge=0
+    )
+    symbol_id: str = Field(
+        ...,
+        description="Identity of this public path: hash of crate, path, kind and (for trait-impl members)\nthe trait.",
+    )
 
 
 class TargetRef1(BaseModel):
@@ -1645,9 +1731,9 @@ class EvidenceManifest(BaseModel):
     snapshot_id: str = Field(
         ...,
         description="Names one immutable set of evidence available for a context.",
-        pattern="^snap_[0-9a-f]{16}$",
+        pattern="^snap_[0-9a-f]{64}$",
     )
-    tables: list[PhysicalTable]
+    tables: list[DeltaBinding]
 
 
 class ExecutionDiagnostic(BaseModel):
@@ -1719,7 +1805,7 @@ class Gap(BaseModel):
     detail: str = Field(
         ..., description="Human-readable detail, e.g. the format version that was refused."
     )
-    kind: Kind3 = Field(..., description="What is missing.")
+    kind: Kind4 = Field(..., description="What is missing.")
     planned_fallback: PlannedFallback | None = Field(
         ..., description="The producer and profile that would supply it, when one exists."
     )
@@ -1774,27 +1860,6 @@ class NamespaceFacet(BaseModel):
     truncated_children: int = Field(..., description="Children beyond the sample.", ge=0)
 
 
-class Observation(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    alias_target: str | None = Field(..., description="Alias target even if unresolved.")
-    bases: list[str] = Field(
-        ..., description="Declared base expressions, not resolved inheritance claims."
-    )
-    docs: str | None = Field(..., description="Full bounded docstring.")
-    file: str = Field(..., description="Relative archive path, never an arbitrary local path.")
-    kind: str = Field(..., description="Module, class, function or attribute.")
-    line: int | None = Field(..., description="First declaration line.", ge=0)
-    origin: ObservationOrigin = Field(..., description="Source versus stub provenance.")
-    overloads: list[str] = Field(
-        ..., description="Every declared overload, including stub-only overload groups."
-    )
-    path: str = Field(..., description="Qualified Python path.")
-    publicness: Publicness = Field(..., description="Signals remain separate.")
-    signature: str | None = Field(..., description="Rendered signature or annotation.")
-
-
 class ProducerRun(BaseModel):
     attempt_id: str = Field(
         ...,
@@ -1814,16 +1879,6 @@ class ProducerRun(BaseModel):
     producer_version: str = Field(..., description="Exact producer version.")
     profile: Profile = Field(..., description="The execution profile the run was performed under.")
     started_at: str = Field(..., description="RFC 3339 start time. Provenance only.")
-
-
-class PythonSymbol(BaseModel):
-    observations: list[Observation] = Field(
-        ..., description="All source/stub observations of this public path."
-    )
-    signature_conflict: bool = Field(
-        ...,
-        description="Distinct nonempty signatures disagree; neither is promoted to runtime truth.",
-    )
 
 
 class RecoveryAction8(BaseModel):
@@ -1894,7 +1949,7 @@ class Release(BaseModel):
     release_id: str = Field(
         ...,
         description="Derived from `key`; never set independently.",
-        pattern="^rel_[0-9a-f]{16}$",
+        pattern="^rel_[0-9a-f]{64}$",
     )
     root_module: str | None = Field(
         ..., description="The root module name as it appears in `use` paths, when known."
@@ -1966,7 +2021,7 @@ class ScopeAssessment(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    kind: Kind6 = Field(
+    kind: Kind7 = Field(
         ...,
         description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
     )
@@ -2021,51 +2076,6 @@ class SourceExcerpt(BaseModel):
     text: str = Field(..., description="The text.")
     truncated: bool = Field(..., description="Whether the file had more lines after `end_line`.")
     window_kind: SourceWindowKind
-
-
-class Symbol(BaseModel):
-    cfg_hints: list[str] = Field(
-        ...,
-        description="`cfg`-shaped attribute strings the producer preserved, as declared hints only. Never\na feature predicate: items compiled out are absent, not annotated (§4.3).",
-    )
-    defined_in_crate: str = Field(..., description="The crate the definition belongs to.")
-    definition_id: str = Field(..., description="Identity of the definition this path names.")
-    definition_path: str = Field(..., description="The path the item is defined at.")
-    deprecated: Deprecated | None = Field(..., description="Deprecation, when marked.")
-    doc_summary: str | None = Field(
-        ..., description="First paragraph of the documentation, bounded."
-    )
-    docs: str | None = Field(..., description="Full documentation text.")
-    is_reexport: bool = Field(
-        ..., description="Whether this path is a re-export of a definition elsewhere."
-    )
-    kind: Kind7 = Field(..., description="What kind of item this is.")
-    name: str = Field(..., description="The last path segment.")
-    parent_path: str | None = Field(..., description="The containing path, when any.")
-    path: str = Field(..., description="Canonical public path, e.g. `enr_fixture::inner::Widget`.")
-    producer_local_id: int = Field(
-        ...,
-        description="The producer's own item identifier -- local, never a cross-release identity.",
-        ge=0,
-    )
-    python: PythonSymbol | None = Field(
-        ...,
-        description="Separate Python source/stub observations; absent in legacy/Rust snapshots.",
-    )
-    qualifier: str | None = Field(
-        ..., description="Trait or declaration qualifier included in symbol/definition identity."
-    )
-    signature: str | None = Field(
-        ..., description="Rendered signature, when the producer rendered one."
-    )
-    span_file: str | None = Field(..., description="Source file as the producer recorded it.")
-    span_line: int | None = Field(
-        ..., description="1-based source line as the producer recorded it.", ge=0
-    )
-    symbol_id: str = Field(
-        ...,
-        description="Identity of this public path: hash of crate, path, kind and (for trait-impl members)\nthe trait.",
-    )
 
 
 class VerificationData(BaseModel):
@@ -2176,13 +2186,15 @@ class LibraryEnrichmentToolData9(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    catalog_generation: int = Field(..., ge=0)
+    control_version: int = Field(..., ge=0)
     is_current: bool = Field(..., description="Whether this snapshot is the context's current one.")
     manifest: EvidenceManifest = Field(..., description="The immutable manifest as published.")
+    previous_snapshot_id: str | None
     producer_runs: list[ProducerRun] = Field(
         ...,
         description="Operational attribution from the catalog generation pinned by this request.",
     )
+    publication_changes: list[RelationChanges]
     tool: Literal["snapshot_manifest"]
 
 
@@ -2347,13 +2359,15 @@ class ManifestData(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    catalog_generation: int = Field(..., ge=0)
+    control_version: int = Field(..., ge=0)
     is_current: bool = Field(..., description="Whether this snapshot is the context's current one.")
     manifest: EvidenceManifest = Field(..., description="The immutable manifest as published.")
+    previous_snapshot_id: str | None
     producer_runs: list[ProducerRun] = Field(
         ...,
         description="Operational attribution from the catalog generation pinned by this request.",
     )
+    publication_changes: list[RelationChanges]
 
 
 class Sandbox(BaseModel):

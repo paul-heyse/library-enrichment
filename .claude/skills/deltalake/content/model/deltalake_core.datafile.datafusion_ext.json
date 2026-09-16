@@ -1,0 +1,123 @@
+{
+  "module": "deltalake_core::datafile::datafusion_ext",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.datafile.datafusion_ext.md",
+  "items": [
+    {
+      "path": "deltalake_core::datafile::datafusion_ext::DataFusionDataReader",
+      "name": "DataFusionDataReader",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DataFusionDataReader",
+      "summary": "A DataFusion-backed reader wrapping the existing `DeltaScanNext` provider. It carries its own session so it can also satisfy [`DeltaDataReader`].",
+      "doc": "api/deltalake_core.datafile.datafusion_ext.md#datafusiondatareader",
+      "aliases": [
+        "deltalake::datafile::datafusion_ext::DataFusionDataReader"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DeltaDataReader",
+        "deltalake_core::datafile::datafusion_ext::DeltaDataReaderExt"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(provider: Arc<dyn TableProvider>, session: Arc<dyn Session>) -> Self",
+          "summary": "Create a reader from an already-built table provider and session."
+        },
+        {
+          "name": "read",
+          "signature": "async fn read(&self, options: ReadOptions) -> DeltaResult<BatchStream>",
+          "via_trait": "deltalake_core::datafile::DeltaDataReader"
+        },
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, session: &dyn Session, options: ScanOptions) -> DeltaResult<SendableRecordBatchStream>",
+          "via_trait": "deltalake_core::datafile::datafusion_ext::DeltaDataReaderExt"
+        },
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(table: &DeltaTable, session: Arc<dyn Session>) -> DeltaResult<Self>",
+          "summary": "Build a reader for `table`, registering the table's object store with `session` (idempotent) and resolving the `DeltaScanNext` provider."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::datafusion_ext::ScanOptions",
+      "name": "ScanOptions",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ScanOptions",
+      "summary": "Options controlling a DataFusion-backed scan.",
+      "doc": "api/deltalake_core.datafile.datafusion_ext.md#scanoptions",
+      "aliases": [
+        "deltalake::datafile::datafusion_ext::ScanOptions"
+      ],
+      "fields": [
+        "projection",
+        "limit"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: ReadOptions) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::datafusion_ext::DeltaDataReaderExt",
+      "name": "DeltaDataReaderExt",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DeltaDataReaderExt: DeltaDataReader",
+      "summary": "DataFusion extension to [`DeltaDataReader`]: a full scan with pushdown.",
+      "doc": "api/deltalake_core.datafile.datafusion_ext.md#deltadatareaderext",
+      "aliases": [
+        "deltalake::datafile::datafusion_ext::DeltaDataReaderExt"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::datafusion_ext::DataFusionDataReader"
+      ],
+      "required_methods": [
+        "scan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "scan",
+          "signature": "async fn scan(&self, session: &dyn Session, options: ScanOptions) -> DeltaResult<SendableRecordBatchStream>",
+          "summary": "Scan the table through the DataFusion `DeltaScanNext` provider, returning a coalesced single-partition stream."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::datafusion_ext::DeltaDataWriterExt",
+      "name": "DeltaDataWriterExt",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DeltaDataWriterExt",
+      "summary": "DataFusion extension to [`DeltaDataWriter`]: write the output of an execution plan.",
+      "doc": "api/deltalake_core.datafile.datafusion_ext.md#deltadatawriterext",
+      "aliases": [
+        "deltalake::datafile::datafusion_ext::DeltaDataWriterExt"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::writer::DeltaWriter"
+      ],
+      "required_methods": [
+        "write_plan"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "write_plan",
+          "signature": "async fn write_plan(Box<self>, session: &dyn Session, plan: Arc<dyn ExecutionPlan>) -> DeltaResult<Vec<Add>>",
+          "summary": "Execute `plan` (already containing any validation/repartition/CDC nodes) against `session` and write its output through the basic writer."
+        }
+      ]
+    }
+  ]
+}

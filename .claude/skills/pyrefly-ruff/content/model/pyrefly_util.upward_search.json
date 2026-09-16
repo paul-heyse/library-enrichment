@@ -1,0 +1,64 @@
+{
+  "module": "pyrefly_util::upward_search",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.upward_search.md",
+  "items": [
+    {
+      "path": "pyrefly_util::upward_search::FileGroup",
+      "name": "FileGroup",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct FileGroup<T>",
+      "summary": "A single filegroup used in an upward search, paired with a predicate on whether the loaded result should be used or the search should continue. This is especially useful when you have one set of filenames that would be preferred, but requi…",
+      "doc": "api/pyrefly_util.upward_search.md#filegroup",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(filenames: Vec<OsString>, predicate: impl Fn(&T) -> bool + Send + Sync + 'static) -> Self",
+          "summary": "Creates a new `FileGroup`, searching for the given filenames, and only using the loaded result if `predicate` returns true."
+        },
+        {
+          "name": "new_simple",
+          "signature": "fn new_simple(filenames: Vec<OsString>) -> Self",
+          "summary": "Creates a simple instance of `FileGroup`, whose predicate always returns true."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::upward_search::UpwardSearch",
+      "name": "UpwardSearch",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct UpwardSearch<T>",
+      "summary": "A cached way to search the file system upwards for specific files.",
+      "doc": "api/pyrefly_util.upward_search.md#upwardsearch",
+      "methods": [
+        {
+          "name": "clear",
+          "signature": "fn clear(&self)",
+          "summary": "Clear all cached data."
+        },
+        {
+          "name": "directory",
+          "signature": "fn directory(&self, dir: &Path) -> Option<T>",
+          "summary": "Get the config file associated with a directory."
+        },
+        {
+          "name": "directory_absolute",
+          "signature": "fn directory_absolute(&self, dir: &Path) -> Option<T>",
+          "summary": "Given an already-absolute directory, return the value `T` for it, or `None` if there is not one."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(filenames: Vec<OsString>, load: impl Fn(&Path) -> T + Send + Sync + 'static) -> Self",
+          "summary": "Given the files you want to find, and a function to load a file (which must have one of those filenames), create a cached searcher. This only performs a single upward search, with all files at the same group priority. The predicate used al…"
+        },
+        {
+          "name": "new_grouped",
+          "signature": "fn new_grouped(filegroups: Vec<FileGroup<T>>, load: impl Fn(&Path) -> T + Send + Sync + 'static) -> Self",
+          "summary": "Given the files you want to find, and a function to load a file (which must have one of those filenames), create a cached searcher. Each [`FileGroup`] represents a set of files at the same priority level, which we will perform a full upwar…"
+        }
+      ]
+    }
+  ]
+}

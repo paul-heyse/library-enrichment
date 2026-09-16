@@ -1,0 +1,154 @@
+{
+ "api": "api/fastmcp.cli.deploy.state.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#modelt",
+   "inferred": "TypeVar",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "ModelT",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.ModelT",
+   "preferred": "fastmcp.cli.deploy.state.ModelT",
+   "signature": "ModelT = TypeVar('ModelT', bound=BaseModel)",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#_windows_acl_script",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_WINDOWS_ACL_SCRIPT",
+   "nameable": false,
+   "path": "fastmcp.cli.deploy.state._WINDOWS_ACL_SCRIPT",
+   "preferred": "fastmcp.cli.deploy.state._WINDOWS_ACL_SCRIPT",
+   "signature": "_WINDOWS_ACL_SCRIPT = '\\n$ErrorActionPreference = \"Stop\"\\n$path = $env:FASTMCP_STATE_PATH\\n$sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User\\n$acl = Get-Acl -LiteralPath $path\\n$acl.SetAccessRuleProtection($true, $false)\\nforeach ($existingRule in @($acl.Access)) {\\n    $acl.RemoveAccessRuleSpecific($existingRule)\\n}\\n\\nif ([System.IO.Directory]::Exists($path)) {\\n    $inheritance = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit `\\n        -bor [System.Security.AccessControl.InheritanceFlags]::ObjectInherit\\n    $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(\\n        $sid,\\n        [System.Security.AccessControl.FileSystemRights]::FullControl,\\n        $inheritance,\\n        [System.Security.AccessControl.PropagationFlags]::None,\\n        [System.Security.AccessControl.AccessControlType]::Allow\\n    )\\n} else {\\n    $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(\\n        $sid,\\n        [System.Security.AccessControl.FileSystemRights]::FullControl,\\n        [System.Security.AccessControl.AccessControlType]::Allow\\n    )\\n}\\n\\n$acl.AddAccessRule($rule)\\nSet-Acl -LiteralPath $path -AclObject $acl\\n'",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.deploy.command.StateFileError",
+    "fastmcp.cli.deploy.credentials.StateFileError"
+   ],
+   "bases": [
+    "RuntimeError"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#statefileerror",
+   "kind": "class",
+   "name": "StateFileError",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.StateFileError",
+   "preferred": "fastmcp.cli.deploy.command.StateFileError",
+   "signature": "class StateFileError(RuntimeError)",
+   "summary": "A CLI state file could not be read or written safely."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#_prepare_directory",
+   "kind": "function",
+   "name": "_prepare_directory",
+   "nameable": false,
+   "path": "fastmcp.cli.deploy.state._prepare_directory",
+   "preferred": "fastmcp.cli.deploy.state._prepare_directory",
+   "signature": "def _prepare_directory(path: Path) -> None",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#_restrict_access",
+   "kind": "function",
+   "name": "_restrict_access",
+   "nameable": false,
+   "path": "fastmcp.cli.deploy.state._restrict_access",
+   "preferred": "fastmcp.cli.deploy.state._restrict_access",
+   "signature": "def _restrict_access(path: Path, directory: bool = False) -> None",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#_restrict_windows_access",
+   "kind": "function",
+   "name": "_restrict_windows_access",
+   "nameable": false,
+   "path": "fastmcp.cli.deploy.state._restrict_windows_access",
+   "preferred": "fastmcp.cli.deploy.state._restrict_windows_access",
+   "signature": "def _restrict_windows_access(path: Path) -> None",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.deploy.configuration.read_state",
+    "fastmcp.cli.deploy.credentials.read_state"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#read_state",
+   "kind": "function",
+   "name": "read_state",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.read_state",
+   "preferred": "fastmcp.cli.deploy.credentials.read_state",
+   "signature": "def read_state(path: Path, model: type[ModelT], secret: bool = False) -> ModelT | None",
+   "summary": "Read and validate a versioned JSON state file.",
+   "types_used": [
+    "fastmcp.cli.deploy.state.ModelT"
+   ]
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.deploy.credentials.remove_state"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#remove_state",
+   "kind": "function",
+   "name": "remove_state",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.remove_state",
+   "preferred": "fastmcp.cli.deploy.credentials.remove_state",
+   "signature": "def remove_state(path: Path) -> None",
+   "summary": "Remove a state file when it exists."
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.deploy.command.state_lock",
+    "fastmcp.cli.deploy.configuration.state_lock",
+    "fastmcp.cli.deploy.credentials.state_lock"
+   ],
+   "decorators": [
+    "contextmanager"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#state_lock",
+   "kind": "function",
+   "name": "state_lock",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.state_lock",
+   "preferred": "fastmcp.cli.deploy.command.state_lock",
+   "signature": "def state_lock(directory: Path) -> Iterator[None]",
+   "summary": "Lock related CLI state changes across processes."
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.deploy.configuration.write_state",
+    "fastmcp.cli.deploy.credentials.write_state"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.cli.deploy.state.md#write_state",
+   "kind": "function",
+   "name": "write_state",
+   "nameable": true,
+   "path": "fastmcp.cli.deploy.state.write_state",
+   "preferred": "fastmcp.cli.deploy.credentials.write_state",
+   "signature": "def write_state(path: Path, data: dict[str, Any]) -> None",
+   "summary": "Write JSON through a restricted temporary file and atomic replacement."
+  }
+ ],
+ "module": "fastmcp.cli.deploy.state"
+}

@@ -1,0 +1,1751 @@
+{
+  "module": "pyrefly::alt::answers_solver",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.alt.answers_solver.md",
+  "items": [
+    {
+      "path": "pyrefly::alt::answers_solver::SccNodeState",
+      "name": "SccNodeState",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum SccNodeState",
+      "summary": "Tracks the state of a node within an active SCC.",
+      "doc": "api/pyrefly.alt.answers_solver.md#sccnodestate",
+      "variants": [
+        "Fresh",
+        "InProgress",
+        "HasPlaceholder",
+        "Done"
+      ],
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self, has_previous_answer: bool) -> SccNodeStateKind",
+          "summary": "Compute the lightweight summary kind from this state plus whether a previous answer exists for the same node."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::SccNodeStateKind",
+      "name": "SccNodeStateKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum SccNodeStateKind",
+      "summary": "Lightweight summary of an `SccNodeState` for borrow-safe read-then-act patterns.",
+      "doc": "api/pyrefly.alt.answers_solver.md#sccnodestatekind",
+      "variants": [
+        "Fresh",
+        "InProgressWithPreviousAnswer",
+        "InProgressWithPlaceholder",
+        "InProgressCold",
+        "Done"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::AnswerScope",
+      "name": "AnswerScope",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct AnswerScope",
+      "summary": "Retains SCC answer generations for the lifetime of one solver view.",
+      "doc": "api/pyrefly.alt.answers_solver.md#answerscope"
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::AnswersSolver",
+      "name": "AnswersSolver",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct AnswersSolver<'ctx, 'answer, Ans: LookupAnswer>",
+      "summary": "`'ctx` covers the context a solver runs against: the standard library, the type heap, the unique factory, the recursion guard, the cross-module export and answer lookups, and the error collector and caches belonging to this solve. A caller…",
+      "doc": "api/pyrefly.alt.answers_solver.md#answerssolver",
+      "fields": [
+        "exports",
+        "uniques",
+        "recurser",
+        "stdlib",
+        "heap"
+      ],
+      "methods": [
+        {
+          "name": "add_implicit_any_error",
+          "signature": "fn add_implicit_any_error(errors: &ErrorCollector, range: TextRange, generic_entity: String, tparam_name: Option<&str>)",
+          "summary": "Add an `implicit-any-type-argument` error for a generic entity used without explicit type arguments."
+        },
+        {
+          "name": "add_specialization_errors",
+          "signature": "fn add_specialization_errors(&self, specialization_errors: Vec1<TypeVarSpecializationError>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>)"
+        },
+        {
+          "name": "apply_special_form",
+          "signature": "fn apply_special_form(&self, special_form: SpecialForm, arguments: &Expr, range: TextRange, type_form_context: TypeFormContext<'_>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "as_bool",
+          "signature": "fn as_bool(&self, ty: &Type, range: TextRange, errors: &ErrorCollector) -> Option<bool>",
+          "summary": "Determine the boolean behavior of a type: - `Some(true)` or `Some(false)` when it is known to be statically truthy   or falsey (as determined by some baked in rules for literals   and looking at the `__bool__` method, if it is present). -…"
+        },
+        {
+          "name": "as_call_target",
+          "signature": "fn as_call_target(&self, ty: Type) -> CallTargetLookup"
+        },
+        {
+          "name": "as_call_target_or_error",
+          "signature": "fn as_call_target_or_error(&self, ty: Type, call_style: CallStyle<'_>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> CallTarget"
+        },
+        {
+          "name": "as_class_info",
+          "signature": "fn as_class_info(&self, ty: Type) -> Vec<Type>",
+          "summary": "Returns the list of types passed as the second argument to `isinstance` or `issubclass`."
+        },
+        {
+          "name": "as_class_type_unchecked",
+          "signature": "fn as_class_type_unchecked(&self, class: &Class) -> ClassType",
+          "summary": "Gets this Class as a ClassType with its tparams as the arguments. For non-TypedDict classes, this is the type of an instance of this class. Unless you specifically need the ClassType inside the Type and know you don't have a TypedDict, you…"
+        },
+        {
+          "name": "as_enum_member",
+          "signature": "fn as_enum_member(&self, field: &ClassField, enum_cls: &Class) -> Option<Lit>"
+        },
+        {
+          "name": "as_param",
+          "signature": "fn as_param(&self, field: &ClassField, name: &Name, default: bool, kw_only: bool, strict: bool, converter_param: Option<Type>, param_type_transform: &dyn Fn(Type) -> Type, errors: &ErrorCollector) -> Param"
+        },
+        {
+          "name": "as_superclass",
+          "signature": "fn as_superclass(&self, class: &ClassType, want: &Class) -> Option<ClassType>",
+          "summary": "Return the type representing `class` upcast to `want`, if `want` is a supertype of `class` in the class hierarchy. Will return `None` if `want` is not a superclass, including if `want` is a protocol (unless it explicitly appears in the MRO…"
+        },
+        {
+          "name": "as_tuple",
+          "signature": "fn as_tuple(&self, cls: &ClassType) -> Option<Tuple>"
+        },
+        {
+          "name": "as_typed_dict_unchecked",
+          "signature": "fn as_typed_dict_unchecked(&self, class: &Class) -> TypedDict",
+          "summary": "Gets this Class as a TypedDict with its tparams as the arguments."
+        },
+        {
+          "name": "async_iterate",
+          "signature": "fn async_iterate(&self, iterable: &Type, range: TextRange, errors: &ErrorCollector) -> Vec<Iterable>",
+          "summary": "Given a type, determine the async iteration type; this is the type of `x` if we were to loop using `async for x in iterable`."
+        },
+        {
+          "name": "atomic_narrow_for_facet",
+          "signature": "fn atomic_narrow_for_facet(&self, base: &Type, facet: &FacetKind, op: &AtomicNarrowOp, allow_never_collapse: bool, range: TextRange, errors: &ErrorCollector) -> Option<Type>"
+        },
+        {
+          "name": "attr_infer",
+          "signature": "fn attr_infer(&self, base: &TypeInfo, attr_name: &Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> TypeInfo"
+        },
+        {
+          "name": "attr_infer_for_type",
+          "signature": "fn attr_infer_for_type(&self, base: &Type, attr_name: &Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "attribute_expr_infer",
+          "signature": "fn attribute_expr_infer(&self, x: &Expr, annotation: Option<&Annotation>, name: &Name, errors: &ErrorCollector) -> Type",
+          "summary": "Helper to infer with an optional annotation as a hint and then expand"
+        },
+        {
+          "name": "augassign_infer",
+          "signature": "fn augassign_infer(&self, ann: Option<Idx<KeyAnnotation>>, x: &StmtAugAssign, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "base_errors",
+          "signature": "fn base_errors(&self) -> &ErrorCollector"
+        },
+        {
+          "name": "behaves_like_any",
+          "signature": "fn behaves_like_any(&self, ty: &Type) -> bool"
+        },
+        {
+          "name": "bind_boundmethod",
+          "signature": "fn bind_boundmethod(&self, m: &BoundMethod, is_subset: &mut dyn FnMut(&Type, &Type) -> bool) -> Option<Type>",
+          "summary": "Bind a bound method by stripping its first (self/cls) parameter and optionally instantiating type variables."
+        },
+        {
+          "name": "bind_dunder_init",
+          "signature": "fn bind_dunder_init(&self, t: Type, cls: &ClassType) -> Type",
+          "summary": "Bind a `__init__` method for constructor callable conversion. Attempts to strip the first parameter and sets the return type to the first param's type. Does not instantiate type variables (they should be inferred at the call site)."
+        },
+        {
+          "name": "bind_dunder_new",
+          "signature": "fn bind_dunder_new(&self, t: &Type, cls: ClassType) -> Option<Type>"
+        },
+        {
+          "name": "bindings",
+          "signature": "fn bindings(&self) -> &'answer Bindings"
+        },
+        {
+          "name": "binop_infer",
+          "signature": "fn binop_infer(&self, x: &ExprBinOp, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector, type_form_context: Option<TypeFormContext<'_>>) -> Type"
+        },
+        {
+          "name": "build_pydantic_lax_conversion_table",
+          "signature": "fn build_pydantic_lax_conversion_table(&self, field_types: &[Type]) -> ConverterMap"
+        },
+        {
+          "name": "calculate_abstract_members",
+          "signature": "fn calculate_abstract_members(&self, cls: &Class) -> AbstractClassMembers"
+        },
+        {
+          "name": "calculate_class_disjoint_base",
+          "signature": "fn calculate_class_disjoint_base(&self, cls: &Class, errors: &ErrorCollector) -> ClassDisjointBase",
+          "summary": "Resolve `cls`'s disjoint-base representative."
+        },
+        {
+          "name": "calculate_class_field",
+          "signature": "fn calculate_class_field(&self, class: &Class, name: &Name, range: TextRange, field_definition: &ClassFieldDefinition, functional_class_def: bool, errors: &ErrorCollector) -> ClassField"
+        },
+        {
+          "name": "calculate_class_mro",
+          "signature": "fn calculate_class_mro(&self, cls: &Class, errors: &ErrorCollector) -> ClassMro"
+        },
+        {
+          "name": "calculate_class_tparams",
+          "signature": "fn calculate_class_tparams(&self, name: &Identifier, scoped_type_params: Option<&TypeParams>, generic_bases: &[BaseClassGeneric], legacy: &[Idx<KeyLegacyTypeParam>], errors: &ErrorCollector) -> TParams"
+        },
+        {
+          "name": "calculate_class_tparams_no_legacy",
+          "signature": "fn calculate_class_tparams_no_legacy(&self, name: &Identifier, scoped_type_params: Option<&TypeParams>, errors: &ErrorCollector) -> TParams",
+          "summary": "Calculate class type parameters in the case where we were able to predetermine syntactically (from looking at the base class expressions) that there are no legacy type variables."
+        },
+        {
+          "name": "calculate_subscript_symmetry",
+          "signature": "fn calculate_subscript_symmetry(&self, cls: &Class) -> bool"
+        },
+        {
+          "name": "calculate_typed_dict_field",
+          "signature": "fn calculate_typed_dict_field(&self, metadata: &ClassMetadata, name: &Name, range: TextRange, field_definition: &ClassFieldDefinition, errors: &ErrorCollector) -> ClassField"
+        },
+        {
+          "name": "call_assert_shape",
+          "signature": "fn call_assert_shape(&self, args: &[Expr], keywords: &[Keyword], range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_assert_type",
+          "signature": "fn call_assert_type(&self, args: &[Expr], keywords: &[Keyword], range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_dataclasses_asdict",
+          "signature": "fn call_dataclasses_asdict(&self, asdict_ty: &Type, args: &[CallArg<'_>], kws: &[CallKeyword<'_>], callee_range: TextRange, arg_range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_dataclasses_replace",
+          "signature": "fn call_dataclasses_replace(&self, kind: ReplaceKind, replace_ty: &Type, args: &[CallArg<'_>], kws: &[CallKeyword<'_>], callee_range: TextRange, arg_range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_descriptor_getter",
+          "signature": "fn call_descriptor_getter(&self, getter_method: Type, base: DescriptorBase, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Helper function hide details of call synthesis from the attribute resolution code."
+        },
+        {
+          "name": "call_descriptor_setter",
+          "signature": "fn call_descriptor_setter(&self, setter_method: Type, base: DescriptorBase, got: CallArg<'_>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Helper function hide details of call synthesis from the attribute resolution code."
+        },
+        {
+          "name": "call_functools_partial",
+          "signature": "fn call_functools_partial(&self, partial_ty: &Type, args: &[CallArg<'_>], kws: &[CallKeyword<'_>], callee_range: TextRange, arg_range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type",
+          "summary": "Handle a `functools.partial(func, ...)` call, synthesizing the residual signature instead of deferring to the typeshed stub."
+        },
+        {
+          "name": "call_getattr_or_delattr",
+          "signature": "fn call_getattr_or_delattr(&self, getattr_ty: Type, attr_name: Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "call_infer",
+          "signature": "fn call_infer(&self, call_target: CallTarget, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], arguments_range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, hint: Option<HintRef<'_, '_>>, ctor_targs: Option<&mut TArgs>) -> Type"
+        },
+        {
+          "name": "call_isinstance",
+          "signature": "fn call_isinstance(&self, obj: &Expr, class_or_tuple: &Expr, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_issubclass",
+          "signature": "fn call_issubclass(&self, cls: &Expr, class_or_tuple: &Expr, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_len",
+          "signature": "fn call_len(&self, args: &[CallArg<'_>], callee_ty: Type, keywords: &[CallKeyword<'_>], func_range: TextRange, arguments_range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type",
+          "summary": "`len(x)`: typeshed types this as `len(obj: Sized) -> int`, discarding the argument's `__len__` return type. When that return type is a strict subtype of `int` (e.g. a shaped array's `Int[N]`), we return it instead so the size carries into…"
+        },
+        {
+          "name": "call_magic_dunder_method",
+          "signature": "fn call_magic_dunder_method(&self, ty: &Type, method_name: &Name, range: TextRange, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Option<Type>",
+          "summary": "Calls a magic dunder method. If no attribute exists with the given method name, returns None without attempting the call."
+        },
+        {
+          "name": "call_method_or_error",
+          "signature": "fn call_method_or_error(&self, ty: &Type, method_name: &Name, range: TextRange, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Calls a method. If no attribute exists with the given method name, logs an error and calls the method with an assumed type of Callable[..., Any]."
+        },
+        {
+          "name": "call_overloads",
+          "signature": "fn call_overloads(&self, overloads: Vec1<TargetWithTParams<Function>>, metadata: &FuncMetadata, shape_transform: Option<&ShapeTransform>, self_obj: Option<Type>, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], arguments_range: TextRange, errors: &ErrorCollector, return_errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, hint: Option<HintRef<'_, '_>>, ctor_targs: Option<&mut TArgs>) -> (Type, Callable)",
+          "summary": "Calls an overloaded function, returning the return type and the closest matching overload signature."
+        },
+        {
+          "name": "call_property_getter",
+          "signature": "fn call_property_getter(&self, getter_method: Type, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Helper function hide details of call synthesis from the attribute resolution code."
+        },
+        {
+          "name": "call_property_setter",
+          "signature": "fn call_property_setter(&self, setter_method: Type, got: CallArg<'_>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Helper function hide details of call synthesis from the attribute resolution code."
+        },
+        {
+          "name": "call_reveal_type",
+          "signature": "fn call_reveal_type(&self, args: &[Expr], keywords: &[Keyword], range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "call_setattr",
+          "signature": "fn call_setattr(&self, setattr_ty: Type, arg: CallArg<'_>, attr_name: Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "call_typeform",
+          "signature": "fn call_typeform(&self, args: &[Expr], keywords: &[Keyword], range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Handle `TypeForm(expr)` — validates the argument is a valid type expression and returns `TypeForm[T]` where `T` is the resolved type."
+        },
+        {
+          "name": "call_typing_cast",
+          "signature": "fn call_typing_cast(&self, args: &[Expr], keywords: &[Keyword], range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Simulates a call to `typing.cast`, whose signature is `(typ: type[T], val: Any) -> T: ...` (ignoring corner cases like special forms and forward references). The actual definition has additional overloads to accommodate said corner cases,…"
+        },
+        {
+          "name": "callable_infer",
+          "signature": "fn callable_infer(&self, callable: Callable, callable_name: Option<&FunctionKind>, shape_transform: Option<&ShapeTransform>, tparams: Option<&TParams>, self_obj: Option<Type>, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], arguments_range: TextRange, arg_errors: &ErrorCollector, call_errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, hint: Option<HintRef<'_, '_>>, ctor_targs: Option<&mut TArgs>) -> (Type, Vec<TypeVarSpecializationError>, Vec<ReturnTypeResolutionError>, ArgMap)"
+        },
+        {
+          "name": "callable_infer_with_hint",
+          "signature": "fn callable_infer_with_hint<R>(&self, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector, inner: impl FnMut(Option<&Type>, &ErrorCollector) -> R, result_type: impl Fn(&R) -> &Type) -> R",
+          "summary": "Helper used by `callable_infer` and Expr::Lambda inference to distribute over hints."
+        },
+        {
+          "name": "canonicalize_all_class_types",
+          "signature": "fn canonicalize_all_class_types(&self, ty: Type, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "When interpreted as static types (as opposed to when accounting for runtime behavior when used as values), `Type::ClassDef(cls)` is equivalent to `Type::Type(box Type::ClassType(cls, default_targs(cls)))` where `default_targs(cls)` is the…"
+        },
+        {
+          "name": "check_and_return_type",
+          "signature": "fn check_and_return_type(&self, got: Type, want: &Type, loc: TextRange, errors: &ErrorCollector, tcc: &dyn Fn() -> TypeCheckContext) -> Type",
+          "summary": "Check if `got` matches `want`, returning `want` if the check fails. Convenience wrapper around `check_type_with_options`."
+        },
+        {
+          "name": "check_assign_to_attribute_and_infer_narrow",
+          "signature": "fn check_assign_to_attribute_and_infer_narrow(&self, base: &Type, name: &Name, got: &ExprOrBinding, allow_assign_to_final: bool, range: TextRange, errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Check whether a type or expression is assignable to an attribute, using contextual typing in the expression case."
+        },
+        {
+          "name": "check_attr_delete",
+          "signature": "fn check_attr_delete(&self, base: &TypeInfo, attr_name: &Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, todo_ctx: &str)"
+        },
+        {
+          "name": "check_class_attr_delete",
+          "signature": "fn check_class_attr_delete(&self, class_attr: ClassAttribute, attr_name: &Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>)"
+        },
+        {
+          "name": "check_class_attr_set_and_infer_narrow",
+          "signature": "fn check_class_attr_set_and_infer_narrow(&self, class_attr: ClassAttribute, instance_class: Option<&ClassType>, class_base: Option<&ClassBase>, attr_name: &Name, got: TypeOrExpr<'_>, allow_assign_to_final: bool, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, should_narrow: &mut bool, narrowed_types: &mut Vec<Type>)"
+        },
+        {
+          "name": "check_consistent_multiple_inheritance",
+          "signature": "fn check_consistent_multiple_inheritance(&self, cls: &Class, errors: &ErrorCollector)",
+          "summary": "For classes with multiple inheritance, check that fields inherited from multiple base classes are consistent."
+        },
+        {
+          "name": "check_consistent_override_for_field",
+          "signature": "fn check_consistent_override_for_field(&self, cls: &Class, field_name: &Name, class_field: &ClassField, bases: &ClassBases, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_dict_items_against_typed_dict",
+          "signature": "fn check_dict_items_against_typed_dict(&self, dict_items: &Vec<&DictItem>, typed_dict: &TypedDict, is_update: bool, range: TextRange, check_errors: &ErrorCollector, item_errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_dunder_bool_is_callable",
+          "signature": "fn check_dunder_bool_is_callable(&self, type_of_term_used_as_bool: &Type, range: TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_final_reassignment",
+          "signature": "fn check_final_reassignment(&self, annot: &AnnotationWithTarget, range: TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_implicit_bool",
+          "signature": "fn check_implicit_bool(&self, condition_type: &Type, range: TextRange, errors: &ErrorCollector)",
+          "summary": "Report a non-`bool` type used where Python implicitly tests truthiness."
+        },
+        {
+          "name": "check_match_case_reachability",
+          "signature": "fn check_match_case_reachability(&self, subject_idx: &Idx<Key>, narrowing_subject: Option<&NarrowingSubject>, narrow_ops_for_case: &(Box<NarrowOp>, TextRange), case_range: &TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_match_exhaustiveness",
+          "signature": "fn check_match_exhaustiveness(&self, subject_idx: &Idx<Key>, narrowing_subject: Option<&NarrowingSubject>, narrow_ops_for_fall_through: &(Box<NarrowOp>, TextRange), subject_range: &TextRange, show_subject_expr: bool, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_pydantic_argument_range_constraints",
+          "signature": "fn check_pydantic_argument_range_constraints(&self, cls: &Class, dataclass: &DataclassMetadata, args: &[CallArg<'_>], keywords: &[CallKeyword<'_>], errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_pydantic_range_constraints",
+          "signature": "fn check_pydantic_range_constraints(&self, field_name: &Name, field_ty: &Type, keywords: &DataclassFieldKeywords, range: TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_redundant_condition",
+          "signature": "fn check_redundant_condition(&self, condition_type: &Type, range: TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "check_set_read_write_and_infer_narrow",
+          "signature": "fn check_set_read_write_and_infer_narrow(&self, attr_ty: Type, attr_name: &Name, got: TypeOrExpr<'_>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, should_narrow: bool, narrowed_types: &mut Vec<Type>)"
+        },
+        {
+          "name": "check_type",
+          "signature": "fn check_type(&self, got: &Type, want: &Type, loc: TextRange, errors: &ErrorCollector, tcc: &dyn Fn() -> TypeCheckContext) -> bool",
+          "summary": "Check if `got` matches `want`. Convenience wrapper around `check_type_with_options`."
+        },
+        {
+          "name": "check_type_as_call_argument",
+          "signature": "fn check_type_as_call_argument(&self, got: &Type, want: &Type, loc: TextRange, errors: &ErrorCollector, tcc: &dyn Fn() -> TypeCheckContext) -> bool",
+          "summary": "Check `got` against `want` as an argument outside a call boundary."
+        },
+        {
+          "name": "check_type_with_options",
+          "signature": "fn check_type_with_options(&self, got: &Type, want: &Type, loc: TextRange, options: TypeCheckOptions<'_, '_>) -> Option<SubsetError>",
+          "summary": "Check if `got` matches `want`. Returns the error on an unsuccessful match."
+        },
+        {
+          "name": "check_variance_violations",
+          "signature": "fn check_variance_violations(&self, class: &Class, class_bases: &ClassBases, field_map: &SmallMap<Name, &ClassField>) -> Vec<VarianceViolation>",
+          "summary": "Check a class for variance violations."
+        },
+        {
+          "name": "class_bases_of",
+          "signature": "fn class_bases_of(&self, cls: &Class, bases: &[BaseClass], is_new_type: bool, errors: &ErrorCollector) -> ClassBases"
+        },
+        {
+          "name": "class_definition",
+          "signature": "fn class_definition(&self, def_index: ClassDefIndex, x: &ClassDefData, parent: &NestingContext, is_protocol: bool, tparams_require_binding: bool, errors: &ErrorCollector) -> Class"
+        },
+        {
+          "name": "class_instances_always_truthy",
+          "signature": "fn class_instances_always_truthy(&self, cls: &Class) -> bool",
+          "summary": "Returns `false` if `cls` or any of its non-object ancestors defines a dunder that could affect truthiness or attribute resolution at runtime: `__bool__`, `__len__`, `__getattr__`, `__getattribute__` (which can intercept `__bool__` dynamica…"
+        },
+        {
+          "name": "class_metadata_of",
+          "signature": "fn class_metadata_of(&self, cls: &Class, bases: &[BaseClass], raw_keywords: &[Keyword], decorators: &[Idx<KeyDecorator>], is_new_type: bool, pydantic_config_dict: &PydanticConfigDict, pydantic_before_validator_fields: &[Name], django_field_info: &DjangoFieldInfo, capture_init: Option<&[Name]>, shaped_array_metadata: Option<&ShapedArrayDecoratorMetadata>, errors: &ErrorCollector) -> ClassMetadata"
+        },
+        {
+          "name": "class_overrides_tuple_getitem",
+          "signature": "fn class_overrides_tuple_getitem(&self, cls: &ClassType) -> bool",
+          "summary": "Check if a class that inherits from tuple defines its own `__getitem__`, which should take priority over tuple's special subscript handling."
+        },
+        {
+          "name": "class_self_param",
+          "signature": "fn class_self_param(&self, cls: &Class, posonly: bool) -> Param"
+        },
+        {
+          "name": "collect_jaxtyping_tparams",
+          "signature": "fn collect_jaxtyping_tparams(&self, callable: &impl Visit<Type>, tparams: &Arc<TParams>, name_range: TextRange, errors: &ErrorCollector) -> Arc<TParams>",
+          "summary": "Collect implicit jaxtyping TypeVars from a callable's signature and extend `tparams` with them. Also detects and reports mixing of native and jaxtyping syntax for legacy decorated shaped arrays in the same function."
+        },
+        {
+          "name": "compare_infer",
+          "signature": "fn compare_infer(&self, x: &ExprCompare, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "completions",
+          "signature": "fn completions(&self, base: Type, expected_attribute_name: Option<&Name>, include_types: bool) -> Vec<AttrInfo>",
+          "summary": "List all the attributes available from a type. Used to power completion. Not all usages need types, so we can skip type computation with `include_types=false`."
+        },
+        {
+          "name": "compute_dataclass_field_initialization",
+          "signature": "fn compute_dataclass_field_initialization(&self, call: &ExprCall, field_name: &Name, annotated_field_ty: Option<&Type>, dm: &DataclassMetadata) -> Option<DataclassFieldKeywords>",
+          "summary": "Extract dataclass field keywords from a call expression if it's a dataclass field specifier."
+        },
+        {
+          "name": "compute_kw_only_fields_by_class",
+          "signature": "fn compute_kw_only_fields_by_class(&self, cls: &Class) -> SmallMap<Class, SmallSet<Name>>"
+        },
+        {
+          "name": "compute_variance",
+          "signature": "fn compute_variance(&self, class: &Class) -> VarianceMap",
+          "summary": "Compute variance for a class."
+        },
+        {
+          "name": "constructor_to_callable",
+          "signature": "fn constructor_to_callable(&self, cls: &ClassType) -> Type"
+        },
+        {
+          "name": "constructor_to_callable_for_class_def",
+          "signature": "fn constructor_to_callable_for_class_def(&self, cls: &Class) -> Type",
+          "summary": "Convert a bare class definition while keeping its type parameters generic."
+        },
+        {
+          "name": "create_recursive",
+          "signature": "fn create_recursive(&self, binding: &Binding) -> Var"
+        },
+        {
+          "name": "create_type_alias_params_recursive",
+          "signature": "fn create_type_alias_params_recursive(&self, tparams: &TypeAliasParams, anchor: TextRange) -> Arc<TParams>",
+          "summary": "Create TParams for a recursive reference to a type alias. This is essentially a slimmed-down version of `wrap_type_alias` that skips most validation (because the validation will be done by `wrap_type_alias`)."
+        },
+        {
+          "name": "current",
+          "signature": "fn current(&self) -> &'answer Answers"
+        },
+        {
+          "name": "dataclass_field_keywords",
+          "signature": "fn dataclass_field_keywords(&self, func: &Type, field_name: &Name, args: &Arguments, annotated_field_ty: Option<&Type>, dataclass_metadata: &DataclassMetadata, errors: &ErrorCollector) -> DataclassFieldKeywords"
+        },
+        {
+          "name": "decompose_async_generator",
+          "signature": "fn decompose_async_generator(&self, ty: &Type) -> Option<(Type, Type)>"
+        },
+        {
+          "name": "decompose_dict",
+          "signature": "fn decompose_dict(&self, hint: &Type) -> (Option<Type>, Option<Type>)"
+        },
+        {
+          "name": "decompose_generator",
+          "signature": "fn decompose_generator(&self, ty: &Type) -> Option<(Type, Type, Type)>"
+        },
+        {
+          "name": "decompose_hint",
+          "signature": "fn decompose_hint<'b, D>(&self, hint: HintRef<'_, 'b>, decompose: impl Fn(&'b Type) -> Option<D>) -> Vec<D>"
+        },
+        {
+          "name": "decompose_set",
+          "signature": "fn decompose_set(&self, hint: &Type) -> Option<Type>"
+        },
+        {
+          "name": "decompose_tuple",
+          "signature": "fn decompose_tuple(&self, hint: &Type) -> Option<Type>"
+        },
+        {
+          "name": "decorated_function_type",
+          "signature": "fn decorated_function_type(&self, def: &UndecoratedFunction, stmt: &FunctionDefData, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "disjoint_base",
+          "signature": "fn disjoint_base(&self, t: &Type) -> Class",
+          "summary": "Return the most specific disjoint base for a type per PEP 800."
+        },
+        {
+          "name": "distribute_over_union",
+          "signature": "fn distribute_over_union(&self, ty: &Type, f: impl FnMut(&Type) -> Type) -> Type"
+        },
+        {
+          "name": "django_reverse_relations_index",
+          "signature": "fn django_reverse_relations_index(&self) -> &'answer DjangoReverseRelationIndex"
+        },
+        {
+          "name": "erase_tuple_type",
+          "signature": "fn erase_tuple_type(&self, tuple: Tuple) -> ClassType",
+          "summary": "Erase the structural information (length, ordering) Type::Tuple return the union of the contents Use to generate the type parameters for the Type::ClassType representation of tuple"
+        },
+        {
+          "name": "error",
+          "signature": "fn error(&self, errors: &ErrorCollector, range: TextRange, kind: ErrorKind, msg: String) -> Type",
+          "summary": "Adds an error and returns Type::Any(Error)"
+        },
+        {
+          "name": "error_collector",
+          "signature": "fn error_collector(&self) -> ErrorCollector",
+          "summary": "Create a new error collector. Useful when a caller wants to decide whether or not to report errors from an operation."
+        },
+        {
+          "name": "error_swallower",
+          "signature": "fn error_swallower(&self) -> ErrorCollector",
+          "summary": "Create an error collector that simply swallows errors. Useful when a caller wants to try an operation that may error but never report errors from it."
+        },
+        {
+          "name": "error_with_context",
+          "signature": "fn error_with_context(&self, errors: &ErrorCollector, range: TextRange, kind: ErrorKind, msg: String, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "Adds an error with the given context and returns Type::Any(Error)"
+        },
+        {
+          "name": "expand_mut",
+          "signature": "fn expand_mut(&self, ty: &mut Type)"
+        },
+        {
+          "name": "expr_call_infer",
+          "signature": "fn expr_call_infer(&self, x: &ExprCall, callee_ty: Type, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "expr_check",
+          "signature": "fn expr_check(&self, x: &Expr, check: Option<(&Type, &dyn Fn() -> TypeCheckContext)>, errors: &ErrorCollector) -> Type",
+          "summary": "Infer a type for an expression, with an optional type hint that influences the inferred type. The inferred type is also checked against the hint. Convenience wrapper around `expr_with_options`."
+        },
+        {
+          "name": "expr_class_keyword",
+          "signature": "fn expr_class_keyword(&self, x: &Expr, errors: &ErrorCollector) -> Annotation"
+        },
+        {
+          "name": "expr_infer",
+          "signature": "fn expr_infer(&self, x: &Expr, errors: &ErrorCollector) -> Type",
+          "summary": "Infer a type for an expression. Convenience wrapper around `expr_with_options`."
+        },
+        {
+          "name": "expr_infer_with_hint",
+          "signature": "fn expr_infer_with_hint(&self, x: &Expr, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type",
+          "summary": "Infer a type for an expression, with an optional type hint that influences the inferred type. Convenience wrapper around `expr_with_options`."
+        },
+        {
+          "name": "expr_untype",
+          "signature": "fn expr_untype(&self, x: &Expr, type_form_context: TypeFormContext<'_>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "expr_with_options",
+          "signature": "fn expr_with_options(&self, x: &Expr, options: ExprOptions<'_, '_, '_>) -> TypeInfo",
+          "summary": "Infer a type for an expression, with options to influence the inference and control whether and how the type is checked against an expected type."
+        },
+        {
+          "name": "extends_any",
+          "signature": "fn extends_any(&self, cls: &Class) -> bool"
+        },
+        {
+          "name": "extract_pydantic_field_from_annotation",
+          "signature": "fn extract_pydantic_field_from_annotation(&self, annot: Idx<KeyAnnotation>, field_name: &Name, metadata: &ClassMetadata) -> Option<DataclassFieldKeywords>",
+          "summary": "Extract Pydantic Field metadata from an annotation binding. This handles the Pydantic-specific pattern where fields can be declared as: `field: Annotated[some_type, Field(some_keyword=<value>)]`"
+        },
+        {
+          "name": "extract_root_model_inner_type",
+          "signature": "fn extract_root_model_inner_type(&self, ty: &Type) -> Option<Type>",
+          "summary": "Check if a type is a RootModel or subclass of RootModel, and if so, recursively extract all inner types. Returns Some(root_type) if the type is a RootModel, None otherwise. For unions containing multiple RootModels, extracts and returns a…"
+        },
+        {
+          "name": "field_defining_class_matches",
+          "signature": "fn field_defining_class_matches(&self, cls: &Class, field: &Name, predicate: impl FnOnce(&Class) -> bool) -> bool",
+          "summary": "Check whether the defining class of `field` on `cls` satisfies `predicate`. Returns false if the field does not exist."
+        },
+        {
+          "name": "field_is_inherited_from",
+          "signature": "fn field_is_inherited_from(&self, cls: &Class, field: &Name, ancestor: (&str, &str)) -> bool"
+        },
+        {
+          "name": "finish_quantified",
+          "signature": "fn finish_quantified(&self, vs: QuantifiedHandle, infer_with_first_use: bool) -> Result<(), Vec1<TypeVarSpecializationError>>"
+        },
+        {
+          "name": "for_display",
+          "signature": "fn for_display(&self, t: Type) -> Type"
+        },
+        {
+          "name": "force_for_narrowing",
+          "signature": "fn force_for_narrowing(&self, ty: &Type, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Force the outermost type, without deep-forcing. Without this, narrowing behavior is unpredictable and has undesirable behavior particularly in loop recursion."
+        },
+        {
+          "name": "freeform_call_infer",
+          "signature": "fn freeform_call_infer(&self, ty: Type, args: &[CallArg<'_>], kws: &[CallKeyword<'_>], callee_range: TextRange, arg_range: TextRange, hint: Option<HintRef<'_, '_>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "functional_class_definition",
+          "signature": "fn functional_class_definition(&self, def_index: ClassDefIndex, name: &Identifier, parent: &NestingContext) -> Class"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<K: Solve<Ans>>(&self, k: &K) -> &'answer K::Answer where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_abstract_members_for_class",
+          "signature": "fn get_abstract_members_for_class(&self, cls: &Class) -> &AbstractClassMembers"
+        },
+        {
+          "name": "get_annotated_metadata",
+          "signature": "fn get_annotated_metadata(&self, expr: &Expr, type_form_context: TypeFormContext<'_>, errors: &ErrorCollector) -> Vec<Expr>",
+          "summary": "Extract metadata items from an `Annotated` subscript expression. Returns the metadata items (skipping the first element which is the type). Returns an empty Vec if the expression is not `Annotated[...]`."
+        },
+        {
+          "name": "get_base_types_for_class",
+          "signature": "fn get_base_types_for_class(&self, cls: &Class) -> &ClassBases"
+        },
+        {
+          "name": "get_bounded_quantified_attribute",
+          "signature": "fn get_bounded_quantified_attribute(&self, quantified: Quantified, upper_bound: &ClassType, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_bounded_quantified_class_attribute",
+          "signature": "fn get_bounded_quantified_class_attribute(&self, quantified: Quantified, class: &ClassType, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_class_attribute",
+          "signature": "fn get_class_attribute(&self, cls: &ClassBase, name: &Name) -> Option<ClassAttribute>",
+          "summary": "Gets an attribute from a class definition."
+        },
+        {
+          "name": "get_class_field_map",
+          "signature": "fn get_class_field_map(&self, cls: &Class) -> SmallMap<Name, &ClassField>"
+        },
+        {
+          "name": "get_class_fields",
+          "signature": "fn get_class_fields(&self, cls: &Class) -> Option<&ClassFields>",
+          "summary": "Look up the fields of a class from binding metadata."
+        },
+        {
+          "name": "get_class_tparams",
+          "signature": "fn get_class_tparams<'b>(&'b self, class: &'b Class) -> Option<&'b Arc<TParams>>",
+          "summary": "The type parameters of a class, or `None` when it has none."
+        },
+        {
+          "name": "get_dataclass_fields",
+          "signature": "fn get_dataclass_fields(&self, cls: &Class, bases_with_metadata: &[(Class, &ClassMetadata)], kind: &DataclassKind) -> SmallSet<Name>",
+          "summary": "Gets dataclass fields for an `@dataclass`-decorated class. attrs with `auto_attribs=False` collects only `attr.ib()`/`field()` assignments; every other kind is annotation-driven."
+        },
+        {
+          "name": "get_dataclass_member",
+          "signature": "fn get_dataclass_member(&self, cls: &Class, name: &Name) -> DataclassMember<'_>",
+          "summary": "This is used for dataclass field synthesis; when accessing attributes on dataclass instances, use `get_instance_attribute` or `get_class_attribute`"
+        },
+        {
+          "name": "get_dataclass_synthesized_fields",
+          "signature": "fn get_dataclass_synthesized_fields(&self, cls: &Class, errors: &ErrorCollector) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_disjoint_base_for_class",
+          "signature": "fn get_disjoint_base_for_class(&self, cls: &Class) -> &ClassDisjointBase"
+        },
+        {
+          "name": "get_django_enum_synthesized_fields",
+          "signature": "fn get_django_enum_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_django_field_type",
+          "signature": "fn get_django_field_type(&self, ty: &Type, class: &Class, field_name: Option<&Name>, initial_value_expr: Option<&Expr>) -> Option<Type>"
+        },
+        {
+          "name": "get_django_model_synthesized_fields",
+          "signature": "fn get_django_model_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_dunder_init",
+          "signature": "fn get_dunder_init(&self, cls: &ClassType, get_object_init: bool) -> Option<Type>",
+          "summary": "Get the class's `__init__` method. The second argument controls whether we return an inherited `object.__init__`."
+        },
+        {
+          "name": "get_dunder_new",
+          "signature": "fn get_dunder_new(&self, cls: &ClassType, preserve_self: bool) -> Option<Type>",
+          "summary": "Get the class's `__new__` method."
+        },
+        {
+          "name": "get_enum_class_field_type",
+          "signature": "fn get_enum_class_field_type(&self, class: &Class, name: &Name, direct_annotation: Option<&Annotation>, ty: &Type, field_definition: &ClassFieldDefinition, is_descriptor: bool, range: TextRange, errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Enum handling: - Check whether the field is a member (which depends only on its type and name) - Validate that a member should not have an annotation, and should respect any explicit annotation on `_value_`"
+        },
+        {
+          "name": "get_enum_from_class",
+          "signature": "fn get_enum_from_class(&self, cls: &Class) -> Option<EnumMetadata>"
+        },
+        {
+          "name": "get_enum_literal_or_instance_attribute",
+          "signature": "fn get_enum_literal_or_instance_attribute(&self, lit: &LitEnum, metadata: &ClassMetadata, attr_name: &Name) -> Option<ClassAttribute>",
+          "summary": "Checks for a special-cased enum attribute on an enum literal, falling back to a regular instance attribute lookup."
+        },
+        {
+          "name": "get_enum_member",
+          "signature": "fn get_enum_member(&self, cls: &Class, name: &Name) -> Option<Lit>"
+        },
+        {
+          "name": "get_enum_member_count",
+          "signature": "fn get_enum_member_count(&self, cls: &Class) -> Option<usize>"
+        },
+        {
+          "name": "get_enum_members",
+          "signature": "fn get_enum_members(&self, cls: &Class) -> SmallSet<Lit>"
+        },
+        {
+          "name": "get_enum_or_instance_attribute",
+          "signature": "fn get_enum_or_instance_attribute(&self, class: &ClassType, metadata: &ClassMetadata, attr_name: &Name) -> Option<ClassAttribute>",
+          "summary": "Checks for a special-cased enum attribute, falling back to a regular instance attribute lookup."
+        },
+        {
+          "name": "get_factory_boy_synthesized_fields",
+          "signature": "fn get_factory_boy_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>",
+          "summary": "Synthesize `create`, `build`, `create_batch`, `build_batch`, and `__new__` on factory-boy `DjangoModelFactory` subclasses, returning the model type from `class Meta: model = X`."
+        },
+        {
+          "name": "get_field_from_current_class_only",
+          "signature": "fn get_field_from_current_class_only(&self, cls: &Class, name: &Name) -> Option<&ClassField>",
+          "summary": "This function does not return fields defined in parent classes"
+        },
+        {
+          "name": "get_from_class",
+          "signature": "fn get_from_class<K: Solve<Ans> + Exported>(&self, cls: &Class, k: &K) -> Option<&'answer K::Answer> where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>",
+          "summary": "Might return None if the class is no longer present on the underlying module."
+        },
+        {
+          "name": "get_from_export",
+          "signature": "fn get_from_export(&self, module: ModuleName, path: Option<&ModulePath>, k: &KeyExport) -> &'answer Type"
+        },
+        {
+          "name": "get_hashed",
+          "signature": "fn get_hashed<K: Solve<Ans>>(&self, k: Hashed<&K>) -> &'answer K::Answer where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_hashed_opt",
+          "signature": "fn get_hashed_opt<K: Solve<Ans>>(&self, k: Hashed<&K>) -> Option<&'answer K::Answer> where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_idx",
+          "signature": "fn get_idx<K: Solve<Ans>>(&self, idx: Idx<K>) -> &'answer K::Answer where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_instance_attribute",
+          "signature": "fn get_instance_attribute(&self, cls: &ClassType, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_literal_string_attribute",
+          "signature": "fn get_literal_string_attribute(&self, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_metaclass_attribute",
+          "signature": "fn get_metaclass_attribute(&self, cls: &ClassBase, metaclass: &ClassType, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_metaclass_dunder_call",
+          "signature": "fn get_metaclass_dunder_call(&self, cls: &ClassType) -> Option<Type>",
+          "summary": "Get the metaclass `__call__` method"
+        },
+        {
+          "name": "get_metadata_for_class",
+          "signature": "fn get_metadata_for_class(&self, cls: &Class) -> &ClassMetadata"
+        },
+        {
+          "name": "get_mro_for_class",
+          "signature": "fn get_mro_for_class(&self, cls: &Class) -> &ClassMro"
+        },
+        {
+          "name": "get_named_tuple_elements",
+          "signature": "fn get_named_tuple_elements(&self, cls: &Class, errors: &ErrorCollector) -> SmallSet<Name>"
+        },
+        {
+          "name": "get_named_tuple_synthesized_fields",
+          "signature": "fn get_named_tuple_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_new_type_synthesized_fields",
+          "signature": "fn get_new_type_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_nn_module_synthesized_fields",
+          "signature": "fn get_nn_module_synthesized_fields(&self, cls: &Class, registrations: &SmallMap<Name, Vec<Expr>>) -> Option<ClassSynthesizedFields>",
+          "summary": "Synthesize attributes created by `nn.Module.register_buffer` and `nn.Module.register_parameter` calls in a constructor."
+        },
+        {
+          "name": "get_non_synthesized_class_member",
+          "signature": "fn get_non_synthesized_class_member(&self, cls: &Class, name: &Name) -> Option<Cow<'_, ClassField>>",
+          "summary": "Only look up fields that are not synthesized. This is useful when synthesizing method signatures for typeddict, named tuple, etc."
+        },
+        {
+          "name": "get_non_synthesized_class_member_and_defining_class",
+          "signature": "fn get_non_synthesized_class_member_and_defining_class(&self, cls: &Class, name: &Name) -> Option<WithDefiningClass<Cow<'_, ClassField>>>"
+        },
+        {
+          "name": "get_non_synthesized_field_from_current_class_only",
+          "signature": "fn get_non_synthesized_field_from_current_class_only(&self, cls: &Class, name: &Name) -> Option<&ClassField>"
+        },
+        {
+          "name": "get_or_create_jaxtyping_dimension",
+          "signature": "fn get_or_create_jaxtyping_dimension(&self, name: Name, kind: QuantifiedKind) -> Quantified",
+          "summary": "Get or create a Quantified type for a jaxtyping dimension name. Cached per module on the `(name, kind)` pair: the same name reused with a different `QuantifiedKind` intentionally yields a distinct Quantified."
+        },
+        {
+          "name": "get_or_create_jaxtyping_variadic_shape",
+          "signature": "fn get_or_create_jaxtyping_variadic_shape(&self, name: Name, kind: QuantifiedKind) -> Quantified",
+          "summary": "Get or create a TypeVar or IntVar for a jaxtyping variadic shape name."
+        },
+        {
+          "name": "get_produced_type",
+          "signature": "fn get_produced_type(&self, iterables: Vec<Iterable>) -> Type"
+        },
+        {
+          "name": "get_protocol_attribute",
+          "signature": "fn get_protocol_attribute(&self, cls: &ClassType, self_type: Type, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_pydantic_root_model_class_field_type",
+          "signature": "fn get_pydantic_root_model_class_field_type(&self, cls: &Class, attr_name: &Name) -> Option<Type>"
+        },
+        {
+          "name": "get_pydantic_root_model_init",
+          "signature": "fn get_pydantic_root_model_init(&self, cls: &Class, root_model_type: Type, has_strict: bool) -> ClassSynthesizedField"
+        },
+        {
+          "name": "get_pydantic_root_model_type_via_mro",
+          "signature": "fn get_pydantic_root_model_type_via_mro(&self, class: &Class, metadata: &ClassMetadata) -> Option<(Type, bool)>"
+        },
+        {
+          "name": "get_self_attribute",
+          "signature": "fn get_self_attribute(&self, cls: &ClassType, name: &Name) -> Option<ClassAttribute>"
+        },
+        {
+          "name": "get_shaped_array_attribute",
+          "signature": "fn get_shaped_array_attribute(&self, shaped_array: &ShapedArrayType, name: &Name) -> Option<ClassAttribute>",
+          "summary": "Look up an attribute on a shaped-array instance, substituting Self with the full type."
+        },
+        {
+          "name": "get_special_decorator",
+          "signature": "fn get_special_decorator<'a>(&'a self, decorator: &'a Decorator) -> Option<SpecialDecorator<'a>>"
+        },
+        {
+          "name": "get_subscript_symmetry_for_class",
+          "signature": "fn get_subscript_symmetry_for_class(&self, cls: &Class) -> bool"
+        },
+        {
+          "name": "get_super_attribute",
+          "signature": "fn get_super_attribute(&self, start_lookup_cls: &ClassType, super_obj: &SuperObj, name: &Name) -> Option<ClassAttribute>",
+          "summary": "Looks up an attribute on a super instance."
+        },
+        {
+          "name": "get_super_class_member",
+          "signature": "fn get_super_class_member(&self, cls: &Class, start_lookup_cls: Option<&ClassType>, name: &Name) -> Option<WithDefiningClass<Cow<'_, ClassField>>>"
+        },
+        {
+          "name": "get_total_ordering_synthesized_fields",
+          "signature": "fn get_total_ordering_synthesized_fields(&self, errors: &ErrorCollector, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_type_alias",
+          "signature": "fn get_type_alias<'b>(&self, data: &'b TypeAliasData) -> Cow<'b, TypeAlias> where 'answer: 'b",
+          "summary": "Resolve a type alias, borrowing it when no substitution is needed."
+        },
+        {
+          "name": "get_typed_dict_attribute",
+          "signature": "fn get_typed_dict_attribute(&self, td: &TypedDictInner, name: &Name) -> Option<ClassAttribute>",
+          "summary": "Get a non-field attribute of a TypedDict instance. TypedDict fields are dict key declarations and are not accessible as attributes. However, if a field name shadows a dict method (e.g. `values`, `items`, `keys`), the method should still be…"
+        },
+        {
+          "name": "get_typed_dict_dunder_init",
+          "signature": "fn get_typed_dict_dunder_init(&self, td: &TypedDictInner) -> Type"
+        },
+        {
+          "name": "get_typed_dict_synthesized_fields",
+          "signature": "fn get_typed_dict_synthesized_fields(&self, cls: &Class) -> Option<ClassSynthesizedFields>"
+        },
+        {
+          "name": "get_typed_dict_value_type",
+          "signature": "fn get_typed_dict_value_type(&self, typed_dict: &TypedDict) -> Type"
+        },
+        {
+          "name": "get_typed_dict_value_type_as_builtins_dict",
+          "signature": "fn get_typed_dict_value_type_as_builtins_dict(&self, typed_dict: &TypedDict) -> Option<Type>",
+          "summary": "If the TypedDict is assignable to `dict[str, VT]`, return `VT`."
+        },
+        {
+          "name": "has_attr",
+          "signature": "fn has_attr(&self, base: &Type, attr_name: &Name) -> bool",
+          "summary": "Can the attribute be successfully looked up on all union branches? Uses the full lookup pipeline (static + `__getattr__`/`__getattribute__` fallback)."
+        },
+        {
+          "name": "has_django_field_choices",
+          "signature": "fn has_django_field_choices(&self, call_expr: &ExprCall) -> bool",
+          "summary": "Check if a Django field has a `choices` argument."
+        },
+        {
+          "name": "has_static_attr",
+          "signature": "fn has_static_attr(&self, base: &Type, attr_name: &Name) -> bool",
+          "summary": "Does any union branch have the attribute via static lookup (class fields only, no `__getattr__`/`__getattribute__` fallback)?"
+        },
+        {
+          "name": "has_superclass",
+          "signature": "fn has_superclass(&self, class: &Class, want: &Class) -> bool",
+          "summary": "Is `want` a superclass of `class` in the class hierarchy? Will return `false` if `want` is a protocol, unless it is explicitly marked as a base class in the MRO."
+        },
+        {
+          "name": "hasattr_narrow_type",
+          "signature": "fn hasattr_narrow_type(&self, base: &Type, attr_name: &Name, range: TextRange, errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Compute the narrowed attribute type for `hasattr` narrowing. Returns `None` if the attribute exists on all union members (no narrowing needed). Otherwise returns `Some(ty)` where `ty` is the union of attribute types from members that have…"
+        },
+        {
+          "name": "infer_int_tuple_subscript",
+          "signature": "fn infer_int_tuple_subscript(&self, int_tuple: &IntTuple, index: &Expr, index_ty: Option<&Type>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "infer_tuple_subscript",
+          "signature": "fn infer_tuple_subscript(&self, tuple: Tuple, index: &Expr, index_ty: Option<&Type>, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Type",
+          "summary": "When indexing/slicing tuples with literals, try to infer a more precise type"
+        },
+        {
+          "name": "infer_variance_ignoring_declared",
+          "signature": "fn infer_variance_ignoring_declared(&self, class: &Class) -> VarianceMap",
+          "summary": "Infer variance from structural usage, ignoring declared variance. All type params are treated as having undefined variance, and the fixpoint algorithm discovers what the structure implies."
+        },
+        {
+          "name": "infer_with_decomposed_hint",
+          "signature": "fn infer_with_decomposed_hint<D>(&self, hint: Option<HintRef<'_, '_>>, decompose: impl Fn(&Type) -> Option<D>, infer: impl Fn(Option<D>, Option<HintRef<'_, '_>>) -> Type) -> Type"
+        },
+        {
+          "name": "instance_as_dunder_call",
+          "signature": "fn instance_as_dunder_call(&self, cls: &ClassType) -> Option<Type>",
+          "summary": "Return `__call__` as a bound method if instances of `cls` have `__call__`. This is what the runtime automatically does when we try to call an instance."
+        },
+        {
+          "name": "instantiate",
+          "signature": "fn instantiate(&self, cls: &Class) -> Type",
+          "summary": "Given a class or typed dictionary, create a `Type` that represents a generic instance of the class or typed dictionary."
+        },
+        {
+          "name": "instantiate_fresh_callable",
+          "signature": "fn instantiate_fresh_callable(&self, tparams: &TParams, c: Callable) -> (QuantifiedHandle, Callable)"
+        },
+        {
+          "name": "instantiate_fresh_class",
+          "signature": "fn instantiate_fresh_class(&self, cls: &Class) -> (QuantifiedHandle, Type)",
+          "summary": "Instantiates a class or typed dictionary with fresh variables for its type parameters."
+        },
+        {
+          "name": "instantiate_fresh_forall",
+          "signature": "fn instantiate_fresh_forall(&self, forall: Forall<Forallable>) -> (QuantifiedHandle, Type)"
+        },
+        {
+          "name": "instantiate_fresh_function",
+          "signature": "fn instantiate_fresh_function(&self, tparams: &TParams, func: Function) -> (QuantifiedHandle, Function)"
+        },
+        {
+          "name": "instantiate_type_var_tuple",
+          "signature": "fn instantiate_type_var_tuple(&self) -> (TParams, Type)"
+        },
+        {
+          "name": "instantiate_unbounded_tuple",
+          "signature": "fn instantiate_unbounded_tuple(&self) -> (TParams, Type)"
+        },
+        {
+          "name": "intersects",
+          "signature": "fn intersects(&self, ts: &[Type]) -> Type",
+          "summary": "Calculate the intersection of a number of types"
+        },
+        {
+          "name": "is_class_attribute_subset",
+          "signature": "fn is_class_attribute_subset(&self, got: &ClassAttribute, want: &ClassAttribute, allow_property_override: bool, is_subset: &mut dyn FnMut(&Type, &Type) -> Result<(), SubsetError>) -> Result<(), Box<AttrSubsetError>>"
+        },
+        {
+          "name": "is_compatible_constructor_return",
+          "signature": "fn is_compatible_constructor_return(&self, ty: &Type, class: &Class) -> bool"
+        },
+        {
+          "name": "is_consistent",
+          "signature": "fn is_consistent(&self, got: &Type, want: &Type) -> bool"
+        },
+        {
+          "name": "is_coroutine",
+          "signature": "fn is_coroutine(&self, ty: &Type) -> bool",
+          "summary": "Warning: this returns `true` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "is_debug",
+          "signature": "fn is_debug(&self) -> bool",
+          "summary": "Is the debug flag set? Intended to support print debugging."
+        },
+        {
+          "name": "is_dict_like",
+          "signature": "fn is_dict_like(&self, ty: &Type) -> bool"
+        },
+        {
+          "name": "is_equivalent",
+          "signature": "fn is_equivalent(&self, got: &Type, want: &Type) -> bool"
+        },
+        {
+          "name": "is_foreign_key_like_field",
+          "signature": "fn is_foreign_key_like_field(&self, field: &Class) -> bool"
+        },
+        {
+          "name": "is_jaxtyping_quantified",
+          "signature": "fn is_jaxtyping_quantified(&self, q: &Quantified) -> bool",
+          "summary": "Check if a quantified type was created while parsing a jaxtyping shape."
+        },
+        {
+          "name": "is_jaxtyping_wrapper_expr",
+          "signature": "fn is_jaxtyping_wrapper_expr(&self, expr: &Expr) -> bool",
+          "summary": "Check if an expression resolves to one of jaxtyping's public dtype wrappers."
+        },
+        {
+          "name": "is_many_to_many_field",
+          "signature": "fn is_many_to_many_field(&self, field: &Class) -> bool"
+        },
+        {
+          "name": "is_protocol_subset_at_attr",
+          "signature": "fn is_protocol_subset_at_attr(&self, got: &Type, protocol: &ClassType, attr_name: &Name, is_subset: &mut dyn FnMut(&Type, &Type) -> Result<(), SubsetError>) -> Result<(), SubsetError>",
+          "summary": "Predicate for whether a specific attribute name matches a protocol during structural subtyping checks."
+        },
+        {
+          "name": "is_provably_disjoint",
+          "signature": "fn is_provably_disjoint(&self, left: &Type, right: &Type) -> bool",
+          "summary": "Whether two types have no possible runtime value in common for the `invalid-cast` check."
+        },
+        {
+          "name": "is_pydantic_strict_metadata",
+          "signature": "fn is_pydantic_strict_metadata(&self, ty: &Type) -> bool"
+        },
+        {
+          "name": "is_sequence_for_pattern",
+          "signature": "fn is_sequence_for_pattern(&self, ty: &Type) -> bool",
+          "summary": "Check if a type is a sequence type for pattern matching purposes (PEP 634)."
+        },
+        {
+          "name": "is_subclassable",
+          "signature": "fn is_subclassable(&self, class: &Class) -> bool"
+        },
+        {
+          "name": "is_subset_eq",
+          "signature": "fn is_subset_eq(&self, got: &Type, want: &Type) -> bool",
+          "summary": "Check that got is assignable to want"
+        },
+        {
+          "name": "is_subset_eq_with_reason",
+          "signature": "fn is_subset_eq_with_reason(&self, got: &Type, want: &Type) -> Result<(), SubsetError>"
+        },
+        {
+          "name": "iter_fields",
+          "signature": "fn iter_fields(&self, cls: &Class, dataclass: &DataclassMetadata, include_initvar: bool, kw_only_fields_by_class: &SmallMap<Class, SmallSet<Name>>) -> Vec<(Name, ClassField, DataclassFieldKeywords)>"
+        },
+        {
+          "name": "iterate",
+          "signature": "fn iterate(&self, iterable: &Type, range: TextRange, errors: &ErrorCollector, orig_context: Option<&dyn Fn() -> ErrorContext>) -> Vec<Iterable>",
+          "summary": "Given an `iterable` type, determine the iteration type; this is the type of `x` if we were to loop using `for x in iterable`."
+        },
+        {
+          "name": "literal_typed_dict_key_name",
+          "signature": "fn literal_typed_dict_key_name(&self, ty: &Type) -> Option<Name>"
+        },
+        {
+          "name": "map_over_union",
+          "signature": "fn map_over_union(&self, ty: &Type, f: impl FnMut(&Type))"
+        },
+        {
+          "name": "maybe_apply_function_decorator",
+          "signature": "fn maybe_apply_function_decorator(&self, callee: &Type, args: &[CallArg<'_>], kws: &[CallKeyword<'_>], errors: &ErrorCollector) -> Option<Type>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(&self) -> &pyrefly_python::module::Module"
+        },
+        {
+          "name": "narrow",
+          "signature": "fn narrow(&self, type_info: &TypeInfo, op: &NarrowOp, range: TextRange, errors: &ErrorCollector) -> TypeInfo"
+        },
+        {
+          "name": "narrowable_for_attr",
+          "signature": "fn narrowable_for_attr(&self, base: &Type, attr_name: &Name, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Compute the get (i.e. read) type information of an attribute for narrowing."
+        },
+        {
+          "name": "paramspec_from_call",
+          "signature": "fn paramspec_from_call(&self, name: Identifier, x: &ExprCall, errors: &ErrorCollector) -> ParamSpec"
+        },
+        {
+          "name": "parse_assert_shape_expr",
+          "signature": "fn parse_assert_shape_expr(&self, expr: &Expr, errors: &ErrorCollector) -> Option<IntTuple>"
+        },
+        {
+          "name": "parse_jaxtyping_type_form",
+          "signature": "fn parse_jaxtyping_type_form(&self, value: &Expr, slice: &Expr, range: TextRange, errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Parse an origin-aware jaxtyping type form such as `Float[Tensor, \"batch\"]`."
+        },
+        {
+          "name": "polars_column_name",
+          "signature": "fn polars_column_name(&self, expr: &Expr) -> Option<Name>"
+        },
+        {
+          "name": "polars_dataframe_annotated_type",
+          "signature": "fn polars_dataframe_annotated_type(&self, inner: &Type, metadata: &[Type]) -> Option<Type>",
+          "summary": "Interpret supported `Annotated[pl.DataFrame, ...]` metadata as a schema contract."
+        },
+        {
+          "name": "polars_select_columns",
+          "signature": "fn polars_select_columns(&self, schema: &DataFrameSchema, elts: &[Expr], errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Select list-literal columns while rejecting duplicates as Polars does."
+        },
+        {
+          "name": "promote",
+          "signature": "fn promote(&self, cls: &Class, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Given a class or typed dictionary, create a `Type` that represents to an instance annotated with the class or typed dictionary's bare name. This will either have empty type arguments if the class or typed dictionary is not generic, or type…"
+        },
+        {
+          "name": "promote_forall",
+          "signature": "fn promote_forall(&self, forall: Forall<Forallable>, range: TextRange, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "promote_nontypeddict_silently_to_classtype",
+          "signature": "fn promote_nontypeddict_silently_to_classtype(&self, cls: &Class) -> ClassType",
+          "summary": "Silently promotes a Class to a ClassType, using default type arguments. It is up to the caller to ensure they are not calling this method on a TypedDict class, which should be promoted to TypedDict instead of ClassType."
+        },
+        {
+          "name": "promote_silently",
+          "signature": "fn promote_silently(&self, cls: &Class) -> Type",
+          "summary": "Version of `promote` that does not potentially raise errors. Should only be used for unusual scenarios."
+        },
+        {
+          "name": "pydantic_config",
+          "signature": "fn pydantic_config(&self, bases_with_metadata: &[(Class, &ClassMetadata)], pydantic_config_dict: &PydanticConfigDict, keywords: &[(Name, Annotation)], decorators: &[(&Decorator, TextRange)], errors: &ErrorCollector, range: TextRange) -> Option<PydanticConfig>"
+        },
+        {
+          "name": "quantified_instance_as_dunder_call",
+          "signature": "fn quantified_instance_as_dunder_call(&self, quantified: Quantified, upper_bound: &ClassType) -> Option<Type>",
+          "summary": "Return `__call__` as a bound method if instances of `type_var` have `__call__`. We look up `__call__` from the upper bound of `type_var`, but `Self` is substituted with the `type_var` instead of the upper bound class."
+        },
+        {
+          "name": "record_attribute_definition_index",
+          "signature": "fn record_attribute_definition_index(&self, base: &Type, attribute_name: &Name, attribute_reference_range: TextRange, reference_kind: AttributeReferenceKind)"
+        },
+        {
+          "name": "record_property_getter",
+          "signature": "fn record_property_getter(&self, loc: TextRange, getter_ty: &Type)"
+        },
+        {
+          "name": "record_recursive",
+          "signature": "fn record_recursive(&self, ty: Type, recursive: Var) -> Type"
+        },
+        {
+          "name": "record_resolved_trace",
+          "signature": "fn record_resolved_trace(&self, loc: TextRange, ty: &Type)"
+        },
+        {
+          "name": "record_type_trace",
+          "signature": "fn record_type_trace(&self, loc: TextRange, ty: &Type)"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, var: Var) -> Option<Guard<'a, Var>>"
+        },
+        {
+          "name": "report_forbidden_dataclass_target",
+          "signature": "fn report_forbidden_dataclass_target(&self, name: &Name, is_protocol: bool, is_enum: bool, is_typed_dict: bool, is_named_tuple: bool, range: TextRange, errors: &ErrorCollector) -> bool",
+          "summary": "Report the \"`@dataclass` cannot be applied to X\" diagnostics for the class kinds dataclass rejects. Shared by the decorator path (`dataclass_metadata`) and the call form `dataclass(C)` so both reject the same kinds with the same messages.…"
+        },
+        {
+          "name": "resolve_facet_chain",
+          "signature": "fn resolve_facet_chain(&self, unresolved: UnresolvedFacetChain) -> Option<FacetChain>"
+        },
+        {
+          "name": "resolve_facet_kind",
+          "signature": "fn resolve_facet_kind(&self, unresolved: UnresolvedFacetKind) -> Option<FacetKind>"
+        },
+        {
+          "name": "resolve_get_class_attr",
+          "signature": "fn resolve_get_class_attr(&self, attr_name: &Name, class_attr: ClassAttribute, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>) -> Result<Type, NoAccessReason>"
+        },
+        {
+          "name": "resolve_named_tuple_element",
+          "signature": "fn resolve_named_tuple_element(&self, cls: &ClassType, name: &Name) -> Option<Type>"
+        },
+        {
+          "name": "scoped_type_params",
+          "signature": "fn scoped_type_params(&self, x: Option<&TypeParams>, errors: &ErrorCollector) -> Vec<Quantified>"
+        },
+        {
+          "name": "self_as_dunder_call",
+          "signature": "fn self_as_dunder_call(&self, cls: &ClassType) -> Option<Type>",
+          "summary": "Return `__call__` as bound method when called on `Self`."
+        },
+        {
+          "name": "sentinel_from_call",
+          "signature": "fn sentinel_from_call(&self, assignment_name: Identifier, nesting_context: NestingContext, x: &ExprCall, errors: &ErrorCollector) -> Sentinel"
+        },
+        {
+          "name": "set_debug",
+          "signature": "fn set_debug(&self, value: bool)",
+          "summary": "Set the debug flag. Intended to support print debugging."
+        },
+        {
+          "name": "set_flag_from_special_decorator",
+          "signature": "fn set_flag_from_special_decorator(&self, flags: &mut FuncFlags, decorator: &SpecialDecorator<'_>) -> bool",
+          "summary": "If the decorator corresponds to a function flag, set the flag appropriately. Returns whether a flag was set."
+        },
+        {
+          "name": "shaped_array_shape_for_class",
+          "signature": "fn shaped_array_shape_for_class(&self, cls: &Class) -> Option<Quantified>"
+        },
+        {
+          "name": "shaped_array_shape_for_class_type",
+          "signature": "fn shaped_array_shape_for_class_type(&self, cls: &ClassType) -> Option<Quantified>"
+        },
+        {
+          "name": "show_binding",
+          "signature": "fn show_binding(&self, binding: &Binding) -> String"
+        },
+        {
+          "name": "show_binding_for",
+          "signature": "fn show_binding_for<K: Keyed>(&self, idx: Idx<K>) -> String where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "show_binding_for_with",
+          "signature": "fn show_binding_for_with<K: Keyed>(&self, idx: Idx<K>, bindings: &Bindings) -> String where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "show_binding_generic",
+          "signature": "fn show_binding_generic<K>(&self, binding: &K::Value) -> String where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "show_current_binding",
+          "signature": "fn show_current_binding(&self) -> String"
+        },
+        {
+          "name": "show_current_cycle",
+          "signature": "fn show_current_cycle(&self) -> impl Iterator<Item = String>"
+        },
+        {
+          "name": "show_current_idx",
+          "signature": "fn show_current_idx(&self) -> String"
+        },
+        {
+          "name": "show_current_module",
+          "signature": "fn show_current_module(&self) -> String"
+        },
+        {
+          "name": "show_current_stack",
+          "signature": "fn show_current_stack(&self) -> impl Iterator<Item = String>"
+        },
+        {
+          "name": "show_idx",
+          "signature": "fn show_idx<K>(&self, idx: Idx<K>) -> String where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "show_idx_with",
+          "signature": "fn show_idx_with<K>(&self, idx: Idx<K>, bindings: &Bindings) -> String where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "solve_abstract_members",
+          "signature": "fn solve_abstract_members(&self, cls: &Class, errors: &ErrorCollector) -> AbstractClassMembers"
+        },
+        {
+          "name": "solve_annotation",
+          "signature": "fn solve_annotation(&self, binding: &BindingAnnotation, errors: &ErrorCollector) -> AnnotationWithTarget"
+        },
+        {
+          "name": "solve_binding",
+          "signature": "fn solve_binding(&self, binding: &Binding, range: TextRange, errors: &ErrorCollector) -> TypeInfo"
+        },
+        {
+          "name": "solve_class",
+          "signature": "fn solve_class(&self, cls: &BindingClass, errors: &ErrorCollector) -> NoneIfRecursive<Class>"
+        },
+        {
+          "name": "solve_class_base_type",
+          "signature": "fn solve_class_base_type(&self, binding: &BindingClassBaseType, errors: &ErrorCollector) -> ClassBases"
+        },
+        {
+          "name": "solve_class_checks",
+          "signature": "fn solve_class_checks(&self, binding: &BindingClassChecks, errors: &ErrorCollector) -> EmptyAnswer",
+          "summary": "Run class-level diagnostics that do not produce downstream answers."
+        },
+        {
+          "name": "solve_class_disjoint_base",
+          "signature": "fn solve_class_disjoint_base(&self, binding: &BindingClassDisjointBase, errors: &ErrorCollector) -> ClassDisjointBase"
+        },
+        {
+          "name": "solve_class_field",
+          "signature": "fn solve_class_field(&self, field: &BindingClassField, errors: &ErrorCollector) -> ClassField"
+        },
+        {
+          "name": "solve_class_metadata",
+          "signature": "fn solve_class_metadata(&self, binding: &BindingClassMetadata, errors: &ErrorCollector) -> ClassMetadata"
+        },
+        {
+          "name": "solve_class_mro",
+          "signature": "fn solve_class_mro(&self, binding: &BindingClassMro, errors: &ErrorCollector) -> ClassMro"
+        },
+        {
+          "name": "solve_class_synthesized_fields",
+          "signature": "fn solve_class_synthesized_fields(&self, errors: &ErrorCollector, binding: &BindingClassSynthesizedFields) -> ClassSynthesizedFields"
+        },
+        {
+          "name": "solve_decorated_function",
+          "signature": "fn solve_decorated_function(&self, x: &BindingDecoratedFunction, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "solve_decorator",
+          "signature": "fn solve_decorator(&self, x: &BindingDecorator, errors: &ErrorCollector) -> Decorator"
+        },
+        {
+          "name": "solve_django_reverse_relations",
+          "signature": "fn solve_django_reverse_relations(&self, binding: &BindingDjangoRelations, _range: TextRange, _errors: &ErrorCollector) -> DjangoReverseRelationIndex"
+        },
+        {
+          "name": "solve_expectation",
+          "signature": "fn solve_expectation(&self, binding: &BindingExpect, range: TextRange, errors: &ErrorCollector) -> EmptyAnswer"
+        },
+        {
+          "name": "solve_function_binding",
+          "signature": "fn solve_function_binding(&self, idx: Idx<KeyDecoratedFunction>, predecessor: &mut Option<Idx<Key>>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "solve_legacy_tparam",
+          "signature": "fn solve_legacy_tparam(&self, binding: &BindingLegacyTypeParam, scope_anchor: TextRange) -> LegacyTypeParameterLookup",
+          "summary": "Solve a `BindingLegacyTypeParam`, producing a `LegacyTypeParameterLookup` that tells the caller whether the name is a type parameter and, if so, which `Quantified` to use."
+        },
+        {
+          "name": "solve_tparams",
+          "signature": "fn solve_tparams(&self, binding: &BindingTParams, errors: &ErrorCollector) -> TParams"
+        },
+        {
+          "name": "solve_type_alias",
+          "signature": "fn solve_type_alias(&self, binding: &BindingTypeAlias, errors: &ErrorCollector) -> TypeAlias"
+        },
+        {
+          "name": "solve_undecorated_function",
+          "signature": "fn solve_undecorated_function(&self, x: &BindingUndecoratedFunction, errors: &ErrorCollector) -> UndecoratedFunction"
+        },
+        {
+          "name": "solve_variance_binding",
+          "signature": "fn solve_variance_binding(&self, variance_info: &BindingVariance, _errors: &ErrorCollector) -> VarianceMap"
+        },
+        {
+          "name": "solve_yield",
+          "signature": "fn solve_yield(&self, x: &BindingYield, errors: &ErrorCollector) -> YieldResult"
+        },
+        {
+          "name": "solve_yield_from",
+          "signature": "fn solve_yield_from(&self, x: &BindingYieldFrom, errors: &ErrorCollector) -> YieldFromResult"
+        },
+        {
+          "name": "solver",
+          "signature": "fn solver(&self) -> &Solver"
+        },
+        {
+          "name": "specialize",
+          "signature": "fn specialize(&self, cls: &Class, targs: Vec<Type>, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Given a class or typed dictionary and some (explicit) type arguments, construct a `Type` that represents the type of an instance of the class or typed dictionary with those `targs`."
+        },
+        {
+          "name": "specialize_forall",
+          "signature": "fn specialize_forall(&self, forall: Forall<Forallable>, targs: Vec<Type>, range: TextRange, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "specialize_forall_in_base_class",
+          "signature": "fn specialize_forall_in_base_class(&self, forall: Forall<Forallable>, targs: Vec<Type>, range: TextRange, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "specialize_in_base_class",
+          "signature": "fn specialize_in_base_class(&self, cls: &Class, targs: Vec<Type>, range: TextRange, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "stack",
+          "signature": "fn stack(&self) -> &CalcStack"
+        },
+        {
+          "name": "subscript_bytes_literal",
+          "signature": "fn subscript_bytes_literal(&self, bytes: &[u8], index_expr: &Expr, errors: &ErrorCollector, range: TextRange, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "subscript_infer",
+          "signature": "fn subscript_infer(&self, base: &TypeInfo, slice: &Expr, range: TextRange, type_form_context: TypeFormContext<'_>, errors: &ErrorCollector) -> TypeInfo"
+        },
+        {
+          "name": "subscript_infer_for_type",
+          "signature": "fn subscript_infer_for_type(&self, base: &Type, slice: &Expr, range: TextRange, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "subscript_str_literal",
+          "signature": "fn subscript_str_literal(&self, value: &str, base_type: &Type, index_expr: &Expr, errors: &ErrorCollector, range: TextRange, context: Option<&dyn Fn() -> ErrorContext>) -> Type"
+        },
+        {
+          "name": "suggest_enum_member_for_value",
+          "signature": "fn suggest_enum_member_for_value(&self, got: &Type, want: &Type) -> Option<String>",
+          "summary": "Suggest an enum member when a raw literal matches exactly one expected enum value."
+        },
+        {
+          "name": "try_get_from_export",
+          "signature": "fn try_get_from_export(&self, module: ModuleName, attr: Name) -> Option<&'answer Type>"
+        },
+        {
+          "name": "try_nn_module_dict_attr",
+          "signature": "fn try_nn_module_dict_attr(&self, class: &ClassType, attr_name: &Name) -> Option<ClassAttribute>",
+          "summary": "Handle attribute access on `nn.ModuleDict[T]` where `T` is a TypedDict."
+        },
+        {
+          "name": "try_nn_module_dict_index",
+          "signature": "fn try_nn_module_dict_index(&self, cls: &ClassType, base: &Type, slice: &Expr, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Handle indexing on `nn.ModuleDict[T]` where `T` is a TypedDict."
+        },
+        {
+          "name": "try_nn_sequential_chain_forward",
+          "signature": "fn try_nn_sequential_chain_forward(&self, cls: &ClassType, input_ty: Type, range: TextRange, errors: &ErrorCollector) -> Option<Type>",
+          "summary": "Chain input through each module in an `nn.Sequential`."
+        },
+        {
+          "name": "try_string_literal_as_typeform",
+          "signature": "fn try_string_literal_as_typeform(&self, x: &Expr, hint: &Type, range: TextRange, errors: &ErrorCollector, tcc: &dyn Fn() -> TypeCheckContext, call_context: &CallContext<'_>) -> Option<Type>",
+          "summary": "Try to evaluate a string literal as a forward-reference type form by resolving the name through the module's exports (PEP 747). Returns `Some(TypeForm[T])` for valid type names, `None` otherwise."
+        },
+        {
+          "name": "type_of",
+          "signature": "fn type_of(&self, ty: Type) -> Type"
+        },
+        {
+          "name": "type_of_attr_get",
+          "signature": "fn type_of_attr_get(&self, base: &Type, attr_name: &Name, range: TextRange, errors: &ErrorCollector, error_kind: ErrorKind, context: Option<&dyn Fn() -> ErrorContext>, todo_ctx: &str) -> Type",
+          "summary": "Compute the get (i.e. read) type of an attribute. If the attribute cannot be found or read, error and return `Any`. Use this to infer the type of a direct attribute fetch."
+        },
+        {
+          "name": "type_of_magic_dunder_attr",
+          "signature": "fn type_of_magic_dunder_attr(&self, base: &Type, attr_name: &Name, range: TextRange, errors: &ErrorCollector, context: Option<&dyn Fn() -> ErrorContext>, todo_ctx: &str, allow_getattr_fallback: bool) -> Option<Type>",
+          "summary": "Compute the get (i.e., read) type of a magic dunder attribute, if it can be found. Handles distributing over unions. - If we find it, return `Some(dunder_type)` - If no attribute is found, return `None`. - If we hit an internal error, reco…"
+        },
+        {
+          "name": "type_order",
+          "signature": "fn type_order(&self) -> TypeOrder<'_, Ans>"
+        },
+        {
+          "name": "typed_dict_extra_items",
+          "signature": "fn typed_dict_extra_items(&self, typed_dict: &TypedDict) -> ExtraItems"
+        },
+        {
+          "name": "typed_dict_field",
+          "signature": "fn typed_dict_field(&self, typed_dict: &TypedDict, name: &Name) -> Option<TypedDictField>"
+        },
+        {
+          "name": "typed_dict_fields",
+          "signature": "fn typed_dict_fields(&self, typed_dict: &TypedDict) -> SmallMap<Name, TypedDictField>"
+        },
+        {
+          "name": "typed_dict_kw_param_info",
+          "signature": "fn typed_dict_kw_param_info(&self, typed_dict: &TypedDict) -> Vec<(Name, Type, Required)>"
+        },
+        {
+          "name": "typevar_from_call",
+          "signature": "fn typevar_from_call(&self, name: Identifier, x: &ExprCall, kind: QuantifiedKind, errors: &ErrorCollector) -> TypeVar"
+        },
+        {
+          "name": "typevartuple_from_call",
+          "signature": "fn typevartuple_from_call(&self, name: Identifier, x: &ExprCall, errors: &ErrorCollector) -> TypeVarTuple"
+        },
+        {
+          "name": "undecorated_function",
+          "signature": "fn undecorated_function(&self, def: &FunctionDefData, def_index: FuncDefIndex, is_in_type_checking_block: bool, body_kind: BodyKind, is_return_inferred: bool, calls_super_method: bool, class_key: Option<&Idx<KeyClass>>, decorators: &[Idx<KeyDecorator>], legacy_tparams: &[Idx<KeyLegacyTypeParam>], parent: &NestingContext, shape_dsl_def: Option<Arc<ShapeDslFunction>>, type_shape_dsl_def: Option<Arc<ParsedTypeShapeDslFunction>>, uses_shape_dsl_ir_name: Option<ShortIdentifier>, errors: &ErrorCollector) -> UndecoratedFunction"
+        },
+        {
+          "name": "union",
+          "signature": "fn union(&self, x: Type, y: Type) -> Type"
+        },
+        {
+          "name": "unions",
+          "signature": "fn unions(&self, xs: Vec<Type>) -> Type"
+        },
+        {
+          "name": "unop_infer",
+          "signature": "fn unop_infer(&self, x: &ExprUnaryOp, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "untype",
+          "signature": "fn untype(&self, ty: Type, range: TextRange, errors: &ErrorCollector) -> Type",
+          "summary": "Unwraps a type, originally evaluated as a value, so that it can be used as a type annotation. For example, in `def f(x: int): ...`, we evaluate `int` as a value, getting its type as `type[int]`, then call `untype(type[int])` to get the `in…"
+        },
+        {
+          "name": "untype_alias",
+          "signature": "fn untype_alias(&self, ta: &TypeAliasData) -> Type"
+        },
+        {
+          "name": "untype_opt",
+          "signature": "fn untype_opt(&self, ty: Type, range: TextRange, errors: &ErrorCollector) -> Option<Type>"
+        },
+        {
+          "name": "unwrap_async_iterable",
+          "signature": "fn unwrap_async_iterable(&self, ty: &Type) -> Option<Type>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "unwrap_awaitable",
+          "signature": "fn unwrap_awaitable(&self, ty: &Type) -> Option<Type>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "unwrap_class_object_silently",
+          "signature": "fn unwrap_class_object_silently(&self, ty: &Type) -> Option<(TParams, Type)>"
+        },
+        {
+          "name": "unwrap_coroutine",
+          "signature": "fn unwrap_coroutine(&self, ty: &Type) -> Option<(Type, Type, Type)>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "unwrap_generator",
+          "signature": "fn unwrap_generator(&self, ty: &Type) -> Option<(Type, Type, Type)>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "unwrap_iterable",
+          "signature": "fn unwrap_iterable(&self, ty: &Type) -> Option<Type>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "unwrap_mapping",
+          "signature": "fn unwrap_mapping(&self, ty: &Type) -> Option<(Type, Type)>",
+          "summary": "Warning: this returns `Some` if the type is `Any` or a class that extends `Any`"
+        },
+        {
+          "name": "uses_builtin_shaped_array_indexing",
+          "signature": "fn uses_builtin_shaped_array_indexing(&self, cls: &Class) -> bool"
+        },
+        {
+          "name": "validate_final_thread_state",
+          "signature": "fn validate_final_thread_state(&self)"
+        },
+        {
+          "name": "validate_frozen_dataclass_inheritance",
+          "signature": "fn validate_frozen_dataclass_inheritance(&self, cls: &Class, dataclass_metadata: &DataclassMetadata, bases_with_metadata: &[(Class, &ClassMetadata)], is_from_dataclass_transform: bool, errors: &ErrorCollector)",
+          "summary": "Validate that frozen and non-frozen dataclasses are not mixed in an inheritance chain. `@dataclass` and attrs reject both directions (frozen-from-non-frozen and non-frozen-from-frozen). Other `@dataclass_transform` classes only reject non-…"
+        },
+        {
+          "name": "validate_post_init",
+          "signature": "fn validate_post_init(&self, cls: &Class, dataclass_metadata: &DataclassMetadata, post_init: Type, range: TextRange, errors: &ErrorCollector)"
+        },
+        {
+          "name": "validate_type_form",
+          "signature": "fn validate_type_form(&self, ty: Type, range: TextRange, type_form_context: TypeFormContext<'_>, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "validate_type_var_default",
+          "signature": "fn validate_type_var_default(&self, name: &Name, kind: QuantifiedKind, default: &Type, range: TextRange, restriction: &Restriction, errors: &ErrorCollector) -> Type"
+        },
+        {
+          "name": "validated_tparams",
+          "signature": "fn validated_tparams(&self, range: TextRange, tparams: Vec<Quantified>, source: TParamsSource, errors: &ErrorCollector) -> TParams",
+          "summary": "Validates `tparams` and returns a validated `TParams`. References to out-of-scope legacy type variables are replaced with gradual fallbacks."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::CalcId",
+      "name": "CalcId",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct CalcId",
+      "summary": "Compactly represents the identity of a binding, for the purposes of understanding the calculation stack.",
+      "doc": "api/pyrefly.alt.answers_solver.md#calcid",
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::CalcStack",
+      "name": "CalcStack",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct CalcStack",
+      "summary": "Represent a stack of in-progress calculations in an `AnswersSolver`.",
+      "doc": "api/pyrefly.alt.answers_solver.md#calcstack",
+      "methods": [
+        {
+          "name": "current_cycle",
+          "signature": "fn current_cycle(&self) -> Option<Vec1<CalcId>>",
+          "summary": "Return the current cycle, if we are at a (module, idx) that we've already seen in this thread."
+        },
+        {
+          "name": "into_vec",
+          "signature": "fn into_vec(&self) -> Vec<CalcId>"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Return the current stack depth (number of entries on the stack)."
+        },
+        {
+          "name": "peek",
+          "signature": "fn peek(&self) -> Option<CalcId>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::ReservedSlot",
+      "name": "ReservedSlot",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ReservedSlot<'a, 'ctx, 'answer, Ans: LookupAnswer>",
+      "summary": "Proof that this SCC owns the pending result slot for this calculation. Dropping the proof rolls back the reservation if it is still pending.",
+      "doc": "api/pyrefly.alt.answers_solver.md#reservedslot",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::Scc",
+      "name": "Scc",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Scc",
+      "summary": "Represent an SCC (Strongly Connected Component) we are currently solving.",
+      "doc": "api/pyrefly.alt.answers_solver.md#scc",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::SccIterationState",
+      "name": "SccIterationState",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SccIterationState",
+      "summary": "Per-SCC iteration state for iterative fixpoint solving.",
+      "doc": "api/pyrefly.alt.answers_solver.md#scciterationstate",
+      "fields": [
+        "iteration",
+        "has_changed",
+        "recursion_breaks"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::ThreadState",
+      "name": "ThreadState",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ThreadState",
+      "summary": "Represents thread-local state for the current `AnswersSolver` and any `AnswersSolver`s waiting for the results that we are currently computing.",
+      "doc": "api/pyrefly.alt.answers_solver.md#threadstate",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(recursion_limit_config: Option<RecursionLimitConfig>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers_solver::TypeCheckOptions",
+      "name": "TypeCheckOptions",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TypeCheckOptions<'a, 'subset>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(errors: &'a ErrorCollector, context: &'a dyn Fn() -> TypeCheckContext) -> Self"
+        },
+        {
+          "name": "with_call_context",
+          "signature": "fn with_call_context(self, call_context: &'a CallContext<'subset>) -> Self"
+        }
+      ]
+    }
+  ]
+}

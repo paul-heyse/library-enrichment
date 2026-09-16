@@ -1,0 +1,24 @@
+id: model-extension-points
+language: json
+severity: hint
+message: Extension point with concrete implementors in the pinned release.
+note: |
+  A trait record that carries an `implementors` list is something you can plug into, and the list
+  is every in-tree type that already does. Read those as worked examples before writing your own:
+  they show which provided methods are worth overriding.
+metadata:
+  record: extension-point
+  reads: content/model
+rule:
+  all:
+    - matches: json-record
+    - has:
+        matches:
+          json-string-field:
+            key-pattern: { regex: '^"kind"$' }
+            value-pattern: { regex: '^"trait"$' }
+    - has:
+        kind: pair
+        has:
+          field: key
+          regex: '^"implementors"$'

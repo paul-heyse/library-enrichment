@@ -1,0 +1,892 @@
+{
+  "module": "pyrefly::binding::bindings",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.binding.bindings.md",
+  "items": [
+    {
+      "path": "pyrefly::binding::bindings::AwaitContext",
+      "name": "AwaitContext",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum AwaitContext",
+      "summary": "An enum tracking whether we are in a generator expression like `(x for x in xs)` - used to allow `await` inside of generators even when a function is not async, for example (await x for x in xs).",
+      "doc": "api/pyrefly.binding.bindings.md#awaitcontext",
+      "variants": [
+        "General",
+        "GeneratorElement"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::bindings::InitializedInFlow",
+      "name": "InitializedInFlow",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum InitializedInFlow",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Yes",
+        "Conditionally",
+        "No",
+        "DeferredCheck"
+      ],
+      "methods": [
+        {
+          "name": "as_error_message",
+          "signature": "fn as_error_message(&self, name: &Name) -> Option<String>"
+        },
+        {
+          "name": "deferred_termination_keys",
+          "signature": "fn deferred_termination_keys(&self) -> Option<&[Idx<Key>]>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::LegacyTParamId",
+      "name": "LegacyTParamId",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum LegacyTParamId",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Name",
+        "Attr"
+      ],
+      "implements": [
+        "ruff_text_size::traits::Ranged"
+      ],
+      "methods": [
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange",
+          "via_trait": "ruff_text_size::traits::Ranged"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::NameLookupResult",
+      "name": "NameLookupResult",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum NameLookupResult",
+      "summary": "The result of looking up a name. Similar to `NameReadInfo`, but differs because the `BindingsBuilder` layer is responsible for both intercepting first-usage reads and for wrapping forward-reference `Key`s in `Idx<Key>` by inserting them in…",
+      "doc": "api/pyrefly.binding.bindings.md#namelookupresult",
+      "variants": [
+        "Found",
+        "NotFound"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::bindings::BindingTable",
+      "name": "BindingTable",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct BindingTable",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "types",
+        "expectations",
+        "type_aliases",
+        "exports",
+        "decorators",
+        "decorated_functions",
+        "undecorated_functions",
+        "func_defs",
+        "classes",
+        "tparams",
+        "class_base_types",
+        "class_fields",
+        "class_synthesized_fields",
+        "variance",
+        "class_checks",
+        "annotations",
+        "class_metadata",
+        "django_relations",
+        "class_mros",
+        "class_disjoint_bases",
+        "abstract_class_check",
+        "class_subscript_symmetry",
+        "legacy_tparams",
+        "yields",
+        "yield_froms"
+      ],
+      "implements": [
+        "pyrefly::binding::table::TableKeyed"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> &Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<K: Keyed>(&mut self, key: K, value: K::Value) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "insert_idx",
+          "signature": "fn insert_idx<K: Keyed>(&mut self, idx: Idx<K>, value: K::Value) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::Bindings",
+      "name": "Bindings",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Bindings",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "available_definitions",
+          "signature": "fn available_definitions(&self, position: TextSize) -> SmallSet<Idx<Key>>"
+        },
+        {
+          "name": "class_def_index",
+          "signature": "fn class_def_index(&self, class_def: &StmtClassDef) -> Option<ClassDefIndex>",
+          "summary": "Per-module class index for a class definition statement (`ClassDefIndex`), used for `KeyClassField` / `ClassFields` lookups."
+        },
+        {
+          "name": "definition_at_position",
+          "signature": "fn definition_at_position(&self, position: TextSize) -> Option<&Key>"
+        },
+        {
+          "name": "display",
+          "signature": "fn display<K: Keyed>(&self, idx: Idx<K>) -> impl Display + '_ where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "enclosing_class",
+          "signature": "fn enclosing_class(&self, range: TextRange) -> Option<Idx<KeyClass>>",
+          "summary": "Returns the innermost class whose body range contains `range`, or `None` if `range` is not inside any class body. Used by the solver to anchor `typing.Self` references to the enclosing class."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "function_def_range",
+          "signature": "fn function_def_range(&self, def_index: FuncDefIndex) -> Option<TextRange>",
+          "summary": "The range of the name in the `def` statement a `FuncDefIndex` refers to. Returns `None` if the index does not name a function in this module, which happens for a stale cross-module index after an incremental rebuild."
+        },
+        {
+          "name": "function_has_return_annotation",
+          "signature": "fn function_has_return_annotation(&self, name: &Identifier) -> bool"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<K: Keyed>(&self, idx: Idx<K>) -> &K::Value where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "get_class_fields",
+          "signature": "fn get_class_fields(&self, idx: ClassDefIndex) -> Option<&ClassFields>",
+          "summary": "Look up pre-computed class fields by `ClassDefIndex`. O(1) Vec index. Returns `None` if the index is out of bounds (e.g., stale cross-module index after incremental rebuild)."
+        },
+        {
+          "name": "get_function_param",
+          "signature": "fn get_function_param(&self, name: &Identifier) -> &FunctionParameter"
+        },
+        {
+          "name": "get_lambda_param_id",
+          "signature": "fn get_lambda_param_id(&self, name: &Identifier) -> LambdaParamId"
+        },
+        {
+          "name": "idx_to_key",
+          "signature": "fn idx_to_key<K: Keyed>(&self, idx: Idx<K>) -> &K where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "is_type_level_lambda_parameter",
+          "signature": "fn is_type_level_lambda_parameter(&self, name: &Identifier) -> bool",
+          "summary": "Whether `name` is bound as an experimental `MapIntTuples` mapper parameter."
+        },
+        {
+          "name": "is_valid_key",
+          "signature": "fn is_valid_key(&self, k: &Key) -> bool",
+          "summary": "Within the LSP, check if a key exists. It may not exist within `if False:` or `if sys.version == 0:` style code."
+        },
+        {
+          "name": "key_to_idx",
+          "signature": "fn key_to_idx<K: Keyed>(&self, k: &K) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "key_to_idx_hashed",
+          "signature": "fn key_to_idx_hashed<K: Keyed>(&self, k: Hashed<&K>) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "key_to_idx_hashed_opt",
+          "signature": "fn key_to_idx_hashed_opt<K: Keyed>(&self, k: Hashed<&K>) -> Option<Idx<K>> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "keys",
+          "signature": "fn keys<K: Keyed>(&self) -> impl ExactSizeIterator<Item = Idx<K>> + '_ where BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "lambda_yield_keys",
+          "signature": "fn lambda_yield_keys(&self, range: TextRange) -> (&[Idx<KeyYield>], &[Idx<KeyYieldFrom>])",
+          "summary": "Returns the yield and yield-from indices for a lambda at the given range, or empty slices if the lambda has no yields."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Arc<BindingsMetadata>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(&self) -> &pyrefly_python::module::Module"
+        },
+        {
+          "name": "module_deletes",
+          "signature": "fn module_deletes(&self) -> &SmallSet<Name>",
+          "summary": "Names `del`eted at module scope."
+        },
+        {
+          "name": "module_ranges",
+          "signature": "fn module_ranges(&self) -> &Arc<ModuleRanges>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(x: ModModule, module_info: pyrefly_python::module::Module, exports: &Exports, solver: &Solver, lookup: &dyn LookupExport, sys_info: SysInfo, errors: &ErrorCollector, enable_trace: bool, check_unannotated_defs: bool, analyze_unannotated_for_ide: bool, infer_return_types: InferReturnTypes, treat_all_caps_as_final: bool) -> Self"
+        },
+        {
+          "name": "should_promote_at_range",
+          "signature": "fn should_promote_at_range(&self, range: TextRange) -> bool"
+        },
+        {
+          "name": "subsequently_initialized",
+          "signature": "fn subsequently_initialized(&self, ann: Idx<KeyAnnotation>) -> bool",
+          "summary": "Returns `true` if the given annotation-only declaration was subsequently initialized by a non-annotated assignment (tuple unpacking, walrus, `with … as`)."
+        },
+        {
+          "name": "sys_info",
+          "signature": "fn sys_info(&self) -> &SysInfo"
+        },
+        {
+          "name": "unused_imports",
+          "signature": "fn unused_imports(&self) -> &[UnusedImport]"
+        },
+        {
+          "name": "unused_parameters",
+          "signature": "fn unused_parameters(&self) -> &[UnusedParameter]"
+        },
+        {
+          "name": "unused_variables",
+          "signature": "fn unused_variables(&self) -> &[UnusedVariable]"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::BindingsBuilder",
+      "name": "BindingsBuilder",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct BindingsBuilder<'a>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "module_info",
+        "lookup",
+        "sys_info",
+        "metadata",
+        "func_count",
+        "has_docstring",
+        "scopes",
+        "check_unannotated_defs",
+        "analyze_unannotated_for_ide",
+        "infer_return_types",
+        "treat_all_caps_as_final",
+        "class_scopes",
+        "adjacent_namedtuple_defaults",
+        "promote_ranges",
+        "type_checking_depth"
+      ],
+      "implements": [
+        "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+      ],
+      "methods": [
+        {
+          "name": "abandon_branch",
+          "signature": "fn abandon_branch(&mut self)",
+          "summary": "Abandon a branch we began without including it in the merge. Used for a few cases where we need to analyze a test, but we then determine statically that the branch is unreachable in a way that should not be analyzed (e.g. python version an…"
+        },
+        {
+          "name": "add_loop_exitpoint",
+          "signature": "fn add_loop_exitpoint(&mut self, exit: LoopExit)"
+        },
+        {
+          "name": "add_name_definitions",
+          "signature": "fn add_name_definitions(&mut self, legacy_tparams: &LegacyTParamCollector)",
+          "summary": "Add `Definition` bindings to a class or function body scope for all the names referenced in the function parameter/return annotations or the class bases."
+        },
+        {
+          "name": "as_special_export",
+          "signature": "fn as_special_export(&self, e: &Expr) -> Option<SpecialExport>"
+        },
+        {
+          "name": "base_class_of",
+          "signature": "fn base_class_of(&self, base_expr: Expr) -> BaseClass"
+        },
+        {
+          "name": "bind_annotation",
+          "signature": "fn bind_annotation(&mut self, name: &Identifier, annotation: &mut Expr, is_initialized: AnnAssignHasValue) -> Idx<KeyAnnotation>",
+          "summary": "Bind the annotation in an `AnnAssign`"
+        },
+        {
+          "name": "bind_attr_assign",
+          "signature": "fn bind_attr_assign(&mut self, attr: ExprAttribute, assigned: &mut Expr, make_assigned_value: impl FnOnce(&Expr, Option<Idx<KeyAnnotation>>) -> ExprOrBinding) -> ExprOrBinding"
+        },
+        {
+          "name": "bind_attr_assign_impl",
+          "signature": "fn bind_attr_assign_impl(&mut self, attr: ExprAttribute, assigned: Option<&mut Expr>, make_assigned_value: impl FnOnce(Option<&Expr>, Option<Idx<KeyAnnotation>>) -> ExprOrBinding, ensure_assigned: bool) -> ExprOrBinding",
+          "summary": "Create a binding to verify that an attribute assignment is valid and potentially narrow (or invalidate narrows on) the name assigned to."
+        },
+        {
+          "name": "bind_current",
+          "signature": "fn bind_current(&mut self, name: &Name, current: &CurrentIdx, style: FlowStyle) -> Option<Idx<KeyAnnotation>>",
+          "summary": "Bind a name in scope to the idx of `current`, without inserting a binding."
+        },
+        {
+          "name": "bind_current_as",
+          "signature": "fn bind_current_as(&mut self, name: &Identifier, current: CurrentIdx, binding: Binding, style: FlowStyle) -> Option<Idx<KeyAnnotation>>",
+          "summary": "Bind a name in scope to the idx of `current`, inserting `binding` as the binding."
+        },
+        {
+          "name": "bind_definition",
+          "signature": "fn bind_definition(&mut self, name: &Identifier, binding: Binding, style: FlowStyle) -> Option<Idx<KeyAnnotation>>"
+        },
+        {
+          "name": "bind_function_param",
+          "signature": "fn bind_function_param(&mut self, target: AnnotationTarget, x: &Parameter, undecorated_idx: Idx<KeyUndecoratedFunction>, class_key: Option<Idx<KeyClass>>, is_variadic: bool, ignore_annotation: bool)"
+        },
+        {
+          "name": "bind_inline_functional_named_tuple",
+          "signature": "fn bind_inline_functional_named_tuple(&mut self, call: &mut ExprCall, kind: SpecialExport) -> Option<Idx<Key>>",
+          "summary": "Synthesize a NamedTuple class from a functional call like `NamedTuple(\"X\", ...)` and insert an anonymous `ClassDef` binding for it. Returns the binding index."
+        },
+        {
+          "name": "bind_lambda",
+          "signature": "fn bind_lambda(&mut self, lambda: &mut ExprLambda, usage: &mut Usage, kind: LambdaKind)"
+        },
+        {
+          "name": "bind_lambda_param",
+          "signature": "fn bind_lambda_param(&mut self, name: &Identifier, kind: LambdaKind, usage: &Usage)"
+        },
+        {
+          "name": "bind_name",
+          "signature": "fn bind_name(&mut self, name: &Name, idx: Idx<Key>, style: FlowStyle) -> Option<Idx<KeyAnnotation>>",
+          "summary": "Bind a name in the current flow. Panics if the name is not in the current static scope."
+        },
+        {
+          "name": "bind_narrow_ops",
+          "signature": "fn bind_narrow_ops(&mut self, narrow_ops: &NarrowOps, use_location: NarrowUseLocation, usage: &Usage)"
+        },
+        {
+          "name": "bind_single_name_assign",
+          "signature": "fn bind_single_name_assign(&mut self, name: &Identifier, value: Box<Expr>, direct_ann: Option<(&Expr, Idx<KeyAnnotation>)>, ensure_assigned: bool) -> Option<Idx<KeyAnnotation>>",
+          "summary": "Handle single assignment: this is closely related to `bind_target_name`, but handles additional concerns (such as type alias logic) that don't apply to other target name assignments."
+        },
+        {
+          "name": "bind_subscript_assign",
+          "signature": "fn bind_subscript_assign(&mut self, subscript: ExprSubscript, assigned: &mut Expr, make_assigned_value: impl FnOnce(&Expr, Option<Idx<KeyAnnotation>>) -> ExprOrBinding)"
+        },
+        {
+          "name": "bind_subscript_assign_impl",
+          "signature": "fn bind_subscript_assign_impl(&mut self, subscript: ExprSubscript, assigned: Option<&mut Expr>, make_assigned_value: impl FnOnce(Option<&Expr>, Option<Idx<KeyAnnotation>>) -> ExprOrBinding, ensure_assigned: bool)",
+          "summary": "Create a binding to verify that a subscript assignment is valid and potentially narrow (or invalidate narrows on) the name assigned to."
+        },
+        {
+          "name": "bind_target_no_expr",
+          "signature": "fn bind_target_no_expr(&mut self, target: &mut Expr, make_binding: &dyn Fn(Option<Idx<KeyAnnotation>>) -> Binding)"
+        },
+        {
+          "name": "bind_target_with_expr",
+          "signature": "fn bind_target_with_expr(&mut self, target: &mut Expr, assigned: &mut Expr, make_binding: &dyn Fn(&Expr, Option<Idx<KeyAnnotation>>) -> Binding)"
+        },
+        {
+          "name": "bind_targets_with_value",
+          "signature": "fn bind_targets_with_value(&mut self, targets: &mut [Expr], value: &mut Expr)",
+          "summary": "Similar to `bind_target`, but specifically for assignments that are *not* to a single name - Handles attribute and subscript assignment. If there is only one target   we will use contextual typing. - Handles multi-target assignment; in thi…"
+        },
+        {
+          "name": "build_narrow_entries",
+          "signature": "fn build_narrow_entries(&mut self, negated_prev_ops: &NarrowOps) -> Vec<(Idx<Key>, Box<NarrowOp>, TextRange)>",
+          "summary": "Build narrow entries for exhaustiveness checking by resolving each narrowed name to its variable binding at the fork base. Using the fork base preserves narrowing from enclosing scopes; a regular lookup would fall back to the un-narrowed s…"
+        },
+        {
+          "name": "check_functional_definition_name",
+          "signature": "fn check_functional_definition_name(&mut self, name: &Name, arg: &Expr, error_kind: ErrorKind)"
+        },
+        {
+          "name": "class_def",
+          "signature": "fn class_def(&mut self, x: StmtClassDef, parent: &NestingContext)"
+        },
+        {
+          "name": "class_object_is_generic",
+          "signature": "fn class_object_is_generic(&self, idx: Idx<Key>) -> bool"
+        },
+        {
+          "name": "create_function_index",
+          "signature": "fn create_function_index(&mut self, function_identifier: &Identifier) -> (Idx<KeyDecoratedFunction>, Option<Idx<Key>>)",
+          "summary": "Given the name of a function def, return a new `Idx<KeyDecoratedFunction>` at which we will store the result of binding it along with an optional `Idx<Key>` at which we have the binding for the TypeInfo of any preceding function def of the…"
+        },
+        {
+          "name": "declare_current_idx",
+          "signature": "fn declare_current_idx(&mut self, key: Key) -> CurrentIdx",
+          "summary": "Declare a `Key` as a usage, which can be used for name lookups. Like `idx_for_promise`, this is a promise to later provide a `Binding` corresponding this key."
+        },
+        {
+          "name": "declare_mutable_capture",
+          "signature": "fn declare_mutable_capture(&mut self, name: &Identifier, kind: MutableCaptureKind)"
+        },
+        {
+          "name": "defer_bound_name",
+          "signature": "fn defer_bound_name(&mut self, key: Key, lookup_result_idx: Idx<Key>, usage: &Usage, promote: bool) -> Idx<Key>",
+          "summary": "Defer creation of a BoundName binding until after AST traversal."
+        },
+        {
+          "name": "ensure_and_bind_decorators",
+          "signature": "fn ensure_and_bind_decorators(&mut self, decorators: ThinVec<Decorator>, usage: &mut Usage) -> Vec<Idx<KeyDecorator>>"
+        },
+        {
+          "name": "ensure_class_member_type",
+          "signature": "fn ensure_class_member_type(&mut self, x: &mut Expr, tparams_builder: Option<&mut LegacyTParamCollector>)"
+        },
+        {
+          "name": "ensure_expr",
+          "signature": "fn ensure_expr(&mut self, x: &mut Expr, usage: &mut Usage)",
+          "summary": "Execute through the expr, ensuring every name has a binding."
+        },
+        {
+          "name": "ensure_expr_name",
+          "signature": "fn ensure_expr_name(&mut self, x: &ExprName, usage: &mut Usage) -> Idx<Key>",
+          "summary": "Ensure the name in an `ExprName`. Note that unlike `ensure_expr`, it does not require a mutable ref."
+        },
+        {
+          "name": "ensure_expr_opt",
+          "signature": "fn ensure_expr_opt(&mut self, x: Option<&mut Expr>, usage: &mut Usage)",
+          "summary": "Execute through the expr, ensuring every name has a binding."
+        },
+        {
+          "name": "ensure_type",
+          "signature": "fn ensure_type(&mut self, x: &mut Expr, tparams_builder: Option<&mut LegacyTParamCollector>)",
+          "summary": "Execute through the expr, ensuring every name has a binding."
+        },
+        {
+          "name": "ensure_type_opt",
+          "signature": "fn ensure_type_opt(&mut self, x: Option<&mut Expr>, tparams_builder: Option<&mut LegacyTParamCollector>)",
+          "summary": "Execute through the expr, ensuring every name has a binding."
+        },
+        {
+          "name": "ensure_type_with_usage",
+          "signature": "fn ensure_type_with_usage(&mut self, x: &mut Expr, tparams_builder: Option<&mut LegacyTParamCollector>, usage: &mut Usage)",
+          "summary": "Like `ensure_type`, but with a specific usage context. Used by type alias construction sites to pass `Usage::TypeAliasRhs`."
+        },
+        {
+          "name": "error",
+          "signature": "fn error(&self, range: TextRange, kind: ErrorKind, msg: String)"
+        },
+        {
+          "name": "error_with_detail",
+          "signature": "fn error_with_detail(&self, range: TextRange, kind: ErrorKind, header: String, detail: String)"
+        },
+        {
+          "name": "error_with_detail_from",
+          "signature": "fn error_with_detail_from(&self, range: TextRange, kind: ErrorKind, header: String, detail: impl FnOnce() -> Option<String>)",
+          "summary": "Like [`Self::error_with_detail`], but for a detail that costs something to work out. Modules loaded below `Require::Errors` discard everything they collect, so for them the detail is never computed at all."
+        },
+        {
+          "name": "extract_django_fields_from_class_body",
+          "signature": "fn extract_django_fields_from_class_body(&self, field_definitions: &SmallMap<Name, (ClassFieldDefinition, TextRange)>) -> DjangoFieldInfo",
+          "summary": "Extract Django field information from class body field definitions. Scans all fields assigned in the class body for Django-specific patterns (primary_key, ForeignKey, choices)."
+        },
+        {
+          "name": "extract_field_validator_fields",
+          "signature": "fn extract_field_validator_fields(&self, body: &[Stmt]) -> Vec<Name>",
+          "summary": "Scan a class body for `@field_validator(...)` decorators with `mode='before'` or `mode='plain'`, and return the field names those validators target. When a before/plain validator is present, the corresponding `__init__` parameter should ac…"
+        },
+        {
+          "name": "extract_pydantic_config_dict",
+          "signature": "fn extract_pydantic_config_dict(&self, e: &Expr, name: &Hashed<Name>, pydantic_config_dict: &mut PydanticConfigDict)"
+        },
+        {
+          "name": "finish_bool_op_fork",
+          "signature": "fn finish_bool_op_fork(&mut self)",
+          "summary": "Finish the fork for a boolean operation. This requires lax handling of possibly-uninitialized locals, see the inline comment in `FlowStyle::merge`."
+        },
+        {
+          "name": "finish_branch",
+          "signature": "fn finish_branch(&mut self)",
+          "summary": "Finish a branch in the current fork: save the branch, reset the flow to `base`. Panics if called when no fork is active."
+        },
+        {
+          "name": "finish_exhaustive_fork",
+          "signature": "fn finish_exhaustive_fork(&mut self)",
+          "summary": "Finish an exhaustive fork (one that does not include the base flow), popping it and setting flow to the merge result."
+        },
+        {
+          "name": "finish_match_or_fork",
+          "signature": "fn finish_match_or_fork(&mut self)",
+          "summary": "Finish a `MatchOr`, which behaves like an exhaustive fork except that we know only some of the base flow cases will get here, which means we should preserve all narrows."
+        },
+        {
+          "name": "finish_non_exhaustive_fork",
+          "signature": "fn finish_non_exhaustive_fork(&mut self, negated_prev_ops: &NarrowOps, base_termination_key: Option<Idx<Key>>)",
+          "summary": "Finish a non-exhaustive fork in which the base flow is part of the merge. It negates the branch-choosing narrows by applying `negated_prev_ops` to base before merging, which is important so that we can preserve any cases where a termanatin…"
+        },
+        {
+          "name": "func_def_index",
+          "signature": "fn func_def_index(&mut self) -> FuncDefIndex"
+        },
+        {
+          "name": "function_def",
+          "signature": "fn function_def(&mut self, x: StmtFunctionDef, parent: &NestingContext)"
+        },
+        {
+          "name": "future_annotations_or_stub",
+          "signature": "fn future_annotations_or_stub(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "get_original_binding",
+          "signature": "fn get_original_binding(&'a self, original_idx: Idx<Key>) -> Option<(Idx<Key>, Option<&'a Binding>)>"
+        },
+        {
+          "name": "global",
+          "signature": "fn global(&self, name: &str) -> Option<TextRange>",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "has_nonlocal_binding",
+          "signature": "fn has_nonlocal_binding(&self, name: &str) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "idx_for_promise",
+          "signature": "fn idx_for_promise<K>(&mut self, key: K) -> Idx<K> where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>",
+          "summary": "Given a `key: K = impl Keyed`, get an `Idx<K>` for it. The intended use case is when creating a complex binding where the process of creating the binding requires being able to identify what we are binding."
+        },
+        {
+          "name": "idx_to_key",
+          "signature": "fn idx_to_key<K>(&self, idx: Idx<K>) -> &K where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>"
+        },
+        {
+          "name": "in_async_context",
+          "signature": "fn in_async_context(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_await_allowed_context",
+          "signature": "fn in_await_allowed_context(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_class_body_comprehension",
+          "signature": "fn in_class_body_comprehension(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_function_scope",
+          "signature": "fn in_function_scope(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_generator_context",
+          "signature": "fn in_generator_context(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_loop_context",
+          "signature": "fn in_loop_context(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_module_scope",
+          "signature": "fn in_module_scope(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_notebook",
+          "signature": "fn in_notebook(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_sync_comprehension",
+          "signature": "fn in_sync_comprehension(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "in_yield_allowed_context",
+          "signature": "fn in_yield_allowed_context(&self) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "infer_with_first_use",
+          "signature": "fn infer_with_first_use(&self) -> bool",
+          "summary": "Whether to infer empty container types and unsolved type variables based on first use."
+        },
+        {
+          "name": "init_static_scope",
+          "signature": "fn init_static_scope(&mut self, x: &[Stmt], top_level: bool)"
+        },
+        {
+          "name": "insert_binding",
+          "signature": "fn insert_binding<K: Keyed>(&mut self, key: K, value: K::Value) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>",
+          "summary": "Insert a binding into the bindings table immediately, given a `key`"
+        },
+        {
+          "name": "insert_binding_current",
+          "signature": "fn insert_binding_current(&mut self, current: CurrentIdx, value: Binding) -> Idx<Key>",
+          "summary": "Insert a binding into the bindings table using the current idx from a `CurrentIdx` wrapper."
+        },
+        {
+          "name": "insert_binding_idx",
+          "signature": "fn insert_binding_idx<K: Keyed>(&mut self, idx: Idx<K>, value: K::Value) -> Idx<K> where BindingTable: TableKeyed<K, Value = BindingEntry<K>>",
+          "summary": "Insert a binding into the bindings table, given the `idx` of a key that we obtained previously."
+        },
+        {
+          "name": "insert_binding_overwrite",
+          "signature": "fn insert_binding_overwrite(&mut self, key: Key, value: Binding) -> Idx<Key>",
+          "summary": "Like `insert_binding` but will overwrite any existing binding. Should only be used in exceptional cases."
+        },
+        {
+          "name": "insert_subsequently_initialized",
+          "signature": "fn insert_subsequently_initialized(&mut self, ann_idx: Idx<KeyAnnotation>)",
+          "summary": "Record that an annotation-only declaration was subsequently initialized by a non-annotated assignment."
+        },
+        {
+          "name": "intercept_lookup",
+          "signature": "fn intercept_lookup(&mut self, legacy_tparams: &mut LegacyTParamCollector, id: LegacyTParamId) -> NameLookupResult",
+          "summary": "Perform a lookup of a name used in either base classes of a class or parameter/return annotations of a function."
+        },
+        {
+          "name": "is_bound_parameter",
+          "signature": "fn is_bound_parameter(&self, name: &str) -> bool",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "last_statement_idx_for_implicit_return",
+          "signature": "fn last_statement_idx_for_implicit_return(&mut self, last: LastStmt, x: &Expr) -> Idx<Key>",
+          "summary": "Allow access to an `Idx<Key>` given a `LastStmt` coming from a scan of a function body. This index will not be dangling under two assumptions: - we bind the function body (note that this isn't true for, e.g. a `@no_type_check` function!) -…"
+        },
+        {
+          "name": "lazy_import_context",
+          "signature": "fn lazy_import_context(&self) -> Option<LazyImportContext>",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "lookup_name",
+          "signature": "fn lookup_name(&mut self, name: Hashed<&Name>, usage: &mut Usage) -> NameLookupResult",
+          "summary": "Look up a name in scope, marking it as used, but without first-use detection."
+        },
+        {
+          "name": "mark_does_not_pin_if_first_use",
+          "signature": "fn mark_does_not_pin_if_first_use(&mut self, def_idx: Idx<Key>)",
+          "summary": "Mark a NameAssign as DoesNotPin if it's still Undetermined."
+        },
+        {
+          "name": "next_branch",
+          "signature": "fn next_branch(&mut self)"
+        },
+        {
+          "name": "promised_idx",
+          "signature": "fn promised_idx<K>(&self, key: &K) -> Option<Idx<K>> where K: Keyed, BindingTable: TableKeyed<K, Value = BindingEntry<K>>",
+          "summary": "The `Idx` of `key`, if a promise for it has already been made, otherwise `None`. Lets a caller distinguish a key that some existing binding may already refer to from one that nothing can possibly refer to yet."
+        },
+        {
+          "name": "python_version",
+          "signature": "fn python_version(&self) -> ruff_python_ast::PythonVersion",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "record_django_relation_class",
+          "signature": "fn record_django_relation_class(&mut self, class_idx: Idx<KeyClass>, fields: Vec<Idx<KeyClassField>>)"
+        },
+        {
+          "name": "record_lambda_yield_keys",
+          "signature": "fn record_lambda_yield_keys(&mut self, range: TextRange, yield_keys: Box<[Idx<KeyYield>]>, yield_from_keys: Box<[Idx<KeyYieldFrom>]>)",
+          "summary": "Record the yield and yield-from binding indices for a lambda expression."
+        },
+        {
+          "name": "record_unused_imports",
+          "signature": "fn record_unused_imports(&mut self, unused: Vec<UnusedImport>)"
+        },
+        {
+          "name": "record_unused_parameters",
+          "signature": "fn record_unused_parameters(&mut self, unused: Vec<UnusedParameter>)"
+        },
+        {
+          "name": "record_unused_variables",
+          "signature": "fn record_unused_variables(&mut self, unused: Vec<UnusedVariable>)"
+        },
+        {
+          "name": "record_used_imports_from_dunder_all_names",
+          "signature": "fn record_used_imports_from_dunder_all_names<T>(&mut self, dunder_all_names: T) where T: Iterator<Item = &'a Name>"
+        },
+        {
+          "name": "report_semantic_error",
+          "signature": "fn report_semantic_error(&self, error: SemanticSyntaxError)",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "seed_captured_variables",
+          "signature": "fn seed_captured_variables(&mut self)",
+          "summary": "For names that are read but not locally-defined (implicit captures), this method creates flow entries pointing to the outer scope's binding."
+        },
+        {
+          "name": "setup_loop",
+          "signature": "fn setup_loop(&mut self, range: TextRange, loop_header_targets: &SmallSet<Name>)",
+          "summary": "Set up a loop: preserve the base flow and push the loop to the current scope's `loops`, set up loop phi keys, and bind any narrow ops from the loop header."
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> &str",
+          "via_trait": "ruff_python_parser::semantic_errors::SemanticSyntaxContext"
+        },
+        {
+          "name": "start_branch",
+          "signature": "fn start_branch(&mut self)",
+          "summary": "Set the current flow to a copy of the current Fork's base so we can analyze a branch. Panics if no flow is active."
+        },
+        {
+          "name": "start_fork",
+          "signature": "fn start_fork(&mut self, range: TextRange)",
+          "summary": "Start a new fork in control flow (e.g. an if/else, match statement, etc)"
+        },
+        {
+          "name": "start_fork_and_branch",
+          "signature": "fn start_fork_and_branch(&mut self, range: TextRange)"
+        },
+        {
+          "name": "stmt",
+          "signature": "fn stmt(&mut self, x: Stmt, parent: &NestingContext)",
+          "summary": "Evaluate the statements and update the bindings. Every statement should end up in the bindings, perhaps with a location that is never used."
+        },
+        {
+          "name": "stmt_match",
+          "signature": "fn stmt_match(&mut self, x: StmtMatch, parent: &NestingContext)"
+        },
+        {
+          "name": "stmts",
+          "signature": "fn stmts(&mut self, xs: ThinVec<Stmt>, parent: &NestingContext)"
+        },
+        {
+          "name": "suggest_similar_name",
+          "signature": "fn suggest_similar_name(&self, missing: &Name) -> Option<Name>"
+        },
+        {
+          "name": "synthesize_collections_named_tuple_def",
+          "signature": "fn synthesize_collections_named_tuple_def(&mut self, class_name: Identifier, parent: &NestingContext, func: &mut Expr, members: &mut [Expr], keywords: &mut [Keyword], bind_to_name: bool, adjacent_defaults: Option<Vec<Expr>>) -> Idx<KeyClass>"
+        },
+        {
+          "name": "synthesize_enum_def",
+          "signature": "fn synthesize_enum_def(&mut self, name: &ExprName, parent: &NestingContext, func: &mut Expr, arg_name: &mut Expr, members: &mut [Expr])"
+        },
+        {
+          "name": "synthesize_typed_dict_def",
+          "signature": "fn synthesize_typed_dict_def(&mut self, name: &ExprName, parent: &NestingContext, func: &mut Expr, arg_name: &Expr, args: &mut [Expr], keywords: &mut [Keyword])"
+        },
+        {
+          "name": "synthesize_typing_named_tuple_def",
+          "signature": "fn synthesize_typing_named_tuple_def(&mut self, class_name: Identifier, parent: &NestingContext, func: &mut Expr, members: &[Expr], bind_to_name: bool, adjacent_defaults: Option<Vec<Expr>>) -> Idx<KeyClass>"
+        },
+        {
+          "name": "synthesize_typing_new_type",
+          "signature": "fn synthesize_typing_new_type(&mut self, name: &ExprName, parent: &NestingContext, func: &mut Expr, new_type_name: &mut Expr, base: &mut Expr)"
+        },
+        {
+          "name": "teardown_loop",
+          "signature": "fn teardown_loop(&mut self, range: TextRange, narrow_ops: &NarrowOps, orelse: ThinVec<Stmt>, parent: &NestingContext, is_while_true: bool, loop_definitely_runs: bool)"
+        },
+        {
+          "name": "try_intercept_lookup",
+          "signature": "fn try_intercept_lookup(&mut self, legacy_tparams: &mut LegacyTParamCollector, id: &LegacyTParamId) -> Option<NameLookupResult>",
+          "summary": "Like `intercept_lookup`, but only resolves via an *existing* entry in the legacy tparam collector. Does NOT add a new entry if one doesn't exist. Used for `P.args`/`P.kwargs` so that `P` is resolved if already in scope (e.g. from `Callable…"
+        },
+        {
+          "name": "type_alias_index",
+          "signature": "fn type_alias_index(&mut self) -> TypeAliasIndex"
+        },
+        {
+          "name": "type_params",
+          "signature": "fn type_params(&mut self, x: &mut TypeParams) -> SmallSet<Name>"
+        },
+        {
+          "name": "type_params_with_owner",
+          "signature": "fn type_params_with_owner(&mut self, x: &mut TypeParams, owner: Option<Name>) -> SmallSet<Name>"
+        },
+        {
+          "name": "with_semantic_checker",
+          "signature": "fn with_semantic_checker(&mut self, f: impl FnOnce(&mut SemanticSyntaxChecker, &Self))"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::CurrentIdx",
+      "name": "CurrentIdx",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct CurrentIdx",
+      "summary": "An abstraction representing the `Idx<Key>` for a binding that we are currently constructing, which can be used as a factory to create usage values for `ensure_expr`.",
+      "doc": "api/pyrefly.binding.bindings.md#currentidx",
+      "methods": [
+        {
+          "name": "idx",
+          "signature": "fn idx(&self) -> Idx<Key>"
+        },
+        {
+          "name": "into_idx",
+          "signature": "fn into_idx(self) -> Idx<Key>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(idx: Idx<Key>) -> Self"
+        },
+        {
+          "name": "usage",
+          "signature": "fn usage(&mut self) -> &mut Usage"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::LegacyTParamCollector",
+      "name": "LegacyTParamCollector",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct LegacyTParamCollector",
+      "summary": "Handle intercepting names inside either function parameter/return annotations or base class lists of classes, in order to check whether they point at type variable declarations and need to be converted to type parameters.",
+      "doc": "api/pyrefly.binding.bindings.md#legacytparamcollector",
+      "methods": [
+        {
+          "name": "lookup_keys",
+          "signature": "fn lookup_keys(&self) -> Vec<Idx<KeyLegacyTypeParam>>",
+          "summary": "Get the keys that correspond to the result of checking whether a name corresponds to a legacy type param. This is used when actually computing the final type parameters for classes and functions, which have to take all the names that *do*…"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(has_scoped_tparams: bool) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::bindings::BindingEntry",
+      "name": "BindingEntry",
+      "kind": "type_alias",
+      "crate": "pyrefly",
+      "signature": "type BindingEntry<K> = (pyrefly_graph::index::Index<K>, pyrefly_graph::index_map::IndexMap<K, <K as Keyed>::Value>)",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

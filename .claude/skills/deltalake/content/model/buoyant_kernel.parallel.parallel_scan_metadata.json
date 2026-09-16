@@ -1,0 +1,127 @@
+{
+  "module": "buoyant_kernel::parallel::parallel_scan_metadata",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.parallel.parallel_scan_metadata.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::parallel::parallel_scan_metadata::AfterSequentialScanMetadata",
+      "name": "AfterSequentialScanMetadata",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum AfterSequentialScanMetadata",
+      "summary": "Result of sequential scan metadata processing.",
+      "doc": "api/buoyant_kernel.parallel.parallel_scan_metadata.md#aftersequentialscanmetadata",
+      "aliases": [
+        "buoyant_kernel::scan::AfterSequentialScanMetadata",
+        "delta_kernel::parallel::parallel_scan_metadata::AfterSequentialScanMetadata"
+      ],
+      "variants": [
+        "Done",
+        "Parallel"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::parallel::parallel_scan_metadata::ParallelScanMetadata",
+      "name": "ParallelScanMetadata",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ParallelScanMetadata",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "buoyant_kernel::scan::ParallelScanMetadata",
+        "delta_kernel::parallel::parallel_scan_metadata::ParallelScanMetadata"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "new_from_iter",
+          "signature": "fn new_from_iter(state: Arc<ParallelState>, iter: impl IntoIterator<Item = DeltaResult<Box<dyn EngineData>>> + 'static) -> Self"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(engine: Arc<dyn Engine>, state: Arc<ParallelState>, leaf_files: Vec<FileMeta>) -> DeltaResult<Self>"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::parallel::parallel_scan_metadata::ParallelState",
+      "name": "ParallelState",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ParallelState",
+      "summary": "State for parallel scan metadata processing.",
+      "doc": "api/buoyant_kernel.parallel.parallel_scan_metadata.md#parallelstate",
+      "aliases": [
+        "buoyant_kernel::scan::ParallelState",
+        "delta_kernel::parallel::parallel_scan_metadata::ParallelState"
+      ],
+      "methods": [
+        {
+          "name": "file_read_schema",
+          "signature": "fn file_read_schema(&self) -> SchemaRef",
+          "summary": "Get the schema to use for reading checkpoint files."
+        },
+        {
+          "name": "from_bytes",
+          "signature": "fn from_bytes(engine: &dyn Engine, bytes: &[u8]) -> DeltaResult<Self>",
+          "summary": "Reconstruct a ParallelState from bytes."
+        },
+        {
+          "name": "from_serializable_state",
+          "signature": "fn from_serializable_state(engine: &dyn Engine, state: SerializableScanState) -> DeltaResult<Self>",
+          "summary": "Reconstruct a ParallelState from serialized state."
+        },
+        {
+          "name": "into_bytes",
+          "signature": "fn into_bytes(self) -> DeltaResult<Vec<u8>>",
+          "summary": "Serialize the processor state directly to bytes."
+        },
+        {
+          "name": "into_serializable_state",
+          "signature": "fn into_serializable_state(self) -> DeltaResult<SerializableScanState>",
+          "summary": "Serialize the processor state for distributed processing."
+        },
+        {
+          "name": "log_metrics",
+          "signature": "fn log_metrics(&self)",
+          "summary": "Log the accumulated metrics from parallel processing."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::parallel::parallel_scan_metadata::SequentialScanMetadata",
+      "name": "SequentialScanMetadata",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct SequentialScanMetadata",
+      "summary": "Sequential scan metadata processing.",
+      "doc": "api/buoyant_kernel.parallel.parallel_scan_metadata.md#sequentialscanmetadata",
+      "aliases": [
+        "buoyant_kernel::scan::SequentialScanMetadata",
+        "delta_kernel::parallel::parallel_scan_metadata::SequentialScanMetadata"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> DeltaResult<AfterSequentialScanMetadata>"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    }
+  ]
+}

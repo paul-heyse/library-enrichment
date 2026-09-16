@@ -1,0 +1,273 @@
+{
+ "api": "api/mcp.os.win32.utilities.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "aliases": [
+    "mcp.client.stdio.ServerProcess"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#serverprocess",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "ServerProcess",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.ServerProcess",
+   "preferred": "mcp.client.stdio.ServerProcess",
+   "signature": "ServerProcess: TypeAlias = Process | FallbackProcess",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_exit_poll_interval",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_EXIT_POLL_INTERVAL",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._EXIT_POLL_INTERVAL",
+   "preferred": "mcp.os.win32.utilities._EXIT_POLL_INTERVAL",
+   "signature": "_EXIT_POLL_INTERVAL = 0.01",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_process_jobs",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_process_jobs",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._process_jobs",
+   "preferred": "mcp.os.win32.utilities._process_jobs",
+   "signature": "_process_jobs: weakref.WeakKeyDictionary[Process | FallbackProcess, object] = weakref.WeakKeyDictionary()",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.logger",
+   "preferred": "mcp.os.win32.utilities.logger",
+   "signature": "logger = logging.getLogger(__name__)",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#fallbackprocess",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "kill",
+     "signature": "def kill(self) -> None",
+     "summary": "Kills the subprocess (on Windows the same hard kill as terminate)."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "pid",
+     "signature": "pid: int",
+     "summary": "Returns the process ID."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "popen",
+     "signature": "popen: subprocess.Popen[bytes] = popen_obj"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "returncode",
+     "signature": "returncode: int | None",
+     "summary": "The exit code, or None while the process is still running."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "stdin",
+     "signature": "stdin = FileWriteStream(cast(BinaryIO, stdin)) if stdin else None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "stdout",
+     "signature": "stdout = FileReadStream(cast(BinaryIO, stdout)) if stdout else None"
+    },
+    {
+     "kind": "function",
+     "name": "terminate",
+     "signature": "def terminate(self) -> None",
+     "summary": "Terminates the subprocess."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "wait",
+     "signature": "async def wait(self) -> int",
+     "summary": "Waits for exit by polling the Popen."
+    }
+   ],
+   "name": "FallbackProcess",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.FallbackProcess",
+   "preferred": "mcp.os.win32.utilities.FallbackProcess",
+   "signature": "class FallbackProcess",
+   "summary": "Async wrapper around subprocess.Popen for SelectorEventLoop."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_close_job_handle",
+   "kind": "function",
+   "name": "_close_job_handle",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._close_job_handle",
+   "preferred": "mcp.os.win32.utilities._close_job_handle",
+   "signature": "def _close_job_handle(job: object) -> None",
+   "summary": "Closes a Job Object handle, tolerating one that is already closed."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_create_job_object",
+   "kind": "function",
+   "name": "_create_job_object",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._create_job_object",
+   "preferred": "mcp.os.win32.utilities._create_job_object",
+   "signature": "def _create_job_object() -> object | None",
+   "summary": "Creates a Windows Job Object configured to terminate all its processes when closed."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_create_windows_fallback_process",
+   "kind": "function",
+   "labels": [
+    "async"
+   ],
+   "name": "_create_windows_fallback_process",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._create_windows_fallback_process",
+   "preferred": "mcp.os.win32.utilities._create_windows_fallback_process",
+   "signature": "async def _create_windows_fallback_process(command: str, args: list[str], env: dict[str, str] | None = None, errlog: TextIO | None = sys.stderr, cwd: Path | str | None = None) -> FallbackProcess",
+   "summary": "Spawns via subprocess.Popen and wraps it in FallbackProcess.",
+   "types_used": [
+    "mcp.os.win32.utilities.FallbackProcess"
+   ]
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#_maybe_assign_process_to_job",
+   "kind": "function",
+   "name": "_maybe_assign_process_to_job",
+   "nameable": false,
+   "path": "mcp.os.win32.utilities._maybe_assign_process_to_job",
+   "preferred": "mcp.os.win32.utilities._maybe_assign_process_to_job",
+   "signature": "def _maybe_assign_process_to_job(process: Process | FallbackProcess, job: object | None) -> None",
+   "summary": "Assigns the process to the job and records it for tree termination."
+  },
+  {
+   "aliases": [
+    "mcp.client.stdio.close_process_job"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#close_process_job",
+   "kind": "function",
+   "name": "close_process_job",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.close_process_job",
+   "preferred": "mcp.client.stdio.close_process_job",
+   "signature": "def close_process_job(process: Process | FallbackProcess) -> None",
+   "summary": "Closes the process's Job Object handle, if it still has one."
+  },
+  {
+   "aliases": [
+    "mcp.client.stdio.create_windows_process"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#create_windows_process",
+   "kind": "function",
+   "labels": [
+    "async"
+   ],
+   "name": "create_windows_process",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.create_windows_process",
+   "preferred": "mcp.client.stdio.create_windows_process",
+   "signature": "async def create_windows_process(command: str, args: list[str], env: dict[str, str] | None = None, errlog: TextIO | None = sys.stderr, cwd: Path | str | None = None) -> Process | FallbackProcess",
+   "summary": "Creates a subprocess with Job Object support for tree termination.",
+   "types_used": [
+    "mcp.os.win32.utilities.FallbackProcess"
+   ]
+  },
+  {
+   "aliases": [
+    "mcp.client.stdio.get_windows_executable_command"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#get_windows_executable_command",
+   "kind": "function",
+   "name": "get_windows_executable_command",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.get_windows_executable_command",
+   "preferred": "mcp.client.stdio.get_windows_executable_command",
+   "signature": "def get_windows_executable_command(command: str) -> str",
+   "summary": "Resolves the command to a Windows executable path."
+  },
+  {
+   "aliases": [
+    "mcp.server.stdio.rebind_std_handle_to_fd"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#rebind_std_handle_to_fd",
+   "kind": "function",
+   "name": "rebind_std_handle_to_fd",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.rebind_std_handle_to_fd",
+   "preferred": "mcp.server.stdio.rebind_std_handle_to_fd",
+   "signature": "def rebind_std_handle_to_fd(fd: int) -> None",
+   "summary": "Points the Win32 standard-handle slot for fd 0, 1, or 2 at fd's current OS handle."
+  },
+  {
+   "aliases": [
+    "mcp.client.stdio.terminate_windows_process_tree"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.os.win32.utilities.md#terminate_windows_process_tree",
+   "kind": "function",
+   "labels": [
+    "async"
+   ],
+   "name": "terminate_windows_process_tree",
+   "nameable": true,
+   "path": "mcp.os.win32.utilities.terminate_windows_process_tree",
+   "preferred": "mcp.client.stdio.terminate_windows_process_tree",
+   "signature": "async def terminate_windows_process_tree(process: Process | FallbackProcess) -> None",
+   "summary": "Terminates the process's job, or just the process if it has no job."
+  }
+ ],
+ "module": "mcp.os.win32.utilities"
+}

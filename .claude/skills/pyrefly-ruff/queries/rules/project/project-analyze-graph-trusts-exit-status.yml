@@ -1,0 +1,32 @@
+# `ruff analyze graph` returns {} with exit status 0 for a path that does not exist.
+id: project-analyze-graph-trusts-exit-status
+language: python
+severity: hint
+message: An empty import graph is indistinguishable from a wrong path by exit status alone.
+note: |
+  Measured at the pinned release: `ruff analyze graph <path that does not exist>` writes `{}`
+  to stdout and exits 0. `check=True` therefore proves nothing here, and a caller that treats a
+  clean exit as "no imports" will report an empty graph for a mistyped path.
+
+  Check the number of keys in the parsed JSON instead. See content/catalogs/import-graph.md.
+rule:
+  kind: list
+  all:
+    - has:
+        kind: string
+        has:
+          kind: string_content
+          regex: '^analyze$'
+    - has:
+        kind: string
+        has:
+          kind: string_content
+          regex: '^graph$'
+    - inside:
+        kind: argument_list
+        has:
+          kind: keyword_argument
+          # `pattern: check=True` does NOT match: a bare keyword argument is not a parseable
+          # standalone snippet, so the pattern compiles to something else entirely. A regex over
+          # the node text is the reliable form here.
+          regex: '^check=True$'

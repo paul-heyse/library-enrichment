@@ -129,7 +129,7 @@ fmt-check:
     @if [ -f Cargo.toml ]; then cargo fmt --all -- --check; fi
     @if [ -d python ]; then ruff format --check python tests scripts; fi
 
-[doc("Type-check the Python boundary with ty. Not pyrefly, not pyright, not mypy.")]
+[doc("Type-check the Python boundary with ty. Not pyright, not mypy; pyrefly is admissible (ADR-0046) but ty is the producer.")]
 [group('gate')]
 typecheck:
     @if [ -d python ]; then ty check python; else echo "typecheck: no python/ yet (phase 0)"; fi

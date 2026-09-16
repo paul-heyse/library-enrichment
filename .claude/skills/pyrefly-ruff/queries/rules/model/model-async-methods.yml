@@ -1,0 +1,20 @@
+id: model-async-methods
+language: json
+severity: hint
+message: Async method. Requires a runtime and an await at the call site.
+note: |
+  Rendered from the `#[async_trait]` desugaring, so the signature here reads as source does rather
+  than as `Pin<Box<dyn Future<...>>>`. If you are implementing the owning trait, this method needs
+  `#[async_trait]` on your impl block too.
+metadata:
+  record: async-method
+  reads: content/model
+rule:
+  kind: pair
+  all:
+    - has:
+        field: key
+        regex: '^"signature"$'
+    - has:
+        field: value
+        regex: '^"async fn '

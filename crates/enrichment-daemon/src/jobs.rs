@@ -1,29 +1,21 @@
-//! Durable concrete producer jobs. One journal is owned by the daemon; callers own interests.
+//! Native Delta job coordination; in-memory handles only signal owned running effects.
 use enrichment_core::{
-    clock,
     execution::{JobData, VerifyRequest},
     wire::{Envelope, JobState},
 };
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
-use std::sync::{
-    Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+use enrichment_store::{
+    BlobStore,
+    control_jobs::{Arguments, JobStore, Resolution},
 };
-
-const FORMAT: &str = "concrete-jobs/5";
-const MAX_RECORD_BYTES: u64 = 2 * 1024 * 1024;
-const MAX_TERMINAL_CACHE: usize = 8;
-const MAX_INTERESTS: usize = 256;
-
-#[derive(Deserialize)]
-struct JournalHeader {
-    format: String,
-    job_id: String,
-    state: JobState,
-}
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    io,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 
 /// Closed durable operation inputs; no generic workflow or arbitrary command payload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,7 +100,6 @@ impl JobSpec {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JobRecord {
-    pub format: String,
     pub job_id: String,
     pub key: String,
     pub specification: JobSpec,
@@ -118,7 +109,6 @@ pub struct JobRecord {
     pub detached_interests: BTreeSet<String>,
     pub submitted_at: String,
     pub updated_at: String,
-    pub transitions: Vec<JobState>,
     pub result: Option<Envelope>,
     pub resolution: Option<ResolutionStage>,
 }
@@ -135,12 +125,6 @@ impl JobRecord {
             result: self.result.as_ref().map(Into::into),
         }
     }
-    fn transition(&mut self, state: JobState, stage: &str) {
-        self.state = state;
-        self.stage = stage.into();
-        self.updated_at = clock::now_rfc3339();
-        self.transitions.push(state);
-    }
 }
 
 pub fn terminal(state: JobState) -> bool {
@@ -150,868 +134,584 @@ pub fn terminal(state: JobState) -> bool {
     )
 }
 
-#[derive(Debug)]
-struct Entry {
-    record: JobRecord,
+struct OwnedHandle {
+    kind: enrichment_store::native_effect::CommandKind,
     cancel: Arc<AtomicBool>,
-    /// A terminal whose write failed must remain visible until restart reconciles its journal.
-    durable: bool,
+    fence: Option<u64>,
+    heartbeat: Option<Heartbeat>,
+    task: Option<datafusion::common::runtime::SpawnedTask<()>>,
+    physically_finished: bool,
 }
-
-#[derive(Debug)]
+/// This task can renew ownership but cannot start an effect. Dropping its physical owner
+/// aborts it; losing its native grant signals the same cancellation channel as the client.
+struct Heartbeat(tokio::task::JoinHandle<()>);
+impl Drop for Heartbeat {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+struct CancelOnExit(Arc<AtomicBool>);
+impl Drop for CancelOnExit {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::Release);
+    }
+}
 pub struct Jobs {
-    root: PathBuf,
-    entries: Mutex<BTreeMap<String, Entry>>,
+    native: JobStore,
+    cache_root: std::path::PathBuf,
+    blobs: BlobStore,
+    execution: Arc<crate::execution::cleanup::Supervisor>,
+    handles: Mutex<BTreeMap<String, OwnedHandle>>,
     pub permits: Arc<tokio::sync::Semaphore>,
-    queue_limit: usize,
 }
 impl Jobs {
-    /// Open the journal over the worker semaphore the cleanup supervisor also holds.
-    ///
-    /// The semaphore is passed in rather than built here so that one permit set covers both
-    /// running work and unresolved container cleanup: a half-removed container must occupy a
-    /// worker slot, or repeated removal failures would quietly exceed the concurrency bound.
-    pub fn open(
-        data: &Path,
+    pub async fn open_recover<F, Fut>(
+        native: JobStore,
+        cache_root: std::path::PathBuf,
+        blobs: BlobStore,
         permits: Arc<tokio::sync::Semaphore>,
-        queue_limit: usize,
-    ) -> io::Result<Self> {
-        Self::open_recover(data, permits, queue_limit, |_| Ok(None))
-    }
-    /// Reconcile committed publication before classifying interrupted work. No producer runs here.
-    pub fn open_recover(
-        data: &Path,
-        permits: Arc<tokio::sync::Semaphore>,
-        queue_limit: usize,
-        mut recover: impl FnMut(&JobRecord) -> io::Result<Option<(JobState, Envelope)>>,
-    ) -> io::Result<Self> {
-        let root = data.join("jobs");
-        std::fs::create_dir_all(&root)?;
-        for child in std::fs::read_dir(&root)? {
-            let child = child?;
-            if !matches!(child.file_name().to_str(), Some("active" | "terminal"))
-                || !child.file_type()?.is_dir()
-            {
-                return Err(io::Error::other(
-                    "unsupported job storage layout; reset obsolete development evidence",
-                ));
-            }
-        }
-        std::fs::create_dir_all(root.join("active"))?;
-        std::fs::create_dir_all(root.join("terminal"))?;
-        std::fs::File::open(&root)?.sync_all()?;
-        std::fs::File::open(data)?.sync_all()?;
-        for entry in std::fs::read_dir(root.join("active"))? {
-            let path = entry?.path();
-            if path.extension().and_then(|s| s.to_str()) != Some("json") {
-                let temporary = path
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                    .and_then(|s| s.strip_prefix('.'))
-                    .and_then(|s| s.strip_suffix(".tmp"))
-                    .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()));
-                if !temporary {
-                    return Err(io::Error::other("unknown active job record"));
-                }
-                drop(open_record(&path)?);
-                std::fs::remove_file(&path)?;
-                std::fs::File::open(root.join("active"))?.sync_all()?;
-                continue;
-            }
-            let header: JournalHeader =
-                serde_json::from_reader(std::io::BufReader::new(open_record(&path)?))?;
-            validate_id(&header.job_id)?;
-            if header.format != FORMAT {
-                return Err(io::Error::other(
-                    "unsupported job journal format; reset obsolete development evidence",
-                ));
-            }
-            if path.file_stem().and_then(|s| s.to_str()) != Some(&header.job_id) {
-                return Err(io::Error::other("job journal identity mismatch"));
-            }
-            if !terminal(header.state) {
-                let mut record = read_record(&root, &header.job_id)?;
-                if terminal(record.state) {
-                    // Terminal rename/fsync won, but the process died before active unlink.
-                    std::fs::remove_file(&path)?;
-                    std::fs::File::open(root.join("active"))?.sync_all()?;
-                    continue;
-                }
-                if let Some((state, result)) = recover(&record)? {
-                    if !terminal(state) {
-                        return Err(io::Error::other(
-                            "recovery supplied a nonterminal publication",
-                        ));
-                    }
-                    record.transition(state, "recovered committed result; producer was not rerun");
-                    record.result = Some(bound_delivery(&root, result)?);
-                    persist(&root, &record)?;
-                    continue;
-                }
-                record.transition(JobState::Failed, "interrupted: daemon restarted; resubmit explicitly after inspecting execution state");
-                record.result = Some(crate::envelope::error(
-                    enrichment_core::wire::ErrorCode::VerificationFailed,
-                    "The daemon restarted before this job reached a terminal outcome.",
-                    "Inspect owned execution containers, then explicitly resubmit; runtime work is never automatically repeated.",
-                    false,
-                ));
-                persist(&root, &record)?;
-            }
-        }
-        Ok(Self {
-            root,
-            entries: Mutex::new(BTreeMap::new()),
+        execution: Arc<crate::execution::cleanup::Supervisor>,
+        mut recover: F,
+    ) -> io::Result<Self>
+    where
+        F: FnMut(JobRecord) -> Fut + Send,
+        Fut: std::future::Future<Output = io::Result<Option<(JobState, Envelope)>>> + Send,
+    {
+        let jobs = Self {
+            native,
+            cache_root,
+            blobs,
+            execution,
+            handles: Mutex::new(BTreeMap::new()),
             permits,
-            queue_limit: queue_limit.clamp(1, 1024),
-        })
+        };
+        let pin = jobs.native.pin().await.map_err(io::Error::other)?;
+        for state in jobs.native.active(&pin).await.map_err(io::Error::other)? {
+            let record = jobs.get(&state.job_id).await?;
+            let (state,result)=recover(record.clone()).await?.unwrap_or_else(||(JobState::Failed,crate::envelope::error(
+                enrichment_core::wire::ErrorCode::VerificationFailed,
+                "The daemon restarted before a terminal outcome was committed.",
+                "Physical ownership has been reconciled. Inspect retained evidence before resubmitting.",false)));
+            let artifact = jobs.store_result(result).await?;
+            jobs.native
+                .recover_settled(&record.job_id, state, &artifact)
+                .await
+                .map_err(io::Error::other)?;
+        }
+        if jobs.execution.is_idle() {
+            jobs.native
+                .confirm_terminal_cleanup()
+                .await
+                .map_err(io::Error::other)?;
+        }
+        Ok(jobs)
     }
-
-    /// Return a unique caller interest and whether this submission owns the new worker.
-    pub fn submit(
+    pub async fn submit(
         &self,
-        key: String,
         request: impl Into<JobSpec>,
     ) -> io::Result<(JobRecord, String, bool)> {
+        self.reconcile_finished().await?;
         let specification = request.into();
         specification.validate()?;
-        let mut entries = self
-            .entries
-            .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        let token = format!("interest_{}", uuid::Uuid::new_v4().simple());
-        if let Some(entry) = entries.values_mut().find(|e| {
-            e.record.key == key && matches!(e.record.state, JobState::Queued | JobState::Running)
-        }) {
-            if entry.record.interests.len() + entry.record.detached_interests.len() >= MAX_INTERESTS
-            {
-                return Err(io::Error::other("job subscriber bound exhausted"));
-            }
-            let mut next = entry.record.clone();
-            next.interests.insert(token.clone());
-            next.updated_at = clock::now_rfc3339();
-            persist(&self.root, &next)?;
-            entry.record = next.clone();
-            return Ok((next, token, false));
+        let kind = match &specification {
+            JobSpec::Resolve(_) => enrichment_store::native_effect::CommandKind::Resolve,
+            JobSpec::Compare(_) => enrichment_store::native_effect::CommandKind::Compare,
+            JobSpec::Inspect(_) => enrichment_store::native_effect::CommandKind::Inspect,
+            JobSpec::Verify(_) => enrichment_store::native_effect::CommandKind::Verify,
+        };
+        let mut arguments = Arguments::default();
+        match specification {
+            JobSpec::Verify(request) => arguments.verify = Some(request),
+            JobSpec::Inspect(request) => arguments.inspect = Some(request),
+            JobSpec::Resolve(request) => arguments.resolve = Some(request),
+            JobSpec::Compare(request) => arguments.compare = Some(request),
         }
-        if entries
-            .values()
-            .filter(|e| !terminal(e.record.state) || !e.durable)
-            .count()
-            >= self.queue_limit
-        {
-            return Err(io::Error::other(
-                "execution queue is full; poll current jobs before submitting more",
-            ));
+        let interest = format!("interest_{}", uuid::Uuid::new_v4().simple());
+        let (id, fresh) = self
+            .native
+            .submit(
+                self.native
+                    .command_input(arguments)
+                    .await
+                    .map_err(io::Error::other)?,
+                interest.clone(),
+            )
+            .await
+            .map_err(io::Error::other)?;
+        if fresh {
+            self.handles
+                .lock()
+                .map_err(|_| io::Error::other("owned handle lock"))?
+                .insert(
+                    id.clone(),
+                    OwnedHandle {
+                        kind,
+                        cancel: Arc::new(AtomicBool::new(false)),
+                        fence: None,
+                        heartbeat: None,
+                        task: None,
+                        physically_finished: false,
+                    },
+                );
         }
-        let now = clock::now_rfc3339();
-        let record = JobRecord {
-            format: FORMAT.into(),
-            job_id: format!("job_{}", uuid::Uuid::new_v4().simple()),
-            key,
+        Ok((self.get(&id).await?, interest, fresh))
+    }
+    pub async fn get(&self, id: &str) -> io::Result<JobRecord> {
+        let pin = self.native.pin().await.map_err(io::Error::other)?;
+        let command = self
+            .native
+            .command(&pin, id)
+            .await
+            .map_err(io::Error::other)?
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unknown native job"))?;
+        let state = self
+            .native
+            .transition(&pin, id)
+            .await
+            .map_err(io::Error::other)?
+            .ok_or_else(|| io::Error::other("job transition absent"))?;
+        let arguments = command.arguments;
+        let specification = match (
+            arguments.verify,
+            arguments.inspect,
+            arguments.resolve,
+            arguments.compare,
+        ) {
+            (Some(value), None, None, None) => JobSpec::Verify(value),
+            (None, Some(value), None, None) => JobSpec::Inspect(value),
+            (None, None, Some(value), None) => JobSpec::Resolve(value),
+            (None, None, None, Some(value)) => JobSpec::Compare(value),
+            _ => return Err(io::Error::other("invalid typed native command union")),
+        };
+        let interests = self
+            .native
+            .interests(&pin, id)
+            .await
+            .map_err(io::Error::other)?;
+        let result = state
+            .result
+            .as_ref()
+            .map(|artifact| {
+                // Publication may settle the job atomically with its complete result.
+                // Project the retained descriptor from that selected artifact as well as
+                // from ordinary finish; never expose a complete stored envelope as inline.
+                crate::delivery::recover_result(&self.blobs, artifact)
+            })
+            .transpose()?;
+        Ok(JobRecord {
+            job_id: id.into(),
+            key: command.job_key,
             specification,
-            state: JobState::Queued,
-            stage: "queued".into(),
-            interests: BTreeSet::from([token.clone()]),
-            detached_interests: BTreeSet::new(),
-            submitted_at: now.clone(),
-            updated_at: now,
-            transitions: vec![JobState::Queued],
-            result: None,
-            resolution: None,
-        };
-        persist(&self.root, &record)?;
-        entries.insert(
-            record.job_id.clone(),
-            Entry {
-                record: record.clone(),
-                cancel: Arc::new(AtomicBool::new(false)),
-                durable: true,
-            },
-        );
-        Ok((record, token, true))
+            state: state.state,
+            stage: state.stage,
+            interests: interests
+                .iter()
+                .filter(|i| i.attached)
+                .map(|i| i.interest_id.clone())
+                .collect(),
+            detached_interests: interests
+                .iter()
+                .filter(|i| !i.attached)
+                .map(|i| i.interest_id.clone())
+                .collect(),
+            submitted_at: command.submitted_at,
+            updated_at: state.updated_at,
+            result,
+            resolution: state.resolution.map(|value| ResolutionStage {
+                release_id: value.release_id,
+                environment_id: value.environment_id,
+                context_id: value.context_id,
+                attempt_id: value.attempt_id,
+                input_artifact_ids: value.input_artifact_ids,
+                result_artifact_id: value.result_artifact_id,
+            }),
+        })
     }
-    pub fn counts(&self) -> (usize, usize) {
-        let Ok(entries) = self.entries.lock() else {
-            return (0, 0);
-        };
-        (
-            entries
-                .values()
-                .filter(|e| e.record.state == JobState::Queued)
-                .count(),
-            entries
-                .values()
-                .filter(|e| {
-                    matches!(
-                        e.record.state,
-                        JobState::Running | JobState::CancelRequested
-                    )
-                })
-                .count(),
-        )
+    pub async fn counts(&self) -> io::Result<(usize, usize)> {
+        self.native.counts().await.map_err(io::Error::other)
     }
-    pub fn request_shutdown(&self) -> io::Result<()> {
-        let mut entries = self
-            .entries
+    pub async fn request_shutdown(&self) -> io::Result<()> {
+        self.native
+            .request_shutdown()
+            .await
+            .map_err(io::Error::other)?;
+        for handle in self
+            .handles
             .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        for entry in entries.values_mut().filter(|e| !terminal(e.record.state)) {
-            let mut next = entry.record.clone();
-            next.transition(
-                JobState::CancelRequested,
-                "daemon shutdown; waiting for owned execution cleanup",
-            );
-            persist(&self.root, &next)?;
-            entry.record = next;
-            entry.cancel.store(true, Ordering::Release);
+            .map_err(|_| io::Error::other("owned handle lock"))?
+            .values()
+        {
+            handle.cancel.store(true, Ordering::Release);
         }
         Ok(())
-    }
-    pub fn get(&self, id: &str) -> io::Result<JobRecord> {
-        let mut entries = self
-            .entries
-            .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        ensure_terminal_loaded(&self.root, &mut entries, id)?;
-        let record = entries
-            .get(id)
-            .ok_or_else(|| io::Error::other("job disappeared"))?
-            .record
-            .clone();
-        evict_terminals(&mut entries);
-        Ok(record)
     }
     pub fn cancellation(&self, id: &str) -> io::Result<Arc<AtomicBool>> {
-        self.entries
+        self.handles
             .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?
+            .map_err(|_| io::Error::other("owned handle lock"))?
             .get(id)
-            .map(|e| e.cancel.clone())
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unknown job"))
+            .map(|handle| Arc::clone(&handle.cancel))
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "no local effect owner"))
     }
-    pub fn cancel(&self, id: &str, token: &str) -> io::Result<JobRecord> {
-        let mut entries = self
-            .entries
-            .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        ensure_terminal_loaded(&self.root, &mut entries, id)?;
-        evict_terminals(&mut entries);
-        // Authenticate from a bounded disk record if eviction selected this terminal job.
-        let record = if let Some(entry) = entries.get(id) {
-            entry.record.clone()
-        } else {
-            read_record(&self.root, id)?
+    pub async fn cancel(&self, id: &str, token: &str) -> io::Result<JobRecord> {
+        self.native
+            .cancel(id, token)
+            .await
+            .map_err(io::Error::other)?;
+        let record = self.get(id).await?;
+        if record.state == JobState::CancelRequested
+            && let Ok(cancel) = self.cancellation(id)
+        {
+            cancel.store(true, Ordering::Release);
+        }
+        Ok(record)
+    }
+    pub async fn start(&self, id: &str) -> io::Result<bool> {
+        let execution = self.native.config().execution.clone();
+        let cache = self.cache_root.clone();
+        let cleanup = match self.execution.admission() {
+            crate::execution::cleanup::Admission::Quarantined { detail, .. } => Some(detail),
+            crate::execution::cleanup::Admission::Open => None,
         };
-        if !record.interests.contains(token) && !record.detached_interests.contains(token) {
-            return Err(io::Error::new(
-                io::ErrorKind::PermissionDenied,
-                "a matching caller interest token is required",
-            ));
-        }
-        let mut next = record;
-        next.interests.remove(token);
-        next.detached_interests.insert(token.into());
-        if next.interests.is_empty() && !terminal(next.state) {
-            next.transition(
-                JobState::CancelRequested,
-                "last caller detached; waiting for process cleanup",
-            );
-        }
-        persist(&self.root, &next)?;
-        if let Some(entry) = entries.get_mut(id) {
-            entry.record = next.clone();
-            if next.state == JobState::CancelRequested {
-                entry.cancel.store(true, Ordering::Release);
-            }
-        }
-        Ok(next)
-    }
-    pub fn start(&self, id: &str) -> io::Result<bool> {
-        let mut entries = self
-            .entries
-            .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        let entry = entries
-            .get_mut(id)
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unknown job"))?;
-        if entry.record.state != JobState::Queued {
+        let captured = self
+            .native
+            .runtime()
+            .blocking(move || crate::execution::admission::capture(&execution, &cache, cleanup))
+            .await
+            .map_err(io::Error::other)?;
+        let policy = enrichment_store::execution_policy::Policy::bind(
+            self.native.runtime(),
+            self.native.config(),
+            captured,
+        )
+        .await
+        .map_err(io::Error::other)?;
+        let period = self.native.renewal_period().map_err(io::Error::other)?;
+        let attempt = format!("attempt_{}", uuid::Uuid::new_v4().simple());
+        // No expiry grants a replacement owner. Physical cleanup and the persisted fence do.
+        if !self
+            .native
+            .start(id, &attempt, &policy)
+            .await
+            .map_err(io::Error::other)?
+        {
             return Ok(false);
         }
-        let mut next = entry.record.clone();
-        next.transition(JobState::Running, "preparing concrete operation inputs");
-        persist(&self.root, &next)?;
-        entry.record = next;
+        let pin = self.native.pin().await.map_err(io::Error::other)?;
+        let claim = self
+            .native
+            .claim(&pin, id)
+            .await
+            .map_err(io::Error::other)?
+            .ok_or_else(|| io::Error::other("claim disappeared"))?;
+        {
+            let mut handles = self
+                .handles
+                .lock()
+                .map_err(|_| io::Error::other("owned handle lock"))?;
+            handles
+                .get_mut(id)
+                .ok_or_else(|| io::Error::other("local ownership handle absent"))?
+                .fence = Some(claim.fence);
+        }
+        let grant = self
+            .native
+            .grant(id, claim.fence)
+            .await
+            .map_err(io::Error::other)?;
+        enrichment_store::native_effect::bind_claim(grant).map_err(io::Error::other)?;
+        let mut handles = self
+            .handles
+            .lock()
+            .map_err(|_| io::Error::other("owned handle lock"))?;
+        let handle = handles
+            .get_mut(id)
+            .ok_or_else(|| io::Error::other("local ownership handle absent"))?;
+        handle.fence = Some(claim.fence);
+        let cancellation = CancelOnExit(Arc::clone(&handle.cancel));
+        let native = self.native.clone();
+        let id = id.to_owned();
+        handle.heartbeat = Some(Heartbeat(tokio::spawn(async move {
+            let _cancellation = cancellation;
+            loop {
+                tokio::time::sleep(period).await;
+                if !matches!(native.renew(&id, claim.fence).await, Ok(true)) {
+                    break;
+                }
+            }
+        })));
         Ok(true)
     }
-    /// Linearize cancellation against publication admission while pinning exact selected inputs.
-    pub fn pin_resolution(&self, id: &str, stage: ResolutionStage) -> io::Result<()> {
-        stage.validate()?;
-        let mut entries = self
-            .entries
+    pub fn publication_fence(
+        &self,
+        id: &str,
+    ) -> io::Result<enrichment_store::control::PublicationFence> {
+        Ok(enrichment_store::control::PublicationFence {
+            owner: self.native.owner().into(),
+            fence: self
+                .fence(id)?
+                .ok_or_else(|| io::Error::other("job has no native claim"))?,
+        })
+    }
+    fn fence(&self, id: &str) -> io::Result<Option<u64>> {
+        Ok(self
+            .handles
             .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        let entry = entries
-            .get_mut(id)
-            .ok_or_else(|| io::Error::other("unknown acquisition job"))?;
-        if !matches!(entry.record.specification, JobSpec::Resolve(_))
-            || entry.record.state != JobState::Running
-            || entry.record.resolution.is_some()
-        {
-            return Err(io::Error::other(
-                "resolution was cancelled, already pinned or is not running",
-            ));
-        }
-        let mut next = entry.record.clone();
-        next.resolution = Some(stage);
-        next.stage = "publishing exact immutable resolution".into();
-        next.updated_at = clock::now_rfc3339();
-        persist(&self.root, &next)?;
-        entry.record = next;
+            .map_err(|_| io::Error::other("owned handle lock"))?
+            .get(id)
+            .ok_or_else(|| io::Error::other("unknown effect owner"))?
+            .fence)
+    }
+    pub async fn pin_resolution(&self, id: &str, stage: ResolutionStage) -> io::Result<()> {
+        stage.validate()?;
+        self.native
+            .pin_resolution(
+                id,
+                self.fence(id)?
+                    .ok_or_else(|| io::Error::other("acquisition has no claim"))?,
+                Resolution {
+                    release_id: stage.release_id,
+                    environment_id: stage.environment_id,
+                    context_id: stage.context_id,
+                    attempt_id: stage.attempt_id,
+                    input_artifact_ids: stage.input_artifact_ids,
+                    result_artifact_id: stage.result_artifact_id,
+                },
+            )
+            .await
+            .map_err(io::Error::other)
+    }
+    async fn store_result(
+        &self,
+        result: Envelope,
+    ) -> io::Result<enrichment_core::evidence::Artifact> {
+        self.native
+            .retain_delivery(self.blobs.clone(), result)
+            .await
+            .map_err(io::Error::other)
+    }
+    pub async fn finish(&self, id: &str, state: JobState, result: Envelope) -> io::Result<()> {
+        self.native
+            .settle_result(id, self.fence(id)?, state, || self.store_result(result))
+            .await
+            .map_err(io::Error::other)?;
         Ok(())
     }
-    pub fn finish(&self, id: &str, state: JobState, result: Envelope) -> io::Result<()> {
-        if !terminal(state) {
-            return Err(io::Error::other("finish requires a terminal state"));
-        }
-        let mut entries = self
-            .entries
+
+    /// Own the driver until it has returned, independently of its terminal publication.
+    /// QueryRuntime supplies the native executor and DataFusion's abort-on-drop task handle.
+    pub fn spawn(
+        self: &Arc<Self>,
+        runtime: &enrichment_store::runtime::QueryRuntime,
+        id: String,
+        work: impl std::future::Future<Output = ()> + Send + 'static,
+    ) -> io::Result<()> {
+        use futures::FutureExt;
+        let mut handles = self
+            .handles
             .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        let entry = entries
-            .get_mut(id)
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unknown job"))?;
-        if terminal(entry.record.state) {
-            return Err(io::Error::other("terminal evidence is immutable"));
+            .map_err(|_| io::Error::other("owned handle lock"))?;
+        let handle = handles
+            .get_mut(&id)
+            .ok_or_else(|| io::Error::other("effect has no local owner"))?;
+        if handle.task.is_some() || handle.physically_finished {
+            return Err(io::Error::other("effect driver already assigned"));
         }
-        let terminal = (|| {
-            let result = bound_delivery(&self.root, result)?;
-            let mut next = entry.record.clone();
-            next.transition(state, "finished");
-            next.result = Some(result);
-            persist(&self.root, &next)?;
-            Ok::<_, io::Error>(next)
-        })();
-        match terminal {
-            Ok(next) => entry.record = next,
-            Err(error) => {
-                settle_failure(&self.root, entry, &error);
-                return Err(error);
+        let jobs = Arc::clone(self);
+        let kind = handle.kind;
+        let command_runtime = runtime.clone();
+        let work = Box::pin(work);
+        handle.task = Some(runtime.spawn(async move {
+            // The future and all of its local guards are dropped before cleanup is observed.
+            let completion =
+                std::panic::AssertUnwindSafe(command_runtime.command(id.clone(), kind, work))
+                    .catch_unwind()
+                    .await;
+            if !matches!(completion, Ok(Ok(()))) {
+                eprintln!("native job {id}: driver failed; retained state requires reconciliation");
             }
-        }
-        evict_terminals(&mut entries);
+            if let Err(error) = jobs.settle_returned(&id).await {
+                // Retain the completed physical handle so reconciliation can retry the durable
+                // settlement. Failure to commit a result must not erase observed physical exit.
+                eprintln!("native job {id}: terminal reconciliation: {error}");
+            }
+            if let Ok(mut handles) = jobs.handles.lock()
+                && let Some(handle) = handles.get_mut(&id)
+            {
+                handle.physically_finished = true;
+                handle.heartbeat.take();
+            }
+            if let Err(error) = jobs.reconcile_finished().await {
+                eprintln!("native job {id}: cleanup reconciliation: {error}");
+            }
+        }));
         Ok(())
     }
 
-    /// A task that exits before terminal delivery cannot remain indefinitely running.
-    /// Existing visible terminal records win; failed persistence remains explicit in memory.
-    pub fn fail_unfinished(&self, id: &str, error: &io::Error) -> io::Result<()> {
-        let mut entries = self
-            .entries
+    async fn settle_returned(&self, id: &str) -> io::Result<()> {
+        self.native
+            .settle_unfinished(id, self.fence(id)?, || {
+                self.store_result(crate::envelope::error(
+                    enrichment_core::wire::ErrorCode::VerificationFailed,
+                    "The owned driver exited before retaining a terminal result.",
+                    "Inspect the recorded operation diagnostics before explicitly retrying.",
+                    false,
+                ))
+            })
+            .await
+            .map_err(io::Error::other)
+    }
+
+    pub fn has_owned_work(&self) -> bool {
+        self.handles
             .lock()
-            .map_err(|_| io::Error::other("job lock poisoned"))?;
-        let entry = entries
-            .get_mut(id)
-            .ok_or_else(|| io::Error::other("unknown failed job"))?;
-        if !terminal(entry.record.state) {
-            settle_failure(&self.root, entry, error);
+            .map_or(true, |handles| !handles.is_empty())
+    }
+
+    pub async fn reconcile_finished(&self) -> io::Result<()> {
+        if !self.execution.is_idle() {
+            return Ok(());
+        }
+        let ids = self
+            .handles
+            .lock()
+            .map_err(|_| io::Error::other("owned handle lock"))?
+            .iter()
+            .filter(|(_, handle)| handle.physically_finished)
+            .map(|(id, _)| id.clone())
+            .collect::<Vec<_>>();
+        for id in &ids {
+            self.settle_returned(id).await?;
+        }
+        self.native
+            .confirm_cleanup(&ids)
+            .await
+            .map_err(io::Error::other)?;
+        let mut handles = self
+            .handles
+            .lock()
+            .map_err(|_| io::Error::other("owned handle lock"))?;
+        for id in ids {
+            handles.remove(&id);
         }
         Ok(())
     }
-}
-
-fn settle_failure(root: &Path, entry: &mut Entry, error: &io::Error) {
-    if let Ok(committed) = read_record(root, &entry.record.job_id)
-        && terminal(committed.state)
-    {
-        // Rename may have succeeded before a later fsync/unlink failed. Never overwrite it.
-        entry.record = committed;
-        entry.durable = false;
-        return;
-    }
-    let detail: String = error.to_string().chars().take(1024).collect();
-    let mut next = entry.record.clone();
-    next.transition(JobState::Failed, "terminal delivery failed");
-    let mut result = crate::envelope::error(
-        enrichment_core::wire::ErrorCode::ArtifactUnavailable,
-        format!("Job terminal delivery failed: {detail}"),
-        "Inspect retained evidence and storage health before explicitly retrying.",
-        false,
-    );
-    result.coverage.scope =
-        "terminal delivery; previously published evidence remains independently retained".into();
-    next.result = Some(result);
-    entry.durable = persist(root, &next).is_ok();
-    if !entry.durable {
-        next.stage = "terminal delivery failed; journal could not be persisted; restart must reconcile retained state".into();
-    }
-    entry.record = next;
-}
-
-/// Journal size is independent of library size. Large delivery DTOs use the same immutable
-/// indexed-artifact contract as tool replies. Committed recovery reads these bytes directly;
-/// it never regenerates a missing result.
-fn bound_delivery(root: &Path, result: Envelope) -> io::Result<Envelope> {
-    let data = root
-        .parent()
-        .ok_or_else(|| io::Error::other("job data root missing"))?;
-    crate::delivery::terminal(&enrichment_store::BlobStore::open(data)?, result)
-}
-
-fn validate_id(id: &str) -> io::Result<()> {
-    if !id
-        .strip_prefix("job_")
-        .is_some_and(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "invalid service job identity",
-        ));
-    }
-    Ok(())
-}
-
-fn open_record(path: &Path) -> io::Result<std::io::Take<std::fs::File>> {
-    let metadata = std::fs::symlink_metadata(path)?;
-    if !metadata.is_file() || metadata.len() > MAX_RECORD_BYTES {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "invalid or oversized job journal",
-        ));
-    }
-    Ok(std::fs::File::open(path)?.take(MAX_RECORD_BYTES))
-}
-
-fn read_record(root: &Path, id: &str) -> io::Result<JobRecord> {
-    validate_id(id)?;
-    let terminal_path = root.join("terminal").join(format!("{id}.json"));
-    let path = match std::fs::symlink_metadata(&terminal_path) {
-        Ok(_) => terminal_path,
-        Err(e) if e.kind() == io::ErrorKind::NotFound => {
-            root.join("active").join(format!("{id}.json"))
+    pub async fn fail_unfinished(&self, id: &str, error: &io::Error) -> io::Result<()> {
+        if terminal(self.get(id).await?.state) {
+            return Ok(());
         }
-        Err(e) => return Err(e),
-    };
-    let record: JobRecord = serde_json::from_reader(std::io::BufReader::new(open_record(&path)?))?;
-    record
-        .specification
-        .validate()
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-    if let Some(stage) = &record.resolution {
-        stage
-            .validate()
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
-        if !matches!(record.specification, JobSpec::Resolve(_)) {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "non-resolution job contains an exact resolution stage",
-            ));
-        }
+        self.finish(
+            id,
+            JobState::Failed,
+            crate::envelope::error(
+                enrichment_core::wire::ErrorCode::ArtifactUnavailable,
+                format!("Owned job failed: {error}"),
+                "Inspect retained results and cleanup before explicitly retrying.",
+                false,
+            ),
+        )
+        .await
     }
-    if record.format != FORMAT
-        || record.job_id != id
-        || record.interests.len() + record.detached_interests.len() > MAX_INTERESTS
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "job journal identity or subscriber bound mismatch",
-        ));
-    }
-    Ok(record)
-}
-
-fn ensure_terminal_loaded(
-    root: &Path,
-    entries: &mut BTreeMap<String, Entry>,
-    id: &str,
-) -> io::Result<()> {
-    if !entries.contains_key(id) {
-        let record = read_record(root, id)?;
-        if !terminal(record.state) {
-            return Err(io::Error::other(
-                "nonterminal job lost its worker ownership",
-            ));
-        }
-        entries.insert(
-            id.into(),
-            Entry {
-                record,
-                cancel: Arc::new(AtomicBool::new(false)),
-                durable: true,
-            },
-        );
-    }
-    Ok(())
-}
-
-fn evict_terminals(entries: &mut BTreeMap<String, Entry>) {
-    let terminal_ids: Vec<_> = entries
-        .iter()
-        .filter(|(_, e)| terminal(e.record.state) && e.durable)
-        .map(|(id, _)| id.clone())
-        .collect();
-    for id in terminal_ids
-        .iter()
-        .take(terminal_ids.len().saturating_sub(MAX_TERMINAL_CACHE))
-    {
-        entries.remove(id);
-    }
-}
-
-fn persist(root: &Path, record: &JobRecord) -> io::Result<()> {
-    record.specification.validate()?;
-    if let Some(stage) = &record.resolution {
-        stage.validate()?;
-        if !matches!(record.specification, JobSpec::Resolve(_)) {
-            return Err(io::Error::other(
-                "non-resolution job contains an exact resolution stage",
-            ));
-        }
-    }
-    if record.format != FORMAT {
-        return Err(io::Error::other("invalid journal format"));
-    }
-    validate_id(&record.job_id)?;
-    let bytes = serde_json::to_vec(record)?;
-    if bytes.len() as u64 > MAX_RECORD_BYTES
-        || record.interests.len() + record.detached_interests.len() > MAX_INTERESTS
-    {
-        return Err(io::Error::other("job journal exceeds storage bound"));
-    }
-    let directory = root.join(if terminal(record.state) {
-        "terminal"
-    } else {
-        "active"
-    });
-    let target = directory.join(format!("{}.json", record.job_id));
-    let temp = root
-        .join("active")
-        .join(format!(".{}.tmp", uuid::Uuid::new_v4().simple()));
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&temp)?;
-    file.write_all(&bytes)?;
-    file.sync_all()?;
-    std::fs::rename(&temp, &target)?;
-    std::fs::File::open(&directory)?.sync_all()?;
-    std::fs::File::open(root.join("active"))?.sync_all()?;
-    if terminal(record.state) {
-        enrichment_store::publication_probe::hit(
-            root.parent()
-                .ok_or_else(|| io::Error::other("job data root missing"))?,
-            enrichment_store::publication_probe::Point::JournalTerminalDurable,
-        )?;
-        match std::fs::remove_file(root.join("active").join(format!("{}.json", record.job_id))) {
-            Ok(()) => std::fs::File::open(root.join("active"))?.sync_all()?,
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e),
-        }
-    }
-    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn failed_terminal_delivery_leaves_a_failed_job_and_restart_never_reexecutes() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        let (job, _, _) = jobs.submit("delivery".into(), request()).unwrap();
-        jobs.start(&job.job_id).unwrap();
-        std::fs::write(dir.path().join("blobs"), b"unavailable blob root").unwrap();
-        let result = crate::envelope::error(
-            enrichment_core::wire::ErrorCode::VerificationFailed,
-            "result",
-            "inspect",
-            false,
-        );
-        assert!(jobs.finish(&job.job_id, JobState::Failed, result).is_err());
-        assert_eq!(jobs.get(&job.job_id).unwrap().state, JobState::Failed);
-        drop(jobs);
-        let reopened = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        assert!(
-            reopened
-                .get(&job.job_id)
-                .unwrap()
-                .result
-                .unwrap()
-                .summary
-                .contains("terminal delivery failed")
-        );
-    }
 
-    #[test]
-    fn unavailable_terminal_storage_keeps_failure_visible_and_bounds_new_admission() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        let (job, _, _) = jobs.submit("delivery".into(), request()).unwrap();
-        jobs.start(&job.job_id).unwrap();
-        let terminal = jobs.root.join("terminal");
-        std::fs::remove_dir(&terminal).unwrap();
-        std::fs::write(&terminal, b"unavailable terminal directory").unwrap();
-        let result = crate::envelope::error(
-            enrichment_core::wire::ErrorCode::VerificationFailed,
-            "result",
-            "inspect",
-            false,
-        );
-        assert!(jobs.finish(&job.job_id, JobState::Failed, result).is_err());
-        let record = jobs.get(&job.job_id).unwrap();
-        assert_eq!(record.state, JobState::Failed);
-        assert!(record.stage.contains("could not be persisted"));
-        assert!(jobs.submit("another".into(), request()).is_err());
-        drop(jobs);
-        std::fs::remove_file(&terminal).unwrap();
-        std::fs::create_dir(&terminal).unwrap();
-        let reopened = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        let record = reopened.get(&job.job_id).unwrap();
-        assert_eq!(record.state, JobState::Failed);
-        assert!(record.stage.contains("interrupted"));
-    }
-    fn permits(n: usize) -> Arc<tokio::sync::Semaphore> {
-        Arc::new(tokio::sync::Semaphore::new(n))
-    }
-    fn request() -> VerifyRequest {
-        VerifyRequest {
-            context_id: "ctx_test".into(),
-            snapshot_id: Some("snap_test".into()),
-            snippet: "assert True".into(),
-            mode: enrichment_core::execution::ProbeMode::Runtime,
-            profile: enrichment_core::policy::ExecutionProfile::Runtime,
-            test_intent: None,
-            max_bytes: None,
-        }
-    }
-    #[test]
-    fn oversized_success_is_durable_without_exceeding_the_journal_bound() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let (job, _, _) = jobs.submit("large result".into(), request()).unwrap();
-        jobs.start(&job.job_id).unwrap();
-        let payload = "é".repeat(800_000);
-        let result = crate::envelope::ok(
-            "large native result",
-            crate::ops::common::to_object(&serde_json::json!({"payload":payload})),
-            enrichment_core::wire::Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: "large delivery".into(),
-                indexed: Default::default(),
-                missing: Default::default(),
-                limitations: Vec::new(),
-            },
-        );
-        jobs.finish(&job.job_id, JobState::Succeeded, result)
-            .unwrap();
-        let record = jobs.get(&job.job_id).unwrap();
-        let envelope = record.result.unwrap();
-        let enrichment_core::wire::DeliveryDescriptor::Artifact {
-            artifact_id: id, ..
-        } = &envelope.delivery
-        else {
-            panic!("large result requires artifact delivery");
-        };
-        let blobs = enrichment_store::BlobStore::open(dir.path()).unwrap();
-        let artifact = blobs.find(id).unwrap().unwrap();
-        let saved: serde_json::Value =
-            serde_json::from_slice(&blobs.read(&artifact.sha256).unwrap()).unwrap();
-        assert_eq!(saved["result"]["status"], "ok");
-        assert_eq!(saved["result"]["data"]["payload"], payload);
-        assert_eq!(saved["result"]["request_id"], "req_retained");
-        assert!(
-            std::fs::metadata(
-                dir.path()
-                    .join("jobs/terminal")
-                    .join(format!("{}.json", job.job_id))
-            )
-            .unwrap()
-            .len()
-                < MAX_RECORD_BYTES
-        );
-        drop(jobs);
-        let reopened = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let record = reopened.get(&job.job_id).unwrap();
-        assert_eq!(record.state, JobState::Succeeded);
-        assert_eq!(record.result.unwrap().data, envelope.data);
-    }
-
-    #[test]
-    fn durable_jobs_preserve_two_interests_and_terminal_evidence_across_restart() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let (a, token_a, fresh) = jobs.submit("same".into(), request()).unwrap();
-        assert!(fresh);
-        let (b, token_b, fresh) = jobs.submit("same".into(), request()).unwrap();
-        assert!(!fresh);
-        assert_eq!(a.job_id, b.job_id);
-        assert_ne!(token_a, token_b);
-        jobs.start(&a.job_id).unwrap();
-        assert!(jobs.cancel(&a.job_id, "wrong").is_err());
-        assert_eq!(
-            jobs.cancel(&a.job_id, &token_a).unwrap().state,
-            JobState::Running
-        );
-        assert!(
-            !jobs
-                .cancellation(&a.job_id)
-                .unwrap()
-                .load(Ordering::Acquire)
-        );
-        assert_eq!(
-            jobs.cancel(&a.job_id, &token_b).unwrap().state,
-            JobState::CancelRequested
-        );
-        assert!(
-            jobs.cancellation(&a.job_id)
-                .unwrap()
-                .load(Ordering::Acquire)
-        );
-        let result = crate::envelope::error(
-            enrichment_core::wire::ErrorCode::VerificationFailed,
-            "cancelled after cleanup",
-            "resubmit explicitly",
-            false,
-        );
-        jobs.finish(&a.job_id, JobState::Cancelled, result.clone())
-            .unwrap();
-        assert!(jobs.finish(&a.job_id, JobState::Succeeded, result).is_err());
-        drop(jobs);
-        let reopened = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        assert_eq!(reopened.get(&a.job_id).unwrap().state, JobState::Cancelled);
-        assert_eq!(
-            reopened.get(&a.job_id).unwrap().transitions,
-            vec![
-                JobState::Queued,
-                JobState::Running,
-                JobState::CancelRequested,
-                JobState::Cancelled
-            ]
-        );
-    }
-    #[test]
-    fn committed_publication_wins_over_interruption_and_late_cancellation() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let (job, token, _) = jobs.submit("query".into(), request()).unwrap();
-        jobs.start(&job.job_id).unwrap();
-        jobs.cancel(&job.job_id, &token).unwrap();
-        drop(jobs);
-        let result = crate::envelope::ok(
-            "committed result",
-            Default::default(),
-            enrichment_core::wire::Coverage {
-                details: None,
-                assessments: Vec::new(),
-                scope: "fixture".into(),
-                indexed: Default::default(),
-                missing: Default::default(),
-                limitations: vec![],
-            },
-        );
-        let jobs = Jobs::open_recover(dir.path(), permits(1), 2, |record| {
-            assert_eq!(record.job_id, job.job_id);
-            assert_eq!(record.state, JobState::CancelRequested);
-            Ok(Some((JobState::Succeeded, result.clone())))
-        })
+    #[tokio::test]
+    async fn terminal_publication_does_not_release_a_live_driver() {
+        let root = tempfile::tempdir().unwrap();
+        let service = crate::service::Service::open(
+            enrichment_core::config::Config::default(),
+            enrichment_store::StatePaths::explicit(
+                root.path().join("cache"),
+                root.path().join("data"),
+            ),
+        )
         .unwrap();
-        let recovered = jobs.get(&job.job_id).unwrap().result.unwrap();
-        assert_eq!(recovered.outcome(), result.outcome());
-        assert_eq!(recovered.coverage, result.coverage);
-        assert_eq!(recovered.summary, result.summary);
+        let (record, _, _) = service
+            .jobs
+            .submit(JobSpec::Resolve(enrichment_core::request::ResolveRequest {
+                name: "fixture".into(),
+                version: Some("1.0.0".into()),
+                ..Default::default()
+            }))
+            .await
+            .unwrap();
+        let id = record.job_id.clone();
+        let jobs = Arc::clone(&service.jobs);
+        let (terminal_sent, terminal_seen) = tokio::sync::oneshot::channel();
+        let (release, exit) = tokio::sync::oneshot::channel();
+        service
+            .jobs
+            .spawn(&service.repository.runtime, id.clone(), async move {
+                assert!(jobs.start(&id).await.unwrap());
+                jobs.finish(
+                    &id,
+                    JobState::Succeeded,
+                    crate::envelope::ok(
+                        "Native driver result retained",
+                        serde_json::Map::new(),
+                        enrichment_core::wire::Coverage {
+                            details: None,
+                            assessments: vec![],
+                            scope: "driver ownership".into(),
+                            indexed: Default::default(),
+                            missing: Default::default(),
+                            limitations: vec![],
+                        },
+                    ),
+                )
+                .await
+                .unwrap();
+                terminal_sent.send(()).unwrap();
+                exit.await.unwrap();
+            })
+            .unwrap();
+        terminal_seen.await.unwrap();
+        assert!(service.jobs.has_owned_work());
+        let record = service.jobs.get(&record.job_id).await.unwrap();
+        assert_eq!(record.state, JobState::Succeeded);
         assert!(matches!(
-            recovered.delivery,
+            record.result.unwrap().delivery,
             enrichment_core::wire::DeliveryDescriptor::Artifact { .. }
         ));
+        let pin = service.jobs.native.pin().await.unwrap();
         assert_eq!(
-            jobs.cancel(&job.job_id, &token).unwrap().state,
-            JobState::Succeeded
+            service
+                .jobs
+                .native
+                .claim(&pin, &record.job_id)
+                .await
+                .unwrap()
+                .unwrap()
+                .cleanup_state,
+            "unresolved"
         );
-        drop(jobs);
-        let jobs = Jobs::open_recover(dir.path(), permits(1), 2, |_| {
-            panic!("terminal replay requires no publication lookup or execution")
+        service.jobs.reconcile_finished().await.unwrap();
+        assert!(
+            service.jobs.has_owned_work(),
+            "a terminal outcome does not prove physical exit"
+        );
+        release.send(()).unwrap();
+        tokio::time::timeout(std::time::Duration::from_secs(30), async {
+            while service.jobs.has_owned_work() {
+                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            }
         })
+        .await
         .unwrap();
-        assert_eq!(jobs.get(&job.job_id).unwrap().state, JobState::Succeeded);
-    }
-    #[test]
-    fn terminal_cache_eviction_preserves_disk_results_and_bounds_unauthorized_cancels() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let mut records = Vec::new();
-        for i in 0..MAX_TERMINAL_CACHE * 3 {
-            let (record, token, _) = jobs.submit(format!("request-{i}"), request()).unwrap();
-            let result = crate::envelope::error(
-                enrichment_core::wire::ErrorCode::VerificationFailed,
-                format!("completed-{i}"),
-                "inspect retained result",
-                false,
-            );
-            jobs.finish(&record.job_id, JobState::Failed, result)
-                .unwrap();
-            records.push((record.job_id, token));
-            assert!(jobs.entries.lock().unwrap().len() <= MAX_TERMINAL_CACHE);
-        }
-        drop(jobs);
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        assert!(jobs.entries.lock().unwrap().is_empty());
-        for (i, (id, token)) in records.iter().enumerate() {
-            assert!(jobs.cancel(id, "unrelated-interest").is_err());
-            assert!(jobs.entries.lock().unwrap().len() <= MAX_TERMINAL_CACHE);
-            let record = jobs.cancel(id, token).unwrap();
-            assert_eq!(record.state, JobState::Failed);
-            assert_eq!(record.result.unwrap().summary, format!("completed-{i}"));
-            assert!(jobs.entries.lock().unwrap().len() <= MAX_TERMINAL_CACHE);
-            assert_eq!(jobs.get(id).unwrap().state, JobState::Failed);
-        }
-        assert!(jobs.get("../../outside").is_err());
-    }
-    #[test]
-    fn subscriber_and_journal_storage_bounds_reject_without_overwriting() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 2).unwrap();
-        let (record, _, _) = jobs.submit("same".into(), request()).unwrap();
-        for _ in 1..MAX_INTERESTS {
-            jobs.submit("same".into(), request()).unwrap();
-        }
-        assert!(jobs.submit("same".into(), request()).is_err());
+        let pin = service.jobs.native.pin().await.unwrap();
         assert_eq!(
-            jobs.get(&record.job_id).unwrap().interests.len(),
-            MAX_INTERESTS
+            service
+                .jobs
+                .native
+                .claim(&pin, &record.job_id)
+                .await
+                .unwrap()
+                .unwrap()
+                .cleanup_state,
+            "settled"
         );
-        let mut oversized = record.clone();
-        oversized.stage = "x".repeat(MAX_RECORD_BYTES as usize);
-        assert!(persist(&jobs.root, &oversized).is_err());
-        assert_eq!(
-            read_record(&jobs.root, &record.job_id).unwrap().stage,
-            "queued"
-        );
-        let path = jobs
-            .root
-            .join("active")
-            .join(format!("{}.json", record.job_id));
-        std::fs::OpenOptions::new()
-            .write(true)
-            .open(path)
-            .unwrap()
-            .set_len(MAX_RECORD_BYTES + 1)
-            .unwrap();
-        drop(jobs);
-        assert!(Jobs::open(dir.path(), permits(1), 2).is_err());
-    }
-    #[test]
-    fn durable_jobs_restart_never_reexecutes_interrupted_runtime_and_queue_is_bounded() {
-        let dir = tempfile::tempdir().unwrap();
-        let jobs = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        let (a, _, _) = jobs.submit("one".into(), request()).unwrap();
-        assert!(jobs.submit("two".into(), request()).is_err());
-        jobs.start(&a.job_id).unwrap();
-        drop(jobs);
-        let reopened = Jobs::open(dir.path(), permits(1), 1).unwrap();
-        let a = reopened.get(&a.job_id).unwrap();
-        assert_eq!(a.state, JobState::Failed);
-        assert!(a.stage.contains("interrupted"));
-        assert!(a.result.is_some());
-        assert!(reopened.submit("one".into(), request()).unwrap().2);
     }
 }

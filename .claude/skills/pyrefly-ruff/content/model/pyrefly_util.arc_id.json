@@ -1,0 +1,82 @@
+{
+  "module": "pyrefly_util::arc_id",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.arc_id.md",
+  "items": [
+    {
+      "path": "pyrefly_util::arc_id::ArcId",
+      "name": "ArcId",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct ArcId<T: ?Sized>",
+      "summary": "An `Arc` where `Eq`, `Hash` and `Ord` are based on the pointer. As a result, things like Hash/Ord might be unstable between multiple program runs.",
+      "doc": "api/pyrefly_util.arc_id.md#arcid",
+      "implements": [
+        "core::convert::AsRef",
+        "core::fmt::Display",
+        "core::ops::deref::Deref",
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &T",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &T",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "downgrade",
+          "signature": "fn downgrade(&self) -> WeakArcId<T>",
+          "summary": "Create a [`WeakArcId`] from this `ArcId`, which does not increase its strong ref count."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> usize"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> Option<T>",
+          "summary": "Unwrap the inner value if this is the only reference. Returns `None` if there are other references."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(id: T) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::arc_id::WeakArcId",
+      "name": "WeakArcId",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct WeakArcId<T: ?Sized>",
+      "summary": "A [`Weak`] version of an [`ArcId`]. Hash and equality is based on the original `ArcId`'s id without upgrading it.",
+      "doc": "api/pyrefly_util.arc_id.md#weakarcid",
+      "methods": [
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> usize"
+        },
+        {
+          "name": "upgrade",
+          "signature": "fn upgrade(&self) -> Option<ArcId<T>>",
+          "summary": "Turn this `WeakArcId` into an [`ArcId`], if it still exists."
+        },
+        {
+          "name": "vacant",
+          "signature": "fn vacant(&self) -> bool",
+          "summary": "Does this [`WeakArcId`] still exist, or have all backing `ArcId`s been dropped?"
+        }
+      ]
+    }
+  ]
+}

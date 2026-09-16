@@ -1,0 +1,252 @@
+{
+ "api": "api/mcp.server.extension.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "aliases": [
+    "mcp.server.mcpserver.server.RequestHandler"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#requesthandler",
+   "inferred": "```xml <Callable special-form '( ServerRequestContext[Any, Any], Any, / ) -> Awaitable[BaseModel | dict[str, Any] | None]'> ```",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "RequestHandler",
+   "nameable": true,
+   "path": "mcp.server.extension.RequestHandler",
+   "preferred": "mcp.server.mcpserver.server.RequestHandler",
+   "signature": "RequestHandler = Callable[[ServerRequestContext[Any, Any], Any], Awaitable[HandlerResult]]",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "mcp.server.apps.Extension",
+    "mcp.server.mcpserver.Extension",
+    "mcp.server.mcpserver.server.Extension"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#extension",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "identifier",
+     "signature": "identifier: str"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "intercept_tool_call",
+     "signature": "async def intercept_tool_call(self, params: CallToolRequestParams, ctx: ServerRequestContext[Any, Any], call_next: CallNext) -> HandlerResult",
+     "summary": "Wrap `tools/call`. Default: pass through unchanged."
+    },
+    {
+     "kind": "function",
+     "name": "methods",
+     "signature": "def methods(self) -> Sequence[MethodBinding]",
+     "summary": "New request methods this extension serves (additive)."
+    },
+    {
+     "kind": "function",
+     "name": "resources",
+     "signature": "def resources(self) -> Sequence[ResourceBinding]",
+     "summary": "Resources this extension contributes (additive)."
+    },
+    {
+     "kind": "function",
+     "name": "settings",
+     "signature": "def settings(self) -> dict[str, Any]",
+     "summary": "Per-extension settings advertised at `capabilities.extensions[identifier]`."
+    },
+    {
+     "kind": "function",
+     "name": "tools",
+     "signature": "def tools(self) -> Sequence[ToolBinding]",
+     "summary": "Tools this extension contributes (additive)."
+    }
+   ],
+   "name": "Extension",
+   "nameable": true,
+   "path": "mcp.server.extension.Extension",
+   "preferred": "mcp.server.mcpserver.Extension",
+   "signature": "class Extension",
+   "summary": "Base class for an opt-in MCP extension. Override only the methods you need."
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.MethodBinding",
+    "mcp.server.mcpserver.server.MethodBinding"
+   ],
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#methodbinding",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "handler",
+     "signature": "handler: RequestHandler"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "method",
+     "signature": "method: str"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "params_type",
+     "signature": "params_type: type[BaseModel]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "protocol_versions",
+     "signature": "protocol_versions: frozenset[str] | None = None"
+    }
+   ],
+   "name": "MethodBinding",
+   "nameable": true,
+   "path": "mcp.server.extension.MethodBinding",
+   "preferred": "mcp.server.mcpserver.MethodBinding",
+   "signature": "class MethodBinding",
+   "summary": "A new request method an extension serves, e.g. `tasks/get`."
+  },
+  {
+   "aliases": [
+    "mcp.server.apps.ResourceBinding",
+    "mcp.server.mcpserver.ResourceBinding"
+   ],
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#resourcebinding",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "resource",
+     "signature": "resource: Resource"
+    }
+   ],
+   "name": "ResourceBinding",
+   "nameable": true,
+   "path": "mcp.server.extension.ResourceBinding",
+   "preferred": "mcp.server.mcpserver.ResourceBinding",
+   "signature": "class ResourceBinding",
+   "summary": "A pre-built resource an extension contributes."
+  },
+  {
+   "aliases": [
+    "mcp.server.apps.ToolBinding",
+    "mcp.server.mcpserver.ToolBinding"
+   ],
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#toolbinding",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "fn",
+     "signature": "fn: Callable[..., Any]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "kwargs",
+     "signature": "kwargs: dict[str, Any] = field(default_factory=lambda: {})"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "meta",
+     "signature": "meta: dict[str, Any] | None = None"
+    }
+   ],
+   "name": "ToolBinding",
+   "nameable": true,
+   "path": "mcp.server.extension.ToolBinding",
+   "preferred": "mcp.server.mcpserver.ToolBinding",
+   "signature": "class ToolBinding",
+   "summary": "A tool an extension contributes, plus the `_meta` to stamp on it."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#_bind_interceptor",
+   "kind": "function",
+   "name": "_bind_interceptor",
+   "nameable": false,
+   "path": "mcp.server.extension._bind_interceptor",
+   "preferred": "mcp.server.extension._bind_interceptor",
+   "signature": "def _bind_interceptor(extension: Extension, params: CallToolRequestParams, call_next: CallNext) -> CallNext",
+   "summary": "",
+   "types_used": [
+    "mcp.server.context.CallNext"
+   ]
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.server.compose_tool_call_handler"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.extension.md#compose_tool_call_handler",
+   "kind": "function",
+   "name": "compose_tool_call_handler",
+   "nameable": true,
+   "path": "mcp.server.extension.compose_tool_call_handler",
+   "preferred": "mcp.server.mcpserver.server.compose_tool_call_handler",
+   "signature": "def compose_tool_call_handler(extensions: Sequence[Extension], handler: RequestHandler) -> RequestHandler",
+   "summary": "Fold every extension's `intercept_tool_call` around the `tools/call` handler.",
+   "types_used": [
+    "mcp.server.extension.RequestHandler"
+   ]
+  }
+ ],
+ "module": "mcp.server.extension"
+}

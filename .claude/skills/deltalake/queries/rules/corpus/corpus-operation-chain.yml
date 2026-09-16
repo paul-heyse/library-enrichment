@@ -1,0 +1,18 @@
+id: corpus-operation-chain
+language: rust
+severity: hint
+message: An operation builder is configured here; these are the options upstream reaches for.
+note: |
+  Every delta-rs operation is a builder you configure with `with_*` and then await. The
+  defaults are chosen to be safe rather than fast, so the `with_*` calls upstream actually
+  uses are the closest thing to a statement of which options matter in practice.
+  See content/catalogs/operations.md for the full set each builder accepts.
+metadata:
+  record: builder-option
+  reads: content/corpus
+rule:
+  kind: field_identifier
+  regex: '^with_[a-z0-9_]+$'
+  inside:
+    kind: field_expression
+    stopBy: end

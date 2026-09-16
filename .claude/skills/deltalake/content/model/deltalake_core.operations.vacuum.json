@@ -1,0 +1,194 @@
+{
+  "module": "deltalake_core::operations::vacuum",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.operations.vacuum.md",
+  "items": [
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumMode",
+      "name": "VacuumMode",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum VacuumMode",
+      "summary": "Type of Vacuum operation to perform",
+      "doc": "api/deltalake_core.operations.vacuum.md#vacuummode",
+      "aliases": [
+        "deltalake::operations::vacuum::VacuumMode"
+      ],
+      "variants": [
+        "Lite",
+        "Full"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumBuilder",
+      "name": "VacuumBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct VacuumBuilder",
+      "summary": "Vacuum a Delta table with the given options See this module's documentation for more information",
+      "doc": "api/deltalake_core.operations.vacuum.md#vacuumbuilder",
+      "aliases": [
+        "deltalake::operations::vacuum::VacuumBuilder"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture",
+        "deltalake_core::operations::Operation"
+      ],
+      "methods": [
+        {
+          "name": "get_custom_execute_handler",
+          "signature": "fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        },
+        {
+          "name": "log_store",
+          "signature": "fn log_store(&self) -> &LogStoreRef",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "parallel_scan",
+          "signature": "fn parallel_scan(self, parallel_scan: bool) -> Self",
+          "summary": "Flag to enable/disable the parallel multi-level partition scan used by full-mode vacuum."
+        },
+        {
+          "name": "with_commit_properties",
+          "signature": "fn with_commit_properties(self, commit_properties: CommitProperties) -> Self",
+          "summary": "Additional metadata to be added to commit info"
+        },
+        {
+          "name": "with_custom_execute_handler",
+          "signature": "fn with_custom_execute_handler(self, handler: Arc<dyn CustomExecuteHandler>) -> Self",
+          "summary": "Set a custom execute handler, for pre and post execution"
+        },
+        {
+          "name": "with_dry_run",
+          "signature": "fn with_dry_run(self, dry_run: bool) -> Self",
+          "summary": "Only determine which files should be deleted"
+        },
+        {
+          "name": "with_enforce_retention_duration",
+          "signature": "fn with_enforce_retention_duration(self, enforce: bool) -> Self",
+          "summary": "Check if the specified retention period is less than the table's minimum"
+        },
+        {
+          "name": "with_keep_versions",
+          "signature": "fn with_keep_versions(self, versions: &[Version]) -> Self",
+          "summary": "Specify table versions that we want to keep for time travel. This will prevent deletion of files required by these versions."
+        },
+        {
+          "name": "with_mode",
+          "signature": "fn with_mode(self, mode: VacuumMode) -> Self",
+          "summary": "Override the default vacuum mode (lite)"
+        },
+        {
+          "name": "with_retention_period",
+          "signature": "fn with_retention_period(self, retention_period: Duration) -> Self",
+          "summary": "Override the default retention period for which files are deleted."
+        },
+        {
+          "name": "with_scan_concurrency",
+          "signature": "fn with_scan_concurrency(self, concurrency: usize) -> Self",
+          "summary": "Set the maximum number of concurrent object-store LIST operations used during full-mode vacuum scanning (partition prefix expansion and leaf orphan listing)."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumEndOperationMetrics",
+      "name": "VacuumEndOperationMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct VacuumEndOperationMetrics",
+      "summary": "Details for the Vacuum End operation for the transaction log",
+      "doc": "api/deltalake_core.operations.vacuum.md#vacuumendoperationmetrics",
+      "aliases": [
+        "deltalake::operations::vacuum::VacuumEndOperationMetrics"
+      ],
+      "fields": [
+        "num_deleted_files",
+        "num_vacuumed_directories"
+      ],
+      "implements": [
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumMetrics",
+      "name": "VacuumMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct VacuumMetrics",
+      "summary": "Details for the Vacuum operation including which files were",
+      "doc": "api/deltalake_core.operations.vacuum.md#vacuummetrics",
+      "aliases": [
+        "deltalake::operations::vacuum::VacuumMetrics"
+      ],
+      "fields": [
+        "dry_run",
+        "files_deleted"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::VacuumStartOperationMetrics",
+      "name": "VacuumStartOperationMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct VacuumStartOperationMetrics",
+      "summary": "Details for the Vacuum start operation for the transaction log",
+      "doc": "api/deltalake_core.operations.vacuum.md#vacuumstartoperationmetrics",
+      "aliases": [
+        "deltalake::operations::vacuum::VacuumStartOperationMetrics"
+      ],
+      "fields": [
+        "num_files_to_delete",
+        "size_of_data_to_delete"
+      ],
+      "implements": [
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::vacuum::Clock",
+      "name": "Clock",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait Clock: Debug + Send + Sync",
+      "summary": "A source of time",
+      "doc": "api/deltalake_core.operations.vacuum.md#clock",
+      "aliases": [
+        "deltalake::operations::vacuum::Clock"
+      ],
+      "required_methods": [
+        "current_timestamp_millis"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "current_timestamp_millis",
+          "signature": "fn current_timestamp_millis(&self) -> i64",
+          "summary": "get the current time in milliseconds since epoch"
+        }
+      ]
+    }
+  ]
+}

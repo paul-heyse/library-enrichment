@@ -413,12 +413,20 @@ async fn read_inner(
             state,
             delivery,
         };
-        if let Err(error) = service.repository.publish_comparison(publication).await {
+        let fence = match service.jobs.publication_fence(job_id) {
+            Ok(fence) => fence,
+            Err(error) => return common::operation_error(&error, "comparison_claim"),
+        };
+        if let Err(error) = service
+            .repository
+            .publish_comparison(publication, fence)
+            .await
+        {
             return common::operation_error(&error, "comparison_publication");
         }
         return bounded;
     }
-    common::enforce_budget(service, result, request.max_bytes)
+    common::enforce_budget(service, result, request.max_bytes).await
 }
 
 /// Include exactly the value artifacts reachable from the final fitted page.
@@ -433,7 +441,7 @@ fn value_artifacts(
         if let enrichment_core::compare::AlternativeValue::Artifact { artifact, .. } =
             &alternative.value
         {
-            artifacts.insert(artifact.artifact_id.clone(), artifact.clone());
+            artifacts.insert(artifact.receipt.artifact_id.clone(), artifact.clone());
         }
     }
     artifacts.into_values().collect()

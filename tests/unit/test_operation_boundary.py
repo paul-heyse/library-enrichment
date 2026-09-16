@@ -21,7 +21,7 @@ class FailedProgress(Context):
 async def test_progress_failure_preserves_the_pending_receipt() -> None:
     server = build_server()
     root = Path(__file__).resolve().parents[2]
-    receipt = json.loads((root / "contracts/research-v2/examples/pending.fixture.json").read_text())
+    receipt = json.loads((root / "tests/fixtures/wire/pending.fixture.json").read_text())
     expected = ToolResult(structured_content=receipt)
     context = MiddlewareContext(
         message=CallToolRequestParams(name="job_status", arguments={"job_id": "job_fixture"}),

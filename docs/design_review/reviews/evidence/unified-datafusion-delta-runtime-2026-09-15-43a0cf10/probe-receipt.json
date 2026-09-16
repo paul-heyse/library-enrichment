@@ -1,0 +1,173 @@
+{
+  "verified_at_utc": "2026-09-15T22:51:40.080786+00:00",
+  "head": "9c154de8b2ead1d082fd253399bb1694627395c1",
+  "service_source_digest": "5b2640ca15e4e1e6bb3355eda84edb89d4bcdab3e390897513648c0581d4026a",
+  "review_scope": "documentation plus isolated native mechanism probe; existing service source unchanged",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+  "dependency_universe": {
+    "datafusion": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-session": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-expr": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-datasource": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-proto": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow-array": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow-schema": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "parquet": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "object_store": [
+      {
+        "version": "0.13.2",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "deltalake": [
+      {
+        "version": "1.0.0",
+        "source": "git+https://github.com/delta-io/delta-rs.git?rev=43a0cf10a313e5077c48637ad786a05359136bbb#43a0cf10a313e5077c48637ad786a05359136bbb"
+      }
+    ],
+    "deltalake-core": [
+      {
+        "version": "1.0.0",
+        "source": "git+https://github.com/delta-io/delta-rs.git?rev=43a0cf10a313e5077c48637ad786a05359136bbb#43a0cf10a313e5077c48637ad786a05359136bbb"
+      }
+    ],
+    "buoyant_kernel": [
+      {
+        "version": "0.25.1",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "buoyant_kernel_engine": [
+      {
+        "version": "0.25.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ]
+  },
+  "delta_checkout_note": "git tracked source matches 43a0cf10a313e5077c48637ad786a05359136bbb; only Cargo .cargo-ok untracked",
+  "commands": [
+    {
+      "command": "cargo metadata --locked --offline --format-version 1 --manifest-path .dev-state/unified-datafusion-review/Cargo.toml",
+      "exit_code": 0
+    },
+    {
+      "command": "CARGO_TARGET_DIR=/home/paul/library-enrichment/target cargo build --locked --offline --manifest-path docs/design_review/reviews/evidence/unified-datafusion-delta-runtime-2026-09-15/Cargo.toml -j 8",
+      "exit_code": 0,
+      "log": "probe-build.log"
+    },
+    {
+      "command": "target/debug/unified-datafusion-review /home/paul/library-enrichment/.dev-state/unified-datafusion-review/delta-table-evidence-final",
+      "exit_code": 0,
+      "log": "probe-run.log"
+    },
+    {
+      "command": "ast-grep scan -c .claude/skills/datafusion/queries/sgconfig.yml --filter '^project-' crates",
+      "exit_code": 0,
+      "log": "capability-gap.log",
+      "interpretation": "heuristic leads, including a lease-statistics false positive; not an acceptance gate"
+    },
+    {
+      "command": "ast-grep test",
+      "exit_code": 0,
+      "log": "rule-tests.log",
+      "interpretation": "11 rule fixture tests; not product acceptance"
+    },
+    {
+      "command": "typos docs/design_review/reviews/design_review_unified-datafusion-delta-runtime_2026-09-15.md docs/design_review/reviews/evidence/unified-datafusion-delta-runtime-2026-09-15/README.md",
+      "exit_code": 0
+    },
+    {
+      "command": "inline document validation: local Markdown links, table widths, sections 1-11, unique findings F01-F14 and G1-G7 rows",
+      "exit_code": 0,
+      "result": "4 local links; 11 sections; 14 findings; 7 gates; all table widths consistent"
+    }
+  ],
+  "setup_failures": [
+    {
+      "stage": "initial compile",
+      "detail": "ConstraintBuilder returns DeltaTable, not a tuple; corrected."
+    },
+    {
+      "stage": "probe runs 1 and 2",
+      "exit_code": 101,
+      "detail": "Plain DataFusion SessionState could not lower Delta MetricObserver; initial any-error assertion was insufficient to prove CHECK rejection. Final probe installs DeltaPlanner and asserts a validation-specific diagnostic. Failed setup is retained in probe-setup-failure.log."
+    }
+  ],
+  "warnings": [
+    "Scratch build reports future-incompatible code in proc-macro-error2 2.0.1; not a change to production Cargo dependencies."
+  ],
+  "not_run": [
+    "full service implementation",
+    "full acceptance suite",
+    "installed MCP clients",
+    "real external producer execution",
+    "multi-table control-publication protocol",
+    "complete claim/retry/recovery implementation",
+    "power-loss durability",
+    "retention and vacuum races",
+    "full Arrow-Delta round trips",
+    "production-scale recursive closure"
+  ],
+  "artifact_sha256": {
+    "Cargo.lock": "d092aecd2478032c7e14fa308417f834ab6c1b3deeee69527d3a6c31aefb2106",
+    "Cargo.toml": "b472055a04da01f4d4e3eb82d91777af1b37c7c73931f9e10962a153bae9f104",
+    "README.md": "22890016dcb4e55be2d690b130a55be9b8261ad9593096639314e0495952df6e",
+    "capability-gap.log": "59cda807430a9b9cc816ae89630775fe9ff41e955df6abff47685f26d48d71f5",
+    "capability_probe.rs": "1b4f926366ca419dbf502ad5722c9bbabdbf26d5507151dc8d2250b548fb2b36",
+    "context7-research.json": "f466e92a3070cc3c2b0ea1b82c0e4f1f9b185320ea4e18fb309c3665f2b52c88",
+    "probe-build.log": "b32db98afbf43cb8227bbd5865bc0945a4352cef17e336c804901922ab76e6c4",
+    "probe-run.log": "2b189e0353df8f49f9f0fe0899646b239c0cd6c2b4203dedd601f3a8a1108198",
+    "probe-setup-failure.log": "271f89edc0b59649572f37418d7077a97fa80d80bb71960e732e0cc8bb82232c",
+    "rule-tests.log": "e43c39eedb6df6e63a138570409aaa3d94f9326cbca567102378bd9aab954f21"
+  },
+  "probe_binary_sha256": "db404a2a37dea1c941ae580c88a1782a5af75dec3dc808183323d03e3e763c54",
+  "review_sha256": "7a3e457e789fa4beba2cabb444cfdb1f085ab77a0de7541f42ef01f07b2dd6c7",
+  "archive_note": "README heading/reproduction path adjusted after copying into historical directory; probe source, manifest, lockfile, build/run logs unchanged."
+}

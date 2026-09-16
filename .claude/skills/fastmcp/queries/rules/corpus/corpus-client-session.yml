@@ -1,0 +1,27 @@
+id: corpus-client-session
+language: python
+severity: hint
+message: An upstream client session — `Client` is an async context manager, not a constructor.
+note: |
+  963 sites in the corpus open a client as `async with Client(...) as client:`. The connection
+  is established on entry and torn down on exit; calling a method on a `Client` you never
+  entered raises rather than connecting lazily, and that is the first thing to check when a
+  client call fails with no network activity.
+
+  These sites are also the readable inventory of what a transport argument can be: a server
+  object, a path, a URL, a config dict, or an explicit `ClientTransport`. See
+  `content/catalogs/transports.md` for the 11 transport classes and which each accepts.
+metadata:
+  record: usage
+  capability: client
+  reads: content/corpus
+rule:
+  kind: with_statement
+  all:
+    - regex: '^async'
+    - has:
+        stopBy: end
+        kind: call
+        has:
+          field: function
+          regex: '^Client$'

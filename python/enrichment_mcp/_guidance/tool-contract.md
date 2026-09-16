@@ -24,7 +24,7 @@ For long jobs, poll the supplied job ID with bounded waits. Cancel only your req
 
 Tools may create service-owned caches or jobs, but none should modify the working repository. `verify_usage` and analysis involving build scripts/imports are execution, even if their purpose is inspection.
 
-## Research contract 2.0
+## Research contract 3.0
 
 Read the installed catalog for exact schemas. Removed depth/aspects arguments and old root
 pagination are rejected. Selection, scope assessment, cursor checks, policy, enforced byte
@@ -62,13 +62,20 @@ coverage and empty lexical matches do not establish capability absence. A count'
 exact, lower_bound or unknown. In a comparison, inspect both sides' coverage and each changed
 key's independently paged before/after alternatives. Each alternative retains its own source.
 Its `value.mode` is `inline` (the complete JSON is in `value.value`) or `artifact` (read
-`value.artifact.artifact_id` with `read_artifact` and verify `size_bytes` and `sha256`).
+`value.artifact.receipt.artifact_id` with `read_artifact` and verify `size_bytes` and `sha256`).
 A representation change is not automatically a proven breaking change.
 
 `error.diagnostic` names the cause, stage, affected IDs, rule, limits, correlation ID and typed
 recovery actions. Follow that action. An unknown job calls for a valid job ID; a malformed
 response calls for a defect report. Repeating a request or repairing storage is appropriate
 only when its diagnosed cause supports that step. An adapter timeout does not cancel a job.
+
+### Artifact receipts
+
+An issued artifact carries `receipt.artifact_id`, the complete SHA-256 digest and byte length,
+media type, source URI and retrieval provenance. Pass `receipt.artifact_id` to `read_artifact`.
+Identical bytes can have different source-qualified acquisition receipts. A receipt describes
+exact bytes; it does not by itself establish that their claims apply to another release.
 
 ### Direct result retrieval
 
@@ -78,7 +85,7 @@ cannot fit beside the inline scope assessment. Text previews and resource links 
 the structured result always carries the portable tool action.
 
 ```json
-{"tool":"read_artifact","arguments":{"artifact_id":"art_0123456789abcdef","section":{"kind":"result","name":"signature"},"max_bytes":4096}}
+{"tool":"read_artifact","arguments":{"artifact_id":"art_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","section":{"kind":"result","name":"signature"},"max_bytes":4096}}
 ```
 
 Result sections are coverage, signature, changes, aspects or data, when listed in the descriptor.

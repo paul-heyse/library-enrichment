@@ -17,6 +17,17 @@ bash_case() {  # desc, command, expect(deny|allow)
   else fail=$((fail+1)); printf '  FAIL want=%s got=%s  %s\n         %s\n' "$3" "$got" "$1" "$2"; fi
 }
 
+
+deny_rule_case() {  # desc, exact permissions.deny entry
+  if python3 - "$2" <<'PY'
+import json, pathlib, sys
+document = json.loads(pathlib.Path(".claude/settings.json").read_text())
+sys.exit(0 if sys.argv[1] in (document.get("permissions") or {}).get("deny", []) else 1)
+PY
+  then pass=$((pass+1)); printf '  ok   deny  %s\n' "$1"
+  else fail=$((fail+1)); printf '  FAIL missing from permissions.deny: %s  (%s)\n' "$2" "$1"; fi
+}
+
 edit_case() {  # desc, path, expect(deny|allow)
   local out got
   out=$(printf '{"hook_event_name":"PreToolUse","tool_name":"Write","cwd":"%s","tool_input":{"file_path":%s}}' \
@@ -27,9 +38,15 @@ edit_case() {  # desc, path, expect(deny|allow)
 }
 
 echo "pre_bash: binding decisions"
-bash_case "pyrefly"             'uv run pyrefly check src/'                            deny
-bash_case "pyright"             'pyright python/'                                      deny
-bash_case "mypy"                'uv run mypy .'                                        deny
+# ADR-0046: pyrefly is an admissible Python engine, so executing it is allowed.
+bash_case "pyrefly"             'uv run pyrefly check src/'                            allow
+# pyright and mypy are denied by `.claude/settings.json` rather than by pre_bash.sh: rule 1
+# went when the pyrefly prohibition did (ADR-0046), and the permission deny list is what
+# enforces them now. Verified by measurement -- the permission system checks each segment of a
+# compound command, so `Bash(mypy*)` catches `cd x && mypy .`, not just a leading `mypy`.
+deny_rule_case "pyright is denied"   'Bash(pyright*)'
+deny_rule_case "mypy is denied"      'Bash(mypy*)'
+deny_rule_case "uv run mypy denied"  'Bash(uv run mypy*)'
 bash_case "ty is the engine"    'uv run ty check python/'                              allow
 
 echo "pre_bash: pinning and toolchain"

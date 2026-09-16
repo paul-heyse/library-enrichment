@@ -18,7 +18,7 @@ These are settled. Changing one requires an ADR with primary-source evidence and
 |---|---|
 | Core ownership | Rust owns identities, resolution, fetching, normalization, evidence storage, querying, job state, policy, and publication. |
 | Python boundary | A thin FastMCP 4 adapter and a separate extraction worker. Never reimplement the core in Python. |
-| Python semantics | Astral **ty**. Not pyrefly, not pyright, not mypy. |
+| Python semantics | Astral **ty** or pyrefly, not pyright, not mypy. |
 | Rust semantics | rust-analyzer over LSP, behind a producer adapter. |
 | Static extraction | Griffe, with `allow_inspection=False` and explicit `search_paths`. |
 | Rust API source | Hosted rustdoc JSON from docs.rs **before** any local compilation. |
@@ -62,7 +62,7 @@ Python is `uv` only, always `uv run <tool>`, dev dependencies in `[dependency-gr
 pinned in the lockfile, never installed as a global `uv tool`.
 
 `pyrefly` is installed on this workstation and globally plugin-enabled in Claude Code, and
-`pyright-lsp` is too. **Neither is this project's engine.** If `ty` is unavailable, the affected
+`pyright-lsp` is too. **Neither is this project's engine although pyrefly may be used and may become the project's engine.** If `ty` is unavailable, the affected
 gates are `blocked` and it warrants an ADR — it is never grounds for substituting another
 type checker.
 

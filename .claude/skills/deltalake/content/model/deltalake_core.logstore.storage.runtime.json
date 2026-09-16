@@ -1,0 +1,165 @@
+{
+  "module": "deltalake_core::logstore::storage::runtime",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.logstore.storage.runtime.md",
+  "items": [
+    {
+      "path": "deltalake_core::logstore::storage::runtime::IORuntime",
+      "name": "IORuntime",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum IORuntime",
+      "summary": "Provide custom Tokio RT or a runtime config",
+      "doc": "api/deltalake_core.logstore.storage.runtime.md#ioruntime",
+      "aliases": [
+        "deltalake::logstore::IORuntime",
+        "deltalake_core::logstore::IORuntime"
+      ],
+      "variants": [
+        "RT",
+        "Config"
+      ],
+      "methods": [
+        {
+          "name": "get_handle",
+          "signature": "fn get_handle(&self) -> Handle",
+          "summary": "Retrieves the Tokio runtime for IO bound operations"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::runtime::DeltaIOStorageBackend",
+      "name": "DeltaIOStorageBackend",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaIOStorageBackend<T: ObjectStore + Clone>",
+      "summary": "Wraps any object store and runs IO in it's own runtime [EXPERIMENTAL]",
+      "doc": "api/deltalake_core.logstore.storage.runtime.md#deltaiostoragebackend",
+      "aliases": [
+        "deltalake::logstore::DeltaIOStorageBackend",
+        "deltalake_core::logstore::DeltaIOStorageBackend"
+      ],
+      "fields": [
+        "inner"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore"
+      ],
+      "methods": [
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> ObjectStoreResult<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, ObjectStoreResult<Path>>) -> BoxStream<'static, ObjectStoreResult<Path>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error>",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> ObjectStoreResult<GetResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "get_ranges",
+          "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> ObjectStoreResult<Vec<Bytes>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, ObjectStoreResult<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> ObjectStoreResult<ListResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, ObjectStoreResult<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: T, rt: IORuntime) -> Self",
+          "summary": "Wrap `store` so that its IO operations are executed on the dedicated runtime `rt`."
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, options: PutMultipartOptions) -> ObjectStoreResult<Box<dyn MultipartUpload>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, bytes: PutPayload, options: PutOptions) -> ObjectStoreResult<PutResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "rename_opts",
+          "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> ObjectStoreResult<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "spawn_io_rt",
+          "signature": "fn spawn_io_rt<F, O>(&self, f: F, store: &T, path: Path) -> BoxFuture<'_, ObjectStoreResult<O>> where F: for<'a> FnOnce(&'a T, &'a Path) -> BoxFuture<'a, ObjectStoreResult<O>> + Send + 'static, O: Send + 'static",
+          "summary": "spawn tasks on IO runtime"
+        },
+        {
+          "name": "spawn_io_rt_from_to",
+          "signature": "fn spawn_io_rt_from_to<F, O>(&self, f: F, store: &T, from: Path, to: Path) -> BoxFuture<'_, ObjectStoreResult<O>> where F: for<'a> FnOnce(&'a T, &'a Path, &'a Path) -> BoxFuture<'a, ObjectStoreResult<O>> + Send + 'static, O: Send + 'static",
+          "summary": "spawn tasks on IO runtime"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::runtime::RuntimeConfig",
+      "name": "RuntimeConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct RuntimeConfig",
+      "summary": "Configuration for Tokio runtime",
+      "doc": "api/deltalake_core.logstore.storage.runtime.md#runtimeconfig",
+      "implements": [
+        "core::iter::traits::collect::FromIterator",
+        "deltalake_core::logstore::config::TryUpdateKey",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "load_from_environment",
+          "signature": "fn load_from_environment(&mut self) -> DeltaResult<()>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "try_update_key",
+          "signature": "fn try_update_key(&mut self, key: &str, v: &str) -> DeltaResult<Option<()>>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        }
+      ]
+    }
+  ]
+}

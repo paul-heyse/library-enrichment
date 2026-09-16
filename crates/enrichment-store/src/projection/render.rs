@@ -40,7 +40,6 @@ pub(crate) fn symbol_headers(batches: &[RecordBatch]) -> Result<Vec<Symbol>, Arr
                 defined_in_crate: r.text("defined_in_package")?.into(),
                 qualifier: r.owned("qualifier")?,
                 cfg_hints: Vec::new(),
-                python: None,
             });
         }
     }
@@ -67,7 +66,14 @@ pub(crate) fn api_observations(
                     _ => return Err(invalid("unknown API origin")),
                 },
                 environment_id: r.text("environment_id")?.into(),
-                payload: decode::payload_projection(r.structure("payload")?, docs_included)?,
+                payload: decode::payload(
+                    r.structure("payload")?,
+                    if docs_included {
+                        r.owned("docs")?
+                    } else {
+                        None
+                    },
+                )?,
                 source: decode::source(r.structure("source")?)?,
                 docs_included,
             });

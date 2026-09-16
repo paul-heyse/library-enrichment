@@ -1,0 +1,561 @@
+{
+  "module": "ruff_python_ast::helpers",
+  "crate": "ruff_python_ast",
+  "api": "api/ruff_python_ast.helpers.md",
+  "items": [
+    {
+      "path": "ruff_python_ast::helpers::SideEffect",
+      "name": "SideEffect",
+      "kind": "enum",
+      "crate": "ruff_python_ast",
+      "signature": "enum SideEffect",
+      "summary": "Whether an expression has no side effects, may have side effects, or is assumed to have side effects.",
+      "doc": "api/ruff_python_ast.helpers.md#sideeffect",
+      "variants": [
+        "Absent",
+        "Possible",
+        "Present"
+      ],
+      "methods": [
+        {
+          "name": "is_absent",
+          "signature": "const fn is_absent(self) -> bool"
+        },
+        {
+          "name": "is_present",
+          "signature": "const fn is_present(self) -> bool"
+        },
+        {
+          "name": "merge",
+          "signature": "const fn merge(self, other: Self) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::Truthiness",
+      "name": "Truthiness",
+      "kind": "enum",
+      "crate": "ruff_python_ast",
+      "signature": "enum Truthiness",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "True",
+        "False",
+        "Falsey",
+        "Truthy",
+        "None",
+        "Unknown"
+      ],
+      "methods": [
+        {
+          "name": "from_expr",
+          "signature": "fn from_expr<F>(expr: &Expr, is_builtin: F) -> Self where F: Fn(&str) -> bool",
+          "summary": "Return the truthiness of an expression."
+        },
+        {
+          "name": "into_bool",
+          "signature": "fn into_bool(self) -> Option<bool>"
+        },
+        {
+          "name": "is_false",
+          "signature": "const fn is_false(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`False`]."
+        },
+        {
+          "name": "is_falsey",
+          "signature": "const fn is_falsey(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Falsey`]."
+        },
+        {
+          "name": "is_none",
+          "signature": "const fn is_none(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`None`]."
+        },
+        {
+          "name": "is_true",
+          "signature": "const fn is_true(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`True`]."
+        },
+        {
+          "name": "is_truthy",
+          "signature": "const fn is_truthy(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Truthy`]."
+        },
+        {
+          "name": "is_unknown",
+          "signature": "const fn is_unknown(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Unknown`]."
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::any_over_body",
+      "name": "any_over_body",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn any_over_body<F>(body: &[Stmt], func: F) -> bool where F: FnMut(&Expr) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_python_ast::helpers::any_over_expr",
+      "name": "any_over_expr",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn any_over_expr<F>(expr: &Expr, func: F) -> bool where F: FnMut(&Expr) -> bool",
+      "summary": "Call `func` over every `Expr` in `expr`, returning `true` if any expression returns `true`..",
+      "doc": "api/ruff_python_ast.helpers.md#any_over_expr"
+    },
+    {
+      "path": "ruff_python_ast::helpers::body_without_leading_docstring",
+      "name": "body_without_leading_docstring",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn body_without_leading_docstring(body: &[Stmt]) -> &[Stmt]",
+      "summary": "Returns `body` without its leading docstring statement, if present.",
+      "doc": "api/ruff_python_ast.helpers.md#body_without_leading_docstring"
+    },
+    {
+      "path": "ruff_python_ast::helpers::collect_import_from_member",
+      "name": "collect_import_from_member",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn collect_import_from_member<'a>(level: u32, module: Option<&'a str>, member: &'a str) -> name::QualifiedName<'a>",
+      "summary": "Format the call path for a relative import.",
+      "doc": "api/ruff_python_ast.helpers.md#collect_import_from_member"
+    },
+    {
+      "path": "ruff_python_ast::helpers::comment_indentation_after",
+      "name": "comment_indentation_after",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn comment_indentation_after(preceding: AnyNodeRef<'_>, comment_range: ruff_text_size::TextRange, source: &str) -> ruff_text_size::TextSize",
+      "summary": "Determine the indentation level of an own-line comment, defined as the minimum indentation of all comments between the preceding node and the comment, including the comment itself. In other words, we don't allow successive comments to iden…",
+      "doc": "api/ruff_python_ast.helpers.md#comment_indentation_after"
+    },
+    {
+      "path": "ruff_python_ast::helpers::contains_effect",
+      "name": "contains_effect",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn contains_effect<F>(expr: &Expr, is_builtin: F) -> bool where F: Fn(&str) -> bool",
+      "summary": "Return `true` if the `Expr` contains an expression that appears to include a side-effect (like a function call).",
+      "doc": "api/ruff_python_ast.helpers.md#contains_effect"
+    },
+    {
+      "path": "ruff_python_ast::helpers::extract_handled_exceptions",
+      "name": "extract_handled_exceptions",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn extract_handled_exceptions(handlers: &[ExceptHandler]) -> Vec<&Expr>",
+      "summary": "Extract the names of all handled exceptions.",
+      "doc": "api/ruff_python_ast.helpers.md#extract_handled_exceptions"
+    },
+    {
+      "path": "ruff_python_ast::helpers::format_import_from",
+      "name": "format_import_from",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn format_import_from(level: u32, module: Option<&str>) -> std::borrow::Cow<'_, str>",
+      "summary": "Format the module reference name for a relative import.",
+      "doc": "api/ruff_python_ast.helpers.md#format_import_from"
+    },
+    {
+      "path": "ruff_python_ast::helpers::format_import_from_member",
+      "name": "format_import_from_member",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn format_import_from_member(level: u32, module: Option<&str>, member: &str) -> String",
+      "summary": "Format the member reference name for a relative import.",
+      "doc": "api/ruff_python_ast.helpers.md#format_import_from_member"
+    },
+    {
+      "path": "ruff_python_ast::helpers::from_relative_import",
+      "name": "from_relative_import",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn from_relative_import<'a>(module: &'a [String], import: &[&'a str], tail: &[&'a str]) -> Option<name::QualifiedName<'a>>",
+      "summary": "Format the call path for a relative import, or `None` if the relative import extends beyond the root module.",
+      "doc": "api/ruff_python_ast.helpers.md#from_relative_import"
+    },
+    {
+      "path": "ruff_python_ast::helpers::generate_comparison",
+      "name": "generate_comparison",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn generate_comparison(left: &Expr, ops: &[CmpOp], comparators: &[Expr], parent: AnyNodeRef<'_>, tokens: &token::Tokens, source: &str) -> String",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_python_ast::helpers::in_nested_block",
+      "name": "in_nested_block",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn in_nested_block<'a>(parents: impl Iterator<Item = &'a Stmt>) -> bool",
+      "summary": "Check if a node is in a nested block.",
+      "doc": "api/ruff_python_ast.helpers.md#in_nested_block"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_assignment_to_a_dunder",
+      "name": "is_assignment_to_a_dunder",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_assignment_to_a_dunder(stmt: &Stmt) -> bool",
+      "summary": "Return `true` if the [`Stmt`] is an assignment to a dunder (like `__all__`).",
+      "doc": "api/ruff_python_ast.helpers.md#is_assignment_to_a_dunder"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_compound_statement",
+      "name": "is_compound_statement",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "const fn is_compound_statement(stmt: &Stmt) -> bool",
+      "summary": "Return `true` if the `Stmt` is a compound statement (as opposed to a simple statement).",
+      "doc": "api/ruff_python_ast.helpers.md#is_compound_statement"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_const_false",
+      "name": "is_const_false",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "const fn is_const_false(expr: &Expr) -> bool",
+      "summary": "Return `true` if an [`Expr`] is a literal `False`.",
+      "doc": "api/ruff_python_ast.helpers.md#is_const_false"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_const_true",
+      "name": "is_const_true",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "const fn is_const_true(expr: &Expr) -> bool",
+      "summary": "Return `true` if an [`Expr`] is a literal `True`.",
+      "doc": "api/ruff_python_ast.helpers.md#is_const_true"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_constant",
+      "name": "is_constant",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_constant(expr: &Expr) -> bool",
+      "summary": "Return `true` if the [`Expr`] is a literal or tuple of literals.",
+      "doc": "api/ruff_python_ast.helpers.md#is_constant"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_constant_non_singleton",
+      "name": "is_constant_non_singleton",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_constant_non_singleton(expr: &Expr) -> bool",
+      "summary": "Return `true` if the [`Expr`] is a non-singleton constant.",
+      "doc": "api/ruff_python_ast.helpers.md#is_constant_non_singleton"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_docstring_stmt",
+      "name": "is_docstring_stmt",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_docstring_stmt(stmt: &Stmt) -> bool",
+      "summary": "Return `true` if a `Stmt` is a docstring.",
+      "doc": "api/ruff_python_ast.helpers.md#is_docstring_stmt"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_dotted_name",
+      "name": "is_dotted_name",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_dotted_name(expr: &ast::Expr) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_dunder",
+      "name": "is_dunder",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_dunder(id: &str) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_empty_f_string",
+      "name": "is_empty_f_string",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_empty_f_string(expr: &ast::ExprFString) -> bool",
+      "summary": "Returns `true` if the expression definitely resolves to the empty string, when used as an f-string expression.",
+      "doc": "api/ruff_python_ast.helpers.md#is_empty_f_string"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_mutable_iterable_initializer",
+      "name": "is_mutable_iterable_initializer",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "const fn is_mutable_iterable_initializer(expr: &Expr) -> bool",
+      "summary": "Return `true` if the [`Expr`] is a mutable iterable initializer, like `{}` or `[]`.",
+      "doc": "api/ruff_python_ast.helpers.md#is_mutable_iterable_initializer"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_stub_body",
+      "name": "is_stub_body",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_stub_body(body: &[Stmt]) -> bool",
+      "summary": "Returns `true` if all statements in `body` are `pass` or `...` (ellipsis)",
+      "doc": "api/ruff_python_ast.helpers.md#is_stub_body"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_sunder",
+      "name": "is_sunder",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_sunder(id: &str) -> bool",
+      "summary": "Whether a name starts and ends with a single underscore.",
+      "doc": "api/ruff_python_ast.helpers.md#is_sunder"
+    },
+    {
+      "path": "ruff_python_ast::helpers::is_unpacking_assignment",
+      "name": "is_unpacking_assignment",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn is_unpacking_assignment(parent: &Stmt, child: &Expr) -> bool",
+      "summary": "Check if a node represents an unpacking assignment.",
+      "doc": "api/ruff_python_ast.helpers.md#is_unpacking_assignment"
+    },
+    {
+      "path": "ruff_python_ast::helpers::map_callable",
+      "name": "map_callable",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn map_callable(decorator: &Expr) -> &Expr",
+      "summary": "Given an [`Expr`] that can be callable or not (like a decorator, which could be used with or without explicit call syntax), return the underlying callable.",
+      "doc": "api/ruff_python_ast.helpers.md#map_callable"
+    },
+    {
+      "path": "ruff_python_ast::helpers::map_starred",
+      "name": "map_starred",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn map_starred(expr: &Expr) -> &Expr",
+      "summary": "Given an [`Expr`] that can be starred, return the underlying starred expression.",
+      "doc": "api/ruff_python_ast.helpers.md#map_starred"
+    },
+    {
+      "path": "ruff_python_ast::helpers::map_subscript",
+      "name": "map_subscript",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn map_subscript(expr: &Expr) -> &Expr",
+      "summary": "Given an [`Expr`] that can be a [`ExprSubscript`][ast::ExprSubscript] or not (like an annotation that may be generic or not), return the underlying expr.",
+      "doc": "api/ruff_python_ast.helpers.md#map_subscript"
+    },
+    {
+      "path": "ruff_python_ast::helpers::on_conditional_branch",
+      "name": "on_conditional_branch",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn on_conditional_branch<'a>(parents: &mut impl Iterator<Item = &'a Stmt>) -> bool",
+      "summary": "Check if a node is part of a conditional branch.",
+      "doc": "api/ruff_python_ast.helpers.md#on_conditional_branch"
+    },
+    {
+      "path": "ruff_python_ast::helpers::pep_604_optional",
+      "name": "pep_604_optional",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn pep_604_optional(expr: &Expr) -> Expr",
+      "summary": "Format the expression as a PEP 604-style optional.",
+      "doc": "api/ruff_python_ast.helpers.md#pep_604_optional"
+    },
+    {
+      "path": "ruff_python_ast::helpers::pep_604_union",
+      "name": "pep_604_union",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn pep_604_union(elts: &[Expr]) -> Expr",
+      "summary": "Format the expressions as a PEP 604-style union.",
+      "doc": "api/ruff_python_ast.helpers.md#pep_604_union"
+    },
+    {
+      "path": "ruff_python_ast::helpers::resolve_imported_module_path",
+      "name": "resolve_imported_module_path",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn resolve_imported_module_path<'a>(level: u32, module: Option<&'a str>, module_path: Option<&[String]>) -> Option<std::borrow::Cow<'a, str>>",
+      "summary": "Given an imported module (based on its relative import level and module name), return the fully-qualified module path.",
+      "doc": "api/ruff_python_ast.helpers.md#resolve_imported_module_path"
+    },
+    {
+      "path": "ruff_python_ast::helpers::side_effect",
+      "name": "side_effect",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn side_effect<F>(expr: &Expr, is_builtin: F) -> SideEffect where F: Fn(&str) -> bool",
+      "summary": "Return whether `expr` has no side effects, maybe has side effects, or definitely has side effects.",
+      "doc": "api/ruff_python_ast.helpers.md#side_effect"
+    },
+    {
+      "path": "ruff_python_ast::helpers::to_module_path",
+      "name": "to_module_path",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn to_module_path(package: &std::path::Path, path: &std::path::Path) -> Option<Vec<String>>",
+      "summary": "Create a module path from a (package, path) pair.",
+      "doc": "api/ruff_python_ast.helpers.md#to_module_path"
+    },
+    {
+      "path": "ruff_python_ast::helpers::typing_optional",
+      "name": "typing_optional",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn typing_optional(elt: Expr, binding: name::Name) -> Expr",
+      "summary": "Format the expression as a `typing.Optional`-style optional.",
+      "doc": "api/ruff_python_ast.helpers.md#typing_optional"
+    },
+    {
+      "path": "ruff_python_ast::helpers::typing_union",
+      "name": "typing_union",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn typing_union(elts: &[Expr], binding: name::Name) -> Expr",
+      "summary": "Format the expressions as a `typing.Union`-style union.",
+      "doc": "api/ruff_python_ast.helpers.md#typing_union"
+    },
+    {
+      "path": "ruff_python_ast::helpers::uses_magic_variable_access",
+      "name": "uses_magic_variable_access",
+      "kind": "function",
+      "crate": "ruff_python_ast",
+      "signature": "fn uses_magic_variable_access<F>(body: &[Stmt], is_builtin: F) -> bool where F: Fn(&str) -> bool",
+      "summary": "Return `true` if the body uses `locals()`, `globals()`, `vars()`, `eval()`.",
+      "doc": "api/ruff_python_ast.helpers.md#uses_magic_variable_access"
+    },
+    {
+      "path": "ruff_python_ast::helpers::AwaitVisitor",
+      "name": "AwaitVisitor",
+      "kind": "struct",
+      "crate": "ruff_python_ast",
+      "signature": "struct AwaitVisitor",
+      "summary": "A [`Visitor`] that detects the presence of `await` expressions in the current scope.",
+      "doc": "api/ruff_python_ast.helpers.md#awaitvisitor",
+      "fields": [
+        "seen_await"
+      ],
+      "implements": [
+        "ruff_python_ast::visitor::Visitor"
+      ],
+      "methods": [
+        {
+          "name": "visit_comprehension",
+          "signature": "fn visit_comprehension(&mut self, comprehension: &Comprehension)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        },
+        {
+          "name": "visit_expr",
+          "signature": "fn visit_expr(&mut self, expr: &Expr)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        },
+        {
+          "name": "visit_stmt",
+          "signature": "fn visit_stmt(&mut self, stmt: &Stmt)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::NameFinder",
+      "name": "NameFinder",
+      "kind": "struct",
+      "crate": "ruff_python_ast",
+      "signature": "struct NameFinder<'a>",
+      "summary": "A [`Visitor`] to collect all [`Expr::Name`] nodes in an AST.",
+      "doc": "api/ruff_python_ast.helpers.md#namefinder",
+      "fields": [
+        "names"
+      ],
+      "implements": [
+        "ruff_python_ast::visitor::Visitor"
+      ],
+      "methods": [
+        {
+          "name": "visit_expr",
+          "signature": "fn visit_expr(&mut self, expr: &'a Expr)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::RaiseStatementVisitor",
+      "name": "RaiseStatementVisitor",
+      "kind": "struct",
+      "crate": "ruff_python_ast",
+      "signature": "struct RaiseStatementVisitor<'a>",
+      "summary": "A [`StatementVisitor`] that collects all `raise` statements in a function or method.",
+      "doc": "api/ruff_python_ast.helpers.md#raisestatementvisitor",
+      "fields": [
+        "raises"
+      ],
+      "implements": [
+        "ruff_python_ast::statement_visitor::StatementVisitor"
+      ],
+      "methods": [
+        {
+          "name": "visit_stmt",
+          "signature": "fn visit_stmt(&mut self, stmt: &'a Stmt)",
+          "via_trait": "ruff_python_ast::statement_visitor::StatementVisitor"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::ReturnStatementVisitor",
+      "name": "ReturnStatementVisitor",
+      "kind": "struct",
+      "crate": "ruff_python_ast",
+      "signature": "struct ReturnStatementVisitor<'a>",
+      "summary": "A [`Visitor`] that collects all `return` statements in a function or method.",
+      "doc": "api/ruff_python_ast.helpers.md#returnstatementvisitor",
+      "fields": [
+        "returns",
+        "is_generator"
+      ],
+      "implements": [
+        "ruff_python_ast::visitor::Visitor"
+      ],
+      "methods": [
+        {
+          "name": "visit_expr",
+          "signature": "fn visit_expr(&mut self, expr: &'a Expr)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        },
+        {
+          "name": "visit_stmt",
+          "signature": "fn visit_stmt(&mut self, stmt: &'a Stmt)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_ast::helpers::StoredNameFinder",
+      "name": "StoredNameFinder",
+      "kind": "struct",
+      "crate": "ruff_python_ast",
+      "signature": "struct StoredNameFinder<'a>",
+      "summary": "A [`Visitor`] to collect all stored [`Expr::Name`] nodes in an AST.",
+      "doc": "api/ruff_python_ast.helpers.md#storednamefinder",
+      "fields": [
+        "names"
+      ],
+      "implements": [
+        "ruff_python_ast::visitor::Visitor"
+      ],
+      "methods": [
+        {
+          "name": "visit_expr",
+          "signature": "fn visit_expr(&mut self, expr: &'a Expr)",
+          "via_trait": "ruff_python_ast::visitor::Visitor"
+        }
+      ]
+    }
+  ]
+}

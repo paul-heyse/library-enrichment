@@ -1,0 +1,156 @@
+{
+  "module": "pyrefly_build::module_resolver",
+  "crate": "pyrefly_build",
+  "api": "api/pyrefly_build.module_resolver.md",
+  "items": [
+    {
+      "path": "pyrefly_build::module_resolver::FindResult",
+      "name": "FindResult",
+      "kind": "enum",
+      "crate": "pyrefly_build",
+      "signature": "enum FindResult",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "SingleFilePyiModule",
+        "SingleFilePyModule",
+        "RegularPackage",
+        "LegacyNamespacePackage",
+        "ImplicitNamespacePackage",
+        "CompiledModule"
+      ],
+      "methods": [
+        {
+          "name": "module_path",
+          "signature": "fn module_path(self) -> Option<ModulePath>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::module_resolver::StubSearchResult",
+      "name": "StubSearchResult",
+      "kind": "enum",
+      "crate": "pyrefly_build",
+      "signature": "enum StubSearchResult",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Provides",
+        "Transparent"
+      ],
+      "methods": [
+        {
+          "name": "into_find_result",
+          "signature": "fn into_find_result(self) -> FindResult"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::module_resolver::find_module_prefixes",
+      "name": "find_module_prefixes",
+      "kind": "function",
+      "crate": "pyrefly_build",
+      "signature": "fn find_module_prefixes<'a>(prefix: pyrefly_python::module_name::ModuleName, include: impl Iterator<Item = &'a std::path::PathBuf>) -> Vec<pyrefly_python::module_name::ModuleName>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_build::module_resolver::find_module_results",
+      "name": "find_module_results",
+      "kind": "function",
+      "crate": "pyrefly_build",
+      "signature": "fn find_module_results<'a, I>(module: pyrefly_python::module_name::ModuleName, include: I, style_filter: Option<pyrefly_python::module_path::ModuleStyle>, phantom_paths: &mut Option<&mut Vec<std::path::PathBuf>>, dir_cache: &DirEntryCache, observer: Option<&dyn ModuleResolutionObserver>) -> ModuleSearchResult where I: Iterator<Item = &'a std::path::PathBuf> + Clone",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_build::module_resolver::package_has_py_typed",
+      "name": "package_has_py_typed",
+      "kind": "function",
+      "crate": "pyrefly_build",
+      "signature": "fn package_has_py_typed(module: pyrefly_python::module_name::ModuleName, result: &FindResult, dir_cache: &DirEntryCache) -> bool",
+      "summary": "Whether the package containing `module` has a `py.typed` marker.",
+      "doc": "api/pyrefly_build.module_resolver.md#package_has_py_typed"
+    },
+    {
+      "path": "pyrefly_build::module_resolver::DirEntryCache",
+      "name": "DirEntryCache",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct DirEntryCache",
+      "summary": "Cache of directory listings to avoid repeated stat() calls during module resolution.",
+      "doc": "api/pyrefly_build.module_resolver.md#direntrycache",
+      "methods": [
+        {
+          "name": "dir_exists",
+          "signature": "fn dir_exists(&self, dir: &Path) -> bool"
+        },
+        {
+          "name": "file_exists",
+          "signature": "fn file_exists(&self, path: &Path) -> bool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::module_resolver::ModuleResolver",
+      "name": "ModuleResolver",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct ModuleResolver",
+      "summary": "Filesystem-only module resolver for build-system integrations.",
+      "doc": "api/pyrefly_build.module_resolver.md#moduleresolver",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(roots: impl IntoIterator<Item = PathBuf>) -> Self"
+        },
+        {
+          "name": "resolve",
+          "signature": "fn resolve(&self, module: ModuleName, style: Option<ModuleStyle>) -> Option<ModulePath>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::module_resolver::ModuleSearchResult",
+      "name": "ModuleSearchResult",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct ModuleSearchResult",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "stub_result",
+        "normal_result"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_build::module_resolver::ModuleResolutionObserver",
+      "name": "ModuleResolutionObserver",
+      "kind": "trait",
+      "crate": "pyrefly_build",
+      "signature": "trait ModuleResolutionObserver",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "observe_read",
+        "observe_stat"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "observe_read",
+          "signature": "fn observe_read(&self, elapsed_ns: u64)"
+        },
+        {
+          "name": "observe_stat",
+          "signature": "fn observe_stat(&self, elapsed_ns: u64)"
+        }
+      ]
+    }
+  ]
+}

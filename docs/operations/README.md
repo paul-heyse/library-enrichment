@@ -294,7 +294,7 @@ latency for coding agents, with larger-corpus and concurrency measurements guidi
 ### Native scan and storage policy
 
 The optional `[arrow.native]` section controls the same immutable Rust policy used by scans,
-writers and diagnostic settings. Plan 14 measured and selected these defaults:
+writers, claims and diagnostic settings. The target defaults are:
 
 ```toml
 [arrow.native]
@@ -302,14 +302,17 @@ decoder_filter = true
 reorder_filters = true
 observation_bloom = true
 row_group_rows = 1024
-catalog_file_rows = 4096
+row_group_bytes = 8388608
+target_file_bytes = 67108864
+claim_lease_seconds = 600
 ```
 
-`observation_bloom` writes Bloom filters only for the declared API-observation ID. Row-group and
-catalog file targets must be positive and at most 1,000,000 rows; existing byte/footer/admission
-bounds still apply. They are independent of `arrow.batch_rows` and the catalog transaction limit.
-Whole-file scan groups are capped by exact file count and configured partitions. A one-file
-relation retains one group. Changing configuration takes effect when the daemon runtime is
+`observation_bloom` enables native Bloom writing for a declared observation ID. Row groups have
+positive row and byte targets, with at most 1,000,000 rows and bytes no greater than the Delta file
+target. Complete Delta builders consume those properties, the file target and `arrow.batch_rows`.
+The native lease horizon is positive and at most one day; expiration alone cannot release physical
+ownership or permit a replacement owner. Writer targets do not certify an end-to-end memory bound;
+that remains part of native resource qualification. Changing configuration takes effect when the daemon runtime is
 constructed; SQL `SET enrichment.*` is explicitly refused.
 
 Native operation catalogs are immutable pinned inventories. Their bounded internal metadata

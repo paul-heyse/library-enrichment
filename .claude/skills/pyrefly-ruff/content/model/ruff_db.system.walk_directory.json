@@ -1,0 +1,238 @@
+{
+  "module": "ruff_db::system::walk_directory",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.system.walk_directory.md",
+  "items": [
+    {
+      "path": "ruff_db::system::walk_directory::ErrorKind",
+      "name": "ErrorKind",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum ErrorKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Loop",
+        "Io",
+        "NonUtf8Path"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_db::system::walk_directory::WalkState",
+      "name": "WalkState",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum WalkState",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Continue",
+        "Skip",
+        "Quit"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_db::system::walk_directory::DirectoryEntry",
+      "name": "DirectoryEntry",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DirectoryEntry",
+      "summary": "An entry in a directory.",
+      "doc": "api/ruff_db.system.walk_directory.md#directoryentry",
+      "methods": [
+        {
+          "name": "depth",
+          "signature": "fn depth(&self) -> usize",
+          "summary": "Returns the depth at which this entry was created relative to the root."
+        },
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> FileType",
+          "summary": "Return the file type for the file that this entry points to."
+        },
+        {
+          "name": "into_path",
+          "signature": "fn into_path(self) -> SystemPathBuf",
+          "summary": "The full path that this entry represents. Analogous to [`DirectoryEntry::path`], but moves ownership of the path."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &SystemPath",
+          "summary": "The full path that this entry represents."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::Error",
+      "name": "Error",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Error",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "depth",
+          "signature": "fn depth(&self) -> Option<usize>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &ErrorKind"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::WalkDirectoryBuilder",
+      "name": "WalkDirectoryBuilder",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct WalkDirectoryBuilder",
+      "summary": "A builder for constructing a directory recursive traversal.",
+      "doc": "api/ruff_db.system.walk_directory.md#walkdirectorybuilder",
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(self, path: impl AsRef<SystemPath>) -> Self",
+          "summary": "Adds a path that should be traversed recursively."
+        },
+        {
+          "name": "ignore_hidden",
+          "signature": "fn ignore_hidden(self, hidden: bool) -> Self",
+          "summary": "Whether hidden files should be ignored."
+        },
+        {
+          "name": "incremental_matcher",
+          "signature": "fn incremental_matcher(self) -> Box<dyn IgnoreIncremental>",
+          "summary": "Creates a matcher for determining whether paths are ignored during incremental walking."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<W>(path: impl AsRef<SystemPath>, walker: W) -> Self where W: DirectoryWalker + 'static"
+        },
+        {
+          "name": "run",
+          "signature": "fn run<'s, F>(self, builder: F) where F: FnMut() -> Box<dyn FnMut(std::result::Result<DirectoryEntry, Error>) -> WalkState + Send + 's>",
+          "summary": "Runs the directory traversal and calls the passed `builder` to create visitors that do the visiting. The walker may run multiple threads to visit the directories."
+        },
+        {
+          "name": "standard_filters",
+          "signature": "fn standard_filters(self, standard_filters: bool) -> Self",
+          "summary": "Enables all the standard ignore filters."
+        },
+        {
+          "name": "visit",
+          "signature": "fn visit(self, builder: &mut dyn WalkDirectoryVisitorBuilder<'_>)",
+          "summary": "Runs the directory traversal and calls the passed `builder` to create visitors that do the visiting. The walker may run multiple threads to visit the directories."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::WalkDirectoryConfiguration",
+      "name": "WalkDirectoryConfiguration",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct WalkDirectoryConfiguration",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "paths",
+        "ignore_hidden",
+        "standard_filters"
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::DirectoryWalker",
+      "name": "DirectoryWalker",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait DirectoryWalker",
+      "summary": "Concrete walker that performs the directory walking.",
+      "doc": "api/ruff_db.system.walk_directory.md#directorywalker",
+      "required_methods": [
+        "incremental_matcher",
+        "walk"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "incremental_matcher",
+          "signature": "fn incremental_matcher(&self, configuration: WalkDirectoryConfiguration) -> Box<dyn IgnoreIncremental>",
+          "summary": "Creates a matcher for determining whether paths are ignored during incremental walking."
+        },
+        {
+          "name": "walk",
+          "signature": "fn walk(&self, builder: &mut dyn WalkDirectoryVisitorBuilder<'_>, configuration: WalkDirectoryConfiguration)"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::IgnoreIncremental",
+      "name": "IgnoreIncremental",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait IgnoreIncremental",
+      "summary": "A matcher for determining whether paths are ignored during incremental directory walking.",
+      "doc": "api/ruff_db.system.walk_directory.md#ignoreincremental",
+      "required_methods": [
+        "is_ignored"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "is_ignored",
+          "signature": "fn is_ignored(&mut self, path: &SystemPath, is_directory: bool) -> bool",
+          "summary": "Returns whether the directory walker ignores `path`."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::WalkDirectoryVisitor",
+      "name": "WalkDirectoryVisitor",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait WalkDirectoryVisitor: Send",
+      "summary": "Visitor handling the individual directory entries.",
+      "doc": "api/ruff_db.system.walk_directory.md#walkdirectoryvisitor",
+      "required_methods": [
+        "visit"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "visit",
+          "signature": "fn visit(&mut self, entry: std::result::Result<DirectoryEntry, Error>) -> WalkState"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::walk_directory::WalkDirectoryVisitorBuilder",
+      "name": "WalkDirectoryVisitorBuilder",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait WalkDirectoryVisitorBuilder<'s>",
+      "summary": "Creates a visitor for each thread that does the visiting.",
+      "doc": "api/ruff_db.system.walk_directory.md#walkdirectoryvisitorbuilder",
+      "required_methods": [
+        "build"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&mut self) -> Box<dyn WalkDirectoryVisitor + 's>"
+        }
+      ]
+    }
+  ]
+}

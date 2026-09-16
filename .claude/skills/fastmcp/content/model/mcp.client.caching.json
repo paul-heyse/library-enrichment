@@ -1,0 +1,458 @@
+{
+ "api": "api/mcp.client.caching.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "aliases": [
+    "fastmcp.client.client.CacheMode",
+    "fastmcp.client.group.CacheMode",
+    "fastmcp.client.mixins.prompts.CacheMode",
+    "fastmcp.client.mixins.resources.CacheMode",
+    "fastmcp.client.mixins.tools.CacheMode",
+    "mcp.client.CacheMode",
+    "mcp.client.client.CacheMode"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#cachemode",
+   "inferred": "```xml <special-form 'Literal[\"use\", \"refresh\", \"bypass\"]'> ``` --- Per-call cache behavior: `\"use\"` serves and stores, `\"refresh\"` stores without serving, `\"bypass\"` skips the cache entirely.",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "CacheMode",
+   "nameable": true,
+   "path": "mcp.client.caching.CacheMode",
+   "preferred": "mcp.client.CacheMode",
+   "signature": "CacheMode = Literal['use', 'refresh', 'bypass']",
+   "summary": "Per-call cache behavior: `\"use\"` serves and stores, `\"refresh\"` stores without serving, `\"bypass\"` skips the cache entirely."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#max_ttl_ms",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "MAX_TTL_MS",
+   "nameable": true,
+   "path": "mcp.client.caching.MAX_TTL_MS",
+   "preferred": "mcp.client.caching.MAX_TTL_MS",
+   "signature": "MAX_TTL_MS: Final[int] = 24 * 60 * 60 * 1000",
+   "summary": "Cap on any entry's time-to-live (24 hours, in milliseconds); larger `ttlMs` values are clamped down."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#_generation_map_cap",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_GENERATION_MAP_CAP",
+   "nameable": false,
+   "path": "mcp.client.caching._GENERATION_MAP_CAP",
+   "preferred": "mcp.client.caching._GENERATION_MAP_CAP",
+   "signature": "_GENERATION_MAP_CAP: Final[int] = 4096",
+   "summary": "Cap on the generation map; at the cap the oldest key's eviction-race guard is dropped (FIFO)."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#_store_cleanup_timeout",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_STORE_CLEANUP_TIMEOUT",
+   "nameable": false,
+   "path": "mcp.client.caching._STORE_CLEANUP_TIMEOUT",
+   "preferred": "mcp.client.caching._STORE_CLEANUP_TIMEOUT",
+   "signature": "_STORE_CLEANUP_TIMEOUT: Final[float] = 5",
+   "summary": "Bound for must-complete store cleanup deletes (mirrors the dispatcher's final-write bound); a wedged store delete must not hold client teardown uncancellably."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#__all__",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "__all__",
+   "nameable": false,
+   "path": "mcp.client.caching.__all__",
+   "preferred": "mcp.client.caching.__all__",
+   "signature": "__all__ = ['MAX_TTL_MS', 'CacheConfig', 'CacheEntry', 'CacheKey', 'CacheMode', 'InMemoryResponseCacheStore', 'ResponseCacheStore']",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "mcp.client.caching.logger",
+   "preferred": "mcp.client.caching.logger",
+   "signature": "logger = logging.getLogger(__name__)",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.client.client.CacheConfig",
+    "mcp.client.CacheConfig",
+    "mcp.client.client.CacheConfig"
+   ],
+   "decorators": [
+    "dataclass(frozen=True, slots=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#cacheconfig",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "clock",
+     "signature": "clock: Callable[[], float] = time.time",
+     "summary": "Wall-clock source returning epoch seconds; injectable for expiry tests."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "default_ttl_ms",
+     "signature": "default_ttl_ms: int = 0",
+     "summary": "TTL in milliseconds for results carrying no `ttlMs` hint; the default `0` leaves them uncached."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "partition",
+     "signature": "partition: str = ''",
+     "summary": "Authorization-context identifier isolating `\"private\"`-scoped entries within a shared store. Derive it from a verified credential - never from request-supplied data or the server URL. Fixed for the `Client`'s lifetime: construct a new `Cli\u2026"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "share_public",
+     "signature": "share_public: bool = False",
+     "summary": "Serve server-marked `\"public\"` entries across every partition in the store."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "store",
+     "signature": "store: ResponseCacheStore | None = None",
+     "summary": "Backing store; `None` means a per-client `InMemoryResponseCacheStore`. A custom store requires an explicit `partition`."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "target_id",
+     "signature": "target_id: str | None = None",
+     "summary": "Server-identity override for custom transports and proxies where the SDK cannot derive one from a URL; must be non-empty when provided."
+    }
+   ],
+   "name": "CacheConfig",
+   "nameable": true,
+   "path": "mcp.client.caching.CacheConfig",
+   "preferred": "mcp.client.CacheConfig",
+   "signature": "class CacheConfig",
+   "summary": "Configuration for a `Client`'s response cache."
+  },
+  {
+   "aliases": [
+    "fastmcp.client.caching.CacheEntry",
+    "mcp.client.CacheEntry"
+   ],
+   "decorators": [
+    "dataclass(frozen=True, slots=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#cacheentry",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "expires_at",
+     "signature": "expires_at: float | None",
+     "summary": "Epoch seconds after which the entry is stale; `None` is never fresh."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "scope",
+     "signature": "scope: Literal['public', 'private']",
+     "summary": "Server-asserted `cacheScope`: only `\"public\"` entries may be shared across authorization contexts."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "value",
+     "signature": "value: Any",
+     "summary": "The cached result; the SDK deep-copies on write and on serve, so a store may hold it as-is."
+    }
+   ],
+   "name": "CacheEntry",
+   "nameable": true,
+   "path": "mcp.client.caching.CacheEntry",
+   "preferred": "mcp.client.CacheEntry",
+   "signature": "class CacheEntry",
+   "summary": "One cached response with its freshness and sharing metadata."
+  },
+  {
+   "aliases": [
+    "fastmcp.client.caching.CacheKey",
+    "mcp.client.CacheKey"
+   ],
+   "decorators": [
+    "dataclass(frozen=True, slots=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#cachekey",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "method",
+     "signature": "method: str"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "params_key",
+     "signature": "params_key: str = ''",
+     "summary": "Result-affecting params discriminator: the uri for `resources/read`, `\"\"` for the list methods."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "partition",
+     "signature": "partition: str = ''",
+     "summary": "Coordinator-computed arm identifier; opaque to stores."
+    }
+   ],
+   "name": "CacheKey",
+   "nameable": true,
+   "path": "mcp.client.caching.CacheKey",
+   "preferred": "mcp.client.CacheKey",
+   "signature": "class CacheKey",
+   "summary": "Identity of one cached response; compare as the field tuple, never a flattened string (collision hazard)."
+  },
+  {
+   "aliases": [
+    "fastmcp.client.client.ClientResponseCache",
+    "mcp.client.client.ClientResponseCache"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#clientresponsecache",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "capture",
+     "signature": "def capture(self, method: str, params_key: str) -> int",
+     "summary": "Register the key for eviction-race detection before the fetch; `write` takes the returned generation."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "evict_for_notification",
+     "signature": "async def evict_for_notification(self, notification: ServerNotification) -> None",
+     "summary": "Map a server notification to the entries it makes stale."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "evict_key",
+     "signature": "async def evict_key(self, method: str, params_key: str) -> None",
+     "summary": "Evict one key from both arms."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "evict_method",
+     "signature": "async def evict_method(self, method: str) -> None",
+     "summary": "Evict the method's cursor-less entry."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self, method: str, params_key: str) -> CacheableResult | None",
+     "summary": "Serve a fresh entry for the key, or `None`; the served result is a deep copy."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "write",
+     "signature": "async def write(self, method: str, params_key: str, result: CacheableResult, gen_at_capture: int, mode: Literal['use', 'refresh']) -> None",
+     "summary": "Store a fetched result under the arm its resolved scope selects."
+    }
+   ],
+   "name": "ClientResponseCache",
+   "nameable": true,
+   "path": "mcp.client.caching.ClientResponseCache",
+   "preferred": "mcp.client.client.ClientResponseCache",
+   "signature": "class ClientResponseCache",
+   "summary": "Coordinates the `Client` caching verbs with a `ResponseCacheStore`: keys, era gate, TTL/scope, eviction."
+  },
+  {
+   "aliases": [
+    "fastmcp.client.client.InMemoryResponseCacheStore",
+    "mcp.client.InMemoryResponseCacheStore",
+    "mcp.client.client.InMemoryResponseCacheStore"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#inmemoryresponsecachestore",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "clear",
+     "signature": "async def clear(self) -> None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "delete",
+     "signature": "async def delete(self, key: CacheKey) -> None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get",
+     "signature": "async def get(self, key: CacheKey) -> CacheEntry | None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "set",
+     "signature": "async def set(self, key: CacheKey, entry: CacheEntry) -> None"
+    }
+   ],
+   "name": "InMemoryResponseCacheStore",
+   "nameable": true,
+   "path": "mcp.client.caching.InMemoryResponseCacheStore",
+   "preferred": "mcp.client.InMemoryResponseCacheStore",
+   "signature": "class InMemoryResponseCacheStore",
+   "summary": "Default in-process `ResponseCacheStore`."
+  },
+  {
+   "aliases": [
+    "mcp.client.ResponseCacheStore"
+   ],
+   "bases": [
+    "Protocol"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.caching.md#responsecachestore",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "clear",
+     "signature": "async def clear(self) -> None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "delete",
+     "signature": "async def delete(self, key: CacheKey) -> None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get",
+     "signature": "async def get(self, key: CacheKey) -> CacheEntry | None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "set",
+     "signature": "async def set(self, key: CacheKey, entry: CacheEntry) -> None"
+    }
+   ],
+   "name": "ResponseCacheStore",
+   "nameable": true,
+   "path": "mcp.client.caching.ResponseCacheStore",
+   "preferred": "mcp.client.ResponseCacheStore",
+   "signature": "class ResponseCacheStore(Protocol)",
+   "summary": "Storage contract for the client response cache."
+  }
+ ],
+ "module": "mcp.client.caching"
+}

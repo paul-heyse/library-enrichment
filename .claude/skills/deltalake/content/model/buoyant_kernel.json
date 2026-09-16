@@ -1,0 +1,548 @@
+{
+  "module": "buoyant_kernel",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::transform_output_type",
+      "name": "transform_output_type",
+      "kind": "macro",
+      "crate": "buoyant_kernel",
+      "signature": "macro_rules! transform_output_type",
+      "summary": "Defines a transform's `Output` and `Residual` associated types.",
+      "doc": "api/buoyant_kernel.md#transform_output_type",
+      "aliases": [
+        "buoyant_kernel::transforms::transform_output_type",
+        "delta_kernel::transform_output_type"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileMeta",
+      "name": "FileMeta",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct FileMeta",
+      "summary": "The metadata that describes an object.",
+      "doc": "api/buoyant_kernel.md#filemeta",
+      "aliases": [
+        "delta_kernel::FileMeta"
+      ],
+      "fields": [
+        "location",
+        "last_modified",
+        "size"
+      ],
+      "implements": [
+        "buoyant_kernel::path::AsUrl",
+        "core::convert::TryFrom",
+        "deltalake_core::delta_datafusion::engine::storage::AsObjectStoreUrl"
+      ],
+      "methods": [
+        {
+          "name": "as_url",
+          "signature": "fn as_url(&self) -> &Url",
+          "via_trait": "buoyant_kernel::path::AsUrl"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(location: Url, last_modified: i64, size: u64) -> Self",
+          "summary": "Create a new instance of `FileMeta`"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(ent: DirEntry) -> DeltaResult<FileMeta>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::ParquetFooter",
+      "name": "ParquetFooter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ParquetFooter",
+      "summary": "Metadata from a Parquet file footer.",
+      "doc": "api/buoyant_kernel.md#parquetfooter",
+      "aliases": [
+        "delta_kernel::ParquetFooter"
+      ],
+      "fields": [
+        "schema"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::AsAny",
+      "name": "AsAny",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait AsAny: Any + Send + Sync",
+      "summary": "Extension trait that makes it easier to work with traits objects that implement [`Any`], implemented automatically for any type that satisfies `Any`, `Send`, and `Sync`. In particular, given some `trait T: Any + Send + Sync`, it allows upc…",
+      "doc": "api/buoyant_kernel.md#asany",
+      "aliases": [
+        "delta_kernel::AsAny"
+      ],
+      "required_methods": [
+        "any_ref",
+        "as_any",
+        "into_any",
+        "type_name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "any_ref",
+          "signature": "fn any_ref(&self) -> &dyn Any + Send + Sync",
+          "summary": "Obtains a `dyn Any` reference to the object:"
+        },
+        {
+          "name": "as_any",
+          "signature": "fn as_any(Arc<self>) -> Arc<dyn Any + Send + Sync>",
+          "summary": "Obtains an `Arc<dyn Any>` reference to the object:"
+        },
+        {
+          "name": "into_any",
+          "signature": "fn into_any(Box<self>) -> Box<dyn Any + Send + Sync>",
+          "summary": "Converts the object to `Box<dyn Any>`:"
+        },
+        {
+          "name": "type_name",
+          "signature": "fn type_name(&self) -> &'static str",
+          "summary": "Convenient wrapper for [`std::any::type_name`], since [`Any`] does not provide it and [`Any::type_id`] is useless as a debugging aid (its `Debug` is just a mess of hex digits)."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::DynPartialEq",
+      "name": "DynPartialEq",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait DynPartialEq: AsAny",
+      "summary": "Extension trait that facilitates object-safe implementations of `PartialEq`.",
+      "doc": "api/buoyant_kernel.md#dynpartialeq",
+      "aliases": [
+        "delta_kernel::DynPartialEq"
+      ],
+      "required_methods": [
+        "dyn_eq"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "dyn_eq",
+          "signature": "fn dyn_eq(&self, other: &dyn Any) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::Engine",
+      "name": "Engine",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait Engine: AsAny",
+      "summary": "The `Engine` trait encapsulates all the functionality an engine or connector needs to provide to the Delta Kernel in order to read the Delta table.",
+      "doc": "api/buoyant_kernel.md#engine",
+      "aliases": [
+        "delta_kernel::Engine"
+      ],
+      "implementors": [
+        "buoyant_kernel::metrics::metered_engine::MeteredDeltaEngine",
+        "buoyant_kernel_engine::DefaultEngine",
+        "deltalake_core::delta_datafusion::engine::DataFusionEngine"
+      ],
+      "required_methods": [
+        "evaluation_handler",
+        "json_handler",
+        "parquet_handler",
+        "storage_handler"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "evaluation_handler",
+          "signature": "fn evaluation_handler(&self) -> Arc<dyn EvaluationHandler>",
+          "summary": "Get the connector provided [`EvaluationHandler`]."
+        },
+        {
+          "name": "json_handler",
+          "signature": "fn json_handler(&self) -> Arc<dyn JsonHandler>",
+          "summary": "Get the connector provided [`JsonHandler`]."
+        },
+        {
+          "name": "parquet_handler",
+          "signature": "fn parquet_handler(&self) -> Arc<dyn ParquetHandler>",
+          "summary": "Get the connector provided [`ParquetHandler`]."
+        },
+        {
+          "name": "storage_handler",
+          "signature": "fn storage_handler(&self) -> Arc<dyn StorageHandler>",
+          "summary": "Get the connector provided [`StorageHandler`]"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::EvaluationHandler",
+      "name": "EvaluationHandler",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait EvaluationHandler: AsAny",
+      "summary": "Provides expression evaluation capability to Delta Kernel.",
+      "doc": "api/buoyant_kernel.md#evaluationhandler",
+      "aliases": [
+        "delta_kernel::EvaluationHandler"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_expression::ArrowEvaluationHandler"
+      ],
+      "required_methods": [
+        "create_many",
+        "new_expression_evaluator",
+        "new_predicate_evaluator",
+        "null_row"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_many",
+          "signature": "fn create_many(&self, schema: SchemaRef, rows: &[&[Scalar]]) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Create a multi-row [`EngineData`] by applying the given schema to multiple rows of values."
+        },
+        {
+          "name": "new_expression_evaluator",
+          "signature": "fn new_expression_evaluator(&self, input_schema: SchemaRef, expression: ExpressionRef, output_type: DataType) -> DeltaResult<Arc<dyn ExpressionEvaluator>>",
+          "summary": "Create an [`ExpressionEvaluator`] that can evaluate the given [`Expression`] on columnar batches with the given [`Schema`] to produce data of [`DataType`]."
+        },
+        {
+          "name": "new_predicate_evaluator",
+          "signature": "fn new_predicate_evaluator(&self, input_schema: SchemaRef, predicate: PredicateRef) -> DeltaResult<Arc<dyn PredicateEvaluator>>",
+          "summary": "Create a [`PredicateEvaluator`] that can evaluate the given [`Predicate`] on columnar batches with the given [`Schema`] to produce a column of boolean results."
+        },
+        {
+          "name": "null_row",
+          "signature": "fn null_row(&self, output_schema: SchemaRef) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Create a single-row all-null-value [`EngineData`] with the schema specified by `output_schema`."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::EvaluationHandlerExtension",
+      "name": "EvaluationHandlerExtension",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait EvaluationHandlerExtension: EvaluationHandler",
+      "summary": "Internal trait to allow us to have a private `create_one` API that's implemented for all EvaluationHandlers.",
+      "doc": "api/buoyant_kernel.md#evaluationhandlerextension",
+      "aliases": [
+        "delta_kernel::EvaluationHandlerExtension"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "create_one"
+      ],
+      "methods": [
+        {
+          "name": "create_one",
+          "signature": "fn create_one(&self, schema: SchemaRef, values: &[Scalar]) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Create a single-row [`EngineData`] by applying the given schema to the leaf-values given in `values`."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::ExpressionEvaluator",
+      "name": "ExpressionEvaluator",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ExpressionEvaluator: AsAny",
+      "summary": "Trait for implementing an Expression evaluator.",
+      "doc": "api/buoyant_kernel.md#expressionevaluator",
+      "aliases": [
+        "delta_kernel::ExpressionEvaluator"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_expression::DefaultExpressionEvaluator"
+      ],
+      "required_methods": [
+        "evaluate"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &dyn EngineData) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Evaluate the expression on a given EngineData."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::IntoEngineData",
+      "name": "IntoEngineData",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait IntoEngineData",
+      "summary": "A trait that allows converting a type into (single-row) EngineData",
+      "doc": "api/buoyant_kernel.md#intoenginedata",
+      "aliases": [
+        "delta_kernel::IntoEngineData"
+      ],
+      "implementors": [
+        "buoyant_kernel::actions::CommitInfo",
+        "buoyant_kernel::actions::DomainMetadata",
+        "buoyant_kernel::actions::Metadata",
+        "buoyant_kernel::actions::Protocol",
+        "buoyant_kernel::actions::SetTransaction"
+      ],
+      "required_methods": [
+        "into_engine_data"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "into_engine_data",
+          "signature": "fn into_engine_data(self, schema: SchemaRef, engine: &dyn Engine) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Consume this type to produce a single-row EngineData using the provided schema."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::JsonHandler",
+      "name": "JsonHandler",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait JsonHandler: AsAny",
+      "summary": "Provides JSON handling functionality to Delta Kernel.",
+      "doc": "api/buoyant_kernel.md#jsonhandler",
+      "aliases": [
+        "delta_kernel::JsonHandler"
+      ],
+      "implementors": [
+        "buoyant_kernel::metrics::metered_json::MeteredJsonHandler",
+        "buoyant_kernel_engine::json::DefaultJsonHandler",
+        "deltalake_core::delta_datafusion::engine::file_formats::DataFusionFileFormatHandler"
+      ],
+      "required_methods": [
+        "parse_json",
+        "read_json_files",
+        "write_json_file"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "parse_json",
+          "signature": "fn parse_json(&self, json_strings: Box<dyn EngineData>, output_schema: SchemaRef) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Parse the given json strings and return the fields requested by output schema as columns in [`EngineData`]. json_strings MUST be a single column batch of engine data, and the column type must be string"
+        },
+        {
+          "name": "read_json_files",
+          "signature": "fn read_json_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+          "summary": "Read and parse the JSON format file at given locations and return the data as EngineData with the columns requested by physical schema. Note: The [`FileDataReadResultIterator`] must emit data from files in the order that `files` is given.…"
+        },
+        {
+          "name": "write_json_file",
+          "signature": "fn write_json_file(&self, path: &Url, data: DeltaResultIterator<'_, FilteredEngineData>, overwrite: bool) -> DeltaResult<()>",
+          "summary": "Atomically (!) write a single JSON file. Each selected row of the input data must be written as a new JSON object appended to the file; rows not selected by a batch's selection vector (see [`FilteredEngineData`]) must not be written. [`Fil…"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::ParquetHandler",
+      "name": "ParquetHandler",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ParquetHandler: AsAny",
+      "summary": "Provides Parquet file related functionalities to Delta Kernel.",
+      "doc": "api/buoyant_kernel.md#parquethandler",
+      "aliases": [
+        "delta_kernel::ParquetHandler"
+      ],
+      "implementors": [
+        "buoyant_kernel::metrics::metered_parquet::MeteredParquetHandler",
+        "buoyant_kernel_engine::parquet::DefaultParquetHandler",
+        "deltalake_core::delta_datafusion::engine::file_formats::DataFusionFileFormatHandler"
+      ],
+      "required_methods": [
+        "read_parquet_files",
+        "read_parquet_footer",
+        "write_parquet_file"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "read_parquet_files",
+          "signature": "fn read_parquet_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+          "summary": "Read and parse the Parquet file at given locations and return the data as EngineData with the columns requested by physical schema. The ParquetHandler _must_ return exactly the columns specified in `physical_schema`, and they _must_ be in…"
+        },
+        {
+          "name": "read_parquet_footer",
+          "signature": "fn read_parquet_footer(&self, file: &FileMeta) -> DeltaResult<ParquetFooter>",
+          "summary": "Read the footer metadata from a Parquet file without reading the data."
+        },
+        {
+          "name": "write_parquet_file",
+          "signature": "fn write_parquet_file(&self, location: url::Url, data: DeltaResultIteratorStatic<Box<dyn EngineData>>) -> DeltaResult<()>",
+          "summary": "Write data to a Parquet file at the specified URL."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::PredicateEvaluator",
+      "name": "PredicateEvaluator",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait PredicateEvaluator: AsAny",
+      "summary": "Trait for implementing a Predicate evaluator.",
+      "doc": "api/buoyant_kernel.md#predicateevaluator",
+      "aliases": [
+        "delta_kernel::PredicateEvaluator"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_expression::DefaultPredicateEvaluator"
+      ],
+      "required_methods": [
+        "evaluate"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, batch: &dyn EngineData) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Evaluate the predicate on a given EngineData."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::StorageHandler",
+      "name": "StorageHandler",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait StorageHandler: AsAny",
+      "summary": "Provides file system related functionalities to Delta Kernel.",
+      "doc": "api/buoyant_kernel.md#storagehandler",
+      "aliases": [
+        "delta_kernel::StorageHandler"
+      ],
+      "implementors": [
+        "buoyant_kernel::metrics::metered_storage::MeteredStorageHandler",
+        "buoyant_kernel_engine::filesystem::ObjectStoreStorageHandler",
+        "deltalake_core::delta_datafusion::engine::storage::DataFusionStorageHandler"
+      ],
+      "required_methods": [
+        "copy_atomic",
+        "delete",
+        "head",
+        "list_from",
+        "put",
+        "read_files"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "copy_atomic",
+          "signature": "fn copy_atomic(&self, src: &Url, dest: &Url) -> DeltaResult<()>",
+          "summary": "Copy a file atomically from source to destination. If the destination file already exists, it must return Err(Error::FileAlreadyExists)."
+        },
+        {
+          "name": "delete",
+          "signature": "fn delete(&self, path: &Url) -> DeltaResult<()>",
+          "summary": "Delete the file at the given path."
+        },
+        {
+          "name": "head",
+          "signature": "fn head(&self, path: &Url) -> DeltaResult<FileMeta>",
+          "summary": "Perform a HEAD request for the given file at a Url, returning the file metadata."
+        },
+        {
+          "name": "list_from",
+          "signature": "fn list_from(&self, path: &Url) -> DeltaResult<Box<dyn Iterator<Item = DeltaResult<FileMeta>>>>",
+          "summary": "Recursively list files whose full path is lexicographically greater than (UTF-8 sorting) the given `path`, restricted to descendants of `path`'s parent directory. The result must be sorted by the full path (UTF-8 byte order)."
+        },
+        {
+          "name": "put",
+          "signature": "fn put(&self, path: &Url, data: Bytes, overwrite: bool) -> DeltaResult<()>",
+          "summary": "Write data to the specified path."
+        },
+        {
+          "name": "read_files",
+          "signature": "fn read_files(&self, files: Vec<FileSlice>) -> DeltaResult<Box<dyn Iterator<Item = DeltaResult<Bytes>>>>",
+          "summary": "Read data specified by the start and end offset from the file."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileDataReadResult",
+      "name": "FileDataReadResult",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type FileDataReadResult = (FileMeta, Box<dyn EngineData>)",
+      "summary": "Data read from a Delta table file and the corresponding scan file information.",
+      "doc": "api/buoyant_kernel.md#filedatareadresult",
+      "aliases": [
+        "delta_kernel::FileDataReadResult"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileDataReadResultIterator",
+      "name": "FileDataReadResultIterator",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type FileDataReadResultIterator = DeltaResultIteratorStatic<Box<dyn EngineData>>",
+      "summary": "An iterator of data read from specified files",
+      "doc": "api/buoyant_kernel.md#filedatareadresultiterator",
+      "aliases": [
+        "delta_kernel::FileDataReadResultIterator"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileIndex",
+      "name": "FileIndex",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type FileIndex = u64",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::FileIndex"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileSize",
+      "name": "FileSize",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type FileSize = u64",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::FileSize"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::FileSlice",
+      "name": "FileSlice",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type FileSlice = (url::Url, Option<std::ops::Range<FileIndex>>)",
+      "summary": "A specification for a range of bytes to read from a file location",
+      "doc": "api/buoyant_kernel.md#fileslice",
+      "aliases": [
+        "delta_kernel::FileSlice"
+      ],
+      "implements": [
+        "deltalake_core::delta_datafusion::engine::storage::AsObjectStoreUrl"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::Version",
+      "name": "Version",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type Version = u64",
+      "summary": "Delta table version is 8 byte unsigned int",
+      "doc": "api/buoyant_kernel.md#version",
+      "aliases": [
+        "delta_kernel::Version",
+        "deltalake::kernel::Version",
+        "deltalake_core::kernel::Version"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+id: project-merge-without-aliases
+language: rust
+severity: hint
+message: A merge is awaited without source and target aliases.
+note: |
+  Merge predicates reference columns from two relations. Without explicit aliases the
+  expressions are ambiguous wherever the two schemas share a column name -- which is the
+  normal case for an upsert, since the join key exists on both sides.
+  Set `with_source_alias` and `with_target_alias`.
+  See content/topics/dml.md.
+metadata:
+  record: capability-gap
+  capability: merge-aliasing
+rule:
+  kind: await_expression
+  all:
+    - has:
+        kind: field_identifier
+        regex: '^merge$'
+        stopBy: end
+    - not:
+        has:
+          kind: field_identifier
+          regex: '^with_source_alias$'
+          stopBy: end

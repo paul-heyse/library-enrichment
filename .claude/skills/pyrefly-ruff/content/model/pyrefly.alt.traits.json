@@ -1,0 +1,92 @@
+{
+  "module": "pyrefly::alt::traits",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.alt.traits.md",
+  "items": [
+    {
+      "path": "pyrefly::alt::traits::SolveResult",
+      "name": "SolveResult",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum SolveResult<K: Keyed>",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Answer",
+        "Alias"
+      ]
+    },
+    {
+      "path": "pyrefly::alt::traits::Solve",
+      "name": "Solve",
+      "kind": "trait",
+      "crate": "pyrefly",
+      "signature": "trait Solve<Ans: LookupAnswer>: Keyed",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "pyrefly::binding::binding::Key",
+        "pyrefly::binding::binding::KeyAbstractClassCheck",
+        "pyrefly::binding::binding::KeyAnnotation",
+        "pyrefly::binding::binding::KeyClass",
+        "pyrefly::binding::binding::KeyClassBaseType",
+        "pyrefly::binding::binding::KeyClassChecks",
+        "pyrefly::binding::binding::KeyClassDisjointBase",
+        "pyrefly::binding::binding::KeyClassField",
+        "pyrefly::binding::binding::KeyClassMetadata",
+        "pyrefly::binding::binding::KeyClassMro",
+        "pyrefly::binding::binding::KeyClassSubscriptSymmetry",
+        "pyrefly::binding::binding::KeyClassSynthesizedFields",
+        "pyrefly::binding::binding::KeyDecoratedFunction",
+        "pyrefly::binding::binding::KeyDecorator",
+        "pyrefly::binding::binding::KeyDjangoRelations",
+        "pyrefly::binding::binding::KeyExpect",
+        "pyrefly::binding::binding::KeyExport",
+        "pyrefly::binding::binding::KeyLegacyTypeParam",
+        "pyrefly::binding::binding::KeyTParams",
+        "pyrefly::binding::binding::KeyTypeAlias",
+        "pyrefly::binding::binding::KeyUndecoratedFunction",
+        "pyrefly::binding::binding::KeyUndecoratedFunctionRange",
+        "pyrefly::binding::binding::KeyVariance",
+        "pyrefly::binding::binding::KeyYield",
+        "pyrefly::binding::binding::KeyYieldFrom"
+      ],
+      "required_methods": [
+        "promote_recursive",
+        "solve"
+      ],
+      "provided_methods": [
+        "check_shortcut",
+        "create_recursive",
+        "record_recursive"
+      ],
+      "methods": [
+        {
+          "name": "check_shortcut",
+          "signature": "fn check_shortcut(_answers: &AnswersSolver<'_, '_, Ans>, _binding: &Self::Value) -> Option<Self::Answer>",
+          "summary": "Check for a shortcut answer that bypasses CalcStack push and caching. Called in `get_idx` before pushing to the CalcStack. If this returns `Some`, the answer is returned directly without pushing, solving, or caching."
+        },
+        {
+          "name": "create_recursive",
+          "signature": "fn create_recursive(_answers: &AnswersSolver<'_, '_, Ans>, _binding: &Self::Value) -> Var",
+          "summary": "We have reached a recursive solve of this binding. Create a sentinel value to store information about it."
+        },
+        {
+          "name": "promote_recursive",
+          "signature": "fn promote_recursive(heap: &TypeHeap, x: Var) -> Self::Answer",
+          "summary": "We hit a recursive case, so promote the recursive value into an answer that needs to be sufficient for now."
+        },
+        {
+          "name": "record_recursive",
+          "signature": "fn record_recursive(_answers: &AnswersSolver<'_, '_, Ans>, answer: Self::Answer, _recursive: Var) -> Self::Answer",
+          "summary": "We solved a binding, but during its execution we gave some people back a recursive value. Record that recursive value along with the answer."
+        },
+        {
+          "name": "solve",
+          "signature": "fn solve(answers: &AnswersSolver<'_, '_, Ans>, binding: &Self::Value, range: TextRange, errors: &ErrorCollector) -> SolveResult<Self>",
+          "summary": "Solve the binding. Note that the key (`Self`) is not provided, as the result of a binding should not depend on the key it was bound to."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "module": "pyrefly_graph::calculation",
+  "crate": "pyrefly_graph",
+  "api": "api/pyrefly_graph.calculation.md",
+  "items": [
+    {
+      "path": "pyrefly_graph::calculation::ProposalResult",
+      "name": "ProposalResult",
+      "kind": "enum",
+      "crate": "pyrefly_graph",
+      "signature": "enum ProposalResult<T>",
+      "summary": "The result of proposing a calculation in the current thread. See `propose_calculation` for more details on how it is used.",
+      "doc": "api/pyrefly_graph.calculation.md#proposalresult",
+      "variants": [
+        "Calculatable",
+        "Calculated"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_graph::calculation::Calculation",
+      "name": "Calculation",
+      "kind": "struct",
+      "crate": "pyrefly_graph",
+      "signature": "struct Calculation<T>",
+      "summary": "A cached calculation where recursive calculation returns None.",
+      "doc": "api/pyrefly_graph.calculation.md#calculation",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "calculate",
+          "signature": "fn calculate(&self, calculate: impl FnOnce() -> T) -> Option<T>",
+          "summary": "Perform or use the cached result of a calculation without using the full power of cycle-breaking plumbing."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> Option<T>",
+          "summary": "Get the value if it has been calculated, otherwise `None`. Does not block on write locks — reads are unaffected."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "propose_calculation",
+          "signature": "unsafe fn propose_calculation(&self) -> ProposalResult<T>",
+          "summary": "Look up the current status of the calculation as a `ProposalResult`, under the assumption that the current thread will begin the calculation if the result is `Calculatable`. - If no other thread has already computed a result, return `Calcu…"
+        },
+        {
+          "name": "record_value",
+          "signature": "fn record_value(&self, value: T) -> (T, bool)",
+          "summary": "Attempt to record a calculated value."
+        },
+        {
+          "name": "write_lock",
+          "signature": "fn write_lock(&self) -> bool",
+          "summary": "Lock this cell for an SCC batch commit. Blocks if another SCC commit already holds the lock. Returns false (no lock acquired) if the cell is already `Calculated`, since `record_value` would be a no-op anyway."
+        },
+        {
+          "name": "write_unlock",
+          "signature": "fn write_unlock(&self, value: T) -> (T, bool)",
+          "summary": "Write a value to a write-locked cell and release the lock. Panics if the cell is not write-locked."
+        },
+        {
+          "name": "write_unlock_empty",
+          "signature": "fn write_unlock_empty(&self)",
+          "summary": "Release the write lock without writing a value. Used by the RAII guard for panic cleanup."
+        }
+      ]
+    }
+  ]
+}

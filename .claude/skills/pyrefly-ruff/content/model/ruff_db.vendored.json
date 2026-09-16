@@ -1,0 +1,148 @@
+{
+  "module": "ruff_db::vendored",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.vendored.md",
+  "items": [
+    {
+      "path": "ruff_db::vendored::FileType",
+      "name": "FileType",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum FileType",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "File",
+        "Directory"
+      ],
+      "methods": [
+        {
+          "name": "is_directory",
+          "signature": "const fn is_directory(self) -> bool"
+        },
+        {
+          "name": "is_file",
+          "signature": "const fn is_file(self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::vendored::DirectoryEntry",
+      "name": "DirectoryEntry",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DirectoryEntry",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> FileType"
+        },
+        {
+          "name": "into_path",
+          "signature": "fn into_path(self) -> VendoredPathBuf"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(path: VendoredPathBuf, file_type: FileType) -> Self"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &VendoredPath"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::vendored::Metadata",
+      "name": "Metadata",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Metadata",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> FileType"
+        },
+        {
+          "name": "revision",
+          "signature": "fn revision(&self) -> FileRevision"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::vendored::VendoredFileSystem",
+      "name": "VendoredFileSystem",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct VendoredFileSystem",
+      "summary": "File system that stores all content in a static zip archive bundled as part of the Ruff binary.",
+      "doc": "api/ruff_db.vendored.md#vendoredfilesystem",
+      "methods": [
+        {
+          "name": "exists",
+          "signature": "fn exists(&self, path: impl AsRef<VendoredPath>) -> bool"
+        },
+        {
+          "name": "is_directory",
+          "signature": "fn is_directory(&self, path: impl AsRef<VendoredPath>) -> bool"
+        },
+        {
+          "name": "is_file",
+          "signature": "fn is_file(&self, path: impl AsRef<VendoredPath>) -> bool"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self, path: impl AsRef<VendoredPath>) -> io::Result<Metadata>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(raw_bytes: Vec<u8>) -> io::Result<Self>"
+        },
+        {
+          "name": "new_static",
+          "signature": "fn new_static(raw_bytes: &'static [u8]) -> io::Result<Self>"
+        },
+        {
+          "name": "read_directory",
+          "signature": "fn read_directory(&self, dir: impl AsRef<VendoredPath>) -> impl Iterator<Item = DirectoryEntry> + '_",
+          "summary": "Read the direct children of the directory identified by `path`."
+        },
+        {
+          "name": "read_to_string",
+          "signature": "fn read_to_string(&self, path: impl AsRef<VendoredPath>) -> io::Result<String>",
+          "summary": "Read the entire contents of the zip file at `path` into a string"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::vendored::VendoredFileSystemBuilder",
+      "name": "VendoredFileSystemBuilder",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct VendoredFileSystemBuilder",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "add_directory",
+          "signature": "fn add_directory(&mut self, path: impl AsRef<VendoredPath>) -> ZipResult<()>"
+        },
+        {
+          "name": "add_file",
+          "signature": "fn add_file(&mut self, path: impl AsRef<VendoredPath>, content: &str) -> std::io::Result<()>"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> io::Result<VendoredFileSystem>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(compression_method: CompressionMethod) -> Self"
+        }
+      ]
+    }
+  ]
+}

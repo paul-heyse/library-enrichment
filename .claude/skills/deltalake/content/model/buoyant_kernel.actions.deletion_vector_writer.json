@@ -1,0 +1,147 @@
+{
+  "module": "buoyant_kernel::actions::deletion_vector_writer",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.actions.deletion_vector_writer.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::actions::deletion_vector_writer::DeletionVectorWriteResult",
+      "name": "DeletionVectorWriteResult",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct DeletionVectorWriteResult",
+      "summary": "Metadata about a written deletion vector, excluding the storage path.",
+      "doc": "api/buoyant_kernel.actions.deletion_vector_writer.md#deletionvectorwriteresult",
+      "aliases": [
+        "delta_kernel::actions::deletion_vector_writer::DeletionVectorWriteResult"
+      ],
+      "fields": [
+        "offset",
+        "size_in_bytes",
+        "cardinality"
+      ],
+      "methods": [
+        {
+          "name": "to_descriptor",
+          "signature": "fn to_descriptor(self, path: &DeletionVectorPath) -> DeletionVectorDescriptor",
+          "summary": "Convert the write result to a deletion vector descriptor."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::actions::deletion_vector_writer::KernelDeletionVector",
+      "name": "KernelDeletionVector",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct KernelDeletionVector",
+      "summary": "A Kernel-provided deletion vector implementation backed by [`RoaringTreemap`].",
+      "doc": "api/buoyant_kernel.actions.deletion_vector_writer.md#kerneldeletionvector",
+      "aliases": [
+        "delta_kernel::actions::deletion_vector_writer::KernelDeletionVector"
+      ],
+      "implements": [
+        "buoyant_kernel::actions::deletion_vector_writer::DeletionVector"
+      ],
+      "methods": [
+        {
+          "name": "add_deleted_row_indexes",
+          "signature": "fn add_deleted_row_indexes<I, T>(&mut self, iter: I) where I: IntoIterator<Item = T>, T: Borrow<u64>",
+          "summary": "Adds indexes to be deleted to this deletion vector."
+        },
+        {
+          "name": "cardinality",
+          "signature": "fn cardinality(&self) -> u64",
+          "summary": "Get the number of deleted rows in this deletion vector."
+        },
+        {
+          "name": "cardinality",
+          "signature": "fn cardinality(&self) -> u64",
+          "via_trait": "buoyant_kernel::actions::deletion_vector_writer::DeletionVector"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IndexIterator",
+          "via_trait": "buoyant_kernel::actions::deletion_vector_writer::DeletionVector"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new empty deletion vector."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize(self) -> DeltaResult<Bytes>",
+          "via_trait": "buoyant_kernel::actions::deletion_vector_writer::DeletionVector",
+          "summary": "Optimized serialization that directly serializes the internal RoaringTreemap."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::actions::deletion_vector_writer::StreamingDeletionVectorWriter",
+      "name": "StreamingDeletionVectorWriter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StreamingDeletionVectorWriter<'a, W: Write>",
+      "summary": "A streaming writer for deletion vectors.",
+      "doc": "api/buoyant_kernel.actions.deletion_vector_writer.md#streamingdeletionvectorwriter",
+      "aliases": [
+        "delta_kernel::actions::deletion_vector_writer::StreamingDeletionVectorWriter"
+      ],
+      "methods": [
+        {
+          "name": "finalize",
+          "signature": "fn finalize(self) -> DeltaResult<()>",
+          "summary": "Finalize all writes and flush the underlying writer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(writer: &'a mut W) -> Self",
+          "summary": "Create a new streaming deletion vector writer."
+        },
+        {
+          "name": "write_deletion_vector",
+          "signature": "fn write_deletion_vector(&mut self, deletion_vector: impl DeletionVector) -> DeltaResult<DeletionVectorWriteResult>",
+          "summary": "Write a deletion vector to the underlying writer."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::actions::deletion_vector_writer::DeletionVector",
+      "name": "DeletionVector",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait DeletionVector: Sized",
+      "summary": "A trait that allows engines to provide deletion vectors in various formats.",
+      "doc": "api/buoyant_kernel.actions.deletion_vector_writer.md#deletionvector",
+      "aliases": [
+        "delta_kernel::actions::deletion_vector_writer::DeletionVector"
+      ],
+      "implementors": [
+        "buoyant_kernel::actions::deletion_vector_writer::KernelDeletionVector"
+      ],
+      "required_methods": [
+        "cardinality",
+        "into_iter"
+      ],
+      "provided_methods": [
+        "serialize"
+      ],
+      "methods": [
+        {
+          "name": "cardinality",
+          "signature": "fn cardinality(&self) -> u64",
+          "summary": "Return the number of deleted rows in the deletion vector."
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IndexIterator",
+          "summary": "Return an iterator over deleted row indexes."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize(self) -> DeltaResult<Bytes>",
+          "summary": "Serialize the deletion vector into bytes."
+        }
+      ]
+    }
+  ]
+}

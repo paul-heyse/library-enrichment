@@ -1,0 +1,68 @@
+Initialize a new pyrefly config in the given directory, or migrate an existing mypy or pyright
+config to pyrefly
+
+Usage: pyrefly init [OPTIONS] [PATH]
+
+Arguments:
+  [PATH]
+          The path to the project to initialize. Optional. If not present, will create a new
+          pyrefly.toml config in the current directory. If this is the path to a pyproject.toml, the
+          config will be written as a `[tool.pyrefly]` entry in that file
+          
+          [default: .]
+
+Options:
+  -j, --threads <THREADS>
+          Number of threads to use for parallelization. Setting the value to 1 implies sequential
+          execution without any parallelism. Setting the value to 0 means to pick the number of
+          threads automatically using default heuristics
+          
+          [env: PYREFLY_THREADS=]
+          [default: 0]
+
+      --non-interactive
+          Run without interactive prompts, using safe defaults (decline all). Useful for CI,
+          scripted workflows, or running init before check in automated pipelines
+
+      --color <COLOR>
+          Control whether colored output is used
+          
+          [env: PYREFLY_COLOR=]
+          [default: auto]
+          [possible values: auto, always, never]
+
+      --migrate-from <MIGRATE_FROM>
+          Which type checker config to migrate from when multiple are present. When set to "auto"
+          (the default), tries mypy first, then pyright
+
+          Possible values:
+          - auto:    Automatically detect: try mypy first, then pyright
+          - mypy:    Migrate only from mypy configuration
+          - pyright: Migrate only from pyright configuration
+          
+          [default: auto]
+
+      --dry-run
+          Preview what `pyrefly init` would do without writing or modifying any `pyrefly.toml` or
+          `pyproject.toml` files. Skips the post-init `pyrefly check` and the error-suppression
+          prompt
+
+  -v, --verbose
+          Enable verbose logging
+          
+          [env: PYREFLY_VERBOSE=]
+
+      --print-config
+          Emit the would-be config TOML to stdout. Independent of `--dry-run`: combine with
+          `--dry-run` for a pure preview, or use alone to also write the file. Output is the raw
+          TOML body (the `[tool.pyrefly]` section contents when targeting a pyproject.toml),
+          suitable for piping into downstream tooling
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+Examples:
+   `pyrefly init`: Create a new pyrefly.toml config in the current directory
+   `pyrefly init --dry-run`: Print the config that would be written, without modifying any files
+   `pyrefly init --dry-run --print-config`: Emit the would-be config TOML to stdout for downstream
+   tooling

@@ -1,0 +1,150 @@
+{
+  "module": "deltalake_core::delta_datafusion::session",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.delta_datafusion.session.md",
+  "items": [
+    {
+      "path": "deltalake_core::delta_datafusion::session::SessionFallbackPolicy",
+      "name": "SessionFallbackPolicy",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum SessionFallbackPolicy",
+      "summary": "Controls how delta-rs resolves a caller-provided DataFusion `Session` into a `SessionState`.",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#sessionfallbackpolicy",
+      "aliases": [
+        "deltalake::delta_datafusion::SessionFallbackPolicy",
+        "deltalake_core::delta_datafusion::SessionFallbackPolicy"
+      ],
+      "variants": [
+        "InternalDefaults",
+        "DeriveFromTrait",
+        "RequireSessionState"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::create_session",
+      "name": "create_session",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn create_session() -> DeltaSessionContext",
+      "summary": "Create a default [`DeltaSessionContext`], a DataFusion session pre-configured with the settings delta-rs relies on (custom planner, object-store registration, etc.).",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#create_session",
+      "aliases": [
+        "deltalake::delta_datafusion::create_session",
+        "deltalake_core::delta_datafusion::create_session"
+      ]
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::create_session_state_with_spill_config",
+      "name": "create_session_state_with_spill_config",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn create_session_state_with_spill_config(max_spill_size: Option<usize>, max_temp_directory_size: Option<u64>) -> datafusion::execution::SessionState",
+      "summary": "Create a [`SessionState`] with optional spill-to-disk configuration.",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#create_session_state_with_spill_config",
+      "aliases": [
+        "deltalake::delta_datafusion::create_session_state_with_spill_config",
+        "deltalake_core::delta_datafusion::create_session_state_with_spill_config"
+      ]
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::DeltaParserOptions",
+      "name": "DeltaParserOptions",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaParserOptions",
+      "summary": "A wrapper for sql_parser's ParserOptions to capture sane default table defaults",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#deltaparseroptions",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaParserOptions",
+        "deltalake_core::delta_datafusion::DeltaParserOptions"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::DeltaRuntimeEnvBuilder",
+      "name": "DeltaRuntimeEnvBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaRuntimeEnvBuilder",
+      "summary": "A builder for configuring DataFusion RuntimeEnv with Delta-specific defaults",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#deltaruntimeenvbuilder",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaRuntimeEnvBuilder",
+        "deltalake_core::delta_datafusion::DeltaRuntimeEnvBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Arc<RuntimeEnv>",
+          "summary": "Finalize the configuration and build the shared [`RuntimeEnv`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new builder with DataFusion's default runtime settings."
+        },
+        {
+          "name": "with_max_spill_size",
+          "signature": "fn with_max_spill_size(self, size: usize) -> Self",
+          "summary": "Cap in-memory usage by installing a [`FairSpillPool`] of `size` bytes, allowing operators to spill to disk once the budget is exhausted."
+        },
+        {
+          "name": "with_max_temp_directory_size",
+          "signature": "fn with_max_temp_directory_size(self, size: u64) -> Self",
+          "summary": "Limit the total bytes the disk manager may use for temporary spill files to `size`."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::DeltaSessionConfig",
+      "name": "DeltaSessionConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaSessionConfig",
+      "summary": "A wrapper for Deltafusion's SessionConfig to capture sane default table defaults",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#deltasessionconfig",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaSessionConfig",
+        "deltalake_core::delta_datafusion::DeltaSessionConfig"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::session::DeltaSessionContext",
+      "name": "DeltaSessionContext",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaSessionContext",
+      "summary": "A wrapper for DataFusion's SessionContext with Delta-specific defaults",
+      "doc": "api/deltalake_core.delta_datafusion.session.md#deltasessioncontext",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaSessionContext",
+        "deltalake_core::delta_datafusion::DeltaSessionContext"
+      ],
+      "methods": [
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> SessionContext",
+          "summary": "Consume the wrapper and return the underlying DataFusion [`SessionContext`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new DeltaSessionContext with default configuration"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&self) -> SessionState",
+          "summary": "Return a snapshot of the underlying [`SessionState`] for planning or execution."
+        },
+        {
+          "name": "with_runtime_env",
+          "signature": "fn with_runtime_env(runtime_env: Arc<RuntimeEnv>) -> Self",
+          "summary": "Create a DeltaSessionContext with a custom RuntimeEnv"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "module": "buoyant_kernel::transaction::builder::alter_table",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.transaction.builder.alter_table.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder",
+      "name": "AlterTableTransactionBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct AlterTableTransactionBuilder<S = Ready>",
+      "summary": "Builder for constructing an [`AlterTableTransaction`] with schema evolution operations.",
+      "doc": "api/buoyant_kernel.transaction.builder.alter_table.md#altertabletransactionbuilder",
+      "aliases": [
+        "delta_kernel::transaction::builder::alter_table::AlterTableTransactionBuilder"
+      ],
+      "methods": [
+        {
+          "name": "add_column",
+          "signature": "fn add_column(self, field: StructField) -> AlterTableTransactionBuilder<Modifying>",
+          "summary": "Add a new top-level column to the table schema."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self, _engine: &dyn Engine, committer: Box<dyn Committer>) -> DeltaResult<AlterTableTransaction>",
+          "summary": "Validate and apply schema operations, then build the [`AlterTableTransaction`]."
+        },
+        {
+          "name": "set_nullable",
+          "signature": "fn set_nullable(self, column: ColumnName) -> AlterTableTransactionBuilder<Modifying>",
+          "summary": "Change a column's nullability from NOT NULL to nullable. If the column is already nullable, the op is a no-op but still generates a commit."
+        },
+        {
+          "name": "with_correlation_id",
+          "signature": "fn with_correlation_id(self, correlation_id: impl Into<Arc<str>>) -> Self",
+          "summary": "Attach an opaque, caller-supplied correlation id for joining the alter-table commit's metric events to the caller's own request or operation id. An empty id is treated as unset."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::builder::alter_table::Modifying",
+      "name": "Modifying",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Modifying",
+      "summary": "State after at least one operation has been added. `build()` is available. See [`Chainable`] for the operations available on this state.",
+      "doc": "api/buoyant_kernel.transaction.builder.alter_table.md#modifying",
+      "aliases": [
+        "delta_kernel::transaction::builder::alter_table::Modifying"
+      ],
+      "implements": [
+        "buoyant_kernel::transaction::builder::alter_table::Chainable",
+        "buoyant_kernel::transaction::builder::alter_table::sealed::Sealed"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::builder::alter_table::Ready",
+      "name": "Ready",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Ready",
+      "summary": "Initial state: `build()` is not yet available (at least one operation is required). See [`Chainable`] for the operations available on this state.",
+      "doc": "api/buoyant_kernel.transaction.builder.alter_table.md#ready",
+      "aliases": [
+        "delta_kernel::transaction::builder::alter_table::Ready"
+      ],
+      "implements": [
+        "buoyant_kernel::transaction::builder::alter_table::Chainable",
+        "buoyant_kernel::transaction::builder::alter_table::sealed::Sealed"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::builder::alter_table::Chainable",
+      "name": "Chainable",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait Chainable: sealed::Sealed",
+      "summary": "Marker trait for builder states that accept chainable schema operations. Grouping states under one bound lets each op (like `add_column`) live on a single `impl<S: Chainable>` block -- chainable states share the body rather than duplicatin…",
+      "doc": "api/buoyant_kernel.transaction.builder.alter_table.md#chainable",
+      "aliases": [
+        "delta_kernel::transaction::builder::alter_table::Chainable"
+      ],
+      "implementors": [
+        "buoyant_kernel::transaction::builder::alter_table::Modifying",
+        "buoyant_kernel::transaction::builder::alter_table::Ready"
+      ],
+      "required_methods": [],
+      "provided_methods": []
+    }
+  ]
+}

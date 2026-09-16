@@ -19,8 +19,7 @@ pub const FAMILIES: &[&str] = &["api", "docs", "examples", "release_notes", "fea
 
 pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
     let query = request.query.trim().to_owned();
-    let tokens = search::tokenize(&query);
-    if query.is_empty() || query.len() > 65536 || tokens.len() > 64 {
+    if query.is_empty() || query.len() > 65536 {
         return envelope::error(
             ErrorCode::UnsupportedFormat,
             "Search needs a nonempty query of at most 64 terms and 65536 bytes",
@@ -28,6 +27,11 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             false,
         );
     }
+    let tokens = match enrichment_store::scoring::tokens(&service.repository.runtime, &query).await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "search_tokens"),
+    };
     let mut kinds = request
         .kinds
         .clone()
@@ -253,7 +257,7 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
     }
     // An oversized first hit is complete in an immutable overflow artifact, including its
     // continuation. It is never silently skipped and cannot trap the caller on an empty page.
-    common::enforce_budget(service, result, request.max_bytes)
+    common::enforce_budget(service, result, request.max_bytes).await
 }
 
 fn render(

@@ -8,7 +8,6 @@ use std::io;
 
 use enrichment_core::clock;
 use enrichment_core::config::Config;
-use enrichment_core::policy::FetchPolicy;
 use enrichment_store::{
     BlobStore, StatePaths,
     admission::AdmissionLimits,
@@ -79,24 +78,62 @@ pub enum ServiceError {
 }
 
 impl Service {
+    /// Cancel work and await both physical exit and durable reconciliation before reopening roots.
+    /// A retained terminal result alone is not evidence that the owned driver has exited.
+    pub async fn shutdown(&self) -> io::Result<()> {
+        let seconds = self
+            .config
+            .network
+            .request_timeout_seconds
+            .max(self.config.execution.deadline_seconds)
+            .saturating_add(self.config.execution.cleanup_deadline_seconds)
+            .saturating_add(self.config.arrow.query_deadline_seconds);
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(seconds);
+        self.jobs.request_shutdown().await?;
+        self.lsp.shutdown(deadline).await?;
+        loop {
+            let reconciled = self.jobs.reconcile_finished().await;
+            let counts = self.jobs.counts().await;
+            if reconciled.is_ok()
+                && matches!(counts, Ok((0, 0)))
+                && !self.jobs.has_owned_work()
+                && self.execution.is_idle()
+            {
+                self.repository
+                    .runtime
+                    .close_diagnostics()
+                    .await
+                    .map_err(io::Error::other)?;
+                return Ok(());
+            }
+            if tokio::time::Instant::now() >= deadline {
+                return Err(io::Error::other(format!(
+                    "shutdown could not reconcile physical ownership: reconciliation={reconciled:?}, counts={counts:?}, containers={:?}",
+                    self.execution.outstanding()
+                )));
+            }
+            // The owned handles remain installed across transient persistence failures.
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+    }
+
     /// Bind exact request/configuration identities to the native operation before queueing.
     /// This identifies the effective daemon policy; producer admission still enforces it.
     pub fn operation_descriptor(
         &self,
         method: &str,
         request: &impl serde::Serialize,
-    ) -> enrichment_store::runtime::OperationDescriptor {
-        enrichment_store::runtime::OperationDescriptor {
+    ) -> enrichment_core::telemetry::OperationDescriptor {
+        enrichment_core::telemetry::OperationDescriptor {
             method: method.into(),
             request_digest: enrichment_core::canonical::digest_hex(&serde_json::json!([
                 "research-operation/2",
                 method,
                 request
             ])),
-            policy_digest: enrichment_core::canonical::digest_hex(&serde_json::json!([
-                "effective-operation-policy/2",
-                self.config,
-            ])),
+            policy_digest: enrichment_core::native_key::Key::OperationPolicy
+                .value(&self.config)
+                .expect("validated typed effective configuration"),
         }
     }
     /// Assemble the service over explicit roots.
@@ -136,8 +173,9 @@ impl Service {
         crate::execution::ownership::validate_for_state(&paths, &config.execution)
             .map_err(store_err(&paths.cache_root))?;
         let arrow = &config.arrow;
-        let runtime = QueryRuntime::new(
+        let runtime = QueryRuntime::with_diagnostics(
             &paths.cache_root.join("query-spill"),
+            &paths.data_root.join("diagnostics"),
             QueryLimits {
                 native: arrow.native.clone(),
                 memory_bytes: arrow.memory_bytes,
@@ -156,33 +194,21 @@ impl Service {
             paths.clone(),
             runtime,
             WriteLimits {
-                row_group_rows: arrow.native.row_group_rows,
-                observation_bloom: arrow.native.observation_bloom,
                 record_bytes: arrow.record_bytes,
                 batch_rows: arrow.batch_rows,
                 batch_bytes: arrow.batch_bytes,
                 file_bytes: arrow.file_bytes,
                 table_rows: arrow.table_rows,
-                row_groups: arrow.row_groups,
             },
             AdmissionLimits {
                 record_bytes: arrow.record_bytes,
-                file_bytes: arrow.file_bytes,
-                batch_rows: arrow.batch_rows,
-                batch_bytes: arrow.batch_bytes,
-                cached_snapshots: arrow.cached_snapshots,
                 table_rows: arrow.table_rows,
                 deadline: std::time::Duration::from_secs(arrow.admission_deadline_seconds),
-                ..AdmissionLimits::default()
             },
         )
         .map_err(|e| store_err(&paths.data_root)(io::Error::other(e.to_string())))?;
         let metrics = crate::metrics::Metrics::new();
-        let fetcher = Fetcher::new(FetchPolicy::from_config(&config))?
-            .with_cache(
-                paths.cache_root.join("http"),
-                config.freshness.negative_cache_ttl_seconds,
-            )
+        let fetcher = Fetcher::new(&config, &repository.runtime, &paths.data_root)?
             // The fetcher is the only code that opens a socket, so it is the only place that
             // can tell a cache hit from a revalidation from a download (§14.3).
             .with_metrics(std::sync::Arc::clone(&metrics));
@@ -206,31 +232,36 @@ impl Service {
         .map_err(store_err(&paths.cache_root))?;
         crate::execution::budget::recover_orphans(&paths.cache_root)
             .map_err(store_err(&paths.cache_root))?;
-        // A private startup runtime can perform native catalog recovery even when this sync
-        // constructor is called from a Tokio worker. No library producer is replayed here.
-        let jobs = std::thread::scope(|scope| {
-            scope
-                .spawn(|| {
-                    let runtime = tokio::runtime::Builder::new_current_thread()
-                        .enable_all()
-                        .build()?;
-                    crate::jobs::Jobs::open_recover(
-                        &paths.data_root,
-                        permits,
-                        config.execution.queue_limit,
-                        |record| {
-                            runtime.block_on(crate::ops::verify::recover(
-                                &repository,
-                                &blobs,
-                                record,
-                            ))
-                        },
-                    )
-                })
-                .join()
-                .map_err(|_| std::io::Error::other("job recovery worker panicked"))?
-        })
-        .map_err(store_err(&paths.data_root))?;
+        let recovery_repository = repository.clone();
+        let recovery_blobs = blobs.clone();
+        let recovery_execution = std::sync::Arc::clone(&execution);
+        let job_config = std::sync::Arc::new(config.clone());
+        let job_cache = paths.cache_root.clone();
+        let jobs = repository
+            .runtime
+            .bootstrap(async move {
+                crate::jobs::Jobs::open_recover(
+                enrichment_store::control_jobs::JobStore::new(
+                    recovery_repository.catalog.clone(),
+                    recovery_repository.runtime.clone(),
+                    format!("daemon_{}", uuid::Uuid::new_v4().simple()),
+                    job_config,
+                ),
+                job_cache,
+                recovery_blobs.clone(),
+                permits,
+                recovery_execution,
+                move |record| {
+                    let repository = recovery_repository.clone();
+                    let blobs = recovery_blobs.clone();
+                    async move {
+                        crate::ops::verify::recover(&repository, &blobs, &record).await
+                    }
+                },
+            ).await
+            })
+            .map_err(|error| store_err(&paths.data_root)(io::Error::other(error)))?
+            .map_err(store_err(&paths.data_root))?;
         Ok(Self {
             writer_lock: std::sync::Arc::new(writer_lock),
             cache_writer_lock: std::sync::Arc::new(cache_writer_lock),

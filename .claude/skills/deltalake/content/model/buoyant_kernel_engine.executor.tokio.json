@@ -1,0 +1,101 @@
+{
+  "module": "buoyant_kernel_engine::executor::tokio",
+  "crate": "buoyant_kernel_engine",
+  "api": "api/buoyant_kernel_engine.executor.tokio.md",
+  "items": [
+    {
+      "path": "buoyant_kernel_engine::executor::tokio::TokioBackgroundExecutor",
+      "name": "TokioBackgroundExecutor",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct TokioBackgroundExecutor",
+      "summary": "A [`TaskExecutor`] that uses the tokio single-threaded runtime in a background thread to service tasks.",
+      "doc": "api/buoyant_kernel_engine.executor.tokio.md#tokiobackgroundexecutor",
+      "aliases": [
+        "delta_kernel_default_engine::executor::tokio::TokioBackgroundExecutor"
+      ],
+      "implements": [
+        "buoyant_kernel_engine::executor::TaskExecutor",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "block_on",
+          "signature": "fn block_on<T>(&self, task: T) -> T::Output where T: Future + Send + 'static, T::Output: Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self) -> EnterGuard<'_>",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&self, task: F) where F: Future<Output = ()> + Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "spawn_blocking",
+          "signature": "fn spawn_blocking<T, R>(&self, task: T) -> BoxFuture<'_, DeltaResult<R>> where T: FnOnce() -> R + Send + 'static, R: Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::executor::tokio::TokioMultiThreadExecutor",
+      "name": "TokioMultiThreadExecutor",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct TokioMultiThreadExecutor",
+      "summary": "A [`TaskExecutor`] that uses the tokio multi-threaded runtime.",
+      "doc": "api/buoyant_kernel_engine.executor.tokio.md#tokiomultithreadexecutor",
+      "aliases": [
+        "delta_kernel_default_engine::executor::tokio::TokioMultiThreadExecutor"
+      ],
+      "implements": [
+        "buoyant_kernel_engine::executor::TaskExecutor"
+      ],
+      "methods": [
+        {
+          "name": "block_on",
+          "signature": "fn block_on<T>(&self, task: T) -> T::Output where T: Future + Send + 'static, T::Output: Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self) -> EnterGuard<'_>",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(handle: tokio::runtime::Handle) -> Self",
+          "summary": "Create a new executor that uses an existing runtime's handle."
+        },
+        {
+          "name": "new_owned_runtime",
+          "signature": "fn new_owned_runtime(worker_threads: Option<usize>, max_blocking_threads: Option<usize>) -> DeltaResult<Self>",
+          "summary": "Create a new executor that owns its own multi-threaded Tokio runtime."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&self, task: F) where F: Future<Output = ()> + Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        },
+        {
+          "name": "spawn_blocking",
+          "signature": "fn spawn_blocking<T, R>(&self, task: T) -> BoxFuture<'_, DeltaResult<R>> where T: FnOnce() -> R + Send + 'static, R: Send + 'static",
+          "via_trait": "buoyant_kernel_engine::executor::TaskExecutor"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 //! Bounded operation projections over one admitted, catalog-pinned snapshot.
 use crate::{
-    catalog_generation::PinnedCatalog,
+    control::ControlSnapshot,
     projection,
     repository::{EvidenceRepository, OpenedSnapshot},
     runtime::QueryRuntime,
@@ -22,7 +22,7 @@ use enrichment_core::{
     producer::ProducerRun,
     wire::data::NamespaceFacet,
 };
-use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
+use std::{collections::BTreeMap, sync::Arc};
 
 pub struct SnapshotReader {
     ctx: SessionContext,
@@ -336,7 +336,7 @@ impl SnapshotReader {
     /// Membership, exact file integrity and admission must all succeed before domain views exist.
     pub async fn open(
         repository: &EvidenceRepository,
-        catalog: Arc<PinnedCatalog>,
+        catalog: Arc<ControlSnapshot>,
         id: &SnapshotId,
     ) -> Result<Self, QueryError> {
         if catalog.snapshot(&repository.runtime, id).await?.is_none() {
@@ -353,10 +353,6 @@ impl SnapshotReader {
     #[must_use]
     pub fn manifest(&self) -> &EvidenceManifest {
         &self.opened.manifest
-    }
-    #[must_use]
-    pub fn dir(&self) -> &PathBuf {
-        &self.opened.directory
     }
     #[must_use]
     pub fn session(&self) -> &SessionContext {
@@ -722,7 +718,7 @@ impl SnapshotReader {
             .filter(
                 col("kind")
                     .eq(lit(FragmentKind::Example.as_str()))
-                    .and(crate::scoring::fragment_eligibility(&spec.fragment_clauses)),
+                    .and(crate::scoring::fragment_eligibility(&spec)?),
             )?
             .sort(vec![col("fragment_id").sort(true, false)])?
             .limit(0, Some(3))?;
@@ -837,7 +833,7 @@ impl SnapshotReader {
                     .await?
                     .filter(col("snapshot_id").eq(lit(self.manifest().snapshot_id.as_str())))?,
                 Some(crate::preparation::QueryFamily::Catalog(
-                    crate::catalog_generation::Table::Attempts,
+                    crate::control::Table::Attempts,
                 )),
             )
             .await?;
@@ -871,7 +867,7 @@ impl SnapshotReader {
                     )?
                     .limit(0, Some(2))?,
                 Some(crate::preparation::QueryFamily::Catalog(
-                    crate::catalog_generation::Table::Attempts,
+                    crate::control::Table::Attempts,
                 )),
             )
             .await?;
@@ -890,6 +886,27 @@ impl SnapshotReader {
     }
     /// # Errors
     /// Acquisition-specific URIs, clocks and validators come from actual catalog attempts.
+    /// The primary archive is selected from this snapshot's release and acquisition records.
+    /// No global first-retrieval sidecar can substitute a different release's locator.
+    pub async fn source_artifact(
+        &self,
+    ) -> Result<Option<enrichment_core::evidence::Artifact>, QueryError> {
+        Ok(self
+            .catalog_artifacts(
+                "WITH source AS (
+                SELECT r.artifact_digest FROM state.records.snapshots s
+                JOIN state.records.contexts c ON s.context_id=c.context_id
+                JOIN state.records.releases r ON c.release_id=r.release_id WHERE s.snapshot_id=$1
+            ), receipts AS (
+                SELECT unnest(acquisitions) AS artifact,started_at,attempt_id
+                FROM state.records.attempts WHERE snapshot_id=$1
+            ) SELECT artifact FROM receipts JOIN source ON artifact.sha256=artifact_digest
+              ORDER BY started_at,attempt_id,artifact.source_uri LIMIT 1",
+            )
+            .await?
+            .pop())
+    }
+
     pub async fn artifacts(&self) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
         self.catalog_artifacts(
             "WITH raw AS (

@@ -6,11 +6,9 @@ use std::{io, path::Path};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Point {
-    SnapshotFilesDurable,
-    SnapshotRenamed,
-    CatalogFilesDurable,
-    CatalogRootDurable,
-    JournalTerminalDurable,
+    EvidenceCohortsDurable,
+    ControlCandidateValidated,
+    ControlCommitAcknowledged,
 }
 
 /// # Errors

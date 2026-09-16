@@ -1,0 +1,76 @@
+{
+  "module": "pyrefly_util::suggest",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.suggest.md",
+  "items": [
+    {
+      "path": "pyrefly_util::suggest::best_suggestion",
+      "name": "best_suggestion",
+      "kind": "function",
+      "crate": "pyrefly_util",
+      "signature": "fn best_suggestion<'a, I>(missing: &ruff_python_ast::name::Name, candidates: I) -> Option<ruff_python_ast::name::Name> where I: IntoIterator<Item = Candidate<'a>>",
+      "summary": "Pick the closest candidate to `missing`, preferring smaller `priority` on ties.",
+      "doc": "api/pyrefly_util.suggest.md#best_suggestion"
+    },
+    {
+      "path": "pyrefly_util::suggest::char_mask",
+      "name": "char_mask",
+      "kind": "function",
+      "crate": "pyrefly_util",
+      "signature": "fn char_mask(c: char) -> u32",
+      "summary": "Which characters a name contains, folded into 32 buckets.",
+      "doc": "api/pyrefly_util.suggest.md#char_mask"
+    },
+    {
+      "path": "pyrefly_util::suggest::Candidate",
+      "name": "Candidate",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Candidate<'a>",
+      "summary": "A name the search may offer, and what it needs to know about it.",
+      "doc": "api/pyrefly_util.suggest.md#candidate",
+      "methods": [
+        {
+          "name": "measured",
+          "signature": "fn measured(name: &'a Name, priority: usize) -> Self",
+          "summary": "A candidate whose keys are not already known, computed on the spot."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: &'a Name, char_len: usize, mask: u32, priority: usize) -> Self",
+          "summary": "A candidate whose keys the caller has already recorded somewhere cheap to reach -- which one scanning a large scope should, rather than have them computed here once per lookup."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::suggest::Search",
+      "name": "Search",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Search<'a>",
+      "summary": "The state a search carries between candidates.",
+      "doc": "api/pyrefly_util.suggest.md#search",
+      "methods": [
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> Option<Name>",
+          "summary": "The nearest candidate the search kept, if any."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(missing: &'a Name) -> Self"
+        },
+        {
+          "name": "offer",
+          "signature": "fn offer(&mut self, candidate: Candidate<'_>)",
+          "summary": "Offer a candidate with nothing further to check."
+        },
+        {
+          "name": "offer_if",
+          "signature": "fn offer_if(&mut self, candidate: Candidate<'_>, admit: impl FnOnce() -> bool)",
+          "summary": "Offer a candidate, if `admit` allows it."
+        }
+      ]
+    }
+  ]
+}

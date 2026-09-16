@@ -1,0 +1,146 @@
+{
+  "module": "pyrefly::error::collector",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.error.collector.md",
+  "items": [
+    {
+      "path": "pyrefly::error::collector::CollectedErrors",
+      "name": "CollectedErrors",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct CollectedErrors",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "ordinary",
+        "directives",
+        "suppressed",
+        "disabled",
+        "baseline"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::error::collector::ErrorBuilder",
+      "name": "ErrorBuilder",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ErrorBuilder<'a>",
+      "summary": "A builder for constructing and emitting errors incrementally. Chain decoration methods and call `.emit()` to push the error into the collector.",
+      "doc": "api/pyrefly.error.collector.md#errorbuilder",
+      "methods": [
+        {
+          "name": "emit",
+          "signature": "fn emit(self)",
+          "summary": "Emit the error into the collector."
+        },
+        {
+          "name": "with_annotation",
+          "signature": "fn with_annotation(self, range: TextRange, label: String) -> Self",
+          "summary": "Add a secondary labeled span."
+        },
+        {
+          "name": "with_context",
+          "signature": "fn with_context(self, ctx: Option<impl FnOnce() -> ErrorContext>) -> Self",
+          "summary": "Set the ErrorContext. At emit time, the context's message becomes the header (demoting the original header to first detail), its annotations are prepended, and the ErrorKind is overridden. If called more than once, the last context wins. `…"
+        },
+        {
+          "name": "with_detail",
+          "signature": "fn with_detail(self, msg: String) -> Self",
+          "summary": "Append a detail line (shown indented below the header)."
+        },
+        {
+          "name": "with_detail_from",
+          "signature": "fn with_detail_from(self, msg: impl FnOnce() -> Option<String>) -> Self",
+          "summary": "Append a detail line that is only worth working out if the error will be kept. Modules loaded below `Require::Errors` collect with [`ErrorStyle::Never`], so for them this never runs at all."
+        },
+        {
+          "name": "with_details",
+          "signature": "fn with_details(self, details: Vec<String>) -> Self",
+          "summary": "Convenience method to append multiple detail lines."
+        },
+        {
+          "name": "with_errors_as_details",
+          "signature": "fn with_errors_as_details(self, collector: ErrorCollector) -> Self",
+          "summary": "Adds the errors from `collector` as detail lines."
+        },
+        {
+          "name": "with_quick_fix",
+          "signature": "fn with_quick_fix(self, fix: ErrorQuickFix) -> Self",
+          "summary": "Add a structured quick fix."
+        },
+        {
+          "name": "without_deprecated_tag",
+          "signature": "fn without_deprecated_tag(self) -> Self",
+          "summary": "Report the deprecation without marking the range as deprecated in editors. See [`Error::without_deprecated_tag`]."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::error::collector::ErrorCollector",
+      "name": "ErrorCollector",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ErrorCollector",
+      "summary": "Collects the user errors (e.g. type errors) associated with a module.",
+      "doc": "api/pyrefly.error.collector.md#errorcollector",
+      "methods": [
+        {
+          "name": "collect",
+          "signature": "fn collect(&self, error_config: &ErrorConfig<'_>) -> CollectedErrors"
+        },
+        {
+          "name": "collect_into",
+          "signature": "fn collect_into(&self, error_config: &ErrorConfig<'_>, fstring_ranges: &[(LineNumber, LineNumber)], ignore_all: &[Suppression], misplaced: &[LineNumber], result: &mut CollectedErrors)"
+        },
+        {
+          "name": "error_builder",
+          "signature": "fn error_builder(&self, range: TextRange, kind: ErrorKind, header: String) -> ErrorBuilder<'_>",
+          "summary": "Start building an error. Returns a no-op builder if style is Never."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&self, other: ErrorCollector)"
+        },
+        {
+          "name": "has_hard",
+          "signature": "fn has_hard(&self) -> bool",
+          "summary": "Whether any hard (non-soft) errors exist. Short-circuits on the first match."
+        },
+        {
+          "name": "internal_error",
+          "signature": "fn internal_error(&self, range: TextRange, header: String)"
+        },
+        {
+          "name": "is_active",
+          "signature": "fn is_active(&self) -> bool"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "len_hard",
+          "signature": "fn len_hard(&self) -> usize",
+          "summary": "Count of errors excluding soft diagnostics (which should not influence overload selection or type-inference decisions)."
+        },
+        {
+          "name": "module",
+          "signature": "fn module(&self) -> &pyrefly_python::module::Module"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(module_info: pyrefly_python::module::Module, style: ErrorStyle) -> Self"
+        },
+        {
+          "name": "style",
+          "signature": "fn style(&self) -> ErrorStyle"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "module": "deltalake_core::writer::json",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.writer.json.md",
+  "items": [
+    {
+      "path": "deltalake_core::writer::json::JsonWriter",
+      "name": "JsonWriter",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct JsonWriter",
+      "summary": "Writes messages to a delta lake table.",
+      "doc": "api/deltalake_core.writer.json.md#jsonwriter",
+      "aliases": [
+        "deltalake::writer::JsonWriter",
+        "deltalake::writer::json::JsonWriter",
+        "deltalake_core::writer::JsonWriter"
+      ],
+      "implements": [
+        "deltalake_core::writer::DeltaWriter"
+      ],
+      "methods": [
+        {
+          "name": "arrow_schema",
+          "signature": "fn arrow_schema(&self) -> ArrowSchemaRef",
+          "summary": "Returns the arrow schema this writer encodes under (fixed at construction)."
+        },
+        {
+          "name": "buffer_len",
+          "signature": "fn buffer_len(&self) -> usize",
+          "summary": "Approximate encoded (parquet) size written since the last flush, including files already finalized by a size roll. Monotonic within a flush window, so usable as a threshold for calling [`flush`](Self::flush)."
+        },
+        {
+          "name": "buffered_record_batch_count",
+          "signature": "fn buffered_record_batch_count(&self) -> usize",
+          "summary": "Returns the number of record batches streamed since the last flush."
+        },
+        {
+          "name": "flush",
+          "signature": "async fn flush(&mut self) -> Result<Vec<Add>, DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Finalize all files written since the last flush and return their [`Add`] actions, resetting internal state to handle another flush window."
+        },
+        {
+          "name": "for_table",
+          "signature": "fn for_table(table: &DeltaTable) -> Result<JsonWriter, DeltaTableError>",
+          "summary": "Creates a JsonWriter to write to the given table, using the table's schema."
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self)",
+          "summary": "Resets internal state, discarding any data written since the last flush."
+        },
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(table_url: Url, schema_ref: ArrowSchemaRef, partition_columns: Option<Vec<String>>, storage_options: Option<HashMap<String, String>>) -> Result<Self, DeltaTableError>",
+          "summary": "Create a new JsonWriter instance"
+        },
+        {
+          "name": "with_target_file_size",
+          "signature": "fn with_target_file_size(self, target_file_size: u64) -> Self",
+          "summary": "Sets a target file size; once an in-progress file reaches it the writer finalizes it and rolls a new one. Without this the writer emits a single file per partition per flush (the default)."
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, values: Vec<Value>) -> Result<(), DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Write a chunk of values into the internal write buffers with the default write mode"
+        },
+        {
+          "name": "write_with_mode",
+          "signature": "async fn write_with_mode(&mut self, values: Vec<Value>, mode: WriteMode) -> Result<(), DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Decode the JSON values into a record batch and stream it into the dataset writer; partitioning and parquet encoding happen incrementally, and files are finalized at flush."
+        }
+      ]
+    }
+  ]
+}

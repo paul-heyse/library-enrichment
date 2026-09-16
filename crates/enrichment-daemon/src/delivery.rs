@@ -51,8 +51,10 @@ pub(crate) fn size(value: &impl serde::Serialize, limit: usize) -> io::Result<us
     canonical::serialized_size(value, limit)
 }
 
-pub(crate) fn encode(
+pub(crate) async fn encode(
     blobs: &BlobStore,
+    catalog: &enrichment_store::control::ControlStore,
+    runtime: &enrichment_store::runtime::QueryRuntime,
     mut result: Envelope,
     inline: usize,
     requested: Option<usize>,
@@ -66,36 +68,53 @@ pub(crate) fn encode(
     result.delivery.set_limits(requested, inline);
     // Reject before to_value/canonicalization. JSON escaping is included in this bound.
     let bytes = size(&result, MAX_RESULT_BYTES)?;
+    catalog
+        .retain_artifacts(
+            runtime,
+            &result
+                .artifacts
+                .iter()
+                .map(|handle| handle.receipt.clone())
+                .collect::<Vec<_>>(),
+        )
+        .await
+        .map_err(io::Error::other)?;
     if bytes <= inline {
         return Ok(result);
     }
     let (artifact, index) =
         if let DeliveryDescriptor::Artifact { artifact_id, .. } = &result.delivery {
-            let artifact = blobs
-                .find(artifact_id)?
+            let artifact = catalog
+                .pin()
+                .await
+                .map_err(io::Error::other)?
+                .artifact(runtime, artifact_id)
+                .await
+                .map_err(io::Error::other)?
                 .ok_or_else(|| io::Error::other("retained result missing"))?;
-            let (index, _) =
-                blobs.read_result_sections(&artifact, &["status"], MAX_RESULT_BYTES as u64)?;
+            let owned = blobs.clone();
+            let descriptor = artifact.clone();
+            let (index, _) = runtime
+                .blocking(move || {
+                    owned.read_result_sections(&descriptor, &["status"], MAX_RESULT_BYTES as u64)
+                })
+                .await
+                .map_err(io::Error::other)??;
             (artifact, index)
         } else {
-            store_result(blobs, &result, "service:bounded-result/2")?
+            let owned = blobs.clone();
+            let input = result.clone();
+            let output = runtime
+                .blocking(move || store_result(&owned, &input, "service:bounded-result/3"))
+                .await
+                .map_err(io::Error::other)??;
+            catalog
+                .retain_result(runtime, blobs, &output.0)
+                .await
+                .map_err(io::Error::other)?;
+            output
         };
     overflow(&artifact, &index, result, bytes, inline)
-}
-
-pub(crate) fn terminal(blobs: &BlobStore, result: Envelope) -> io::Result<Envelope> {
-    if let DeliveryDescriptor::Artifact { artifact_id, .. } = &result.delivery {
-        let artifact = blobs
-            .find(artifact_id)?
-            .ok_or_else(|| io::Error::other("terminal delivery artifact missing"))?;
-        blobs.result_dependencies(&artifact)?;
-        // Verify the root itself even when it has no dependent artifacts.
-        let _ = blobs.read_result_sections(&artifact, &["status"], MAX_RESULT_BYTES as u64)?;
-        return Ok(result);
-    }
-    let bytes = size(&result, MAX_RESULT_BYTES)?;
-    let (artifact, index) = store_result(blobs, &result, "service:terminal-result/2")?;
-    overflow(&artifact, &index, result, bytes, JOURNAL_BYTES)
 }
 
 fn store_result(
@@ -300,10 +319,17 @@ mod tests {
     use super::*;
     use enrichment_core::wire::ErrorCode;
 
-    #[test]
-    fn delivery_preserves_outcome_and_scope_and_indexes_independent_sections() {
+    #[tokio::test]
+    async fn delivery_preserves_outcome_and_scope_and_indexes_independent_sections() {
         let dir = tempfile::tempdir().unwrap();
         let blobs = BlobStore::open(dir.path()).unwrap();
+        let runtime = enrichment_store::runtime::QueryRuntime::new(
+            &dir.path().join("spill"),
+            Default::default(),
+        )
+        .unwrap();
+        let catalog =
+            enrichment_store::control::ControlStore::open(dir.path(), runtime.clone()).unwrap();
         let mut result = envelope::ok(
             "retained comparison",
             common::to_object(&serde_json::json!({
@@ -324,7 +350,9 @@ mod tests {
         let coverage = result.coverage.clone();
         let expected_changes = result.data["changes"].clone();
         result.delivery.set_limits(Some(8192), 8192);
-        let reply = encode(&blobs, result, 8192, Some(8192)).unwrap();
+        let reply = encode(&blobs, &catalog, &runtime, result, 8192, Some(8192))
+            .await
+            .unwrap();
         assert_eq!(reply.status(), enrichment_core::wire::Status::Partial);
         assert_eq!(reply.coverage, coverage);
         assert!(reply.data.is_empty());
@@ -341,7 +369,14 @@ mod tests {
                 .iter()
                 .any(|s| s.name == enrichment_core::wire::research::ResultSectionName::Changes)
         );
-        let artifact = blobs.find(artifact_id).unwrap().unwrap();
+        let artifact = catalog
+            .pin()
+            .await
+            .unwrap()
+            .artifact(&runtime, artifact_id)
+            .await
+            .unwrap()
+            .unwrap();
         let mut file = blobs.capture(&artifact, MAX_RESULT_BYTES as u64).unwrap();
         let (index, base) =
             enrichment_store::result::index(&mut file, artifact.size_bytes).unwrap();
@@ -368,10 +403,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let blobs = BlobStore::open(dir.path()).unwrap();
         let context =
-            enrichment_core::identity::ContextId::try_from("ctx_0123456789abcdef".to_owned())
+            enrichment_core::identity::ContextId::try_from(format!("ctx_{}", "0".repeat(64)))
                 .unwrap();
         let snapshot =
-            enrichment_core::identity::SnapshotId::try_from("snap_0123456789abcdef".to_owned())
+            enrichment_core::identity::SnapshotId::try_from(format!("snap_{}", "1".repeat(64)))
                 .unwrap();
         let mut answer = envelope::ok(
             "complete result",
@@ -422,10 +457,17 @@ mod tests {
         );
     }
 
-    #[test]
-    fn escaped_results_are_bounded_before_copy_and_reuse_one_artifact() {
+    #[tokio::test]
+    async fn escaped_results_are_bounded_before_copy_and_reuse_one_artifact() {
         let dir = tempfile::tempdir().unwrap();
         let blobs = BlobStore::open(dir.path()).unwrap();
+        let runtime = enrichment_store::runtime::QueryRuntime::new(
+            &dir.path().join("spill"),
+            Default::default(),
+        )
+        .unwrap();
+        let catalog =
+            enrichment_store::control::ControlStore::open(dir.path(), runtime.clone()).unwrap();
         let mut answer = envelope::error(
             ErrorCode::UnsupportedFormat,
             "fixture",
@@ -441,21 +483,30 @@ mod tests {
             size(&answer, size_bytes).unwrap(),
             serde_json::to_vec(&answer).unwrap().len()
         );
-        let first = encode(&blobs, answer.clone(), 4096, Some(4096)).unwrap();
+        let first = encode(&blobs, &catalog, &runtime, answer.clone(), 4096, Some(4096))
+            .await
+            .unwrap();
         answer.request_id = envelope::new_request_id();
-        let second = encode(&blobs, answer, 4096, Some(4096)).unwrap();
+        let second = encode(&blobs, &catalog, &runtime, answer, 4096, Some(4096))
+            .await
+            .unwrap();
         assert_eq!(
             serde_json::to_value(&first.delivery).unwrap()["artifact_id"],
             serde_json::to_value(&second.delivery).unwrap()["artifact_id"]
         );
         assert_ne!(first.request_id, second.request_id);
         assert!(size(&second, 4096).is_ok());
-        let artifact = blobs
-            .find(
+        let artifact = catalog
+            .pin()
+            .await
+            .unwrap()
+            .artifact(
+                &runtime,
                 serde_json::to_value(&first.delivery).unwrap()["artifact_id"]
                     .as_str()
                     .unwrap(),
             )
+            .await
             .unwrap()
             .unwrap();
         let decoded: serde_json::Value =

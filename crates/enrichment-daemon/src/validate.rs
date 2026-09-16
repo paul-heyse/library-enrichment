@@ -71,8 +71,7 @@ pub fn validate(document: &str) -> Validation {
 mod tests {
     use super::*;
 
-    const OK_FIXTURE: &str =
-        include_str!("../../../contracts/research-v2/examples/ok.fixture.json");
+    const OK_FIXTURE: &str = include_str!("../../../tests/fixtures/wire/ok.fixture.json");
 
     #[test]
     fn a_delivered_fixture_is_accepted() {

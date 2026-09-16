@@ -1,0 +1,110 @@
+{
+  "module": "buoyant_kernel::metrics::reporter",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.metrics.reporter.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::metrics::reporter::LoggingMetricsReporter",
+      "name": "LoggingMetricsReporter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct LoggingMetricsReporter",
+      "summary": "A [`MetricsReporter`] that logs each event as a tracing event at the configured level.",
+      "doc": "api/buoyant_kernel.metrics.reporter.md#loggingmetricsreporter",
+      "aliases": [
+        "buoyant_kernel::metrics::LoggingMetricsReporter",
+        "delta_kernel::metrics::reporter::LoggingMetricsReporter"
+      ],
+      "implements": [
+        "buoyant_kernel::metrics::reporter::MetricsReporter"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(level: Level) -> Self",
+          "summary": "Create a new reporter that logs each [`MetricEvent`] at the given tracing level."
+        },
+        {
+          "name": "report",
+          "signature": "fn report(&self, event: MetricEvent)",
+          "via_trait": "buoyant_kernel::metrics::reporter::MetricsReporter"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::metrics::reporter::ReportGeneratorLayer",
+      "name": "ReportGeneratorLayer",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ReportGeneratorLayer",
+      "summary": "A [`tracing_subscriber::Layer`] that converts kernel tracing spans into [`MetricEvent`]s and forwards them to a registered [`MetricsReporter`].",
+      "doc": "api/buoyant_kernel.metrics.reporter.md#reportgeneratorlayer",
+      "aliases": [
+        "buoyant_kernel::metrics::ReportGeneratorLayer",
+        "delta_kernel::metrics::reporter::ReportGeneratorLayer"
+      ],
+      "implements": [
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(reporter: Arc<dyn MetricsReporter>) -> Self",
+          "summary": "Create a new layer that forwards metric events to the given reporter."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_event",
+          "signature": "fn on_event(&self, event: &tracing::Event<'_>, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, id: &Id, values: &Record<'_>, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::metrics::reporter::MetricsReporter",
+      "name": "MetricsReporter",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait MetricsReporter: Send + Sync + std::fmt::Debug",
+      "summary": "Receives [`MetricEvent`]s as they occur during Delta operations and forwards them to a monitoring system. Reporter implementations must be cheap to call on any thread.",
+      "doc": "api/buoyant_kernel.metrics.reporter.md#metricsreporter",
+      "aliases": [
+        "buoyant_kernel::metrics::MetricsReporter",
+        "delta_kernel::metrics::reporter::MetricsReporter"
+      ],
+      "implementors": [
+        "buoyant_kernel::metrics::reporter::LoggingMetricsReporter"
+      ],
+      "required_methods": [
+        "report"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "report",
+          "signature": "fn report(&self, event: MetricEvent)",
+          "summary": "Report a metric event."
+        }
+      ]
+    }
+  ]
+}

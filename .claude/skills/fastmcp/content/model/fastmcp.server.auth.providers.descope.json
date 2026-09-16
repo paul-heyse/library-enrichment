@@ -1,0 +1,213 @@
+{
+ "api": "api/fastmcp.server.auth.providers.descope.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#_oauth_wk",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_OAUTH_WK",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.descope._OAUTH_WK",
+   "preferred": "fastmcp.server.auth.providers.descope._OAUTH_WK",
+   "signature": "_OAUTH_WK = '/.well-known/oauth-authorization-server'",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#_openid_wk",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_OPENID_WK",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.descope._OPENID_WK",
+   "preferred": "fastmcp.server.auth.providers.descope._OPENID_WK",
+   "signature": "_OPENID_WK = '/.well-known/openid-configuration'",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.descope.logger",
+   "preferred": "fastmcp.server.auth.providers.descope.logger",
+   "signature": "logger = get_logger(__name__)",
+   "summary": ""
+  },
+  {
+   "bases": [
+    "RemoteAuthProvider"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#descopeprovider",
+   "inherits": {
+    "fastmcp.server.auth.auth.AuthProvider": [
+     "challenge_scopes",
+     "get_middleware",
+     "get_well_known_routes",
+     "required_scopes",
+     "resource_base_url",
+     "set_mcp_path"
+    ],
+    "fastmcp.server.auth.auth.RemoteAuthProvider": [
+     "authorization_servers",
+     "get_challenge_scopes",
+     "resource_documentation",
+     "resource_name",
+     "scopes_supported",
+     "token_verifier",
+     "verify_token"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "base_url",
+     "signature": "base_url = AnyHttpUrl(str(base_url).rstrip('/'))"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "descope_base_url",
+     "signature": "descope_base_url = descope_base_url_str"
+    },
+    {
+     "kind": "function",
+     "name": "get_routes",
+     "signature": "def get_routes(self, mcp_path: str | None = None) -> list[Route]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "oauth_authorization_server_metadata_url",
+     "signature": "oauth_authorization_server_metadata_url = self.openid_configuration_url.replace(_OPENID_WK, _OAUTH_WK)"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "openid_configuration_url",
+     "signature": "openid_configuration_url = f'{issuer_url}{_OPENID_WK}'"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "project_id",
+     "signature": "project_id = project_id"
+    }
+   ],
+   "name": "DescopeProvider",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.descope.DescopeProvider",
+   "preferred": "fastmcp.server.auth.providers.descope.DescopeProvider",
+   "signature": "class DescopeProvider(RemoteAuthProvider)",
+   "summary": "Descope metadata provider for Dynamic Client Registration (DCR)."
+  },
+  {
+   "bases": [
+    "JWTVerifier"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#_descopejwtverifier",
+   "inherits": {
+    "fastmcp.server.auth.auth.AuthProvider": [
+     "base_url",
+     "challenge_scopes",
+     "get_challenge_scopes",
+     "get_middleware",
+     "get_routes",
+     "get_well_known_routes",
+     "required_scopes",
+     "resource_base_url",
+     "scopes_supported",
+     "set_mcp_path"
+    ],
+    "fastmcp.server.auth.providers.jwt.JWTVerifier": [
+     "algorithm",
+     "audience",
+     "issuer",
+     "jwks_uri",
+     "load_access_token",
+     "logger",
+     "public_key",
+     "ssrf_safe",
+     "verify_token"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "agentic_issuer",
+     "signature": "agentic_issuer = f'{descope_base_url}/v1/apps/agentic/{project_id}'"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "project_issuer",
+     "signature": "project_issuer = f'{descope_base_url}/v1/apps/{project_id}'"
+    }
+   ],
+   "name": "_DescopeJWTVerifier",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.descope._DescopeJWTVerifier",
+   "preferred": "fastmcp.server.auth.providers.descope._DescopeJWTVerifier",
+   "signature": "class _DescopeJWTVerifier(JWTVerifier)",
+   "summary": "JWT verifier that accepts every issuer form of a Descope project."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#_discover_scopes",
+   "kind": "function",
+   "labels": [
+    "async"
+   ],
+   "name": "_discover_scopes",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.descope._discover_scopes",
+   "preferred": "fastmcp.server.auth.providers.descope._discover_scopes",
+   "signature": "async def _discover_scopes(openid_configuration_url: str) -> list[str] | None",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.descope.md#_parse_descope_config_url",
+   "kind": "function",
+   "name": "_parse_descope_config_url",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.descope._parse_descope_config_url",
+   "preferred": "fastmcp.server.auth.providers.descope._parse_descope_config_url",
+   "signature": "def _parse_descope_config_url(config_url: str) -> tuple[str, str, str, str]",
+   "summary": ""
+  }
+ ],
+ "module": "fastmcp.server.auth.providers.descope"
+}

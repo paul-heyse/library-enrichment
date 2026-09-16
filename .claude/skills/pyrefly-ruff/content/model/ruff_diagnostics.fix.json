@@ -1,0 +1,190 @@
+{
+  "module": "ruff_diagnostics::fix",
+  "crate": "ruff_diagnostics",
+  "api": "api/ruff_diagnostics.fix.md",
+  "items": [
+    {
+      "path": "ruff_diagnostics::fix::Applicability",
+      "name": "Applicability",
+      "kind": "enum",
+      "crate": "ruff_diagnostics",
+      "signature": "enum Applicability",
+      "summary": "Indicates if a fix can be applied.",
+      "doc": "api/ruff_diagnostics.fix.md#applicability",
+      "aliases": [
+        "ruff_diagnostics::Applicability"
+      ],
+      "variants": [
+        "DisplayOnly",
+        "Unsafe",
+        "Safe"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "is_display_only",
+          "signature": "const fn is_display_only(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`DisplayOnly`]."
+        },
+        {
+          "name": "is_safe",
+          "signature": "const fn is_safe(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Safe`]."
+        },
+        {
+          "name": "is_unsafe",
+          "signature": "const fn is_unsafe(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Unsafe`]."
+        }
+      ]
+    },
+    {
+      "path": "ruff_diagnostics::fix::IsolationLevel",
+      "name": "IsolationLevel",
+      "kind": "enum",
+      "crate": "ruff_diagnostics",
+      "signature": "enum IsolationLevel",
+      "summary": "Indicates the level of isolation required to apply a fix.",
+      "doc": "api/ruff_diagnostics.fix.md#isolationlevel",
+      "aliases": [
+        "ruff_diagnostics::IsolationLevel"
+      ],
+      "variants": [
+        "Group",
+        "NonOverlapping"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_diagnostics::fix::Fix",
+      "name": "Fix",
+      "kind": "struct",
+      "crate": "ruff_diagnostics",
+      "signature": "struct Fix",
+      "summary": "A collection of [`Edit`] elements to be applied to a source file.",
+      "doc": "api/ruff_diagnostics.fix.md#fix",
+      "aliases": [
+        "ruff_diagnostics::Fix"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "applicability",
+          "signature": "fn applicability(&self) -> Applicability",
+          "summary": "Return the [`Applicability`] of the [`Fix`]."
+        },
+        {
+          "name": "applicable_edit",
+          "signature": "fn applicable_edit(edit: Edit, applicability: Applicability) -> Self",
+          "summary": "Create a new [`Fix`] with the specified [`Applicability`] to apply an [`Edit`] element."
+        },
+        {
+          "name": "applicable_edits",
+          "signature": "fn applicable_edits(edit: Edit, rest: impl IntoIterator<Item = Edit>, applicability: Applicability) -> Self",
+          "summary": "Create a new [`Fix`] with the specified [`Applicability`] to apply multiple [`Edit`] elements."
+        },
+        {
+          "name": "applies",
+          "signature": "fn applies(&self, applicability: Applicability) -> bool",
+          "summary": "Return [`true`] if this [`Fix`] should be applied with at a given [`Applicability`]."
+        },
+        {
+          "name": "display_only_edit",
+          "signature": "fn display_only_edit(edit: Edit) -> Self",
+          "summary": "Create a new [`Fix`] that should only [display](Applicability::DisplayOnly) and not apply from an [`Edit`] element ."
+        },
+        {
+          "name": "display_only_edits",
+          "signature": "fn display_only_edits(edit: Edit, rest: impl IntoIterator<Item = Edit>) -> Self"
+        },
+        {
+          "name": "edits",
+          "signature": "fn edits(&self) -> &[Edit]",
+          "summary": "Return a slice of the [`Edit`] elements in the [`Fix`], sorted by [`Edit::start`] in ascending order."
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "into_edits",
+          "signature": "fn into_edits(self) -> Vec<Edit>"
+        },
+        {
+          "name": "isolate",
+          "signature": "fn isolate(self, isolation: IsolationLevel) -> Self",
+          "summary": "Create a new [`Fix`] with the given [`IsolationLevel`]."
+        },
+        {
+          "name": "isolation",
+          "signature": "fn isolation(&self) -> IsolationLevel",
+          "summary": "Return the [`IsolationLevel`] of the [`Fix`]."
+        },
+        {
+          "name": "min_start",
+          "signature": "fn min_start(&self) -> Option<TextSize>",
+          "summary": "Return the [`TextSize`] of the first [`Edit`] in the [`Fix`]."
+        },
+        {
+          "name": "safe_edit",
+          "signature": "fn safe_edit(edit: Edit) -> Self",
+          "summary": "Create a new [`Fix`] that is [safe](Applicability::Safe) to apply from an [`Edit`] element."
+        },
+        {
+          "name": "safe_edits",
+          "signature": "fn safe_edits(edit: Edit, rest: impl IntoIterator<Item = Edit>) -> Self",
+          "summary": "Create a new [`Fix`] that is [safe](Applicability::Safe) to apply from multiple [`Edit`] elements."
+        },
+        {
+          "name": "unsafe_edit",
+          "signature": "fn unsafe_edit(edit: Edit) -> Self",
+          "summary": "Create a new [`Fix`] that is [unsafe](Applicability::Unsafe) to apply from an [`Edit`] element."
+        },
+        {
+          "name": "unsafe_edits",
+          "signature": "fn unsafe_edits(edit: Edit, rest: impl IntoIterator<Item = Edit>) -> Self",
+          "summary": "Create a new [`Fix`] that is [unsafe](Applicability::Unsafe) to apply from multiple [`Edit`] elements."
+        },
+        {
+          "name": "with_applicability",
+          "signature": "fn with_applicability(self, applicability: Applicability) -> Self",
+          "summary": "Create a new [`Fix`] with the given [`Applicability`]."
+        }
+      ]
+    }
+  ]
+}

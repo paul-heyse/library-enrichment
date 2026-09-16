@@ -1,0 +1,846 @@
+{
+  "module": "pyrefly::binding::scope",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.binding.scope.md",
+  "items": [
+    {
+      "path": "pyrefly::binding::scope::Exportable",
+      "name": "Exportable",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum Exportable",
+      "summary": "A name defined in a module, which needs to be convertible to an export.",
+      "doc": "api/pyrefly.binding.scope.md#exportable",
+      "variants": [
+        "Initialized",
+        "Uninitialized"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::FlowStyle",
+      "name": "FlowStyle",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum FlowStyle",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Other",
+        "ClassField",
+        "MergeableImport",
+        "Import",
+        "ImportAs",
+        "FunctionDef",
+        "ClassDef",
+        "PossiblyUninitialized",
+        "MaybeInitialized",
+        "Uninitialized",
+        "LoopRecursion"
+      ],
+      "methods": [
+        {
+          "name": "assume_initialized",
+          "signature": "fn assume_initialized(self) -> Self"
+        },
+        {
+          "name": "canonical_class_receiver_idx",
+          "signature": "fn canonical_class_receiver_idx(&self) -> Option<Idx<Key>>",
+          "summary": "Returns the canonical class-object idx for a flow style that should behave as if it has an implicit class-typed receiver, or `None` if the style is not class-bearing."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::LoopExit",
+      "name": "LoopExit",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum LoopExit",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Break",
+        "Continue"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::MutableCaptureError",
+      "name": "MutableCaptureError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum MutableCaptureError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "NotFound",
+        "NonlocalScope",
+        "AssignedBeforeNonlocal",
+        "AssignedBeforeGlobal"
+      ],
+      "methods": [
+        {
+          "name": "message",
+          "signature": "fn message(&self, name: &Identifier) -> String"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::NameReadInfo",
+      "name": "NameReadInfo",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum NameReadInfo",
+      "summary": "The result of looking up a name in the current scope stack for a read operation.",
+      "doc": "api/pyrefly.binding.scope.md#namereadinfo",
+      "variants": [
+        "Flow",
+        "Anywhere",
+        "ImplicitBuiltin",
+        "OuterClassTypeParameter",
+        "NotFound"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::TerminationKind",
+      "name": "TerminationKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum TerminationKind",
+      "summary": "How control flow left a point in the program. Only an exception can be swallowed by an enclosing `with`: `__exit__` also runs for `return`/`break`/`continue`, but its return value is ignored, so those always leave the `with`.",
+      "doc": "api/pyrefly.binding.scope.md#terminationkind",
+      "variants": [
+        "Raise",
+        "Jump",
+        "StaticTest"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::ClassIndices",
+      "name": "ClassIndices",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassIndices",
+      "summary": "Because of complications related both to recursion in the binding graph and to the need for efficient representations, Pyrefly relies on multiple different integer indexes used to refer to classes and retrieve different kinds of binding in…",
+      "doc": "api/pyrefly.binding.scope.md#classindices",
+      "fields": [
+        "def_index",
+        "class_idx",
+        "class_object_idx",
+        "base_type_idx",
+        "metadata_idx",
+        "mro_idx",
+        "disjoint_base_idx",
+        "synthesized_fields_idx",
+        "variance_idx",
+        "class_checks_idx",
+        "abstract_class_check_idx",
+        "subscript_symmetry_idx"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::Flow",
+      "name": "Flow",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Flow",
+      "summary": "Flow-sensitive information about a name.",
+      "doc": "api/pyrefly.binding.scope.md#flow",
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::Fork",
+      "name": "Fork",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Fork",
+      "summary": "Represents forks in control flow that contain branches. Used to control how the final flow from merging branches behaves.",
+      "doc": "api/pyrefly.binding.scope.md#fork",
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::InstanceAttribute",
+      "name": "InstanceAttribute",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct InstanceAttribute",
+      "summary": "",
+      "doc": null,
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::NameWriteInfo",
+      "name": "NameWriteInfo",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct NameWriteInfo",
+      "summary": "The result of a successful lookup of a name for a write operation.",
+      "doc": "api/pyrefly.binding.scope.md#namewriteinfo",
+      "fields": [
+        "annotation",
+        "anywhere_range"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::OuterCaptureInfo",
+      "name": "OuterCaptureInfo",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct OuterCaptureInfo",
+      "summary": "Value and narrow information for a captured variable from an outer scope. Returned by `Scopes::outer_capture_info`.",
+      "doc": "api/pyrefly.binding.scope.md#outercaptureinfo",
+      "fields": [
+        "value_idx",
+        "narrow_idx"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::Scope",
+      "name": "Scope",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Scope",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "annotation",
+          "signature": "fn annotation(range: TextRange, class_scope: bool) -> Self"
+        },
+        {
+          "name": "class_body",
+          "signature": "fn class_body(range: TextRange, indices: ClassIndices, name: Identifier, has_protocol_base: bool) -> Self"
+        },
+        {
+          "name": "comprehension",
+          "signature": "fn comprehension(range: TextRange, is_generator: bool) -> Self"
+        },
+        {
+          "name": "function",
+          "signature": "fn function(range: TextRange, name: Identifier, is_async: bool) -> Self"
+        },
+        {
+          "name": "lambda",
+          "signature": "fn lambda(range: TextRange, name: Identifier, is_async: bool) -> Self"
+        },
+        {
+          "name": "method",
+          "signature": "fn method(range: TextRange, name: Identifier, is_async: bool) -> Self"
+        },
+        {
+          "name": "type_alias",
+          "signature": "fn type_alias(range: TextRange) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::ScopeTrace",
+      "name": "ScopeTrace",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ScopeTrace",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "available_definitions",
+          "signature": "fn available_definitions(&self, table: &BindingTable, position: TextSize) -> SmallSet<Idx<Key>>"
+        },
+        {
+          "name": "definition_at_position",
+          "signature": "fn definition_at_position<'a>(&self, table: &'a BindingTable, position: TextSize) -> Option<&'a Key>"
+        },
+        {
+          "name": "exportables",
+          "signature": "fn exportables(&self) -> SmallMap<Name, Exportable>"
+        },
+        {
+          "name": "module_deletes",
+          "signature": "fn module_deletes(&self) -> &SmallSet<Name>",
+          "summary": "Names `del`eted at module scope."
+        },
+        {
+          "name": "toplevel_scope",
+          "signature": "fn toplevel_scope(&self) -> &Scope"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::Scopes",
+      "name": "Scopes",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Scopes",
+      "summary": "Scopes keep track of the current stack of the scopes we are in.",
+      "doc": "api/pyrefly.binding.scope.md#scopes",
+      "methods": [
+        {
+          "name": "add_implicit_builtin_to_module_static",
+          "signature": "fn add_implicit_builtin_to_module_static(&mut self, name: Hashed<&Name>, module: ModuleName) -> Key",
+          "summary": "Add a lazily-discovered builtin to the module's static scope."
+        },
+        {
+          "name": "add_loop_exit",
+          "signature": "fn add_loop_exit(&mut self, exit: LoopExit) -> bool",
+          "summary": "Add a loop exit point to the current innermost loop with the current flow."
+        },
+        {
+          "name": "add_lvalue_to_current_static",
+          "signature": "fn add_lvalue_to_current_static(&mut self, x: &Expr)",
+          "summary": "Add an adhoc name - if it does not already exist - to the current static scope. If the name already exists, nothing happens."
+        },
+        {
+          "name": "add_name_to_current_static",
+          "signature": "fn add_name_to_current_static(&mut self, name: &Identifier)",
+          "summary": "Add a name to the current static scope."
+        },
+        {
+          "name": "add_parameter_to_current_static",
+          "signature": "fn add_parameter_to_current_static(&mut self, name: &Identifier, ann: Option<Idx<KeyAnnotation>>)",
+          "summary": "Add a parameter to the current static."
+        },
+        {
+          "name": "add_possible_legacy_tparam_to_current_static",
+          "signature": "fn add_possible_legacy_tparam_to_current_static(&mut self, name: &Identifier)",
+          "summary": "Add an intercepted possible legacy TParam - this is a name that's part of the scope, but only for static type lookups, and might potentially intercept the raw runtime value of a pre-PEP-695 legacy type variable to turn it into a quantified…"
+        },
+        {
+          "name": "add_scoped_type_parameter_to_current_static",
+          "signature": "fn add_scoped_type_parameter_to_current_static(&mut self, name: &Identifier)",
+          "summary": "Add a PEP 695 type parameter to the current annotation scope."
+        },
+        {
+          "name": "as_special_export",
+          "signature": "fn as_special_export(&self, name: &Name, base_name: Option<&Name>, current_module: ModuleName, lookup: &dyn LookupExport) -> Option<SpecialExport>",
+          "summary": "Look up either `name` or `base_name.name` in the current scope, assuming we are in the module with name `module_name`. If it is a `SpecialExport`, return it (otherwise None)"
+        },
+        {
+          "name": "binding_idx_for_name",
+          "signature": "fn binding_idx_for_name(&self, name: &Name) -> Option<(Idx<Key>, FlowStyle)>",
+          "summary": "Return the current binding index and flow style for `name`, if it exists in any enclosing scope."
+        },
+        {
+          "name": "clone_current_flow",
+          "signature": "fn clone_current_flow(&self) -> Flow"
+        },
+        {
+          "name": "collect_module_unused_imports",
+          "signature": "fn collect_module_unused_imports(&self) -> Vec<UnusedImport>"
+        },
+        {
+          "name": "current_binding_is_module_binding",
+          "signature": "fn current_binding_is_module_binding(&self, name: &Name) -> bool",
+          "summary": "True when the currently visible binding is the module scope's binding."
+        },
+        {
+          "name": "current_class_def_index",
+          "signature": "fn current_class_def_index(&self) -> Option<ClassDefIndex>",
+          "summary": "The `ClassDefIndex` of the current class body, if the innermost scope is one."
+        },
+        {
+          "name": "current_class_key",
+          "signature": "fn current_class_key(&self) -> Option<Idx<KeyClass>>",
+          "summary": "Are we currently in a class body. If so, return the key for the class."
+        },
+        {
+          "name": "current_flow_idx",
+          "signature": "fn current_flow_idx(&self, name: &Name) -> Option<Idx<Key>>",
+          "summary": "Get the flow idx for `name` in the current scope."
+        },
+        {
+          "name": "current_flow_style",
+          "signature": "fn current_flow_style(&self, name: &Name) -> Option<FlowStyle>",
+          "summary": "Get the flow style for `name` in the current scope."
+        },
+        {
+          "name": "current_fork_base_idx",
+          "signature": "fn current_fork_base_idx(&self, name: &Name) -> Option<Idx<Key>>",
+          "summary": "Get the flow idx for `name` in the current fork's **base** flow (the flow captured at `start_fork` time, before any branches were started)."
+        },
+        {
+          "name": "current_method_and_class",
+          "signature": "fn current_method_and_class(&self) -> Option<(Identifier, Idx<KeyClass>)>",
+          "summary": "Return a pair Some((method_name, class_key)) if we are currently in a method (if we are in nested classes, we'll get the innermost)."
+        },
+        {
+          "name": "current_method_context",
+          "signature": "fn current_method_context(&self) -> Option<Idx<KeyClass>>"
+        },
+        {
+          "name": "current_scope_range",
+          "signature": "fn current_scope_range(&self) -> TextRange",
+          "summary": "The range of the current (innermost) scope."
+        },
+        {
+          "name": "current_static_contains",
+          "signature": "fn current_static_contains(&self, name: &Name) -> bool"
+        },
+        {
+          "name": "define_in_current_flow",
+          "signature": "fn define_in_current_flow(&mut self, name: Hashed<&Name>, idx: Idx<Key>, style: FlowStyle) -> Option<NameWriteInfo>",
+          "summary": "Track the binding from assigning a name in the current flow. Here \"define\" means: - any operation that actually binds a value at runtime (e.g. `x = 5`,   `x := 5`, `for x in ...`) - annotated assignment `x: int` which we model in the flow…"
+        },
+        {
+          "name": "define_in_enclosing_non_comprehension_scope",
+          "signature": "fn define_in_enclosing_non_comprehension_scope(&mut self, name: Hashed<&Name>, idx: Idx<Key>, style: FlowStyle)",
+          "summary": "PEP 572: walrus operators inside comprehensions bind to the enclosing non-comprehension scope. This method updates the flow of the nearest enclosing non-comprehension scope with the given name and binding idx."
+        },
+        {
+          "name": "enclosing_class_name",
+          "signature": "fn enclosing_class_name(&self) -> Option<&Identifier>",
+          "summary": "Get the name of the (innermost) enclosing class, if any."
+        },
+        {
+          "name": "enclosing_class_object_idx",
+          "signature": "fn enclosing_class_object_idx(&self) -> Option<Idx<Key>>",
+          "summary": "Are we anywhere inside a class? If so, return the class object idx. This function looks at enclosing scopes."
+        },
+        {
+          "name": "enter_finally",
+          "signature": "fn enter_finally(&mut self)",
+          "summary": "Enter a finally block (PEP 765)."
+        },
+        {
+          "name": "enter_with",
+          "signature": "fn enter_with(&mut self)",
+          "summary": "Enter a with block."
+        },
+        {
+          "name": "existing_module_import_at",
+          "signature": "fn existing_module_import_at(&self, module_name: &Name) -> Option<Idx<Key>>",
+          "summary": "Check whether the current flow has a module import at a given name."
+        },
+        {
+          "name": "exit_finally",
+          "signature": "fn exit_finally(&mut self)",
+          "summary": "Exit a finally block (PEP 765)."
+        },
+        {
+          "name": "exit_with",
+          "signature": "fn exit_with(&mut self)",
+          "summary": "Exit a with block."
+        },
+        {
+          "name": "finally_depth",
+          "signature": "fn finally_depth(&self) -> usize"
+        },
+        {
+          "name": "finish",
+          "signature": "fn finish(self) -> ScopeTrace",
+          "summary": "There is only one scope remaining, return it."
+        },
+        {
+          "name": "finish_class_and_get_field_definitions",
+          "signature": "fn finish_class_and_get_field_definitions(&mut self) -> (SmallMap<Name, (ClassFieldDefinition, TextRange)>, SmallMap<Name, Vec<Expr>>)",
+          "summary": "Finish traversing a class body: pop both the class body scope and the annotation scope that wraps it, and extract the class field definitions."
+        },
+        {
+          "name": "flow_style_for_name",
+          "signature": "fn flow_style_for_name(&self, name: &Name) -> Option<FlowStyle>",
+          "summary": "Look up the FlowStyle for `name`, skipping class body scopes"
+        },
+        {
+          "name": "fold_suggestion_candidates",
+          "signature": "fn fold_suggestion_candidates<'b>(&self, search: &mut Search<'_>, trailing: impl Iterator<Item = Candidate<'b>>)",
+          "summary": "Fold every name that could be what `search` is looking for into it, innermost scope first so that a nearer name wins a tie, and `trailing` last -- the builtins are the outermost scope there is, so they are searched in the same pass and los…"
+        },
+        {
+          "name": "function_predecessor_indices",
+          "signature": "fn function_predecessor_indices(&self, name: &Name) -> Option<(Idx<Key>, Idx<KeyDecoratedFunction>)>"
+        },
+        {
+          "name": "get_current_flow_idx",
+          "signature": "fn get_current_flow_idx(&self, name: &Name) -> Option<Idx<Key>>"
+        },
+        {
+          "name": "get_global_declaration",
+          "signature": "fn get_global_declaration(&self, name: &str) -> Option<TextRange>",
+          "summary": "Check if a name is declared as global in the current scope. Returns the range of the global statement if found."
+        },
+        {
+          "name": "global_capture_self_defined",
+          "signature": "fn global_capture_self_defined(&self, name: Hashed<&Name>) -> bool",
+          "summary": "Does a `global` declaration of `name` in the current function/method scope come with a value definition in that same scope (e.g. `global x; x = 1`)? Such a declaration legally creates the module-level name at runtime, so it must not be rep…"
+        },
+        {
+          "name": "has_future_annotations",
+          "signature": "fn has_future_annotations(&self) -> bool"
+        },
+        {
+          "name": "has_import_name",
+          "signature": "fn has_import_name(&self, name: &Name) -> bool"
+        },
+        {
+          "name": "has_nonlocal_binding",
+          "signature": "fn has_nonlocal_binding(&self, name: &str) -> bool",
+          "summary": "Check if a name has a nonlocal binding in an enclosing scope."
+        },
+        {
+          "name": "has_terminated",
+          "signature": "fn has_terminated(&self) -> bool"
+        },
+        {
+          "name": "implicit_capture_names",
+          "signature": "fn implicit_capture_names(&self) -> SmallSet<Name>",
+          "summary": "Returns names that are implicit captures in the current scope: read in the body but not locally defined (not in static definitions). Parameters are excluded because they are in static definitions."
+        },
+        {
+          "name": "in_class_body",
+          "signature": "fn in_class_body(&self) -> bool"
+        },
+        {
+          "name": "in_comprehension",
+          "signature": "fn in_comprehension(&self) -> bool",
+          "summary": "Check if we're currently in a comprehension scope (not a generator expression)."
+        },
+        {
+          "name": "in_finally",
+          "signature": "fn in_finally(&self) -> bool",
+          "summary": "Check if we're in a finally block at the current scope level. This resets when entering a new function scope, so nested functions are OK."
+        },
+        {
+          "name": "in_function_scope",
+          "signature": "fn in_function_scope(&self) -> bool"
+        },
+        {
+          "name": "in_generator_expression",
+          "signature": "fn in_generator_expression(&self) -> bool",
+          "summary": "Check if we're in a generator expression scope. Generator expressions are created for `Expr::Generator` comprehensions."
+        },
+        {
+          "name": "in_module_or_class_top_level",
+          "signature": "fn in_module_or_class_top_level(&self) -> bool"
+        },
+        {
+          "name": "in_sync_comprehension",
+          "signature": "fn in_sync_comprehension(&self) -> bool",
+          "summary": "Check if we're in a synchronous comprehension. A comprehension is synchronous unless we're in an async function."
+        },
+        {
+          "name": "in_type_alias",
+          "signature": "fn in_type_alias(&self) -> bool",
+          "summary": "Check if we're currently in a type alias scope."
+        },
+        {
+          "name": "init_current_static",
+          "signature": "fn init_current_static(&mut self, x: &[Stmt], module_info: &pyrefly_python::module::Module, top_level: bool, lookup: &dyn LookupExport, sys_info: SysInfo, get_annotation_idx: &mut impl FnMut(ShortIdentifier) -> Idx<KeyAnnotation>)"
+        },
+        {
+          "name": "is_bound_parameter",
+          "signature": "fn is_bound_parameter(&self, name: &str) -> bool",
+          "summary": "Check if a name is a bound parameter in the current function scope."
+        },
+        {
+          "name": "is_defined_at_module_scope",
+          "signature": "fn is_defined_at_module_scope(&self, name: &Name) -> bool",
+          "summary": "True if the first non-class scope defining this name is the module scope."
+        },
+        {
+          "name": "is_definitely_unreachable",
+          "signature": "fn is_definitely_unreachable(&self) -> bool",
+          "summary": "Check if the current flow has definitely terminated (e.g., after a return, raise, break, or continue)"
+        },
+        {
+          "name": "is_final_at_module_scope",
+          "signature": "fn is_final_at_module_scope(&self, name: &Name) -> bool",
+          "summary": "Check if a name is declared as `Final` at module scope."
+        },
+        {
+          "name": "is_final_in_current_scope",
+          "signature": "fn is_final_in_current_scope(&self, name: &Name) -> bool",
+          "summary": "Check if a name is declared as `Final` in the current (innermost) scope."
+        },
+        {
+          "name": "is_in_async_def",
+          "signature": "fn is_in_async_def(&self) -> bool",
+          "summary": "Are we inside an async function or method?"
+        },
+        {
+          "name": "is_in_protocol_class",
+          "signature": "fn is_in_protocol_class(&self) -> bool",
+          "summary": "Check if we're directly in the body of a class with `Protocol` in its base class list"
+        },
+        {
+          "name": "is_unreachable_from_static_test",
+          "signature": "fn is_unreachable_from_static_test(&self) -> bool",
+          "summary": "Check if the current flow is unreachable due to a statically-evaluated test (e.g., `if sys.platform != \"darwin\": return 0` on linux). In this state, `has_terminated` is true but `is_definitely_unreachable` is false because the code may be…"
+        },
+        {
+          "name": "last_stmt_expr",
+          "signature": "fn last_stmt_expr(&self) -> Option<Idx<Key>>"
+        },
+        {
+          "name": "legacy_tparam_shadows_enclosing_annotation_scope",
+          "signature": "fn legacy_tparam_shadows_enclosing_annotation_scope(&self, name: &Name) -> bool",
+          "summary": "Check if a name, assumed to be a legacy type parameter, is defined as a type parameter in any enclosing Annotation scope."
+        },
+        {
+          "name": "look_up_name_for_read",
+          "signature": "fn look_up_name_for_read(&self, name: Hashed<&Name>, usage: &Usage, lookup: &dyn LookupExport, current_module: ModuleName) -> NameReadInfo",
+          "summary": "Look up the information needed to create a binding for a read of a name in the current scope stack."
+        },
+        {
+          "name": "lookup_final_string_value",
+          "signature": "fn lookup_final_string_value(&self, name: &Name) -> Option<&str>",
+          "summary": "Look up a Final variable's string literal value in the current scope stack. Searches from the innermost scope outward, stopping at the first scope that binds the name, even if it's not Final."
+        },
+        {
+          "name": "loop_depth",
+          "signature": "fn loop_depth(&self) -> usize"
+        },
+        {
+          "name": "loop_protects_from_finally_exit",
+          "signature": "fn loop_protects_from_finally_exit(&self) -> bool",
+          "summary": "Check if we're inside a loop that was started inside the inner-most finally block"
+        },
+        {
+          "name": "mark_as_deleted",
+          "signature": "fn mark_as_deleted(&mut self, name: &Name)",
+          "summary": "Handle a delete operation by marking a name as uninitialized in this flow."
+        },
+        {
+          "name": "mark_flow_termination",
+          "signature": "fn mark_flow_termination(&mut self, kind: TerminationKind)"
+        },
+        {
+          "name": "mark_has_yield_in_dead_code",
+          "signature": "fn mark_has_yield_in_dead_code(&mut self)",
+          "summary": "Mark that the enclosing function contains `yield` or `yield from` in a statically-dead branch that was not traversed during binding."
+        },
+        {
+          "name": "mark_import_used",
+          "signature": "fn mark_import_used(&mut self, name: &Name)"
+        },
+        {
+          "name": "mark_parameter_used",
+          "signature": "fn mark_parameter_used(&mut self, name: &Name)"
+        },
+        {
+          "name": "mark_variable_used",
+          "signature": "fn mark_variable_used(&mut self, name: &Name)"
+        },
+        {
+          "name": "method_that_sets_attr",
+          "signature": "fn method_that_sets_attr(&self, x: &ExprAttribute) -> Option<MethodThatSetsAttr>"
+        },
+        {
+          "name": "module",
+          "signature": "fn module(range: TextRange, keep_scope_tree: bool, is_interface: bool) -> Self"
+        },
+        {
+          "name": "module_shadowed_implicit_builtins",
+          "signature": "fn module_shadowed_implicit_builtins(&self) -> Vec<(Name, ModuleName)>"
+        },
+        {
+          "name": "name_shadows_enclosing_annotation_scope",
+          "signature": "fn name_shadows_enclosing_annotation_scope(&self, name: &Name) -> bool",
+          "summary": "Check if a name is defined as a type parameter in any enclosing Annotation scope."
+        },
+        {
+          "name": "narrow_in_current_flow",
+          "signature": "fn narrow_in_current_flow(&mut self, name: Hashed<&Name>, idx: Idx<Key>)",
+          "summary": "Track a narrow for a name in the current flow. This should result from options that only narrow an existing value, not operations that assign a new value at runtime."
+        },
+        {
+          "name": "nesting_context",
+          "signature": "fn nesting_context(&self) -> NestingContext",
+          "summary": "Reconstruct the current `NestingContext` from the scope stack."
+        },
+        {
+          "name": "outer_capture_info",
+          "signature": "fn outer_capture_info(&self, name: Hashed<&Name>, inner_fn_range: TextRange) -> OuterCaptureInfo",
+          "summary": "Gather the outer scope's value and narrow idx for a captured variable."
+        },
+        {
+          "name": "pop",
+          "signature": "fn pop(&mut self) -> Scope"
+        },
+        {
+          "name": "pop_function_scope",
+          "signature": "fn pop_function_scope(&mut self) -> (YieldsAndReturns, Option<SelfAssignments>, Vec<UnusedParameter>, Vec<UnusedVariable>)"
+        },
+        {
+          "name": "propagate_new_flow_entries_to_fork_base",
+          "signature": "fn propagate_new_flow_entries_to_fork_base(&mut self)",
+          "summary": "Copy walrus-defined names from the current branch flow into the fork's base flow. Walrus names must be in the base flow so the merge can distinguish paths where the walrus was vs. wasn't evaluated. This works because branches started befor…"
+        },
+        {
+          "name": "propagate_new_flow_entries_to_loop_base",
+          "signature": "fn propagate_new_flow_entries_to_loop_base(&mut self)",
+          "summary": "Copy walrus-defined names from the current flow into the innermost loop's base flow. The while-loop condition always evaluates at least once, so any walrus target there is guaranteed to be assigned after the loop. Without this propagation,…"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, scope: Scope)"
+        },
+        {
+          "name": "push_function_scope",
+          "signature": "fn push_function_scope(&mut self, range: TextRange, name: &Identifier, in_class: bool, is_async: bool)"
+        },
+        {
+          "name": "record_nn_module_registration",
+          "signature": "fn record_nn_module_registration(&mut self, receiver: &Expr, name: Name, value: Expr)",
+          "summary": "Record the value of `self.register_buffer(...)` or `self.register_parameter(...)`. The enclosing class is checked for `torch.nn.Module` ancestry during solving."
+        },
+        {
+          "name": "record_or_reject_return",
+          "signature": "fn record_or_reject_return(&mut self, ret: CurrentIdx, x: StmtReturn, is_unreachable: bool) -> Result<(), (CurrentIdx, StmtReturn)>",
+          "summary": "Record a return in the enclosing function body there is one."
+        },
+        {
+          "name": "record_or_reject_yield",
+          "signature": "fn record_or_reject_yield(&mut self, idx: Idx<KeyYield>, x: ExprYield, is_unreachable: bool) -> Result<(), ExprYield>",
+          "summary": "Record a yield in the enclosing function body there is one."
+        },
+        {
+          "name": "record_or_reject_yield_from",
+          "signature": "fn record_or_reject_yield_from(&mut self, idx: Idx<KeyYieldFrom>, x: ExprYieldFrom, is_unreachable: bool) -> Result<(), ExprYieldFrom>",
+          "summary": "Record a yield in the enclosing function body there is one."
+        },
+        {
+          "name": "record_self_assignments_if_applicable",
+          "signature": "fn record_self_assignments_if_applicable(&mut self, self_assignments: Option<SelfAssignments>)",
+          "summary": "Whenever we exit a function definition scope that was a method where we accumulated assignments to `self`, we need to record those assignments on the parent class scope; they may later be used to define class fields."
+        },
+        {
+          "name": "record_self_attr_assign",
+          "signature": "fn record_self_attr_assign(&mut self, x: &ExprAttribute, value: ExprOrBinding, annotation: Option<Idx<KeyAnnotation>>) -> bool",
+          "summary": "In methods, we track assignments to `self` attribute targets so that we can be aware of class fields implicitly defined in methods."
+        },
+        {
+          "name": "register_future_import",
+          "signature": "fn register_future_import(&mut self, name: &Identifier)"
+        },
+        {
+          "name": "register_import",
+          "signature": "fn register_import(&mut self, name: &Identifier)"
+        },
+        {
+          "name": "register_import_with_star",
+          "signature": "fn register_import_with_star(&mut self, name: &Identifier)"
+        },
+        {
+          "name": "register_parameter",
+          "signature": "fn register_parameter(&mut self, name: &Identifier, allow_unused: bool)"
+        },
+        {
+          "name": "register_reexport_import",
+          "signature": "fn register_reexport_import(&mut self, name: &Identifier)",
+          "summary": "Register an import that uses the `X as X` pattern (e.g., `import os as os` or `from math import tau as tau`). Per the Python typing spec, this is an explicit re-export and should not be flagged as unused. See: https://typing.python.org/en/…"
+        },
+        {
+          "name": "register_variable",
+          "signature": "fn register_variable(&mut self, name: &Identifier)"
+        },
+        {
+          "name": "resume_after_with",
+          "signature": "fn resume_after_with(&mut self, last_statement_key: Idx<Key>)",
+          "summary": "Control flow leaving a `with` body may resume after the `with` if the context manager suppresses the exception, which we only know once we know the type of `__exit__`. Make the flow live again, deferring termination calculation to the solv…"
+        },
+        {
+          "name": "set_definitely_unreachable",
+          "signature": "fn set_definitely_unreachable(&mut self, is_definitely_unreachable: bool)"
+        },
+        {
+          "name": "set_has_future_annotations",
+          "signature": "fn set_has_future_annotations(&mut self)"
+        },
+        {
+          "name": "set_last_stmt_expr",
+          "signature": "fn set_last_stmt_expr(&mut self, key: Option<Idx<Key>>)",
+          "summary": "Set or clear the last statement expression key for the current flow."
+        },
+        {
+          "name": "set_self_name_if_applicable",
+          "signature": "fn set_self_name_if_applicable(&mut self, self_name: Option<Identifier>, receiver_kind: MethodSelfKind)",
+          "summary": "Whenever we enter the scope of a method *and* we see a matching parameter, we record the name of it so that we can detect `self` assignments that might define class fields."
+        },
+        {
+          "name": "swap_current_flow_with",
+          "signature": "fn swap_current_flow_with(&mut self, flow: &mut Flow)"
+        },
+        {
+          "name": "terminated_by_raise",
+          "signature": "fn terminated_by_raise(&self) -> bool",
+          "summary": "Whether the current flow terminated by raising, as opposed to `return`/`break`/ `continue`. Only a raise can be swallowed by an enclosing `with`."
+        },
+        {
+          "name": "validate_mutable_capture_and_get_key",
+          "signature": "fn validate_mutable_capture_and_get_key(&self, name: Hashed<&Name>, kind: MutableCaptureKind) -> Result<(Key, Option<ModuleName>), MutableCaptureError>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::scope::UnusedImport",
+      "name": "UnusedImport",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct UnusedImport",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "name",
+        "range"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::UnusedParameter",
+      "name": "UnusedParameter",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct UnusedParameter",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "name",
+        "range"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::UnusedVariable",
+      "name": "UnusedVariable",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct UnusedVariable",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "name",
+        "range"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::scope::YieldsAndReturns",
+      "name": "YieldsAndReturns",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct YieldsAndReturns",
+      "summary": "Things we collect from inside a function. The boolean flag is set when we know for sure the statement is definitely unreachable.",
+      "doc": "api/pyrefly.binding.scope.md#yieldsandreturns",
+      "fields": [
+        "returns",
+        "yields",
+        "yield_froms",
+        "is_generator"
+      ],
+      "methods": []
+    }
+  ]
+}

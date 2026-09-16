@@ -1,0 +1,140 @@
+PLAN projection: logical={"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"} physical=Some({"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"}) rows=1
+PLAN alias: logical={"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"} physical=Some({"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"}) rows=1
+PLAN cast: logical={} physical=Some({}) rows=1
+PLAN union_same: logical={"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"} physical=Some({"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"}) rows=2
+PLAN union_cross_domain: logical={"ARROW:extension:name": "enrichment.id"} physical=Some({"ARROW:extension:metadata": "{\"domain\":\"definition\"}", "ARROW:extension:name": "enrichment.id"}) rows=2
+PLAN join_cross_domain: logical={"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"} physical=Some({"ARROW:extension:metadata": "{\"domain\":\"symbol\"}", "ARROW:extension:name": "enrichment.id"}) rows=1
+PLAN aggregate: logical={} physical=Some({}) rows=1
+CAST reorder: [RecordBatch { schema: Schema { fields: [Field { name: "value", data_type: Struct([Field { name: "a", data_type: Int64, nullable: true }, Field { name: "b", data_type: Int64, nullable: true }]) }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  valid,
+]
+[
+-- child 0: "a" (Int64)
+PrimitiveArray<Int64>
+[
+  10,
+]
+-- child 1: "b" (Int64)
+PrimitiveArray<Int64>
+[
+  20,
+]
+]], row_count: 1 }]
+CAST rename: [RecordBatch { schema: Schema { fields: [Field { name: "value", data_type: Struct([Field { name: "a", data_type: Int64, nullable: true }, Field { name: "b", data_type: Int64, nullable: true }]) }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  valid,
+]
+[
+-- child 0: "a" (Int64)
+PrimitiveArray<Int64>
+[
+  10,
+]
+-- child 1: "b" (Int64)
+PrimitiveArray<Int64>
+[
+  null,
+]
+]], row_count: 1 }]
+NULLABILITY valid: accepted version=Some(1) batches=[RecordBatch { schema: Schema { fields: [Field { name: "payload", data_type: Struct([Field { name: "required", data_type: Int64 }]), nullable: true }, Field { name: "id", data_type: Int64 }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  valid,
+]
+[
+-- child 0: "required" (Int64)
+PrimitiveArray<Int64>
+[
+  9,
+]
+], PrimitiveArray<Int64>
+[
+  1,
+]], row_count: 1 }]
+NULLABILITY missing_child: refused Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+Preview of invalid data:
+
++--------------+----+
+| payload      | id |
++--------------+----+
+| {required: } | 1  |
++--------------+----+
+NULLABILITY absent_parent: refused Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+Preview of invalid data:
+
++---------+----+
+| payload | id |
++---------+----+
+|         | 1  |
++---------+----+
+NULLABILITY guarded_absent: accepted version=Some(1) batches=[RecordBatch { schema: Schema { fields: [Field { name: "payload", data_type: Struct([Field { name: "required", data_type: Int64, nullable: true }]), nullable: true }, Field { name: "id", data_type: Int64 }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  null,
+]
+[
+-- child 0: "required" (Int64)
+PrimitiveArray<Int64>
+[
+  null,
+]
+], PrimitiveArray<Int64>
+[
+  1,
+]], row_count: 1 }]
+NULLABILITY guarded_missing: accepted version=Some(1) batches=[RecordBatch { schema: Schema { fields: [Field { name: "payload", data_type: Struct([Field { name: "required", data_type: Int64, nullable: true }]), nullable: true }, Field { name: "id", data_type: Int64 }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  valid,
+]
+[
+-- child 0: "required" (Int64)
+PrimitiveArray<Int64>
+[
+  null,
+]
+], PrimitiveArray<Int64>
+[
+  1,
+]], row_count: 1 }]
+NULLABILITY feature_guarded_absent: accepted version=Some(2) batches=[RecordBatch { schema: Schema { fields: [Field { name: "payload", data_type: Struct([Field { name: "required", data_type: Int64, nullable: true }]), nullable: true }, Field { name: "id", data_type: Int64 }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  null,
+]
+[
+-- child 0: "required" (Int64)
+PrimitiveArray<Int64>
+[
+  null,
+]
+], PrimitiveArray<Int64>
+[
+  1,
+]], row_count: 1 }]
+NULLABILITY feature_guarded_missing: refused Generic DeltaTable error: External error: Invalid data found: 1 rows failed validation check.
+Preview of invalid data:
+
++--------------+----+
+| payload      | id |
++--------------+----+
+| {required: } | 1  |
++--------------+----+
+NULLABILITY explicit_nested_stats: accepted version=Some(1) batches=[RecordBatch { schema: Schema { fields: [Field { name: "payload", data_type: Struct([Field { name: "required", data_type: Int64 }]), nullable: true }, Field { name: "id", data_type: Int64 }], metadata: {} }, columns: [StructArray
+-- validity:
+[
+  valid,
+]
+[
+-- child 0: "required" (Int64)
+PrimitiveArray<Int64>
+[
+  9,
+]
+], PrimitiveArray<Int64>
+[
+  1,
+]], row_count: 1 }]

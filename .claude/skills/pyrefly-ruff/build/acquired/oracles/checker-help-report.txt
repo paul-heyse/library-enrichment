@@ -1,0 +1,139 @@
+Deprecated alias for `pyrefly coverage report`. Use `pyrefly coverage report` instead
+
+Usage: pyrefly report [OPTIONS] [FILES]...
+
+Arguments:
+  [FILES]...
+          Files to check (glob supported). If no file is specified, switch to project-checking mode
+          where the files to check are determined from the closest configuration file. When
+          supplied, `project_excludes` in any config files loaded for these files to check are
+          ignored, and we use the default excludes unless overridden with the `--project-excludes`
+          flag
+
+Options:
+  -j, --threads <THREADS>
+          Number of threads to use for parallelization. Setting the value to 1 implies sequential
+          execution without any parallelism. Setting the value to 0 means to pick the number of
+          threads automatically using default heuristics
+          
+          [env: PYREFLY_THREADS=]
+          [default: 0]
+
+      --project-excludes <PROJECT_EXCLUDES>
+          Files to exclude when type checking
+
+  -c, --config <FILE>
+          Explicitly set the Pyrefly configuration to use when type checking. In "single-file
+          checking mode," this config is applied to all files being checked, ignoring the config's
+          `project_includes` and `project_excludes` and ignoring any config-finding approach that
+          would otherwise be used. When not set, Pyrefly will perform an upward-filesystem-walk
+          approach to find the nearest pyrefly.toml or pyproject.toml with `tool.pyrefly` section'.
+          If no config is found, Pyrefly exits with error. If both a pyrefly.toml and valid
+          pyproject.toml are found, pyrefly.toml takes precedence
+          
+          [env: PYREFLY_CONFIG=]
+
+      --color <COLOR>
+          Control whether colored output is used
+          
+          [env: PYREFLY_COLOR=]
+          [default: auto]
+          [possible values: auto, always, never]
+
+  -p, --preset <PRESET>
+          A named collection of error severities and behavior settings that serves as the base
+          configuration. Any explicit settings you specify override the preset
+
+          Possible values:
+          - off:     Silences every error kind. Other settings (scalars, behavior flags) are left at
+            their defaults. Useful when Pyrefly is running only for IDE features like hover and
+            go-to-definition, without diagnostics
+          - basic:   Minimal checking preset for unconfigured projects and LSP users. Enables
+            diagnostics covering parse errors and a small set of high-confidence, locally-fixable
+            checks. Stricter checks like override validation, annotation completeness, and broader
+            call-shape or assignment validation are disabled
+          - legacy:  A looser, less-strict preset useful for codebases migrating from mypy. Pyrefly
+            does not aim to mimic mypy's behavior precisely, but this preset preserves selected
+            defaults that otherwise produce new migration errors
+          - default: The default Pyrefly configuration. Equivalent to having no preset at all
+          - strict:  Enables additional error codes on top of the default for stricter checking
+          - all:     Enables every error kind at `Error` severity. Directives like `reveal-type`
+            keep their default severity
+
+  -v, --verbose
+          Enable verbose logging
+          
+          [env: PYREFLY_VERBOSE=]
+
+      --disable-project-excludes-heuristics[=<DISABLE_PROJECT_EXCLUDES_HEURISTICS>]
+          Configures Pyrefly to replace `project-excludes` fully rather than append whatever is in
+          your configuration or passed by CLI to Pyrefly's defaults
+          
+          [possible values: true, false]
+
+      --search-path <SEARCH_PATH>
+          The list of directories where imports are imported from, including type checked files
+
+      --disable-search-path-heuristics[=<DISABLE_SEARCH_PATH_HEURISTICS>]
+          Disable Pyrefly default heuristics, specifically those around constructing a modified
+          search path. Setting this flag will instruct Pyrefly to use the exact `search_path` you
+          give it through your config file and CLI args
+          
+          [possible values: true, false]
+
+      --enable-fallback-search-path[=<ENABLE_FALLBACK_SEARCH_PATH>]
+          Enable walk-up fallback search paths, where Pyrefly walks up from each importing file's
+          directory to the config root to best-effort resolve imports
+          
+          [possible values: true, false]
+
+      --python-version <PYTHON_VERSION>
+          The Python version any `sys.version` checks should evaluate against
+
+      --python-platform <PYTHON_PLATFORM>
+          The platform any `sys.platform` checks should evaluate against
+
+      --site-package-path <SITE_PACKAGE_PATH>
+          Directories containing third-party package imports, searched after first checking
+          `search_path` and `typeshed`
+
+      --conda-environment <CONDA_ENVIRONMENT>
+          Use a specific Conda environment to query Python environment information, even if it isn't
+          activated
+
+      --python-interpreter-path <EXE_PATH>
+          The path to a Python executable that will be queried for `python-version`
+          `python-platform`, or `site-package-path` if any of the values are missing
+
+      --fallback-python-interpreter-name <COMMAND>
+          The Python executable name available on your PATH that will be queried for your
+          `python-version`, `python-platform`, or `site-package-path` if any of the values are
+          missing. We execute `which <COMMAND>` to fill in your `python-interpreter-path`, which is
+          useful if you don't know where the Python executable will be on a given machine, but want
+          to use one other than the default. When this and `python-interpreter-path` are unset, we
+          query for `python3` and `python`
+
+      --skip-interpreter-query
+          Skip doing any automatic querying for `python-interpreter-path`,
+          `fallback-python-interpreter-name`, or `conda-environment`
+
+      --typeshed-path <TYPESHED_PATH>
+          Override the bundled typeshed with a custom path
+
+      --prefer-stubs <PREFER_STUBS>
+          When enabled, `.py` files are skipped if a corresponding `.pyi` file is also present in
+          the set of files to check
+          
+          [default: true]
+          [possible values: true, false]
+
+      --module <MODULE>
+          Override the module name in the report output. When set, all modules use this name instead
+          of the name derived from the file path. Useful when reporting on a single module whose
+          canonical package name differs from its filesystem layout
+
+      --public-only
+          Only report symbols reachable from public modules via re-export chains
+
+  -h, --help
+          Print help (see a summary with '-h')

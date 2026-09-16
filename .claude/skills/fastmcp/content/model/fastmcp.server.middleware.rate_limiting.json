@@ -1,0 +1,281 @@
+{
+ "api": "api/fastmcp.server.middleware.rate_limiting.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "bases": [
+    "MCPError"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.rate_limiting.md#ratelimiterror",
+   "kind": "class",
+   "name": "RateLimitError",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.rate_limiting.RateLimitError",
+   "preferred": "fastmcp.server.middleware.rate_limiting.RateLimitError",
+   "signature": "class RateLimitError(MCPError)",
+   "summary": "Error raised when rate limit is exceeded."
+  },
+  {
+   "bases": [
+    "Middleware"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.rate_limiting.md#ratelimitingmiddleware",
+   "inherits": {
+    "fastmcp.server.middleware.middleware.Middleware": [
+     "on_call_tool",
+     "on_discover",
+     "on_get_prompt",
+     "on_initialize",
+     "on_list_prompts",
+     "on_list_resource_templates",
+     "on_list_resources",
+     "on_list_tools",
+     "on_message",
+     "on_notification",
+     "on_read_resource"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "burst_capacity",
+     "signature": "burst_capacity = burst_capacity or int(max_requests_per_second * 2)"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "get_client_id",
+     "signature": "get_client_id = get_client_id"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "global_limit",
+     "signature": "global_limit = global_limit"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "global_limiter",
+     "signature": "global_limiter = TokenBucketRateLimiter(self.burst_capacity, self.max_requests_per_second)"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "limiters",
+     "signature": "limiters: dict[str, TokenBucketRateLimiter] = defaultdict(lambda: TokenBucketRateLimiter(self.burst_capacity, self.max_requests_per_second))"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "max_requests_per_second",
+     "signature": "max_requests_per_second = max_requests_per_second"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_request",
+     "signature": "async def on_request(self, context: MiddlewareContext, call_next: CallNext) -> Any",
+     "summary": "Apply rate limiting to requests."
+    }
+   ],
+   "name": "RateLimitingMiddleware",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.rate_limiting.RateLimitingMiddleware",
+   "preferred": "fastmcp.server.middleware.rate_limiting.RateLimitingMiddleware",
+   "signature": "class RateLimitingMiddleware(Middleware)",
+   "summary": "Middleware that implements rate limiting to prevent server abuse."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.rate_limiting.md#slidingwindowratelimiter",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "is_allowed",
+     "signature": "async def is_allowed(self) -> bool",
+     "summary": "Check if a request is allowed."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "max_requests",
+     "signature": "max_requests = max_requests"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "requests",
+     "signature": "requests = deque()"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "window_seconds",
+     "signature": "window_seconds = window_seconds"
+    }
+   ],
+   "name": "SlidingWindowRateLimiter",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.rate_limiting.SlidingWindowRateLimiter",
+   "preferred": "fastmcp.server.middleware.rate_limiting.SlidingWindowRateLimiter",
+   "signature": "class SlidingWindowRateLimiter",
+   "summary": "Sliding window rate limiter implementation."
+  },
+  {
+   "bases": [
+    "Middleware"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.rate_limiting.md#slidingwindowratelimitingmiddleware",
+   "inherits": {
+    "fastmcp.server.middleware.middleware.Middleware": [
+     "on_call_tool",
+     "on_discover",
+     "on_get_prompt",
+     "on_initialize",
+     "on_list_prompts",
+     "on_list_resource_templates",
+     "on_list_resources",
+     "on_list_tools",
+     "on_message",
+     "on_notification",
+     "on_read_resource"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "get_client_id",
+     "signature": "get_client_id = get_client_id"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "limiters",
+     "signature": "limiters: dict[str, SlidingWindowRateLimiter] = defaultdict(lambda: SlidingWindowRateLimiter(self.max_requests, self.window_seconds))"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "max_requests",
+     "signature": "max_requests = max_requests"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_request",
+     "signature": "async def on_request(self, context: MiddlewareContext, call_next: CallNext) -> Any",
+     "summary": "Apply sliding window rate limiting to requests."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "window_seconds",
+     "signature": "window_seconds = window_minutes * 60"
+    }
+   ],
+   "name": "SlidingWindowRateLimitingMiddleware",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.rate_limiting.SlidingWindowRateLimitingMiddleware",
+   "preferred": "fastmcp.server.middleware.rate_limiting.SlidingWindowRateLimitingMiddleware",
+   "signature": "class SlidingWindowRateLimitingMiddleware(Middleware)",
+   "summary": "Middleware that implements sliding window rate limiting."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.rate_limiting.md#tokenbucketratelimiter",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "capacity",
+     "signature": "capacity = capacity"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "consume",
+     "signature": "async def consume(self, tokens: int = 1) -> bool",
+     "summary": "Try to consume tokens from the bucket."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "last_refill",
+     "signature": "last_refill = time.time()"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "refill_rate",
+     "signature": "refill_rate = refill_rate"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "tokens",
+     "signature": "tokens = capacity"
+    }
+   ],
+   "name": "TokenBucketRateLimiter",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.rate_limiting.TokenBucketRateLimiter",
+   "preferred": "fastmcp.server.middleware.rate_limiting.TokenBucketRateLimiter",
+   "signature": "class TokenBucketRateLimiter",
+   "summary": "Token bucket implementation for rate limiting."
+  }
+ ],
+ "module": "fastmcp.server.middleware.rate_limiting"
+}

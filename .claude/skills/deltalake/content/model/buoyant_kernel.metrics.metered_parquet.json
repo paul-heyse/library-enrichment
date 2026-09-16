@@ -1,0 +1,45 @@
+{
+  "module": "buoyant_kernel::metrics::metered_parquet",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.metrics.metered_parquet.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::metrics::metered_parquet::MeteredParquetHandler",
+      "name": "MeteredParquetHandler",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct MeteredParquetHandler",
+      "summary": "Decorator over an engine-provided `Arc<dyn ParquetHandler>` that emits a `ParquetReadCompleted` span on every `read_parquet_files` call. `read_parquet_footer` and `write_parquet_file` are pass-through and emit nothing.",
+      "doc": "api/buoyant_kernel.metrics.metered_parquet.md#meteredparquethandler",
+      "aliases": [
+        "buoyant_kernel::metrics::MeteredParquetHandler",
+        "delta_kernel::metrics::metered_parquet::MeteredParquetHandler"
+      ],
+      "implements": [
+        "buoyant_kernel::ParquetHandler"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn ParquetHandler>) -> Self",
+          "summary": "Wrap `inner`. Debug-asserts that `inner` is not already a [`MeteredParquetHandler`] so spans are emitted exactly once."
+        },
+        {
+          "name": "read_parquet_files",
+          "signature": "fn read_parquet_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+          "via_trait": "buoyant_kernel::ParquetHandler"
+        },
+        {
+          "name": "read_parquet_footer",
+          "signature": "fn read_parquet_footer(&self, file: &FileMeta) -> DeltaResult<ParquetFooter>",
+          "via_trait": "buoyant_kernel::ParquetHandler"
+        },
+        {
+          "name": "write_parquet_file",
+          "signature": "fn write_parquet_file(&self, location: url::Url, data: DeltaResultIteratorStatic<Box<dyn EngineData>>) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::ParquetHandler"
+        }
+      ]
+    }
+  ]
+}

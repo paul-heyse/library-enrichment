@@ -195,7 +195,7 @@ def _envelope(
             status, error_detail = Status.error, detail
 
     envelope = LibraryEnrichmentResponseEnvelope(
-        schema_version=SchemaVersion.field_2_0,
+        schema_version=SchemaVersion.field_3_0,
         request_id=new_request_id(),
         status=status,
         summary=summary,

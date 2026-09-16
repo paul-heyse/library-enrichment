@@ -1,0 +1,399 @@
+{
+  "_comment": [
+    "delta-rs is pinned by COMMIT, not by version. The newest published deltalake (0.32.4,",
+    "2026-06-07) pins arrow 58 / datafusion 53; only unreleased main is on arrow 59 /",
+    "datafusion 55 / object_store 0.13.2. docs.rs therefore has nothing to serve for this pin,",
+    "so build/acquire.py produces the rustdoc JSON locally and build.py reads it offline.",
+    "",
+    "--all-features is impossible here: rustls and native-tls are mutually exclusive and both",
+    "forward to delta_kernel_default_engine. Every features_on list below is the set cargo",
+    "ACTUALLY resolved (read from `cargo doc -Z unstable-options --unit-graph`), not the set",
+    "this file asked for -- resolver 3 unifies upward, so the two differ."
+  ],
+  "repository": {
+    "name": "deltalake",
+    "title": "delta-rs and the Delta kernel",
+    "description": "Pinned API surface, guides and examples for delta-rs main @58f07cd6, on arrow 59 / datafusion 55 / object_store 0.13.2."
+  },
+  "tools": {
+    "ast_grep_version": "0.45.2",
+    "rustdoc_format_versions": [
+      57,
+      59,
+      60,
+      61
+    ]
+  },
+  "crate_aliases": {
+    "buoyant_kernel": [
+      "delta_kernel"
+    ],
+    "buoyant_kernel_engine": [
+      "delta_kernel_default_engine"
+    ]
+  },
+  "crate_sets": [
+    {
+      "name": "delta-rs",
+      "source": "git",
+      "document_private_items": true,
+      "version": "1.0.0+58f07cd6",
+      "facade": "deltalake",
+      "git": {
+        "url": "https://github.com/delta-io/delta-rs",
+        "rev": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+        "committed_at": "2026-09-15T16:28:16Z",
+        "branch_tracked_as": "main",
+        "lock_deps": {
+          "buoyant_kernel": "8ba063f8f84fec222000f66d40d70911d7c79675",
+          "buoyant_kernel_engine": "8ba063f8f84fec222000f66d40d70911d7c79675",
+          "buoyant_kernel_derive": "8ba063f8f84fec222000f66d40d70911d7c79675"
+        },
+        "lock_note": "delta-rs does not commit Cargo.lock and takes the kernel from branch buoyant/main. The branch is not a pin; lock_deps is the assertion that acquisition resolved the kernel this file names.",
+        "toolchain": "nightly-2026-09-13",
+        "rustc_expected": [
+          "1.100.0-nightly",
+          "809936eac"
+        ],
+        "target": "x86_64-unknown-linux-gnu",
+        "no_default_features": false,
+        "cargo_features": [
+          "deltalake/datafusion",
+          "deltalake/datafusion-ext",
+          "deltalake/json",
+          "deltalake/nanosecond-timestamps",
+          "deltalake/s3",
+          "deltalake/azure",
+          "deltalake/gcs",
+          "deltalake/hdfs",
+          "deltalake/lakefs",
+          "deltalake/glue",
+          "deltalake/unity-experimental",
+          "deltalake/opendal",
+          "deltalake-catalog-unity/azure",
+          "deltalake-catalog-unity/gcp",
+          "deltalake-catalog-unity/r2",
+          "deltalake-core/cloud"
+        ]
+      },
+      "crates": [
+        {
+          "package": "deltalake",
+          "path": "crates/deltalake",
+          "features_on": [
+            "azure",
+            "datafusion",
+            "datafusion-ext",
+            "default",
+            "gcs",
+            "glue",
+            "hdfs",
+            "json",
+            "lakefs",
+            "nanosecond-timestamps",
+            "opendal",
+            "rustls",
+            "s3",
+            "unity-experimental"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls; upstream's own docs.rs metadata says the same",
+            "s3-native-tls": "implies native-tls",
+            "python": "enables arrow/pyarrow only; zero cfg(feature) sites in any delta-rs src",
+            "opendal-s3": "gates only a register_handlers arm, no item surface",
+            "opendal-gcs": "gates only a register_handlers arm, no item surface",
+            "opendal-azblob": "gates only a register_handlers arm, no item surface",
+            "opendal-azdls": "gates only a register_handlers arm, no item surface",
+            "opendal-oss": "gates only a register_handlers arm, no item surface",
+            "opendal-obs": "gates only a register_handlers arm, no item surface",
+            "opendal-cos": "gates only a register_handlers arm, no item surface",
+            "opendal-tos": "gates only a register_handlers arm, no item surface",
+            "opendal-b2": "gates only a register_handlers arm, no item surface",
+            "opendal-swift": "gates only a register_handlers arm, no item surface",
+            "opendal-webhdfs": "gates only a register_handlers arm, no item surface",
+            "opendal-webdav": "gates only a register_handlers arm, no item surface",
+            "opendal-hf": "gates only a register_handlers arm, no item surface",
+            "opendal-ftp": "native FTP dependency; gates only a register_handlers arm",
+            "opendal-sftp": "native libssh2 dependency; gates only a register_handlers arm",
+            "opendal-fs": "on at the deltalake-opendal level, where it is a default",
+            "opendal-memory": "on at the deltalake-opendal level, where it is a default"
+          }
+        },
+        {
+          "package": "deltalake-core",
+          "path": "crates/core",
+          "features_on": [
+            "cloud",
+            "datafusion",
+            "datafusion-datasource",
+            "datafusion-physical-expr-adapter",
+            "datafusion-proto",
+            "default",
+            "json",
+            "nanosecond-timestamps",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "python": "zero cfg(feature = \"python\") sites in crates/core/src",
+            "delta-cache": "zero cfg(feature) sites in crates/core/src; pulls foyer and tempfile for no item surface",
+            "datafusion-ext": "an alias for `datafusion`, which is on; enabling it changes no cfg",
+            "integration_test": "test-only",
+            "foyer": "optional dependency of delta-cache",
+            "tempfile": "optional dependency of delta-cache",
+            "humantime": "optional dependency of cloud, which is on; the feature itself is not a cfg gate"
+          },
+          "note": "127 cfg(feature = \"datafusion\") sites -- this is the feature that decides whether the DataFusion seam exists at all. 54 nanosecond-timestamps sites, of which 4 are not(feature = ...), so enabling it removes a small amount of surface as well as adding a large amount."
+        },
+        {
+          "package": "deltalake-aws",
+          "path": "crates/aws",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test": "test-only"
+          },
+          "note": "zero cfg(feature) sites in src: the documented surface is complete regardless of the tls choice"
+        },
+        {
+          "package": "deltalake-azure",
+          "path": "crates/azure",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test": "test-only"
+          },
+          "note": "zero cfg(feature) sites in src"
+        },
+        {
+          "package": "deltalake-gcp",
+          "path": "crates/gcp",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test": "test-only"
+          },
+          "note": "zero cfg(feature) sites in src"
+        },
+        {
+          "package": "deltalake-hdfs",
+          "path": "crates/hdfs",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test": "test-only"
+          },
+          "note": "zero cfg(feature) sites in src; backed by pure-Rust hdfs-native-object-store, so no JVM or libhdfs is involved"
+        },
+        {
+          "package": "deltalake-lakefs",
+          "path": "crates/lakefs",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test_lakefs": "test-only"
+          },
+          "note": "zero cfg(feature) sites in src"
+        },
+        {
+          "package": "deltalake-mount",
+          "path": "crates/mount",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "integration_test": "test-only"
+          },
+          "note": "documented as a crate although the deltalake facade has no `mount` feature and does not re-export it: reachable only by depending on deltalake-mount directly"
+        },
+        {
+          "package": "deltalake-opendal",
+          "path": "crates/opendal",
+          "features_on": [
+            "default",
+            "opendal-fs",
+            "opendal-memory",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls",
+            "opendal-s3": "every opendal-* service feature gates only a register_handlers arm; none adds an item",
+            "opendal-gcs": "service registration only",
+            "opendal-azblob": "service registration only",
+            "opendal-azdls": "service registration only",
+            "opendal-oss": "service registration only",
+            "opendal-obs": "service registration only",
+            "opendal-cos": "service registration only",
+            "opendal-tos": "service registration only",
+            "opendal-b2": "service registration only",
+            "opendal-swift": "service registration only",
+            "opendal-webhdfs": "service registration only",
+            "opendal-webdav": "service registration only",
+            "opendal-hf": "service registration only",
+            "opendal-ftp": "service registration only; native FTP dependency",
+            "opendal-sftp": "service registration only; native libssh2 dependency"
+          }
+        },
+        {
+          "package": "deltalake-catalog-glue",
+          "path": "crates/catalog-glue",
+          "features_on": [
+            "default",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls"
+          },
+          "note": "zero cfg(feature) sites in src"
+        },
+        {
+          "package": "deltalake-catalog-unity",
+          "path": "crates/catalog-unity",
+          "features_on": [
+            "aws",
+            "azure",
+            "datafusion",
+            "default",
+            "gcp",
+            "moka",
+            "r2",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "mutually exclusive with rustls"
+          },
+          "note": "the only backend crate with real cfg gating: aws/azure/gcp/r2 have 5 sites each and datafusion 3, and several are not(feature = ...) variants, so enabling all four removes those alternatives"
+        },
+        {
+          "package": "buoyant_kernel",
+          "features_on": [
+            "arrow-59",
+            "arrow-conversion",
+            "arrow-expression",
+            "default",
+            "default-engine-base",
+            "internal-api",
+            "nanosecond-timestamps",
+            "need-arrow",
+            "reqwest"
+          ],
+          "features_off": {
+            "arrow-58": "delta-rs pins arrow 59",
+            "declarative-plans": "experimental; not enabled by delta-rs and needs prost-build",
+            "test-utils": "not enabled by delta-rs; would expose test-only constructors as public",
+            "schema-diff": "experimental; not enabled by delta-rs",
+            "column-defaults-in-dev": "in-progress work; not enabled by delta-rs",
+            "integration-test": "test-only",
+            "prettyprint": "not enabled by delta-rs"
+          },
+          "note": "Documented under delta-rs's OWN unified feature selection, by naming it with -p inside the delta-rs workspace, not as a separate build. That is deliberate: an all-features kernel would advertise items a deltalake user cannot reach. internal-api (47 cfg sites) flips crc, column_trie, utils, path and log_replay from pub(crate) to pub, and delta-rs relies on that."
+        },
+        {
+          "package": "buoyant_kernel_engine",
+          "features_on": [
+            "arrow-59",
+            "rustls"
+          ],
+          "features_off": {
+            "native-tls": "delta-rs selects rustls",
+            "default-engine-base": "not enabled in this resolution"
+          }
+        }
+      ],
+      "excluded_members": {
+        "delta-benchmarks": "binary crate; no library target",
+        "deltalake-test": "test harness, not a capability surface",
+        "deltalake-python": "cdylib with doc = false, and its [lib] name is `deltalake` -- the same as the facade, so documenting the workspace wholesale would have one silently overwrite the other",
+        "deltalake-derive": "proc-macro crate whose sole export is the DeltaConfig derive. rustdoc format 61 emits no `paths` entry for #[proc_macro_derive] exports, so a derive macro cannot be indexed by canonical path at all; measured, documenting it yields one module and zero items. It is used only inside deltalake-core and is not re-exported to callers.",
+        "buoyant_kernel_derive": "proc-macro crate in the kernel's own workspace. Measured, it holds two indexable items (`#[internal_api]` and `parse_column_name!`), both internal to the kernel's build; its three derives are invisible for the same rustdoc reason as above."
+      }
+    }
+  ],
+  "corpora": [
+    {
+      "name": "examples",
+      "repo": "delta-io/delta-rs",
+      "ref": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "ref_kind": "commit",
+      "source_prefix": "crates/deltalake/examples/",
+      "dest": "corpus/examples",
+      "suffixes": [
+        ".rs"
+      ]
+    },
+    {
+      "name": "doc-snippets",
+      "repo": "delta-io/delta-rs",
+      "ref": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "ref_kind": "commit",
+      "source_prefix": "docs/src/rust/",
+      "dest": "corpus/examples/doc-snippets",
+      "suffixes": [
+        ".rs"
+      ]
+    },
+    {
+      "name": "catalog-examples",
+      "repo": "delta-io/delta-rs",
+      "ref": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "ref_kind": "commit",
+      "source_prefix": "crates/catalog-unity/examples/",
+      "dest": "corpus/examples/catalog-unity",
+      "suffixes": [
+        ".rs"
+      ]
+    },
+    {
+      "name": "tests",
+      "repo": "delta-io/delta-rs",
+      "ref": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "ref_kind": "commit",
+      "source_prefix": "crates/core/tests/",
+      "dest": "corpus/tests",
+      "suffixes": [
+        ".rs"
+      ],
+      "note": "Labelled tests, not examples. delta-rs ships 8 example files; the integration suite is where the real usage evidence is."
+    },
+    {
+      "name": "guides",
+      "repo": "delta-io/delta-rs",
+      "ref": "58f07cd62bfbce3649a7e1c87c696288068ae184",
+      "ref_kind": "commit",
+      "source_prefix": "docs/",
+      "dest": "corpus/guides",
+      "suffixes": [
+        ".md"
+      ]
+    },
+    {
+      "name": "protocol",
+      "repo": "delta-io/delta",
+      "ref": "master",
+      "ref_kind": "branch",
+      "source_prefix": "PROTOCOL.md",
+      "dest": "corpus/protocol",
+      "suffixes": [
+        ".md"
+      ],
+      "note": "The normative Delta protocol specification: the authority for table features and log actions, which delta-rs implements rather than defines."
+    }
+  ]
+}

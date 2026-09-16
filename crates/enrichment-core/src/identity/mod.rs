@@ -7,8 +7,8 @@
 //! service returns a *new derived context* whose parent is the old one -- it never mutates the
 //! meaning of an ID already handed out (gate C16).
 //!
-//! Identities are content-derived: a short SHA-256 over the canonical JSON of the defining
-//! fields (see [`crate::canonical`]). That makes them stable across processes and machines, so
+//! Identities are content-derived: SHA-256 over the typed Arrow defining fields evaluated by
+//! the native identity expressions (see [`crate::native_key`]). That makes them stable across processes and machines, so
 //! a retried request finds the artifacts and snapshot the first attempt produced, and an
 //! offline replay names the same snapshot the cold run did. Nothing time-dependent is hashed.
 
@@ -17,9 +17,8 @@ use std::fmt;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-use crate::canonical;
+use crate::native_key::Key;
 
 /// A string that is not a well-formed identity of the expected kind.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,7 +33,7 @@ impl fmt::Display for IdentityError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "`{}` is not a `{}_<16 hex>` identity",
+            "`{}` is not a `{}_<64 hex>` identity",
             self.value, self.expected_prefix
         )
     }
@@ -49,14 +48,14 @@ fn is_well_formed(value: &str, prefix: &str) -> bool {
     let Some(hex) = rest.strip_prefix('_') else {
         return false;
     };
-    hex.len() == canonical::SHORT_ID_HEX_DIGITS
+    hex.len() == 64
         && hex
             .bytes()
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 macro_rules! content_identity {
-    ($(#[$meta:meta])* $name:ident, $prefix:literal, $pattern:literal) => {
+    ($(#[$meta:meta])* $name:ident, $key:ident, $prefix:literal, $pattern:literal) => {
         $(#[$meta])*
         #[derive(
             Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
@@ -69,8 +68,8 @@ macro_rules! content_identity {
             /// The prefix every identity of this kind carries.
             pub const PREFIX: &'static str = $prefix;
 
-            fn from_content(value: &serde_json::Value) -> Self {
-                Self(canonical::short_id($prefix, value))
+            fn from_record<T: Serialize>(value: &T) -> Self {
+                Self(Key::$key.value(value).expect("declared native identity contract"))
             }
 
             /// Borrow the identity as a string slice.
@@ -113,29 +112,33 @@ content_identity!(
     /// Identifies the actual library release: ecosystem, registry, package, exact version and
     /// the selected artifact digest.
     ReleaseId,
+    Release,
     "rel",
-    "^rel_[0-9a-f]{16}$"
+    "^rel_[0-9a-f]{64}$"
 );
 
 content_identity!(
     /// Identifies the declared or resolved environment.
     EnvironmentId,
+    Environment,
     "env",
-    "^env_[0-9a-f]{16}$"
+    "^env_[0-9a-f]{64}$"
 );
 
 content_identity!(
     /// Binds a release to an environment and a research mode.
     ContextId,
+    Context,
     "ctx",
-    "^ctx_[0-9a-f]{16}$"
+    "^ctx_[0-9a-f]{64}$"
 );
 
 content_identity!(
     /// Names one immutable set of evidence available for a context.
     SnapshotId,
+    Snapshot,
     "snap",
-    "^snap_[0-9a-f]{16}$"
+    "^snap_[0-9a-f]{64}$"
 );
 
 /// Which package ecosystem a release belongs to.
@@ -199,13 +202,7 @@ impl ReleaseKey {
     /// The identity these fields derive to.
     #[must_use]
     pub fn id(&self) -> ReleaseId {
-        ReleaseId::from_content(&json!({
-            "ecosystem": self.ecosystem,
-            "registry": self.registry,
-            "package": self.package,
-            "version": self.version,
-            "artifact_digest": self.artifact_digest,
-        }))
+        ReleaseId::from_record(self)
     }
 }
 
@@ -278,9 +275,7 @@ pub struct Environment {
     pub target: Option<String>,
     /// Enabled features or extras, sorted and deduplicated.
     pub features: Vec<String>,
-    /// Whether an empty feature selection was explicitly supplied. Older records did not
-    /// retain this distinction; their empty selections remain unknown when read.
-    #[serde(default)]
+    /// Whether an empty feature selection was explicitly supplied.
     pub features_known: bool,
     /// Whether default features are enabled. `None` when unspecified.
     pub default_features: Option<bool>,
@@ -378,18 +373,27 @@ impl Environment {
         lock_digest: Option<String>,
     ) -> Self {
         let features_known = features.is_some();
-        let mut features = features.unwrap_or_default();
-        features.sort();
-        features.dedup();
-        let environment_id = EnvironmentId::from_content(&json!({
-            "resolution": resolution,
-            "toolchain": toolchain,
-            "target": target,
-            "features": features,
-            "features_known": features_known,
-            "default_features": default_features,
-            "lock_digest": lock_digest,
-        }));
+        let features = crate::native_key::ordered_strings(&features.unwrap_or_default())
+            .expect("declared native feature set");
+        #[derive(Serialize)]
+        struct EnvironmentKey<'a> {
+            resolution: EnvironmentResolution,
+            toolchain: &'a Option<String>,
+            target: &'a Option<String>,
+            features: &'a [String],
+            features_known: bool,
+            default_features: Option<bool>,
+            lock_digest: &'a Option<String>,
+        }
+        let environment_id = EnvironmentId::from_record(&EnvironmentKey {
+            resolution,
+            toolchain: &toolchain,
+            target: &target,
+            features: &features,
+            features_known,
+            default_features,
+            lock_digest: &lock_digest,
+        });
         Self {
             environment_id,
             resolution,
@@ -454,11 +458,17 @@ impl Context {
     ) -> ContextId {
         // The parent is provenance, not identity: two routes to the same (release, environment,
         // mode) must name the same context, or an offline replay could not find its snapshot.
-        ContextId::from_content(&json!({
-            "release_id": release,
-            "environment_id": environment,
-            "mode": mode,
-        }))
+        #[derive(Serialize)]
+        struct ContextKey<'a> {
+            release_id: &'a ReleaseId,
+            environment_id: &'a EnvironmentId,
+            mode: ResearchMode,
+        }
+        ContextId::from_record(&ContextKey {
+            release_id: release,
+            environment_id: environment,
+            mode,
+        })
     }
 }
 
@@ -484,13 +494,7 @@ impl SnapshotId {
     /// Derive the identity of the snapshot these inputs produce.
     #[must_use]
     pub fn derive(inputs: &SnapshotInputs) -> Self {
-        Self::from_content(&json!({
-            "schema_version": inputs.schema_version,
-            "normalizer_version": inputs.normalizer_version,
-            "context_id": inputs.context_id,
-            "input_digests": inputs.input_digests,
-            "producers": inputs.producers,
-        }))
+        Self::from_record(inputs)
     }
 }
 
@@ -500,7 +504,8 @@ mod tests {
 
     #[test]
     fn target_identity_vectors_preserve_environment_knowledge_and_separate_scopes() {
-        // Independently calculated from canonical JSON preimages, not by another call to id().
+        // Independently calculated from typed Arrow byte framing with Python hashlib.
+        // Receipt: .dev-state/plan15/native_identity_vectors.py; no JSON identity preimage.
         let release = Release::new(ReleaseKey {
             ecosystem: Ecosystem::Rust,
             registry: "crates.io".into(),
@@ -508,25 +513,40 @@ mod tests {
             version: "0.1.0".into(),
             artifact_digest: None,
         });
-        assert_eq!(release.release_id.as_str(), "rel_ff2b5582ba719811");
+        assert_eq!(
+            release.release_id.as_str(),
+            "rel_459585f761b0df808ff6bba8f879d8a29f8450c013788f11c1af2ba60cfed459"
+        );
         let unknown = Environment::unspecified();
         let empty = Environment::declared(None, Some(vec![]), None);
-        assert_eq!(unknown.environment_id.as_str(), "env_78680489738d4b44");
-        assert_eq!(empty.environment_id.as_str(), "env_095205ea45d67431");
+        assert_eq!(
+            unknown.environment_id.as_str(),
+            "env_6cae57e8c2dd40293c58bf11c15b3f59ec5e5bb6d8aaf0909041e9b76f13f13e"
+        );
+        assert_eq!(
+            empty.environment_id.as_str(),
+            "env_6d97a21ae1aed40189e19283975b5d2012d27253adffb7f887d37b337e4695da"
+        );
         let context = Context::new(
             release.release_id,
             empty.environment_id,
             ResearchMode::Upstream,
         );
-        assert_eq!(context.context_id.as_str(), "ctx_a1cd4cd6cb1c0d1c");
+        assert_eq!(
+            context.context_id.as_str(),
+            "ctx_426c24ae895b1c6b75e3dede45f40098ee6ba9094f5777efc4d05434ea21ced3"
+        );
         let snapshot = SnapshotId::derive(&SnapshotInputs {
-            schema_version: "4.0".into(),
-            normalizer_version: "2".into(),
+            schema_version: "7.0".into(),
+            normalizer_version: "native/7".into(),
             context_id: context.context_id,
             input_digests: [("coverage".into(), "a".repeat(64))].into_iter().collect(),
             producers: [("fixture".into(), "1".into())].into_iter().collect(),
         });
-        assert_eq!(snapshot.as_str(), "snap_11f9097220e1c45e");
+        assert_eq!(
+            snapshot.as_str(),
+            "snap_beba8fc4918e23aaff924b899bd346b36978da20fe39b7c843271a18c62812df"
+        );
     }
 
     fn key() -> ReleaseKey {
@@ -556,11 +576,17 @@ mod tests {
     fn the_four_identities_never_collapse() {
         // The same content under four prefixes is four different strings, and none parses as
         // another kind. Gate C16's premise.
-        let content = json!({"same": true});
-        let release = ReleaseId::from_content(&content);
-        let environment = EnvironmentId::from_content(&content);
-        let context = ContextId::from_content(&content);
-        let snapshot = SnapshotId::from_content(&content);
+        let release = key().id();
+        let environment = Environment::unspecified().environment_id;
+        let context =
+            Context::new(release.clone(), environment.clone(), ResearchMode::Upstream).context_id;
+        let snapshot = SnapshotId::derive(&SnapshotInputs {
+            schema_version: "7.0".into(),
+            normalizer_version: "fixture".into(),
+            context_id: context.clone(),
+            input_digests: BTreeMap::new(),
+            producers: BTreeMap::new(),
+        });
         let all = [
             release.as_str(),
             environment.as_str(),
@@ -590,8 +616,9 @@ mod tests {
                 "{bad} should be rejected"
             );
         }
-        let good = ContextId::try_from("ctx_0123456789abcdef".to_owned()).expect("well formed");
-        assert_eq!(String::from(good), "ctx_0123456789abcdef");
+        let text = format!("ctx_{}", "0123456789abcdef".repeat(4));
+        let good = ContextId::try_from(text.clone()).expect("well formed");
+        assert_eq!(String::from(good), text);
     }
 
     #[test]
@@ -613,17 +640,12 @@ mod tests {
         assert_ne!(omitted.environment_id, empty.environment_id);
         assert!(!omitted.features_known);
         assert!(empty.features_known);
-        let mut legacy = serde_json::to_value(&empty).expect("serialize");
-        legacy
+        let mut missing_knowledge = serde_json::to_value(&empty).expect("serialize");
+        missing_knowledge
             .as_object_mut()
             .expect("object")
             .remove("features_known");
-        let decoded: Environment = serde_json::from_value(legacy).expect("legacy reader");
-        assert_eq!(decoded.environment_id, empty.environment_id);
-        assert!(
-            !decoded.features_known,
-            "legacy empty records cannot establish a declaration"
-        );
+        assert!(serde_json::from_value::<Environment>(missing_knowledge).is_err());
     }
 
     #[test]

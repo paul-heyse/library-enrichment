@@ -84,7 +84,7 @@ class WireClient:
                 raw = b"".join(chunks)
                 assert hashlib.sha256(raw).hexdigest() == data["artifact"]["sha256"]
                 document = json.loads(raw)
-                assert document["index"]["format"] == "research-result/2"
+                assert document["index"]["format"] == "research-result/3"
                 return document["result"]
             assert following != cursor and chunk
             cursor = following

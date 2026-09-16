@@ -7,7 +7,6 @@ use enrichment_core::{
         Artifact, ArtifactKind, Symbol,
         catalog::{JobPublication, PublishedJobKind},
         execution::*,
-        ingest,
         relational::{FactSource, Locator, SubjectRef},
         snapshot::SnapshotMetadata,
     },
@@ -362,33 +361,22 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
         return denied("Select the explicit build or runtime profile required by this inspection.");
     }
     let readiness =
-        crate::execution::readiness::assess(service, opened.release.key.ecosystem, profile);
+        match crate::execution::readiness::assess(service, opened.release.key.ecosystem, profile)
+            .await
+        {
+            Ok(readiness) => readiness,
+            Err(error) => return common::operation_error(&error, "execution_policy"),
+        };
     if !readiness.available {
         return crate::execution::readiness::refusal(&readiness);
     }
-    let image = readiness.image_id.expect("ready route has an image");
     request.snapshot_id = Some(opened.snapshot_id.to_string());
     request.symbol_path = symbol.path.clone();
     request.definition_id = Some(symbol.definition_id.clone());
-    let mut normalized = request.clone();
-    normalized.max_bytes = None;
-    if let Some(options) = &mut normalized.execution {
-        options.intent = InspectionIntent::Retained;
-    }
-    let containment =
-        match crate::execution::description::containment_identity(&service.config.execution) {
-            Ok(v) => v,
-            Err(e) => return common::operation_error(&e, "inspection_execution"),
-        };
-    let key = canonical::digest_hex(&serde_json::json!([
-        "inspection/2",
-        normalized,
-        image,
-        containment
-    ]));
     let (record, token, new) = match service
         .jobs
-        .submit(key, jobs::JobSpec::Inspect(request.clone()))
+        .submit(jobs::JobSpec::Inspect(request.clone()))
+        .await
     {
         Ok(v) => v,
         Err(e) => return common::operation_error(&e, "inspection_execution"),
@@ -396,7 +384,9 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     if new {
         let service = service.clone();
         let id = record.job_id.clone();
-        tokio::spawn(async move {
+        let jobs = std::sync::Arc::clone(&service.jobs);
+        let runtime = service.repository.runtime.clone();
+        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
             let result = service
                 .repository
                 .runtime
@@ -423,10 +413,12 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
                     ),
                 ),
             };
-            if let Err(e) = service.jobs.finish(&id, state, result) {
+            if let Err(e) = service.jobs.finish(&id, state, result).await {
                 eprintln!("inspection job {id}: terminal journal failed: {e}");
             }
-        });
+        }) {
+            return common::operation_error(&error, "native_effect_owner");
+        }
     }
     match verify::wait(
         service,
@@ -460,7 +452,7 @@ async fn run(
     request: &InspectRequest,
 ) -> io::Result<(JobState, Envelope)> {
     let cancel = service.jobs.cancellation(job)?;
-    if !service.jobs.start(job)? {
+    if !service.jobs.start(job).await? {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
             "cancelled before inspection started",
@@ -536,15 +528,18 @@ pub async fn capsule_inputs(
     prepared: &capsule::Capsule,
 ) -> io::Result<Vec<Artifact>> {
     let owned = service.clone();
-    let digest = opened
-        .release
-        .key
-        .artifact_digest
-        .clone()
-        .ok_or_else(|| io::Error::other("source digest missing"))?;
+    let source = opened
+        .reader
+        .source_artifact()
+        .await
+        .map_err(io::Error::other)?
+        .ok_or_else(|| io::Error::other("selected snapshot lacks its source acquisition"))?;
     let ecosystem = opened.release.key.ecosystem;
     let root = prepared.root.clone();
-    tokio::task::spawn_blocking(move || capture_inputs(&owned, &digest, ecosystem, &root))
+    service
+        .repository
+        .runtime
+        .blocking(move || capture_inputs(&owned, source, ecosystem, &root))
         .await
         .map_err(io::Error::other)?
 }
@@ -592,14 +587,10 @@ fn dependency_paths(root: &Path) -> io::Result<Vec<std::path::PathBuf>> {
 
 fn capture_inputs(
     service: &Service,
-    digest: &str,
+    source: Artifact,
     ecosystem: Ecosystem,
     capsule_root: &Path,
 ) -> io::Result<Vec<Artifact>> {
-    let source = service
-        .blobs
-        .artifact(digest)?
-        .ok_or_else(|| io::Error::other("source acquisition missing"))?;
     let mut artifacts = BTreeMap::from([(source.sha256.clone(), source)]);
     let directory = match ecosystem {
         Ecosystem::Python => "wheelhouse",
@@ -795,12 +786,8 @@ async fn publish(
         })
         .collect::<Result<Vec<_>, _>>()
         .map_err(io::Error::other)?;
-    let evidence = ingest::normalize_execution_set(
-        facts.clone(),
-        run.clone(),
-        artifacts.values().cloned().collect(),
-    )
-    .map_err(io::Error::other)?;
+    let publication_facts = facts.clone();
+    let publication_artifacts = artifacts.values().cloned().collect();
     let context = if produced.environment.environment_id == opened.environment.environment_id {
         opened.context.clone()
     } else {
@@ -853,7 +840,7 @@ async fn publish(
         });
     let manifest = service
         .repository
-        .publish_job(
+        .publish_execution(
             SnapshotMetadata {
                 context: context.clone(),
                 release: opened.release.clone(),
@@ -865,8 +852,11 @@ async fn publish(
                 observed_configuration: parent.observed_configuration.clone(),
                 producer_items: parent.producer_items,
             },
-            evidence,
+            publication_facts,
+            run.clone(),
+            publication_artifacts,
             enrichment_store::repository::JobCompletion {
+                publication_fence: service.jobs.publication_fence(job)?,
                 job_id: job.into(),
                 kind: PublishedJobKind::Inspect,
                 state,
@@ -1170,15 +1160,31 @@ mod tests {
             base_metadata.context = parent_context;
             base_metadata.environment = parent_environment;
         }
+        let session = service.repository.runtime.session();
+        let mut plans = enrichment_store::admission::Relation::ALL
+            .into_iter()
+            .map(|relation| {
+                let batch = match relation {
+                    enrichment_store::admission::Relation::Definitions => {
+                        enrichment_store::projection::definitions(std::slice::from_ref(&definition))
+                            .unwrap()
+                    }
+                    enrichment_store::admission::Relation::Symbols => {
+                        enrichment_store::projection::bindings(std::slice::from_ref(&binding))
+                            .unwrap()
+                    }
+                    _ => arrow::record_batch::RecordBatch::new_empty(relation.schema().unwrap()),
+                };
+                (relation, session.read_batch(batch).unwrap())
+            })
+            .collect();
         let base = service
             .repository
-            .publish(
+            .publish_native(
                 base_metadata.clone(),
-                ingest::EvidenceBatch {
-                    definitions: vec![definition],
-                    symbols: vec![binding.clone()],
-                    ..Default::default()
-                },
+                std::mem::take(&mut plans),
+                vec![],
+                None,
                 None,
             )
             .await
@@ -1219,12 +1225,10 @@ mod tests {
         };
         let (record, _, _) = service
             .jobs
-            .submit(
-                "retained-fixture".into(),
-                jobs::JobSpec::Inspect(request.clone()),
-            )
+            .submit(jobs::JobSpec::Inspect(request.clone()))
+            .await
             .unwrap();
-        service.jobs.start(&record.job_id).unwrap();
+        service.jobs.start(&record.job_id).await.unwrap();
         let document = store(
             &service,
             b"import fixture\nfixture.f\n",
@@ -1334,18 +1338,16 @@ mod tests {
                 reply.snapshot_id = Some(manifest.snapshot_id.to_string());
                 Ok(reply)
             });
-        let evidence = ingest::normalize_execution(
-            fact.clone(),
-            run.clone(),
-            vec![document, lock, result.clone(), receipt],
-        )
-        .unwrap();
+        let publication_artifacts = vec![document, lock, result.clone(), receipt];
         let manifest = service
             .repository
-            .publish_job(
+            .publish_execution(
                 metadata,
-                evidence,
+                vec![fact.clone()],
+                run.clone(),
+                publication_artifacts,
                 enrichment_store::repository::JobCompletion {
+                    publication_fence: service.jobs.publication_fence(&record.job_id).unwrap(),
                     job_id: record.job_id.clone(),
                     kind: PublishedJobKind::Inspect,
                     state: JobState::Succeeded,
@@ -1356,10 +1358,10 @@ mod tests {
             )
             .await
             .unwrap();
-        // Simulate a process disappearing after catalog commit, before terminal journal write.
+        // Publication and terminal state share the control commit even before worker acknowledgement.
         assert_eq!(
-            service.jobs.get(&record.job_id).unwrap().state,
-            JobState::Running
+            service.jobs.get(&record.job_id).await.unwrap().state,
+            JobState::Succeeded
         );
         let expected = recover(&service.repository, &service.blobs, &record)
             .await
@@ -1368,7 +1370,7 @@ mod tests {
         assert_eq!(expected.0, JobState::Succeeded);
         drop(service);
         let service = Service::open(config, paths).unwrap();
-        let terminal = service.jobs.get(&record.job_id).unwrap();
+        let terminal = service.jobs.get(&record.job_id).await.unwrap();
         assert_eq!(terminal.state, JobState::Succeeded);
         assert_eq!(terminal.result.unwrap().data, expected.1.data);
         let mut read = request;
@@ -1385,7 +1387,7 @@ mod tests {
             serde_json::from_value(serde_json::Value::Object(answer.data)).unwrap();
         assert_eq!(data.execution_observations, vec![fact.clone()]);
         assert_eq!(
-            service.jobs.counts(),
+            service.jobs.counts().await.unwrap(),
             (0, 0),
             "execute_on_miss reuses a sound result even though execution is disabled"
         );

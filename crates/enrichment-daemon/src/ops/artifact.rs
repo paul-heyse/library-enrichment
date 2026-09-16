@@ -21,15 +21,6 @@ const SORT: &str = "bytes";
 
 /// Read a slice of an artifact.
 pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
-    let service = service.clone();
-    let runtime = service.repository.runtime.clone();
-    runtime
-        .blocking(move || read_blocking(&service, request))
-        .await
-        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
-}
-
-fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
     let id = request.artifact_id.trim();
     if !is_artifact_id(id) {
         return envelope::error(
@@ -40,7 +31,11 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
             false,
         );
     }
-    let artifact: Artifact = match service.blobs.find(id) {
+    let pin = match service.repository.catalog.pin().await {
+        Ok(pin) => pin,
+        Err(error) => return common::operation_error(&error, "artifact_catalog"),
+    };
+    let artifact = match pin.artifact(&service.repository.runtime, id).await {
         Ok(Some(a)) => a,
         Ok(None) => {
             return envelope::error(
@@ -53,6 +48,44 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
         }
         Err(err) => return common::operation_error(&err, "artifact_read"),
     };
+    let selected_window = if let Some(ArtifactSection::Result { name }) = &request.section {
+        match pin
+            .result_section(&service.repository.runtime, id, name.as_str())
+            .await
+        {
+            Ok(Some(window)) => Some(window),
+            Ok(None) => {
+                return envelope::error(
+                    ErrorCode::ArtifactUnavailable,
+                    "The captured native result has no requested section",
+                    "Choose a section listed in delivery.sections.",
+                    false,
+                );
+            }
+            Err(error) => return common::operation_error(&error, "result_section"),
+        }
+    } else {
+        None
+    };
+    let service = service.clone();
+    let runtime = service.repository.runtime.clone();
+    runtime
+        .blocking(move || {
+            // Keep the captured catalog lease until the byte driver has finished reading.
+            let _pin = pin;
+            read_blocking(&service, request, artifact, selected_window)
+        })
+        .await
+        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
+}
+
+fn read_blocking(
+    service: &Service,
+    request: ReadArtifactRequest,
+    artifact: Artifact,
+    selected_window: Option<enrichment_store::result::Window>,
+) -> Envelope {
+    let id = request.artifact_id.trim();
     let mut file = match service.blobs.capture(&artifact, 256 * 1024 * 1024) {
         Ok(b) => b,
         Err(err) => return common::operation_error(&err, "artifact_read"),
@@ -73,31 +106,21 @@ fn read_blocking(service: &Service, request: ReadArtifactRequest) -> Envelope {
     if let Some(section) = &request.section {
         match section {
             ArtifactSection::Result { name } => {
-                match enrichment_store::result::index(&mut file, total) {
-                    Ok((index, base)) => match index.sections.get(name.as_str()) {
-                        Some(window) => {
-                            window_start = (base + window.start) as usize;
-                            window_end = (base + window.end) as usize;
-                            section_name = Some(name.as_str().to_owned());
-                        }
-                        None => {
-                            return envelope::error(
-                                ErrorCode::ArtifactUnavailable,
-                                format!("result has no {} section", name.as_str()),
-                                "Choose a section listed in delivery.sections, or read the data section.",
-                                false,
-                            );
-                        }
-                    },
-                    Err(error) => {
-                        return envelope::error(
-                            ErrorCode::UnsupportedFormat,
-                            error.to_string(),
-                            "Result sections require an indexed research-result/2 artifact. Use a Markdown selector for text headings.",
-                            false,
-                        );
-                    }
+                let Some(window) = selected_window else {
+                    return common::operation_error(
+                        &std::io::Error::other("native result window absent"),
+                        "result_section",
+                    );
+                };
+                if window.start > window.end || window.end > total {
+                    return common::operation_error(
+                        &std::io::Error::other("native result window exceeds retained bytes"),
+                        "result_section",
+                    );
                 }
+                window_start = window.start as usize;
+                window_end = window.end as usize;
+                section_name = Some(name.as_str().to_owned());
             }
             ArtifactSection::Markdown { heading } => {
                 if !is_text || heading.trim().is_empty() || heading.len() > 512 {
@@ -372,8 +395,14 @@ mod tests {
             },
         );
         let (artifact, _) =
-            enrichment_store::result::store(&service.blobs, &answer, "service:bounded-result/2")
+            enrichment_store::result::store(&service.blobs, &answer, "service:bounded-result/3")
                 .unwrap();
+        service
+            .repository
+            .catalog
+            .retain_result(&service.repository.runtime, &service.blobs, &artifact)
+            .await
+            .unwrap();
         let mut request = ReadArtifactRequest {
             artifact_id: artifact.artifact_id.clone(),
             section: Some(ArtifactSection::Result {

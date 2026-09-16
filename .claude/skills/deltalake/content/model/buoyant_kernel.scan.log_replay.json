@@ -1,0 +1,95 @@
+{
+  "module": "buoyant_kernel::scan::log_replay",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.scan.log_replay.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::scan::log_replay::PARTITION_VALUES_PARSED_NAME",
+      "name": "PARTITION_VALUES_PARSED_NAME",
+      "kind": "static",
+      "crate": "buoyant_kernel",
+      "signature": "static PARTITION_VALUES_PARSED_NAME: &str",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::scan::log_replay::PARTITION_VALUES_PARSED_NAME"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::log_replay::ScanLogReplayProcessor",
+      "name": "ScanLogReplayProcessor",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ScanLogReplayProcessor",
+      "summary": "[`ScanLogReplayProcessor`] performs log replay (processes actions) specifically for doing a table scan.",
+      "doc": "api/buoyant_kernel.scan.log_replay.md#scanlogreplayprocessor",
+      "aliases": [
+        "delta_kernel::scan::log_replay::ScanLogReplayProcessor"
+      ],
+      "implements": [
+        "buoyant_kernel::log_replay::LogReplayProcessor",
+        "buoyant_kernel::log_replay::ParallelLogReplayProcessor"
+      ],
+      "methods": [
+        {
+          "name": "data_skipping_filter",
+          "signature": "fn data_skipping_filter(&self) -> Option<&DataSkippingFilter>",
+          "via_trait": "buoyant_kernel::log_replay::LogReplayProcessor"
+        },
+        {
+          "name": "from_serializable_state",
+          "signature": "fn from_serializable_state(engine: &dyn Engine, state: SerializableScanState) -> DeltaResult<Self>",
+          "summary": "Reconstruct a processor from serialized state."
+        },
+        {
+          "name": "into_serializable_state",
+          "signature": "fn into_serializable_state(self) -> DeltaResult<SerializableScanState>",
+          "summary": "Serialize the processor state for distributed processing."
+        },
+        {
+          "name": "process_actions_batch",
+          "signature": "fn process_actions_batch(&mut self, actions_batch: ActionsBatch) -> DeltaResult<Self::Output>",
+          "via_trait": "buoyant_kernel::log_replay::LogReplayProcessor"
+        },
+        {
+          "name": "process_actions_batch",
+          "signature": "fn process_actions_batch(&self, actions_batch: ActionsBatch) -> DeltaResult<Self::Output>",
+          "via_trait": "buoyant_kernel::log_replay::ParallelLogReplayProcessor"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::log_replay::SerializableScanState",
+      "name": "SerializableScanState",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct SerializableScanState",
+      "summary": "Serializable processor state for distributed processing. This can be serialized using the default serde serialization, or through custom serialization in the engine.",
+      "doc": "api/buoyant_kernel.scan.log_replay.md#serializablescanstate",
+      "aliases": [
+        "delta_kernel::scan::log_replay::SerializableScanState"
+      ],
+      "fields": [
+        "predicate",
+        "internal_state_blob",
+        "seen_file_keys"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    }
+  ]
+}

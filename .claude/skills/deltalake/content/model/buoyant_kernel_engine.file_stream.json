@@ -1,0 +1,94 @@
+{
+  "module": "buoyant_kernel_engine::file_stream",
+  "crate": "buoyant_kernel_engine",
+  "api": "api/buoyant_kernel_engine.file_stream.md",
+  "items": [
+    {
+      "path": "buoyant_kernel_engine::file_stream::OnError",
+      "name": "OnError",
+      "kind": "enum",
+      "crate": "buoyant_kernel_engine",
+      "signature": "enum OnError",
+      "summary": "Describes the behavior of the `FileStream` if file opening or scanning fails",
+      "doc": "api/buoyant_kernel_engine.file_stream.md#onerror",
+      "aliases": [
+        "delta_kernel_default_engine::file_stream::OnError"
+      ],
+      "variants": [
+        "Fail",
+        "Skip"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel_engine::file_stream::FileStream",
+      "name": "FileStream",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct FileStream",
+      "summary": "A stream that iterates record batch by record batch, file over file.",
+      "doc": "api/buoyant_kernel_engine.file_stream.md#filestream",
+      "aliases": [
+        "delta_kernel_default_engine::file_stream::FileStream"
+      ],
+      "implements": [
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(files: impl IntoIterator<Item = FileMeta>, schema: ArrowSchemaRef, file_opener: Box<dyn FileOpener>) -> DeltaResult<Self>",
+          "summary": "Create a new `FileStream` using the given `FileOpener` to scan underlying files"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "with_on_error",
+          "signature": "fn with_on_error(self, on_error: OnError) -> Self",
+          "summary": "Specify the behavior when an error occurs opening or scanning a file"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::file_stream::FileOpener",
+      "name": "FileOpener",
+      "kind": "trait",
+      "crate": "buoyant_kernel_engine",
+      "signature": "trait FileOpener: Send + Unpin",
+      "summary": "Generic API for opening a file using an [`ObjectStore`] and resolving to a stream of [`RecordBatch`]",
+      "doc": "api/buoyant_kernel_engine.file_stream.md#fileopener",
+      "aliases": [
+        "delta_kernel_default_engine::file_stream::FileOpener"
+      ],
+      "implementors": [
+        "buoyant_kernel_engine::parquet::PresignedUrlOpener"
+      ],
+      "required_methods": [
+        "open"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "open",
+          "signature": "fn open(&self, file_meta: FileMeta, range: Option<Range<i64>>) -> DeltaResult<FileOpenFuture>",
+          "summary": "Asynchronously open the specified file and return a stream of [`RecordBatch`]"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::file_stream::FileOpenFuture",
+      "name": "FileOpenFuture",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel_engine",
+      "signature": "type FileOpenFuture = futures::future::BoxFuture<'static, delta_kernel::DeltaResult<futures::stream::BoxStream<'static, delta_kernel::DeltaResult<delta_kernel::arrow::array::RecordBatch>>>>",
+      "summary": "A fallible future that resolves to a stream of [`RecordBatch`] cbindgen:ignore",
+      "doc": "api/buoyant_kernel_engine.file_stream.md#fileopenfuture",
+      "aliases": [
+        "delta_kernel_default_engine::file_stream::FileOpenFuture"
+      ]
+    }
+  ]
+}

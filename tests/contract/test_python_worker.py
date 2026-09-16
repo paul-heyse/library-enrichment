@@ -1,17 +1,36 @@
 """The actual static worker preserves evidence without executing import side effects."""
 
+import io
 import os
 import subprocess
 import sys
 
-from enrichment_mcp._generated.worker_schema import WorkerRequest, WorkerResponse
-from enrichment_worker.__main__ import extract
+import pyarrow as pa
+
+from enrichment_mcp._generated.worker_schema import Observation, WorkerRequest
+from enrichment_worker.__main__ import CONTRACT, SCHEMA, extract
+
+
+def facts(job):
+    output = io.BytesIO()
+    extract(job, output)
+    table = pa.ipc.open_stream(output.getvalue()).read_all()
+    assert table.schema.equals(SCHEMA, check_metadata=True)
+    rows = table.to_pylist()
+    complete = {r["file"] for r in rows if r["fact"] == "file_complete"}
+    observations = [
+        Observation.model_validate(r["observation"])
+        for r in rows
+        if r["fact"] == "observation" and r["file"] in complete
+    ]
+    gaps = [r for r in rows if r["fact"] == "file_gap"]
+    return observations, gaps, complete
 
 
 def request(root, files):
     return WorkerRequest.model_validate(
         {
-            "schema_version": "1.0",
+            "schema_version": CONTRACT["protocol"],
             "root": str(root),
             "max_observations": 10000,
             "max_memory_bytes": 1024 * 1024 * 1024,
@@ -37,7 +56,7 @@ def test_source_stub_overloads_exports_and_aliases_remain_separate(tmp_path):
         "    @overload\n    def convert(self, value: str, /) -> str: ...\n"
         "    @overload\n    def convert(self, value: bytes, /) -> bytes: ...\n"
     )
-    result = extract(
+    observations, gaps, _processed = facts(
         request(
             tmp_path,
             [
@@ -47,11 +66,11 @@ def test_source_stub_overloads_exports_and_aliases_remain_separate(tmp_path):
             ],
         )
     )
-    assert not result.gaps
-    alias = next(o for o in result.observations if o.path == "different.PublicThing")
+    assert not gaps
+    alias = next(o for o in observations if o.path == "different.PublicThing")
     assert alias.alias_target == "different.api.Thing"
     assert alias.publicness.exported is True
-    methods = [o for o in result.observations if o.path == "different.api.Thing.convert"]
+    methods = [o for o in observations if o.path == "different.api.Thing.convert"]
     assert len(methods) == 2
     assert {o.origin.value for o in methods} == {"source", "stub"}
     stub = next(o for o in methods if o.origin.value == "stub")
@@ -74,25 +93,28 @@ def test_separate_worker_does_not_execute_target_or_use_its_cwd(tmp_path):
     env = {"PATH": os.environ["PATH"], "HOME": str(cwd), "TMPDIR": str(cwd)}
     result = subprocess.run(
         [sys.executable, "-I", "-B", "-m", "enrichment_worker"],
-        input=job.model_dump_json(),
-        text=True,
+        input=job.model_dump_json().encode(),
         capture_output=True,
         cwd=cwd,
         env=env,
         timeout=20,
     )
     assert result.returncode == 0, result.stderr
-    response = WorkerResponse.model_validate_json(result.stdout)
+    rows = pa.ipc.open_stream(result.stdout).read_all().to_pylist()
+    response = next(r for r in rows if r["fact"] == "producer")
+    observations = [
+        Observation.model_validate(r["observation"]) for r in rows if r["fact"] == "observation"
+    ]
     assert not canary.exists()
     assert not list(cwd.iterdir())
-    assert response.griffe_version == "2.3.0"
-    assert any(o.path == "fixture.capability" for o in response.observations)
-    assert response.worker_python
+    assert response["griffe_version"] == "2.3.0"
+    assert any(o.path == "fixture.capability" for o in observations)
+    assert response["worker_python"]
 
 
 def test_worker_rejects_path_escape_and_names_parse_failure(tmp_path):
     (tmp_path / "broken.py").write_text("def incomplete(:\n")
-    result = extract(
+    observations, gaps, processed = facts(
         request(
             tmp_path,
             [
@@ -101,22 +123,24 @@ def test_worker_rejects_path_escape_and_names_parse_failure(tmp_path):
             ],
         )
     )
-    assert len(result.gaps) == 2
-    assert not result.observations
-    assert not result.processed_files
-    assert "relative" in result.gaps[0].reason
-    assert "SyntaxError" in result.gaps[1].reason
+    assert len(gaps) == 2
+    assert not observations
+    assert not processed
+    assert "relative" in gaps[0]["detail"]
+    assert "SyntaxError" in gaps[1]["detail"]
 
 
 def test_long_documentation_is_retained_and_oversized_declarations_are_explicit(tmp_path):
     docs = ("λ documentation beyond the old truncation limit. " * 1000).strip()
     (tmp_path / "long.py").write_text(f'def capability():\n    """{docs}"""\n')
     job = request(tmp_path, [("long.py", "long", "source")])
-    result = extract(job)
-    assert not result.gaps
-    assert next(o.docs for o in result.observations if o.path == "long.capability") == docs
-    (tmp_path / "long.py").write_text('def capability():\n    """' + "x" * 1_100_000 + '"""\n')
-    result = extract(job)
-    assert not result.processed_files
-    assert not result.observations
-    assert "declaration exceeds 1 MiB" in result.gaps[0].reason
+    observations, gaps, processed = facts(job)
+    assert not gaps
+    assert next(o.docs for o in observations if o.path == "long.capability") == docs
+    (tmp_path / "long.py").write_text(
+        'def capability():\n    """' + "x" * (CONTRACT["batch_bytes"] + 1) + '"""\n'
+    )
+    observations, gaps, processed = facts(job)
+    assert not processed
+    assert not observations
+    assert "declaration exceeds Arrow batch byte budget" in gaps[0]["detail"]

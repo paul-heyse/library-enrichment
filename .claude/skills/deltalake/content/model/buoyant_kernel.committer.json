@@ -1,0 +1,45 @@
+{
+  "module": "buoyant_kernel::committer",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.committer.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::committer::Committer",
+      "name": "Committer",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait Committer: Send",
+      "summary": "A Committer is the system by which transactions are committed to a table. Transactions are effectively a collection of actions performed on the table at a specific version. The kernel exposes this trait so different catalogs can build thei…",
+      "doc": "api/buoyant_kernel.committer.md#committer",
+      "aliases": [
+        "delta_kernel::committer::Committer"
+      ],
+      "implementors": [
+        "buoyant_kernel::committer::filesystem::FileSystemCommitter"
+      ],
+      "required_methods": [
+        "commit",
+        "is_catalog_committer",
+        "publish"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "commit",
+          "signature": "fn commit(&self, engine: &dyn Engine, actions: DeltaResultIterator<'_, FilteredEngineData>, commit_metadata: CommitMetadata) -> DeltaResult<CommitResponse>",
+          "summary": "Commits actions to the table at the version specified in [`CommitMetadata`]."
+        },
+        {
+          "name": "is_catalog_committer",
+          "signature": "fn is_catalog_committer(&self) -> bool",
+          "summary": "Returns `true` if this committer is for a catalog-managed table, else `false`."
+        },
+        {
+          "name": "publish",
+          "signature": "fn publish(&self, engine: &dyn Engine, publish_metadata: PublishMetadata) -> DeltaResult<()>",
+          "summary": "Publishes catalog commits to the Delta log. Applicable only to catalog-managed tables."
+        }
+      ]
+    }
+  ]
+}

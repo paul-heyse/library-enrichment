@@ -1,0 +1,131 @@
+{
+  "module": "buoyant_kernel_engine",
+  "crate": "buoyant_kernel_engine",
+  "api": "api/buoyant_kernel_engine.md",
+  "items": [
+    {
+      "path": "buoyant_kernel_engine::build_add_file_metadata",
+      "name": "build_add_file_metadata",
+      "kind": "function",
+      "crate": "buoyant_kernel_engine",
+      "signature": "fn build_add_file_metadata(file_metadata: parquet::DataFileMetadata, write_context: &delta_kernel::transaction::WriteContext) -> delta_kernel::DeltaResult<Box<dyn EngineData>>",
+      "summary": "Converts [`DataFileMetadata`] into Add action [`EngineData`] using the partition values and table root from the provided [`WriteContext`].",
+      "doc": "api/buoyant_kernel_engine.md#build_add_file_metadata",
+      "aliases": [
+        "delta_kernel_default_engine::build_add_file_metadata"
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::DefaultEngine",
+      "name": "DefaultEngine",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct DefaultEngine<E: TaskExecutor>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel_default_engine::DefaultEngine"
+      ],
+      "implements": [
+        "buoyant_kernel::Engine"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder(object_store: Arc<DynObjectStore>) -> DefaultEngineBuilder<DefaultTaskExecutor>",
+          "summary": "Create a [`DefaultEngineBuilder`] for constructing a [`DefaultEngine`] with custom options."
+        },
+        {
+          "name": "default_parquet_handler",
+          "signature": "fn default_parquet_handler(&self) -> Arc<DefaultParquetHandler<E>>",
+          "summary": "Returns the concrete [`DefaultParquetHandler`] for callers that need the inherent async `write_parquet_file` helper not exposed by the [`ParquetHandler`] trait. For the metered trait surface used by reads, use [`Self::parquet_handler`]."
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self) -> <E as TaskExecutor>::Guard<'_>",
+          "summary": "Enter the runtime context of the executor associated with this engine."
+        },
+        {
+          "name": "evaluation_handler",
+          "signature": "fn evaluation_handler(&self) -> Arc<dyn EvaluationHandler>",
+          "via_trait": "buoyant_kernel::Engine"
+        },
+        {
+          "name": "get_object_store_for_url",
+          "signature": "fn get_object_store_for_url(&self, _url: &Url) -> Option<Arc<DynObjectStore>>"
+        },
+        {
+          "name": "json_handler",
+          "signature": "fn json_handler(&self) -> Arc<dyn JsonHandler>",
+          "via_trait": "buoyant_kernel::Engine"
+        },
+        {
+          "name": "parquet_handler",
+          "signature": "fn parquet_handler(&self) -> Arc<dyn ParquetHandler>",
+          "via_trait": "buoyant_kernel::Engine"
+        },
+        {
+          "name": "storage_handler",
+          "signature": "fn storage_handler(&self) -> Arc<dyn StorageHandler>",
+          "via_trait": "buoyant_kernel::Engine"
+        },
+        {
+          "name": "write_parquet",
+          "signature": "async fn write_parquet(&self, data: &ArrowEngineData, write_context: &WriteContext) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Write `data` as a parquet file using the provided `write_context`."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::DefaultEngineBuilder",
+      "name": "DefaultEngineBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct DefaultEngineBuilder<E>",
+      "summary": "Builder for creating [`DefaultEngine`] instances.",
+      "doc": "api/buoyant_kernel_engine.md#defaultenginebuilder",
+      "aliases": [
+        "delta_kernel_default_engine::DefaultEngineBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DefaultEngine<E>",
+          "summary": "Build the [`DefaultEngine`] instance."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(object_store: Arc<DynObjectStore>) -> Self",
+          "summary": "Create a new [`DefaultEngineBuilder`] instance with the default executor."
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: NonZero<usize>) -> Self",
+          "summary": "Set the maximum number of rows per batch yielded by the JSON and Parquet handlers in their `read_*_files` paths."
+        },
+        {
+          "name": "with_buffer_size",
+          "signature": "fn with_buffer_size(self, buffer_size: NonZero<usize>) -> Self",
+          "summary": "Set the maximum number of files read concurrently by the JSON and Parquet handlers in their `read_*_files` paths. This is the file-level I/O readahead depth: higher values overlap more object-store requests to hide latency, at the cost of…"
+        },
+        {
+          "name": "with_task_executor",
+          "signature": "fn with_task_executor<F: TaskExecutor>(self, task_executor: Arc<F>) -> DefaultEngineBuilder<Arc<F>>",
+          "summary": "Set a custom task executor for the engine."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::DefaultTaskExecutor",
+      "name": "DefaultTaskExecutor",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct DefaultTaskExecutor",
+      "summary": "Represents the default [`TaskExecutor`]. The executor is created lazily to avoid unnecessary instantiations.",
+      "doc": "api/buoyant_kernel_engine.md#defaulttaskexecutor",
+      "aliases": [
+        "delta_kernel_default_engine::DefaultTaskExecutor"
+      ]
+    }
+  ]
+}

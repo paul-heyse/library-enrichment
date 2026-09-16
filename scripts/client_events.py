@@ -240,7 +240,7 @@ class Trace:
             document = json.loads(complete)
             if (
                 not isinstance(document, dict)
-                or document.get("index", {}).get("format") != "research-result/2"
+                or document.get("index", {}).get("format") != "research-result/3"
             ):
                 raise ValueError("result artifact is not an indexed research result")
             result = document["result"]

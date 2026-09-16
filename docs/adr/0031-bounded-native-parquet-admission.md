@@ -1,7 +1,7 @@
 ---
 id: ADR-0031
 title: Isolate native Parquet admission allocations
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§6.3, §8.2, §10]
 review: docs/design_review/reviews/design_review_native-architecture-completion_2026-09-14.md
 evidence: Implemented
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0043
 revisit: The pinned native decoder exposes verified preallocation limits for footer lists, page decompression and dictionary expansion.
 verification: hostile_footer_allocation_is_confined_to_native_worker; native_decoder_isolates_row_groups_before_arrow_batching; dropped_admission_future_cancels_and_reaps_running_decoder
 ---
@@ -127,3 +127,4 @@ requires its existing qualified capsule. No migration, TTL or optional legacy re
 
 - 2026-09-14 — accepted after scoped native architecture review; remaining actual producer,
   client and final performance qualification stays in Plan 12.
+- 2026-09-15 — superseded by ADR-0043.

@@ -198,28 +198,27 @@ impl ProducerRun {
     /// Semantic producer identity includes outcome/coverage but excludes attempt provenance.
     #[must_use]
     pub fn semantic_binding_id(&self) -> String {
-        let mut gaps: Vec<_> = self.gaps.iter().map(|gap| serde_json::json!(gap)).collect();
-        gaps.sort_by_cached_key(canonical::to_canonical_string);
-        gaps.dedup();
-        format!(
-            "producer_{}",
-            canonical::digest_hex(&serde_json::json!({
-                "version": "producer-binding/1", "dedupe": self.dedupe_key(),
-                "outcome": self.outcome, "gaps": gaps,
-            }))
-        )
+        crate::native_key::Key::ProducerBinding
+            .batch_value(
+                &crate::evidence::arrow_model::provenance::producer_fields(std::slice::from_ref(
+                    self,
+                ))
+                .expect("native producer fields"),
+            )
+            .expect("native producer identity")
     }
     /// The single-flight key (§8.2): producer version, normalized options, input digests and
     /// profile. Deliberately excludes timestamps and the request that triggered the run.
     #[must_use]
     pub fn dedupe_key(&self) -> String {
-        canonical::digest_hex(&serde_json::json!({
-            "producer": self.producer,
-            "producer_version": self.producer_version,
-            "config_digest": self.config_digest,
-            "inputs": self.inputs,
-            "profile": self.profile,
-        }))
+        crate::native_key::Key::ProducerPlan
+            .batch_value(
+                &crate::evidence::arrow_model::provenance::producer_fields(std::slice::from_ref(
+                    self,
+                ))
+                .expect("native producer fields"),
+            )
+            .expect("native producer identity")
     }
 }
 

@@ -1,0 +1,193 @@
+help[project-unbounded-session]: SessionContext built without a bounded RuntimeEnv; a large query can exhaust memory.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:170:15
+    │
+170 │     let ctx = SessionContext::new();
+    │               ^^^^^^^^^^^^^^^^^^^^^
+    │
+    = SessionContext::new and new_with_config take the default RuntimeEnv, which has no memory
+      limit and no spill path: an aggregation or sort larger than RAM aborts the process rather than
+      spilling. RuntimeEnvBuilder supplies with_memory_pool, with_temp_file_path and
+      with_max_temp_directory_size; pass the result to SessionContext::new_with_config_rt.
+      See content/api/datafusion_execution.runtime_env.md#runtimeenvbuilder.
+
+help[project-unbounded-session]: SessionContext built without a bounded RuntimeEnv; a large query can exhaust memory.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:369:15
+    │
+369 │     let ctx = SessionContext::new();
+    │               ^^^^^^^^^^^^^^^^^^^^^
+    │
+    = SessionContext::new and new_with_config take the default RuntimeEnv, which has no memory
+      limit and no spill path: an aggregation or sort larger than RAM aborts the process rather than
+      spilling. RuntimeEnvBuilder supplies with_memory_pool, with_temp_file_path and
+      with_max_temp_directory_size; pass the result to SessionContext::new_with_config_rt.
+      See content/api/datafusion_execution.runtime_env.md#runtimeenvbuilder.
+
+help[project-unbounded-session]: SessionContext built without a bounded RuntimeEnv; a large query can exhaust memory.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:547:19
+    │
+547 │     let session = SessionContext::new();
+    │                   ^^^^^^^^^^^^^^^^^^^^^
+    │
+    = SessionContext::new and new_with_config take the default RuntimeEnv, which has no memory
+      limit and no spill path: an aggregation or sort larger than RAM aborts the process rather than
+      spilling. RuntimeEnvBuilder supplies with_memory_pool, with_temp_file_path and
+      with_max_temp_directory_size; pass the result to SessionContext::new_with_config_rt.
+      See content/api/datafusion_execution.runtime_env.md#runtimeenvbuilder.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:178:19
+    │      
+178 │           let batches = ctx
+    │ ╭───────────────────────^
+    │ │ ╭─────────────────────'
+    │ │ │ ╭───────────────────'
+    · │ │ │
+182 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+183 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:206:20
+    │      
+206 │           let distinct = ctx
+    │ ╭────────────────────────^
+    │ │ ╭──────────────────────'
+    │ │ │ ╭────────────────────'
+    · │ │ │
+210 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+211 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:394:16
+    │      
+394 │           let runs = ctx
+    │ ╭────────────────────^
+    │ │ ╭──────────────────'
+    │ │ │ ╭────────────────'
+    · │ │ │
+398 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+399 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:407:18
+    │      
+407 │           let inputs = ctx
+    │ ╭──────────────────────^
+    │ │ ╭────────────────────'
+    │ │ │ ╭──────────────────'
+    · │ │ │
+411 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+412 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:418:16
+    │      
+418 │           let back = ctx
+    │ ╭────────────────────^
+    │ │ ╭──────────────────'
+    │ │ │ ╭────────────────'
+    · │ │ │
+422 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+423 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-collect-over-stream]: Whole result collected into memory; a streaming execution path exists.
+    ┌─ crates/enrichment-store/tests/typed_arrow.rs:556:16
+    │      
+556 │           let read = session
+    │ ╭────────────────────^
+    │ │ ╭──────────────────'
+    │ │ │ ╭────────────────'
+    · │ │ │
+560 │ │ │ │         .collect()
+    │ │ │ │          -------
+    │ │ ╰─│────────────────'
+    │ │   ╰──────────────────'
+561 │ │             .await
+    │ ╰──────────────────^
+    │      
+    = collect() materializes every RecordBatch before returning. execute_stream() and
+      execute_stream_partitioned() yield batches as they are produced, which bounds memory and lets
+      a caller stop early. Collecting is correct for small results and for tests -- this is a prompt
+      to check, not a defect.
+      
+      Anchored to an awaited call, because DataFusion's collect is async and Iterator::collect
+      is not. Without that anchor this rule matches every iterator in the repository: 298 hits
+      instead of the handful that concern DataFusion.
+
+help[project-execution-plan-no-statistics]: ExecutionPlan does not report statistics; the optimizer plans this node blind.
+    ┌─ crates/enrichment-store/src/leases.rs:262:1
+    │  
+262 │ ╭ impl ExecutionPlan for LeasedExec {
+    │        -------------
+    · │
+352 │ │ }
+    │ ╰─^
+    │  
+    = Without partition_statistics (or the older statistics) the optimizer cannot estimate
+      cardinality, so join ordering and repartitioning decisions around this node are guesses.
+      See content/api/datafusion_physical_plan.execution_plan.md#executionplan.
+

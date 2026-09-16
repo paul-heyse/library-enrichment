@@ -1,0 +1,156 @@
+{
+  "module": "pyrefly_types::meta_shape_dsl",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.meta_shape_dsl.md",
+  "items": [
+    {
+      "path": "pyrefly_types::meta_shape_dsl::convert_shape_dsl_function",
+      "name": "convert_shape_dsl_function",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn convert_shape_dsl_function(func: &ruff_python_ast::StmtFunctionDef) -> Result<ShapeDslFunction, DslCompileError>",
+      "summary": "Convert a single Python function definition into a [`ShapeDslFunction`].",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#convert_shape_dsl_function"
+    },
+    {
+      "path": "pyrefly_types::meta_shape_dsl::validate_shape_dsl_functions",
+      "name": "validate_shape_dsl_functions",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn validate_shape_dsl_functions(fns: &[std::sync::Arc<ShapeDslFunction>]) -> Result<(), Vec<DslCompileError>>",
+      "summary": "Validate a set of `ShapeDslFunction`s as a program.",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#validate_shape_dsl_functions"
+    },
+    {
+      "path": "pyrefly_types::meta_shape_dsl::DslCompileError",
+      "name": "DslCompileError",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct DslCompileError",
+      "summary": "A structured error from DSL compilation (parsing or type-checking), carrying the source range of the problematic construct so callers can emit precise diagnostics without resorting to a function-wide fallback range.",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#dslcompileerror",
+      "fields": [
+        "range",
+        "message"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::meta_shape_dsl::ShapeDslFunction",
+      "name": "ShapeDslFunction",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ShapeDslFunction",
+      "summary": "A single DSL function that has been lowered from its Python AST.",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#shapedslfunction",
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "call_targets",
+          "signature": "fn call_targets(&self) -> HashSet<String>",
+          "summary": "Returns the set of user-defined function names called in this function's body."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "The function name from the DSL definition."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, _ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::meta_shape_dsl::ShapeTransform",
+      "name": "ShapeTransform",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ShapeTransform",
+      "summary": "Reference to a shape-DSL function that refines a callable's return type. Carried on `FuncFlags` for functions decorated with `@uses_shape_dsl`.",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#shapetransform",
+      "fields": [
+        "dsl_fn",
+        "fn_closure"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "to_meta_shape_function",
+          "signature": "fn to_meta_shape_function(&self) -> Box<dyn MetaShapeFunction>",
+          "summary": "Build a `MetaShapeFunction` evaluator from this shape transform. Populates `fn_lookup` with all functions in `fn_closure` so that cross-function DSL calls resolve correctly."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, _ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::meta_shape_dsl::MetaShapeFunction",
+      "name": "MetaShapeFunction",
+      "kind": "trait",
+      "crate": "pyrefly_types",
+      "signature": "trait MetaShapeFunction: Debug + Send + Sync",
+      "summary": "A function that computes output shapes from input shapes.",
+      "doc": "api/pyrefly_types.meta_shape_dsl.md#metashapefunction",
+      "implementors": [
+        "pyrefly_types::meta_shape_dsl::DslMetaShapeFunction"
+      ],
+      "required_methods": [
+        "evaluate",
+        "name"
+      ],
+      "provided_methods": [
+        "param_names"
+      ],
+      "methods": [
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self, bound_args: &HashMap<String, Type>, ret_type: &Type) -> Option<Result<Type, ShapeError>>",
+          "summary": "Evaluate bound arguments and return the refined return type directly."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Name of this meta-shape function (for error messages)."
+        },
+        {
+          "name": "param_names",
+          "signature": "fn param_names(&self) -> Vec<&str>",
+          "summary": "Return the names of all parameters in this DSL function."
+        }
+      ]
+    }
+  ]
+}

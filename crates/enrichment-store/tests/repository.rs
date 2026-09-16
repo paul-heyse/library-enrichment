@@ -1,7 +1,10 @@
-mod support;
+use support::native_ingest::{self, EvidenceRows};
+#[path = "support/claims.rs"]
+mod claims;
+pub mod support;
 
 use enrichment_core::{
-    evidence::{Artifact, ArtifactKind, ingest::EvidenceBatch, snapshot::SnapshotMetadata},
+    evidence::{Artifact, ArtifactKind, snapshot::SnapshotMetadata},
     identity::{Context, Ecosystem, Environment, Release, ReleaseKey, ResearchMode},
 };
 use enrichment_store::{
@@ -39,7 +42,7 @@ fn metadata() -> SnapshotMetadata {
     }
 }
 
-fn evidence(metadata: &SnapshotMetadata) -> EvidenceBatch {
+fn evidence(metadata: &SnapshotMetadata) -> EvidenceRows {
     support::rust_evidence_for(
         metadata.release.release_id.as_str(),
         metadata.environment.environment_id.as_str(),
@@ -91,10 +94,15 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         cache_root: dir.path().join("cache"),
     };
     let before_metadata = metadata();
-    let before = repository
-        .publish(before_metadata.clone(), evidence(&before_metadata), None)
-        .await
-        .unwrap();
+    let before = native_ingest::publish_rows(
+        &repository,
+        before_metadata.clone(),
+        evidence(&before_metadata),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
     let mut after_metadata = before_metadata.clone();
     let mut release = after_metadata.release.key.clone();
     release.version = "0.2.0".into();
@@ -105,10 +113,15 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         ResearchMode::Upstream,
     );
     after_metadata.crate_version = Some("0.2.0".into());
-    let after = repository
-        .publish(after_metadata.clone(), evidence(&after_metadata), None)
-        .await
-        .unwrap();
+    let after = native_ingest::publish_rows(
+        &repository,
+        after_metadata.clone(),
+        evidence(&after_metadata),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
     let blobs = BlobStore::open(&paths.data_root).unwrap();
     let bytes = br#"{"complete":"indivisible comparison value"}"#;
     let dependency = blobs
@@ -123,10 +136,8 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         })
         .unwrap()
         .acquired;
-    let mut result: Envelope = serde_json::from_str(include_str!(
-        "../../../contracts/research-v2/examples/ok.fixture.json"
-    ))
-    .unwrap();
+    let mut result: Envelope =
+        serde_json::from_str(include_str!("../../../tests/fixtures/wire/ok.fixture.json")).unwrap();
     result.context_id = Some(after.context_id.to_string());
     result.snapshot_id = Some(after.snapshot_id.to_string());
     result.data = serde_json::from_value(serde_json::json!({
@@ -136,11 +147,10 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
     }))
     .unwrap();
     result.artifacts = vec![ArtifactHandle {
-        artifact_id: dependency.artifact_id.clone(),
+        receipt: dependency.clone(),
         uri: format!("library-evidence://artifacts/{}", dependency.artifact_id)
             .try_into()
             .unwrap(),
-        media_type: dependency.media_type.clone(),
         description: "Complete comparison value".into(),
     }];
     let delivery =
@@ -157,19 +167,33 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         state: JobState::Succeeded,
         delivery: delivery.clone(),
     };
+    let fence = claims::publication_fence(
+        &repository,
+        &publication.job_id,
+        enrichment_store::control_jobs::Arguments {
+            compare: Some(enrichment_core::request::CompareRequest {
+                before_snapshot_id: Some(before.snapshot_id.to_string()),
+                after_snapshot_id: Some(after.snapshot_id.to_string()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    )
+    .await;
     let initial = repository.catalog.pin().await.unwrap();
     let mut invalid = publication.clone();
     invalid.before_context_id = after.context_id.clone();
     assert!(
         repository
-            .publish_comparison(invalid.clone())
+            .publish_comparison(invalid.clone(), fence.clone())
             .await
             .is_err()
     );
     assert!(
         repository
             .catalog
-            .commit(enrichment_store::catalog_generation::CatalogDelta {
+            .commit(enrichment_store::control::ControlBatch {
+                search_projections: vec![],
                 comparison: Some(invalid),
                 ..Default::default()
             })
@@ -181,7 +205,7 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         initial.generation()
     );
     repository
-        .publish_comparison(publication.clone())
+        .publish_comparison(publication.clone(), fence.clone())
         .await
         .unwrap();
     let pin = repository.catalog.pin().await.unwrap();
@@ -207,15 +231,27 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
             .unwrap()
             .is_empty()
     );
-    assert!(
-        exported
-            .join("data/snapshots")
-            .join(before.snapshot_id.as_str())
-            .is_dir()
-    );
+    let runtime = repository.runtime.clone();
     let offline = BlobStore::read_only(&exported.join("data")).unwrap();
+    let native =
+        enrichment_store::control::ControlStore::read_only(&exported.join("data"), runtime.clone())
+            .unwrap()
+            .pin()
+            .await
+            .unwrap();
+    assert!(
+        native
+            .snapshot(&runtime, &before.snapshot_id)
+            .await
+            .unwrap()
+            .is_some()
+    );
     assert_eq!(
-        offline.result_dependencies(&delivery).unwrap().as_slice(),
+        native
+            .result_dependencies(&runtime, &offline, &delivery)
+            .await
+            .unwrap()
+            .as_slice(),
         std::slice::from_ref(&dependency)
     );
     let (_, fields) = offline
@@ -223,7 +259,12 @@ async fn comparison_publication_exports_both_inputs_and_verified_result_closure(
         .unwrap();
     assert_eq!(fields["data.changes"], result.data["changes"]);
     std::fs::remove_file(offline.path_for(&dependency.sha256)).unwrap();
-    assert!(offline.result_dependencies(&delivery).is_err());
+    assert!(
+        native
+            .result_dependencies(&runtime, &offline, &delivery)
+            .await
+            .is_err()
+    );
     assert!(
         !enrichment_store::bundle::verify(&exported)
             .await
@@ -243,8 +284,7 @@ async fn native_navigation_and_text_projection_preserve_retained_identities() {
     let repository = repository(dir.path(), true);
     let metadata = metadata();
     let facts = evidence(&metadata);
-    let manifest = repository
-        .publish(metadata, facts.clone(), None)
+    let manifest = native_ingest::publish_rows(&repository, metadata, facts.clone(), None, None)
         .await
         .unwrap();
     let reader = enrichment_store::SnapshotReader::open(
@@ -369,14 +409,18 @@ async fn large_alternative_sets_remain_reachable_for_inspection_and_comparison()
             changed.api_observations.push(observation);
         }
     }
-    let before = repository
-        .publish(metadata.clone(), original, None)
+    let before = native_ingest::publish_rows(&repository, metadata.clone(), original, None, None)
         .await
         .expect("before");
-    let after = repository
-        .publish(metadata, changed, Some(before.snapshot_id.clone()))
-        .await
-        .expect("after");
+    let after = native_ingest::publish_rows(
+        &repository,
+        metadata,
+        changed,
+        Some(before.snapshot_id.clone()),
+        None,
+    )
+    .await
+    .expect("after");
     let catalog = repository.catalog.pin().await.expect("catalog");
     let before = SnapshotReader::open(&repository, catalog.clone(), &before.snapshot_id)
         .await
@@ -567,8 +611,7 @@ async fn requested_coverage_distinguishes_unknown_missing_partial_and_recovered_
         )
         .expect("symbol coverage"),
     );
-    let manifest = repository
-        .publish(metadata, evidence, None)
+    let manifest = native_ingest::publish_rows(&repository, metadata, evidence, None, None)
         .await
         .expect("publish");
     let reader = enrichment_store::SnapshotReader::open(
@@ -640,10 +683,15 @@ async fn cleanup_is_excluded_until_catalog_plan_and_exhausted_stream_are_dropped
     let dir = tempfile::tempdir().expect("directory");
     let repository = repository(dir.path(), true);
     let metadata = metadata();
-    let manifest = repository
-        .publish(metadata.clone(), evidence(&metadata), None)
-        .await
-        .expect("publish");
+    let manifest = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        evidence(&metadata),
+        None,
+        None,
+    )
+    .await
+    .expect("publish");
     let root = dir.path().join("data");
     drop(leases::exclusive(&root).expect("idle caches hold no lease"));
     for sql in [
@@ -700,16 +748,21 @@ async fn cleanup_is_excluded_until_catalog_plan_and_exhausted_stream_are_dropped
 #[tokio::test]
 async fn cold_open_rejects_missing_or_unrelated_catalog_attempts() {
     use enrichment_core::evidence::catalog::SnapshotAttempt;
-    use enrichment_store::catalog_generation::{CatalogDelta, RelationalCatalog, SelectionChange};
+    use enrichment_store::control::{ControlBatch, ControlStore, SelectionChange};
     for unrelated in [false, true] {
         let dir = tempfile::tempdir().expect("directory");
         let repository = repository(dir.path(), true);
         let metadata = metadata();
         let evidence = evidence(&metadata);
-        let manifest = repository
-            .publish(metadata.clone(), evidence.clone(), None)
-            .await
-            .expect("publish");
+        let manifest = native_ingest::publish_rows(
+            &repository,
+            metadata.clone(),
+            evidence.clone(),
+            None,
+            None,
+        )
+        .await
+        .expect("publish");
         let pin = repository.catalog.pin().await.expect("catalog");
         let entry = pin
             .snapshot(&repository.runtime, &manifest.snapshot_id)
@@ -724,12 +777,14 @@ async fn cold_open_rejects_missing_or_unrelated_catalog_attempts() {
         );
         // Re-encode a coherent physical catalog with the wrong semantic attempt association.
         std::fs::remove_dir_all(dir.path().join("data/catalog")).expect("replace test catalog");
-        let catalog = RelationalCatalog::open(&dir.path().join("data"), repository.runtime.clone())
+        let catalog = ControlStore::open(&dir.path().join("data"), repository.runtime.clone())
             .expect("catalog");
         let mut run = evidence.producer_runs[0].clone();
         run.config_digest = "unrelated-producer-configuration".into();
         catalog
-            .commit(CatalogDelta {
+            .commit(ControlBatch {
+                search_projections: vec![],
+                publication_fence: None,
                 publication: None,
                 comparison: None,
                 releases: vec![metadata.release],
@@ -737,13 +792,25 @@ async fn cold_open_rejects_missing_or_unrelated_catalog_attempts() {
                 contexts: vec![metadata.context.clone()],
                 snapshots: vec![entry],
                 attempts: if unrelated {
-                    vec![SnapshotAttempt {
-                        snapshot_id: manifest.snapshot_id.clone(),
-                        artifacts: evidence.attempt_artifacts[&run.attempt_id].clone(),
-                        run,
-                    }]
+                    Some(
+                        repository
+                            .runtime
+                            .session()
+                            .read_batch(
+                                enrichment_store::projection::catalog::attempts(&[
+                                    SnapshotAttempt {
+                                        snapshot_id: manifest.snapshot_id.clone(),
+                                        artifacts: evidence.attempt_artifacts[&run.attempt_id]
+                                            .clone(),
+                                        run,
+                                    },
+                                ])
+                                .unwrap(),
+                            )
+                            .unwrap(),
+                    )
                 } else {
-                    vec![]
+                    None
                 },
                 selection: Some(SelectionChange {
                     context_id: metadata.context.context_id,
@@ -781,8 +848,7 @@ async fn derived_environment_retains_static_sources_with_new_consumer_identity()
         .iter()
         .map(|o| o.source.clone())
         .collect();
-    let original = repository
-        .publish(metadata.clone(), evidence, None)
+    let original = native_ingest::publish_rows(&repository, metadata.clone(), evidence, None, None)
         .await
         .expect("publish");
     let catalog = repository.catalog.pin().await.expect("catalog");
@@ -865,14 +931,18 @@ async fn native_comparison_preserves_nested_alternatives_and_pages_complete_keys
         )
         .expect("changed alternative"),
     );
-    let before = repository
-        .publish(metadata.clone(), original, None)
+    let before = native_ingest::publish_rows(&repository, metadata.clone(), original, None, None)
         .await
         .expect("before");
-    let after = repository
-        .publish(metadata, changed, Some(before.snapshot_id.clone()))
-        .await
-        .expect("after");
+    let after = native_ingest::publish_rows(
+        &repository,
+        metadata,
+        changed,
+        Some(before.snapshot_id.clone()),
+        None,
+    )
+    .await
+    .expect("after");
     let catalog = repository.catalog.pin().await.expect("catalog");
     let before = SnapshotReader::open(&repository, catalog.clone(), &before.snapshot_id)
         .await
@@ -1023,10 +1093,10 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
         .expect("relationship")
     };
     evidence.relationships = vec![relation(&original.symbol_id, &original.symbol_id)];
-    let baseline = repository
-        .publish(metadata.clone(), evidence.clone(), None)
-        .await
-        .expect("baseline");
+    let baseline =
+        native_ingest::publish_rows(&repository, metadata.clone(), evidence.clone(), None, None)
+            .await
+            .expect("baseline");
     for (subject, target, expected_changes) in [
         (&original.symbol_id, &alternate.symbol_id, 1),
         (&alternate.symbol_id, &original.symbol_id, 2),
@@ -1039,10 +1109,10 @@ async fn relationship_comparison_distinguishes_same_path_qualified_endpoints() {
             .await
             .expect("current");
         drop(pin);
-        let after = repository
-            .publish(metadata.clone(), changed, current)
-            .await
-            .expect("changed endpoint");
+        let after =
+            native_ingest::publish_rows(&repository, metadata.clone(), changed, current, None)
+                .await
+                .expect("changed endpoint");
         let catalog = repository.catalog.pin().await.expect("catalog");
         let before = SnapshotReader::open(&repository, catalog.clone(), &baseline.snapshot_id)
             .await
@@ -1074,10 +1144,15 @@ async fn portable_bundle_admits_without_the_original_store_and_rejects_a_missing
     let dir = tempfile::tempdir().expect("directory");
     let repository = repository(dir.path(), true);
     let metadata = metadata();
-    let manifest = repository
-        .publish(metadata.clone(), evidence(&metadata), None)
-        .await
-        .expect("publication");
+    let manifest = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        evidence(&metadata),
+        None,
+        None,
+    )
+    .await
+    .expect("publication");
     let paths = StatePaths {
         data_root: dir.path().join("data"),
         cache_root: dir.path().join("cache"),
@@ -1164,8 +1239,7 @@ async fn actual_rustdoc_publishes_and_reopens_only_through_catalog_membership() 
     let evidence = evidence(&metadata);
     let count = evidence.api_observations.len();
     let empty = repository.catalog.pin().await.expect("empty generation");
-    let manifest = repository
-        .publish(metadata, evidence, None)
+    let manifest = native_ingest::publish_rows(&repository, metadata, evidence, None, None)
         .await
         .expect("publication");
     assert_eq!(manifest.schema_version, "6.0");
@@ -1203,10 +1277,15 @@ async fn operational_logs_survive_export_without_changing_snapshot_identity() {
     let dir = tempfile::tempdir().unwrap();
     let repository = repository(dir.path(), true);
     let metadata = metadata();
-    let first = repository
-        .publish(metadata.clone(), evidence(&metadata), None)
-        .await
-        .unwrap();
+    let first = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        evidence(&metadata),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
     let mut again = evidence(&metadata);
     // The production semantic digest must ignore ordering and duplicate rows, including
     // duplicates separated by physical batches. This exercises the native distinct/sort.
@@ -1239,10 +1318,15 @@ async fn operational_logs_survive_export_without_changing_snapshot_identity() {
     again
         .attempt_artifacts
         .insert(run.attempt_id.clone(), artifacts);
-    let second = repository
-        .publish(metadata.clone(), again, Some(first.snapshot_id.clone()))
-        .await
-        .unwrap();
+    let second = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        again,
+        Some(first.snapshot_id.clone()),
+        None,
+    )
+    .await
+    .unwrap();
     assert_eq!(first.snapshot_id, second.snapshot_id);
     let reader = SnapshotReader::open(
         &repository,
@@ -1282,10 +1366,15 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
     let dir = tempfile::tempdir().expect("directory");
     let repository = repository(dir.path(), true);
     let metadata = metadata();
-    let first = repository
-        .publish(metadata.clone(), evidence(&metadata), None)
-        .await
-        .expect("first");
+    let first = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        evidence(&metadata),
+        None,
+        None,
+    )
+    .await
+    .expect("first");
     let path = dir
         .path()
         .join("data/snapshots")
@@ -1303,10 +1392,15 @@ async fn reacquisition_preserves_snapshot_bytes_and_adds_attempt_attribution() {
         .insert(again.producer_runs[0].attempt_id.clone(), acquisitions);
     again.producer_runs[0].started_at = "2026-09-15T00:00:00Z".into();
     again.producer_runs[0].finished_at = "2026-09-15T00:00:01Z".into();
-    let second = repository
-        .publish(metadata, again, Some(first.snapshot_id.clone()))
-        .await
-        .expect("second");
+    let second = native_ingest::publish_rows(
+        &repository,
+        metadata,
+        again,
+        Some(first.snapshot_id.clone()),
+        None,
+    )
+    .await
+    .expect("second");
     assert_eq!(first.snapshot_id, second.snapshot_id);
     assert_eq!(before, std::fs::read(path).expect("same manifest"));
     let catalog = repository.catalog.pin().await.expect("catalog");
@@ -1346,8 +1440,8 @@ async fn concurrent_same_context_enrichments_rebase_disjoint_observations_withou
         .attempt_artifacts
         .insert(right.producer_runs[0].attempt_id.clone(), acquisitions);
     let (a, b) = tokio::join!(
-        repository.publish(metadata.clone(), left, None),
-        repository.publish(metadata.clone(), right, None)
+        native_ingest::publish_rows(&repository, metadata.clone(), left, None, None),
+        native_ingest::publish_rows(&repository, metadata.clone(), right, None, None)
     );
     a.expect("first job");
     b.expect("second job");
@@ -1399,10 +1493,15 @@ async fn missing_input_bytes_cannot_be_published_as_valid_evidence() {
     let repository = repository(dir.path(), false);
     let metadata = metadata();
     assert!(
-        repository
-            .publish(metadata.clone(), evidence(&metadata), None)
-            .await
-            .is_err()
+        native_ingest::publish_rows(
+            &repository,
+            metadata.clone(),
+            evidence(&metadata),
+            None,
+            None
+        )
+        .await
+        .is_err()
     );
     assert_eq!(
         repository
@@ -1440,7 +1539,9 @@ async fn overview_pages_conflicting_feature_definitions_without_overwriting_sour
             .unwrap(),
         );
     }
-    let manifest = repository.publish(metadata, evidence, None).await.unwrap();
+    let manifest = native_ingest::publish_rows(&repository, metadata, evidence, None, None)
+        .await
+        .unwrap();
     let reader = enrichment_store::SnapshotReader::open(
         &repository,
         repository.catalog.pin().await.unwrap(),

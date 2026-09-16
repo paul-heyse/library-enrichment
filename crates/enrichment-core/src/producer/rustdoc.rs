@@ -21,6 +21,8 @@ use serde::{Deserialize, Serialize};
 
 use super::ProducerError;
 
+pub mod facts;
+
 /// The producer name carried in errors and provenance.
 pub const PRODUCER: &str = "rustdoc-json";
 
@@ -35,7 +37,7 @@ pub const LOCAL_PRODUCER: &str = "locally_built_rustdoc";
 /// The normalizer version. Part of every snapshot identity (§6.3): bump it whenever the shape
 /// or meaning of a normalized symbol, relationship or fragment changes, so improved
 /// normalization of the same inputs is a new snapshot and the old one stays readable.
-pub const NORMALIZER_VERSION: &str = "4";
+pub const NORMALIZER_VERSION: &str = "rust-native-5";
 
 /// Format versions this build can faithfully interpret.
 ///

@@ -1,0 +1,319 @@
+{
+  "module": "deltalake_core::kernel::snapshot",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.kernel.snapshot.md",
+  "items": [
+    {
+      "path": "deltalake_core::kernel::snapshot::EagerSnapshot",
+      "name": "EagerSnapshot",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct EagerSnapshot",
+      "summary": "A snapshot of a Delta table that has been eagerly loaded into memory.",
+      "doc": "api/deltalake_core.kernel.snapshot.md#eagersnapshot",
+      "aliases": [
+        "deltalake::kernel::EagerSnapshot",
+        "deltalake_core::kernel::EagerSnapshot"
+      ],
+      "implements": [
+        "datafusion_common::pruning::PruningStatistics",
+        "deltalake_core::delta_datafusion::DataFusionMixins",
+        "deltalake_core::kernel::transaction::TableReference",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add_actions_batches",
+          "signature": "fn add_actions_batches(&self, flatten: bool) -> Result<Vec<arrow::record_batch::RecordBatch>, DeltaTableError>",
+          "summary": "Like [`add_actions_table`](Self::add_actions_table) but yields the actions as a sequence of record batches instead of a single concatenated batch."
+        },
+        {
+          "name": "add_actions_table",
+          "signature": "fn add_actions_table(&self, flatten: bool) -> Result<arrow::record_batch::RecordBatch, DeltaTableError>",
+          "summary": "Materialize the table's active `Add` actions as a single Arrow [`RecordBatch`]."
+        },
+        {
+          "name": "arrow_schema",
+          "signature": "fn arrow_schema(&self) -> SchemaRef",
+          "summary": "Get the table arrow schema of the snapshot"
+        },
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &TableProperties",
+          "via_trait": "deltalake_core::kernel::transaction::TableReference"
+        },
+        {
+          "name": "contained",
+          "signature": "fn contained(&self, column: &Column, value: &HashSet<ScalarValue>) -> Option<BooleanArray>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<EagerSnapshot, D::Error> where D: Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "domain_metadata",
+          "signature": "async fn domain_metadata(&self, log_store: &dyn LogStore, domain: impl ToString) -> DeltaResult<Option<String>>",
+          "summary": "Return the configuration string stored for the given metadata `domain`, if present."
+        },
+        {
+          "name": "eager_snapshot",
+          "signature": "fn eager_snapshot(&self) -> &EagerSnapshot",
+          "via_trait": "deltalake_core::kernel::transaction::TableReference"
+        },
+        {
+          "name": "file_views",
+          "signature": "fn file_views(&self, log_store: &dyn LogStore, predicate: Option<PredicateRef>) -> BoxStream<'_, DeltaResult<LogicalFileView>>",
+          "summary": "Stream the active files in the snapshot"
+        },
+        {
+          "name": "input_schema",
+          "signature": "fn input_schema(&self) -> ArrowSchemaRef",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "load_config",
+          "signature": "fn load_config(&self) -> &DeltaTableConfig",
+          "summary": "Get the table config which is loaded with of the snapshot"
+        },
+        {
+          "name": "log_data",
+          "signature": "fn log_data(&self) -> LogDataHandler<'_>",
+          "summary": "Get a [`LogDataHandler`] for the snapshot to inspect the currently loaded state of the log."
+        },
+        {
+          "name": "max_values",
+          "signature": "fn max_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics",
+          "summary": "return the maximum values for the named column, if known. Note: the returned array must contain `num_containers()` rows."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Metadata",
+          "summary": "Get the table metadata of the snapshot"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Metadata",
+          "via_trait": "deltalake_core::kernel::transaction::TableReference"
+        },
+        {
+          "name": "min_values",
+          "signature": "fn min_values(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics",
+          "summary": "return the minimum values for the named column, if known. Note: the returned array must contain `num_containers()` rows"
+        },
+        {
+          "name": "null_counts",
+          "signature": "fn null_counts(&self, column: &Column) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics",
+          "summary": "return the number of null values for the named column as an `Option<UInt64Array>`."
+        },
+        {
+          "name": "num_containers",
+          "signature": "fn num_containers(&self) -> usize",
+          "via_trait": "datafusion_common::pruning::PruningStatistics",
+          "summary": "return the number of containers (e.g. row groups) being pruned with these statistics"
+        },
+        {
+          "name": "parse_predicate_expression",
+          "signature": "fn parse_predicate_expression(&self, expr: impl AsRef<str>, session: &dyn Session) -> DeltaResult<Expr>",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "protocol",
+          "signature": "fn protocol(&self) -> &Protocol",
+          "summary": "Get the table protocol of the snapshot"
+        },
+        {
+          "name": "protocol",
+          "signature": "fn protocol(&self) -> &Protocol",
+          "via_trait": "deltalake_core::kernel::transaction::TableReference"
+        },
+        {
+          "name": "read_schema",
+          "signature": "fn read_schema(&self) -> ArrowSchemaRef",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "row_counts",
+          "signature": "fn row_counts(&self) -> Option<ArrayRef>",
+          "via_trait": "datafusion_common::pruning::PruningStatistics",
+          "summary": "return the number of rows in each container as an `Option<UInt64Array>`."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> KernelSchemaRef",
+          "summary": "Get the table schema of the snapshot"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "table_configuration",
+          "signature": "fn table_configuration(&self) -> &TableConfiguration",
+          "summary": "Returns the resolved [`TableConfiguration`] (protocol, metadata and parsed properties)."
+        },
+        {
+          "name": "table_properties",
+          "signature": "fn table_properties(&self) -> &TableProperties",
+          "summary": "Well known table configuration"
+        },
+        {
+          "name": "transaction_version",
+          "signature": "async fn transaction_version(&self, log_store: &dyn LogStore, app_id: impl ToString) -> DeltaResult<Option<i64>>",
+          "summary": "Return the latest committed transaction version for the given application id, if any."
+        },
+        {
+          "name": "try_log_data",
+          "signature": "fn try_log_data(&self) -> DeltaResult<LogDataHandler<'_>>",
+          "summary": "Try to get a [`LogDataHandler`] for the snapshot to inspect the currently loaded state of the log."
+        },
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(log_store: &dyn LogStore, config: DeltaTableConfig, version: Option<Version>) -> DeltaResult<Self>",
+          "summary": "Create a new [`EagerSnapshot`] instance"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Version",
+          "summary": "Get the table version of the snapshot"
+        },
+        {
+          "name": "version_timestamp",
+          "signature": "fn version_timestamp(&self, version: Version) -> Option<i64>",
+          "summary": "Get the timestamp of the given version"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::snapshot::Snapshot",
+      "name": "Snapshot",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct Snapshot",
+      "summary": "A snapshot of a Delta table",
+      "doc": "api/deltalake_core.kernel.snapshot.md#snapshot",
+      "aliases": [
+        "deltalake::kernel::Snapshot",
+        "deltalake_core::kernel::Snapshot"
+      ],
+      "implements": [
+        "deltalake_core::delta_datafusion::DataFusionMixins",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "arrow_schema",
+          "signature": "fn arrow_schema(&self) -> SchemaRef",
+          "summary": "Convert the lgoical schema into an Arrow [SchemaRef]"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "domain_metadata",
+          "signature": "async fn domain_metadata(&self, log_store: &dyn LogStore, domain: impl ToString) -> DeltaResult<Option<String>>",
+          "summary": "Fetch the [domainMetadata] for a specific domain in this snapshot."
+        },
+        {
+          "name": "file_views",
+          "signature": "fn file_views(&self, log_store: &dyn LogStore, predicate: Option<PredicateRef>) -> BoxStream<'_, DeltaResult<LogicalFileView>>",
+          "summary": "Stream the active files in the snapshot"
+        },
+        {
+          "name": "files",
+          "signature": "fn files(&self, log_store: &dyn LogStore, predicate: Option<PredicateRef>) -> SendableRBStream",
+          "summary": "Get the active files for the current snapshot."
+        },
+        {
+          "name": "input_schema",
+          "signature": "fn input_schema(&self) -> ArrowSchemaRef",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "into_scan_builder",
+          "signature": "fn into_scan_builder(self) -> ScanBuilder",
+          "summary": "Consume this snapshot and create a [`ScanBuilder`] that owns the underlying state."
+        },
+        {
+          "name": "load_config",
+          "signature": "fn load_config(&self) -> &DeltaTableConfig",
+          "summary": "Get the table config which is loaded with of the snapshot"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Metadata",
+          "summary": "Get the table metadata of the snapshot"
+        },
+        {
+          "name": "parse_predicate_expression",
+          "signature": "fn parse_predicate_expression(&self, expr: impl AsRef<str>, session: &dyn Session) -> DeltaResult<Expr>",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "protocol",
+          "signature": "fn protocol(&self) -> &Protocol",
+          "summary": "Get the table protocol of the snapshot"
+        },
+        {
+          "name": "read_schema",
+          "signature": "fn read_schema(&self) -> ArrowSchemaRef",
+          "via_trait": "deltalake_core::delta_datafusion::DataFusionMixins"
+        },
+        {
+          "name": "scan_builder",
+          "signature": "fn scan_builder(&self) -> ScanBuilder",
+          "summary": "Create a [`ScanBuilder`] borrowing this snapshot to configure a read of the table."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> KernelSchemaRef",
+          "summary": "Get the logical table schema of the snapshot"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "table_configuration",
+          "signature": "fn table_configuration(&self) -> &TableConfiguration",
+          "summary": "Returns the resolved [`TableConfiguration`] (protocol, metadata and parsed properties)."
+        },
+        {
+          "name": "table_properties",
+          "signature": "fn table_properties(&self) -> &TableProperties",
+          "summary": "Well known properties of the table"
+        },
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(log_store: &dyn LogStore, config: DeltaTableConfig, version: Option<Version>) -> DeltaResult<Self>",
+          "summary": "Create a new [`Snapshot`] instance"
+        },
+        {
+          "name": "try_new_with_engine",
+          "signature": "async fn try_new_with_engine(engine: Arc<dyn Engine>, table_root: Url, config: DeltaTableConfig, version: Option<Version>) -> DeltaResult<Self>",
+          "summary": "Build a snapshot of the table at `table_root` using the provided kernel `engine`."
+        },
+        {
+          "name": "update",
+          "signature": "async fn update(Arc<self>, engine: Arc<dyn Engine>, target_version: Option<Version>) -> DeltaResult<Arc<Self>>",
+          "summary": "Update the snapshot to the given version"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Version",
+          "summary": "Get the table version of the snapshot"
+        }
+      ]
+    }
+  ]
+}

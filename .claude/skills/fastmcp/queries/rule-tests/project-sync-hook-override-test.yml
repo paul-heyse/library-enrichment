@@ -1,0 +1,14 @@
+id: project-sync-hook-override
+valid:
+  - |
+    class Good(Middleware):
+        async def on_call_tool(self, context, call_next):
+            return await call_next(context)
+  - |
+    def on_call_tool(context, call_next):
+        return call_next(context)
+invalid:
+  - |
+    class Bad(Middleware):
+        def on_call_tool(self, context, call_next):
+            return call_next(context)

@@ -1,0 +1,487 @@
+{
+  "module": "buoyant_kernel::engine_data",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.engine_data.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::engine_data::FilteredEngineData",
+      "name": "FilteredEngineData",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct FilteredEngineData",
+      "summary": "Engine data paired with a selection vector indicating which rows are logically selected.",
+      "doc": "api/buoyant_kernel.engine_data.md#filteredenginedata",
+      "aliases": [
+        "buoyant_kernel::FilteredEngineData",
+        "delta_kernel::engine_data::FilteredEngineData"
+      ],
+      "implements": [
+        "buoyant_kernel::log_replay::HasSelectionVector",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "apply_selection_vector",
+          "signature": "fn apply_selection_vector(self) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Apply the contained selection vector and return an engine data with only the selected rows included. This consumes the `FilteredEngineData`."
+        },
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &dyn EngineData",
+          "summary": "Returns a reference to the underlying engine data."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(data: Box<dyn EngineData>) -> Self",
+          "via_trait": "core::convert::From",
+          "summary": "Converts `EngineData` into `FilteredEngineData` with all rows selected."
+        },
+        {
+          "name": "has_selected_rows",
+          "signature": "fn has_selected_rows(&self) -> bool",
+          "via_trait": "buoyant_kernel::log_replay::HasSelectionVector",
+          "summary": "Returns true if any row in the selection vector is marked as selected"
+        },
+        {
+          "name": "into_parts",
+          "signature": "fn into_parts(self) -> (Box<dyn EngineData>, Vec<bool>)",
+          "summary": "Consumes the FilteredEngineData and returns the underlying data and selection vector."
+        },
+        {
+          "name": "selection_vector",
+          "signature": "fn selection_vector(&self) -> &[bool]",
+          "summary": "Returns a reference to the selection vector."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(data: Box<dyn EngineData>, selection_vector: Vec<bool>) -> DeltaResult<Self>"
+        },
+        {
+          "name": "with_all_rows_selected",
+          "signature": "fn with_all_rows_selected(data: Box<dyn EngineData>) -> Self",
+          "summary": "Creates a new `FilteredEngineData` with all rows selected."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::ListItem",
+      "name": "ListItem",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ListItem<'a>",
+      "summary": "A pre-resolved view into a single row's list of strings. The string array type is resolved once at construction, so subsequent element accesses use virtual dispatch rather than repeated downcasting.",
+      "doc": "api/buoyant_kernel.engine_data.md#listitem",
+      "aliases": [
+        "delta_kernel::engine_data::ListItem"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, list_index: usize) -> String"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "materialize",
+          "signature": "fn materialize(&self) -> Vec<String>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(values: &'a dyn StringArrayAccessor, offsets: Range<usize>) -> ListItem<'a>"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::MapItem",
+      "name": "MapItem",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct MapItem<'a>",
+      "summary": "A pre-resolved view into a single row's map of string keys to string values. Like [`ListItem`], the string array types are resolved once at construction.",
+      "doc": "api/buoyant_kernel.engine_data.md#mapitem",
+      "aliases": [
+        "delta_kernel::engine_data::MapItem"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, key: &str) -> Option<&'a str>"
+        },
+        {
+          "name": "materialize",
+          "signature": "fn materialize(&self) -> HashMap<String, String>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(keys: &'a dyn StringArrayAccessor, values: &'a dyn StringArrayAccessor, offsets: Range<usize>) -> MapItem<'a>"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::RowIndexIterator",
+      "name": "RowIndexIterator",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct RowIndexIterator<'sv>",
+      "summary": "An iterator over the indices of selected rows in an engine-data batch.",
+      "doc": "api/buoyant_kernel.engine_data.md#rowindexiterator",
+      "aliases": [
+        "buoyant_kernel::RowIndexIterator",
+        "delta_kernel::engine_data::RowIndexIterator"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<usize>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "num_rows",
+          "signature": "fn num_rows(&self) -> usize",
+          "summary": "Returns the total number of rows in the batch (selected and deselected)."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::EngineData",
+      "name": "EngineData",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait EngineData: AsAny",
+      "summary": "Any type that an engine wants to return as \"data\" needs to implement this trait. The bulk of the work is in the [`EngineData::visit_rows`] method. See the docs for that method for more details. ```rust # use buoyant_kernel as delta_kernel;…",
+      "doc": "api/buoyant_kernel.engine_data.md#enginedata",
+      "aliases": [
+        "buoyant_kernel::EngineData",
+        "delta_kernel::engine_data::EngineData"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_data::ArrowEngineData"
+      ],
+      "required_methods": [
+        "append_columns",
+        "apply_selection_vector",
+        "has_field",
+        "len",
+        "visit_rows"
+      ],
+      "provided_methods": [
+        "is_empty"
+      ],
+      "methods": [
+        {
+          "name": "append_columns",
+          "signature": "fn append_columns(&self, schema: SchemaRef, columns: Vec<ArrayData>) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Append new columns provided by Kernel to the existing data."
+        },
+        {
+          "name": "apply_selection_vector",
+          "signature": "fn apply_selection_vector(Box<self>, selection_vector: Vec<bool>) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Apply a selection vector to the data and return a data where only the selected rows are included. This consumes the EngineData, allowing engines to implement this \"in place\" if desired."
+        },
+        {
+          "name": "has_field",
+          "signature": "fn has_field(&self, name: &ColumnName) -> bool",
+          "summary": "Returns `true` if a field at the given (possibly nested) path exists in this data's schema."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if the data is empty (i.e., has no rows)."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Return the number of items (rows) in blob"
+        },
+        {
+          "name": "visit_rows",
+          "signature": "fn visit_rows(&self, column_names: &[ColumnName], visitor: &mut dyn RowVisitor) -> DeltaResult<()>",
+          "summary": "Visits a subset of leaf columns in each row of this data, passing a `GetData` item for each requested column to the visitor's `visit` method (along with the number of rows of data to be visited)."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::FilteredRowVisitor",
+      "name": "FilteredRowVisitor",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait FilteredRowVisitor",
+      "summary": "A visitor that processes [`FilteredEngineData`] with automatic row filtering.",
+      "doc": "api/buoyant_kernel.engine_data.md#filteredrowvisitor",
+      "aliases": [
+        "buoyant_kernel::FilteredRowVisitor",
+        "delta_kernel::engine_data::FilteredRowVisitor"
+      ],
+      "implementors": [
+        "buoyant_kernel::scan::state::ScanFileVisitor",
+        "buoyant_kernel::transaction::update::DvMatchVisitor"
+      ],
+      "required_methods": [
+        "selected_column_names_and_types",
+        "visit_filtered"
+      ],
+      "provided_methods": [
+        "visit_rows_of"
+      ],
+      "methods": [
+        {
+          "name": "selected_column_names_and_types",
+          "signature": "fn selected_column_names_and_types(&self) -> (&'static [ColumnName], &'static [DataType])"
+        },
+        {
+          "name": "visit_filtered",
+          "signature": "fn visit_filtered<'a>(&mut self, getters: &[&'a dyn GetData<'a>], rows: RowIndexIterator<'_>) -> DeltaResult<()>",
+          "summary": "Process this batch. `getters` contains one [`GetData`] item per requested column. Iterate `rows` to receive the index of each selected row. Use [`RowIndexIterator::num_rows`] to get the total row count (for padding output vectors with null…"
+        },
+        {
+          "name": "visit_rows_of",
+          "signature": "fn visit_rows_of(&mut self, data: &FilteredEngineData) -> DeltaResult<()> where Self: Sized",
+          "summary": "Visit the rows of a [`FilteredEngineData`], automatically respecting the selection vector."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::GetData",
+      "name": "GetData",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait GetData<'a>",
+      "summary": "When calling back into a [`RowVisitor`], the engine needs to provide a slice of items that implement this trait. This allows type_safe extraction from the raw data by the kernel. By default all these methods will return an `Error` that an…",
+      "doc": "api/buoyant_kernel.engine_data.md#getdata",
+      "aliases": [
+        "buoyant_kernel::GetData",
+        "delta_kernel::engine_data::GetData"
+      ],
+      "implementors": [
+        "arrow_array::array::boolean_array::BooleanArray",
+        "arrow_array::array::byte_array::GenericByteArray",
+        "arrow_array::array::byte_view_array::BinaryViewArray",
+        "arrow_array::array::byte_view_array::StringViewArray",
+        "arrow_array::array::list_array::GenericListArray",
+        "arrow_array::array::list_view_array::GenericListViewArray",
+        "arrow_array::array::map_array::MapArray",
+        "arrow_array::array::primitive_array::PrimitiveArray",
+        "arrow_array::array::run_array::RunArray"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "get_binary",
+        "get_bool",
+        "get_byte",
+        "get_date",
+        "get_decimal",
+        "get_double",
+        "get_float",
+        "get_int",
+        "get_list",
+        "get_long",
+        "get_map",
+        "get_short",
+        "get_str",
+        "get_timestamp"
+      ],
+      "methods": [
+        {
+          "name": "get_binary",
+          "signature": "fn get_binary(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<&'a [u8]>>"
+        },
+        {
+          "name": "get_bool",
+          "signature": "fn get_bool(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<bool>>"
+        },
+        {
+          "name": "get_byte",
+          "signature": "fn get_byte(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i8>>"
+        },
+        {
+          "name": "get_date",
+          "signature": "fn get_date(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i32>>"
+        },
+        {
+          "name": "get_decimal",
+          "signature": "fn get_decimal(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i128>>"
+        },
+        {
+          "name": "get_double",
+          "signature": "fn get_double(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<f64>>"
+        },
+        {
+          "name": "get_float",
+          "signature": "fn get_float(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<f32>>"
+        },
+        {
+          "name": "get_int",
+          "signature": "fn get_int(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i32>>"
+        },
+        {
+          "name": "get_list",
+          "signature": "fn get_list(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<ListItem<'a>>>"
+        },
+        {
+          "name": "get_long",
+          "signature": "fn get_long(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i64>>"
+        },
+        {
+          "name": "get_map",
+          "signature": "fn get_map(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<MapItem<'a>>>"
+        },
+        {
+          "name": "get_short",
+          "signature": "fn get_short(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i16>>"
+        },
+        {
+          "name": "get_str",
+          "signature": "fn get_str(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<&'a str>>"
+        },
+        {
+          "name": "get_timestamp",
+          "signature": "fn get_timestamp(&'a self, _row_index: usize, field_name: &str) -> DeltaResult<Option<i64>>"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::RowVisitor",
+      "name": "RowVisitor",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait RowVisitor",
+      "summary": "A `RowVisitor` can be called back to visit extracted data. Aside from calling [`RowVisitor::visit`] on the visitor passed to [`EngineData::visit_rows`], engines do not need to worry about this trait.",
+      "doc": "api/buoyant_kernel.engine_data.md#rowvisitor",
+      "aliases": [
+        "buoyant_kernel::RowVisitor",
+        "delta_kernel::engine_data::RowVisitor"
+      ],
+      "implementors": [
+        "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationVisitor",
+        "buoyant_kernel::actions::visitors::AddVisitor",
+        "buoyant_kernel::actions::visitors::CdcVisitor",
+        "buoyant_kernel::actions::visitors::DomainMetadataVisitor",
+        "buoyant_kernel::actions::visitors::InCommitTimestampVisitor",
+        "buoyant_kernel::actions::visitors::MetadataVisitor",
+        "buoyant_kernel::actions::visitors::ProtocolVisitor",
+        "buoyant_kernel::actions::visitors::RemoveVisitor",
+        "buoyant_kernel::actions::visitors::SelectionVectorVisitor",
+        "buoyant_kernel::actions::visitors::SetTransactionVisitor",
+        "buoyant_kernel::actions::visitors::SidecarVisitor",
+        "buoyant_kernel::crc::file_stats::FileStatsVisitor",
+        "buoyant_kernel::engine_data::FilteredVisitorBridge",
+        "buoyant_kernel::incremental_scan::IncrementalDedupVisitor",
+        "buoyant_kernel::log_segment::crc_replay::CrcReplayVisitor",
+        "buoyant_kernel::row_tracking::RowTrackingVisitor",
+        "buoyant_kernel::scan::log_replay::AddRemoveDedupVisitor",
+        "buoyant_kernel::table_changes::log_replay::FileActionSelectionVisitor",
+        "buoyant_kernel::table_changes::log_replay::PreparePhaseVisitor",
+        "buoyant_kernel::table_changes::scan_file::CdfScanFileVisitor",
+        "buoyant_kernel::transaction::stats_verifier::ColumnStatsValidator",
+        "buoyant_kernel::transaction::stats_verifier::NumRecordsValidator"
+      ],
+      "required_methods": [
+        "selected_column_names_and_types",
+        "visit"
+      ],
+      "provided_methods": [
+        "visit_rows_of"
+      ],
+      "methods": [
+        {
+          "name": "selected_column_names_and_types",
+          "signature": "fn selected_column_names_and_types(&self) -> (&'static [ColumnName], &'static [DataType])",
+          "summary": "The names and types of leaf fields this visitor accesses. The `EngineData` being visited validates these types when extracting column getters, and [`RowVisitor::visit`] will receive one getter for each selected field, in the requested orde…"
+        },
+        {
+          "name": "visit",
+          "signature": "fn visit<'a>(&mut self, row_count: usize, getters: &[&'a dyn GetData<'a>]) -> DeltaResult<()>",
+          "summary": "Have the visitor visit the data. This will be called on a visitor passed to [`EngineData::visit_rows`]. For each leaf in the schema that was passed to `extract` a \"getter\" of type [`GetData`] will be present. This can be used to actually g…"
+        },
+        {
+          "name": "visit_rows_of",
+          "signature": "fn visit_rows_of(&mut self, data: &dyn EngineData) -> DeltaResult<()> where Self: Sized",
+          "summary": "Visit the rows of an [`EngineData`], selecting the leaf column names given by [`RowVisitor::selected_column_names_and_types`]. This is a thin wrapper around [`EngineData::visit_rows`] which in turn will eventually invoke [`RowVisitor::visi…"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::StringArrayAccessor",
+      "name": "StringArrayAccessor",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait StringArrayAccessor",
+      "summary": "Uniform read access to a string array, abstracting over the various string representations that list and map columns may use (e.g. Utf8, LargeUtf8, Utf8View). Engines implement this for their string array types so that [`ListItem`] and [`M…",
+      "doc": "api/buoyant_kernel.engine_data.md#stringarrayaccessor",
+      "aliases": [
+        "delta_kernel::engine_data::StringArrayAccessor"
+      ],
+      "implementors": [
+        "arrow_array::array::byte_array::GenericByteArray",
+        "arrow_array::array::byte_view_array::StringViewArray"
+      ],
+      "required_methods": [
+        "is_valid",
+        "len",
+        "value"
+      ],
+      "provided_methods": [
+        "is_empty"
+      ],
+      "methods": [
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns whether the array has no elements."
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self, index: usize) -> bool",
+          "summary": "Returns whether the value at the given index is non-null."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of elements in the array."
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self, index: usize) -> &str",
+          "summary": "Returns the string value at the given index. The caller must ensure `index < len()`."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine_data::TypedGetData",
+      "name": "TypedGetData",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait TypedGetData<'a, T>",
+      "summary": "This is a convenience wrapper over `GetData` to allow code like: `let name: Option<String> = getters[1].get_opt(row_index, \"metadata.name\")?;`",
+      "doc": "api/buoyant_kernel.engine_data.md#typedgetdata",
+      "aliases": [
+        "delta_kernel::engine_data::TypedGetData"
+      ],
+      "required_methods": [
+        "get_opt"
+      ],
+      "provided_methods": [
+        "get"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&'a self, row_index: usize, field_name: &str) -> DeltaResult<T>"
+        },
+        {
+          "name": "get_opt",
+          "signature": "fn get_opt(&'a self, row_index: usize, field_name: &str) -> DeltaResult<Option<T>>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "module": "pyrefly_config::finder",
+  "crate": "pyrefly_config",
+  "api": "api/pyrefly_config.finder.md",
+  "items": [
+    {
+      "path": "pyrefly_config::finder::debug_log",
+      "name": "debug_log",
+      "kind": "function",
+      "crate": "pyrefly_config",
+      "signature": "fn debug_log(errors: Vec<ConfigError>)",
+      "summary": "When debugging is enabled, log errors.",
+      "doc": "api/pyrefly_config.finder.md#debug_log"
+    },
+    {
+      "path": "pyrefly_config::finder::ConfigError",
+      "name": "ConfigError",
+      "kind": "struct",
+      "crate": "pyrefly_config",
+      "signature": "struct ConfigError",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "context",
+          "signature": "fn context(self, context: String) -> Self"
+        },
+        {
+          "name": "error",
+          "signature": "fn error(msg: anyhow::Error) -> Self"
+        },
+        {
+          "name": "get_message",
+          "signature": "fn get_message(&self) -> String"
+        },
+        {
+          "name": "print",
+          "signature": "fn print(&self)"
+        },
+        {
+          "name": "severity",
+          "signature": "fn severity(&self) -> Severity"
+        },
+        {
+          "name": "warn",
+          "signature": "fn warn(msg: anyhow::Error) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_config::finder::ConfigFinder",
+      "name": "ConfigFinder",
+      "kind": "struct",
+      "crate": "pyrefly_config",
+      "signature": "struct ConfigFinder",
+      "summary": "A way to find a config file given a directory or Python file. Uses a lot of caching.",
+      "doc": "api/pyrefly_config.finder.md#configfinder",
+      "methods": [
+        {
+          "name": "add_errors",
+          "signature": "fn add_errors(&self, errors: Vec<ConfigError>)"
+        },
+        {
+          "name": "checkpoint",
+          "signature": "fn checkpoint<R, E>(&self, result: Result<R, E>) -> Result<R, E>",
+          "summary": "If we have an error, print all the errors that the config finder has accumulated. This is used to ensure that config errors are still surfaced if we exit early."
+        },
+        {
+          "name": "clear",
+          "signature": "fn clear(&self)",
+          "summary": "Invalidate all data stored in the config."
+        },
+        {
+          "name": "directory",
+          "signature": "fn directory(&self, dir: &Path) -> Option<ArcId<ConfigFile>>",
+          "summary": "Get the config file associated with a directory. If no config exists on disk, returns `None`."
+        },
+        {
+          "name": "errors",
+          "signature": "fn errors(&self) -> Vec<ConfigError>",
+          "summary": "Collect all the current errors that have been produced, and clear them."
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self, file: &Path) -> Option<ArcId<ConfigFile>>",
+          "summary": "Get the config file associated with a (non-Python) file. If no config exists on disk, return `None`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(load: Box<dyn Fn(&std::path::Path) -> (pyrefly_util::arc_id::ArcId<config::ConfigFile>, Vec<ConfigError>) + Send + Sync>, fallback: Box<dyn Fn(pyrefly_python::module_name::ModuleNameWithKind, &pyrefly_python::module_path::ModulePath) -> pyrefly_util::arc_id::ArcId<config::ConfigFile> + Send + Sync>, clear_extra_caches: Box<dyn Fn() + Send + Sync>) -> Self",
+          "summary": "Create a new ConfigFinder a way to load a config file, and a default if that errors or there is no file."
+        },
+        {
+          "name": "new_constant",
+          "signature": "fn new_constant(constant: ArcId<ConfigFile>) -> Self",
+          "summary": "Create a new ConfigFinder that always returns the same constant."
+        },
+        {
+          "name": "new_custom",
+          "signature": "fn new_custom(before: Box<dyn Fn(pyrefly_python::module_name::ModuleName, &pyrefly_python::module_path::ModulePath) -> anyhow::Result<Option<pyrefly_util::arc_id::ArcId<config::ConfigFile>>> + Send + Sync>, load: Box<dyn Fn(&std::path::Path) -> (pyrefly_util::arc_id::ArcId<config::ConfigFile>, Vec<ConfigError>) + Send + Sync>, fallback: Box<dyn Fn(pyrefly_python::module_name::ModuleNameWithKind, &pyrefly_python::module_path::ModulePath) -> pyrefly_util::arc_id::ArcId<config::ConfigFile> + Send + Sync>, clear_extra_caches: Box<dyn Fn() + Send + Sync>) -> Self",
+          "summary": "Create a new ConfigFinder, but with a custom way to produce a result from a Python file. If the `before` function fails to produce a config, then the other methods will be used. The `before` function is not cached in any way."
+        },
+        {
+          "name": "print_errors",
+          "signature": "fn print_errors(&self)",
+          "summary": "Print and clear all accumulated config errors."
+        },
+        {
+          "name": "python_file",
+          "signature": "fn python_file(&self, name: ModuleNameWithKind, path: &ModulePath) -> ArcId<ConfigFile>",
+          "summary": "Get the config file given a Python file. If no config exists on disk, one will be constructed."
+        }
+      ]
+    }
+  ]
+}

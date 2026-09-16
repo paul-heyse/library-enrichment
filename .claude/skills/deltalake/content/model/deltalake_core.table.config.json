@@ -1,0 +1,193 @@
+{
+  "module": "deltalake_core::table::config",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.table.config.md",
+  "items": [
+    {
+      "path": "deltalake_core::table::config::DEFAULT_NUM_INDEX_COLS",
+      "name": "DEFAULT_NUM_INDEX_COLS",
+      "kind": "constant",
+      "crate": "deltalake-core",
+      "signature": "const DEFAULT_NUM_INDEX_COLS: u64 = 32",
+      "summary": "Default num index cols",
+      "doc": "api/deltalake_core.table.config.md#default_num_index_cols",
+      "aliases": [
+        "deltalake::table::config::DEFAULT_NUM_INDEX_COLS"
+      ]
+    },
+    {
+      "path": "deltalake_core::table::config::DEFAULT_TARGET_FILE_SIZE",
+      "name": "DEFAULT_TARGET_FILE_SIZE",
+      "kind": "constant",
+      "crate": "deltalake-core",
+      "signature": "const DEFAULT_TARGET_FILE_SIZE: std::num::NonZeroU64 = _",
+      "summary": "Default target file size",
+      "doc": "api/deltalake_core.table.config.md#default_target_file_size",
+      "aliases": [
+        "deltalake::table::config::DEFAULT_TARGET_FILE_SIZE"
+      ]
+    },
+    {
+      "path": "deltalake_core::table::config::DeltaConfigError",
+      "name": "DeltaConfigError",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum DeltaConfigError",
+      "summary": "Delta configuration error",
+      "doc": "api/deltalake_core.table.config.md#deltaconfigerror",
+      "aliases": [
+        "deltalake::table::config::DeltaConfigError"
+      ],
+      "variants": [
+        "Validation"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::table::config::TableProperty",
+      "name": "TableProperty",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum TableProperty",
+      "summary": "Typed property keys that can be defined on a delta table",
+      "doc": "api/deltalake_core.table.config.md#tableproperty",
+      "aliases": [
+        "deltalake::TableProperty",
+        "deltalake::table::config::TableProperty",
+        "deltalake_core::TableProperty"
+      ],
+      "variants": [
+        "AppendOnly",
+        "AutoOptimizeAutoCompact",
+        "AutoOptimizeOptimizeWrite",
+        "CheckpointInterval",
+        "CheckpointWriteStatsAsJson",
+        "CheckpointWriteStatsAsStruct",
+        "CheckpointUseRunLengthEncoding",
+        "ColumnMappingMode",
+        "DataSkippingNumIndexedCols",
+        "DataSkippingStatsColumns",
+        "DeletedFileRetentionDuration",
+        "EnableChangeDataFeed",
+        "EnableDeletionVectors",
+        "IsolationLevel",
+        "LogRetentionDuration",
+        "EnableExpiredLogCleanup",
+        "MinReaderVersion",
+        "MinWriterVersion",
+        "RandomizeFilePrefixes",
+        "RandomPrefixLength",
+        "SetTransactionRetentionDuration",
+        "TargetFileSize",
+        "TuneFileSizesForRewrites",
+        "CheckpointPolicy"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::table::config::TablePropertiesExt",
+      "name": "TablePropertiesExt",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait TablePropertiesExt",
+      "summary": "Convenience accessors for reading well-known Delta table properties with their defaults applied, layered on top of the raw [`TableProperties`] parsed from table metadata.",
+      "doc": "api/deltalake_core.table.config.md#tablepropertiesext",
+      "aliases": [
+        "deltalake::table::config::TablePropertiesExt"
+      ],
+      "implementors": [
+        "buoyant_kernel::table_properties::TableProperties"
+      ],
+      "required_methods": [
+        "append_only",
+        "checkpoint_interval",
+        "deleted_file_retention_duration",
+        "enable_change_data_feed",
+        "enable_expired_log_cleanup",
+        "get_constraints",
+        "isolation_level",
+        "log_retention_duration",
+        "num_indexed_cols",
+        "target_file_size"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "append_only",
+          "signature": "fn append_only(&self) -> bool",
+          "summary": "true for this Delta table to be append-only. If append-only, existing records cannot be deleted, and existing values cannot be updated. See [append-only tables] in the protocol."
+        },
+        {
+          "name": "checkpoint_interval",
+          "signature": "fn checkpoint_interval(&self) -> NonZero<u64>",
+          "summary": "Interval (expressed as number of commits) after which a new checkpoint should be created. E.g. if checkpoint interval = 10, then a checkpoint should be written every 10 commits."
+        },
+        {
+          "name": "deleted_file_retention_duration",
+          "signature": "fn deleted_file_retention_duration(&self) -> Duration",
+          "summary": "How long removed data files are retained before they may be physically deleted by vacuum."
+        },
+        {
+          "name": "enable_change_data_feed",
+          "signature": "fn enable_change_data_feed(&self) -> bool",
+          "summary": "Whether the Change Data Feed is enabled for this table."
+        },
+        {
+          "name": "enable_expired_log_cleanup",
+          "signature": "fn enable_expired_log_cleanup(&self) -> bool",
+          "summary": "Whether to clean up expired checkpoints/commits in the delta log."
+        },
+        {
+          "name": "get_constraints",
+          "signature": "fn get_constraints(&self) -> Vec<Constraint>",
+          "summary": "The list of constraints (e.g. CHECK constraints) declared on the table."
+        },
+        {
+          "name": "isolation_level",
+          "signature": "fn isolation_level(&self) -> IsolationLevel",
+          "summary": "The isolation level used when checking for conflicts during commits."
+        },
+        {
+          "name": "log_retention_duration",
+          "signature": "fn log_retention_duration(&self) -> Duration",
+          "summary": "How long the history for a Delta table is kept."
+        },
+        {
+          "name": "num_indexed_cols",
+          "signature": "fn num_indexed_cols(&self) -> DataSkippingNumIndexedCols",
+          "summary": "Number of columns to be indexed."
+        },
+        {
+          "name": "target_file_size",
+          "signature": "fn target_file_size(&self) -> NonZero<u64>",
+          "summary": "Target size in bytes for data files produced by writes and compaction."
+        }
+      ]
+    }
+  ]
+}

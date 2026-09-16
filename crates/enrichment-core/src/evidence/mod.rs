@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::canonical;
 
 pub mod catalog;
+pub mod document;
 pub mod execution;
 pub mod ingest;
 pub mod metadata;
@@ -21,8 +22,8 @@ pub mod text;
 
 pub use model::{
     Availability, AvailabilityStatus, Deprecated, EvidenceFragment, FragmentKind,
-    ObservedConfiguration, RelationKind, Relationship, RequestedConfiguration, SnapshotCounts,
-    Symbol, SymbolKind,
+    ObservedConfiguration, RelationKind, RequestedConfiguration, SnapshotCounts, Symbol,
+    SymbolKind,
 };
 
 /// The kinds of evidence a producer can require or yield, and that `coverage.indexed` and
@@ -55,28 +56,27 @@ pub enum EvidenceKind {
 }
 
 impl EvidenceKind {
+    pub const ALL: [Self; 15] = [
+        Self::RegistryMetadata,
+        Self::CrateSource,
+        Self::DocumentationBuildConfig,
+        Self::HostedRustdocJson,
+        Self::PublicApi,
+        Self::Documentation,
+        Self::Examples,
+        Self::ReleaseNotes,
+        Self::SourceExcerpts,
+        Self::DistributionSource,
+        Self::Stubs,
+        Self::Inventory,
+        Self::RuntimeApi,
+        Self::SemanticQueries,
+        Self::UsageProbes,
+    ];
     /// Parse the one canonical evidence-kind vocabulary.
     #[must_use]
     pub fn parse(value: &str) -> Option<Self> {
-        [
-            Self::RegistryMetadata,
-            Self::CrateSource,
-            Self::DocumentationBuildConfig,
-            Self::HostedRustdocJson,
-            Self::PublicApi,
-            Self::Documentation,
-            Self::Examples,
-            Self::ReleaseNotes,
-            Self::SourceExcerpts,
-            Self::DistributionSource,
-            Self::Stubs,
-            Self::Inventory,
-            Self::RuntimeApi,
-            Self::SemanticQueries,
-            Self::UsageProbes,
-        ]
-        .into_iter()
-        .find(|v| v.as_str() == value)
+        Self::ALL.into_iter().find(|v| v.as_str() == value)
     }
     /// The `coverage` spelling of this kind.
     #[must_use]
@@ -230,19 +230,12 @@ impl ArtifactKind {
 
 /// An immutable, content-addressed artifact (§6.1).
 ///
-/// The digest is the identity; everything else is provenance. Two retrievals of identical bytes
-/// share one artifact, and the **stored** record keeps the first retrieval's provenance.
-///
-/// That is not only about an earlier clock. Per-file `source_uri`s are version- or
-/// commit-qualified (`…/serde/1.0.0#README.md`), and a file unchanged between two releases hashes
-/// identically — so a stored record can name a *different release* than the one being reported
-/// on. Acquisition results carry the current call's locator instead, but a citation resolved from
-/// a published snapshot reads the stored record, and there `source_uri` should be read as "a
-/// place these exact bytes were retrieved from", not "the place this release served them from".
-/// The digest is what is guaranteed.
+/// The digest identifies immutable bytes. Every acquisition keeps its own exact receipt,
+/// including source locator and retrieval time, in the native Delta catalog. Evidence resolves
+/// provenance through its selected attempt; byte delivery resolves the complete digest.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Artifact {
-    /// `art_<32 hex>`, derived from the digest; the handle callers pass to `read_artifact`.
+    /// `art_<64 hex>`, derived from the complete digest; used by `read_artifact`.
     pub artifact_id: String,
     /// Full SHA-256 of the stored bytes, lower-case hex.
     pub sha256: String,
@@ -267,7 +260,7 @@ pub struct Artifact {
 }
 
 /// The number of hex digits of the digest kept in an artifact identity.
-pub const ARTIFACT_ID_HEX_DIGITS: usize = 32;
+pub const ARTIFACT_ID_HEX_DIGITS: usize = 64;
 
 /// Derive the artifact handle from a full SHA-256 hex digest.
 #[must_use]
@@ -327,9 +320,14 @@ mod tests {
             artifact.sha256,
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
-        assert_eq!(artifact.artifact_id, "art_ba7816bf8f01cfea414140de5dae2223");
+        assert_eq!(
+            artifact.artifact_id,
+            "art_ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
         assert!(is_artifact_id(&artifact.artifact_id));
         assert!(!is_artifact_id("art_short"));
         assert!(!is_artifact_id("/etc/passwd"));
     }
 }
+
+pub mod arrow_model;

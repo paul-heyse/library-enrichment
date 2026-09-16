@@ -1,17 +1,18 @@
-mod native_ingest;
+use native_ingest::EvidenceRows;
+pub mod native_ingest;
 mod producer_records;
 use enrichment_core::{
     evidence::{
         Artifact, ArtifactKind, EvidenceKind,
-        ingest::{EvidenceBatch, IngestContext, ProducerBatch},
+        ingest::{DocumentBatch, IngestContext},
     },
     identity::Ecosystem,
     policy::ExecutionProfile,
-    producer::{ProducerRun, RunOutcome, normalize},
+    producer::{ProducerRun, RunOutcome},
     wire::SourceVersionMatch,
 };
 
-pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceBatch {
+pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceRows {
     let payload = include_str!("../../../../tests/fixtures/rustdoc/enr-fixture-0.1.0-default.json");
     let artifact = Artifact::describe(
         payload.as_bytes(),
@@ -20,20 +21,11 @@ pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceBatc
         "https://docs.rs/enr-fixture/0.1.0.json",
         "2026-09-14T00:00:00Z",
     );
-    let produced = producer_records::collect(
-        normalize::prepare(&normalize::NormalizeInput {
-            payload,
-            rustdoc_artifact_id: &artifact.artifact_id,
-            json_path: None,
-            summary_chars: 240,
-        })
-        .expect("prepared fixture producer"),
-    )
-    .expect("rustdoc normalization");
-    native_ingest::normalize(
+    producer_records::collect(
+        payload,
         IngestContext {
             ecosystem: Ecosystem::Rust,
-            symbol_package: produced.source.crate_name,
+            symbol_package: "enr_fixture".into(),
             release_id: release_id.into(),
             environment_id: environment_id.into(),
             source_version_match: SourceVersionMatch::Exact,
@@ -54,16 +46,12 @@ pub fn rust_evidence_for(release_id: &str, environment_id: &str) -> EvidenceBatc
                 log: None,
             }],
             artifacts: vec![artifact],
-            component_versions: [("rustdoc-json".into(), "2".into())].into_iter().collect(),
             indexed: vec![EvidenceKind::PublicApi, EvidenceKind::Documentation],
             missing: vec![],
             gaps: vec![],
         },
-        ProducerBatch {
-            symbols: produced.symbols,
-            relationships: produced.relationships,
-            fragments: produced.fragments,
-        },
+        DocumentBatch::default(),
     )
     .expect("typed normalization")
+    .1
 }

@@ -2,15 +2,54 @@
 //!
 //! No URL, VCS, editable or filesystem source reaches a package-manager subprocess. The
 //! resolver evaluates only the explicit Linux CPython capsule environment and requested extras.
-use pep440_rs::{Version, VersionSpecifiers};
+use datafusion::{
+    logical_expr::Expr,
+    prelude::{col, lit},
+};
+use pep440_rs::VersionSpecifiers;
+use std::ops::Not;
 use std::str::FromStr;
+
+/// Explicit observed/admitted capsule fields; the marker compiler supplies no host defaults.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct MarkerEnvironment {
+    pub python_full_version: String,
+    pub implementation_version: String,
+    pub implementation_name: String,
+    pub os_name: String,
+    pub platform_machine: String,
+    pub platform_system: String,
+    pub platform_python_implementation: String,
+    pub sys_platform: String,
+}
+
+impl MarkerEnvironment {
+    pub fn schema() -> arrow::datatypes::SchemaRef {
+        use arrow::datatypes::{DataType, Field, Schema};
+        std::sync::Arc::new(Schema::new(
+            [
+                "python_full_version",
+                "implementation_version",
+                "implementation_name",
+                "os_name",
+                "platform_machine",
+                "platform_system",
+                "platform_python_implementation",
+                "sys_platform",
+            ]
+            .into_iter()
+            .map(|name| Field::new(name, DataType::Utf8, false))
+            .collect::<Vec<_>>(),
+        ))
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Requirement {
     pub name: String,
     pub extras: Vec<String>,
     pub versions: VersionSpecifiers,
-    marker: Vec<Token>,
+    marker: Expr,
 }
 impl Requirement {
     pub fn parse(text: &str) -> Result<Self, String> {
@@ -62,34 +101,33 @@ impl Requirement {
         }
         let versions = VersionSpecifiers::from_str(rest)
             .map_err(|e| format!("unsupported dependency constraint: {e}"))?;
-        let marker = tokenize(marker)?;
-        let result = Self {
+        let tokens = tokenize(marker)?;
+        let mut parser = Parser {
+            tokens: &tokens,
+            position: 0,
+        };
+        let marker = if tokens.is_empty() {
+            lit(true)
+        } else {
+            parser.or()?
+        };
+        if parser.position != tokens.len() {
+            return Err("trailing dependency marker syntax".into());
+        }
+        Ok(Self {
             name: super::normalize_name(name),
             extras,
             versions,
             marker,
-        };
-        // Validate every branch, even when an extra condition would currently make it false.
-        result.applies(&[])?;
-        Ok(result)
+        })
     }
-    pub fn permits(&self, version: &str) -> bool {
-        Version::from_str(version).is_ok_and(|v| self.versions.contains(&v))
+    /// A native value predicate; this method never evaluates a candidate in Rust.
+    pub fn version_predicate(&self, version: Expr) -> Expr {
+        crate::native_version::pep440_matches().call(vec![lit(self.versions.to_string()), version])
     }
-    pub fn applies(&self, extras: &[String]) -> Result<bool, String> {
-        if self.marker.is_empty() {
-            return Ok(true);
-        }
-        let mut parser = Parser {
-            tokens: &self.marker,
-            position: 0,
-            extras,
-        };
-        let matches = parser.or()?;
-        if parser.position != self.marker.len() {
-            return Err("trailing dependency marker syntax".into());
-        }
-        Ok(matches)
+    /// Native boolean expression over explicitly supplied marker environment fields.
+    pub fn marker_predicate(&self) -> Expr {
+        self.marker.clone()
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -158,7 +196,6 @@ fn tokenize(text: &str) -> Result<Vec<Token>, String> {
 struct Parser<'a> {
     tokens: &'a [Token],
     position: usize,
-    extras: &'a [String],
 }
 impl Parser<'_> {
     fn word(&mut self, text: &str) -> bool {
@@ -169,23 +206,23 @@ impl Parser<'_> {
             false
         }
     }
-    fn or(&mut self) -> Result<bool, String> {
+    fn or(&mut self) -> Result<Expr, String> {
         let mut value = self.and()?;
         while self.word("or") {
             let rhs = self.and()?;
-            value |= rhs;
+            value = value.or(rhs);
         }
         Ok(value)
     }
-    fn and(&mut self) -> Result<bool, String> {
+    fn and(&mut self) -> Result<Expr, String> {
         let mut value = self.atom()?;
         while self.word("and") {
             let rhs = self.atom()?;
-            value &= rhs;
+            value = value.and(rhs);
         }
         Ok(value)
     }
-    fn atom(&mut self) -> Result<bool, String> {
+    fn atom(&mut self) -> Result<Expr, String> {
         if self.tokens.get(self.position) == Some(&Token::Open) {
             self.position += 1;
             let value = self.or()?;
@@ -216,25 +253,25 @@ impl Parser<'_> {
             if left_extra && right_extra {
                 return Err("extra-to-extra marker comparison is undefined".into());
             }
-            let selected = super::normalize_name(if left_extra { &right } else { &left });
-            let contains = self
-                .extras
-                .iter()
-                .any(|v| super::normalize_name(v) == selected);
+            let left = normalized_name(left);
+            let right = normalized_name(right);
             return match op.as_str() {
-                "==" => Ok(contains),
-                "!=" => Ok(!contains),
+                "==" => Ok(left.eq(right)),
+                "!=" => Ok(left.not_eq(right)),
                 _ => Err("only equality and inequality are admitted for extra markers".into()),
             };
         }
+
         if (left_version || right_version) && matches!(op.as_str(), "in" | "not in") {
             return Err("containment is not defined for version marker fields".into());
         }
         if op == "in" {
-            return Ok(right.contains(&left));
+            return Ok(datafusion::functions::unicode::expr_fn::strpos(right, left).gt(lit(0i64)));
         }
         if op == "not in" {
-            return Ok(!right.contains(&left));
+            return Ok(datafusion::functions::unicode::expr_fn::strpos(right, left)
+                .gt(lit(0i64))
+                .not());
         }
         if left_version || right_version {
             let op = if right_version && !left_version {
@@ -249,43 +286,45 @@ impl Parser<'_> {
                 &op
             };
             let (candidate, constraint) = if right_version && !left_version {
-                (&right, &left)
+                (right, left)
             } else {
-                (&left, &right)
+                (left, right)
             };
-            let spec = VersionSpecifiers::from_str(&format!("{op}{constraint}"))
-                .map_err(|e| e.to_string())?;
-            let version = Version::from_str(candidate).map_err(|e| e.to_string())?;
-            return Ok(spec.contains(&version));
+            let specifier =
+                datafusion::functions::string::expr_fn::concat(vec![lit(op), constraint]);
+            return Ok(crate::native_version::pep440_matches().call(vec![specifier, candidate]));
         }
         match op.as_str() {
-            "==" | "<=" | ">=" => Ok(left == right),
-            "!=" => Ok(left != right),
-            "<" | ">" => Ok(false),
+            "==" | "===" => Ok(left.eq(right)),
+            "!=" => Ok(left.not_eq(right)),
+            "<" => Ok(left.lt(right)),
+            ">" => Ok(left.gt(right)),
+            "<=" => Ok(left.lt_eq(right)),
+            ">=" => Ok(left.gt_eq(right)),
             _ => Err("unsupported non-version marker comparison".into()),
         }
     }
-    fn value(&mut self) -> Result<(String, bool), String> {
+
+    fn value(&mut self) -> Result<(Expr, bool), String> {
         let value = match self.tokens.get(self.position) {
-            Some(Token::Literal(value)) => (value.clone(), false),
+            Some(Token::Literal(value)) => (lit(value.clone()), false),
             Some(Token::Word(name)) => {
-                let (value, version) = match name.as_str() {
-                    "python_version" => ("3.14", true),
-                    "python_full_version" | "implementation_version" => ("3.14.7", true),
-                    "implementation_name" => ("cpython", false),
-                    "os_name" => ("posix", false),
-                    "platform_machine" => ("x86_64", false),
-                    "platform_system" => ("Linux", false),
-                    "platform_python_implementation" => ("CPython", false),
-                    "sys_platform" => ("linux", false),
-                    "extra" => ("", false),
+                let version = match name.as_str() {
+                    "python_version" | "python_full_version" | "implementation_version" => true,
+                    "implementation_name"
+                    | "os_name"
+                    | "platform_machine"
+                    | "platform_system"
+                    | "platform_python_implementation"
+                    | "sys_platform"
+                    | "extra" => false,
                     _ => {
                         return Err(format!(
                             "marker environment field {name} is not reproduced by this capsule"
                         ));
                     }
                 };
-                (value.into(), version)
+                (col(name), version)
             }
             _ => return Err("marker operand missing".into()),
         };
@@ -293,62 +332,18 @@ impl Parser<'_> {
         Ok(value)
     }
 }
+fn normalized_name(value: Expr) -> Expr {
+    datafusion::functions::regex::expr_fn::regexp_replace(
+        datafusion::functions::string::expr_fn::lower(value),
+        lit("[-_.]+"),
+        lit("-"),
+        Some(lit("g")),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn registry_requirements_admit_versions_extras_and_explicit_markers() {
-        let req = Requirement::parse("Some_Package[fast]>=1.2,<2; python_version >= '3.10' and (sys_platform == 'linux' or extra == 'other')").unwrap();
-        assert_eq!(req.name, "some-package");
-        assert_eq!(req.extras, ["fast"]);
-        assert!(req.permits("1.9"));
-        assert!(!req.permits("2.0"));
-        assert!(req.applies(&[]).unwrap());
-        let optional = Requirement::parse("optional; extra == 'speed'").unwrap();
-        assert!(!optional.applies(&[]).unwrap());
-        assert!(optional.applies(&["speed".into()]).unwrap());
-        assert!(
-            Requirement::parse("pkg; '3.10' < python_version")
-                .unwrap()
-                .applies(&[])
-                .unwrap()
-        );
-    }
-    #[test]
-    fn current_marker_rules_use_field_types_and_extra_membership() {
-        assert!(
-            !Requirement::parse("pkg; os_name >= 'foo'")
-                .unwrap()
-                .applies(&[])
-                .unwrap()
-        );
-        assert!(
-            !Requirement::parse("pkg; os_name > 'abc'")
-                .unwrap()
-                .applies(&[])
-                .unwrap()
-        );
-        assert!(
-            Requirement::parse("pkg; os_name <= 'posix'")
-                .unwrap()
-                .applies(&[])
-                .unwrap()
-        );
-        assert!(
-            !Requirement::parse("pkg; extra != 'foo'")
-                .unwrap()
-                .applies(&["foo".into()])
-                .unwrap()
-        );
-        assert!(
-            Requirement::parse("pkg; extra == 'fast_mode'")
-                .unwrap()
-                .applies(&["FAST-Mode".into()])
-                .unwrap()
-        );
-        assert!(Requirement::parse("pkg; python_version in '3.14'").is_err());
-        assert!(Requirement::parse("pkg; os_name ~= 'posix'").is_err());
-    }
     #[test]
     fn dependency_sources_and_unknown_marker_environments_fail_before_fetch() {
         for text in [

@@ -1,0 +1,51 @@
+{
+  "module": "buoyant_kernel_engine::executor",
+  "crate": "buoyant_kernel_engine",
+  "api": "api/buoyant_kernel_engine.executor.md",
+  "items": [
+    {
+      "path": "buoyant_kernel_engine::executor::TaskExecutor",
+      "name": "TaskExecutor",
+      "kind": "trait",
+      "crate": "buoyant_kernel_engine",
+      "signature": "trait TaskExecutor: Send + Sync + 'static",
+      "summary": "An executor that can be used to run async tasks. This is used by IO functions within the `DefaultEngine`.",
+      "doc": "api/buoyant_kernel_engine.executor.md#taskexecutor",
+      "aliases": [
+        "delta_kernel_default_engine::executor::TaskExecutor"
+      ],
+      "implementors": [
+        "buoyant_kernel_engine::executor::tokio::TokioBackgroundExecutor",
+        "buoyant_kernel_engine::executor::tokio::TokioMultiThreadExecutor"
+      ],
+      "required_methods": [
+        "block_on",
+        "enter",
+        "spawn",
+        "spawn_blocking"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "block_on",
+          "signature": "fn block_on<T>(&self, task: T) -> T::Output where T: Future + Send + 'static, T::Output: Send + 'static",
+          "summary": "Block on the given future, returning its output."
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self) -> Self::Guard<'_>",
+          "summary": "Enter the runtime context of this executor."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&self, task: F) where F: Future<Output = ()> + Send + 'static",
+          "summary": "Run the future in the background."
+        },
+        {
+          "name": "spawn_blocking",
+          "signature": "fn spawn_blocking<T, R>(&self, task: T) -> BoxFuture<'_, DeltaResult<R>> where T: FnOnce() -> R + Send + 'static, R: Send + 'static"
+        }
+      ]
+    }
+  ]
+}

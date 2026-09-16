@@ -8,22 +8,18 @@
 //! These are real `#[test]` functions, not doctests: `cargo nextest` does not run doctests, and
 //! `docs/reports/logs/nextest.json` is what promotes the gate.
 
-use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use enrichment_core::wire::{Envelope, EnvelopeError, Outcome, Status, envelope_schema_json};
 use serde_json::{Value, json};
 
-const OK_FIXTURE: &str = include_str!("../../../contracts/research-v2/examples/ok.fixture.json");
-const PARTIAL_FIXTURE: &str =
-    include_str!("../../../contracts/research-v2/examples/partial.fixture.json");
-const PENDING_FIXTURE: &str =
-    include_str!("../../../contracts/research-v2/examples/pending.fixture.json");
-const ERROR_FIXTURE: &str =
-    include_str!("../../../contracts/research-v2/examples/error.fixture.json");
-const FROZEN_CONTRACT: &str =
-    include_str!("../../../contracts/research-v2/research-envelope.schema.json");
-const FROZEN_ENUMS: &str = include_str!("../../../contracts/research-v2/enums.json");
+const OK_FIXTURE: &str = include_str!("../../../tests/fixtures/wire/ok.fixture.json");
+const PARTIAL_FIXTURE: &str = include_str!("../../../tests/fixtures/wire/partial.fixture.json");
+const PENDING_FIXTURE: &str = include_str!("../../../tests/fixtures/wire/pending.fixture.json");
+const ERROR_FIXTURE: &str = include_str!("../../../tests/fixtures/wire/error.fixture.json");
+const OUTCOME_CONSTRAINTS: &str =
+    include_str!("../../../tests/fixtures/wire/outcome-constraints.json");
+const VOCABULARY: &str = include_str!("../../../tests/fixtures/wire/vocabulary.json");
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -46,12 +42,12 @@ fn generated_schema() -> Value {
     serde_json::from_str(&text).expect("the generated schema is valid JSON")
 }
 
-fn frozen_contract() -> Value {
-    serde_json::from_str(FROZEN_CONTRACT).expect("the frozen contract is valid JSON")
+fn outcome_constraints() -> Value {
+    serde_json::from_str(OUTCOME_CONSTRAINTS).expect("the native contract is valid JSON")
 }
 
-fn frozen_enums() -> Value {
-    serde_json::from_str(FROZEN_ENUMS).expect("the frozen enum extract is valid JSON")
+fn vocabulary() -> Value {
+    serde_json::from_str(VOCABULARY).expect("the native enum extract is valid JSON")
 }
 
 /// Deserialize, re-serialize, and compare as `Value` so key order is not asserted -- the frozen
@@ -231,7 +227,7 @@ fn error_outcome_always_emits_an_error_object() {
     );
 }
 
-// --- 13-21: structure, against contracts/research-v2/enums.json ----------------------------------
+// --- 13-21: structure, against tests/fixtures/wire/vocabulary.json ----------------------------------
 //
 // 13-17 double as the guard against a `///` doc comment on a unit enum variant: that turns the
 // emitted `enum` into `oneOf` + `const`, and these lookups return `None`.
@@ -247,40 +243,40 @@ fn enum_at(schema: &Value, pointer: &str) -> Vec<String> {
         .collect()
 }
 
-fn frozen_list(key: &str) -> Vec<String> {
-    frozen_enums()[key]
+fn vocabulary_list(key: &str) -> Vec<String> {
+    vocabulary()[key]
         .as_array()
-        .unwrap_or_else(|| panic!("contracts/research-v2/enums.json has no array `{key}`"))
+        .unwrap_or_else(|| panic!("tests/fixtures/wire/vocabulary.json has no array `{key}`"))
         .iter()
         .map(|v| v.as_str().expect("values are strings").to_owned())
         .collect()
 }
 
 #[test]
-fn status_enum_matches_the_frozen_contract() {
+fn status_enum_matches_the_outcome_constraints() {
     let actual = enum_at(&generated_schema(), "/properties/status/enum");
-    assert_eq!(actual, frozen_list("status"));
+    assert_eq!(actual, vocabulary_list("status"));
 }
 
 #[test]
-fn error_code_enum_matches_the_frozen_contract() {
+fn error_code_enum_matches_the_outcome_constraints() {
     let actual = enum_at(&generated_schema(), "/$defs/Error/properties/code/enum");
-    assert_eq!(actual, frozen_list("error_codes"));
+    assert_eq!(actual, vocabulary_list("error_codes"));
 }
 
 #[test]
-fn evidence_class_enum_matches_the_frozen_contract() {
+fn evidence_class_enum_matches_the_outcome_constraints() {
     let actual = enum_at(
         &generated_schema(),
         "/$defs/Evidence/properties/evidence_class/enum",
     );
-    assert_eq!(actual, frozen_list("evidence_class"));
+    assert_eq!(actual, vocabulary_list("evidence_class"));
 }
 
 #[test]
-fn source_version_match_enum_matches_the_frozen_contract() {
+fn source_version_match_enum_matches_the_outcome_constraints() {
     let schema = generated_schema();
-    let expected = frozen_list("source_version_match");
+    let expected = vocabulary_list("source_version_match");
     // Appears twice in the contract; both sites must agree.
     for pointer in [
         "/$defs/Freshness/properties/source_version_match/enum",
@@ -291,26 +287,26 @@ fn source_version_match_enum_matches_the_frozen_contract() {
 }
 
 #[test]
-fn job_state_enum_matches_the_frozen_contract() {
+fn job_state_enum_matches_the_outcome_constraints() {
     let actual = enum_at(
         &generated_schema(),
         "/$defs/JobHandle/properties/state/enum",
     );
-    assert_eq!(actual, frozen_list("job_state"));
+    assert_eq!(actual, vocabulary_list("job_state"));
 }
 
 #[test]
-fn artifact_uri_pattern_matches_the_frozen_contract() {
+fn artifact_uri_pattern_matches_the_outcome_constraints() {
     let schema = generated_schema();
     let actual = schema
         .pointer("/$defs/ArtifactHandle/properties/uri/pattern")
         .and_then(Value::as_str)
         .expect("the artifact uri carries a pattern");
-    assert_eq!(actual, frozen_enums()["artifact_uri_pattern"]);
+    assert_eq!(actual, vocabulary()["artifact_uri_pattern"]);
 }
 
 #[test]
-fn root_required_fields_match_the_frozen_contract() {
+fn root_required_fields_match_the_outcome_constraints() {
     let schema = generated_schema();
     let mut actual: Vec<String> = schema["required"]
         .as_array()
@@ -321,7 +317,7 @@ fn root_required_fields_match_the_frozen_contract() {
     actual.sort();
     assert_eq!(
         actual,
-        frozen_list("root_required"),
+        vocabulary_list("root_required"),
         "all fourteen root fields must be required; nullability is expressed by type, not by \
          absence. A missing Option field means the schema was generated under the deserialize \
          contract."
@@ -329,19 +325,24 @@ fn root_required_fields_match_the_frozen_contract() {
 }
 
 #[test]
-fn defs_match_the_active_contract_definitions() {
+fn artifact_handles_require_the_exact_receipt() {
     let schema = generated_schema();
-    let actual: BTreeSet<String> = schema["$defs"]
-        .as_object()
-        .expect("the schema has $defs")
-        .keys()
-        .cloned()
-        .collect();
-    let expected: BTreeSet<String> = frozen_list("definitions").into_iter().collect();
     assert_eq!(
-        actual, expected,
-        "an extra $defs entry means a type that should be inlined is not, or a \
-         deserialization-only helper leaked into the emitted schema"
+        schema["$defs"]["ArtifactHandle"]["required"],
+        json!(["receipt", "uri", "description"])
+    );
+    let receipt = &schema["$defs"]["Artifact"];
+    assert!(
+        receipt["required"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("sha256"))
+    );
+    assert!(
+        receipt["required"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("source_uri"))
     );
 }
 
@@ -350,14 +351,14 @@ fn root_forbids_additional_properties() {
     assert_eq!(generated_schema()["additionalProperties"], json!(false));
 }
 
-// --- 22-25: agreement with the frozen contract, and reproducibility -----------------------
+// --- 22-25: agreement with the native contract, and reproducibility -----------------------
 
 #[test]
-fn root_conditionals_match_the_frozen_contract() {
+fn root_conditionals_match_the_outcome_constraints() {
     assert_eq!(
         generated_schema()["allOf"],
-        frozen_contract()["allOf"],
-        "the emitted root conditionals must restate the frozen contract verbatim; they are what \
+        outcome_constraints(),
+        "the emitted root conditionals must restate the native contract verbatim; they are what \
          make `pending` require a job handle and `error` require an error object"
     );
 }

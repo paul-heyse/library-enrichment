@@ -96,7 +96,26 @@ pub fn exclusive(root: &Path) -> io::Result<File> {
 #[derive(Debug)]
 pub(crate) struct LeasedProvider {
     input: Arc<dyn TableProvider>,
-    lease: Arc<File>,
+    lease: Retained,
+}
+
+/// The two physical resources native scans can own. Staging is removed only after the
+/// last provider, optimized physical plan and stream has released the directory.
+#[derive(Clone, Debug)]
+enum Retained {
+    Evidence(Arc<File>),
+    Staging(Arc<tempfile::TempDir>),
+    Captured(Arc<tempfile::TempDir>, Arc<File>),
+}
+impl Retained {
+    fn same(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Evidence(a), Self::Evidence(b)) => Arc::ptr_eq(a, b),
+            (Self::Staging(a), Self::Staging(b)) => Arc::ptr_eq(a, b),
+            (Self::Captured(a, x), Self::Captured(b, y)) => Arc::ptr_eq(a, b) && Arc::ptr_eq(x, y),
+            _ => false,
+        }
+    }
 }
 
 /// Keep ownership outside native operators that release their inputs after completion.
@@ -120,19 +139,19 @@ impl datafusion::execution::context::QueryPlanner for RetentionPlanner {
         };
         // Exact statistics may remove a physical scan. Capture its ownership from the
         // resolved native logical leaves before physical optimization can eliminate it.
-        let mut leases: Vec<Arc<File>> = Vec::new();
+        let mut leases: Vec<Retained> = Vec::new();
         logical.apply_with_subqueries(|node| {
             if let datafusion::logical_expr::LogicalPlan::TableScan(scan) = node {
                 let provider = datafusion::datasource::source_as_provider(&scan.source)?;
                 if let Some(owned) = provider.downcast_ref::<LeasedProvider>()
-                    && !leases.iter().any(|lease| Arc::ptr_eq(lease, &owned.lease))
+                    && !leases.iter().any(|lease| lease.same(&owned.lease))
                 {
                     if leases.len() == 1024 {
                         return Err(DataFusionError::ResourcesExhausted(
                             "query retention ownership exceeds 1024 leases".into(),
                         ));
                     }
-                    leases.push(Arc::clone(&owned.lease));
+                    leases.push(owned.lease.clone());
                 }
             }
             Ok(TreeNodeRecursion::Continue)
@@ -140,14 +159,14 @@ impl datafusion::execution::context::QueryPlanner for RetentionPlanner {
         let mut plan = self.inner.create_physical_plan(logical, state).await?;
         plan.apply(|node| {
             if let Some(owned) = node.downcast_ref::<LeasedExec>()
-                && !leases.iter().any(|lease| Arc::ptr_eq(lease, &owned.lease))
+                && !leases.iter().any(|lease| lease.same(&owned.lease))
             {
                 if leases.len() == 1024 {
                     return Err(DataFusionError::ResourcesExhausted(
                         "query retention ownership exceeds 1024 leases".into(),
                     ));
                 }
-                leases.push(Arc::clone(&owned.lease));
+                leases.push(owned.lease.clone());
             }
             Ok(TreeNodeRecursion::Continue)
         })?;
@@ -162,7 +181,10 @@ impl datafusion::execution::context::QueryPlanner for RetentionPlanner {
 }
 impl LeasedProvider {
     pub(crate) fn new(input: Arc<dyn TableProvider>, lease: Arc<File>) -> Self {
-        Self { input, lease }
+        Self {
+            input,
+            lease: Retained::Evidence(lease),
+        }
     }
 }
 
@@ -174,6 +196,31 @@ pub(crate) fn leased_view(
     view: &Arc<dyn TableProvider>,
     session: &datafusion::prelude::SessionContext,
     lease: &Arc<File>,
+) -> Result<Arc<dyn TableProvider>> {
+    retained_view(view, session, Retained::Evidence(Arc::clone(lease)))
+}
+
+pub(crate) fn staged_view(
+    view: &Arc<dyn TableProvider>,
+    session: &datafusion::prelude::SessionContext,
+    directory: Arc<tempfile::TempDir>,
+) -> Result<Arc<dyn TableProvider>> {
+    retained_view(view, session, Retained::Staging(directory))
+}
+
+pub(crate) fn captured_view(
+    view: &Arc<dyn TableProvider>,
+    session: &datafusion::prelude::SessionContext,
+    directory: Arc<tempfile::TempDir>,
+    evidence: Arc<File>,
+) -> Result<Arc<dyn TableProvider>> {
+    retained_view(view, session, Retained::Captured(directory, evidence))
+}
+
+fn retained_view(
+    view: &Arc<dyn TableProvider>,
+    session: &datafusion::prelude::SessionContext,
+    lease: Retained,
 ) -> Result<Arc<dyn TableProvider>> {
     use datafusion::{
         common::tree_node::Transformed,
@@ -198,8 +245,10 @@ pub(crate) fn leased_view(
                     "cached domain view has an unexpanded nested view".into(),
                 ));
             }
-            scan.source =
-                provider_as_source(Arc::new(LeasedProvider::new(input, Arc::clone(lease))));
+            scan.source = provider_as_source(Arc::new(LeasedProvider {
+                input,
+                lease: lease.clone(),
+            }));
             Ok(Transformed::yes(LogicalPlan::TableScan(scan)))
         })?
         .data;
@@ -234,7 +283,7 @@ impl TableProvider for LeasedProvider {
     ) -> Result<Arc<dyn ExecutionPlan>> {
         Ok(Arc::new(LeasedExec {
             input: self.input.scan(state, projection, filters, limit).await?,
-            lease: Arc::clone(&self.lease),
+            lease: self.lease.clone(),
         }))
     }
     async fn scan_with_args<'a>(
@@ -244,7 +293,7 @@ impl TableProvider for LeasedProvider {
     ) -> Result<ScanResult> {
         Ok(ScanResult::new(Arc::new(LeasedExec {
             input: self.input.scan_with_args(state, args).await?.into_inner(),
-            lease: Arc::clone(&self.lease),
+            lease: self.lease.clone(),
         })))
     }
 }
@@ -252,7 +301,7 @@ impl TableProvider for LeasedProvider {
 #[derive(Debug)]
 struct LeasedExec {
     input: Arc<dyn ExecutionPlan>,
-    lease: Arc<File>,
+    lease: Retained,
 }
 impl DisplayAs for LeasedExec {
     fn fmt_as(&self, _: DisplayFormatType, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -284,7 +333,7 @@ impl ExecutionPlan for LeasedExec {
     ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
         Ok(Some(Arc::new(Self {
             input: datafusion::physical_plan::projection::make_with_child(projection, &self.input)?,
-            lease: Arc::clone(&self.lease),
+            lease: self.lease.clone(),
         })))
     }
     fn cardinality_effect(&self) -> CardinalityEffect {
@@ -327,7 +376,7 @@ impl ExecutionPlan for LeasedExec {
         }
         Ok(Arc::new(Self {
             input: children.remove(0),
-            lease: Arc::clone(&self.lease),
+            lease: self.lease.clone(),
         }))
     }
     fn with_new_children(
@@ -346,13 +395,13 @@ impl ExecutionPlan for LeasedExec {
     ) -> Result<SendableRecordBatchStream> {
         Ok(Box::pin(LeasedStream {
             inner: self.input.execute(partition, context)?,
-            _lease: Arc::clone(&self.lease),
+            _lease: self.lease.clone(),
         }))
     }
 }
 struct LeasedStream {
     inner: SendableRecordBatchStream,
-    _lease: Arc<File>,
+    _lease: Retained,
 }
 impl Stream for LeasedStream {
     type Item = Result<RecordBatch>;
@@ -363,5 +412,76 @@ impl Stream for LeasedStream {
 impl RecordBatchStream for LeasedStream {
     fn schema(&self) -> SchemaRef {
         self.inner.schema()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::{
+        array::UInt64Array,
+        datatypes::{DataType, Field, Schema},
+        ipc::writer::FileWriter,
+    };
+    use futures::TryStreamExt;
+
+    #[tokio::test]
+    async fn private_input_directory_survives_planning_and_stream_ownership() {
+        let root = tempfile::tempdir().unwrap();
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())
+                .unwrap();
+        let directory = Arc::new(tempfile::tempdir_in(root.path()).unwrap());
+        let path = directory.path().join("input.arrow");
+        let schema = Arc::new(Schema::new(vec![Field::new("n", DataType::UInt64, false)]));
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![Arc::new(UInt64Array::from(vec![1, 2, 3]))],
+        )
+        .unwrap();
+        let mut writer = FileWriter::try_new(File::create(&path).unwrap(), &schema).unwrap();
+        writer.write(&batch).unwrap();
+        writer.finish().unwrap();
+        drop(writer);
+        let session = runtime.session();
+        let input = crate::arrow_input::provider(&runtime, &path, schema)
+            .await
+            .unwrap();
+        let owned = staged_view(&input, &session, directory.clone()).unwrap();
+        let frame = session
+            .read_table(owned.clone())
+            .unwrap()
+            .aggregate(
+                vec![],
+                vec![datafusion::functions_aggregate::expr_fn::count(
+                    datafusion::prelude::lit(1),
+                )],
+            )
+            .unwrap();
+        let physical = frame.create_physical_plan().await.unwrap();
+        drop((frame, input, owned, directory));
+        assert!(
+            path.exists(),
+            "native physical plan owns the private directory"
+        );
+        let mut stream =
+            datafusion::physical_plan::execute_stream(physical.clone(), session.task_ctx())
+                .unwrap();
+        drop((physical, session));
+        assert!(
+            path.exists(),
+            "an executing stream owns its input after caller cancellation"
+        );
+        assert_eq!(stream.try_next().await.unwrap().unwrap().num_rows(), 1);
+        assert!(stream.try_next().await.unwrap().is_none());
+        assert!(
+            path.exists(),
+            "exhaustion does not release the caller's retained stream"
+        );
+        drop(stream);
+        assert!(
+            !path.exists(),
+            "last physical owner reclaims the private directory"
+        );
     }
 }

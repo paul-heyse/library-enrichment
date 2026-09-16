@@ -1,0 +1,313 @@
+{
+  "module": "pyrefly_types::quantified",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.quantified.md",
+  "items": [
+    {
+      "path": "pyrefly_types::quantified::QuantifiedKind",
+      "name": "QuantifiedKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum QuantifiedKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "TypeVar",
+        "IntVar",
+        "ParamSpec",
+        "TypeVarTuple"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::quantified::QuantifiedOrigin",
+      "name": "QuantifiedOrigin",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum QuantifiedOrigin",
+      "summary": "Discriminator for the origin of a `Quantified`, making collisions structurally impossible between quantifieds that share the same anchor range but have different origins.",
+      "doc": "api/pyrefly_types.quantified.md#quantifiedorigin",
+      "variants": [
+        "ScopedLegacy",
+        "Pep695",
+        "Synthetic",
+        "MapIntTuplesParameter",
+        "NormalizedMapIntTuplesParameter"
+      ],
+      "implements": [
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "synthetic",
+          "signature": "fn synthetic() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::quantified::AnchorIndex",
+      "name": "AnchorIndex",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct AnchorIndex",
+      "summary": "A source range plus an index that disambiguates multiple quantifieds sharing the same range. Index 0 is used when a range produces exactly one quantified; higher indices are used when a single range produces several (e.g. multiple type par…",
+      "doc": "api/pyrefly_types.quantified.md#anchorindex",
+      "fields": [
+        "range",
+        "index"
+      ],
+      "implements": [
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "first",
+          "signature": "fn first(range: TextRange) -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(range: TextRange, index: u32) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::quantified::Quantified",
+      "name": "Quantified",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Quantified",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "name",
+        "kind",
+        "default",
+        "restriction",
+        "owner"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_gradual_type",
+          "signature": "fn as_gradual_type(&self) -> Type"
+        },
+        {
+          "name": "as_gradual_type_helper",
+          "signature": "fn as_gradual_type_helper(kind: QuantifiedKind, default: Option<&Type>) -> Type"
+        },
+        {
+          "name": "class_type",
+          "signature": "fn class_type<'a>(&self, stdlib: &'a Stdlib) -> &'a ClassType"
+        },
+        {
+          "name": "default",
+          "signature": "fn default(&self) -> Option<&Type>"
+        },
+        {
+          "name": "display_name_with_prefix",
+          "signature": "fn display_name_with_prefix(&self) -> impl Display + '_",
+          "summary": "Display this type parameter name with the `*`/`**` kind prefix (e.g. `*Ts` for TypeVarTuple, `**P` for ParamSpec)."
+        },
+        {
+          "name": "display_with_bounds",
+          "signature": "fn display_with_bounds(&self) -> impl Display + '_",
+          "summary": "Display this type parameter with its bounds/constraints and default, in the format used for type parameter lists (e.g. `T: int = str`)."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_type_var",
+          "signature": "fn from_type_var(tv: &TypeVar, identity: QuantifiedIdentity) -> Self",
+          "summary": "Creates a Quantified from a TypeVar, extracting all relevant fields."
+        },
+        {
+          "name": "identity",
+          "signature": "fn identity(&self) -> &QuantifiedIdentity"
+        },
+        {
+          "name": "is_param_spec",
+          "signature": "fn is_param_spec(&self) -> bool"
+        },
+        {
+          "name": "is_type_var",
+          "signature": "fn is_type_var(&self) -> bool"
+        },
+        {
+          "name": "is_type_var_tuple",
+          "signature": "fn is_type_var_tuple(&self) -> bool"
+        },
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> QuantifiedKind"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &Name"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(identity: QuantifiedIdentity, name: Name, kind: QuantifiedKind, default: Option<Type>, restriction: Restriction, variance: PreInferenceVariance) -> Self"
+        },
+        {
+          "name": "param_spec",
+          "signature": "fn param_spec(name: Name, identity: QuantifiedIdentity, default: Option<Type>) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "restriction",
+          "signature": "fn restriction(&self) -> &Restriction"
+        },
+        {
+          "name": "to_type",
+          "signature": "fn to_type(self, heap: &TypeHeap) -> Type"
+        },
+        {
+          "name": "to_value",
+          "signature": "fn to_value(self) -> Type"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "type_var",
+          "signature": "fn type_var(name: Name, identity: QuantifiedIdentity, default: Option<Type>, restriction: Restriction, variance: PreInferenceVariance) -> Self"
+        },
+        {
+          "name": "type_var_tuple",
+          "signature": "fn type_var_tuple(name: Name, identity: QuantifiedIdentity, default: Option<Type>) -> Self"
+        },
+        {
+          "name": "upper_bound",
+          "signature": "fn upper_bound(&self, stdlib: &Stdlib, heap: &TypeHeap) -> Type",
+          "summary": "The upper bound of this type parameter as a type."
+        },
+        {
+          "name": "variance",
+          "signature": "fn variance(&self) -> PreInferenceVariance"
+        },
+        {
+          "name": "with_owner",
+          "signature": "fn with_owner(self, owner: Name) -> Self"
+        },
+        {
+          "name": "with_restriction",
+          "signature": "fn with_restriction(self, restriction: Restriction) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::quantified::QuantifiedIdentity",
+      "name": "QuantifiedIdentity",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct QuantifiedIdentity",
+      "summary": "Deterministic identity for a `Quantified`, derived from source locations rather than allocation order. Two quantifieds are the same iff their identity is the same.",
+      "doc": "api/pyrefly_types.quantified.md#quantifiedidentity",
+      "fields": [
+        "module",
+        "anchor",
+        "origin"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(module: ModuleName, anchor: AnchorIndex, origin: QuantifiedOrigin) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    }
+  ]
+}

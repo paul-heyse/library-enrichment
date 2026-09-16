@@ -71,38 +71,7 @@ pub async fn serve(
     });
     let result = accept_loop(&listener, service.clone(), shutdown, Arc::clone(&stop)).await;
     sweeper.abort();
-    let deadline = tokio::time::Instant::now()
-        + std::time::Duration::from_secs(
-            service
-                .config
-                .network
-                .request_timeout_seconds
-                .saturating_add(30)
-                .min(600),
-        );
-    // Cancel queued/running jobs before waiting for the manager: a warm start may itself be
-    // waiting for their slot. The same deadline bounds lock acquisition, polite stop and cleanup.
-    service.jobs.request_shutdown()?;
-    service.lsp.shutdown(deadline).await?;
-    // Journals going terminal is not the same fact as containers being gone. Wait for both, and
-    // name the containers still outstanding rather than exiting on a half-kept promise.
-    while service.jobs.counts() != (0, 0) || !service.execution.is_idle() {
-        if tokio::time::Instant::now() >= deadline {
-            let outstanding = service.execution.outstanding();
-            let detail = if outstanding.is_empty() {
-                "retained journals require inspection".to_owned()
-            } else {
-                format!(
-                    "these owned containers were not confirmed absent: {}",
-                    outstanding.join(", ")
-                )
-            };
-            return Err(std::io::Error::other(format!(
-                "shutdown could not confirm all job cleanup; {detail}"
-            )));
-        }
-        tokio::time::sleep(std::time::Duration::from_millis(25)).await;
-    }
+    service.shutdown().await?;
 
     // Leaving a live socket behind would make the next `start` look like a running daemon.
     let _ = std::fs::remove_file(&paths.socket);
@@ -265,26 +234,40 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
         .and_then(serde_json::Value::as_u64)
         .and_then(|n| usize::try_from(n).ok());
     let correlation = crate::envelope::new_request_id().to_string();
-    match service
-        .repository
-        .runtime
-        .operation(
-            correlation.clone(),
-            service.operation_descriptor(&request.method, &request.params),
-            Box::pin(dispatch_request(service, request, began)),
-        )
+    let owned = service.clone();
+    let runtime = service.repository.runtime.clone();
+    let operation = correlation.clone();
+    let task = runtime.spawn(async move {
+        owned
+            .repository
+            .runtime
+            .operation(
+                operation,
+                owned.operation_descriptor(&request.method, &request.params),
+                Box::pin(dispatch_request(&owned, request, began)),
+            )
+            .await
+    });
+    match task
         .await
+        .map_err(std::io::Error::other)
+        .and_then(|result| result.map_err(std::io::Error::other))
     {
         Ok(result) => result,
-        Err(error) => Dispatched {
-            response: id.map(|id| {
+        Err(error) => {
+            let response = if let Some(id) = id {
                 let mut result = ops::common::query_error(&error.into());
                 result.request_id = enrichment_core::wire::RequestId::try_from(correlation)
                     .expect("admitted identity");
-                research_response(service, Some(id), result, requested)
-            }),
-            shutdown: false,
-        },
+                Some(research_response(service, Some(id), result, requested).await)
+            } else {
+                None
+            };
+            Dispatched {
+                response,
+                shutdown: false,
+            }
+        }
     }
 }
 
@@ -312,12 +295,16 @@ async fn dispatch_request(
         "service.status" => {
             match serde_json::from_value::<enrichment_core::request::StatusRequest>(request.params)
             {
-                Ok(status_request) => research_response(
-                    service,
-                    request.id,
-                    status::status_envelope(Some(service), status_request.component.as_deref()),
-                    requested_budget,
-                ),
+                Ok(status_request) => {
+                    research_response(
+                        service,
+                        request.id,
+                        status::status_envelope(Some(service), status_request.component.as_deref())
+                            .await,
+                        requested_budget,
+                    )
+                    .await
+                }
                 Err(error) => invalid_params(
                     request.id,
                     "service.status",
@@ -331,12 +318,15 @@ async fn dispatch_request(
         // `resolve_library`). Parameters are the typed core request; the answer is a complete
         // envelope whose `partial`/`error` states are decided by the core, not here.
         "library.resolve" => match serde_json::from_value::<ResolveRequest>(request.params) {
-            Ok(resolve) => research_response(
-                service,
-                request.id,
-                ops::resolve::resolve(service, resolve).await,
-                requested_budget,
-            ),
+            Ok(resolve) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::resolve::resolve(service, resolve).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => Response::err(
                 request.id,
                 RpcError::new(
@@ -354,12 +344,15 @@ async fn dispatch_request(
             match serde_json::from_value::<enrichment_core::execution::VerifyRequest>(
                 request.params,
             ) {
-                Ok(req) => research_response(
-                    service,
-                    request.id,
-                    ops::verify::verify(service, req).await,
-                    requested_budget,
-                ),
+                Ok(req) => {
+                    research_response(
+                        service,
+                        request.id,
+                        ops::verify::verify(service, req).await,
+                        requested_budget,
+                    )
+                    .await
+                }
                 Err(err) => invalid_params(
                     request.id,
                     "usage.verify",
@@ -370,22 +363,28 @@ async fn dispatch_request(
         }
         "job.control" => {
             match serde_json::from_value::<enrichment_core::execution::JobRequest>(request.params) {
-                Ok(req) => research_response(
-                    service,
-                    request.id,
-                    ops::verify::control(service, req).await,
-                    requested_budget,
-                ),
+                Ok(req) => {
+                    research_response(
+                        service,
+                        request.id,
+                        ops::verify::control(service, req).await,
+                        requested_budget,
+                    )
+                    .await
+                }
                 Err(err) => invalid_params(request.id, "job.control", &err, "job_id and action"),
             }
         }
         "library.compare" => match serde_json::from_value::<CompareRequest>(request.params) {
-            Ok(req) => research_response(
-                service,
-                request.id,
-                ops::compare::compare(service, req).await,
-                requested_budget,
-            ),
+            Ok(req) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::compare::compare(service, req).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => invalid_params(
                 request.id,
                 "library.compare",
@@ -394,12 +393,15 @@ async fn dispatch_request(
             ),
         },
         "library.overview" => match serde_json::from_value::<OverviewRequest>(request.params) {
-            Ok(req) => research_response(
-                service,
-                request.id,
-                ops::overview::overview(service, req).await,
-                requested_budget,
-            ),
+            Ok(req) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::overview::overview(service, req).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => invalid_params(
                 request.id,
                 "library.overview",
@@ -408,12 +410,15 @@ async fn dispatch_request(
             ),
         },
         "evidence.search" => match serde_json::from_value::<SearchRequest>(request.params) {
-            Ok(req) => research_response(
-                service,
-                request.id,
-                ops::search::search(service, req).await,
-                requested_budget,
-            ),
+            Ok(req) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::search::search(service, req).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => invalid_params(
                 request.id,
                 "evidence.search",
@@ -422,12 +427,15 @@ async fn dispatch_request(
             ),
         },
         "symbol.inspect" => match serde_json::from_value::<InspectRequest>(request.params) {
-            Ok(req) => research_response(
-                service,
-                request.id,
-                ops::inspect::inspect(service, req).await,
-                requested_budget,
-            ),
+            Ok(req) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::inspect::inspect(service, req).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => invalid_params(
                 request.id,
                 "symbol.inspect",
@@ -436,12 +444,15 @@ async fn dispatch_request(
             ),
         },
         "artifact.read" => match serde_json::from_value::<ReadArtifactRequest>(request.params) {
-            Ok(req) => research_response(
-                service,
-                request.id,
-                ops::artifact::read(service, req).await,
-                requested_budget,
-            ),
+            Ok(req) => {
+                research_response(
+                    service,
+                    request.id,
+                    ops::artifact::read(service, req).await,
+                    requested_budget,
+                )
+                .await
+            }
             Err(err) => invalid_params(
                 request.id,
                 "artifact.read",
@@ -451,12 +462,15 @@ async fn dispatch_request(
         },
         "snapshot.manifest" => {
             match serde_json::from_value::<ops::manifest::ManifestRequest>(request.params) {
-                Ok(req) => research_response(
-                    service,
-                    request.id,
-                    ops::manifest::manifest(service, req).await,
-                    requested_budget,
-                ),
+                Ok(req) => {
+                    research_response(
+                        service,
+                        request.id,
+                        ops::manifest::manifest(service, req).await,
+                        requested_budget,
+                    )
+                    .await
+                }
                 Err(err) => invalid_params(
                     request.id,
                     "snapshot.manifest",
@@ -561,7 +575,7 @@ async fn dispatch_request(
 
 /// The only native research-to-RPC projection. Keep the domain result typed through delivery
 /// and diagnostics; serialize once when constructing the transport response.
-fn research_response(
+async fn research_response(
     service: &Service,
     id: Option<serde_json::Value>,
     mut result: enrichment_core::wire::Envelope,
@@ -581,7 +595,7 @@ fn research_response(
                 .record_failure(error.diagnostic.clone());
         }
     }
-    let bounded = ops::common::enforce_budget(service, result, requested);
+    let bounded = ops::common::enforce_budget(service, result, requested).await;
     Response::ok(
         id,
         serde_json::to_value(bounded).expect("bounded native research envelope"),
@@ -713,7 +727,7 @@ mod tests {
             "the core states its own coverage"
         );
         assert_eq!(envelope["freshness"]["latest_verified"], false);
-        assert_eq!(envelope["schema_version"], "2.0");
+        assert_eq!(envelope["schema_version"], "3.0");
     }
 
     #[tokio::test]

@@ -1,0 +1,72 @@
+{
+  "module": "pyrefly_util::thread_pool",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.thread_pool.md",
+  "items": [
+    {
+      "path": "pyrefly_util::thread_pool::TEST_THREAD_COUNT",
+      "name": "TEST_THREAD_COUNT",
+      "kind": "constant",
+      "crate": "pyrefly_util",
+      "signature": "const TEST_THREAD_COUNT: ThreadCount = _",
+      "summary": "Thread count used by tests. Enough threads to see parallelism bugs, but not too many to debug through.",
+      "doc": "api/pyrefly_util.thread_pool.md#test_thread_count"
+    },
+    {
+      "path": "pyrefly_util::thread_pool::ThreadCount",
+      "name": "ThreadCount",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum ThreadCount",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "AllThreads",
+        "NumThreads",
+        "Inline"
+      ],
+      "implements": [
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::thread_pool::ThreadPool",
+      "name": "ThreadPool",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct ThreadPool",
+      "summary": "A WASM compatible thread-pool.",
+      "doc": "api/pyrefly_util.thread_pool.md#threadpool",
+      "methods": [
+        {
+          "name": "async_spawn",
+          "signature": "fn async_spawn(&self, f: impl FnOnce() + Send + 'static)"
+        },
+        {
+          "name": "install",
+          "signature": "fn install<OP, R>(&self, op: OP) -> R where OP: FnOnce() -> R + Send, R: Send"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(count: ThreadCount) -> Self"
+        },
+        {
+          "name": "spawn_many",
+          "signature": "fn spawn_many(&self, f: impl Fn() + Sync)",
+          "summary": "Spawns `f` on the thread pool, or runs it directly if running single-threaded. Note that this will block the entire thread pool until the work is complete."
+        },
+        {
+          "name": "stack_size",
+          "signature": "fn stack_size() -> usize"
+        }
+      ]
+    }
+  ]
+}

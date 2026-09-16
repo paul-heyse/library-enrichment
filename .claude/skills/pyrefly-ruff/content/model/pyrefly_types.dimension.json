@@ -1,0 +1,246 @@
+{
+  "module": "pyrefly_types::dimension",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.dimension.md",
+  "items": [
+    {
+      "path": "pyrefly_types::dimension::Int",
+      "name": "Int",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Int",
+      "summary": "A dimension expression in a tensor shape.",
+      "doc": "api/pyrefly_types.dimension.md#int",
+      "variants": [
+        "Literal",
+        "Int",
+        "Symbolic",
+        "Add",
+        "Sub",
+        "Mul",
+        "FloorDiv",
+        "Pow"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(left: Type, right: Type) -> Self",
+          "summary": "Helper constructors for expressions. Take Type arguments to support type variables in expressions."
+        },
+        {
+          "name": "as_literal",
+          "signature": "fn as_literal(&self) -> Option<i64>"
+        },
+        {
+          "name": "floor_div",
+          "signature": "fn floor_div(left: Type, right: Type) -> Self"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_type",
+          "signature": "fn from_type(ty: &Type) -> Option<Int>",
+          "summary": "Convert a `Type` to an `Int`."
+        },
+        {
+          "name": "is_literal",
+          "signature": "fn is_literal(&self) -> bool"
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal(value: i64) -> Self"
+        },
+        {
+          "name": "materialize",
+          "signature": "fn materialize(&mut self)",
+          "summary": "Replace a gradual size leaf with a materialization marker, mirroring how `Type::materialize` rewrites `Any` to `Type::Materialization`. A gradual dimension is the shape analog of `Any`, so materializing it keeps `is_equivalent` (and thus `…"
+        },
+        {
+          "name": "mul",
+          "signature": "fn mul(left: Type, right: Type) -> Self"
+        },
+        {
+          "name": "pow",
+          "signature": "fn pow(left: Type, right: Type) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(left: Type, right: Type) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::dimension::ShapeError",
+      "name": "ShapeError",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum ShapeError",
+      "summary": "Errors that can occur during shape/dimension checking",
+      "doc": "api/pyrefly_types.dimension.md#shapeerror",
+      "variants": [
+        "RankMismatch",
+        "InvalidDimension",
+        "ShapeComputation",
+        "StructuralMismatch",
+        "NestedTypeVarNotInferred",
+        "ScalarIndex",
+        "TooManyIndices",
+        "BadIndex",
+        "Unsupported"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "invalid_dimension",
+          "signature": "fn invalid_dimension(value: i64, reason: impl Into<String>) -> Self"
+        },
+        {
+          "name": "nested_type_var_not_inferred",
+          "signature": "fn nested_type_var_not_inferred() -> Self"
+        },
+        {
+          "name": "rank_mismatch",
+          "signature": "fn rank_mismatch(got: usize, want: usize) -> Self"
+        },
+        {
+          "name": "structural_mismatch",
+          "signature": "fn structural_mismatch(got: impl Into<String>, got_canonical: impl Into<String>, want: impl Into<String>, want_canonical: impl Into<String>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::dimension::canonicalize",
+      "name": "canonicalize",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn canonicalize(ty: types::Type) -> types::Type",
+      "summary": "Canonicalize a dimension expression to a unique normal form.",
+      "doc": "api/pyrefly_types.dimension.md#canonicalize"
+    },
+    {
+      "path": "pyrefly_types::dimension::contains_var_in_type",
+      "name": "contains_var_in_type",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn contains_var_in_type(ty: &types::Type) -> bool",
+      "summary": "Check if a dimension type contains a solver Var anywhere in its structure. This is used to detect when a type variable in a nested position cannot be inferred.",
+      "doc": "api/pyrefly_types.dimension.md#contains_var_in_type"
+    },
+    {
+      "path": "pyrefly_types::dimension::gradual_size",
+      "name": "gradual_size",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn gradual_size() -> types::Type",
+      "summary": "The gradual size type: the internal representation of bare `Int` and `Int[int]`.",
+      "doc": "api/pyrefly_types.dimension.md#gradual_size"
+    },
+    {
+      "path": "pyrefly_types::dimension::int_is_provably_negative",
+      "name": "int_is_provably_negative",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn int_is_provably_negative(dim: &Int) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::dimension::int_is_provably_nonnegative",
+      "name": "int_is_provably_nonnegative",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn int_is_provably_nonnegative(dim: &Int) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::dimension::int_type_is_provably_negative",
+      "name": "int_type_is_provably_negative",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn int_type_is_provably_negative(ty: &types::Type) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::dimension::int_type_is_provably_nonnegative",
+      "name": "int_type_is_provably_nonnegative",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn int_type_is_provably_nonnegative(ty: &types::Type) -> bool",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::dimension::is_gradual_size",
+      "name": "is_gradual_size",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_gradual_size(ty: &types::Type) -> bool",
+      "summary": "Whether `ty` is the gradual size type.",
+      "doc": "api/pyrefly_types.dimension.md#is_gradual_size"
+    },
+    {
+      "path": "pyrefly_types::dimension::is_gradual_size_bound_type_var",
+      "name": "is_gradual_size_bound_type_var",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_gradual_size_bound_type_var(ty: &types::Type) -> bool",
+      "summary": "Whether `ty` is an ordinary type variable whose bound is exactly the gradual size `Int`.",
+      "doc": "api/pyrefly_types.dimension.md#is_gradual_size_bound_type_var"
+    },
+    {
+      "path": "pyrefly_types::dimension::is_optional_int",
+      "name": "is_optional_int",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_optional_int(ty: &types::Type) -> bool",
+      "summary": "Whether `ty` is exactly the shape `Int | None` domain, in either order.",
+      "doc": "api/pyrefly_types.dimension.md#is_optional_int"
+    },
+    {
+      "path": "pyrefly_types::dimension::is_optional_int_bound_type_var",
+      "name": "is_optional_int_bound_type_var",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_optional_int_bound_type_var(ty: &types::Type) -> bool",
+      "summary": "Whether `ty` is an ordinary type variable whose resolved bound is exactly `Int | None`.",
+      "doc": "api/pyrefly_types.dimension.md#is_optional_int_bound_type_var"
+    },
+    {
+      "path": "pyrefly_types::dimension::type_is_gradual_fast",
+      "name": "type_is_gradual_fast",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn type_is_gradual_fast(ty: &types::Type) -> bool",
+      "summary": "Whether a type is gradual for size purposes.",
+      "doc": "api/pyrefly_types.dimension.md#type_is_gradual_fast"
+    }
+  ]
+}

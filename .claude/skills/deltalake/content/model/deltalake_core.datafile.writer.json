@@ -1,0 +1,178 @@
+{
+  "module": "deltalake_core::datafile::writer",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.datafile.writer.md",
+  "items": [
+    {
+      "path": "deltalake_core::datafile::writer::DeltaWriter",
+      "name": "DeltaWriter",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaWriter",
+      "summary": "A parquet writer implementation tailored to the needs of writing data to a delta table.",
+      "doc": "api/deltalake_core.datafile.writer.md#deltawriter",
+      "aliases": [
+        "deltalake::datafile::writer::DeltaWriter",
+        "deltalake::operations::write::writer::DeltaWriter",
+        "deltalake_core::operations::write::writer::DeltaWriter"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DeltaDataWriter",
+        "deltalake_core::datafile::datafusion_ext::DeltaDataWriterExt"
+      ],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(self) -> DeltaResult<()>",
+          "summary": "Abandon the writer, aborting every partition's in-progress multipart upload. Already-completed files are left as orphans for vacuum."
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(self) -> DeltaResult<Vec<Add>>",
+          "summary": "Close the writer and get the new [Add] actions."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(object_store: ObjectStoreRef, config: WriterConfig) -> Self",
+          "summary": "Create a new instance of [`DeltaWriter`]"
+        },
+        {
+          "name": "with_writer_properties",
+          "signature": "fn with_writer_properties(self, writer_properties: WriterProperties) -> Self",
+          "summary": "Apply custom writer_properties to the underlying parquet writer"
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, batch: &RecordBatch) -> DeltaResult<()>",
+          "summary": "Buffers record batches in-memory per partition up to appx. `target_file_size` for a partition. Flushes data to storage once a full file can be written."
+        },
+        {
+          "name": "write_all",
+          "signature": "async fn write_all(Box<self>, batches: BatchStream) -> DeltaResult<Vec<Add>>",
+          "via_trait": "deltalake_core::datafile::DeltaDataWriter"
+        },
+        {
+          "name": "write_partition",
+          "signature": "async fn write_partition(&mut self, record_batch: RecordBatch, partition_values: &IndexMap<String, Scalar>) -> DeltaResult<()>",
+          "summary": "Write a batch to the partition induced by `partition_values`. The batch must be pre-partitioned (all rows in one partition) but still include the partition columns; they are stripped before encoding."
+        },
+        {
+          "name": "write_plan",
+          "signature": "async fn write_plan(Box<self>, session: &dyn Session, plan: Arc<dyn ExecutionPlan>) -> DeltaResult<Vec<Add>>",
+          "via_trait": "deltalake_core::datafile::datafusion_ext::DeltaDataWriterExt"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::writer::PartitionWriter",
+      "name": "PartitionWriter",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PartitionWriter",
+      "summary": "Partition writer implementation This writer takes in table data as RecordBatches and writes it out to partitioned parquet files. It buffers data in memory until it reaches a certain size, then writes it out to optimize file sizes. When you…",
+      "doc": "api/deltalake_core.datafile.writer.md#partitionwriter",
+      "aliases": [
+        "deltalake::datafile::writer::PartitionWriter",
+        "deltalake::operations::write::writer::PartitionWriter",
+        "deltalake_core::operations::write::writer::PartitionWriter"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DataFileWriter"
+      ],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(self) -> DeltaResult<()>",
+          "summary": "Abandon the writer: let in-flight size-roll uploads finish (cancelling mid-upload would leak parts vacuum cannot see; completed files are orphans it can reclaim), then abort the open file's multipart upload."
+        },
+        {
+          "name": "abort",
+          "signature": "async fn abort(Box<self>) -> DeltaResult<()>",
+          "via_trait": "deltalake_core::datafile::DataFileWriter"
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(self) -> DeltaResult<Vec<Add>>",
+          "summary": "Close the writer and get the new [Add] actions."
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(Box<self>) -> DeltaResult<Vec<Add>>",
+          "via_trait": "deltalake_core::datafile::DataFileWriter"
+        },
+        {
+          "name": "try_with_config",
+          "signature": "fn try_with_config(object_store: ObjectStoreRef, config: PartitionWriterConfig, num_indexed_cols: DataSkippingNumIndexedCols, stats_columns: Option<Vec<String>>) -> DeltaResult<Self>",
+          "summary": "Create a new instance of [`PartitionWriter`] from [`PartitionWriterConfig`]"
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, batch: &RecordBatch) -> DeltaResult<()>",
+          "summary": "Buffers record batches in-memory up to appx. `target_file_size`. Flushes data to storage once a full file can be written."
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, batch: &RecordBatch) -> DeltaResult<()>",
+          "via_trait": "deltalake_core::datafile::DataFileWriter"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::writer::PartitionWriterConfig",
+      "name": "PartitionWriterConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PartitionWriterConfig",
+      "summary": "Write configuration for partition writers",
+      "doc": "api/deltalake_core.datafile.writer.md#partitionwriterconfig",
+      "aliases": [
+        "deltalake::datafile::writer::PartitionWriterConfig",
+        "deltalake::operations::write::writer::PartitionWriterConfig",
+        "deltalake_core::operations::write::writer::PartitionWriterConfig"
+      ],
+      "methods": [
+        {
+          "name": "try_new",
+          "signature": "fn try_new(file_schema: ArrowSchemaRef, partition_values: IndexMap<String, Scalar>, writer_properties: Option<WriterProperties>, target_file_size: Option<NonZeroU64>, write_batch_size: Option<usize>, max_concurrency_tasks: Option<usize>, prefix_override: Option<Path>) -> DeltaResult<Self>",
+          "summary": "Create a new instance of [PartitionWriterConfig]"
+        },
+        {
+          "name": "with_roll_on_row_group_boundary",
+          "signature": "fn with_roll_on_row_group_boundary(self, roll_on_row_group_boundary: bool) -> Self",
+          "summary": "Defer the `target_file_size` file roll until the parquet writer's current row group is complete, so no file ends in a truncated row group."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::writer::WriterConfig",
+      "name": "WriterConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct WriterConfig",
+      "summary": "Configuration to write data into Delta tables",
+      "doc": "api/deltalake_core.datafile.writer.md#writerconfig",
+      "aliases": [
+        "deltalake::datafile::writer::WriterConfig",
+        "deltalake::operations::write::writer::WriterConfig",
+        "deltalake_core::operations::write::writer::WriterConfig"
+      ],
+      "methods": [
+        {
+          "name": "file_schema",
+          "signature": "fn file_schema(&self) -> ArrowSchemaRef",
+          "summary": "Schema of files written to disk"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(table_schema: ArrowSchemaRef, partition_columns: Vec<String>, writer_properties: Option<WriterProperties>, target_file_size: Option<NonZeroU64>, write_batch_size: Option<usize>, num_indexed_cols: DataSkippingNumIndexedCols, stats_columns: Option<Vec<String>>) -> Self",
+          "summary": "Create a new instance of [WriterConfig]."
+        },
+        {
+          "name": "with_random_prefix_length",
+          "signature": "fn with_random_prefix_length(self, length: Option<usize>) -> Self",
+          "summary": "Write data files under a random prefix of `length` chars instead of Hive-style dirs (column-mapped tables); `None` keeps the Hive layout."
+        }
+      ]
+    }
+  ]
+}

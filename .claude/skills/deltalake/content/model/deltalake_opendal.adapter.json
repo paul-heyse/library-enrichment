@@ -1,0 +1,98 @@
+{
+  "module": "deltalake_opendal::adapter",
+  "crate": "deltalake-opendal",
+  "api": "api/deltalake_opendal.adapter.md",
+  "items": [
+    {
+      "path": "deltalake_opendal::adapter::GenericAdapter",
+      "name": "GenericAdapter",
+      "kind": "struct",
+      "crate": "deltalake-opendal",
+      "signature": "struct GenericAdapter",
+      "summary": "Adapter for \"simple\" OpenDAL services whose operator is scoped at the bucket root: the URL host is the bucket and the URL path is the table prefix.",
+      "doc": "api/deltalake_opendal.adapter.md#genericadapter",
+      "aliases": [
+        "deltalake::opendal::GenericAdapter",
+        "deltalake_opendal::GenericAdapter"
+      ],
+      "fields": [
+        "service",
+        "option_prefix"
+      ],
+      "implements": [
+        "deltalake_opendal::adapter::OpendalAdapter"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(service: impl Into<String>) -> Self",
+          "summary": "A generic adapter for `service`, reading `opendal.<key>` storage options."
+        },
+        {
+          "name": "resolve",
+          "signature": "fn resolve(&self, url: &Url, config: &StorageConfig) -> DeltaResult<OperatorSpec>",
+          "via_trait": "deltalake_opendal::adapter::OpendalAdapter"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_opendal::adapter::OperatorSpec",
+      "name": "OperatorSpec",
+      "kind": "struct",
+      "crate": "deltalake-opendal",
+      "signature": "struct OperatorSpec",
+      "summary": "Everything the generic factories need to build an OpenDAL-backed store for a delta table: which OpenDAL service to use, its config, and where the table lives within the resulting operator.",
+      "doc": "api/deltalake_opendal.adapter.md#operatorspec",
+      "aliases": [
+        "deltalake::opendal::OperatorSpec",
+        "deltalake_opendal::OperatorSpec"
+      ],
+      "fields": [
+        "scheme",
+        "config",
+        "table_prefix"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_opendal::adapter::OpendalAdapter",
+      "name": "OpendalAdapter",
+      "kind": "trait",
+      "crate": "deltalake-opendal",
+      "signature": "trait OpendalAdapter: Send + Sync + std::fmt::Debug",
+      "summary": "Per-service specialization for the generic OpenDAL factories.",
+      "doc": "api/deltalake_opendal.adapter.md#opendaladapter",
+      "aliases": [
+        "deltalake::opendal::OpendalAdapter",
+        "deltalake_opendal::OpendalAdapter"
+      ],
+      "implementors": [
+        "deltalake_opendal::adapter::GenericAdapter"
+      ],
+      "required_methods": [
+        "resolve"
+      ],
+      "provided_methods": [
+        "logstore_prefix",
+        "wrap_store"
+      ],
+      "methods": [
+        {
+          "name": "logstore_prefix",
+          "signature": "fn logstore_prefix(&self, spec: &OperatorSpec) -> Path",
+          "summary": "The prefix the log store's `PrefixStore` should apply on top of the root store. Defaults to [`OperatorSpec::table_prefix`]."
+        },
+        {
+          "name": "resolve",
+          "signature": "fn resolve(&self, url: &Url, config: &StorageConfig) -> DeltaResult<OperatorSpec>",
+          "summary": "Map a delta table URL and storage options to an [`OperatorSpec`]."
+        },
+        {
+          "name": "wrap_store",
+          "signature": "fn wrap_store(&self, store: ObjectStoreRef, _spec: &OperatorSpec) -> ObjectStoreRef",
+          "summary": "Optionally wrap the raw `OpendalStore`. The default is the identity; an adapter may override this to rewrite paths or otherwise decorate the store."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "module": "ruff_formatter::formatter",
+  "crate": "ruff_formatter",
+  "api": "api/ruff_formatter.formatter.md",
+  "items": [
+    {
+      "path": "ruff_formatter::formatter::Formatter",
+      "name": "Formatter",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct Formatter<'buf, Context>",
+      "summary": "Handles the formatting of a CST and stores the context how the CST should be formatted (user preferences). The formatter is passed to the [Format] implementation of every node in the CST so that they can use it to format their children.",
+      "doc": "api/ruff_formatter.formatter.md#formatter",
+      "aliases": [
+        "ruff_formatter::prelude::Formatter"
+      ],
+      "implements": [
+        "ruff_formatter::buffer::Buffer"
+      ],
+      "methods": [
+        {
+          "name": "context",
+          "signature": "fn context(&self) -> &Context",
+          "summary": "Returns the Context specifying how to format the current CST"
+        },
+        {
+          "name": "context_mut",
+          "signature": "fn context_mut(&mut self) -> &mut Context",
+          "summary": "Returns a mutable reference to the context."
+        },
+        {
+          "name": "fill",
+          "signature": "fn fill<'a>(&'a mut self) -> FillBuilder<'a, 'buf, Context>",
+          "summary": "Concatenates a list of [`crate::Format`] objects with spaces and line breaks to fit them on as few lines as possible. Each element introduces a conceptual group. The printer first tries to print the item in flat mode but then prints it in…"
+        },
+        {
+          "name": "group_id",
+          "signature": "fn group_id(&self, debug_name: &'static str) -> GroupId",
+          "summary": "Creates a new group id that is unique to this document. The passed debug name is used in the [`std::fmt::Debug`] of the document if this is a debug build. The name is unused for production builds and has no meaning on the equality of two g…"
+        },
+        {
+          "name": "intern_vec",
+          "signature": "fn intern_vec(&mut self, elements: Vec<FormatElement>) -> Option<FormatElement>"
+        },
+        {
+          "name": "join",
+          "signature": "fn join<'a>(&'a mut self) -> JoinBuilder<'a, 'buf, (), Context>",
+          "summary": "Joins multiple [Format] together without any separator"
+        },
+        {
+          "name": "join_with",
+          "signature": "fn join_with<'a, Joiner>(&'a mut self, joiner: Joiner) -> JoinBuilder<'a, 'buf, Joiner, Context> where Joiner: Format<Context>",
+          "summary": "Joins the objects by placing the specified separator between every two items."
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &Context::Options where Context: FormatContext",
+          "summary": "Returns the format options"
+        },
+        {
+          "name": "restore_snapshot",
+          "signature": "fn restore_snapshot(&mut self, snapshot: BufferSnapshot)",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        },
+        {
+          "name": "restore_state_snapshot",
+          "signature": "fn restore_state_snapshot(&mut self, snapshot: FormatterSnapshot)",
+          "summary": "Restore the state of the formatter to a previous snapshot"
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> BufferSnapshot",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        },
+        {
+          "name": "state",
+          "signature": "fn state(&self) -> &FormatState<Self::Context>",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        },
+        {
+          "name": "state_mut",
+          "signature": "fn state_mut(&mut self) -> &mut FormatState<Self::Context>",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        },
+        {
+          "name": "state_snapshot",
+          "signature": "fn state_snapshot(&self) -> FormatterSnapshot",
+          "summary": "Take a snapshot of the state of the formatter"
+        },
+        {
+          "name": "write_element",
+          "signature": "fn write_element(&mut self, element: FormatElement)",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        },
+        {
+          "name": "write_fmt",
+          "signature": "fn write_fmt(&mut self, arguments: Arguments<'_, Self::Context>) -> FormatResult<()>",
+          "via_trait": "ruff_formatter::buffer::Buffer"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::formatter::FormatterSnapshot",
+      "name": "FormatterSnapshot",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct FormatterSnapshot",
+      "summary": "Snapshot of the formatter state  used to handle backtracking if errors are encountered in the formatting process and the formatter has to fallback to printing raw tokens",
+      "doc": "api/ruff_formatter.formatter.md#formattersnapshot"
+    }
+  ]
+}

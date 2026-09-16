@@ -50,7 +50,7 @@ async def test_all_nine_tools_are_registered() -> None:
 
 
 def test_inline_success_cannot_use_a_receipt_or_an_empty_payload() -> None:
-    sample = json.loads((ROOT / "contracts/research-v2/examples/ok.fixture.json").read_text())
+    sample = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
     for tool in TOOL_NAMES:
         invalid = sample | {"data": {}}
         with pytest.raises(ValueError):
@@ -194,7 +194,7 @@ def test_rust_generated_request_contract_rejects_unknown_and_invalid_types():
 
 def test_terminal_result_and_page_keep_native_cross_field_constraints() -> None:
     schema = presentation.output_schema("job_control")
-    fixture = json.loads((ROOT / "contracts/research-v2/examples/ok.fixture.json").read_text())
+    fixture = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
     terminal = {
         key: fixture[key]
         for key in ("summary", "context_id", "snapshot_id", "coverage", "delivery", "error")

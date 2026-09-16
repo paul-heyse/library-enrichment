@@ -1,0 +1,355 @@
+{
+ "api": "api/fastmcp.server.providers.fastmcp_provider.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "aliases": [
+    "fastmcp.server.mixins.transport.FastMCPProvider",
+    "fastmcp.server.providers.FastMCPProvider"
+   ],
+   "bases": [
+    "Provider"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.providers.fastmcp_provider.md#fastmcpprovider",
+   "inherits": {
+    "fastmcp.server.providers.base.Provider": [
+     "add_transform",
+     "disable",
+     "enable",
+     "get_prompt",
+     "get_resource",
+     "get_resource_template",
+     "get_tool",
+     "list_prompts",
+     "list_resource_templates",
+     "list_resources",
+     "list_tools",
+     "transforms",
+     "wrap_transform"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_app_tool",
+     "signature": "async def get_app_tool(self, app_name: str, tool_name: str) -> Tool | None",
+     "summary": "Delegate to nested server's get_app_tool, wrapping for middleware."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_tasks",
+     "signature": "async def get_tasks(self) -> Sequence[FastMCPComponent]",
+     "summary": "Return task-eligible components from the mounted server."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_tool_by_hash",
+     "signature": "async def get_tool_by_hash(self, tool_hash: str, tool_name: str) -> Tool | None",
+     "summary": "Delegate to nested server's get_tool_by_hash, wrapping for middleware."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "lifespan",
+     "signature": "async def lifespan(self) -> AsyncIterator[None]",
+     "summary": "Start the mounted server's lifespan."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "server",
+     "signature": "server = server"
+    }
+   ],
+   "name": "FastMCPProvider",
+   "nameable": true,
+   "path": "fastmcp.server.providers.fastmcp_provider.FastMCPProvider",
+   "preferred": "fastmcp.server.providers.FastMCPProvider",
+   "signature": "class FastMCPProvider(Provider)",
+   "summary": "Provider that wraps a FastMCP server."
+  },
+  {
+   "bases": [
+    "Prompt"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.providers.fastmcp_provider.md#fastmcpproviderprompt",
+   "inherits": {
+    "fastmcp.prompts.base.Prompt": [
+     "KEY_PREFIX",
+     "arguments",
+     "auth",
+     "convert_result",
+     "from_function",
+     "to_mcp_prompt"
+    ],
+    "fastmcp.utilities.components.FastMCPComponent": [
+     "description",
+     "disable",
+     "enable",
+     "get_meta",
+     "icons",
+     "key",
+     "make_key",
+     "meta",
+     "name",
+     "tags",
+     "task_config",
+     "title",
+     "version"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "get_span_attributes",
+     "signature": "def get_span_attributes(self) -> dict[str, Any]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "render",
+     "signature": "async def render(self, arguments: dict[str, Any] | None = None) -> PromptResult",
+     "summary": "Delegate to the child server's render_prompt()."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "wrap",
+     "signature": "def wrap(cls, server: Any, prompt: Prompt) -> FastMCPProviderPrompt",
+     "summary": "Wrap a Prompt to delegate rendering to the server's middleware."
+    }
+   ],
+   "name": "FastMCPProviderPrompt",
+   "nameable": true,
+   "path": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderPrompt",
+   "preferred": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderPrompt",
+   "signature": "class FastMCPProviderPrompt(Prompt)",
+   "summary": "Prompt that delegates rendering to a wrapped server's render_prompt()."
+  },
+  {
+   "bases": [
+    "Resource"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.providers.fastmcp_provider.md#fastmcpproviderresource",
+   "inherits": {
+    "fastmcp.resources.base.Resource": [
+     "KEY_PREFIX",
+     "annotations",
+     "auth",
+     "convert_result",
+     "from_function",
+     "key",
+     "mime_type",
+     "name",
+     "read",
+     "set_default_mime_type",
+     "set_default_name",
+     "to_mcp_resource",
+     "uri"
+    ],
+    "fastmcp.utilities.components.FastMCPComponent": [
+     "description",
+     "disable",
+     "enable",
+     "get_meta",
+     "icons",
+     "make_key",
+     "meta",
+     "tags",
+     "task_config",
+     "title",
+     "version"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "get_span_attributes",
+     "signature": "def get_span_attributes(self) -> dict[str, Any]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "wrap",
+     "signature": "def wrap(cls, server: Any, resource: Resource) -> FastMCPProviderResource",
+     "summary": "Wrap a Resource to delegate reading to the server's middleware."
+    }
+   ],
+   "name": "FastMCPProviderResource",
+   "nameable": true,
+   "path": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderResource",
+   "preferred": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderResource",
+   "signature": "class FastMCPProviderResource(Resource)",
+   "summary": "Resource that delegates reading to a wrapped server's read_resource()."
+  },
+  {
+   "bases": [
+    "ResourceTemplate"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.providers.fastmcp_provider.md#fastmcpproviderresourcetemplate",
+   "inherits": {
+    "fastmcp.resources.template.ResourceTemplate": [
+     "KEY_PREFIX",
+     "annotations",
+     "auth",
+     "convert_result",
+     "from_function",
+     "from_mcp_template",
+     "key",
+     "matches",
+     "mime_type",
+     "parameters",
+     "read",
+     "resolve_security",
+     "security",
+     "set_default_mime_type",
+     "to_mcp_template",
+     "uri_template"
+    ],
+    "fastmcp.utilities.components.FastMCPComponent": [
+     "description",
+     "disable",
+     "enable",
+     "get_meta",
+     "icons",
+     "make_key",
+     "meta",
+     "name",
+     "tags",
+     "task_config",
+     "title",
+     "version"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "create_resource",
+     "signature": "async def create_resource(self, uri: str, params: dict[str, Any]) -> Resource",
+     "summary": "Create a FastMCPProviderResource for the given URI."
+    },
+    {
+     "kind": "function",
+     "name": "get_span_attributes",
+     "signature": "def get_span_attributes(self) -> dict[str, Any]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "wrap",
+     "signature": "def wrap(cls, server: Any, template: ResourceTemplate) -> FastMCPProviderResourceTemplate",
+     "summary": "Wrap a ResourceTemplate to create FastMCPProviderResources."
+    }
+   ],
+   "name": "FastMCPProviderResourceTemplate",
+   "nameable": true,
+   "path": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderResourceTemplate",
+   "preferred": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderResourceTemplate",
+   "signature": "class FastMCPProviderResourceTemplate(ResourceTemplate)",
+   "summary": "Resource template that creates FastMCPProviderResources."
+  },
+  {
+   "bases": [
+    "Tool"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.providers.fastmcp_provider.md#fastmcpprovidertool",
+   "inherits": {
+    "fastmcp.tools.base.Tool": [
+     "KEY_PREFIX",
+     "annotations",
+     "auth",
+     "convert_result",
+     "execution",
+     "from_function",
+     "from_tool",
+     "output_schema",
+     "parameters",
+     "return_type",
+     "timeout",
+     "to_mcp_tool"
+    ],
+    "fastmcp.utilities.components.FastMCPComponent": [
+     "description",
+     "disable",
+     "enable",
+     "get_meta",
+     "icons",
+     "key",
+     "make_key",
+     "meta",
+     "name",
+     "tags",
+     "task_config",
+     "title",
+     "version"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "get_span_attributes",
+     "signature": "def get_span_attributes(self) -> dict[str, Any]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "run",
+     "signature": "async def run(self, arguments: dict[str, Any]) -> ToolResult",
+     "summary": "Delegate to the child server's call_tool()."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "wrap",
+     "signature": "def wrap(cls, server: Any, tool: Tool) -> FastMCPProviderTool",
+     "summary": "Wrap a Tool to delegate execution to the server's middleware."
+    }
+   ],
+   "name": "FastMCPProviderTool",
+   "nameable": true,
+   "path": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderTool",
+   "preferred": "fastmcp.server.providers.fastmcp_provider.FastMCPProviderTool",
+   "signature": "class FastMCPProviderTool(Tool)",
+   "summary": "Tool that delegates execution to a wrapped server's middleware."
+  }
+ ],
+ "module": "fastmcp.server.providers.fastmcp_provider"
+}

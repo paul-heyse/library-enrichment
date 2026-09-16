@@ -1,0 +1,25 @@
+id: project-write-without-schema-mode
+language: rust
+severity: hint
+message: A write is awaited with no schema mode; a new column will not be added silently.
+note: |
+  `WriteBuilder` neither merges nor overwrites the schema by default. If the incoming batches
+  carry a column the table does not have, the default is not "evolve" -- so a pipeline whose
+  source gains a field silently stops carrying it, or starts erroring, depending on the path.
+  Set the schema mode explicitly, even if you set it to the default, so the choice is visible.
+  See content/catalogs/operations.md and content/topics/writing.md.
+metadata:
+  record: capability-gap
+  capability: schema-evolution
+rule:
+  kind: await_expression
+  all:
+    - has:
+        kind: field_identifier
+        regex: '^write$'
+        stopBy: end
+    - not:
+        has:
+          kind: field_identifier
+          regex: '^with_schema_mode$'
+          stopBy: end

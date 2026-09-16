@@ -1,0 +1,98 @@
+{
+  "module": "ruff_db::parsed",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.parsed.md",
+  "items": [
+    {
+      "path": "ruff_db::parsed::parsed_module",
+      "name": "parsed_module",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn parsed_module<'db>(db: &'db dyn Db, file: PythonFile<'_>) -> &'db ParsedModule",
+      "summary": "Returns the parsed AST of `file`, including its token stream.",
+      "doc": "api/ruff_db.parsed.md#parsed_module"
+    },
+    {
+      "path": "ruff_db::parsed::parsed_string_annotation",
+      "name": "parsed_string_annotation",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn parsed_string_annotation(source: &str, string: &ruff_python_ast::StringLiteral) -> Result<ruff_python_parser::Parsed<ruff_python_ast::ModExpression>, ruff_python_parser::ParseError>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_db::parsed::ParsedModule",
+      "name": "ParsedModule",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct ParsedModule",
+      "summary": "A wrapper around a parsed module.",
+      "doc": "api/ruff_db.parsed.md#parsedmodule",
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "clear",
+          "signature": "fn clear(&self)",
+          "summary": "Clear the parsed module, dropping the AST once all references to it are dropped."
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self) -> File",
+          "summary": "Returns the file to which this module belongs."
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "load",
+          "signature": "fn load(&self, db: &dyn Db) -> ParsedModuleRef",
+          "summary": "Loads a reference to the parsed module."
+        },
+        {
+          "name": "python_version",
+          "signature": "fn python_version(&self) -> PythonVersion",
+          "summary": "Returns the Python version used to parse this module."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::parsed::ParsedModuleRef",
+      "name": "ParsedModuleRef",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct ParsedModuleRef",
+      "summary": "Cheap cloneable wrapper around an instance of a module AST.",
+      "doc": "api/ruff_db.parsed.md#parsedmoduleref",
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "get_by_index",
+          "signature": "fn get_by_index<'ast>(&'ast self, index: NodeIndex) -> AnyRootNodeRef<'ast>",
+          "summary": "Returns a reference to the AST node at the given index."
+        },
+        {
+          "name": "module",
+          "signature": "fn module(&self) -> &ParsedModule",
+          "summary": "Returns a reference to the [`ParsedModule`] that this instance was loaded from."
+        }
+      ]
+    }
+  ]
+}

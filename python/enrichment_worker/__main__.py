@@ -3,26 +3,31 @@
 from __future__ import annotations
 
 import importlib.metadata
+import io
+import json
 import platform
 import resource
 import sys
 import tokenize
-from collections.abc import Iterator
+from collections.abc import Buffer, Iterator
+from importlib.resources import files
 from pathlib import Path
+from typing import BinaryIO
 
 import griffe
+import pyarrow as pa
 
 from enrichment_mcp._generated.worker_schema import (
     Observation,
     Publicness,
     WorkerFile,
-    WorkerGap,
     WorkerRequest,
-    WorkerResponse,
 )
 
 MAX_INPUT = 4 * 1024 * 1024
-MAX_OUTPUT = 16 * 1024 * 1024
+with files("enrichment_worker").joinpath("_schemas/worker.arrow").open("rb") as _schema_file:
+    SCHEMA = pa.ipc.open_stream(_schema_file).schema
+CONTRACT = json.loads(SCHEMA.metadata[b"enrichment.worker"])
 
 
 def _publicness(obj: griffe.Object | griffe.Alias, parent: griffe.Object | None) -> Publicness:
@@ -86,78 +91,125 @@ def _walk(
                 yield _observation(overloads[0], file, obj, overloads)
 
 
-def extract(request: WorkerRequest) -> WorkerResponse:
-    """Return independent per-file observations under the Rust-provided inventory."""
-    if request.schema_version != "1.0" or not 1 <= request.max_observations <= 100000:
-        raise ValueError("unsupported worker protocol or observation bound")
+class BoundedSink(io.RawIOBase):
+    """Transport byte ceiling, applied before every native IPC write."""
+
+    def __init__(self, output: BinaryIO) -> None:
+        self.output = output
+        self.position = 0
+
+    def writable(self) -> bool:
+        return True
+
+    def tell(self) -> int:
+        return self.position
+
+    def write(self, data: Buffer, /) -> int:
+        if self.position + memoryview(data).nbytes > CONTRACT["max_bytes"]:
+            raise ValueError("worker Arrow output exceeds byte budget")
+        written = self.output.write(data)
+        self.position += written
+        return written
+
+
+def extract(request: WorkerRequest, output: BinaryIO) -> None:
+    """Stream mechanical facts and per-file receipts under the Rust-owned schema."""
+    if request.schema_version != CONTRACT["protocol"]:
+        raise ValueError("unsupported worker protocol")
+    if not 1 <= request.max_observations <= CONTRACT["max_observations"]:
+        raise ValueError("unsupported worker observation bound")
+    if len(request.files) > CONTRACT["max_files"]:
+        raise ValueError("worker file inventory exceeds bound")
+    if importlib.metadata.version("pyarrow") != CONTRACT["encoder"]:
+        raise ValueError("worker Arrow encoder pin mismatch")
+    if importlib.metadata.version("griffe") != CONTRACT["griffe"]:
+        raise ValueError("worker Griffe pin mismatch")
     root = Path(request.root)
     if not root.is_absolute() or not root.is_dir():
         raise ValueError("worker needs an explicit absolute input root")
     root = root.resolve(strict=True)
-    # The loader provides reviewed extensions and shared collections to the AST visitor.
-    # Never call load(): independent visits preserve source/stub disagreements and avoid
-    # sys.path discovery, .pth redirects, package imports and implicit source/stub merging.
     loader = griffe.GriffeLoader(
         search_paths=[root], allow_inspection=False, force_inspection=False
     )
-    observations: list[Observation] = []
-    processed: list[str] = []
-    gaps: list[WorkerGap] = []
-    retained_bytes = 0
-    for file in request.files:
-        start = len(observations)
-        previous_bytes = retained_bytes
-        try:
-            relative = Path(file.file)
-            if relative.is_absolute() or ".." in relative.parts:
-                raise ValueError("file is not an archive-relative path")
-            path = root / relative
-            if path.is_symlink() or not path.resolve(strict=True).is_relative_to(root):
-                raise ValueError("file escaped the sanitized input root")
-            if path.stat().st_size > 8 * 1024 * 1024:
-                raise ValueError("source file exceeds static worker byte budget")
-            with tokenize.open(path) as stream:
-                code = stream.read()
-            module = griffe.visit(
-                file.module,
-                path,
-                code,
-                extensions=loader.extensions,
-                lines_collection=loader.lines_collection,
-                modules_collection=loader.modules_collection,
-            )
-            for fact in _walk(module, file):
-                size = len(fact.model_dump_json().encode())
-                if size > 1024 * 1024:
-                    raise ValueError("declaration exceeds 1 MiB; source artifact remains available")
-                if len(observations) >= request.max_observations:
-                    raise ValueError("observation budget exhausted")
-                if retained_bytes + size > MAX_OUTPUT - 65536:
-                    raise ValueError("retained observation byte budget exhausted")
-                observations.append(fact)
-                retained_bytes += size
-            processed.append(file.file)
-        except (OSError, ValueError, SyntaxError, UnicodeError, RecursionError) as error:
-            del observations[start:]
-            retained_bytes = previous_bytes
-            gaps.append(
-                WorkerGap(
-                    file=file.file,
-                    reason=f"{type(error).__name__}: {error}".replace(str(root), "<input>"),
-                )
-            )
-    return WorkerResponse(
-        schema_version="1.0",
-        griffe_version=importlib.metadata.version("griffe"),
-        worker_python=platform.python_version(),
-        observations=observations,
-        processed_files=processed,
-        gaps=gaps,
+    options = pa.ipc.IpcWriteOptions(
+        metadata_version=pa.ipc.MetadataVersion.V5, use_legacy_format=False, compression=None
     )
+    with pa.ipc.new_stream(BoundedSink(output), SCHEMA, options=options) as writer:
+        pending: list[pa.RecordBatch] = []
+        pending_bytes = 0
+
+        def flush() -> None:
+            nonlocal pending_bytes
+            if pending:
+                writer.write_table(pa.Table.from_batches(pending).combine_chunks())
+                pending.clear()
+                pending_bytes = 0
+
+        def emit(**values: object) -> None:
+            nonlocal pending_bytes
+            batch = pa.RecordBatch.from_pylist([values], schema=SCHEMA)
+            batch.validate(full=True)
+            if batch.nbytes > CONTRACT["batch_bytes"]:
+                raise ValueError("declaration exceeds Arrow batch byte budget")
+            if (
+                len(pending) >= CONTRACT["batch_rows"]
+                or pending_bytes + batch.nbytes > CONTRACT["batch_bytes"]
+            ):
+                flush()
+            pending.append(batch)
+            pending_bytes += batch.nbytes
+
+        emit(
+            fact="producer",
+            griffe_version=importlib.metadata.version("griffe"),
+            worker_python=platform.python_version(),
+            encoder_version=pa.__version__,
+        )
+        total = 0
+        for file in request.files:
+            count = 0
+            try:
+                relative = Path(file.file)
+                if relative.is_absolute() or ".." in relative.parts:
+                    raise ValueError("file is not an archive-relative path")
+                path = root / relative
+                if path.is_symlink() or not path.resolve(strict=True).is_relative_to(root):
+                    raise ValueError("file escaped the sanitized input root")
+                if path.stat().st_size > 8 * 1024 * 1024:
+                    raise ValueError("source file exceeds static worker byte budget")
+                with tokenize.open(path) as stream:
+                    code = stream.read()
+                module = griffe.visit(
+                    file.module,
+                    path,
+                    code,
+                    extensions=loader.extensions,
+                    lines_collection=loader.lines_collection,
+                    modules_collection=loader.modules_collection,
+                )
+                for fact in _walk(module, file):
+                    if total >= request.max_observations:
+                        raise ValueError("observation budget exhausted")
+                    emit(
+                        fact="observation",
+                        file=file.file,
+                        ordinal=count,
+                        observation=fact.model_dump(mode="json"),
+                    )
+                    total += 1
+                    count += 1
+                emit(fact="file_complete", file=file.file, count=count)
+            except (OSError, ValueError, SyntaxError, UnicodeError, RecursionError) as error:
+                # Already-streamed declarations remain raw facts. Native admission joins
+                # only completed file receipts, so partial files never publish declarations.
+                detail = f"{type(error).__name__}: {error}".replace(str(root), "<input>")[:4096]
+                emit(fact="file_gap", file=file.file, count=count, detail=detail)
+        emit(fact="complete", count=total)
+        flush()
 
 
 def main() -> int:
-    """Read one schema-validated job and write exactly one JSON response."""
+    """Read one request and emit one bounded Arrow IPC V5 fact stream."""
     try:
         raw = sys.stdin.buffer.read(MAX_INPUT + 1)
         if len(raw) > MAX_INPUT:
@@ -178,11 +230,7 @@ def main() -> int:
             resource.setrlimit(kind, selected)
             if resource.getrlimit(kind) != selected:
                 raise ValueError("worker process limit installation failed")
-        result = extract(request)
-        output = result.model_dump_json().encode()
-        if len(output) > MAX_OUTPUT:
-            raise ValueError("worker output exceeds byte budget")
-        sys.stdout.buffer.write(output + b"\n")
+        extract(request, sys.stdout.buffer)
         sys.stdout.buffer.flush()
         return 0
     except (OSError, ValueError, MemoryError) as error:

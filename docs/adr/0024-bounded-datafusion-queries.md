@@ -1,7 +1,7 @@
 ---
 id: ADR-0024
 title: Execute typed evidence queries through bounded DataFusion plans
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§B7, §7.1, §7.3, §8.4, §14.3]
 review: docs/design_review/reviews/design_review_arrow-target-contract_2026-09-14.md
 evidence: Proposed
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0041
 revisit: A measured query fails its semantic or resource contract using the current built-in operators.
 verification: query_contract; query_resources; search_truth_table; comparison_relational; arrow_projection; query_workload
 ---
@@ -106,3 +106,4 @@ or automatic project editing is added.
 
 - 2026-09-14 — proposed for target-contract review; implementation authorized.
 - 2026-09-14 — accepted at Proposed contract scope by the target-contract review; implementation and executable acceptance remain open.
+- 2026-09-15 — superseded by ADR-0041.

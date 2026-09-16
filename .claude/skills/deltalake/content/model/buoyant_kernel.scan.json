@@ -1,0 +1,272 @@
+{
+  "module": "buoyant_kernel::scan",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.scan.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::scan::StructStats",
+      "name": "StructStats",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum StructStats",
+      "summary": "Which struct stats columns appear in `stats_parsed` in scan metadata output.",
+      "doc": "api/buoyant_kernel.scan.md#structstats",
+      "aliases": [
+        "delta_kernel::scan::StructStats"
+      ],
+      "variants": [
+        "None",
+        "All",
+        "Columns"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::scan::get_transform_for_row",
+      "name": "get_transform_for_row",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn get_transform_for_row(row: usize, transforms: &[Option<expressions::ExpressionRef>]) -> Option<expressions::ExpressionRef>",
+      "summary": "utility method making it easy to get a transform for a particular row. If the requested row is outside the range of the passed slice returns `None`, otherwise returns the element at the index of the specified row",
+      "doc": "api/buoyant_kernel.scan.md#get_transform_for_row",
+      "aliases": [
+        "delta_kernel::scan::get_transform_for_row"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::scan_row_schema",
+      "name": "scan_row_schema",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn scan_row_schema() -> schema::SchemaRef",
+      "summary": "Get the base schema that scan rows (from [`Scan::scan_metadata`]) will be returned with.",
+      "doc": "api/buoyant_kernel.scan.md#scan_row_schema",
+      "aliases": [
+        "delta_kernel::scan::scan_row_schema"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::selection_vector",
+      "name": "selection_vector",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn selection_vector(engine: &dyn Engine, descriptor: &actions::deletion_vector::DeletionVectorDescriptor, table_root: &url::Url) -> DeltaResult<Vec<bool>>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::scan::selection_vector"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::PartitionValuesOptions",
+      "name": "PartitionValuesOptions",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct PartitionValuesOptions",
+      "summary": "Engine-facing partition value options. Pass to [`ScanBuilder::with_partition_values`] to declare whether scan metadata output includes the typed `partitionValues_parsed` struct alongside the raw string map (`fileConstantValues.partitionVal…",
+      "doc": "api/buoyant_kernel.scan.md#partitionvaluesoptions",
+      "aliases": [
+        "delta_kernel::scan::PartitionValuesOptions"
+      ],
+      "methods": [
+        {
+          "name": "string_map_only",
+          "signature": "fn string_map_only() -> Self",
+          "summary": "Raw string map only, no typed struct. Equivalent to [`Default::default`]."
+        },
+        {
+          "name": "with_struct",
+          "signature": "fn with_struct() -> Self",
+          "summary": "Emit the typed `partitionValues_parsed` struct alongside the raw string map. Lets engines consume `partitionValues_parsed` directly instead of parsing the string map per row."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::Scan",
+      "name": "Scan",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Scan",
+      "summary": "The result of building a scan over a table. This can be used to get the actual data from scanning the table.",
+      "doc": "api/buoyant_kernel.scan.md#scan",
+      "aliases": [
+        "delta_kernel::scan::Scan"
+      ],
+      "methods": [
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, engine: Arc<dyn Engine>) -> DeltaResult<impl Iterator<Item = DeltaResult<Box<dyn EngineData>>>>",
+          "summary": "Perform an \"all in one\" scan. This will use the provided `engine` to read and process all the data for the query. Each [`EngineData`] in the resultant iterator is a portion of the final table data. Generally connectors/engines will want to…"
+        },
+        {
+          "name": "logical_schema",
+          "signature": "fn logical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the logical [`Schema`] of the scan (i.e. the output schema of the scan). Note that the logical schema can differ from the physical schema due to e.g. partition columns which are present in the logical schema but n…"
+        },
+        {
+          "name": "parallel_scan_metadata",
+          "signature": "fn parallel_scan_metadata(&self, engine: Arc<dyn Engine>) -> DeltaResult<SequentialScanMetadata>",
+          "summary": "Start a parallel scan metadata processing for the table."
+        },
+        {
+          "name": "physical_predicate",
+          "signature": "fn physical_predicate(&self) -> Option<PredicateRef>",
+          "summary": "Get the predicate [`PredicateRef`] of the scan."
+        },
+        {
+          "name": "physical_schema",
+          "signature": "fn physical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the physical [`Schema`] of the scan. This represents the schema of the underlying data files which must be read from storage."
+        },
+        {
+          "name": "scan_metadata",
+          "signature": "fn scan_metadata(&self, engine: &dyn Engine) -> DeltaResult<impl Iterator<Item = DeltaResult<ScanMetadata>>>",
+          "summary": "Get an iterator of [`ScanMetadata`]s that should be used to facilitate a scan. This handles log-replay, reconciling Add and Remove actions, and applying data skipping (if possible)."
+        },
+        {
+          "name": "scan_metadata_from",
+          "signature": "fn scan_metadata_from(&self, engine: &dyn Engine, existing_version: Version, existing_data: impl IntoIterator<Item = Box<dyn EngineData>> + 'static, _existing_predicate: Option<PredicateRef>) -> DeltaResult<Box<dyn Iterator<Item = DeltaResult<ScanMetadata>>>>",
+          "summary": "Get an updated iterator of [`ScanMetadata`]s based on an existing iterator of [`EngineData`]s."
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> &SnapshotRef",
+          "summary": "Get a shared reference to the [`Snapshot`] of this scan."
+        },
+        {
+          "name": "table_root",
+          "signature": "fn table_root(&self) -> &Url",
+          "summary": "The table's root URL. Any relative paths returned from `scan_data` (or in a callback from [`ScanMetadata::visit_scan_files`]) must be resolved against this root to get the actual path to the file."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::ScanBuilder",
+      "name": "ScanBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ScanBuilder",
+      "summary": "Builder to scan a snapshot of a table.",
+      "doc": "api/buoyant_kernel.scan.md#scanbuilder",
+      "aliases": [
+        "delta_kernel::scan::ScanBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<Scan>",
+          "summary": "Build the [`Scan`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(snapshot: impl Into<SnapshotRef>) -> Self",
+          "summary": "Create a new [`ScanBuilder`] instance."
+        },
+        {
+          "name": "with_correlation_id",
+          "signature": "fn with_correlation_id(self, correlation_id: impl Into<Arc<str>>) -> Self",
+          "summary": "Attach an opaque, caller-supplied correlation id for joining this scan's metric events to the caller's own request or operation id. An empty id is treated as unset. When unset, behavior is unchanged."
+        },
+        {
+          "name": "with_partition_values",
+          "signature": "fn with_partition_values(self, partition_values: PartitionValuesOptions) -> Self",
+          "summary": "Configure partition value output for the scan. See [`PartitionValuesOptions`]."
+        },
+        {
+          "name": "with_predicate",
+          "signature": "fn with_predicate(self, predicate: impl Into<Option<PredicateRef>>) -> Self",
+          "summary": "Optionally provide an expression to filter rows. For example, using the predicate `x < 4` to return a subset of the rows in the scan which satisfy the filter. If `predicate_opt` is `None`, this is a no-op."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, logical_read_schema: SchemaRef) -> Self",
+          "summary": "Provide [`Schema`] for columns to select from the [`Snapshot`]."
+        },
+        {
+          "name": "with_schema_opt",
+          "signature": "fn with_schema_opt(self, schema_opt: Option<SchemaRef>) -> Self",
+          "summary": "Optionally provide a [`SchemaRef`] for columns to select from the [`Snapshot`]. See [`ScanBuilder::with_schema`] for details. If `schema_opt` is `None` this is a no-op."
+        },
+        {
+          "name": "with_stats",
+          "signature": "fn with_stats(self, stats: StatsOptions) -> Self",
+          "summary": "Configure stats output for the scan. See [`StatsOptions`]."
+        },
+        {
+          "name": "without_row_transforms",
+          "signature": "fn without_row_transforms(self) -> Self",
+          "summary": "Declare that the engine will reconstruct logical rows itself and will not consume [`ScanMetadata::scan_file_transforms`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::ScanMetadata",
+      "name": "ScanMetadata",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ScanMetadata",
+      "summary": "[`ScanMetadata`] contains (1) a batch of [`FilteredEngineData`] specifying data files to be scanned and (2) a vector of transforms (one transform per scan file) that must be applied to the data read from those files.",
+      "doc": "api/buoyant_kernel.scan.md#scanmetadata",
+      "aliases": [
+        "delta_kernel::scan::ScanMetadata"
+      ],
+      "fields": [
+        "scan_files",
+        "scan_file_transforms"
+      ],
+      "implements": [
+        "buoyant_kernel::log_replay::HasSelectionVector"
+      ],
+      "methods": [
+        {
+          "name": "has_selected_rows",
+          "signature": "fn has_selected_rows(&self) -> bool",
+          "via_trait": "buoyant_kernel::log_replay::HasSelectionVector"
+        },
+        {
+          "name": "visit_scan_files",
+          "signature": "fn visit_scan_files<T>(&self, context: T, callback: ScanCallback<T>) -> DeltaResult<T>"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::StatsOptions",
+      "name": "StatsOptions",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StatsOptions",
+      "summary": "Engine-facing stats options. Pass to [`ScanBuilder::with_stats`] to declare what stats data the engine wants in scan metadata output. Two orthogonal axes: JSON stats (`add.stats`) and struct stats (`add.stats_parsed`).",
+      "doc": "api/buoyant_kernel.scan.md#statsoptions",
+      "aliases": [
+        "delta_kernel::scan::StatsOptions"
+      ],
+      "methods": [
+        {
+          "name": "all",
+          "signature": "fn all() -> Self",
+          "summary": "Both JSON and struct stats. Pays for both representations."
+        },
+        {
+          "name": "all_struct",
+          "signature": "fn all_struct() -> Self",
+          "summary": "All struct stats, no JSON. Cheap path for engines that consume `stats_parsed` directly: avoids the per-batch `ToJson` cost on parsed-stats checkpoints."
+        },
+        {
+          "name": "json_only",
+          "signature": "fn json_only() -> Self",
+          "summary": "JSON only. Equivalent to [`Default::default`]."
+        },
+        {
+          "name": "none",
+          "signature": "fn none() -> Self",
+          "summary": "**Disables all stats work**: no stats output, no internal data skipping (even when a predicate is set). Kernel reads no stats columns from parquet at all. Use when the engine handles its own pruning."
+        },
+        {
+          "name": "struct_columns",
+          "signature": "fn struct_columns(cols: Vec<ColumnName>) -> Self",
+          "summary": "Struct stats projected to the specified columns, no JSON. Like [`Self::all_struct`] but narrowed to a subset of indexed columns."
+        }
+      ]
+    }
+  ]
+}

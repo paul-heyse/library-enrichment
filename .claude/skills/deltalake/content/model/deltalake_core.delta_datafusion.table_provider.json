@@ -1,0 +1,196 @@
+{
+  "module": "deltalake_core::delta_datafusion::table_provider",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.delta_datafusion.table_provider.md",
+  "items": [
+    {
+      "path": "deltalake_core::delta_datafusion::table_provider::DeltaScanConfig",
+      "name": "DeltaScanConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaScanConfig",
+      "summary": "Include additional metadata columns during a [`crate::delta_datafusion::DeltaScanNext`]",
+      "doc": "api/deltalake_core.delta_datafusion.table_provider.md#deltascanconfig",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaScanConfig",
+        "deltalake_core::delta_datafusion::DeltaScanConfig"
+      ],
+      "fields": [
+        "file_column_name",
+        "wrap_partition_values",
+        "enable_parquet_pushdown",
+        "schema_force_view_types",
+        "schema"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create a new default [`DeltaScanConfig`]"
+        },
+        {
+          "name": "new_from_session",
+          "signature": "fn new_from_session(session: &dyn Session) -> Self",
+          "summary": "Create a config seeded from an active DataFusion [`Session`], inheriting its Parquet pushdown and view-type settings so the scan matches the session's behavior."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "with_file_column_name",
+          "signature": "fn with_file_column_name<S: ToString>(self, name: S) -> Self",
+          "summary": "Set the name of the synthetic column that exposes each row's source file path."
+        },
+        {
+          "name": "with_parquet_pushdown",
+          "signature": "fn with_parquet_pushdown(self, pushdown: bool) -> Self",
+          "summary": "Allow pushdown of the scan filter"
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Use the provided [SchemaRef] for the [`crate::delta_datafusion::DeltaScanNext`]"
+        },
+        {
+          "name": "with_wrap_partition_values",
+          "signature": "fn with_wrap_partition_values(self, wrap: bool) -> Self",
+          "summary": "Whether to wrap partition values in a dictionary encoding"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::table_provider::DeltaScanConfigBuilder",
+      "name": "DeltaScanConfigBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaScanConfigBuilder",
+      "summary": "Used to specify if additional metadata columns are exposed to the user",
+      "doc": "api/deltalake_core.delta_datafusion.table_provider.md#deltascanconfigbuilder",
+      "aliases": [
+        "deltalake::delta_datafusion::DeltaScanConfigBuilder",
+        "deltalake_core::delta_datafusion::DeltaScanConfigBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, snapshot: &EagerSnapshot) -> DeltaResult<DeltaScanConfig>",
+          "summary": "Build a DeltaScanConfig and ensure no column name conflicts occur during downstream processing"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Construct a new instance of `DeltaScanConfigBuilder`"
+        },
+        {
+          "name": "with_file_column",
+          "signature": "fn with_file_column(self, include: bool) -> Self",
+          "summary": "Indicate that a column containing a records file path is included. Column name is generated and can be determined once this Config is built"
+        },
+        {
+          "name": "with_file_column_name",
+          "signature": "fn with_file_column_name<S: ToString>(self, name: &S) -> Self",
+          "summary": "Indicate that a column containing a records file path is included and column name is user defined."
+        },
+        {
+          "name": "with_parquet_pushdown",
+          "signature": "fn with_parquet_pushdown(self, pushdown: bool) -> Self",
+          "summary": "Allow pushdown of the scan filter When disabled the filter will only be used for pruning files"
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Use the provided [SchemaRef] for the [`crate::delta_datafusion::DeltaScanNext`]"
+        },
+        {
+          "name": "wrap_partition_values",
+          "signature": "fn wrap_partition_values(self, wrap: bool) -> Self",
+          "summary": "Whether to wrap partition values in a dictionary encoding"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder",
+      "name": "TableProviderBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct TableProviderBuilder",
+      "summary": "Builder for a datafusion [TableProvider] for a Delta table",
+      "doc": "api/deltalake_core.delta_datafusion.table_provider.md#tableproviderbuilder",
+      "aliases": [
+        "deltalake::delta_datafusion::TableProviderBuilder",
+        "deltalake_core::delta_datafusion::TableProviderBuilder"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "async fn build(self) -> Result<next::DeltaScan>",
+          "summary": "Consume the builder and resolve it into an executable [`next::DeltaScan`]."
+        },
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        },
+        {
+          "name": "with_adds",
+          "signature": "fn with_adds(self, adds: impl IntoIterator<Item = Add>) -> Self",
+          "summary": "Restrict reads to Add action paths. File metadata comes from the selected snapshot."
+        },
+        {
+          "name": "with_eager_snapshot",
+          "signature": "fn with_eager_snapshot(self, snapshot: impl Into<Arc<EagerSnapshot>>) -> Self",
+          "summary": "Provide an eager snapshot to use for the table provider"
+        },
+        {
+          "name": "with_file_column",
+          "signature": "fn with_file_column(self, file_column: impl ToString) -> Self",
+          "summary": "Specify the name of the file column to include in the scan"
+        },
+        {
+          "name": "with_file_paths",
+          "signature": "fn with_file_paths(self, paths: impl IntoIterator<Item = impl Into<String>>) -> Self",
+          "summary": "Restrict reads to file paths."
+        },
+        {
+          "name": "with_file_selection",
+          "signature": "fn with_file_selection(self, selection: next::FileSelection) -> Self",
+          "summary": "Restrict reads to a file selection resolved against the selected snapshot."
+        },
+        {
+          "name": "with_log_store",
+          "signature": "fn with_log_store(self, log_store: impl Into<Arc<dyn LogStore>>) -> Self",
+          "summary": "Provide the log store to use for the table provider"
+        },
+        {
+          "name": "with_session",
+          "signature": "fn with_session<S>(self, session: Arc<S>) -> Self where S: Session + 'static",
+          "summary": "Provide a DataFusion session for scan config defaults."
+        },
+        {
+          "name": "with_snapshot",
+          "signature": "fn with_snapshot(self, snapshot: impl Into<Arc<Snapshot>>) -> Self",
+          "summary": "Provide a snapshot to use for the table provider"
+        },
+        {
+          "name": "with_table_version",
+          "signature": "fn with_table_version(self, version: impl Into<Option<Version>>) -> Self",
+          "summary": "Specify the version of the table to provide"
+        }
+      ]
+    }
+  ]
+}

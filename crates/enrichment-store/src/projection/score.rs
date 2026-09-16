@@ -1,61 +1,36 @@
-use super::cells::{column, record_list, structure, text};
-use arrow::{
-    array::{ArrayRef, UInt32Array},
-    error::ArrowError,
-};
-use enrichment_core::search::Factor;
-use std::sync::Arc;
-
-pub(crate) fn result(rows: &[Option<(u32, Vec<Factor>)>]) -> Result<ArrayRef, ArrowError> {
-    let factors: Vec<_> = rows
-        .iter()
-        .flat_map(|r| {
-            r.as_ref()
-                .into_iter()
-                .flat_map(|(_, factors)| factors.iter())
-        })
-        .collect();
-    let values = structure(
+//! Ranking schema; values are produced by native expressions in `scoring`.
+use arrow::datatypes::{DataType, Field, FieldRef};
+use std::{collections::HashMap, sync::Arc};
+fn field_with_role(name: &str, kind: DataType, role: &str) -> Field {
+    Field::new(name, kind, true).with_metadata(HashMap::from([
+        ("enrichment.role".into(), role.into()),
+        ("enrichment.contract".into(), super::VERSION.into()),
+        ("enrichment.null".into(), "unobserved".into()),
+    ]))
+}
+pub(crate) fn factor_type() -> DataType {
+    DataType::Struct(
         vec![
-            column(
-                "name",
-                text(factors.iter().map(|f| f.name)),
-                false,
-                "vocabulary:search-factor/2",
-            ),
-            column(
-                "points",
-                Arc::new(UInt32Array::from_iter_values(
-                    factors.iter().map(|f| f.points),
-                )),
-                false,
-                "search-factor-points",
-            ),
-        ],
-        None,
-    )?;
-    structure(
-        vec![
-            column(
-                "score",
-                Arc::new(UInt32Array::from_iter_values(
-                    rows.iter()
-                        .map(|r| r.as_ref().map_or(0, |(score, _)| *score)),
-                )),
-                false,
-                "lexical-score/2",
-            ),
-            column(
-                "factors",
-                record_list(
-                    rows.iter()
-                        .map(|r| r.as_ref().map_or(0, |(_, factors)| factors.len())),
-                    values,
-                )?,
-                false,
-                "ordered:score-factors",
-            ),
-        ],
-        Some(rows.iter().map(Option::is_some).collect()),
+            field_with_role("name", DataType::Utf8, "vocabulary:search-factor/2"),
+            field_with_role("points", DataType::UInt32, "search-factor-points"),
+        ]
+        .into(),
     )
+}
+pub(crate) fn field() -> FieldRef {
+    Arc::new(Field::new(
+        "ranking",
+        DataType::Struct(
+            vec![
+                field_with_role("score", DataType::UInt32, "lexical-score/2"),
+                field_with_role(
+                    "factors",
+                    DataType::List(Arc::new(Field::new("item", factor_type(), true))),
+                    "ordered:score-factors",
+                ),
+            ]
+            .into(),
+        ),
+        true,
+    ))
 }

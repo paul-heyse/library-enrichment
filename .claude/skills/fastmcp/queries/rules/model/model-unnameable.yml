@@ -1,0 +1,21 @@
+id: model-unnameable
+language: json
+severity: hint
+message: This item is real and reachable but cannot be imported or written in an annotation.
+note: |
+  Every path to it passes through a private module and nothing re-exports it. You can receive
+  one from a public call and use it; you cannot `from ... import` it, name it as a parameter
+  type, or write a function that returns it.
+
+  Ask this of `content/model` when a type appears in a signature and you cannot work out where
+  to import it from -- the answer may be that you cannot.
+metadata:
+  record: nameability
+  reads: content/model
+rule:
+  matches: json-record
+  has:
+    kind: pair
+    all:
+      - has: {field: key, regex: '^"nameable"$'}
+      - has: {field: value, regex: '^false$'}

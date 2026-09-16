@@ -1,0 +1,167 @@
+{
+  "_comment": [
+    "Two projects, three crate sets, two acquisition paths.",
+    "",
+    "ruff publishes ONE release across TWO version lines: `ruff`, `ruff_linter` and `ruff_wasm`",
+    "track the product line (0.16.7) while the 28 library crates sit on a 0.0.x line (0.0.13).",
+    "Verified 2026-09-15: ruff_linter 0.16.7 declares `ruff_python_ast ^0.0.13` and 17 further",
+    "ruff_* dependencies at ^0.0.13, and every crate in both lines was published 2026-09-10. They",
+    "are one release. `crate_sets` carries one version each because build.crate_specs assigns",
+    "spec['version'] from the set, so splitting them is what keeps the index from claiming a",
+    "version that does not exist on crates.io.",
+    "",
+    "pyrefly publishes nothing usable: crates.io `pyrefly` is a name squat at 0.0.1 (2025-03-13,",
+    "'Coming soon to crates.io.') and every pyrefly_* crate is absent. docs.rs therefore has",
+    "nothing to serve, so acquire.py produces the rustdoc JSON locally from the pinned tag and",
+    "build.py reads it offline. DESIGN.md B13 authorises exactly this fallback.",
+    "",
+    "Executing either binary during acquisition is governed by ADR-0046."
+  ],
+  "repository": {
+    "name": "pyrefly-ruff",
+    "title": "The ruff crate family and pyrefly",
+    "description": "Pinned API surface, tool catalogs and documentation for ruff 0.16.7 / 0.0.13 and pyrefly 1.3.1 — the two Rust Python-analysis toolchains."
+  },
+  "tools": {
+    "ast_grep_version": "0.45.2",
+    "rustdoc_format_versions": [57, 59, 60, 61]
+  },
+  "crate_aliases": {},
+  "oracles": {
+    "_comment": [
+      "The versions the tool-catalog capture installs into the capsule and asserts before",
+      "recording anything. These MUST match the crate-set pins: this workstation has ruff 0.14.4",
+      "on PATH (pinned by the host repository) and a 0.51.1 checker, so a capture from PATH would",
+      "describe different software than the rustdoc index describes. Measured 2026-09-15: the",
+      "0.14.4 binary reports 934 rules while ruff_linter 0.16.7 carries 970 Rule variants, which",
+      "is exactly the discrepancy the assertion exists to prevent.",
+      "",
+      "`checker` is the role name used by oracles.py; `checker_package` is what uv installs."
+    ],
+    "ruff": "0.16.7",
+    "checker": "1.3.1",
+    "checker_package": "pyrefly"
+  },
+  "crate_sets": [
+    {
+      "name": "ruff-product",
+      "source": "docs_rs",
+      "version": "0.16.7",
+      "facade": "ruff",
+      "note": "The product version line. ruff_linter holds all 934 lint rules; `ruff` is the CLI crate and `ruff_wasm` the browser binding.",
+      "crates": ["ruff", "ruff_linter", "ruff_wasm"]
+    },
+    {
+      "name": "ruff-lib",
+      "source": "docs_rs",
+      "version": "0.0.13",
+      "facade": "ruff_python_ast",
+      "note": "The embeddable library line. These are the crates a downstream Rust consumer depends on, and the crates pyrefly itself builds upon.",
+      "crates": [
+        "ruff_annotate_snippets",
+        "ruff_cache",
+        "ruff_db",
+        "ruff_diagnostics",
+        "ruff_formatter",
+        "ruff_graph",
+        "ruff_index",
+        "ruff_macros",
+        "ruff_markdown",
+        "ruff_memory_usage",
+        "ruff_notebook",
+        "ruff_options_metadata",
+        "ruff_python_ast",
+        "ruff_python_codegen",
+        "ruff_python_edits",
+        "ruff_python_formatter",
+        "ruff_python_importer",
+        "ruff_python_index",
+        "ruff_python_literal",
+        "ruff_python_parser",
+        "ruff_python_semantic",
+        "ruff_python_stdlib",
+        "ruff_python_trivia",
+        "ruff_ranged_value",
+        "ruff_server",
+        "ruff_source_file",
+        "ruff_text_size",
+        "ruff_workspace"
+      ]
+    },
+    {
+      "name": "pyrefly",
+      "source": "git",
+      "document_private_items": true,
+      "version": "1.3.1",
+      "facade": "pyrefly",
+      "note": "document_private_items is load-bearing: the clap Args structs that define the CLI are private, and without them the command surface is absent from the index while the build still succeeds.",
+      "git": {
+        "url": "https://github.com/facebook/pyrefly",
+        "rev": "3e3177d0f4755b56c2d5a710d830eed89b14c2e3",
+        "committed_at": "2026-09-15T03:57:10Z",
+        "branch_tracked_as": "refs/tags/1.3.1",
+        "tag": "1.3.1",
+        "lock_note": "The repository commits its own Cargo.lock, so resolution is pinned upstream. It also carries [patch.crates-io] backtrace = { git = 'https://github.com/rust-lang/backtrace-rs', rev = 'df979dcf80027eb047d7bb9e0874710c15009f31' }, which acquisition must resolve and record.",
+        "lock_deps": {
+          "backtrace": "df979dcf80027eb047d7bb9e0874710c15009f31"
+        },
+        "toolchain": "nightly-2026-08-18",
+        "rustc_expected": ["1.100.0-nightly", "8fa1c96cf"],
+        "toolchain_note": "The checkout's own rust-toolchain.toml pins channel = 'stable', which cannot emit rustdoc JSON, so cargo_env overrides RUSTUP_TOOLCHAIN with a dated producer identity from config/toolchains.toml. NOT the current nightly-2026-09-13: measured 2026-09-15, `allocative` 0.3.6 fails to compile on it with E0119. Its build.rs sets cfg(rust_nightly) by string-matching `rustc --version`, then enables feature(never_type) and adds `impl Allocative for !`, which conflicts with its own `impl Allocative for Infallible` once the two unify. The break landed between 2026-08-18 and 2026-09-13; nightly-2026-08-18 compiles it and still emits format_version 61, the same version docs.rs serves for the ruff crates, so both crate sets are read by one parser adapter.",
+        "target": "x86_64-unknown-linux-gnu",
+        "no_default_features": false,
+        "cargo_features": []
+      },
+      "excluded_members": {
+        "pyrefly_bench_harness": "a benchmark harness, not part of the analysis API",
+        "pyrefly_lsp_test": "a test helper for the LSP suite",
+        "pyrefly_wasm": "version 0.0.0, not 1.3.1, and a cdylib for wasm32 — indexing it under this crate set's version would assert a version it does not carry"
+      },
+      "crates": [
+        { "package": "pyrefly", "path": "pyrefly" },
+        { "package": "pyrefly_build", "path": "crates/pyrefly_build" },
+        { "package": "pyrefly_bundled", "path": "crates/pyrefly_bundled" },
+        { "package": "pyrefly_config", "path": "crates/pyrefly_config" },
+        { "package": "pyrefly_derive", "path": "crates/pyrefly_derive", "kind": "proc-macro" },
+        { "package": "pyrefly_glean_schema", "path": "crates/pyrefly_glean_schema" },
+        { "package": "pyrefly_graph", "path": "crates/pyrefly_graph" },
+        { "package": "pyrefly_python", "path": "crates/pyrefly_python" },
+        { "package": "pyrefly_types", "path": "crates/pyrefly_types" },
+        { "package": "pyrefly_util", "path": "crates/pyrefly_util" },
+        { "package": "tsp_types", "path": "crates/tsp_types" }
+      ]
+    }
+  ],
+  "corpora": [
+    {
+      "name": "ruff-docs",
+      "repo": "astral-sh/ruff",
+      "ref": "0.16.7",
+      "ref_kind": "tag",
+      "source_prefix": "docs/",
+      "dest": "corpus/ruff",
+      "suffixes": [".md"],
+      "note": "Recent ruff tags carry no `v` prefix; older ones (v0.4.10) do. The per-rule documentation is NOT here — it comes from `ruff rule --all --output-format json`, which is richer and machine-readable. These are the non-rule pages: configuration, linter, formatter, editors, faq, versioning, preview."
+    },
+    {
+      "name": "pyrefly-docs",
+      "repo": "facebook/pyrefly",
+      "ref": "1.3.1",
+      "ref_kind": "tag",
+      "source_prefix": "website/docs/",
+      "dest": "corpus/pyrefly",
+      "suffixes": [".mdx", ".md"],
+      "note": "35 pages. configuration.mdx is 80 KB and error-kinds.mdx 73 KB — the two largest, and the narrative layer rustdoc cannot supply. import-resolution.mdx answers the question this skill exists for."
+    },
+    {
+      "name": "pyrefly-conformance",
+      "repo": "facebook/pyrefly",
+      "ref": "1.3.1",
+      "ref_kind": "tag",
+      "source_prefix": "conformance/",
+      "dest": "corpus/conformance",
+      "suffixes": [".py", ".pyi", ".md", ".toml", ".result", ".json"],
+      "note": "The Python typing conformance suite and the checker's measured results against it. `conformance.result` is the load-bearing file: a JSON map of test file to the deviations found, where an empty list means fully conformant. That is machine-checkable evidence of which typing features are supported, rather than a claim. `conformance.exp` is deliberately excluded -- it is 470 KB of raw expected-error dumps that `.result` already summarises."
+    }
+  ]
+}

@@ -1,0 +1,375 @@
+{
+  "module": "ruff_db::system",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.system.md",
+  "items": [
+    {
+      "path": "ruff_db::system::FileType",
+      "name": "FileType",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum FileType",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "File",
+        "Directory",
+        "Symlink"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "is_directory",
+          "signature": "const fn is_directory(self) -> bool"
+        },
+        {
+          "name": "is_file",
+          "signature": "const fn is_file(self) -> bool"
+        },
+        {
+          "name": "is_symlink",
+          "signature": "const fn is_symlink(self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::WhichError",
+      "name": "WhichError",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum WhichError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "CannotFindBinaryPath",
+        "CannotGetCurrentDirAndPathListEmpty",
+        "CannotCanonicalize",
+        "NonUtf8Path"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::file_time_now",
+      "name": "file_time_now",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn file_time_now() -> filetime::FileTime",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_db::system::DirectoryEntry",
+      "name": "DirectoryEntry",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DirectoryEntry",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> FileType"
+        },
+        {
+          "name": "into_path",
+          "signature": "fn into_path(self) -> SystemPathBuf"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(path: SystemPathBuf, file_type: FileType) -> Self"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &SystemPath"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::Metadata",
+      "name": "Metadata",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Metadata",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "file_type",
+          "signature": "fn file_type(&self) -> FileType"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(revision: FileRevision, permissions: Option<u32>, file_type: FileType) -> Self"
+        },
+        {
+          "name": "permissions",
+          "signature": "fn permissions(&self) -> Option<u32>"
+        },
+        {
+          "name": "revision",
+          "signature": "fn revision(&self) -> FileRevision"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::System",
+      "name": "System",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait System: Debug + Sync + Send",
+      "summary": "The system on which Ruff runs.",
+      "doc": "api/ruff_db.system.md#system",
+      "implementors": [
+        "ruff_db::system::test::InMemorySystem",
+        "ruff_db::system::test::TestSystem"
+      ],
+      "required_methods": [
+        "as_any",
+        "as_any_mut",
+        "as_writable",
+        "cache_dir",
+        "canonicalize_path",
+        "current_directory",
+        "dyn_clone",
+        "is_same_file",
+        "path_metadata",
+        "read_directory",
+        "read_to_notebook",
+        "read_to_string",
+        "read_virtual_path_to_notebook",
+        "read_virtual_path_to_string",
+        "user_config_directory",
+        "walk_directory",
+        "which"
+      ],
+      "provided_methods": [
+        "command_executor",
+        "env_var",
+        "is_directory",
+        "is_file",
+        "path_exists",
+        "run_command",
+        "source_type",
+        "virtual_path_source_type"
+      ],
+      "methods": [
+        {
+          "name": "as_any",
+          "signature": "fn as_any(&self) -> &dyn std::any::Any"
+        },
+        {
+          "name": "as_any_mut",
+          "signature": "fn as_any_mut(&mut self) -> &mut dyn std::any::Any"
+        },
+        {
+          "name": "as_writable",
+          "signature": "fn as_writable(&self) -> Option<&dyn WritableSystem>",
+          "summary": "Returns a handle to a [`WritableSystem`] if this system is writable."
+        },
+        {
+          "name": "cache_dir",
+          "signature": "fn cache_dir(&self) -> Option<SystemPathBuf>",
+          "summary": "Returns the directory path where cached files are stored."
+        },
+        {
+          "name": "canonicalize_path",
+          "signature": "fn canonicalize_path(&self, path: &SystemPath) -> Result<SystemPathBuf>",
+          "summary": "Returns the canonical, absolute form of a path with all intermediate components normalized and symbolic links resolved."
+        },
+        {
+          "name": "command_executor",
+          "signature": "fn command_executor(&self) -> Option<&dyn CommandExecutor>",
+          "summary": "Returns the system's command executor, if it supports running commands."
+        },
+        {
+          "name": "current_directory",
+          "signature": "fn current_directory(&self) -> &SystemPath",
+          "summary": "Returns the current working directory"
+        },
+        {
+          "name": "dyn_clone",
+          "signature": "fn dyn_clone(&self) -> Box<dyn System>"
+        },
+        {
+          "name": "env_var",
+          "signature": "fn env_var(&self, name: &str) -> std::result::Result<String, std::env::VarError>",
+          "summary": "Fetches the environment variable `key` from the current process."
+        },
+        {
+          "name": "is_directory",
+          "signature": "fn is_directory(&self, path: &SystemPath) -> bool",
+          "summary": "Returns `true` if `path` exists and is a directory."
+        },
+        {
+          "name": "is_file",
+          "signature": "fn is_file(&self, path: &SystemPath) -> bool",
+          "summary": "Returns `true` if `path` exists and is a file."
+        },
+        {
+          "name": "is_same_file",
+          "signature": "fn is_same_file(&self, first: &SystemPath, second: &SystemPath) -> Result<bool>",
+          "summary": "Returns `true` if both paths refer to the same file."
+        },
+        {
+          "name": "path_exists",
+          "signature": "fn path_exists(&self, path: &SystemPath) -> bool",
+          "summary": "Returns `true` if `path` exists."
+        },
+        {
+          "name": "path_metadata",
+          "signature": "fn path_metadata(&self, path: &SystemPath) -> Result<Metadata>",
+          "summary": "Reads the metadata of the file or directory at `path`."
+        },
+        {
+          "name": "read_directory",
+          "signature": "fn read_directory<'a>(&'a self, path: &SystemPath) -> Result<Box<dyn Iterator<Item = Result<DirectoryEntry>> + 'a>>",
+          "summary": "Iterate over the contents of the directory at `path`."
+        },
+        {
+          "name": "read_to_notebook",
+          "signature": "fn read_to_notebook(&self, path: &SystemPath) -> std::result::Result<Notebook, NotebookError>",
+          "summary": "Reads the content of the file at `path` as a Notebook."
+        },
+        {
+          "name": "read_to_string",
+          "signature": "fn read_to_string(&self, path: &SystemPath) -> Result<String>",
+          "summary": "Reads the content of the file at `path` into a [`String`]."
+        },
+        {
+          "name": "read_virtual_path_to_notebook",
+          "signature": "fn read_virtual_path_to_notebook(&self, path: &SystemVirtualPath) -> std::result::Result<Notebook, NotebookError>",
+          "summary": "Reads the content of the virtual file at `path` as a [`Notebook`]."
+        },
+        {
+          "name": "read_virtual_path_to_string",
+          "signature": "fn read_virtual_path_to_string(&self, path: &SystemVirtualPath) -> Result<String>",
+          "summary": "Reads the content of the virtual file at `path` into a [`String`]."
+        },
+        {
+          "name": "run_command",
+          "signature": "fn run_command(&self, command: Command) -> Result<Output>",
+          "summary": "Runs `command` and captures its standard output and standard error."
+        },
+        {
+          "name": "source_type",
+          "signature": "fn source_type(&self, path: &SystemPath) -> Option<PySourceType>",
+          "summary": "Returns the source type for `path` if known or `None`."
+        },
+        {
+          "name": "user_config_directory",
+          "signature": "fn user_config_directory(&self) -> Option<SystemPathBuf>",
+          "summary": "Returns the directory path where user configurations are stored."
+        },
+        {
+          "name": "virtual_path_source_type",
+          "signature": "fn virtual_path_source_type(&self, path: &SystemVirtualPath) -> Option<PySourceType>",
+          "summary": "Returns the source type for `path` if known or `None`."
+        },
+        {
+          "name": "walk_directory",
+          "signature": "fn walk_directory(&self, path: &SystemPath) -> WalkDirectoryBuilder",
+          "summary": "Recursively walks the content of `path`."
+        },
+        {
+          "name": "which",
+          "signature": "fn which(&self, binary_name: &str) -> WhichResult",
+          "summary": "Find an executable binary's path by name."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::WritableSystem",
+      "name": "WritableSystem",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait WritableSystem: System",
+      "summary": "System trait for non-readonly systems.",
+      "doc": "api/ruff_db.system.md#writablesystem",
+      "implementors": [
+        "ruff_db::system::test::InMemorySystem",
+        "ruff_db::system::test::TestSystem"
+      ],
+      "required_methods": [
+        "create_directory_all",
+        "create_new_file",
+        "dyn_clone",
+        "write_file_bytes"
+      ],
+      "provided_methods": [
+        "get_or_cache",
+        "write_file"
+      ],
+      "methods": [
+        {
+          "name": "create_directory_all",
+          "signature": "fn create_directory_all(&self, path: &SystemPath) -> Result<()>",
+          "summary": "Creates a directory at `path` as well as any intermediate directories."
+        },
+        {
+          "name": "create_new_file",
+          "signature": "fn create_new_file(&self, path: &SystemPath) -> Result<()>",
+          "summary": "Creates a file at the given path."
+        },
+        {
+          "name": "dyn_clone",
+          "signature": "fn dyn_clone(&self) -> Box<dyn WritableSystem>"
+        },
+        {
+          "name": "get_or_cache",
+          "signature": "fn get_or_cache(&self, path: &SystemPath, read_contents: &dyn Fn() -> Result<String>) -> Result<Option<SystemPathBuf>>",
+          "summary": "Reads the provided file from the system cache, or creates the file if necessary."
+        },
+        {
+          "name": "write_file",
+          "signature": "fn write_file(&self, path: &SystemPath, content: &str) -> Result<()>",
+          "summary": "Writes the given content to the file at the given path."
+        },
+        {
+          "name": "write_file_bytes",
+          "signature": "fn write_file_bytes(&self, path: &SystemPath, content: &[u8]) -> Result<()>",
+          "summary": "Writes the given content to the file at the given path."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::Result",
+      "name": "Result",
+      "kind": "type_alias",
+      "crate": "ruff_db",
+      "signature": "type Result<T> = std::io::Result<T>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "ruff_db::system::WhichResult",
+      "name": "WhichResult",
+      "kind": "type_alias",
+      "crate": "ruff_db",
+      "signature": "type WhichResult = std::result::Result<SystemPathBuf, WhichError>",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

@@ -10,8 +10,8 @@ use datafusion::prelude::ParquetReadOptions;
 use enrichment_store::runtime::{QueryLimits, QueryRuntime};
 use std::sync::Arc;
 
-fn descriptor() -> enrichment_store::runtime::OperationDescriptor {
-    enrichment_store::runtime::OperationDescriptor {
+fn descriptor() -> enrichment_core::telemetry::OperationDescriptor {
+    enrichment_core::telemetry::OperationDescriptor {
         method: "native-runtime-fixture".into(),
         request_digest: "0".repeat(64),
         policy_digest: "1".repeat(64),
@@ -19,10 +19,10 @@ fn descriptor() -> enrichment_store::runtime::OperationDescriptor {
 }
 
 #[tokio::test]
-async fn native_coercion_and_product_udfs_survive_empty_scalar_and_partitioned_execution() {
+async fn native_coercion_and_factor_reduction_survive_empty_scalar_and_partitioned_execution() {
     use datafusion::datasource::MemTable;
     use enrichment_core::search::spec::SearchSpec;
-    use enrichment_store::scoring::{ScoreKind, function};
+    use enrichment_store::scoring::{ScoreKind, ranking};
     let dir = tempfile::tempdir().unwrap();
     for partitions in [1, 4] {
         let runtime = QueryRuntime::new(
@@ -56,52 +56,46 @@ async fn native_coercion_and_product_udfs_survive_empty_scalar_and_partitioned_e
                 .unwrap();
             assert_eq!(output.rows, partitions * 2 + 1);
         }
-        let udf = function(ScoreKind::Fragment, SearchSpec::new("Widget"));
-        assert_ne!(udf, function(ScoreKind::Fragment, SearchSpec::new("Shape")));
-        session.register_udf(udf);
+
+        use datafusion::prelude::col;
         for (sql, rows) in [
-            (
-                "SELECT evidence_fragment_score_v2('Widget', 'Widget docs') AS score",
-                1,
-            ),
-            (
-                "SELECT evidence_fragment_score_v2(path, path) AS score FROM input",
-                partitions * 2,
-            ),
-            (
-                "SELECT evidence_fragment_score_v2(path, path) AS score FROM input WHERE false",
-                0,
-            ),
+            ("SELECT 'Widget' AS path", 1),
+            ("SELECT path FROM input", partitions * 2),
+            ("SELECT path FROM input WHERE false", 0),
         ] {
-            let frame = session.sql(sql).await.unwrap();
-            let field = frame.schema().as_arrow().field(0).clone();
-            assert!(field.is_nullable(), "unmatched score is null");
-            assert!(
-                field
-                    .metadata()
-                    .get("enrichment.function")
-                    .unwrap()
-                    .starts_with("evidence_fragment_score_v2:")
-            );
-            enrichment_store::preparation::require_fields(
-                frame.schema().as_arrow(),
-                &[field],
-                "product_udf",
+            let expression = ranking(
+                ScoreKind::Fragment,
+                &SearchSpec::new("Widget"),
+                vec![col("path"), col("path")],
             )
             .unwrap();
+            assert_ne!(
+                expression,
+                ranking(
+                    ScoreKind::Fragment,
+                    &SearchSpec::new("Shape"),
+                    vec![col("path"), col("path")]
+                )
+                .unwrap()
+            );
+            let frame = session
+                .sql(sql)
+                .await
+                .unwrap()
+                .select(vec![expression.alias("ranking")])
+                .unwrap();
             let output = runtime.execute(frame).await.unwrap();
             assert_eq!(output.rows, rows);
-            for batch in output.batches {
-                assert!(
-                    batch
-                        .schema()
-                        .field(0)
-                        .metadata()
-                        .contains_key("enrichment.function")
-                );
-            }
         }
-        assert!(runtime.diagnostics().last().unwrap().completed);
+        assert!(
+            runtime
+                .diagnostics()
+                .await
+                .unwrap()
+                .last()
+                .unwrap()
+                .completed
+        );
     }
 }
 
@@ -173,7 +167,7 @@ async fn a_timed_out_blocking_read_keeps_admission_until_its_worker_exits() {
     });
     running.await.unwrap();
     assert!(request.await.unwrap().is_err());
-    assert_eq!(runtime.operational_counters().admitted, 1);
+    assert_eq!(runtime.operational_counters().await.unwrap().admitted, 1);
     let query = runtime.session().sql("SELECT 1").await.unwrap();
     assert!(
         tokio::time::timeout(std::time::Duration::from_millis(10), runtime.execute(query))
@@ -183,7 +177,7 @@ async fn a_timed_out_blocking_read_keeps_admission_until_its_worker_exits() {
     release.send(()).unwrap();
     let query = runtime.session().sql("SELECT 1").await.unwrap();
     assert_eq!(runtime.execute(query).await.unwrap().rows, 1);
-    assert_eq!(runtime.operational_counters().admitted, 0);
+    assert_eq!(runtime.operational_counters().await.unwrap().admitted, 0);
 }
 
 #[tokio::test]
@@ -228,7 +222,7 @@ async fn a_timed_out_arrow_sink_keeps_admission_until_its_worker_exits() {
     });
     running.await.unwrap();
     assert!(matches!(request.await.unwrap(), Err(_) | Ok(Err(_))));
-    assert_eq!(runtime.operational_counters().admitted, 1);
+    assert_eq!(runtime.operational_counters().await.unwrap().admitted, 1);
     let query = runtime.session().sql("SELECT 1").await.unwrap();
     assert!(
         tokio::time::timeout(std::time::Duration::from_millis(10), runtime.execute(query))
@@ -238,7 +232,7 @@ async fn a_timed_out_arrow_sink_keeps_admission_until_its_worker_exits() {
     release.send(()).unwrap();
     let query = runtime.session().sql("SELECT 1").await.unwrap();
     assert_eq!(runtime.execute(query).await.unwrap().rows, 1);
-    assert_eq!(runtime.operational_counters().admitted, 0);
+    assert_eq!(runtime.operational_counters().await.unwrap().admitted, 0);
 }
 
 #[tokio::test]
@@ -291,10 +285,12 @@ async fn operation_shares_materialization_budget_and_does_not_reacquire_its_perm
     assert!(
         runtime
             .diagnostics()
+            .await
+            .unwrap()
             .iter()
             .all(|q| q.operation_id.as_deref() == Some("outer-request"))
     );
-    assert!(runtime.diagnostics().iter().all(|q| {
+    assert!(runtime.diagnostics().await.unwrap().iter().all(|q| {
         q.binding.as_ref().is_some_and(|binding| {
             binding.request.method == "native-runtime-fixture"
                 && binding.request.policy_digest == "1".repeat(64)
@@ -371,7 +367,7 @@ async fn native_memory_pressure_preserves_owner_and_releases_admission() {
         .await
         .unwrap();
     assert_eq!(runtime.session().runtime_env().memory_pool.reserved(), 0);
-    assert_eq!(runtime.operational_counters().admitted, 0);
+    assert_eq!(runtime.operational_counters().await.unwrap().admitted, 0);
     assert_eq!(
         runtime
             .execute(runtime.session().sql("SELECT 1").await.unwrap())
@@ -413,7 +409,7 @@ async fn native_session_templates_isolate_catalogs_and_execution_metrics() {
     );
     assert_eq!(one.unwrap().rows, 1);
     assert_eq!(two.unwrap().rows, 2);
-    let diagnostics = runtime.diagnostics();
+    let diagnostics = runtime.diagnostics().await.unwrap();
     let mut rows = diagnostics
         .iter()
         .map(|d| d.output_rows)
@@ -473,7 +469,7 @@ async fn diagnostics_observe_the_executed_scan_and_bound_failed_query_history() 
         .await
         .unwrap();
     assert_eq!(output.rows, 2);
-    let records = runtime.diagnostics();
+    let records = runtime.diagnostics().await.unwrap();
     let record = records.last().unwrap();
     assert!(record.completed && !record.truncated);
     assert_eq!(record.output_rows, 2);
@@ -497,7 +493,15 @@ async fn diagnostics_observe_the_executed_scan_and_bound_failed_query_history() 
             .await
             .is_err()
     );
-    assert!(!runtime.diagnostics().last().unwrap().completed);
+    assert!(
+        !runtime
+            .diagnostics()
+            .await
+            .unwrap()
+            .last()
+            .unwrap()
+            .completed
+    );
     for _ in 0..10 {
         assert_eq!(
             runtime
@@ -508,18 +512,41 @@ async fn diagnostics_observe_the_executed_scan_and_bound_failed_query_history() 
             1
         );
     }
-    assert_eq!(runtime.diagnostics().len(), 8);
-    assert!(serde_json::to_vec(&runtime.diagnostics()).unwrap().len() < 8 * 512 * 1024);
-    let retained = dir.path().join("spill/query-failures-v2.json");
-    let failure: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(&retained).unwrap()).unwrap();
+    assert_eq!(runtime.diagnostics().await.unwrap().len(), 8);
+    assert!(
+        serde_json::to_vec(&runtime.diagnostics().await.unwrap())
+            .unwrap()
+            .len()
+            < 8 * 512 * 1024
+    );
+    let failures = runtime.diagnostic_failures().await.unwrap();
+    let mut output = arrow::json::ArrayWriter::new(Vec::new());
+    output
+        .write_batches(&failures.iter().collect::<Vec<_>>())
+        .unwrap();
+    output.finish().unwrap();
+    let failure: serde_json::Value = serde_json::from_slice(&output.into_inner()).unwrap();
     assert_eq!(failure.as_array().unwrap().len(), 1);
-    assert_eq!(failure[0]["diagnostic"]["cause"], "capacity");
+    assert_eq!(failure[0]["failure"]["cause"], "capacity");
+    let (first_close, second_close) =
+        tokio::join!(runtime.close_diagnostics(), runtime.close_diagnostics());
+    first_close.unwrap();
+    second_close.unwrap();
+    assert!(
+        runtime.diagnostics().await.is_err(),
+        "closed diagnostic authority requires reopening"
+    );
     drop(runtime);
     let reopened = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
-    assert!(reopened.diagnostics().is_empty());
+    assert!(reopened.diagnostics().await.unwrap().is_empty());
+    let mut output = arrow::json::ArrayWriter::new(Vec::new());
+    let retained = reopened.diagnostic_failures().await.unwrap();
+    output
+        .write_batches(&retained.iter().collect::<Vec<_>>())
+        .unwrap();
+    output.finish().unwrap();
     assert_eq!(
-        serde_json::from_slice::<serde_json::Value>(&std::fs::read(retained).unwrap()).unwrap(),
+        serde_json::from_slice::<serde_json::Value>(&output.into_inner()).unwrap(),
         failure
     );
 }
@@ -609,6 +636,8 @@ async fn durable_jobs_have_independent_correlation_and_release_output_ownership(
     assert_eq!(
         runtime
             .diagnostics()
+            .await
+            .unwrap()
             .iter()
             .map(|q| q.operation_id.as_deref())
             .collect::<Vec<_>>(),
@@ -645,7 +674,7 @@ async fn preparation_failure_retains_its_own_query_identity() {
     ))];
     let frame = DataFrame::new(session.state(), plan);
     assert!(runtime.execute(frame).await.is_err());
-    let records = runtime.diagnostics();
+    let records = runtime.diagnostics().await.unwrap();
     assert_eq!(records.len(), 2);
     assert_ne!(records[0].query_id, records[1].query_id);
     assert!(!records[1].completed);
@@ -670,7 +699,7 @@ async fn independent_family_requirement_fails_before_execution_with_its_own_trac
         enrichment_core::wire::DiagnosticCause::Internal
     );
     assert_eq!(diagnostic.affected_ids, ["kind"]);
-    let traces = runtime.diagnostics();
+    let traces = runtime.diagnostics().await.unwrap();
     assert_eq!(traces.len(), 1);
     assert_eq!(traces[0].family.as_deref(), Some("Coverage"));
     assert!(!traces[0].completed);
@@ -710,14 +739,17 @@ async fn invariant_witnesses_are_bounded_and_retained_with_the_owning_operation(
         diagnostic.correlation_id.as_deref(),
         Some("witness-operation")
     );
-    let saved: serde_json::Value = serde_json::from_slice(
-        &std::fs::read(dir.path().join("spill/query-failures-v2.json")).unwrap(),
-    )
-    .unwrap();
+    let failures = runtime.diagnostic_failures().await.unwrap();
+    let mut output = arrow::json::ArrayWriter::new(Vec::new());
+    output
+        .write_batches(&failures.iter().collect::<Vec<_>>())
+        .unwrap();
+    output.finish().unwrap();
+    let saved: serde_json::Value = serde_json::from_slice(&output.into_inner()).unwrap();
     assert_eq!(
         saved[0]["last_operation_query"]["family"],
         "InvariantWitness"
     );
     assert_eq!(saved[0]["last_operation_query"]["output_rows"], 8);
-    assert_eq!(saved[0]["diagnostic"]["affected_ids"][7], "8");
+    assert_eq!(saved[0]["failure"]["affected_ids"][7], "8");
 }

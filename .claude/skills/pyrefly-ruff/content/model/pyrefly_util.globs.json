@@ -1,0 +1,251 @@
+{
+  "module": "pyrefly_util::globs",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.globs.md",
+  "items": [
+    {
+      "path": "pyrefly_util::globs::HiddenDirFilter",
+      "name": "HiddenDirFilter",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum HiddenDirFilter",
+      "summary": "Controls whether paths with hidden directory components (names starting with `.`, excluding `.` and `..`) are excluded during file filtering.",
+      "doc": "api/pyrefly_util.globs.md#hiddendirfilter",
+      "variants": [
+        "Disabled",
+        "All",
+        "RelativeTo"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::globs::FilteredGlobs",
+      "name": "FilteredGlobs",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct FilteredGlobs",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_util::includes::Includes"
+      ],
+      "methods": [
+        {
+          "name": "covers",
+          "signature": "fn covers(&self, path: &Path) -> bool",
+          "via_trait": "pyrefly_util::includes::Includes"
+        },
+        {
+          "name": "covers_ignoring_excludes",
+          "signature": "fn covers_ignoring_excludes(&self, path: &Path) -> bool",
+          "via_trait": "pyrefly_util::includes::Includes"
+        },
+        {
+          "name": "errors",
+          "signature": "fn errors(&mut self) -> Vec<anyhow::Error>",
+          "via_trait": "pyrefly_util::includes::Includes"
+        },
+        {
+          "name": "files_iter",
+          "signature": "fn files_iter(&self) -> anyhow::Result<Box<dyn Iterator<Item = PathBuf> + '_>>",
+          "via_trait": "pyrefly_util::includes::Includes"
+        },
+        {
+          "name": "files_iter_with_limit",
+          "signature": "fn files_iter_with_limit(&self, limit: usize) -> anyhow::Result<Box<dyn Iterator<Item = PathBuf> + '_>>",
+          "summary": "Same as `files_iter`, but with an upper limit on the number of files returned. This is useful for indexing of workspaces, where we don't want to index too many files when the user decides to open VSCode at the root of the filesystem."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(includes: Globs, excludes: Globs, ignorefile_search_start: Option<&Path>, hidden_dir_filter: HiddenDirFilter) -> Self",
+          "summary": "Build a new `FilteredGlobs` from the given `includes` and `excludes`. If an `ignorefile_search_start` is provided, it is the path from which we will perform an upward search for applicable ignore files, which will be used when filtering ou…"
+        },
+        {
+          "name": "roots",
+          "signature": "fn roots(&self) -> Vec<PathBuf>",
+          "via_trait": "pyrefly_util::includes::Includes",
+          "summary": "Given a glob pattern, return the directories that can contain files that match the pattern."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::globs::Glob",
+      "name": "Glob",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Glob",
+      "summary": "A glob pattern for matching files. Patterns must use `/` as the path separator for cross-platform consistency.",
+      "doc": "api/pyrefly_util.globs.md#glob",
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "as_path",
+          "signature": "fn as_path(&self) -> &Path"
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_root",
+          "signature": "fn from_root(self, root: &Path) -> Self",
+          "summary": "Rewrite the current `Glob` relative to `root`. `root` should be an absolute path."
+        },
+        {
+          "name": "matches",
+          "signature": "fn matches(&self, file: &Path) -> bool",
+          "summary": "Returns true if the given file matches this glob. The precompiled `<pattern>/**` variant lets a glob naming a directory match the files beneath it."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pattern: String) -> anyhow::Result<Self>",
+          "summary": "Create a new `Glob`, but do not do absolutizing (since we don't want to do that until rewriting with a root). Patterns must use `/` as the path separator for cross-platform consistency."
+        },
+        {
+          "name": "new_with_root",
+          "signature": "fn new_with_root(root: &Path, pattern: String) -> anyhow::Result<Self>",
+          "summary": "Create a new `Glob`, with the pattern relative to `root`. `root` should be an absolute path."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::globs::GlobFilter",
+      "name": "GlobFilter",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct GlobFilter",
+      "summary": "A struct which allows filtering by matching a high-priority [`Globs`] of excludes and several ignore files. The first positive (ignore) or negative (allowlist) match that's found from the following order is what's used. 1. `excludes`: user…",
+      "doc": "api/pyrefly_util.globs.md#globfilter",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self"
+        },
+        {
+          "name": "errors",
+          "signature": "fn errors(&mut self) -> Vec<anyhow::Error>",
+          "summary": "Get the errors from this glob, replacing them with an empty list."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "ignore_files",
+          "signature": "fn ignore_files(root: &Path) -> (Vec<Gitignore>, Vec<anyhow::Error>, Vec<PathBuf>)"
+        },
+        {
+          "name": "is_excluded",
+          "signature": "fn is_excluded(&self, path: &Path) -> bool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(excludes: Globs, ignorefile_search_start: Option<&Path>, hidden_dir_filter: HiddenDirFilter) -> Self",
+          "summary": "Create a new `GlobFilter` with the given `Globs` as highest-priority excludes. If `ignore_file_search_start` is provided, it is where the upward search for ignore files will originate from. Typically, this should be your project root. `hid…"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::globs::Globs",
+      "name": "Globs",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Globs",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(&mut self, patterns: &[Glob])"
+        },
+        {
+          "name": "covers",
+          "signature": "fn covers(&self, path: &Path) -> bool"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self"
+        },
+        {
+          "name": "files_iter",
+          "signature": "fn files_iter(&self) -> anyhow::Result<Box<dyn Iterator<Item = PathBuf>>>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_root",
+          "signature": "fn from_root(self, root: &Path) -> Self",
+          "summary": "Rewrite the existing `Globs` to be relative to `root`. `root` should be an absolute path."
+        },
+        {
+          "name": "globs",
+          "signature": "fn globs(&self) -> &[Glob]"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(patterns: Vec<String>) -> anyhow::Result<Self>",
+          "summary": "Create a new `Globs` from the given patterns. If you want them to be relative to a root, please use `Globs::new_with_root()` instead."
+        },
+        {
+          "name": "new_with_root",
+          "signature": "fn new_with_root(root: &Path, patterns: Vec<String>) -> anyhow::Result<Self>",
+          "summary": "Create a new `Globs`, rewriting all patterns to be relative to `root`. `root` should be an absolute path."
+        },
+        {
+          "name": "roots",
+          "signature": "fn roots(&self) -> Vec<PathBuf>",
+          "summary": "Given a glob pattern, return the directories that can contain files that match the pattern."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    }
+  ]
+}

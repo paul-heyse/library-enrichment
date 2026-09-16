@@ -1,0 +1,143 @@
+{
+  "module": "pyrefly_types::type_info",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.type_info.md",
+  "items": [
+    {
+      "path": "pyrefly_types::type_info::JoinStyle",
+      "name": "JoinStyle",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum JoinStyle<T>",
+      "summary": "The style of a phi.",
+      "doc": "api/pyrefly_types.type_info.md#joinstyle",
+      "variants": [
+        "SimpleMerge",
+        "ReassignmentOf",
+        "NarrowOf"
+      ],
+      "methods": [
+        {
+          "name": "map",
+          "signature": "fn map<S>(&self, f: impl FnOnce(&T) -> S) -> JoinStyle<S>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_info::TypeInfo",
+      "name": "TypeInfo",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeInfo",
+      "summary": "The `TypeInfo` datatype represents type information associated with a name or expression in a control flow context.",
+      "doc": "api/pyrefly_types.type_info.md#typeinfo",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "arc_clone",
+          "signature": "fn arc_clone(Arc<self>) -> Self"
+        },
+        {
+          "name": "arc_clone_ty",
+          "signature": "fn arc_clone_ty(Arc<self>) -> Type"
+        },
+        {
+          "name": "at_facet",
+          "signature": "fn at_facet(&self, facet: &FacetKind, fallback: impl Fn() -> Type) -> Self"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "has_facets",
+          "signature": "fn has_facets(&self) -> bool",
+          "summary": "Returns true if this TypeInfo has any facet narrows."
+        },
+        {
+          "name": "has_value_less_presence",
+          "signature": "fn has_value_less_presence(&self, facet: &FacetKind) -> bool",
+          "summary": "Whether `facet` has a presence marker but no narrowed value of its own."
+        },
+        {
+          "name": "into_ty",
+          "signature": "fn into_ty(self) -> Type"
+        },
+        {
+          "name": "invalidate_all_indexes_for_assignment",
+          "signature": "fn invalidate_all_indexes_for_assignment(&mut self, facets: &[FacetKind])",
+          "summary": "When we assign to a facet chain containing an unknown index, we don't know which index changed and have to invalidate all of them."
+        },
+        {
+          "name": "join",
+          "signature": "fn join(branches: Vec<Self>, union_types: &impl Fn(Vec<Type>) -> Type, is_subset_eq: &impl Fn(&Type, &Type) -> bool, join_style: JoinStyle<&TypeInfo>) -> Self",
+          "summary": "Join zero or more `TypeInfo`s together: - We'll take the union of the top-level types - At facet chains where all branches narrow, take a union of the narrowed types. - Drop narrowing for facet chains where at least one branch does not nar…"
+        },
+        {
+          "name": "key_facets_at",
+          "signature": "fn key_facets_at(&self, prefix: &[FacetKind]) -> Vec<(String, Option<Type>)>",
+          "summary": "Return the known narrowings for dictionary-style key facets at the provided prefix."
+        },
+        {
+          "name": "map_ty",
+          "signature": "fn map_ty(self, f: impl FnOnce(Type) -> Type) -> Self"
+        },
+        {
+          "name": "of_ty",
+          "signature": "fn of_ty(ty: Type) -> Self"
+        },
+        {
+          "name": "record_key_completion",
+          "signature": "fn record_key_completion(&mut self, facets: &Vec1<FacetKind>, ty: Option<Type>)"
+        },
+        {
+          "name": "record_present",
+          "signature": "fn record_present(&mut self, facets: &Vec1<FacetKind>)",
+          "summary": "Record that the facet chain `facets` is known to be present, without a narrowed value."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self) -> &Type"
+        },
+        {
+          "name": "type_at_facet",
+          "signature": "fn type_at_facet(&self, facet: &FacetKind) -> Option<&Type>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "update_for_assignment",
+          "signature": "fn update_for_assignment(&mut self, facets: &Vec1<FacetKind>, ty: Option<Type>)",
+          "summary": "Update for an assignment. This is different from `add_narrow` for two reasons: - It invalidates any existing subtree at that facet chain in addition to narrowing. - There may not be a type available for the assignment (in which case we *ju…"
+        },
+        {
+          "name": "with_narrow",
+          "signature": "fn with_narrow(&self, facets: &Vec1<FacetKind>, ty: Type) -> Self"
+        },
+        {
+          "name": "with_ty",
+          "signature": "fn with_ty(self, ty: Type) -> Self"
+        }
+      ]
+    }
+  ]
+}

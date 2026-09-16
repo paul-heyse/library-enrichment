@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::StatePaths;
 
 pub const MARKER: &str = ".library-enrichment-state.json";
-/// Operator-owned sidecars select this generation explicitly; older roots stay inactive.
-pub const GENERATION: u32 = 6;
+/// The native Delta epoch requires fresh service-owned roots; earlier formats are rejected.
+pub const GENERATION: u32 = 7;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

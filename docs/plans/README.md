@@ -4,6 +4,17 @@ A plan records **how work is sequenced and verified**. A decision record
 ([`../adr/`](../adr/README.md)) records **what was decided and why**. The two have different
 lifecycles, which is why they live in different directories.
 
+**Active pivot, remaining scope reviewed 2026-09-16:**
+[Plan 15](15-unified-datafusion-delta-runtime-hard-pivot.md) consolidates the unified DataFusion/Delta
+runtime review and its Delta integration follow-up. It specifies the complete native execution
+pivot, Delta control/publication, Arrow producer facts, native normalization/results, CDF, retention,
+and explicit legacy removal. It requires fresh state with no compatibility or historical-runtime
+retention. Implementation is in progress; target acceptance remains **not_run**. Plan 14's
+completed installation is the baseline, not qualification of this new target.
+[Plan 16](16-unified-datafusion-delta-runtime-completion.md) reconciles the current implementation
+and receipts into the remaining dependency order, with concrete architecture, deletion,
+qualification and activation obligations. Use it to resume the remaining work.
+
 **Completed and activated hard pivot, 2026-09-15:**
 [Plan 14](14-datafusion-catalog-policy-hard-pivot.md) implements the DataFusion capability/catalog
 review through immutable catalog/schema providers, one declaration and policy binding path,
@@ -44,6 +55,8 @@ and [final qualification](../reports/plan13-final-qualification-2026-09-15.md).
 | [12 — Architecture-first completion](12-architecture-first-completion.md) | Remaining architecture gaps and legacy removal first, then Phase 4–6 functionality and integrated acceptance | ADR-0022–ADR-0035 | done; user stopped redundant registry-only replay; [execution ledger](12-architecture-first-execution-ledger.md) |
 | [13 — DataFusion research operations hard pivot](13-datafusion-research-operations-hard-pivot.md) | Shared scope/selection, native query integration, safe revision reachability, structured errors, durable delivery and faithful FastMCP; no compatibility paths | ADR-0036–ADR-0039 accepted | done and deployed; all required journeys and active gates passed |
 | [14 — DataFusion catalog and policy hard pivot](14-datafusion-catalog-policy-hard-pivot.md) | Full immutable catalog/schema binding, shared declarations/policy, physical statistics, native string coercion, completed-index facts, bounded diagnostics and measured layout choices; explicit replacement and deletion | Retains ADR-0022–0024, ADR-0031, ADR-0033–0034, ADR-0038 boundaries; ADR-0040 accepted | done; implemented, independently verified and activated |
+| [15 — Unified DataFusion and Delta runtime hard pivot](15-unified-datafusion-delta-runtime-hard-pivot.md) | Entire aggregate of F01–F14 and DFU-01–DFU-08; original destination, work packages, deletion obligations and native/installed acceptance | ADR-0041–ADR-0045 | in progress; source-integrated replacements with focused receipts; all full work packages and final qualification remain open |
+| [16 — Complete the remaining unified runtime pivot](16-unified-datafusion-delta-runtime-completion.md) | Current-tree review of Plan 15; 14 dependency-ordered remaining packages covering architecture, deletion, qualification and fresh activation, with full finding/oracle traceability | ADR-0041–ADR-0045 | draft; remaining-scope plan requested 2026-09-16; no new runtime implementation or terminal qualification claimed |
 
 ## Norms
 

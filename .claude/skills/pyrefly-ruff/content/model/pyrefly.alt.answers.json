@@ -1,0 +1,471 @@
+{
+  "module": "pyrefly::alt::answers",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.alt.answers.md",
+  "items": [
+    {
+      "path": "pyrefly::alt::answers::AttributeReferenceKind",
+      "name": "AttributeReferenceKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum AttributeReferenceKind",
+      "summary": "How the source text at a reference range relates to the attribute it resolves to.",
+      "doc": "api/pyrefly.alt.answers.md#attributereferencekind",
+      "variants": [
+        "Textual",
+        "ConstructorCall"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::OverloadedCallee",
+      "name": "OverloadedCallee",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum OverloadedCallee",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Resolved",
+        "Candidates"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::AnswerEntry",
+      "name": "AnswerEntry",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct AnswerEntry<K: Keyed>",
+      "summary": "Result slots indexed identically to `Bindings`.",
+      "doc": "api/pyrefly.alt.answers.md#answerentry",
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::AnswerSlot",
+      "name": "AnswerSlot",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct AnswerSlot<T: Send>",
+      "summary": "A first-write-wins result slot containing an aligned answer pointer. Null is unpublished, `PENDING_TAG` marks a pending pointer, and `ALIAS_TAG` marks a pointer to another slot's allocation. An untagged non-null pointer is published and ow…",
+      "doc": "api/pyrefly.alt.answers.md#answerslot",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::AnswerTable",
+      "name": "AnswerTable",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct AnswerTable",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "types",
+        "expectations",
+        "type_aliases",
+        "exports",
+        "decorators",
+        "decorated_functions",
+        "undecorated_functions",
+        "func_defs",
+        "classes",
+        "tparams",
+        "class_base_types",
+        "class_fields",
+        "class_synthesized_fields",
+        "variance",
+        "class_checks",
+        "annotations",
+        "class_metadata",
+        "django_relations",
+        "class_mros",
+        "class_disjoint_bases",
+        "abstract_class_check",
+        "class_subscript_symmetry",
+        "legacy_tparams",
+        "yields",
+        "yield_froms"
+      ],
+      "implements": [
+        "pyrefly::binding::table::TableKeyed"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> &Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::Answers",
+      "name": "Answers",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Answers",
+      "summary": "Invariants:",
+      "doc": "api/pyrefly.alt.answers.md#answers",
+      "implements": [
+        "pyrefly_util::display::DisplayWith"
+      ],
+      "methods": [
+        {
+          "name": "add_parent_method_mapping",
+          "signature": "fn add_parent_method_mapping(&self, child_range: TextRange, parent_module: ModulePath, parent_range: TextRange)"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>, bindings: &Bindings) -> fmt::Result",
+          "via_trait": "pyrefly_util::display::DisplayWith"
+        },
+        {
+          "name": "get_all_overload_trace",
+          "signature": "fn get_all_overload_trace(&self, range: TextRange) -> Option<(Vec<Callable>, Option<usize>)>",
+          "summary": "Returns all the overload, and the index of a chosen one"
+        },
+        {
+          "name": "get_chosen_overload_trace",
+          "signature": "fn get_chosen_overload_trace(&self, range: TextRange) -> Option<Type>"
+        },
+        {
+          "name": "get_expected_type_trace",
+          "signature": "fn get_expected_type_trace(&self, range: TextRange) -> Option<Type>"
+        },
+        {
+          "name": "get_type_at",
+          "signature": "fn get_type_at(&self, idx: Idx<Key>) -> Option<Type>"
+        },
+        {
+          "name": "get_type_trace",
+          "signature": "fn get_type_trace(&self, range: TextRange) -> Option<Type>"
+        },
+        {
+          "name": "heap",
+          "signature": "fn heap(&self) -> &TypeHeap"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(bindings: &Bindings, solver: Solver, enable_index: bool, enable_trace: bool) -> Self"
+        },
+        {
+          "name": "publish_reserved_preliminary",
+          "signature": "fn publish_reserved_preliminary<Ans: LookupAnswer>(&self, reserved: &mut ReservedSlot<'_, '_, '_, Ans>)",
+          "summary": "Publish a slot previously reserved by an SCC batch."
+        },
+        {
+          "name": "reserve_preliminary",
+          "signature": "fn reserve_preliminary(&self, any_idx: &AnyIdx, answer: AnyAnswer) -> bool",
+          "summary": "Reserve a result slot for SCC batch publication."
+        },
+        {
+          "name": "rollback_reserved_if_pending_preliminary",
+          "signature": "fn rollback_reserved_if_pending_preliminary<Ans: LookupAnswer>(&self, reserved: &mut ReservedSlot<'_, '_, '_, Ans>) -> bool",
+          "summary": "Roll back a slot reserved by an SCC batch if it is still pending."
+        },
+        {
+          "name": "solve",
+          "signature": "fn solve<Ans: LookupAnswer>(&self, exports: &dyn LookupExport, answers: &Ans, bindings: &Bindings, errors: &ErrorCollector, stdlib: &Stdlib, uniques: &UniqueFactory, compute_everything: bool, recursion_limit_config: Option<RecursionLimitConfig>, pysa_context: Option<&report::pysa::context::ModuleAnswersContext>, enable_cinderx_solutions: bool) -> Solutions"
+        },
+        {
+          "name": "solve_exported_key",
+          "signature": "fn solve_exported_key<'ctx, 'answer, Ans: LookupAnswer, K: Solve<Ans> + Exported>(&'answer self, exports: &'ctx dyn LookupExport, answers: &'ctx Ans, bindings: &'answer Bindings, errors: &'ctx ErrorCollector, stdlib: &'ctx Stdlib, uniques: &'ctx UniqueFactory, key: Hashed<&K>, thread_state: &'answer ThreadState, answer_scope: &'answer AnswerScope) -> Option<&'answer K::Answer> where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "solve_idx_erased",
+          "signature": "fn solve_idx_erased<Ans: LookupAnswer>(&self, any_idx: &AnyIdx, answers: &Ans, bindings: &Bindings, exports: &dyn LookupExport, errors: &ErrorCollector, stdlib: &Stdlib, uniques: &UniqueFactory, thread_state: &ThreadState, answer_scope: &AnswerScope)",
+          "summary": "Drive a cross-module iteration member by constructing a temporary `AnswersSolver` for this module and calling `get_idx` on the member."
+        },
+        {
+          "name": "solver",
+          "signature": "fn solver(&self) -> &Solver"
+        },
+        {
+          "name": "table",
+          "signature": "fn table(&self) -> &AnswerTable"
+        },
+        {
+          "name": "try_get_getter_for_range",
+          "signature": "fn try_get_getter_for_range(&self, range: TextRange) -> Option<Type>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::Index",
+      "name": "Index",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Index",
+      "summary": "The index stores reference edges that cannot be recovered by scanning the current module's AST. This includes references to external definitions and implicit constructor-protocol references.",
+      "doc": "api/pyrefly.alt.answers.md#index",
+      "fields": [
+        "externally_defined_variable_references",
+        "renamed_imports",
+        "externally_defined_attribute_references",
+        "constructor_references",
+        "parent_methods_map"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::OverloadTrace",
+      "name": "OverloadTrace",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct OverloadTrace",
+      "summary": "",
+      "doc": null,
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::Solutions",
+      "name": "Solutions",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Solutions",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "changed_exports",
+          "signature": "fn changed_exports(&self, other: &Self, changed: &mut ModuleChanges)",
+          "summary": "Diff two solutions and merge changed keys into `changed`."
+        },
+        {
+          "name": "changed_exports_vs_answers",
+          "signature": "fn changed_exports_vs_answers(&self, old_bindings: &Bindings, old_answers: &Answers, changed: &mut ModuleChanges)",
+          "summary": "Record exports that changed between new solutions (self) and old answers (bindings + answers) into `changed`. This is used when the old solutions were None but old answers exist — e.g., the module was previously only computed up to Answers…"
+        },
+        {
+          "name": "cinderx_solutions",
+          "signature": "fn cinderx_solutions(&self) -> Option<&Arc<CinderxSolutions>>",
+          "summary": "Access per-module cinderx data, if cinderx reporting was enabled."
+        },
+        {
+          "name": "first_difference",
+          "signature": "fn first_difference<'a>(&'a self, other: &'a Self) -> Option<SolutionsDifference<'a>>",
+          "summary": "Find the first key that differs between two solutions, with the two values."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<K: Exported>(&self, key: &K) -> &<K as Keyed>::Answer where SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_hashed",
+          "signature": "fn get_hashed<K: Exported>(&self, key: Hashed<&K>) -> &<K as Keyed>::Answer where SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_hashed_opt",
+          "signature": "fn get_hashed_opt<K: Exported>(&self, key: Hashed<&K>) -> Option<&<K as Keyed>::Answer> where SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>"
+        },
+        {
+          "name": "get_index",
+          "signature": "fn get_index(&self) -> Option<Arc<Mutex<Index>>>"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Arc<BindingsMetadata>"
+        },
+        {
+          "name": "module_ranges",
+          "signature": "fn module_ranges(&self) -> &Arc<ModuleRanges>"
+        },
+        {
+          "name": "pysa_solutions",
+          "signature": "fn pysa_solutions(&self) -> Option<&Arc<PysaSolutions>>",
+          "summary": "Access per-module pysa data, if pysa reporting was enabled."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::SolutionsDifference",
+      "name": "SolutionsDifference",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SolutionsDifference<'a>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::SolutionsEntry",
+      "name": "SolutionsEntry",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SolutionsEntry<K: Keyed>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::SolutionsTable",
+      "name": "SolutionsTable",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SolutionsTable",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "types",
+        "expectations",
+        "type_aliases",
+        "exports",
+        "decorators",
+        "decorated_functions",
+        "undecorated_functions",
+        "func_defs",
+        "classes",
+        "tparams",
+        "class_base_types",
+        "class_fields",
+        "class_synthesized_fields",
+        "variance",
+        "class_checks",
+        "annotations",
+        "class_metadata",
+        "django_relations",
+        "class_mros",
+        "class_disjoint_bases",
+        "abstract_class_check",
+        "class_subscript_symmetry",
+        "legacy_tparams",
+        "yields",
+        "yield_froms"
+      ],
+      "implements": [
+        "pyrefly::binding::table::TableKeyed"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> &Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut Self::Value",
+          "via_trait": "pyrefly::binding::table::TableKeyed"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::TraceSideEffects",
+      "name": "TraceSideEffects",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TraceSideEffects",
+      "summary": "Accumulates trace events during a single calculation. Published to `Traces` only when the calculation result is committed.",
+      "doc": "api/pyrefly.alt.answers.md#tracesideeffects",
+      "fields": [
+        "types",
+        "overloaded_callees",
+        "invoked_properties",
+        "expected_types"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::answers::Traces",
+      "name": "Traces",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Traces",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::answers::LookupAnswer",
+      "name": "LookupAnswer",
+      "kind": "trait",
+      "crate": "pyrefly",
+      "signature": "trait LookupAnswer: Sized",
+      "summary": "",
+      "doc": null,
+      "required_methods": [
+        "get",
+        "get_class_fields"
+      ],
+      "provided_methods": [
+        "publish_reserved_in_module",
+        "reserve_in_module",
+        "solve_idx_erased"
+      ],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get<'answer, K: Solve<Self> + Exported>(&self, module: ModuleName, path: Option<&ModulePath>, k: &K, stack: &'answer ThreadState, answer_scope: &'answer AnswerScope) -> Option<&'answer K::Answer> where AnswerTable: TableKeyed<K, Value = AnswerEntry<K>>, BindingTable: TableKeyed<K, Value = BindingEntry<K>>, SolutionsTable: TableKeyed<K, Value = SolutionsEntry<K>>",
+          "summary": "Look up the value. If present, the `path` is a hint which can optimize certain cases."
+        },
+        {
+          "name": "get_class_fields",
+          "signature": "fn get_class_fields(&self, cls: &Class) -> Option<&ClassFields>",
+          "summary": "Look up the class fields for a class, which may be defined in another module. The fields are populated during the binding phase and can be queried without going through the solve code path."
+        },
+        {
+          "name": "publish_reserved_in_module",
+          "signature": "fn publish_reserved_in_module(&self, _reserved: &mut ReservedSlot<'_, '_, '_, Self>) -> bool",
+          "summary": "Publish a cross-module result slot previously reserved by this SCC."
+        },
+        {
+          "name": "reserve_in_module",
+          "signature": "fn reserve_in_module(&self, _calc_id: &CalcId, _answer: AnyAnswer) -> Option<Arc<Answers>>",
+          "summary": "Reserve a cross-module result slot for SCC batch publication."
+        },
+        {
+          "name": "solve_idx_erased",
+          "signature": "fn solve_idx_erased(&self, _calc_id: &CalcId, _thread_state: &ThreadState, _answer_scope: &AnswerScope) -> bool",
+          "summary": "Drive a cross-module iteration member by calling `get_idx` in the target module's context."
+        }
+      ]
+    }
+  ]
+}

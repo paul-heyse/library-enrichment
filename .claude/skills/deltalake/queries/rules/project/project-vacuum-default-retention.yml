@@ -1,0 +1,26 @@
+id: project-vacuum-default-retention
+language: rust
+severity: hint
+message: Vacuum is awaited with no explicit retention period.
+note: |
+  Vacuum permanently deletes files no longer referenced by the current version. The default
+  retention exists to protect two things you cannot see from the call site: readers still
+  holding an older snapshot, and the time travel window you may have promised someone.
+  Shortening it to reclaim space is the one irreversible mistake in this library.
+  Set the period explicitly so the value is a decision rather than a default.
+  See content/topics/maintenance.md.
+metadata:
+  record: capability-gap
+  capability: retention
+rule:
+  kind: await_expression
+  all:
+    - has:
+        kind: field_identifier
+        regex: '^vacuum$'
+        stopBy: end
+    - not:
+        has:
+          kind: field_identifier
+          regex: '^with_retention_period$'
+          stopBy: end

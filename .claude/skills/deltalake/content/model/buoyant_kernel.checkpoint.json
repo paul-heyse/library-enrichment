@@ -1,0 +1,109 @@
+{
+  "module": "buoyant_kernel::checkpoint",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.checkpoint.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::checkpoint::DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT",
+      "name": "DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT",
+      "kind": "constant",
+      "crate": "buoyant_kernel",
+      "signature": "const DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT: usize = 50_000",
+      "summary": "Default value for [`V2CheckpointConfig::WithSidecar::file_actions_per_sidecar_hint`]. It's the suggested upper bound of file actions (`add` and `remove`) per sidecar file when the caller does not provide an explicit hint.",
+      "doc": "api/buoyant_kernel.checkpoint.md#default_file_actions_per_sidecar_hint",
+      "aliases": [
+        "delta_kernel::checkpoint::DEFAULT_FILE_ACTIONS_PER_SIDECAR_HINT"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::checkpoint::CheckpointSpec",
+      "name": "CheckpointSpec",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum CheckpointSpec",
+      "summary": "Specifies the checkpoint format and behavior.",
+      "doc": "api/buoyant_kernel.checkpoint.md#checkpointspec",
+      "aliases": [
+        "delta_kernel::checkpoint::CheckpointSpec"
+      ],
+      "variants": [
+        "V1",
+        "V2"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::checkpoint::V2CheckpointConfig",
+      "name": "V2CheckpointConfig",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum V2CheckpointConfig",
+      "summary": "Configuration for V2 checkpoints.",
+      "doc": "api/buoyant_kernel.checkpoint.md#v2checkpointconfig",
+      "aliases": [
+        "delta_kernel::checkpoint::V2CheckpointConfig"
+      ],
+      "variants": [
+        "NoSidecar",
+        "WithSidecar"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::checkpoint::CheckpointWriter",
+      "name": "CheckpointWriter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct CheckpointWriter",
+      "summary": "Orchestrates the process of creating a checkpoint for a table.",
+      "doc": "api/buoyant_kernel.checkpoint.md#checkpointwriter",
+      "aliases": [
+        "delta_kernel::checkpoint::CheckpointWriter"
+      ],
+      "implements": [
+        "buoyant_kernel::action_reconciliation::RetentionCalculator"
+      ],
+      "methods": [
+        {
+          "name": "checkpoint_data",
+          "signature": "fn checkpoint_data(&self, engine: &dyn Engine) -> DeltaResult<ActionReconciliationIterator>",
+          "summary": "Returns the checkpoint data to be written to the checkpoint file."
+        },
+        {
+          "name": "checkpoint_path",
+          "signature": "fn checkpoint_path(&self) -> DeltaResult<Url>",
+          "summary": "Returns the URL where the checkpoint file should be written."
+        },
+        {
+          "name": "finalize",
+          "signature": "fn finalize(self, engine: &dyn Engine, last_checkpoint_stats: &LastCheckpointHintStats) -> DeltaResult<()>",
+          "summary": "Finalizes checkpoint creation by saving metadata about the checkpoint."
+        },
+        {
+          "name": "table_properties",
+          "signature": "fn table_properties(&self) -> &TableProperties",
+          "via_trait": "buoyant_kernel::action_reconciliation::RetentionCalculator"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::checkpoint::LastCheckpointHintStats",
+      "name": "LastCheckpointHintStats",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct LastCheckpointHintStats",
+      "summary": "Information about a freshly-written checkpoint. Pass it to [`CheckpointWriter::finalize`] to produce the `_last_checkpoint` hint file.",
+      "doc": "api/buoyant_kernel.checkpoint.md#lastcheckpointhintstats",
+      "aliases": [
+        "delta_kernel::checkpoint::LastCheckpointHintStats"
+      ],
+      "methods": [
+        {
+          "name": "from_reconciliation_state",
+          "signature": "fn from_reconciliation_state(state: ActionReconciliationIteratorState, size_in_bytes: u64, num_sidecars: u64) -> DeltaResult<Self>",
+          "summary": "Constructs a `LastCheckpointHintStats` from the fully-exhausted reconciliation state."
+        }
+      ]
+    }
+  ]
+}

@@ -714,7 +714,11 @@ def build_server() -> FastMCP:
     )
     async def read_artifact(
         artifact_id: Annotated[
-            str, Field(description="From a result's `artifacts`.", min_length=1)
+            str,
+            Field(
+                description="From `artifacts[].receipt.artifact_id` or `delivery.artifact_id`.",
+                min_length=1,
+            ),
         ],
         section: Annotated[
             SectionInput | None,

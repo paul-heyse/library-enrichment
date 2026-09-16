@@ -42,6 +42,8 @@ prerequisite nor in scope.
 
 ### 1.1 Binding decisions
 
+> Decision: ADR-0041 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 Thirteen binding decisions, each a stable citation target. §B1–§B11 are blueprint §1.1;
 §B12 and §B13 are blueprint §5.2 and §4.1, which `AGENTS.md` also treats as binding. The
 mapping from each to the charter's DM principles and G1–G7 gates is in
@@ -82,9 +84,13 @@ uses the generated request/response contract with static inspection disabled.*
 
 #### B4 Python semantic engine
 
-Astral **ty**, through its CLI and LSP boundary, not its private Rust internals. Not pyrefly,
-not pyright, not mypy. If `ty` is unavailable the affected gates are `blocked` and it warrants
-an ADR — it is never grounds for substituting another type checker. blueprint §1.1, §5.4.
+Astral **ty**, through its CLI and LSP boundary, not its private Rust internals. Not pyright, not
+mypy. If `ty` is unavailable the affected gates are `blocked` and it warrants an ADR — it is never
+grounds for substituting pyright or mypy. blueprint §1.1, §5.4.
+
+**pyrefly** is admissible alongside ty: it may be executed, indexed as a subject of study, and may
+in a later record become the production engine. It is not the production engine today, and no
+`SemanticObservation` originates from it. Decision: ADR-0046.
 
 > Decision: ADR-0005 — ty does implement `textDocument/implementation`; gate P08 is superseded by P08a/P08b, and [S18] must not be used to derive any capability assertion.
 
@@ -219,6 +225,8 @@ language servers, downloads, compilation or registry refreshes. blueprint §2.2 
 Compare jobs; shared interests survive adapter disconnection and unrelated caller cancellation.*
 
 ### 2.3 Filesystem layout
+
+> Decision: ADR-0045 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 Implementation in the repository; regenerable data under the cache home
 (`downloads/`, `unpacked/`, `capsules/`, `lsp/`); retained evidence and job records under the
@@ -446,6 +454,8 @@ semantic hashing are the single ingestion/query path.*
 
 ### 6.2 Separate epistemic classes
 
+> Decision: ADR-0043 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 Six, and they stay distinct: `declared`, `statically_extracted`, `compiler_derived`,
 `typechecker_observed`, `runtime_observed`, `agent_inferred`. **These are evidence categories,
 not confidence scores, and they are never collapsed into one.** A passing probe establishes only
@@ -459,6 +469,10 @@ acceptance-gate states and charter §D evidence labels. Conflating them is a def
 one. No producer emits `agent_inferred`, which is correct: that class is the calling agent's.*
 
 ### 6.3 Schema ownership
+
+> Decision: ADR-0043 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
+> Decision: ADR-0041 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 > Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
 
@@ -575,6 +589,8 @@ qualification remains open.*
 
 ### 7.3 Output budgets
 
+> Decision: ADR-0045 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 > Decision: ADR-0036 and ADR-0037 — Independent aspect/alternative pages and complete indexed artifact delivery preserve scope and native outcome.
 
 > Decision: ADR-0029 — Distinguish selected API projections from complete retained observations.
@@ -621,6 +637,8 @@ as read-only. **All logs go to stderr or daemon logs, never MCP stdout.** bluepr
 
 ### 8.1 Producer plans, not bespoke scripts
 
+> Decision: ADR-0044 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 > Decision: ADR-0038 — Foreground operations and durable jobs have distinct deadline, admission, correlation and retained-output owners.
 
 Typed `ProducerSpec` and `ProducerPlan` records over a small explicit dependency graph for the
@@ -633,6 +651,8 @@ is retained with a `partial` status. blueprint §8.1.
 other producers' evidence with a `partial` status.*
 
 ### 8.2 Single-flight and publication
+
+> Decision: ADR-0042 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 > Decision: ADR-0037 — Complete indexed result closure is admitted before job success; recovery reads committed bytes without generating replacement results.
 
@@ -664,6 +684,10 @@ publication, same-context distinct snapshots and failed precommit delivery have 
 
 ### 8.3 Job state
 
+> Decision: ADR-0044 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
+> Decision: ADR-0042 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 > Decision: ADR-0037 — Job/5 exposes a compact outcome and readable delivery descriptor, not recursive full research envelopes.
 
 > Decision: ADR-0030 — Admit complete delivery artifacts before committing successful jobs.
@@ -680,6 +704,10 @@ marked interrupted with an actionable error; restart does not silently re-execut
 of precommit work, cleanup supervision and retained leases through confirmed resource removal.*
 
 ### 8.4 Cache invalidation
+
+> Decision: ADR-0045 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
+> Decision: ADR-0041 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 > Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
 
@@ -706,6 +734,8 @@ remains a measured W11 choice.
 ## 9. LSP and verification implementation details
 
 ### 9.1 Synthetic consumer capsules
+
+> Decision: ADR-0044 — Plan 15 replaces the previous execution/storage mechanism; see §16.
 
 > Decision: ADR-0032 — Configure producer capacity and qualify observed resource limits.
 
@@ -936,6 +966,8 @@ source-bound integrated acceptance is recorded in `STATUS.md`, the Plan 12 ledge
 
 ### 14.3 Operational metrics
 
+> Decision: ADR-0041 — Plan 15 replaces the previous execution/storage mechanism; see §16.
+
 > Decision: ADR-0040 — immutable native catalog binding and one effective policy (Tested; Plan 14 native and installed consumers).
 
 > Decision: ADR-0038 — Preparation attempts receive early query identities, stage diagnostics and native rule failures; metrics describe actual execution only.
@@ -1012,6 +1044,157 @@ blueprint §16, unchanged.
 
 ---
 
+## 17. Unified native execution and Delta authority
+
+> Decision: ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045.
+
+The owner selected the complete Plan 15 architecture. Where earlier sections describe procedural
+normalization/scoring, worker JSON, Parquet catalog manifests, current-pointer publication,
+independent job journals or retention of old runtime formats, this section replaces those
+mechanisms. Their useful code-insight, ownership, provenance and bounded-delivery outcomes remain.
+
+All operations use native Arrow/DataFusion contracts. Delta supplies purpose-specific evidence
+tables and one typed control transaction for claims, publication vectors, expected context heads,
+projection offsets and terminal results. Complete logical-input Delta builders share the concrete
+native session and retention planner. No unqualified provider DML may bypass admission.
+Producer facts enter as Arrow IPC; native plans normalize, select, score, validate and compose
+results. Only bounded format/value kernels and owned external mechanisms remain bespoke.
+Typed commands and exact inputs are replay authority; current physical plans are reconstructed.
+CDF incrementality, native retention/maintenance and structured metrics have actual consumers.
+Activation uses fresh state and removes old executable/state/artifact paths without compatibility.
+
+Evidence: Interface-checked for upstream mechanisms; implementation and qualification are tracked
+in [Plan 15](../plans/15-unified-datafusion-delta-runtime-hard-pivot.md). Earlier Tested labels
+refer to the superseded implementation, not completion of this target.
+
+### Exact Arrow metadata boundary — implementation evidence, 2026-09-15
+
+At delta-rs `58f07cd6`, `writer/utils.rs::arrow_schema_without_partitions` builds its schema
+without top-level Arrow metadata while `record_batch_without_partitions` retains batch metadata.
+`ArrowContract` is a finite logical format adapter that survives optimization and lowers to
+DataFusion 55.1's `ProjectionExec::try_new_with_schema_metadata`. It preserves inferred types,
+nullability and values at write/derived-plan boundaries. Native DeltaScanConfig now restores the
+read schema from the native IPC schema registry. `NativePlanner` composes the format adapter with
+the aggregate `DeltaExtensionPlanner`; the
+retention planner remains outermost. This does not introduce a value-normalization engine.
+
+Evidence publications now select typed table ID/version/cohort/schema-contract vectors in the
+Delta control record. They have no JSON manifest or standalone evidence-Parquet authority.
+Fresh bundles re-encode selected cohorts through native Delta builders and record their own
+control identity; source control identity is provenance. The bounded snapshot-manifest MCP
+resource includes publication-scoped change summaries from exact CDF windows and native set
+operations. Search consumes materialized API and fragment surfaces, maintained from bounded CDF
+changes through native old/new lineage joins. A typed control checkpoint selects exact output
+versions and complete source offsets together. Revision/source changes and native missing-history
+conditions select an explicit full recomputation; I/O, identity, schema and resource errors remain
+failures. The real publication fixture proves incremental/full multiset equality, fresh export,
+missing-history rebuild through a native Delta checkpoint, and isolation of unselected output.
+The complete mutation/fault matrix, replay and durable retention remain open Plan 15 work.
+
+Exact-source follow-up, 2026-09-15: the pinned CDF builder clamps an explicit end version to
+`get_latest_version(start)` even with out-of-range tolerance disabled. A snapshot checkpoint can
+therefore remain readable while its requested CDF end is silently omitted. The native adapter
+requires both a readable end commit and a latest version at least that large before constructing
+the feed. Production publication holds retention exclusion through preparation and control commit;
+preflight alone is not a reclamation-race proof. Explicit Chrono minimum/maximum timestamp bounds
+cover the service's supported timestamp domain without epoch/local-clock selection. Malformed
+external timestamps outside that domain are outside this qualified local-write route. See the
+[pinned CDF implementation](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/operations/load_cdf.rs#L203)
+and [native log-store contract](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L785).
+Projection revisions include the compiled transform/runtime policy definition and dependency lock;
+input table identities, semantic contracts, cohorts and versions remain explicit checkpoint fields.
+
+
+
+### Native acquisition and identity contracts — implementation evidence, 2026-09-15
+
+Sparse-index records enter bounded Arrow batches with physical source-line provenance. Native
+filters and top-k select the exact request, eligible newest versions and nearest candidates.
+Python file facts retain their typed hashes, requirements and artifact fields; native joins/UNNEST
+and ordering implement wheel tags, interpreter/prerelease/yanked policy and artifact rank. The
+only version kernels parse SemVer/PEP 440, expose ordered values and evaluate the pinned library's
+specifier predicate. Dependency markers compile to native expressions over explicit environment
+and independent extra assignments. The acquisition frontier and durable source cache are still
+pending replacement; these native selectors do not imply complete native acquisition.
+
+`core/native_key.rs` declares 17 implemented identity contracts. Their expression graph uses
+native ordered sets/maps, the bounded Arrow byte kernel, SHA-256 and hexadecimal encoding. Corpus
+plans bind columns to the contract. Bounded DTO constructors use `ExprSimplifier` constant folding
+of the identical graph, without another session, runtime or JSON preimage. Target keys use full
+64-hex digests; missing environment feature knowledge is rejected rather than inferred by an
+old-record decoder. Evidence/provenance identities use the core Arrow fields; policy and result
+identities remain Plan 15 work.
+
+The canonical domain is `enrichment/identity/7/<prefix>`; names and variable-length values have
+little-endian u64 length frames, typed nulls differ from values, and list order remains meaningful
+unless the identity contract explicitly applies native distinct/sort. Snapshot maps use native
+`map_entries` and sorting. DataFusion 55.1's `MapEntriesFunc` constructs `key`/`value` struct fields
+with nullable values, so the declared input map uses exactly that native layout before invocation.
+Independent framing/SHA-256 vectors and identity metamorphism passed the scoped core fixture.
+The generated JSON schemas/DTOs carry the new full-hash ID constraints; complete epoch and legacy
+fixture cleanup is still part of WP11.
+
+### Native contribution and admission — implementation evidence, 2026-09-16
+
+`core/evidence/arrow_model` supplies the evidence schemas and value contracts. Native field
+admission traverses those schemas at plan construction, derives vocabularies from core types,
+and executes native predicates for tags, references, coordinates and coverage consistency.
+Content identities and cross-relation membership have separate native violation plans. Complete
+execution/URI/extension/metadata-value and resource admission is still required before retiring
+all format-boundary validators.
+
+`publish_native` accepts the ten native relation plans and one contribution scope. Bounded
+execution DTOs mechanically encode Arrow batches; streaming producer inputs retain private Arrow
+files. Native distinct/union and environment derivation feed complete Delta builders directly.
+Admission then checks the private immutable cohort vector that a control transaction can select.
+The intermediate native-plan-to-Arrow writer and Rust coverage-set folds are deleted. Native
+coverage aggregation supplies both publication and subsequent read validation. Both producer
+semantic walkers are deleted; procedural attempt/metadata composition remains implementation work.
+
+The pinned Delta reader relaxes nested Parquet fields, including list items, before restoring
+its logical schema. Collection predicates over required nested fields exposed a nullable-to-required
+cast failure at that boundary. Core evidence Arrow fields now use the native nested read layout;
+`enrichment.null=forbidden` retains required semantic membership, enforced by native predicates
+before admission. Provider metadata distinguishes physical nullability from required contract
+membership. Parquet filtering remains enabled. Source read on 2026-09-16:
+[Delta nested read schema](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/table_provider/next/scan/expr_adapter.rs).
+
+A conservatively nullable native expression is accepted as write input when its declared types
+and metadata match; the full Delta writer enforces actual required root values. The focused
+write probe passed for a present nullable value and refused an actual NULL without a new version.
+[Upstream nullability enforcement tests](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/operations/write/mod.rs)
+were read on 2026-09-16. These are implementations within ADR-0043's preserved semantic contract,
+not a relaxation of required evidence.
+
+Private input directories are retained by logical scan leaves, optimized physical plans and
+streams; a focused lifetime test passed. Native environment derivation/source preservation and
+repeated contribution identity passed. Full cancellation/Delta-write ownership and the final
+nine-tool installed qualification remain open.
+
+### Native Python fact execution — implementation evidence 2026-09-16
+
+The core owns one generated Arrow IPC V5 worker contract. PyArrow 25.0.1 only encodes Griffe
+facts and file/stream receipts; no response-wide JSON corpus or Python semantic normalizer remains.
+The daemon streams stdout under a byte ceiling into an owned private source. DataFusion's native
+Arrow source reads it directly, and native inventory/ordinal/tag queries admit the stream. File
+receipts select fully extracted files, so partial file observations retain raw provenance without
+becoming published declarations.
+
+Recursive native alias closure groups ambiguity before following an edge. A membership relation
+and equality join bind own and terminal declarations without constructing wide PythonSymbol
+objects. Typed native projections and keys produce definitions, bindings, independent API
+observations, relationships and fragments. Native UNNEST expands bases and overloads. The shared
+read-only native policy captures closure depth; native failure relations expose missing targets,
+ambiguous declarations, cycles and depth exhaustion. Producer component provenance records that
+policy value. Source/stub differences are retained as separate evidence.
+
+Physical Arrow contract projections use DataFusion's native CastExpr when physical string-view
+rewrites differ from the declared storage type. Metadata and field order remain authoritative.
+No native optimizer or filter rule is disabled. The pinned nested-leaf optimizer exposed an invalid
+wide UNION projection during development; the final binding-membership relation gives the
+optimizer one equality-join path. The real worker/native-plan/five-table Delta readback check and
+independent semantic decoders passed; full daemon, scale and installed qualification remain open.
+
 ## Revision history
 
 Every amendment adds a row here naming the revision, the date, what changed, and the ADR that
@@ -1045,6 +1228,7 @@ decided it. See [`README.md`](README.md) for the amendment rule.
 | 21 | 2026-09-15 | Research/2.0 selection, coverage, delivery, native preparation, adapter presentation and revision omission contracts; scoped design acceptance with final qualification open. | ADR-0036, ADR-0037, ADR-0038, ADR-0039 |
 | 22 | 2026-09-15 | Record implemented Arrow value streaming, indexed artifact dependency closure and operation-owned input/permit lifetimes. | ADR-0037, ADR-0038 |
 | 23 | 2026-09-15 | Immutable catalog/schema binding, one native policy/discovery path and consumed physical facts; final native and installed consumer evidence recorded. | ADR-0040 |
+| 24 | 2026-09-15 | Adopt complete native execution, Delta control, semantic mapping, owned effects and fresh-epoch replay/retention. | ADR-0041–ADR-0045 |
 
 
 ### Plan 13 derived comparison publication refinement (2026-09-15)
@@ -1155,3 +1339,235 @@ selects decoder/reorder, observation-ID Bloom, capped whole-file groups and inde
 layout. Query diagnostics use v2 derived history; canonical state formats remain target-compatible.
 No compatibility namespace,
 legacy reader, second policy interpreter or speculative remote/catalog platform is selected.
+
+
+### Native Rust fact execution — implementation evidence 2026-09-16
+
+Rustdoc and public-api syntax extraction runs in the owned native worker and emits seven
+bounded Arrow streams: header, items, containment links, canonical path observations, external
+crates, individual rendered occurrences and missing renderer inputs. It does not walk the public
+API, choose aliases, select one rendering per ID or create evidence identities. Complete raw
+rustdoc bytes remain the acquisition evidence. The worker reports its actual compiled definition
+revision; parent and decoder identities are recorded separately.
+
+DataFusion recursive queries compute containment and public use paths. Visibility depends on the
+raw containing role, so default trait members/enum variants differ from private module or inherent
+implementation members. Renamed type reexports retain member paths. Native plans classify generated,
+blanket and negative implementations, preserve their relationships and retain renderer alternatives.
+Public-api item/parent IDs are candidate associations: one binding permits a symbol subject;
+several bindings of one definition permit a definition subject. Other renderings remain library
+fragments; ambiguous definition association is an explicit native diagnostic. Core-owned Arrow
+expressions construct tagged records, typed inactive fields and all native identities.
+
+The recursive working schemas explicitly use Arrow Utf8View for text. This composes with
+DataFusion 55.1's physical string-view rewriting without disabling an optimizer or lying about a
+recursive field type. The common native Arrow contract adapter casts final values to their declared
+semantic types. Rust and Python contribution plans reach the same Delta publication boundary.
+The Rust semantic walker, JSON-line transport and symbol/relationship object-ingress staging are
+deleted. Document/provenance ingress now supplies typed Arrow facts and native qualification plans.
+
+A focused fixture passed four private Delta stages, five evidence writes/readbacks and independent
+identity/provenance decoding (2.08 s). Live daemon acquisition still encounters native planning
+stack overflow on default stacks. An 8 MiB diagnostic reached the producer deadline and exposed a
+terminal-delivery settlement gap; that boundary has been fixed but not requalified. Scale/resource
+and installed product qualification remain open. No terminal Plan 15 gate is claimed passed.
+
+### Native definition revisions and claim renewal — implementation 2026-09-16
+
+The build derives a framed source digest and an input receipt from workspace Rust source and
+manifests, Python worker/adapter contracts, configuration, lockfiles and recorded compiler/build
+settings. Search projection revisions include that digest, covering core schema, identity and UDF
+changes omitted by the former file list. Durable commands record their definition revision and a
+native eligibility join prevents execution under a different compiled definition. Producer components
+also carry the definition revision. This supplies build provenance; complete operation/input replay
+and codec qualification remain open.
+
+Initial and renewed claim deadlines use one native UTC/interval expression from shared policy.
+Renewal requires the same owner and fence, a live lease, owned cleanup state and a running job.
+Known Delta conflicts recompute from a new snapshot; failure or lost eligibility cancels the owned
+heartbeat's execution channel. Publication and acquired-input pinning require a live claim. Dropping
+or finishing an owner aborts its heartbeat. Expiry never grants replacement execution without physical
+cleanup evidence. Full timer/crash/recovery qualification, old-owner cleanup reconciliation and the
+finite effect-driver architecture remain open.
+
+### Native source projections and terminal settlement — implementation 2026-09-16
+
+Delta readers use the public `DeltaScanNext::new` and `DeltaScanConfig::with_schema` APIs with a
+captured snapshot. Semantic metadata and unsigned types are adapted by the native scan. The full
+stored schema and its registered contract identity are checked before exposing any override.
+DataFusion and Delta builders use the exact same durable root ObjectStore handle; native session
+registration alone would not replace DataFusion's implicit file backend. Read views expose no DML.
+
+Documentation is stored once as a top-level Arrow column, while the wire payload remains a
+presentation of the selected native fields. Inspection selects the other columns through native
+DataFrame projection. At this Delta pin, a nested schema override preserves the requested values
+but does not prune the nested I/O. The flattened contract enables the built-in column projection:
+leased and unleased reads consumed about 21 KB instead of 1.02 MB with equal rows. Predicates over
+transformed types remain post-scan when Delta reports unsupported pushdown.
+
+Document decoders emit bounded Arrow facts; native plans qualify source acquisitions, provenance,
+coverage and identities. Execution ingress uses native observation/input/producer closure and
+result-to-attempt joins. Native admission replaces semantic DTO/file admission and enforces row and
+record-byte bounds. The raw IPC encoder remains mechanical.
+
+Query planning and complete Delta writes retain operation context and shared permits in owned
+abort-on-drop tasks. Control views use native window and join expressions. A terminal result's
+bounded artifact retention runs inside the same settlement scope as its durable transition, so an
+expired producer deadline does not prevent recording failure. Physical cleanup and live daemon
+qualification remain open; aborting an async task is not proof that an external effect has ended.
+
+### Native executor and terminal references — implementation 2026-09-16
+
+One configured multi-thread Tokio executor runs native startup, request dispatch, planning and
+Delta metadata/write operations. Worker count follows native concurrency; blocking-thread count and
+stack size are explicit validated settings, reported separately from Arrow memory. Tasks and running
+blocking callbacks retain the executor owner and admission until physical exit. Futures are boxed
+before task-local/tracing composition to avoid large moves on caller stacks. Background shutdown is
+a drop fallback, not evidence of graceful effect cleanup.
+
+A terminal control transition carries the complete typed Artifact descriptor. Atomic publication
+projects the same descriptor from its delivery column. Job recovery uses that captured record and
+returns a retained delivery; it no longer scans filesystem metadata to identify the terminal result.
+Artifact metadata now has native receipt records; remaining procedural result composition is still assigned replacement.
+
+### Native artifact receipts and finite commands — 2026-09-16
+
+> Decision: ADR-0041, ADR-0042, ADR-0044, ADR-0045.
+
+The four durable service job kinds lower through NativeCommand/NativeCommandExec under the
+aggregate DataFusion planner. Planning and unpolled streams invoke no driver. Owned job handles
+remain live beyond terminal publication until the driver returns and native cleanup is settled.
+Query admission is released before polling a command so its native child queries can proceed.
+Complete physical subprocess/kernel cleanup and unified policy-grant qualification remain open.
+
+The byte store is a bounded conditional immutable writer and descriptor-based reader. It has no
+metadata sidecars, first-retrieval authority, digest-prefix scanning or dependency traversal.
+Artifact receipts and retained-result sections/references are typed Delta control record families.
+Native joins select a captured handle; recursive plans select result and export dependencies with
+explicit depth/cardinality/byte refusals. The final artifact-window driver consumes a native range.
+Issued artifact handles carry their exact acquisition receipt and full SHA-256 content identity.
+Native retention records select these receipts before delivery or publication. The indexed JSON
+body remains a physical encoding; remaining procedural response composition and schema/epoch
+qualification are still implementation work.
+
+The active wire contract is **3.0** and the physical retained-result encoding is
+**research-result/3**. The Rust emitter supplies the packaged JSON schemas and Python DTOs.
+Independent current outcome/vocabulary fixtures are under `tests/fixtures/wire`; runtime
+conformance no longer treats the previous research-v2 snapshot as its authority. Gate C19 keeps
+its stable ID and behavioral scope across Rust, generated schema, packaged schema and adapter.
+No older envelope or retained-result decoding variant is registered.
+
+
+### Native execution policy and attempt publication (Plan 15, 2026-09-16)
+
+Physical execution receipt capture is a bounded decoder. DataFusion evaluates image/root/helper
+identity, enabled-profile, resource-observation and cleanup predicates. The native relation serves
+status, verification, semantic inspection and local rustdoc builds, with independent qualification
+for each ecosystem. Kernel output parsing uses native regex extraction, checked casts and resource
+comparisons; the operator probe uses the same parser. This is implemented policy, with durable
+claim-bound grant/replay qualification still open.
+
+Actual producer attempts remain native relations during contribution and conflict retries. Native
+union/conflict/reference plans feed control publication without reconstructing a Rust attempt
+collection. The same Arrow metadata contract supplies native scope compatibility, observed
+configuration selection and producer-count aggregation. Tagged control payloads use Delta's
+nullable nested read schema, semantic presence predicates, and a native ProjectionExec schema
+boundary. Export selects from each typed family, materializes one native Delta candidate and
+validates its captured provider before publication. The focused comparison/export journey passed;
+full concurrency, fault and installed qualification remain required.
+
+### Native dependency and HTTP acquisition (Plan 15, 2026-09-16)
+
+The Python dependency frontier retains immutable Arrow facts. Native demand/extra joins select
+expansion and acquisition steps, enforce constraints and bounds, converge over cycles and emit
+ordered lock content. The daemon parses metadata and executes the selected physical acquisitions;
+there is no second selected-package map or work queue.
+
+HTTP observations live in a purpose-specific Delta table, with body receipts in the control
+catalog and exact bytes in the common immutable store. Native plans own response/Accept selection,
+negative-cache freshness, validator choice and 304 metadata merging. No JSON HTTP cache remains.
+The URL UDF performs syntax decoding only. One native policy applies endpoint, address and redirect
+rules to original URLs and captured DNS answers. A per-hop client is bound to those admitted
+addresses; automatic redirects and ambient proxy routing are disabled. The same outer monotonic
+deadline covers DNS, requests and body streaming. Claim-bound grant/replay and native retention
+maintenance remain required work, beyond these scoped acquisition checks.
+
+
+### Native resolution and command authority (Plan 15, 2026-09-16)
+
+Captured native joins select retained resolution versus acquisition/offline refusal. Registry
+normalization is explicit: Python physical names normalize punctuation; Rust physical acquisition
+preserves underscores and native catalog matching normalizes equivalence.
+
+Core Arrow schemas now cover finite command arguments and every serialized configuration field.
+Native identity expressions bind policy, command inputs and physical claim. All four daemon job
+entry points use this authority; their separate JSON/Debug identity constructions are deleted.
+Effective configuration lives in `delta/operation_policies`. Each retained command binds its
+exact table ID, version and contract plus native policy identity. Native preconditions combine its exact
+context/snapshot/environment with the shared qualification/profile relation. The resulting claim
+records selected route/image, command key, policy identity and grant identity.
+
+Native operator scopes and shared runtime tasks carry a privately constructed live grant. HTTP
+and decoder entry points require current Delta ownership; HTTP additionally checks its effective
+configuration against the grant and rechecks redirects. A correlation handle cannot manufacture
+or resurrect a claim. Control encoding follows declared field names, so physical projection order
+does not alter stored semantics. The focused Delta ownership fixture passed (92.05 s); complete
+contained-process qualification, full environment/input scope, replay faults and installed
+qualification remain implementation work.
+
+
+Native control publication now evaluates its bounded contribution DAG once, retaining Arrow rows
+for every constraint and the logical Delta append. One overflow row preserves cardinality refusal;
+managed result bounds still apply. This is finite transition materialization, not corpus decoding
+or a second semantic evaluator. Shared service shutdown waits for both actual driver cleanup and
+durable reconciliation before a state root can be reopened; transient settlement failures keep
+physical ownership installed while reconciliation retries under the configured drain deadline.
+
+
+### Native contained process definitions (Plan 15, 2026-09-16)
+
+Policy configuration, executor operations and process effects use one immutable Delta definition
+implementation, with separate finite tables and exact table/version/contract references. Core
+Arrow contracts and native SHA expressions replace executor operation and image/containment JSON
+identities. Protocol version 3 carries the new operation identity; no old protocol fallback exists.
+Input inventories include paths, kinds, permissions, lengths and complete byte digests. Native
+`map_entries` and `array_sort` canonicalize maps while preserving command argument order.
+
+Native process admission joins the live claimed command, configured route and current physical
+qualification, checks build opt-in and exact image/configuration/containment binding, and retains
+the admitted operation and effect. The runner consumes the exact retained operation and checks
+live ownership before container creation and start. Observations distinguish command effect/grant
+witnesses from operator qualification. Qualification is a private fixed-probe contract with empty
+inputs/outputs and no acquisition network. Its authority cannot run target code. Warm language
+servers retain resource ownership; reuse requires the new job's native admission, and every
+request/notification checks the bound live grant. Cleanup retains responsibility on refusal.
+
+These changes are source implementation. Real container/worker, warm-session/revocation and
+installed-client qualification, full derived-environment linkage and retention enrollment remain
+required. Native diagnostic state is implemented as described below; final lifecycle and retention
+qualification remains open.
+
+
+### Native diagnostic event authority (Plan 15, 2026-09-16)
+
+Core owns the typed runtime observation schemas. Physical plan traversal captures bounded raw
+metrics, rule transitions and plan text into Arrow; it does not maintain query history or totals.
+One Delta `native_events` relation contains query, operation-end, index and failure facts with a
+runtime ID, sequence and timestamp. Native filters, ordered limits, window joins and aggregates
+produce the last eight queries, last 32 operations/failures, failure-to-query support and totals.
+Recovery actions retain their opaque MCP wire payload; cause, stage, affected IDs and bounds are
+native columns. There is no JSON history file or second Rust summary/queue authority.
+
+Ingress is a bounded 32-entry channel of Arrow batches with shared DataFusion memory reservations.
+When capture cannot fit, status exposes dropped observations. A single writer uses the shared
+executor, memory and spill pools with a separately reserved admission lane, avoiding a barrier
+waiting behind its caller's sole query permit. Diagnostic output has a finite 32-row/8-MiB bound.
+Diagnostic queries are unobserved to prevent feedback, and writer ownership does not form a cycle
+with observed runtime handles. A read/flush barrier waits for submitted observations to commit.
+Transaction versions follow writer commit order, independently of concurrent observation capture.
+Persistence failure closes this authority and makes diagnostic reads fail explicitly. The service
+shutdown path includes the barrier; complete writer stop/fault and retention gates remain open.
+
+The focused runtime contract target passed all 14 cases (2026-09-16, 0.84 s), including retained
+failure restart, operation correlation, memory exhaustion and owned timeout cleanup. This is
+source evidence, not installed or full Plan 15 acceptance.

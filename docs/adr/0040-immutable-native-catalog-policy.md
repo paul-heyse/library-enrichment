@@ -1,7 +1,7 @@
 ---
 id: ADR-0040
 title: Bind immutable native catalogs and one effective policy
-status: accepted
+status: superseded
 date: 2026-09-15
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§6.3, §8.4, §14.3]
 review: docs/design_review/reviews/design_review_datafusion-capability-leverage_2026-09-15.md
 evidence: Tested
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0041
 revisit: A required native consumer cannot use the immutable bound inventory or measured physical policy.
 verification: Plan 14 J01-J17; native catalog conformance, scan statistics, scoring and index consumer tests; just architecture-check.
 ---
@@ -117,3 +117,4 @@ measurement obligations. Registers R-44/R-45 retain the observable deferred-cons
 - 2026-09-15 — proposed; implementation authorized, functional validation pending.
 
 - 2026-09-15 — accepted after the Accept-scoped source review, complete target replacement, native/installed consumer qualification and single verified activation; measured strategy decisions are recorded separately.
+- 2026-09-15 — superseded by ADR-0041.

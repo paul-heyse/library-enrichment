@@ -1,0 +1,138 @@
+{
+  "module": "buoyant_kernel::committer::commit_types",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.committer.commit_types.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::committer::commit_types::CommitResponse",
+      "name": "CommitResponse",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum CommitResponse",
+      "summary": "`CommitResponse` is the result of committing a transaction via a catalog. The committer uses this type to indicate whether or not the commit was successful or conflicted. The kernel then transforms the associated [`Transaction`] into the a…",
+      "doc": "api/buoyant_kernel.committer.commit_types.md#commitresponse",
+      "aliases": [
+        "buoyant_kernel::committer::CommitResponse",
+        "delta_kernel::committer::commit_types::CommitResponse"
+      ],
+      "variants": [
+        "Committed",
+        "Conflict"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::committer::commit_types::CommitType",
+      "name": "CommitType",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum CommitType",
+      "summary": "The type of commit operation being performed. This communicates to the committer whether this is a table creation or a write to an existing table, and whether the table is catalog-managed.",
+      "doc": "api/buoyant_kernel.committer.commit_types.md#committype",
+      "aliases": [
+        "buoyant_kernel::committer::CommitType",
+        "delta_kernel::committer::commit_types::CommitType"
+      ],
+      "variants": [
+        "PathBasedCreate",
+        "CatalogManagedCreate",
+        "PathBasedWrite",
+        "CatalogManagedWrite",
+        "UpgradeToCatalogManaged",
+        "DowngradeToPathBased"
+      ],
+      "methods": [
+        {
+          "name": "is_create",
+          "signature": "fn is_create(&self) -> bool",
+          "summary": "Returns `true` if this is a create-table commit (version 0)."
+        },
+        {
+          "name": "requires_catalog_committer",
+          "signature": "fn requires_catalog_committer(&self) -> bool",
+          "summary": "Returns `true` if this commit includes a catalog-managed operation, including upgrade/downgrade."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::committer::commit_types::CommitMetadata",
+      "name": "CommitMetadata",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct CommitMetadata",
+      "summary": "`CommitMetadata` bundles the metadata about a commit operation. This includes the commit path, version, and protocol/metadata state of the table being committed to. Catalog committers can use the protocol and metadata getters to validate o…",
+      "doc": "api/buoyant_kernel.committer.commit_types.md#commitmetadata",
+      "aliases": [
+        "buoyant_kernel::committer::CommitMetadata",
+        "delta_kernel::committer::commit_types::CommitMetadata"
+      ],
+      "methods": [
+        {
+          "name": "commit_type",
+          "signature": "fn commit_type(&self) -> CommitType",
+          "summary": "The type of commit operation being performed."
+        },
+        {
+          "name": "has_domain_metadata_change",
+          "signature": "fn has_domain_metadata_change(&self, domain: &str) -> bool",
+          "summary": "Returns `true` if this commit includes a domain metadata change for the given domain name."
+        },
+        {
+          "name": "has_metadata_change",
+          "signature": "fn has_metadata_change(&self) -> bool",
+          "summary": "Returns `true` if this commit changes the table's metadata."
+        },
+        {
+          "name": "has_protocol_change",
+          "signature": "fn has_protocol_change(&self) -> bool",
+          "summary": "Returns `true` if this commit changes the table's protocol."
+        },
+        {
+          "name": "has_reader_feature",
+          "signature": "fn has_reader_feature(&self, feature_name: &str) -> bool",
+          "summary": "Check if the effective protocol has a specific reader feature by name."
+        },
+        {
+          "name": "has_writer_feature",
+          "signature": "fn has_writer_feature(&self, feature_name: &str) -> bool",
+          "summary": "Check if the effective protocol has a specific writer feature by name."
+        },
+        {
+          "name": "in_commit_timestamp",
+          "signature": "fn in_commit_timestamp(&self) -> i64",
+          "summary": "The in-commit timestamp for the commit. Note that this may differ from the actual commit file modification time."
+        },
+        {
+          "name": "max_published_version",
+          "signature": "fn max_published_version(&self) -> Option<Version>",
+          "summary": "The maximum published version of the table."
+        },
+        {
+          "name": "metadata_configuration",
+          "signature": "fn metadata_configuration(&self) -> Option<&HashMap<String, String>>",
+          "summary": "Get the raw metadata configuration for the effective metadata. Returns `None` if no metadata is set."
+        },
+        {
+          "name": "published_commit_path",
+          "signature": "fn published_commit_path(&self) -> DeltaResult<Url>",
+          "summary": "The commit path is the absolute path (e.g. s3://bucket/table/_delta_log/{version}.json) to the published delta file for this commit."
+        },
+        {
+          "name": "staged_commit_path",
+          "signature": "fn staged_commit_path(&self) -> DeltaResult<Url>",
+          "summary": "The staged commit path is the absolute path (e.g. s3://bucket/table/_delta_log/{version}.{uuid}.json) to the staged commit file."
+        },
+        {
+          "name": "table_root",
+          "signature": "fn table_root(&self) -> &Url",
+          "summary": "The root URL of the table being committed to."
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Version",
+          "summary": "The version to which the transaction is being committed."
+        }
+      ]
+    }
+  ]
+}

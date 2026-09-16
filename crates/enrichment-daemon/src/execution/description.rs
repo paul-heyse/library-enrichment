@@ -85,7 +85,8 @@ pub fn containment_identity(config: &Execution) -> io::Result<String> {
         "helper": helper, "broker": broker,
         "controller": canonical::sha256_hex(include_bytes!("mod.rs")),
         "description": canonical::sha256_hex(include_bytes!("description.rs")),
-        "resource_validator": canonical::sha256_hex(include_bytes!("resources.rs")),
+        "resource_contract": canonical::sha256_hex(include_bytes!("../../../enrichment-core/src/execution/facts.rs")),
+        "execution_policy": canonical::sha256_hex(include_bytes!("../../../enrichment-store/src/execution_policy.rs")),
         "resources": config.resources()?, "output_bytes": config.output_bytes.clamp(1024,1048576),
         "deadline_seconds": config.deadline_seconds.clamp(1,600),
         "cleanup_deadline_seconds": config.cleanup_deadline_seconds.clamp(5,3600),
@@ -215,7 +216,7 @@ fn probes() -> BTreeMap<&'static str, Vec<Probe>> {
 #[derive(Debug, Serialize)]
 pub struct QualificationProbes {
     pub tools: BTreeMap<String, enrichment_core::execution::ProcessObservation>,
-    pub resources: super::resources::ResourceProbe,
+    pub resources: enrichment_core::execution::facts::ResourceProbe,
 }
 
 pub async fn probe(
@@ -234,7 +235,23 @@ pub async fn probe(
         config.cleanup_deadline_seconds,
         1,
     );
-    let runner = super::Runner::new(config, cache, supervisor.clone())?;
+    let mut runner = super::Runner::new(config, cache, supervisor.clone())?;
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &cache.join("qualification-spill"),
+        Default::default(),
+    )
+    .map_err(io::Error::other)?;
+    let mut commands: Vec<_> = probes.iter().map(|probe| probe.argv.clone()).collect();
+    commands.push(vec![
+        "/bin/sh".into(),
+        "-c".into(),
+        enrichment_core::execution::facts::RESOURCE_PROBE.into(),
+    ]);
+    runner.authority = super::Authority::Qualification(Arc::new(Qualification {
+        runtime: runtime.clone(),
+        image: image.into(),
+        commands,
+    }));
     runner.recover_owned()?;
     super::budget::recover_orphans(cache)?;
     let runner = runner.admitted().await?;
@@ -271,12 +288,18 @@ pub async fn probe(
                 &[
                     "/bin/sh".into(),
                     "-c".into(),
-                    super::resources::PROBE.into(),
+                    enrichment_core::execution::facts::RESOURCE_PROBE.into(),
                 ],
                 Arc::new(AtomicBool::new(false)),
             )
             .await?;
-        let resources = super::resources::ResourceProbe::new(config.resources()?, process)?;
+        let resources = enrichment_store::execution_policy::resource_probe(
+            &runtime,
+            config.resources()?,
+            process,
+        )
+        .await
+        .map_err(io::Error::other)?;
         Ok(QualificationProbes {
             tools: observed,
             resources,
@@ -289,9 +312,104 @@ pub async fn probe(
     operation
 }
 
+/// Only the operator's fixed probe path can construct this authority. It has no target inputs,
+/// acquisition network, output handoff, or user-selected program surface.
+pub(super) struct Qualification {
+    runtime: enrichment_store::runtime::QueryRuntime,
+    image: String,
+    commands: Vec<Vec<String>>,
+}
+impl std::fmt::Debug for Qualification {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Qualification")
+            .field("image", &self.image)
+            .finish_non_exhaustive()
+    }
+}
+impl Qualification {
+    pub(super) async fn admit(
+        &self,
+        image: &str,
+        operation: &capsule_protocol::Operation,
+        acquisition: bool,
+    ) -> io::Result<()> {
+        use datafusion::{common::ScalarValue, prelude::lit};
+        let check = async {
+            let session = self.runtime.session();
+            let schema = enrichment_core::operation::process_schema();
+            let mut decoder = arrow::json::ReaderBuilder::new(schema).build_decoder()?;
+            decoder.serialize(std::slice::from_ref(operation))?;
+            let batch = decoder.flush()?.ok_or_else(|| datafusion::error::DataFusionError::Execution("qualification input missing".into()))?;
+            session.register_table("qualification_operation", session.read_batch(batch)?.into_view())?;
+            let mut commands = session.read_empty()?.filter(lit(false))?.select(vec![lit(ScalarValue::List(ScalarValue::new_list(&[], &arrow::datatypes::DataType::Utf8, false))).alias("argv")])?;
+            for argv in &self.commands {
+                commands = commands.union(session.read_empty()?.select(vec![lit(ScalarValue::List(ScalarValue::new_list(&argv.iter().map(|value| ScalarValue::from(value.as_str())).collect::<Vec<_>>(), &arrow::datatypes::DataType::Utf8, false))).alias("argv")])?)?;
+            }
+            session.register_table("qualification_commands", commands.into_view())?;
+            self.runtime.require_empty(session.sql("SELECT 'qualification_scope_mismatch' AS witness FROM qualification_operation p JOIN qualification_commands c ON p.argv=c.argv WHERE p.mode='command' AND cardinality(map_keys(p.inputs))=0 AND cardinality(map_keys(p.outputs))=0 AND $1=$2 AND NOT CAST($3 AS BOOLEAN) HAVING count(*)<>1").await?.with_param_values(vec![ScalarValue::from(image),self.image.as_str().into(),acquisition.into()])?, "fixed_qualification_contract", "operator_qualification").await
+        }.await;
+        check.map_err(io::Error::other)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn qualification_authority_admits_only_the_fixed_empty_input_probe() {
+        let root = tempfile::tempdir().unwrap();
+        let qualification = Qualification {
+            runtime: enrichment_store::runtime::QueryRuntime::new(root.path(), Default::default())
+                .unwrap(),
+            image: format!("sha256:{}", "a".repeat(64)),
+            commands: vec![probes()["rust"][0].argv.clone()],
+        };
+        let mut operation = capsule_protocol::Operation {
+            version: capsule_protocol::VERSION,
+            mode: capsule_protocol::Mode::Command,
+            argv: qualification.commands[0].clone(),
+            inputs: Default::default(),
+            outputs: Default::default(),
+            data_bytes: 1024,
+            output_bytes: 1024,
+            deadline_millis: 1000,
+            binding: "fixed-physical-config".into(),
+        };
+        qualification
+            .admit(&qualification.image, &operation, false)
+            .await
+            .unwrap();
+        assert!(
+            qualification
+                .admit(&qualification.image, &operation, true)
+                .await
+                .is_err()
+        );
+        assert!(
+            qualification
+                .admit("another-image", &operation, false)
+                .await
+                .is_err()
+        );
+        operation.argv.push("caller-argument".into());
+        assert!(
+            qualification
+                .admit(&qualification.image, &operation, false)
+                .await
+                .is_err()
+        );
+        operation.argv.pop();
+        operation.inputs.insert(
+            "target".into(),
+            capsule_protocol::inventory::Entry::Directory { mode: 0o700 },
+        );
+        assert!(
+            qualification
+                .admit(&qualification.image, &operation, false)
+                .await
+                .is_err()
+        );
+    }
     #[test]
     fn qualification_state_is_explicit_physical_and_disjoint_from_engine() {
         let temporary = tempfile::tempdir().unwrap();

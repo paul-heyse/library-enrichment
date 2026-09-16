@@ -1,7 +1,7 @@
 ---
 id: ADR-0032
 title: Configure producer capacity and qualify observed resource limits
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§8.2, §9.1, §9.2, §10]
 review: docs/design_review/reviews/design_review_native-architecture-completion_2026-09-14.md
 evidence: Implemented
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0044
 revisit: Measurements require a different concurrency or resource policy, or another execution platform lacks these observed kernel controls.
 verification: workstation_capacity_is_preserved_and_invalid_requests_are_rejected; missing_or_changed_resource_observations_cannot_qualify; execution_configured_contract_matches_kernel_limits_and_output_bound
 ---
@@ -134,3 +134,4 @@ embedded Context7, age-based expiry or automatic project edit is added.
 
 - 2026-09-14 — accepted after scoped native architecture review; remaining actual producer,
   client and final performance qualification stays in Plan 12.
+- 2026-09-15 — superseded by ADR-0044.

@@ -1,0 +1,279 @@
+{
+  "module": "deltalake_core::table",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.table.md",
+  "items": [
+    {
+      "path": "deltalake_core::table::normalize_table_url",
+      "name": "normalize_table_url",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn normalize_table_url(url: &url::Url) -> url::Url",
+      "summary": "Normalize a given [Url] to **always** contain a trailing slash. This is critically important for assumptions about [Url] equivalency and more importantly for **joining** on a Url`.",
+      "doc": "api/deltalake_core.table.md#normalize_table_url",
+      "aliases": [
+        "deltalake::table::normalize_table_url"
+      ]
+    },
+    {
+      "path": "deltalake_core::table::DeltaTable",
+      "name": "DeltaTable",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaTable",
+      "summary": "In memory representation of a Delta Table",
+      "doc": "api/deltalake_core.table.md#deltatable",
+      "aliases": [
+        "deltalake::DeltaTable",
+        "deltalake::table::DeltaTable",
+        "deltalake_core::DeltaTable"
+      ],
+      "fields": [
+        "state",
+        "config"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add_columns",
+          "signature": "fn add_columns(self) -> AddColumnBuilder",
+          "summary": "Add new columns"
+        },
+        {
+          "name": "add_constraint",
+          "signature": "fn add_constraint(self) -> ConstraintBuilder",
+          "summary": "Add a check constraint to a table"
+        },
+        {
+          "name": "add_feature",
+          "signature": "fn add_feature(self) -> AddTableFeatureBuilder",
+          "summary": "Enable a table feature for a table"
+        },
+        {
+          "name": "create",
+          "signature": "fn create(&self) -> CreateBuilder",
+          "summary": "Create a new Delta table at this location, returning a [`CreateBuilder`]."
+        },
+        {
+          "name": "delete",
+          "signature": "fn delete(self) -> DeleteBuilder",
+          "summary": "Delete data from Delta table"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "drop_column_not_null",
+          "signature": "fn drop_column_not_null(self) -> DropColumnNotNullBuilder",
+          "summary": "Drop the `NOT NULL` constraint on a column, making it nullable"
+        },
+        {
+          "name": "drop_constraints",
+          "signature": "fn drop_constraints(self) -> DropConstraintBuilder",
+          "summary": "Drops constraints from a table"
+        },
+        {
+          "name": "filesystem_check",
+          "signature": "fn filesystem_check(self) -> FileSystemCheckBuilder",
+          "summary": "Audit active files with files present on the filesystem"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "generate",
+          "signature": "fn generate(self) -> GenerateBuilder",
+          "summary": "Generate a symlink_format_manifest for other engines"
+        },
+        {
+          "name": "get_active_add_actions_by_partitions",
+          "signature": "fn get_active_add_actions_by_partitions(&self, filters: &[FilterLiteral<'_>]) -> BoxStream<'_, DeltaResult<LogicalFileView>>",
+          "summary": "Stream all logical files matching the provided conjunction (AND) of `(column, op, value)` partition filter literals."
+        },
+        {
+          "name": "get_active_add_actions_by_predicate",
+          "signature": "fn get_active_add_actions_by_predicate(&self, predicate: Option<PredicateRef>) -> BoxStream<'_, DeltaResult<LogicalFileView>>",
+          "summary": "Stream all logical files matching the provided kernel [`Predicate`](delta_kernel::expressions::Predicate)."
+        },
+        {
+          "name": "get_file_uris",
+          "signature": "fn get_file_uris(&self) -> DeltaResult<impl Iterator<Item = String> + '_>",
+          "summary": "Returns a URIs for all active files present in the current table version."
+        },
+        {
+          "name": "get_file_uris_by_partitions",
+          "signature": "async fn get_file_uris_by_partitions(&self, filters: &[FilterLiteral<'_>]) -> Result<Vec<String>, DeltaTableError>",
+          "summary": "Return the file uris as strings for the partition(s)"
+        },
+        {
+          "name": "get_files_by_partitions",
+          "signature": "async fn get_files_by_partitions(&self, filters: &[FilterLiteral<'_>]) -> Result<Vec<Path>, DeltaTableError>",
+          "summary": "Returns the file list tracked in current table state filtered by provided partition filter literals."
+        },
+        {
+          "name": "get_latest_version",
+          "signature": "async fn get_latest_version(&self) -> Result<Version, DeltaTableError>",
+          "summary": "returns the latest available version of the table"
+        },
+        {
+          "name": "history",
+          "signature": "async fn history(&self, limit: Option<usize>) -> Result<impl Iterator<Item = CommitInfo> + use<>, DeltaTableError>",
+          "summary": "Returns provenance information, including the operation, user, and so on, for each write to a table. The table history retention is based on the `logRetentionDuration` property of the Delta Table, 30 days by default. If `limit` is given, t…"
+        },
+        {
+          "name": "load",
+          "signature": "async fn load(&mut self) -> Result<(), DeltaTableError>",
+          "summary": "Load DeltaTable with data from latest checkpoint"
+        },
+        {
+          "name": "load_version",
+          "signature": "async fn load_version(&mut self, version: Version) -> Result<(), DeltaTableError>",
+          "summary": "Loads the DeltaTable state for the given version."
+        },
+        {
+          "name": "load_with_datetime",
+          "signature": "async fn load_with_datetime(&mut self, datetime: DateTime<Utc>) -> Result<(), DeltaTableError>",
+          "summary": "Time travel Delta table to the latest version that's created at or before provided `datetime` argument."
+        },
+        {
+          "name": "log_store",
+          "signature": "fn log_store(&self) -> LogStoreRef",
+          "summary": "get a shared reference to the log store"
+        },
+        {
+          "name": "merge",
+          "signature": "fn merge<E: Into<Expression>>(self, source: datafusion::prelude::DataFrame, predicate: E) -> MergeBuilder",
+          "summary": "Update data from Delta table"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(log_store: LogStoreRef, config: DeltaTableConfig) -> Self",
+          "summary": "Create a new Delta Table struct without loading any data from backing storage."
+        },
+        {
+          "name": "new_in_memory",
+          "signature": "fn new_in_memory() -> Self",
+          "summary": "Create a new [`DeltaTable`] instance, backed by an un-initialized in memory table"
+        },
+        {
+          "name": "object_store",
+          "signature": "fn object_store(&self) -> ObjectStoreRef",
+          "summary": "get a shared reference to the delta object store"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize<'a>(self) -> OptimizeBuilder<'a>",
+          "summary": "Audit active files with files present on the filesystem"
+        },
+        {
+          "name": "restore",
+          "signature": "fn restore(self) -> RestoreBuilder",
+          "summary": "Restore the table to an earlier version or timestamp, returning a [`RestoreBuilder`]."
+        },
+        {
+          "name": "scan_cdf",
+          "signature": "fn scan_cdf(self) -> CdfLoadBuilder",
+          "summary": "Load a table with CDF Enabled"
+        },
+        {
+          "name": "scan_table",
+          "signature": "fn scan_table(&self) -> LoadBuilder",
+          "summary": "Read the table's data into Arrow record batches, returning a [`LoadBuilder`]."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "set_tbl_properties",
+          "signature": "fn set_tbl_properties(self) -> SetTablePropertiesBuilder",
+          "summary": "Set table properties"
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> DeltaResult<&DeltaTableState>",
+          "summary": "Returns the currently loaded state snapshot."
+        },
+        {
+          "name": "table_provider",
+          "signature": "fn table_provider(&self) -> TableProviderBuilder",
+          "summary": "Get a table provider for the table referenced by this DeltaTable."
+        },
+        {
+          "name": "table_url",
+          "signature": "fn table_url(&self) -> &Url",
+          "summary": "The URI of the underlying data"
+        },
+        {
+          "name": "try_from_url",
+          "signature": "async fn try_from_url(uri: Url) -> DeltaResult<Self>",
+          "summary": "Create a new [`DeltaTable`] instance from a URL."
+        },
+        {
+          "name": "try_from_url_with_storage_options",
+          "signature": "async fn try_from_url_with_storage_options(uri: Url, storage_options: HashMap<String, String>) -> DeltaResult<Self>",
+          "summary": "Create a [`DeltaTable`] instance from URL with storage options"
+        },
+        {
+          "name": "update",
+          "signature": "fn update(self) -> UpdateBuilder",
+          "summary": "Update data from Delta table"
+        },
+        {
+          "name": "update_datafusion_session",
+          "signature": "fn update_datafusion_session(&self, session: &dyn Session) -> DeltaResult<()>",
+          "summary": "Ensure the provided DataFusion session is prepared to read this table."
+        },
+        {
+          "name": "update_field_metadata",
+          "signature": "fn update_field_metadata(self) -> UpdateFieldMetadataBuilder",
+          "summary": "Update field metadata"
+        },
+        {
+          "name": "update_incremental",
+          "signature": "async fn update_incremental(&mut self, max_version: Option<Version>) -> Result<(), DeltaTableError>",
+          "summary": "Updates the DeltaTable by incrementally applying newer versions, optionally bounded by `max_version`."
+        },
+        {
+          "name": "update_state",
+          "signature": "async fn update_state(&mut self) -> Result<(), DeltaTableError>",
+          "summary": "Updates the DeltaTable to the most recent state committed to the transaction log by loading the last checkpoint and incrementally applying each version since."
+        },
+        {
+          "name": "update_table_metadata",
+          "signature": "fn update_table_metadata(self) -> UpdateTableMetadataBuilder",
+          "summary": "Update table metadata"
+        },
+        {
+          "name": "vacuum",
+          "signature": "fn vacuum(self) -> VacuumBuilder",
+          "summary": "Vacuum stale files from delta table"
+        },
+        {
+          "name": "verify_deltatable_existence",
+          "signature": "async fn verify_deltatable_existence(&self) -> DeltaResult<bool>",
+          "summary": "Check if the [`DeltaTable`] exists"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Option<Version>",
+          "summary": "Currently loaded version of the table - if any."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(self, batches: impl IntoIterator<Item = RecordBatch>) -> WriteBuilder",
+          "summary": "Write the given record batches to the table, returning a [`WriteBuilder`]."
+        }
+      ]
+    }
+  ]
+}

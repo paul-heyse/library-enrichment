@@ -1,0 +1,188 @@
+{
+  "module": "deltalake_core::logstore::config",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.logstore.config.md",
+  "items": [
+    {
+      "path": "deltalake_core::logstore::config::parse_bool",
+      "name": "parse_bool",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn parse_bool(value: &str) -> DeltaResult<bool>",
+      "summary": "Parse a string into a `bool`, accepting common truthy spellings (e.g. \"1\", \"true\").",
+      "doc": "api/deltalake_core.logstore.config.md#parse_bool",
+      "aliases": [
+        "deltalake::logstore::config::parse_bool"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::parse_f64",
+      "name": "parse_f64",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn parse_f64(value: &str) -> DeltaResult<f64>",
+      "summary": "Parse a string into an `f64`, returning a descriptive error on failure.",
+      "doc": "api/deltalake_core.logstore.config.md#parse_f64",
+      "aliases": [
+        "deltalake::logstore::config::parse_f64"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::parse_string",
+      "name": "parse_string",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn parse_string(value: &str) -> DeltaResult<String>",
+      "summary": "Parse a configuration value as a plain string (an infallible identity conversion).",
+      "doc": "api/deltalake_core.logstore.config.md#parse_string",
+      "aliases": [
+        "deltalake::logstore::config::parse_string"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::parse_usize",
+      "name": "parse_usize",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn parse_usize(value: &str) -> DeltaResult<usize>",
+      "summary": "Parse a string into a `usize`, returning a descriptive error on failure.",
+      "doc": "api/deltalake_core.logstore.config.md#parse_usize",
+      "aliases": [
+        "deltalake::logstore::config::parse_usize"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::str_is_truthy",
+      "name": "str_is_truthy",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn str_is_truthy(val: &str) -> bool",
+      "summary": "Return true for all the stringly values typically associated with true",
+      "doc": "api/deltalake_core.logstore.config.md#str_is_truthy",
+      "aliases": [
+        "deltalake::logstore::config::str_is_truthy"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::ParseResult",
+      "name": "ParseResult",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ParseResult<T: std::fmt::Debug>",
+      "summary": "Generic container for parsing configuration",
+      "doc": "api/deltalake_core.logstore.config.md#parseresult",
+      "aliases": [
+        "deltalake::logstore::config::ParseResult"
+      ],
+      "fields": [
+        "config",
+        "unparsed",
+        "errors",
+        "is_default"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "raise_errors",
+          "signature": "fn raise_errors(&self) -> DeltaResult<()>",
+          "summary": "Return an error if any key/value pair failed to parse, otherwise `Ok(())`."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::StorageConfig",
+      "name": "StorageConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct StorageConfig",
+      "summary": "Resolved configuration for constructing and decorating an object store backend.",
+      "doc": "api/deltalake_core.logstore.config.md#storageconfig",
+      "aliases": [
+        "deltalake::logstore::StorageConfig",
+        "deltalake::logstore::config::StorageConfig",
+        "deltalake_core::logstore::StorageConfig"
+      ],
+      "fields": [
+        "runtime",
+        "retry",
+        "limit",
+        "certificate",
+        "unknown_properties",
+        "raw"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "decorate_store",
+          "signature": "fn decorate_store<T: ObjectStore + Clone>(&self, store: T, table_root: &url::Url) -> DeltaResult<Box<dyn ObjectStore>>",
+          "summary": "Wrap an object store with additional layers of functionality."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "parse_options",
+          "signature": "fn parse_options<K, V, I>(options: I) -> DeltaResult<Self> where I: IntoIterator<Item = (K, V)>, K: AsRef<str> + Into<String>, V: AsRef<str> + Into<String>",
+          "summary": "Parse options into a StorageConfig."
+        },
+        {
+          "name": "raw",
+          "signature": "fn raw(&self) -> impl Iterator<Item = (&String, &String)>",
+          "summary": "Iterate over the raw, unparsed key/value options retained on this config."
+        },
+        {
+          "name": "with_io_runtime",
+          "signature": "fn with_io_runtime(self, rt: IORuntime) -> Self",
+          "summary": "Attach a dedicated IO [`IORuntime`] used to execute storage operations."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::config::TryUpdateKey",
+      "name": "TryUpdateKey",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait TryUpdateKey: Default",
+      "summary": "A configuration type that can be incrementally populated from string key/value pairs.",
+      "doc": "api/deltalake_core.logstore.config.md#tryupdatekey",
+      "aliases": [
+        "deltalake::logstore::config::TryUpdateKey"
+      ],
+      "implementors": [
+        "deltalake_core::logstore::storage::CertificateConfig",
+        "deltalake_core::logstore::storage::LimitConfig",
+        "deltalake_core::logstore::storage::runtime::RuntimeConfig",
+        "deltalake_core::table::builder::DeltaTableConfig",
+        "object_store::client::retry::RetryConfig"
+      ],
+      "required_methods": [
+        "load_from_environment",
+        "try_update_key"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "load_from_environment",
+          "signature": "fn load_from_environment(&mut self) -> DeltaResult<()>",
+          "summary": "Load configuration values from environment variables"
+        },
+        {
+          "name": "try_update_key",
+          "signature": "fn try_update_key(&mut self, key: &str, value: &str) -> DeltaResult<Option<()>>",
+          "summary": "Update an internal field in the configuration."
+        }
+      ]
+    }
+  ]
+}

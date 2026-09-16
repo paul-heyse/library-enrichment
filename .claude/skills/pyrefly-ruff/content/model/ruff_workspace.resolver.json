@@ -1,0 +1,290 @@
+{
+  "module": "ruff_workspace::resolver",
+  "crate": "ruff_workspace",
+  "api": "api/ruff_workspace.resolver.md",
+  "items": [
+    {
+      "path": "ruff_workspace::resolver::ConfigurationOrigin",
+      "name": "ConfigurationOrigin",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum ConfigurationOrigin",
+      "summary": "How the configuration is provided.",
+      "doc": "api/ruff_workspace.resolver.md#configurationorigin",
+      "variants": [
+        "Unknown",
+        "UserSpecified",
+        "UserSettings",
+        "Ancestor"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_workspace::resolver::ExclusionKind",
+      "name": "ExclusionKind",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum ExclusionKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Exclude",
+        "ExtendExclude",
+        "LintExclude",
+        "FormatExclude"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::InclusionKind",
+      "name": "InclusionKind",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum InclusionKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Include",
+        "ExtendInclude"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::PyprojectDiscoveryStrategy",
+      "name": "PyprojectDiscoveryStrategy",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum PyprojectDiscoveryStrategy",
+      "summary": "The strategy used to discover the relevant `pyproject.toml` file for each Python file.",
+      "doc": "api/ruff_workspace.resolver.md#pyprojectdiscoverystrategy",
+      "variants": [
+        "Fixed",
+        "Hierarchical"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_workspace::resolver::Relativity",
+      "name": "Relativity",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum Relativity",
+      "summary": "The strategy for resolving file paths in a `pyproject.toml`.",
+      "doc": "api/ruff_workspace.resolver.md#relativity",
+      "variants": [
+        "Cwd",
+        "Parent"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: ConfigurationOrigin) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::ResolvedFile",
+      "name": "ResolvedFile",
+      "kind": "enum",
+      "crate": "ruff_workspace",
+      "signature": "enum ResolvedFile",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Root",
+        "Nested"
+      ],
+      "methods": [
+        {
+          "name": "file_name",
+          "signature": "fn file_name(&self) -> &OsStr"
+        },
+        {
+          "name": "into_path",
+          "signature": "fn into_path(self) -> PathBuf"
+        },
+        {
+          "name": "is_root",
+          "signature": "fn is_root(&self) -> bool"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &Path"
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::match_any_exclusion",
+      "name": "match_any_exclusion",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn match_any_exclusion(path: &std::path::Path, resolver_settings: &FileResolverSettings, lint_exclude: Option<&globset::GlobSet>, format_exclude: Option<&globset::GlobSet>) -> Option<ExclusionKind>",
+      "summary": "Return the [`ExclusionKind`] for a given [`Path`], if the path or any of its ancestors match any of the exclusion criteria.",
+      "doc": "api/ruff_workspace.resolver.md#match_any_exclusion"
+    },
+    {
+      "path": "ruff_workspace::resolver::match_any_inclusion",
+      "name": "match_any_inclusion",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn match_any_inclusion(path: &std::path::Path, resolver_settings: &FileResolverSettings) -> Option<InclusionKind>",
+      "summary": "Return the [`InclusionKind`] for a given [`Path`], if the path match any of the inclusion criteria.",
+      "doc": "api/ruff_workspace.resolver.md#match_any_inclusion"
+    },
+    {
+      "path": "ruff_workspace::resolver::match_exclusion",
+      "name": "match_exclusion",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn match_exclusion<P: AsRef<std::path::Path>, R: AsRef<std::path::Path>>(file_path: P, file_basename: R, exclusion: &globset::GlobSet) -> bool",
+      "summary": "Return `true` if the given file should be ignored based on the exclusion criteria.",
+      "doc": "api/ruff_workspace.resolver.md#match_exclusion"
+    },
+    {
+      "path": "ruff_workspace::resolver::project_file_at_path",
+      "name": "project_file_at_path",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn project_file_at_path(path: &std::path::Path, resolver: &mut Resolver<'_>, transformer: &dyn ConfigurationTransformer) -> anyhow::Result<bool>",
+      "summary": "Return `true` if the Python file at [`Path`] is _not_ excluded.",
+      "doc": "api/ruff_workspace.resolver.md#project_file_at_path"
+    },
+    {
+      "path": "ruff_workspace::resolver::project_files_in_path",
+      "name": "project_files_in_path",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn project_files_in_path<'a>(paths: &[std::path::PathBuf], pyproject_config: &'a PyprojectConfig, transformer: &dyn ConfigurationTransformer + Sync) -> anyhow::Result<(Vec<anyhow::Result<ResolvedFile, ignore::Error>>, Resolver<'a>)>",
+      "summary": "Find all project files in a set of paths, following configured include/exclude settings.",
+      "doc": "api/ruff_workspace.resolver.md#project_files_in_path"
+    },
+    {
+      "path": "ruff_workspace::resolver::resolve_configuration",
+      "name": "resolve_configuration",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn resolve_configuration(initial_config_path: &std::path::Path, transformer: &dyn ConfigurationTransformer, origin: ConfigurationOrigin) -> anyhow::Result<configuration::Configuration>",
+      "summary": "Recursively resolve a [`Configuration`] from a `pyproject.toml` file at the specified [`Path`].",
+      "doc": "api/ruff_workspace.resolver.md#resolve_configuration"
+    },
+    {
+      "path": "ruff_workspace::resolver::resolve_root_settings",
+      "name": "resolve_root_settings",
+      "kind": "function",
+      "crate": "ruff_workspace",
+      "signature": "fn resolve_root_settings(pyproject: &std::path::Path, transformer: &dyn ConfigurationTransformer, origin: ConfigurationOrigin) -> anyhow::Result<settings::Settings>",
+      "summary": "Extract the [`Settings`] from a given `pyproject.toml` and process the configuration with the given [`ConfigurationTransformer`].",
+      "doc": "api/ruff_workspace.resolver.md#resolve_root_settings"
+    },
+    {
+      "path": "ruff_workspace::resolver::PyprojectConfig",
+      "name": "PyprojectConfig",
+      "kind": "struct",
+      "crate": "ruff_workspace",
+      "signature": "struct PyprojectConfig",
+      "summary": "The configuration information from a `pyproject.toml` file.",
+      "doc": "api/ruff_workspace.resolver.md#pyprojectconfig",
+      "fields": [
+        "strategy",
+        "settings",
+        "path"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(strategy: PyprojectDiscoveryStrategy, settings: Settings, path: Option<PathBuf>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::Resolver",
+      "name": "Resolver",
+      "kind": "struct",
+      "crate": "ruff_workspace",
+      "signature": "struct Resolver<'a>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "base_settings",
+          "signature": "fn base_settings(&self) -> &Settings",
+          "summary": "Return the [`Settings`] from the [`PyprojectConfig`]."
+        },
+        {
+          "name": "force_exclude",
+          "signature": "fn force_exclude(&self) -> bool",
+          "summary": "Return `true` if the [`Resolver`] should force-exclude files passed directly to the CLI."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(pyproject_config: &'a PyprojectConfig) -> Self",
+          "summary": "Create a new [`Resolver`] for the given [`PyprojectConfig`]."
+        },
+        {
+          "name": "package_roots",
+          "signature": "fn package_roots(&'a self, files: &[&'a Path]) -> FxHashMap<&'a Path, Option<PackageRoot<'a>>>",
+          "summary": "Return a mapping from Python package to its package root."
+        },
+        {
+          "name": "resolve",
+          "signature": "fn resolve(&self, path: &Path) -> &Settings",
+          "summary": "Return the appropriate [`Settings`] for a given [`Path`]."
+        },
+        {
+          "name": "resolve_with_path",
+          "signature": "fn resolve_with_path(&self, path: &Path) -> (&Settings, Option<&Path>)",
+          "summary": "Return the appropriate [`Settings`] and config file path for a given [`Path`]."
+        },
+        {
+          "name": "settings",
+          "signature": "fn settings(&self) -> impl Iterator<Item = &Settings>",
+          "summary": "Return an iterator over the resolved [`Settings`] in this [`Resolver`]."
+        }
+      ]
+    },
+    {
+      "path": "ruff_workspace::resolver::ConfigurationTransformer",
+      "name": "ConfigurationTransformer",
+      "kind": "trait",
+      "crate": "ruff_workspace",
+      "signature": "trait ConfigurationTransformer",
+      "summary": "Applies a transformation to a [`Configuration`].",
+      "doc": "api/ruff_workspace.resolver.md#configurationtransformer",
+      "implementors": [
+        "ruff::args::ConfigArguments"
+      ],
+      "required_methods": [
+        "transform"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "transform",
+          "signature": "fn transform(&self, config: Configuration) -> Configuration"
+        }
+      ]
+    }
+  ]
+}

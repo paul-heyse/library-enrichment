@@ -1,0 +1,193 @@
+{
+  "_comment": [
+    "Each probe is a capability question plus the recipe that must answer it. `expect` is a",
+    "regex that must match; `reject` one that must not. Together they are the check that the",
+    "repository is navigable, not merely complete: integrity proves every pointer resolves, and",
+    "these prove a reader following the documented path actually lands on the answer.",
+    "",
+    "The questions are written the way they arrive -- 'who calls this', 'does that rule still",
+    "exist' -- rather than as assertions about file contents."
+  ],
+  "probes": [
+    {
+      "question": "Who calls this function? Is there any route to a call graph?",
+      "file": "catalogs/cross-references.md",
+      "expect": "python\\.CalleeToCaller"
+    },
+    {
+      "question": "Where is a symbol referenced across the whole project?",
+      "file": "catalogs/cross-references.md",
+      "expect": "python\\.XRefsViaNameByTarget"
+    },
+    {
+      "question": "Can I read --report-pysa as JSON, as its help text says?",
+      "file": "catalogs/cross-references.md",
+      "expect": "Cap'n Proto"
+    },
+    {
+      "question": "Does `ruff analyze graph` distinguish a wrong path from no imports?",
+      "file": "catalogs/import-graph.md",
+      "expect": "exit status 0"
+    },
+    {
+      "question": "Does `ruff analyze graph` give me module names?",
+      "file": "catalogs/import-graph.md",
+      "expect": "File-level, not module-level"
+    },
+    {
+      "question": "How do I add import edges the scanner cannot see?",
+      "file": "catalogs/import-graph.md",
+      "expect": "include-dependencies"
+    },
+    {
+      "question": "Does rule F401 exist, and can it fix itself?",
+      "file": "index/rules.tsv",
+      "expect": "^F401\\tunused-import\\tPyflakes\\tSometimes\\tStable\\t"
+    },
+    {
+      "question": "Which rule codes were removed and will now fail a config file?",
+      "file": "index/rules.tsv",
+      "expect": "\\tRemoved\\t"
+    },
+    {
+      "question": "Which rules do nothing unless preview mode is on?",
+      "file": "index/rules.tsv",
+      "expect": "\\tPreview\\t"
+    },
+    {
+      "question": "Does every reported rule map to the Rust enum that implements it?",
+      "file": "catalogs/rules.md",
+      "expect": "970 of them join"
+    },
+    {
+      "question": "Which Rust item implements a given rule?",
+      "file": "index/rules.tsv",
+      "expect": "\\truff_linter::codes::Rule::UnusedImport$"
+    },
+    {
+      "question": "Can the checker's language server find references and callers?",
+      "file": "catalogs/protocols.md",
+      "expect": "referencesProvider"
+    },
+    {
+      "question": "Does it offer a call hierarchy?",
+      "file": "catalogs/protocols.md",
+      "expect": "callHierarchyProvider"
+    },
+    {
+      "question": "Does TSP offer anything LSP does not?",
+      "file": "catalogs/protocols.md",
+      "expect": "typeServerMultiConnection"
+    },
+    {
+      "question": "What version do I pin ruff_python_ast to?",
+      "file": "catalogs/crate-map.md",
+      "expect": "selects a\\nversion that does not exist"
+    },
+    {
+      "question": "Which crate owns the Python AST, and how big is it?",
+      "file": "index/symbols.tsv",
+      "expect": "^ruff_python_ast::generated::Expr\\tenum\\truff_python_ast\\t"
+    },
+    {
+      "question": "Where is the type representation defined?",
+      "file": "index/symbols.tsv",
+      "expect": "^pyrefly_types::types::Type\\tenum\\t"
+    },
+    {
+      "question": "Is the Type Server Protocol readable as declarations?",
+      "file": "index/symbols.tsv",
+      "expect": "^tsp_types::"
+    },
+    {
+      "question": "Are the CLI argument structures indexed, or only the help text?",
+      "file": "index/symbols.tsv",
+      "expect": "^ruff::args::AnalyzeGraphCommand\\tstruct\\t"
+    },
+    {
+      "question": "How do I traverse the AST in source order?",
+      "file": "index/symbols.tsv",
+      "expect": "^ruff_python_ast::visitor::source_order::SourceOrderVisitor\\ttrait\\t"
+    },
+    {
+      "question": "What safety claim does a fix carry?",
+      "file": "index/symbols.tsv",
+      "expect": "^ruff_diagnostics::fix::Applicability\\tenum\\t"
+    },
+    {
+      "question": "Does ruff's semantic model give me types?",
+      "file": "topics/semantic-model.md",
+      "expect": "not a type checker"
+    },
+    {
+      "question": "Will the checker infer my function parameter types?",
+      "file": "topics/type-inference.md",
+      "expect": "parameters do not"
+    },
+    {
+      "question": "Where do I start if I do not know which capability I need?",
+      "file": "topics/00-map.md",
+      "expect": "cross-references-and-calls"
+    },
+    {
+      "question": "What machine-readable formats does `ruff check` support?",
+      "file": "catalogs/structured-outputs.md",
+      "expect": "sarif"
+    },
+    {
+      "question": "What is the default for a given ruff setting, and its type?",
+      "file": "index/config.tsv",
+      "expect": "^ruff\\tline-length\\t"
+    },
+    {
+      "question": "What must I implement to hook into AST traversal?",
+      "file": "traits/Visitor.md",
+      "expect": "Provided"
+    },
+    {
+      "question": "Are both version lines represented, rather than collapsed to one?",
+      "file": "index/symbols.tsv",
+      "expect": "^ruff_linter::codes::Rule\\t"
+    },
+    {
+      "question": "Which flags does `ruff check` accept, and does it take an output format?",
+      "file": "index/cli.tsv",
+      "expect": "^ruff\\tcheck\\tOptions\\t--output-format\\t"
+    },
+    {
+      "question": "Can I override a checker configuration key without editing a config file?",
+      "file": "catalogs/cli-surface.md",
+      "expect": "Config Overrides"
+    },
+    {
+      "question": "Which error kinds can I filter on, and how are they spelled on the CLI?",
+      "file": "index/error-kinds.tsv",
+      "expect": "^pyrefly\\tBadAssignment\\tbad-assignment$"
+    },
+    {
+      "question": "How conformant is the checker with the typing specification?",
+      "file": "catalogs/conformance.md",
+      "expect": "Pass rate"
+    },
+    {
+      "question": "Which typing areas does it fail, and by how much?",
+      "file": "index/conformance.tsv",
+      "expect": "\\tfail\\t"
+    },
+    {
+      "question": "Where does the specification state the required type at a position?",
+      "file": "catalogs/conformance.md",
+      "expect": "conformance\\.result"
+    },
+    {
+      "question": "The index must not claim the checker publishes usable crates.",
+      "file": "catalogs/crate-map.md",
+      "reject": "crates\\.io.*publishes .*pyrefly_"
+    },
+    {
+      "question": "The cross-reference catalog must not present the Pysa report as JSON.",
+      "file": "catalogs/cross-references.md",
+      "reject": "Pysa[^.]{0,40}JSON file for each module\\*\\*"
+    }
+  ]
+}

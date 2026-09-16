@@ -112,6 +112,9 @@ pub struct Session {
 }
 
 impl Session {
+    pub(crate) async fn admit_current_command(&mut self) -> io::Result<()> {
+        self.session.admit_current_command().await
+    }
     pub fn inputs_root(&self) -> &std::path::Path {
         &self.session.inputs_root
     }
@@ -360,6 +363,7 @@ impl Session {
     }
 
     async fn notify(&mut self, method: &str, params: Value) -> io::Result<()> {
+        self.session.check_authority().await?;
         tokio::time::timeout(
             Duration::from_secs(5),
             framing::write(
@@ -388,6 +392,7 @@ impl Session {
         params: Value,
         deadline: Duration,
     ) -> io::Result<Value> {
+        self.session.check_authority().await?;
         self.next_id += 1;
         let id = self.next_id;
         exchange(

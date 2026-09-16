@@ -1,0 +1,53 @@
+# `fastmcp.utilities.lifespan`
+
+Distribution: `fastmcp`
+
+## AppT
+
+`fastmcp.utilities.lifespan.AppT`
+
+```python
+AppT = TypeVar('AppT')
+```
+
+**Inferred type** (`ty`, not declared in the source): `TypeVar`
+
+## combine_lifespans
+
+`fastmcp.utilities.lifespan.combine_lifespans`
+
+```python
+def combine_lifespans(lifespans: Callable[[AppT], AbstractAsyncContextManager[Mapping[str, Any] | None]] = ()) -> Callable[[AppT], AbstractAsyncContextManager[dict[str, Any]]]
+```
+
+Combine multiple lifespans into a single lifespan.
+
+Useful when mounting FastMCP into FastAPI and you need to run
+both your app's lifespan and the MCP server's lifespan.
+
+Works with both FastAPI-style lifespans (yield None) and FastMCP-style
+lifespans (yield dict). Results are merged; later lifespans override
+earlier ones on key conflicts.
+
+Lifespans are entered in order and exited in reverse order (LIFO).
+
+Example:
+    ```python
+    from fastmcp import FastMCP
+    from fastmcp.utilities.lifespan import combine_lifespans
+    from fastapi import FastAPI
+
+    mcp = FastMCP("Tools")
+    mcp_app = mcp.http_app()
+
+    app = FastAPI(lifespan=combine_lifespans(app_lifespan, mcp_app.lifespan))
+    app.mount("/mcp", mcp_app)  # MCP endpoint at /mcp
+    ```
+
+Args:
+    *lifespans: Lifespan context manager factories to combine.
+
+Returns:
+    A combined lifespan context manager factory.
+
+

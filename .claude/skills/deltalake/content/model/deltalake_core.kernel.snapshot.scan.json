@@ -1,0 +1,128 @@
+{
+  "module": "deltalake_core::kernel::snapshot::scan",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.kernel.snapshot.scan.md",
+  "items": [
+    {
+      "path": "deltalake_core::kernel::snapshot::scan::Scan",
+      "name": "Scan",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct Scan",
+      "summary": "A configured, executable scan over a table snapshot.",
+      "doc": "api/deltalake_core.kernel.snapshot.scan.md#scan",
+      "aliases": [
+        "deltalake::kernel::Scan",
+        "deltalake_core::kernel::Scan"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(inner: Arc<KernelScan>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "logical_schema",
+          "signature": "fn logical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the logical [`Schema`] of the scan (i.e. the output schema of the scan). Note that the logical schema can differ from the physical schema due to e.g. partition columns which are present in the logical schema but n…"
+        },
+        {
+          "name": "physical_predicate",
+          "signature": "fn physical_predicate(&self) -> Option<PredicateRef>",
+          "summary": "Get the predicate [`PredicateRef`] of the scan. Returns the predicate pushed down to the physical scan, if any was derived."
+        },
+        {
+          "name": "physical_schema",
+          "signature": "fn physical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the physical [`Schema`] of the scan. This represents the schema of the underlying data files which must be read from storage."
+        },
+        {
+          "name": "scan_metadata",
+          "signature": "fn scan_metadata(&self, engine: Arc<dyn Engine>) -> SendableScanMetadataStream",
+          "summary": "Stream the per-file [`ScanMetadata`] for this scan, driving log replay on `engine`."
+        },
+        {
+          "name": "scan_metadata_from",
+          "signature": "fn scan_metadata_from<T: Iterator<Item = RecordBatch> + Send + 'static>(&self, engine: Arc<dyn Engine>, existing_version: Version, existing_data: Box<T>, existing_predicate: Option<PredicateRef>) -> SendableScanMetadataStream",
+          "summary": "Stream [`ScanMetadata`] incrementally starting from a previously observed state."
+        },
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> &SnapshotRef",
+          "summary": "Get a shared reference to the [`Snapshot`] of this scan."
+        },
+        {
+          "name": "table_root",
+          "signature": "fn table_root(&self) -> &Url",
+          "summary": "The table's root URL. Any relative paths returned from `scan_data` (or in a callback from [`ScanMetadata::visit_scan_files`]) must be resolved against this root to get the actual path to the file."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::snapshot::scan::ScanBuilder",
+      "name": "ScanBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ScanBuilder",
+      "summary": "Builder to scan a snapshot of a table.",
+      "doc": "api/deltalake_core.kernel.snapshot.scan.md#scanbuilder",
+      "aliases": [
+        "deltalake::kernel::ScanBuilder",
+        "deltalake_core::kernel::ScanBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<Scan>",
+          "summary": "Finalize the builder into a [`Scan`], validating the configured schema and predicate."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(snapshot: impl Into<Arc<KernelSnapshot>>) -> Self",
+          "summary": "Create a new [`ScanBuilder`] instance."
+        },
+        {
+          "name": "with_kernel_all_struct_stats",
+          "signature": "fn with_kernel_all_struct_stats(self) -> Self",
+          "summary": "Experimental: Use kernel's all_struct statistics mode (AFFECTS ULP). This is a preview of the modernization - use for experimentation."
+        },
+        {
+          "name": "with_predicate",
+          "signature": "fn with_predicate(self, predicate: impl Into<Option<PredicateRef>>) -> Self",
+          "summary": "Optionally provide an expression to filter rows. For example, using the predicate `x < 4` to return a subset of the rows in the scan which satisfy the filter. If `predicate_opt` is `None`, this is a no-op."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: SchemaRef) -> Self",
+          "summary": "Provide [`Schema`] for columns to select from the [`Snapshot`]."
+        },
+        {
+          "name": "with_schema_opt",
+          "signature": "fn with_schema_opt(self, schema_opt: Option<SchemaRef>) -> Self",
+          "summary": "Optionally provide a [`SchemaRef`] for columns to select from the [`Snapshot`]. See [`ScanBuilder::with_schema`] for details. If `schema_opt` is `None` this is a no-op."
+        },
+        {
+          "name": "with_skip_stats",
+          "signature": "fn with_skip_stats(self, skip_stats: bool) -> Self",
+          "summary": "Skip file statistics during kernel log replay."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::snapshot::scan::SendableScanMetadataStream",
+      "name": "SendableScanMetadataStream",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type SendableScanMetadataStream = std::pin::Pin<Box<dyn Stream<Item = DeltaResult<delta_kernel::scan::ScanMetadata>> + Send>>",
+      "summary": "A boxed, `Send`able stream of [`ScanMetadata`] results produced while scanning a snapshot.",
+      "doc": "api/deltalake_core.kernel.snapshot.scan.md#sendablescanmetadatastream",
+      "aliases": [
+        "deltalake::kernel::SendableScanMetadataStream",
+        "deltalake_core::kernel::SendableScanMetadataStream"
+      ]
+    }
+  ]
+}

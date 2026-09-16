@@ -9,6 +9,36 @@ use datafusion::{
     prelude::{col, lit},
 };
 use enrichment_core::search::spec::SearchSpec;
+
+#[tokio::test]
+async fn native_tokens_are_unicode_aware_distinct_and_bounded() {
+    let root = tempfile::tempdir().unwrap();
+    let runtime =
+        enrichment_store::runtime::QueryRuntime::new(root.path(), Default::default()).unwrap();
+    let tokens = enrichment_store::scoring::tokens(&runtime, "Runtime runtime :: Widget é x")
+        .await
+        .unwrap();
+    assert_eq!(
+        tokens
+            .into_iter()
+            .collect::<std::collections::BTreeSet<_>>(),
+        ["runtime", "widget", "é"]
+            .into_iter()
+            .map(String::from)
+            .collect()
+    );
+    assert!(
+        enrichment_store::scoring::tokens(
+            &runtime,
+            &(0..65)
+                .map(|i| format!("word{i}"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+        .await
+        .is_err()
+    );
+}
 use enrichment_store::{
     projection::TextColumn,
     runtime::{QueryLimits, QueryRuntime},
@@ -62,22 +92,26 @@ async fn native_eligibility_includes_summary_short_queries_and_excludes_bonus_on
             .table("candidates")
             .await
             .expect("table")
-            .filter(scoring::eligibility(&spec.symbol_clauses))
+            .filter(scoring::eligibility(&spec).unwrap())
             .expect("eligibility");
         let native_plan = frame.logical_plan().display_indent().to_string();
         assert!(!native_plan.contains("evidence_symbol_score"));
-        let udf = scoring::function(ScoreKind::Symbol, spec);
         let frame = frame
             .select(vec![
                 col("path"),
-                udf.call(vec![
-                    col("path"),
-                    col("name"),
-                    col("signature"),
-                    col("doc_summary"),
-                    col("docs"),
-                    col("is_reexport"),
-                ])
+                scoring::ranking(
+                    ScoreKind::Symbol,
+                    &spec,
+                    vec![
+                        col("path"),
+                        col("name"),
+                        col("signature"),
+                        col("doc_summary"),
+                        col("docs"),
+                        col("is_reexport"),
+                    ],
+                )
+                .unwrap()
                 .alias("ranking"),
             ])
             .expect("projection");
@@ -112,7 +146,7 @@ async fn native_eligibility_includes_summary_short_queries_and_excludes_bonus_on
         .table("candidates")
         .await
         .expect("table")
-        .filter(scoring::eligibility(&spec.symbol_clauses))
+        .filter(scoring::eligibility(&spec).unwrap())
         .expect("filter");
     assert_eq!(runtime.execute(frame).await.expect("empty result").rows, 0);
 }
@@ -124,15 +158,15 @@ async fn literal_pattern_characters_and_struct_factors_survive_native_fragment_p
         QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).expect("runtime");
     let session = runtime.session();
     let spec = SearchSpec::new("a_%");
-    let frame = session.sql("SELECT 'a_%' AS subject, 'ordinary text' AS text UNION ALL SELECT 'axb', 'ordinary text'").await.expect("fixture").filter(scoring::eligibility(&spec.fragment_clauses)).expect("native filter");
+    let frame = session.sql("SELECT 'a_%' AS label, 'ordinary text' AS text UNION ALL SELECT 'axb', 'ordinary text'").await.expect("fixture").filter(scoring::fragment_eligibility(&spec).unwrap()).expect("native filter");
     let ranking =
-        scoring::function(ScoreKind::Fragment, spec).call(vec![col("subject"), col("text")]);
+        scoring::ranking(ScoreKind::Fragment, &spec, vec![col("label"), col("text")]).unwrap();
     let frame = frame
         .with_column("ranking", ranking)
         .expect("rank")
         .filter(col("ranking").field("score").gt(lit(0u32)))
         .expect("score domain")
-        .select(vec![col("subject"), col("ranking").field("factors")])
+        .select(vec![col("label"), col("ranking").field("factors")])
         .expect("factors");
     let output = runtime.execute(frame).await.expect("execute");
     assert_eq!(output.rows, 1);
@@ -153,7 +187,7 @@ async fn native_string_encodings_keep_scores_metadata_and_arguments_without_utf8
     use arrow::array::{ArrayRef, LargeStringArray, StringArray};
     use datafusion::{
         common::tree_node::{TreeNode, TreeNodeRecursion},
-        logical_expr::{Expr, ExprSchemable},
+        logical_expr::Expr,
     };
     let dir = tempfile::tempdir().unwrap();
     let runtime = QueryRuntime::new(dir.path(), QueryLimits::default()).unwrap();
@@ -200,19 +234,22 @@ async fn native_string_encodings_keep_scores_metadata_and_arguments_without_utf8
         .unwrap();
         let session = runtime.session();
         let source = session.read_batch(batch).unwrap();
-        let score = scoring::function(ScoreKind::Symbol, SearchSpec::new("éclair"));
         let frame = source
             .select(vec![
-                score
-                    .call(vec![
+                scoring::ranking(
+                    ScoreKind::Symbol,
+                    &SearchSpec::new("éclair"),
+                    vec![
                         col("path"),
                         col("name"),
                         col("docs"),
                         col("docs"),
                         col("docs"),
                         lit(true),
-                    ])
-                    .alias("ranking"),
+                    ],
+                )
+                .unwrap()
+                .alias("ranking"),
             ])
             .unwrap();
         let (state, logical) = frame.clone().into_parts();
@@ -225,16 +262,10 @@ async fn native_string_encodings_keep_scores_metadata_and_arguments_without_utf8
             .apply_with_subqueries(|plan| {
                 for expression in plan.expressions() {
                     expression.apply(|expr| {
-                        if let Expr::ScalarFunction(function) = expr
-                            && function.name() == "evidence_symbol_score_v2"
-                        {
-                            found += 1;
-                            for arg in &function.args[..5] {
-                                assert!(!matches!(arg, Expr::Cast(_)));
-                                assert_eq!(
-                                    arg.get_type(plan.inputs()[0].schema().as_ref()).unwrap(),
-                                    kind
-                                );
+                        if let Expr::ScalarFunction(function) = expr {
+                            assert!(!function.name().starts_with("evidence_"));
+                            if function.name() == "array_sum" {
+                                found += 1;
                             }
                         }
                         Ok(TreeNodeRecursion::Continue)

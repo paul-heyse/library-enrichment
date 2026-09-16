@@ -114,7 +114,11 @@ impl Manager {
             lock = self.sessions.lock() => lock,
         };
         let warm = match sessions.remove(&key) {
-            Some(warm) => {
+            Some(mut warm) => {
+                if let Err(error) = warm.session.admit_current_command().await {
+                    warm.session.stop().await?;
+                    return Err(error);
+                }
                 self.bump(|m| m.reused += 1);
                 warm
             }

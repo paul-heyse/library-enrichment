@@ -1,0 +1,142 @@
+{
+  "module": "deltalake_core::logstore::factories",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.logstore.factories.md",
+  "items": [
+    {
+      "path": "deltalake_core::logstore::factories::logstore_factories",
+      "name": "logstore_factories",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn logstore_factories() -> LogStoreFactoryRegistry",
+      "summary": "Access global registry of logstore factories.",
+      "doc": "api/deltalake_core.logstore.factories.md#logstore_factories",
+      "aliases": [
+        "deltalake::logstore::logstore_factories",
+        "deltalake_core::logstore::logstore_factories"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::object_store_factories",
+      "name": "object_store_factories",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn object_store_factories() -> ObjectStoreFactoryRegistry",
+      "summary": "Access global registry of object store factories",
+      "doc": "api/deltalake_core.logstore.factories.md#object_store_factories",
+      "aliases": [
+        "deltalake::logstore::object_store_factories",
+        "deltalake_core::logstore::object_store_factories"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::store_for",
+      "name": "store_for",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn store_for<K, V, I>(url: &url::Url, options: I) -> DeltaResult<super::ObjectStoreRef> where I: IntoIterator<Item = (K, V)>, K: AsRef<str> + Into<String>, V: AsRef<str> + Into<String>",
+      "summary": "Simpler access pattern for the [ObjectStoreFactoryRegistry] to get a single store",
+      "doc": "api/deltalake_core.logstore.factories.md#store_for",
+      "aliases": [
+        "deltalake::logstore::store_for",
+        "deltalake_core::logstore::store_for"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::LogStoreFactory",
+      "name": "LogStoreFactory",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait LogStoreFactory: Send + Sync",
+      "summary": "Trait for generating [LogStore] implementations",
+      "doc": "api/deltalake_core.logstore.factories.md#logstorefactory",
+      "aliases": [
+        "deltalake::logstore::LogStoreFactory",
+        "deltalake_core::logstore::LogStoreFactory"
+      ],
+      "implementors": [
+        "deltalake_aws::S3LogStoreFactory",
+        "deltalake_azure::AzureFactory",
+        "deltalake_catalog_unity::UnityCatalogFactory",
+        "deltalake_core::logstore::factories::DefaultLogStoreFactory",
+        "deltalake_gcp::GcpFactory",
+        "deltalake_hdfs::HdfsFactory",
+        "deltalake_lakefs::LakeFSLogStoreFactory",
+        "deltalake_mount::MountFactory",
+        "deltalake_opendal::factory::OpendalLogStoreFactory"
+      ],
+      "required_methods": [
+        "with_options"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "with_options",
+          "signature": "fn with_options(&self, prefixed_store: ObjectStoreRef, root_store: ObjectStoreRef, location: &Url, options: &StorageConfig) -> DeltaResult<Arc<dyn LogStore>>",
+          "summary": "Create a new [`LogStore`] from options."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::ObjectStoreFactory",
+      "name": "ObjectStoreFactory",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait ObjectStoreFactory: Send + Sync",
+      "summary": "Factory trait for creating [`ObjectStore`](::object_store::ObjectStore) instances at runtime",
+      "doc": "api/deltalake_core.logstore.factories.md#objectstorefactory",
+      "aliases": [
+        "deltalake::logstore::ObjectStoreFactory",
+        "deltalake_core::logstore::ObjectStoreFactory"
+      ],
+      "implementors": [
+        "deltalake_aws::storage::S3ObjectStoreFactory",
+        "deltalake_azure::AzureFactory",
+        "deltalake_catalog_unity::UnityCatalogFactory",
+        "deltalake_core::logstore::factories::DefaultObjectStoreFactory",
+        "deltalake_gcp::GcpFactory",
+        "deltalake_hdfs::HdfsFactory",
+        "deltalake_lakefs::storage::LakeFSObjectStoreFactory",
+        "deltalake_mount::MountFactory",
+        "deltalake_opendal::factory::OpendalObjectStoreFactory"
+      ],
+      "required_methods": [
+        "parse_url_opts"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "parse_url_opts",
+          "signature": "fn parse_url_opts(&self, url: &Url, config: &StorageConfig) -> DeltaResult<(ObjectStoreRef, Path)>",
+          "summary": "Parse URL options and create an object store instance."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::LogStoreFactoryRegistry",
+      "name": "LogStoreFactoryRegistry",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type LogStoreFactoryRegistry = std::sync::Arc<dashmap::DashMap<url::Url, std::sync::Arc<dyn LogStoreFactory>>>",
+      "summary": "Registry of [`LogStoreFactory`] instances",
+      "doc": "api/deltalake_core.logstore.factories.md#logstorefactoryregistry",
+      "aliases": [
+        "deltalake::logstore::LogStoreFactoryRegistry",
+        "deltalake_core::logstore::LogStoreFactoryRegistry"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::factories::ObjectStoreFactoryRegistry",
+      "name": "ObjectStoreFactoryRegistry",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type ObjectStoreFactoryRegistry = std::sync::Arc<dashmap::DashMap<url::Url, std::sync::Arc<dyn ObjectStoreFactory>>>",
+      "summary": "Factory registry to manage [`ObjectStoreFactory`] instances",
+      "doc": "api/deltalake_core.logstore.factories.md#objectstorefactoryregistry",
+      "aliases": [
+        "deltalake::logstore::ObjectStoreFactoryRegistry",
+        "deltalake_core::logstore::ObjectStoreFactoryRegistry"
+      ]
+    }
+  ]
+}

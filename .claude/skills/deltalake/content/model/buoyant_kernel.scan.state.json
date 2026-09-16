@@ -1,0 +1,114 @@
+{
+  "module": "buoyant_kernel::scan::state",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.scan.state.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::scan::state::transform_to_logical",
+      "name": "transform_to_logical",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn transform_to_logical(engine: &dyn Engine, physical_data: Box<dyn EngineData>, physical_schema: &schema::SchemaRef, logical_schema: &schema::Schema, transform: Option<ExpressionRef>) -> DeltaResult<Box<dyn EngineData>>",
+      "summary": "utility function for applying a transform expression to convert data from physical to logical format",
+      "doc": "api/buoyant_kernel.scan.state.md#transform_to_logical",
+      "aliases": [
+        "delta_kernel::scan::state::transform_to_logical"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::state::DvInfo",
+      "name": "DvInfo",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct DvInfo",
+      "summary": "this struct can be used by an engine to materialize a selection vector",
+      "doc": "api/buoyant_kernel.scan.state.md#dvinfo",
+      "aliases": [
+        "delta_kernel::scan::state::DvInfo"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(deletion_vector: DeletionVectorDescriptor) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_row_indexes",
+          "signature": "fn get_row_indexes(&self, engine: &dyn Engine, table_root: &url::Url) -> DeltaResult<Option<Vec<u64>>>",
+          "summary": "Returns a vector of row indexes that should be *removed* from the result set"
+        },
+        {
+          "name": "get_selection_vector",
+          "signature": "fn get_selection_vector(&self, engine: &dyn Engine, table_root: &url::Url) -> DeltaResult<Option<Vec<bool>>>"
+        },
+        {
+          "name": "has_vector",
+          "signature": "fn has_vector(&self) -> bool",
+          "summary": "Check if this DvInfo contains a Deletion Vector. This is mostly used to know if the associated [`Stats`] struct has fully accurate information or not."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::state::ScanFile",
+      "name": "ScanFile",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ScanFile",
+      "summary": "A `ScanFile` represents information about one file that needs to be scanned to read a table.",
+      "doc": "api/buoyant_kernel.scan.state.md#scanfile",
+      "aliases": [
+        "delta_kernel::scan::state::ScanFile"
+      ],
+      "fields": [
+        "path",
+        "size",
+        "modification_time",
+        "stats",
+        "dv_info",
+        "transform",
+        "partition_values"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::scan::state::Stats",
+      "name": "Stats",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Stats",
+      "summary": "Give engines an easy way to consume stats",
+      "doc": "api/buoyant_kernel.scan.state.md#stats",
+      "aliases": [
+        "delta_kernel::scan::state::Stats"
+      ],
+      "fields": [
+        "num_records"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::scan::state::ScanCallback",
+      "name": "ScanCallback",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type ScanCallback<T> = fn(&mut T, ScanFile)",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::scan::state::ScanCallback"
+      ]
+    }
+  ]
+}

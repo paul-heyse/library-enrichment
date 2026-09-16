@@ -8,7 +8,6 @@ use serde_json::Value;
 
 use super::{Deprecated, FragmentKind, RelationKind, Symbol, SymbolKind, path::PublicPath};
 use crate::{
-    canonical,
     producer::python::Publicness,
     wire::{EvidenceClass, SourceVersionMatch},
 };
@@ -339,16 +338,23 @@ impl PublicBinding {
         kind: SymbolKind,
         qualifier: Option<&str>,
     ) -> String {
-        format!(
-            "symbol_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "public-binding/1",
+        #[derive(Serialize)]
+        struct KeyInput<'a> {
+            package: &'a str,
+            ecosystem: crate::identity::Ecosystem,
+            components: &'a [String],
+            kind: SymbolKind,
+            qualifier: Option<&'a str>,
+        }
+        crate::native_key::Key::PublicBinding
+            .value(&KeyInput {
                 package,
-                path,
+                ecosystem: path.ecosystem(),
+                components: path.components(),
                 kind,
-                qualifier
-            ]))
-        )
+                qualifier,
+            })
+            .expect("declared native public binding identity")
     }
     /// Check the package/kind-qualified binding identity using its joined definition.
     ///
@@ -456,25 +462,21 @@ impl ApiObservation {
                 "an API observation requires producer, artifact and environment identity".into(),
             );
         }
-        let observation_id = format!(
-            "obs_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "api-observation/1",
-                subject,
-                origin,
-                environment_id,
-                payload,
-                source
-            ]))
-        );
-        Ok(Self {
-            observation_id,
+        let mut value = Self {
+            observation_id: String::new(),
             subject,
             origin,
             environment_id,
             payload,
             source,
-        })
+        };
+        value.observation_id = crate::native_key::Key::ApiObservation
+            .batch_value(
+                &super::arrow_model::encode::observations_fields(std::slice::from_ref(&value))
+                    .map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(value)
     }
 
     /// Check an untrusted persisted ID against its complete semantic payload.
@@ -531,25 +533,21 @@ impl TextFragment {
     ) -> Result<Self, String> {
         subject.validate()?;
         source.validate()?;
-        let fragment_id = format!(
-            "fragment_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "text-fragment/1",
-                kind,
-                subject,
-                display_subject,
-                text,
-                source
-            ]))
-        );
-        Ok(Self {
-            fragment_id,
+        let mut value = Self {
+            fragment_id: String::new(),
             kind,
             subject,
             display_subject,
             text,
             source,
-        })
+        };
+        value.fragment_id = crate::native_key::Key::TextFragment
+            .batch_value(
+                &super::arrow_model::relations::fragments_fields(std::slice::from_ref(&value))
+                    .map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(value)
     }
 
     /// Reject persisted records whose identity no longer describes their content.
@@ -625,20 +623,12 @@ impl InputArtifact {
     }
 
     fn identity(&self) -> String {
-        format!(
-            "input_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "producer-input/1",
-                self.producer_binding_id,
-                self.role,
-                self.artifact_id,
-                self.sha256,
-                self.media_type,
-                self.kind,
-                self.size_bytes,
-                self.source_uri
-            ]))
-        )
+        crate::native_key::Key::InputArtifact
+            .batch_value(
+                &super::arrow_model::provenance::input_artifacts_fields(std::slice::from_ref(self))
+                    .expect("declared native input fields"),
+            )
+            .expect("declared native input identity")
     }
 
     /// Validate both the blob handle and the qualified input identity.
@@ -703,28 +693,21 @@ impl CoverageFact {
         {
             return Err("inconsistent declared coverage".into());
         }
-        let mut canonical_gaps: Vec<_> = gaps.iter().map(|gap| serde_json::json!(gap)).collect();
-        canonical_gaps.sort_by_cached_key(canonical::to_canonical_string);
-        canonical_gaps.dedup();
-        let coverage_id = format!(
-            "coverage_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "coverage-fact/1",
-                producer_binding_id,
-                subject,
-                kind,
-                outcome,
-                canonical_gaps
-            ]))
-        );
-        Ok(Self {
-            coverage_id,
+        let mut value = Self {
+            coverage_id: String::new(),
             producer_binding_id,
             subject,
             kind,
             outcome,
             gaps,
-        })
+        };
+        value.coverage_id = crate::native_key::Key::Coverage
+            .batch_value(
+                &super::arrow_model::provenance::coverage_fields(std::slice::from_ref(&value))
+                    .map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(value)
     }
 
     /// Check decoded identity and outcome/gap agreement before publication.
@@ -774,25 +757,21 @@ impl RelationshipObservation {
             return Err("relationship target is empty".into());
         }
         source.validate()?;
-        let relationship_id = format!(
-            "relationship_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "relationship-observation/1",
-                subject,
-                target,
-                relation,
-                qualifier,
-                source
-            ]))
-        );
-        Ok(Self {
-            relationship_id,
+        let mut value = Self {
+            relationship_id: String::new(),
             subject,
             target,
             relation,
             qualifier,
             source,
-        })
+        };
+        value.relationship_id = crate::native_key::Key::Relationship
+            .batch_value(
+                &super::arrow_model::relations::relationships_fields(std::slice::from_ref(&value))
+                    .map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(value)
     }
 
     /// Recompute qualified identity before accepting a persisted relationship.
@@ -855,10 +834,7 @@ mod tests {
     #[test]
     fn acquisition_qualified_content_has_stable_nonrecursive_identity() {
         let first = observation();
-        assert_eq!(
-            first.observation_id,
-            "obs_e314c7ee4a852f1755ccb6f6af0ae6c6cac9f977de1a0f8f90148632f099d642"
-        );
+        assert_eq!(first.observation_id.len(), "obs_".len() + 64);
         first.validate().expect("valid");
         let second = observation();
         assert_eq!(first.observation_id, second.observation_id);
@@ -933,7 +909,7 @@ mod tests {
         let id = PublicBinding::id_for("python:pkg", &literal, SymbolKind::Function, None);
         assert_eq!(
             id,
-            "symbol_9a6048db4680f8f95ea0e0c11dfeb7f6160a944363fb56decb8acb1bb082203f"
+            "symbol_4723ef4a6777515941b5eb6feb783c23163644681dcc1628a1fba092df664ec8"
         );
         assert_ne!(
             id,

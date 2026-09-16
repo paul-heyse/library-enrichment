@@ -1,0 +1,840 @@
+{
+  "module": "pyrefly_types::type_level_dsl",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.type_level_dsl.md",
+  "items": [
+    {
+      "path": "pyrefly_types::type_level_dsl::MAX_HELPER_CALL_DEPTH",
+      "name": "MAX_HELPER_CALL_DEPTH",
+      "kind": "constant",
+      "crate": "pyrefly_types",
+      "signature": "const MAX_HELPER_CALL_DEPTH: usize = 32",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::MAX_HELPER_GRAPH_EDGES",
+      "name": "MAX_HELPER_GRAPH_EDGES",
+      "kind": "constant",
+      "crate": "pyrefly_types",
+      "signature": "const MAX_HELPER_GRAPH_EDGES: usize = 16384",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::MAX_HELPER_GRAPH_NODES",
+      "name": "MAX_HELPER_GRAPH_NODES",
+      "kind": "constant",
+      "crate": "pyrefly_types",
+      "signature": "const MAX_HELPER_GRAPH_NODES: usize = 4096",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::DslIntegerDomain",
+      "name": "DslIntegerDomain",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum DslIntegerDomain",
+      "summary": "Which integer domain an integer-valued expression is evaluated in.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#dslintegerdomain",
+      "variants": [
+        "Flag",
+        "Dimension"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeLevelDslFunction",
+      "name": "TypeLevelDslFunction",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeLevelDslFunction",
+      "summary": "The identity of a type-level DSL operation.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeleveldslfunction",
+      "variants": [
+        "IndexShape",
+        "UserDefined",
+        "MapIntTuples"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslArithmeticOp",
+      "name": "TypeShapeDslArithmeticOp",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslArithmeticOp",
+      "summary": "The arithmetic a structurally validated dimension or Flag expression applies. Reached through `TypeShapeDslReturnKind` and `TypeShapeDslExpressionKind`, so it shares their identity requirements.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslarithmeticop",
+      "variants": [
+        "Add",
+        "Subtract",
+        "Multiply",
+        "FloorDivide",
+        "Modulo"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslComparisonOp",
+      "name": "TypeShapeDslComparisonOp",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslComparisonOp",
+      "summary": "The comparison a structurally validated DSL condition applies. `CmpOp` has no total order, so the DSL records its own closed operator set and keeps evaluator matching exhaustive.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslcomparisonop",
+      "variants": [
+        "Equal",
+        "NotEqual",
+        "LessThan",
+        "LessThanOrEqual",
+        "GreaterThan",
+        "GreaterThanOrEqual"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslConditionKind",
+      "name": "TypeShapeDslConditionKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslConditionKind",
+      "summary": "What a structurally validated DSL condition tests. Like `TypeShapeDslReturnKind`, this depends on intrinsic resolution, so it participates in `StructurallyValidatedTypeShapeDslFunction` identity.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslconditionkind",
+      "variants": [
+        "Any",
+        "SlotCompare",
+        "IntegerCompare",
+        "DimensionEquality",
+        "GeneratorElementSelfCompare",
+        "IsConcreteInt",
+        "IsIntValue",
+        "IsNone",
+        "FlagIntCompare",
+        "BoolSlot",
+        "StringEquality",
+        "Membership",
+        "LengthEqualLiteral"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslDomain",
+      "name": "TypeShapeDslDomain",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslDomain",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Int",
+        "IntTuple",
+        "IntTuples"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(self) -> &'static str"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslExpressionKind",
+      "name": "TypeShapeDslExpressionKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslExpressionKind",
+      "summary": "What a structurally validated DSL value expression computes. Like `TypeShapeDslReturnKind`, this depends on intrinsic resolution, so it participates in `StructurallyValidatedTypeShapeDslFunction` identity.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslexpressionkind",
+      "variants": [
+        "IntTupleSlot",
+        "IntTupleSlice",
+        "IntTupleConcat",
+        "Einsum",
+        "GufuncBroadcast",
+        "DimensionSlot",
+        "IntegerSlot",
+        "DimensionLiteral",
+        "Gradual",
+        "IntTupleIndex",
+        "IntTuplesIndex",
+        "DimensionTuple",
+        "IntTupleConstructor",
+        "IntTuplesConstructor",
+        "IntTupleProduct",
+        "IntTupleSum",
+        "IntTupleLength",
+        "GeneratorSourceSlot",
+        "GeneratorElementAsDimension",
+        "GeneratorElementAsFlagInt",
+        "GeneratorElementAsIntTuple",
+        "GeneratorZip",
+        "Slot",
+        "FlagValueSlot",
+        "FlagIntLiteral",
+        "FlagStringLiteral",
+        "FlagBool",
+        "FlagNone",
+        "FlagTuple",
+        "Range",
+        "FlagSequenceLength",
+        "FlagSequenceCount",
+        "FlagSequenceIndex",
+        "FlagIntArithmetic",
+        "DimensionArithmetic",
+        "Conditional",
+        "DimensionGenerator",
+        "FlagGenerator",
+        "IntTuplesGenerator"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslFlagValueKind",
+      "name": "TypeShapeDslFlagValueKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslFlagValueKind",
+      "summary": "The Flag value domain a validated operation requires of its operand. Reached through `TypeShapeDslExpressionKind`, so it shares that type's identity requirements.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslflagvaluekind",
+      "variants": [
+        "Int",
+        "String",
+        "Sequence"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslHelperArgumentError",
+      "name": "TypeShapeDslHelperArgumentError",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslHelperArgumentError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Arity",
+        "IncompatibleDomain"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslInputDomain",
+      "name": "TypeShapeDslInputDomain",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslInputDomain",
+      "summary": "The type-system domain accepted by one DSL parameter.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslinputdomain",
+      "variants": [
+        "Value",
+        "OptionalInt",
+        "Flag"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "can_use_as",
+          "signature": "fn can_use_as(self, result: TypeShapeDslDomain, narrowing: TypeShapeDslParameterNarrowing) -> bool",
+          "summary": "Whether a parameter in this domain may be used as a value in `result` after narrowing."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslIntrinsic",
+      "name": "TypeShapeDslIntrinsic",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslIntrinsic",
+      "summary": "A closed, canonical operation the DSL recognizes by callable identity rather than by spelling.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslintrinsic",
+      "variants": [
+        "Any",
+        "Concat",
+        "Einsum",
+        "GufuncBroadcast",
+        "Gradual",
+        "IsConcreteInt",
+        "IsIntValue",
+        "IntTuple",
+        "IntTuples",
+        "Prod",
+        "Sum",
+        "Invalid",
+        "Len",
+        "Range",
+        "Tuple",
+        "Zip"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslParameterNarrowing",
+      "name": "TypeShapeDslParameterNarrowing",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslParameterNarrowing",
+      "summary": "What control flow has established about a parameter at a particular use.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslparameternarrowing",
+      "variants": [
+        "Unnarrowed",
+        "IsNone",
+        "NonNone",
+        "Integer"
+      ],
+      "methods": [
+        {
+          "name": "proves_not_none",
+          "signature": "fn proves_not_none(self) -> bool",
+          "summary": "Whether this use excludes `None`."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslProgramError",
+      "name": "TypeShapeDslProgramError",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslProgramError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Cycle",
+        "Depth",
+        "NodeBudget",
+        "EdgeBudget",
+        "InconsistentDependency"
+      ],
+      "methods": [
+        {
+          "name": "message",
+          "signature": "fn message(self) -> &'static str"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslReturnKind",
+      "name": "TypeShapeDslReturnKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslReturnKind",
+      "summary": "The structurally validated source of a type-level shape DSL function's return value. Resolving this depends on more than the AST, so it participates in `StructurallyValidatedTypeShapeDslFunction` identity.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslreturnkind",
+      "variants": [
+        "Slot",
+        "Expression",
+        "Invalid",
+        "Gradual",
+        "HelperCall"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslSlotReturnKind",
+      "name": "TypeShapeDslSlotReturnKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TypeShapeDslSlotReturnKind",
+      "summary": "Validation information for a returned parameter or local slot.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslslotreturnkind",
+      "variants": [
+        "DirectParameter",
+        "ParameterAlias",
+        "KnownDomain"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::ParsedTypeShapeDslFunction",
+      "name": "ParsedTypeShapeDslFunction",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ParsedTypeShapeDslFunction",
+      "summary": "A type-level shape DSL declaration whose envelope was validated during binding.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#parsedtypeshapedslfunction",
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "has_parameter_annotation",
+          "signature": "fn has_parameter_annotation(&self, index: usize) -> bool"
+        },
+        {
+          "name": "has_return_annotation",
+          "signature": "fn has_return_annotation(&self) -> bool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &Name"
+        },
+        {
+          "name": "parameter_annotation_range",
+          "signature": "fn parameter_annotation_range(&self, index: usize) -> TextRange"
+        },
+        {
+          "name": "parameter_count",
+          "signature": "fn parameter_count(&self) -> usize"
+        },
+        {
+          "name": "parameter_name",
+          "signature": "fn parameter_name(&self, index: usize) -> &Name"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "return_annotation_range",
+          "signature": "fn return_annotation_range(&self) -> TextRange"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(definition: StmtFunctionDef, is_top_level: bool) -> Result<Self, TypeShapeDslDefinitionError>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, _ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "validate",
+          "signature": "fn validate(&self, intrinsic: impl Fn(&Expr) -> Option<TypeShapeDslIntrinsic>) -> Result<StructurallyValidatedTypeShapeDslFunction, TypeShapeDslDefinitionError>",
+          "summary": "Validate the body: its indexed storage, control flow, and every resolved execution fact evaluation later replays against the retained AST."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::ResolvedTypeShapeDslFunction",
+      "name": "ResolvedTypeShapeDslFunction",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ResolvedTypeShapeDslFunction",
+      "summary": "A validated DSL definition paired with its resolved program.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#resolvedtypeshapedslfunction",
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "contains_function",
+          "signature": "fn contains_function(&self, id: &FuncDefId) -> bool"
+        },
+        {
+          "name": "helper_graph_metrics",
+          "signature": "fn helper_graph_metrics(&self) -> (usize, usize, usize)"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &Name"
+        },
+        {
+          "name": "parameter_domains",
+          "signature": "fn parameter_domains(&self) -> &[TypeShapeDslInputDomain]"
+        },
+        {
+          "name": "parameter_name",
+          "signature": "fn parameter_name(&self, index: usize) -> &Name"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "result_domain",
+          "signature": "fn result_domain(&self) -> TypeShapeDslDomain"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(id: Arc<FuncDefId>, definition: Arc<StructurallyValidatedTypeShapeDslFunction>, parameter_domains: Vec<TypeShapeDslInputDomain>, result_domain: TypeShapeDslDomain, helpers: Vec<(Arc<FuncDefId>, Arc<Self>)>) -> Result<Self, TypeShapeDslProgramError>",
+          "summary": "Builds the resolved helper program after the caller has validated all retained metadata that depends on resolved parameter domains. Evaluation relies on that cross-crate boundary and on parameter lowering mapping unsupported runtime values…"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::StructurallyValidatedTypeShapeDslFunction",
+      "name": "StructurallyValidatedTypeShapeDslFunction",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct StructurallyValidatedTypeShapeDslFunction",
+      "summary": "An owned function AST whose restricted declaration syntax and body have been structurally validated. Future evaluation may interpret the definition relying on these invariants.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#structurallyvalidatedtypeshapedslfunction",
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "conditions",
+          "signature": "fn conditions(&self) -> impl Iterator<Item = TypeShapeDslCondition> + '_"
+        },
+        {
+          "name": "expressions",
+          "signature": "fn expressions(&self) -> impl Iterator<Item = TypeShapeDslExpression> + '_"
+        },
+        {
+          "name": "helper_calls",
+          "signature": "fn helper_calls(&self) -> impl Iterator<Item = &TypeShapeDslHelperCall>"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &Name"
+        },
+        {
+          "name": "parameter_name",
+          "signature": "fn parameter_name(&self, index: usize) -> &Name"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "returns",
+          "signature": "fn returns(&self) -> impl Iterator<Item = TypeShapeDslReturn> + '_"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, _ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "validate_with_resolved_domains",
+          "signature": "fn validate_with_resolved_domains(&self, intrinsic: impl Fn(&Expr) -> Option<TypeShapeDslIntrinsic>, parameter_domains: &[TypeShapeDslInputDomain], helper_argument_domains: Option<&[Vec<TypeShapeDslInputDomain>]>) -> Result<Self, TypeShapeDslDefinitionError>",
+          "summary": "Revalidates the body using resolved parameter domains and the domains selected by helpers."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeLevelDslCall",
+      "name": "TypeLevelDslCall",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeLevelDslCall",
+      "summary": "A deferred type-level DSL invocation retained until the operation's result is consumed.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeleveldslcall",
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_map_int_tuples",
+          "signature": "fn as_map_int_tuples(&self) -> Option<(&TypeLambda, &MapIntTuplesInterpretation, &Type)>",
+          "summary": "Returns the mapper, interpretation, and source of a `MapIntTuples` call."
+        },
+        {
+          "name": "as_map_int_tuples_mut",
+          "signature": "fn as_map_int_tuples_mut(&mut self) -> Option<&mut MapIntTuples>",
+          "summary": "Returns a mutable experimental `shape_extensions.MapIntTuples` application."
+        },
+        {
+          "name": "evaluate",
+          "signature": "fn evaluate(&self) -> Result<Type, ShapeError>",
+          "summary": "Evaluates the call, reporting incompatible concrete shapes."
+        },
+        {
+          "name": "fallback",
+          "signature": "fn fallback(&self) -> Type",
+          "summary": "Returns the gradual result for a call whose precise value cannot be determined."
+        },
+        {
+          "name": "function_name",
+          "signature": "fn function_name(&self) -> &str"
+        },
+        {
+          "name": "index_shape",
+          "signature": "fn index_shape(shape: Type, index: Type) -> Self",
+          "summary": "Constructs a native `index_shape(shape, index)` call."
+        },
+        {
+          "name": "map_int_tuples",
+          "signature": "fn map_int_tuples(mapper: TypeLambda, source: Type) -> Self",
+          "summary": "Constructs a forward `shape_extensions.MapIntTuples` application."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "result_domain",
+          "signature": "fn result_domain(&self) -> Option<TypeShapeDslDomain>",
+          "summary": "Returns the shape-DSL result domain, or `None` for a map of arbitrary result types."
+        },
+        {
+          "name": "subst_parts_mut",
+          "signature": "fn subst_parts_mut(&mut self, shadowed: &mut Vec<Quantified>, f: &mut dyn FnMut(&mut Type, &mut Vec<Quantified>))",
+          "summary": "Recurses through the call while respecting the binder introduced by a map's lambda."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "type_for_generic_bound_check",
+          "signature": "fn type_for_generic_bound_check(&self) -> Type",
+          "summary": "Projects this call to the type used for generic-bound checking."
+        },
+        {
+          "name": "user_defined",
+          "signature": "fn user_defined(function: Arc<ResolvedTypeShapeDslFunction>, args: Vec<Type>) -> Self"
+        },
+        {
+          "name": "visit_parts",
+          "signature": "fn visit_parts<'a>(&'a self, shadowed: &mut Vec<&'a Quantified>, f: &mut dyn FnMut(&'a Type, &mut Vec<&'a Quantified>))",
+          "summary": "Recurses through the call while respecting the binder introduced by a map's lambda."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslComparisonOperand",
+      "name": "TypeShapeDslComparisonOperand",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslComparisonOperand",
+      "summary": "Information needed to validate one comparison operand after parameter domains are resolved.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslcomparisonoperand",
+      "fields": [
+        "parameter_uses",
+        "is_flag_operand",
+        "non_parameter_flag_domain"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslCondition",
+      "name": "TypeShapeDslCondition",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslCondition",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::type_level_dsl::SourceRangeKey"
+      ],
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &TypeShapeDslConditionKind"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange"
+        },
+        {
+          "name": "source_range_key",
+          "signature": "fn source_range_key(&self) -> TextRange",
+          "via_trait": "pyrefly_types::type_level_dsl::SourceRangeKey"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslDefinitionError",
+      "name": "TypeShapeDslDefinitionError",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslDefinitionError",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "range",
+        "message"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslExpression",
+      "name": "TypeShapeDslExpression",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslExpression",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::type_level_dsl::SourceRangeKey"
+      ],
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &TypeShapeDslExpressionKind"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange"
+        },
+        {
+          "name": "source_range_key",
+          "signature": "fn source_range_key(&self) -> TextRange",
+          "via_trait": "pyrefly_types::type_level_dsl::SourceRangeKey"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslHelperCall",
+      "name": "TypeShapeDslHelperCall",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslHelperCall",
+      "summary": "A syntactically valid helper call retained until ordinary name resolution is available.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslhelpercall",
+      "methods": [
+        {
+          "name": "argument_domains",
+          "signature": "fn argument_domains(&self, caller_domains: &[TypeShapeDslInputDomain], expected_domains: &[TypeShapeDslInputDomain], deferred_domains: &mut HashMap<usize, TypeShapeDslInputDomain>) -> Result<Vec<TypeShapeDslInputDomain>, TypeShapeDslHelperArgumentError>"
+        },
+        {
+          "name": "callee",
+          "signature": "fn callee(&self) -> &Expr"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslParameterUse",
+      "name": "TypeShapeDslParameterUse",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslParameterUse",
+      "summary": "A parameter that contributes to a DSL value, together with its narrowing at that use.",
+      "doc": "api/pyrefly_types.type_level_dsl.md#typeshapedslparameteruse",
+      "methods": [
+        {
+          "name": "narrowing",
+          "signature": "fn narrowing(self) -> TypeShapeDslParameterNarrowing"
+        },
+        {
+          "name": "parameter",
+          "signature": "fn parameter(self) -> usize"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_level_dsl::TypeShapeDslReturn",
+      "name": "TypeShapeDslReturn",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TypeShapeDslReturn",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::type_level_dsl::SourceRangeKey"
+      ],
+      "methods": [
+        {
+          "name": "kind",
+          "signature": "fn kind(&self) -> &TypeShapeDslReturnKind"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange"
+        },
+        {
+          "name": "source_range_key",
+          "signature": "fn source_range_key(&self) -> TextRange",
+          "via_trait": "pyrefly_types::type_level_dsl::SourceRangeKey"
+        }
+      ]
+    }
+  ]
+}

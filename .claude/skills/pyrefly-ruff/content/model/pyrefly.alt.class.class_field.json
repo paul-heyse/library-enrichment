@@ -1,0 +1,338 @@
+{
+  "module": "pyrefly::alt::class::class_field",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.alt.class.class_field.md",
+  "items": [
+    {
+      "path": "pyrefly::alt::class::class_field::ClassAttribute",
+      "name": "ClassAttribute",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ClassAttribute",
+      "summary": "The result of looking up an attribute access on a class (either as an instance or a class access, and possibly through a special case lookup such as a type var with a bound).",
+      "doc": "api/pyrefly.alt.class.class_field.md#classattribute",
+      "variants": [
+        "ReadWrite",
+        "ReadOnly",
+        "NoAccess",
+        "Property",
+        "Descriptor",
+        "DescriptorRead"
+      ],
+      "methods": [
+        {
+          "name": "as_instance_method",
+          "signature": "fn as_instance_method(self) -> Option<Type>",
+          "summary": "Given a `ClassAttribute`, try to unwrap it as a method type, assuming that methods are always simple read-only or read-write attributes."
+        },
+        {
+          "name": "descriptor",
+          "signature": "fn descriptor(descriptor: Descriptor, base: DescriptorBase) -> Self"
+        },
+        {
+          "name": "is_read_only",
+          "signature": "fn is_read_only(&self) -> bool"
+        },
+        {
+          "name": "no_access",
+          "signature": "fn no_access(reason: NoAccessReason) -> Self"
+        },
+        {
+          "name": "property",
+          "signature": "fn property(getter: Type, setter: Option<Type>, cls: Class) -> Self"
+        },
+        {
+          "name": "read_only",
+          "signature": "fn read_only(ty: Type, reason: ReadOnlyReason) -> Self"
+        },
+        {
+          "name": "read_only_equivalent",
+          "signature": "fn read_only_equivalent(self, reason: ReadOnlyReason) -> Self"
+        },
+        {
+          "name": "read_write",
+          "signature": "fn read_write(ty: Type) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::ClassFieldInitialization",
+      "name": "ClassFieldInitialization",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ClassFieldInitialization",
+      "summary": "Correctly analyzing which attributes are visible on class objects, as well as handling method binding correctly, requires distinguishing which fields are assigned values in the class body.",
+      "doc": "api/pyrefly.alt.class.class_field.md#classfieldinitialization",
+      "variants": [
+        "ClassBody",
+        "Method",
+        "ClassMethod",
+        "Uninitialized",
+        "Magic"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::ClassFieldVariance",
+      "name": "ClassFieldVariance",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ClassFieldVariance<'a>",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Method",
+        "Property",
+        "Field"
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::DataclassMember",
+      "name": "DataclassMember",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DataclassMember<'a>",
+      "summary": "The result of processing a raw dataclass member (any annotated assignment in its body).",
+      "doc": "api/pyrefly.alt.class.class_field.md#dataclassmember",
+      "variants": [
+        "Field",
+        "InitVar",
+        "KwOnlyMarker",
+        "NotAField"
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::DescriptorBase",
+      "name": "DescriptorBase",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DescriptorBase",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Instance",
+        "SelfInstance",
+        "ClassDef"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::ClassField",
+      "name": "ClassField",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassField",
+      "summary": "Raw information about an attribute declared somewhere in a class. We need to know whether it is initialized in the class body in order to determine both visibility rules and whether method binding should be performed.",
+      "doc": "api/pyrefly.alt.class.class_field.md#classfield",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_named_tuple_requiredness",
+          "signature": "fn as_named_tuple_requiredness(&self) -> Required"
+        },
+        {
+          "name": "as_named_tuple_type",
+          "signature": "fn as_named_tuple_type(&self) -> Type"
+        },
+        {
+          "name": "as_typed_dict_field_info",
+          "signature": "fn as_typed_dict_field_info(&self, required_by_default: bool) -> Option<TypedDictField>"
+        },
+        {
+          "name": "can_have_override_decorator",
+          "signature": "fn can_have_override_decorator(&self) -> bool",
+          "summary": "Returns true if this field can have the `@override` decorator applied to it."
+        },
+        {
+          "name": "data_descriptor_info",
+          "signature": "fn data_descriptor_info(&self) -> Option<(TextRange, ClassType)>",
+          "summary": "For a data descriptor with a `__set__`, get the descriptor range and class type. Used for dataclass validation to check that the class-level `__get__` return type is compatible with `__set__`. Only ordinary descriptor assignments use the c…"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "for_variance_inference",
+          "signature": "fn for_variance_inference(&self) -> (&Type, Option<&Annotation>, bool)"
+        },
+        {
+          "name": "has_choices",
+          "signature": "fn has_choices(&self) -> bool"
+        },
+        {
+          "name": "has_explicit_annotation",
+          "signature": "fn has_explicit_annotation(&self) -> bool"
+        },
+        {
+          "name": "invalid_typed_dict_field",
+          "signature": "fn invalid_typed_dict_field(heap: &TypeHeap) -> Self"
+        },
+        {
+          "name": "is_abstract",
+          "signature": "fn is_abstract(&self) -> bool"
+        },
+        {
+          "name": "is_class_var",
+          "signature": "fn is_class_var(&self) -> bool"
+        },
+        {
+          "name": "is_final",
+          "signature": "fn is_final(&self) -> bool"
+        },
+        {
+          "name": "is_foreign_key",
+          "signature": "fn is_foreign_key(&self) -> bool"
+        },
+        {
+          "name": "is_init_var",
+          "signature": "fn is_init_var(&self) -> bool"
+        },
+        {
+          "name": "is_non_classvar_data_attribute",
+          "signature": "fn is_non_classvar_data_attribute(&self) -> bool",
+          "summary": "Returns true if this field is a non-ClassVar, non-staticmethod data attribute. This includes both annotation-only declarations (`x: int`) and assignments (`x: int = 1`). Such fields should not count as proper class-level attributes when ch…"
+        },
+        {
+          "name": "is_property",
+          "signature": "fn is_property(&self) -> bool"
+        },
+        {
+          "name": "is_simple_instance_attribute",
+          "signature": "fn is_simple_instance_attribute(&self) -> bool"
+        },
+        {
+          "name": "is_uninit_class_var",
+          "signature": "fn is_uninit_class_var(&self) -> bool"
+        },
+        {
+          "name": "new_synthesized",
+          "signature": "fn new_synthesized(ty: Type) -> Self"
+        },
+        {
+          "name": "new_synthesized_classvar",
+          "signature": "fn new_synthesized_classvar(ty: Type) -> Self",
+          "summary": "Like `new_synthesized`, but marks the field as a ClassVar."
+        },
+        {
+          "name": "new_synthesized_instance_attribute",
+          "signature": "fn new_synthesized_instance_attribute(ty: Type) -> Self"
+        },
+        {
+          "name": "non_data_descriptor_info",
+          "signature": "fn non_data_descriptor_info(&self) -> Option<(TextRange, ClassType)>",
+          "summary": "For a non-data descriptor (`__get__` but neither `__set__` nor `__delete__`), get the descriptor range and type. Used for dataclass validation, where we typically disallow non-data descriptors but certain edge cases (where instance shadows…"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "recursive",
+          "signature": "fn recursive(heap: &TypeHeap) -> Self"
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self) -> Type"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "typed_dict_field",
+          "signature": "fn typed_dict_field(ty: Type, annotation: Annotation, read_only_reason: Option<ReadOnlyReason>) -> Self"
+        },
+        {
+          "name": "variance_inference",
+          "signature": "fn variance_inference(&self) -> ClassFieldVariance<'_>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::Descriptor",
+      "name": "Descriptor",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Descriptor",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::class::class_field::WithDefiningClass",
+      "name": "WithDefiningClass",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct WithDefiningClass<T>",
+      "summary": "Result of looking up a member of a class in the MRO, including a handle to the defining class which may be some ancestor.",
+      "doc": "api/pyrefly.alt.class.class_field.md#withdefiningclass",
+      "fields": [
+        "value",
+        "defining_class"
+      ],
+      "methods": []
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "module": "ruff_linter::source_kind",
+  "crate": "ruff_linter",
+  "api": "api/ruff_linter.source_kind.md",
+  "items": [
+    {
+      "path": "ruff_linter::source_kind::SourceError",
+      "name": "SourceError",
+      "kind": "enum",
+      "crate": "ruff_linter",
+      "signature": "enum SourceError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Io",
+        "Notebook"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: io::Error) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::source_kind::SourceKind",
+      "name": "SourceKind",
+      "kind": "enum",
+      "crate": "ruff_linter",
+      "signature": "enum SourceKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Python",
+        "IpyNotebook",
+        "Markdown"
+      ],
+      "methods": [
+        {
+          "name": "as_ipy_notebook",
+          "signature": "fn as_ipy_notebook(&self) -> Option<&Notebook>"
+        },
+        {
+          "name": "as_markdown",
+          "signature": "fn as_markdown(&self) -> Option<&str>"
+        },
+        {
+          "name": "as_python",
+          "signature": "fn as_python(&self) -> Option<&str>"
+        },
+        {
+          "name": "diff",
+          "signature": "fn diff<'a>(&'a self, other: &'a Self, path: Option<&'a Path>) -> Option<SourceKindDiff<'a>>",
+          "summary": "Returns a diff between the original and modified source code."
+        },
+        {
+          "name": "expect_ipy_notebook",
+          "signature": "fn expect_ipy_notebook(self) -> Notebook"
+        },
+        {
+          "name": "expect_markdown",
+          "signature": "fn expect_markdown(self) -> String"
+        },
+        {
+          "name": "expect_python",
+          "signature": "fn expect_python(self) -> String"
+        },
+        {
+          "name": "from_path",
+          "signature": "fn from_path(path: &Path, source_type: SourceType) -> Result<Option<Self>, SourceError>",
+          "summary": "Read the [`SourceKind`] from the given path. Returns `None` if the source is a TOML file."
+        },
+        {
+          "name": "from_source_code",
+          "signature": "fn from_source_code(source_code: String, source_type: SourceType) -> Result<Option<Self>, SourceError>",
+          "summary": "Read the [`SourceKind`] from the given source code. Returns `None` if the source is a TOML file."
+        },
+        {
+          "name": "ipy_notebook",
+          "signature": "fn ipy_notebook(notebook: Notebook) -> Self"
+        },
+        {
+          "name": "py_source_type",
+          "signature": "fn py_source_type(&self) -> PySourceType"
+        },
+        {
+          "name": "source_code",
+          "signature": "fn source_code(&self) -> &str",
+          "summary": "Returns the Python source code for this source kind."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&self, writer: &mut dyn Write) -> Result<(), SourceError>",
+          "summary": "Write the transformed source file to the given writer."
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::source_kind::SourceKindDiff",
+      "name": "SourceKindDiff",
+      "kind": "struct",
+      "crate": "ruff_linter",
+      "signature": "struct SourceKindDiff<'a>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_text",
+          "signature": "fn from_text(original: &'a str, modified: &'a str, path: Option<&'a Path>) -> Self"
+        }
+      ]
+    }
+  ]
+}

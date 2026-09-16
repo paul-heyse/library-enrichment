@@ -1,0 +1,563 @@
+{
+  "_comment": [
+    "Capability axes. Everything below a topic's mental model is generated from the model, and",
+    "an unresolved seed FAILS the build rather than silently disappearing -- a page that quietly",
+    "drops a type it can no longer find asserts by omission that the capability is gone.",
+    "",
+    "Seeds are qualified wherever a leaf name is shared. `UpdateBuilder` and `DeleteBuilder`",
+    "each exist twice (once standalone, once inside merge), and `Snapshot`, `Scan` and",
+    "`Transaction` exist both in the kernel and in deltalake-core. Those pairs are not",
+    "interchangeable, and qualifying them is what keeps a page from conflating them."
+  ],
+  "preamble": "Fifteen capability axes. Each page maps a capability to the types that provide it, the traits that extend it, and the upstream code that demonstrates it. Everything below the mental model is generated from the pinned model, so the mapping cannot drift from the API.",
+  "topics": [
+    {
+      "slug": "table-identity",
+      "title": "Opening tables",
+      "covers": "URLs, storage options, time travel, loading, and the cheap stats-free path",
+      "mental_model": "A table is a URL plus a log store, and opening one is separate from reading it. `DeltaTableBuilder` resolves the URL to a backend and produces an unloaded `DeltaTable`; `load()` replays the log into a snapshot. Pin a version or timestamp at build time if you want reproducibility -- the default is whatever the log says now, which changes under you. `BlindDeltaTable` skips statistics entirely when you only intend to append.",
+      "entry_points": [
+        "deltalake_core::table::builder::DeltaTableBuilder",
+        "deltalake_core::table::DeltaTable",
+        "deltalake_core::table::blind::BlindDeltaTable"
+      ],
+      "extension_points": [
+        "LogStoreFactory",
+        "ObjectStoreFactory"
+      ],
+      "builder_types": [
+        "deltalake_core::table::builder::DeltaTableBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/loading-table.md",
+        "usage/examining-table.md",
+        "usage/managing-tables.md"
+      ],
+      "decision_rules": [
+        "Reproducible read: pin with `with_version` or `with_datestring` at build time. Without one you get whatever the log says at load, which is not the same table twice.",
+        "Append-only writer: `BlindDeltaTable` avoids materialising file statistics you are not going to use.",
+        "Credentials belong in `with_storage_options`, not in the URL."
+      ],
+      "anti_patterns": [
+        "Calling `update()` to refresh a table. It is not a refresh: `update()` consumes the table and returns an `UpdateBuilder`, the DML operation. Refreshing is `load()`, `update_state()` or `update_incremental()`. The names are one character apart and the mistake compiles.",
+        "Rebuilding a `DeltaTable` per query. Log replay is the expensive part; reuse the loaded table and refresh it with `update_incremental` when you need freshness.",
+        "Treating an unloaded table as empty. Before `load()` there is no snapshot, not an empty one.",
+        "Reading `version()` without knowing whether the state was refreshed since. It reports the loaded version, not the table's current one."
+      ],
+      "checklist": [
+        "Is the version or timestamp pinned where reproducibility matters?",
+        "Do storage options carry credentials rather than the URL?",
+        "Is a refresh `load`/`update_incremental`, and not `update`?"
+      ]
+    },
+    {
+      "slug": "snapshot-and-log",
+      "title": "Snapshots and log replay",
+      "covers": "Log segments, checkpoints, eager and lazy snapshots, file listings",
+      "mental_model": "The Delta log is an append-only sequence of JSON commits, periodically compacted into checkpoints. A snapshot is the result of replaying that sequence to a version. `EagerSnapshot` materialises file actions up front; the kernel `Snapshot` is the lazier, kernel-owned path. Anything that answers \"which files are in this table\" is log replay, and it is the dominant cost of opening a large table.",
+      "entry_points": [
+        "deltalake_core::kernel::snapshot::EagerSnapshot",
+        "deltalake_core::kernel::snapshot::Snapshot",
+        "deltalake_core::table::state::DeltaTableState",
+        "deltalake_core::kernel::snapshot::log_data::LogDataHandler",
+        "deltalake_core::kernel::snapshot::iterators::LogicalFileView"
+      ],
+      "extension_points": [
+        "LogStore"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "how-delta-lake-works/architecture-of-delta-table.md",
+        "how-delta-lake-works/delta-lake-file-skipping.md"
+      ],
+      "decision_rules": [
+        "Checkpoint regularly: replay cost grows with the number of commits since the last checkpoint, not with table size.",
+        "File skipping happens against snapshot statistics, so a table written without statistics cannot be pruned."
+      ],
+      "anti_patterns": [
+        "Listing the object store to find data files. The log is authoritative; the store is not.",
+        "Assuming a snapshot refreshes itself. It is a value, pinned to a version."
+      ],
+      "checklist": [
+        "Is the checkpoint interval set for the commit rate?",
+        "Is file skipping actually reaching statistics, or are they absent?"
+      ]
+    },
+    {
+      "slug": "schema-and-types",
+      "title": "Schema and types",
+      "covers": "The kernel schema model, Arrow conversion, nested types, and schema evolution",
+      "mental_model": "Delta's schema is the kernel's `StructType`, not Arrow's. `Schema` and `SchemaRef` in this library are aliases for it, and conversion to Arrow happens at the edges. Types round-trip imperfectly by design: Delta has no unsigned integers and its timestamps are normalised, so an Arrow schema that writes cleanly is not proof the Delta schema says what you meant.",
+      "entry_points": [
+        "buoyant_kernel::schema::StructType",
+        "buoyant_kernel::schema::StructField",
+        "buoyant_kernel::schema::DataType",
+        "buoyant_kernel::schema::PrimitiveType",
+        "buoyant_kernel::expressions::scalars::Scalar"
+      ],
+      "extension_points": [
+        "StructTypeExt",
+        "ToSchema",
+        "StructDataExt",
+        "ScalarExt"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "integrations/delta-lake-arrow.md"
+      ],
+      "decision_rules": [
+        "Write the Delta schema explicitly when creating a table. Inferring it from a `RecordBatch` locks in whatever Arrow happened to produce.",
+        "Schema evolution is opt-in per write, through the write builder's schema mode -- not a table-level setting."
+      ],
+      "anti_patterns": [
+        "Assuming an Arrow schema and a Delta schema are the same thing because a round trip happened to work.",
+        "Adding a column by rewriting the table when `add_columns` exists."
+      ],
+      "checklist": [
+        "Is the schema declared, or inherited from whatever Arrow inferred?",
+        "Is a schema mode set on writes that may see new columns?"
+      ]
+    },
+    {
+      "slug": "writing",
+      "title": "Writing data",
+      "covers": "Save modes, partitioning, predicate overwrite, writer properties, target file size",
+      "mental_model": "A write is a transaction: stage Parquet files, then commit `Add` actions. The builder decides save mode, partitioning, target file size and Parquet properties; nothing is visible until the commit lands. Getting file size right matters more than it looks -- many small files make every later read pay list and open costs.",
+      "entry_points": [
+        "deltalake_core::operations::write::WriteBuilder",
+        "deltalake_core::writer::record_batch::RecordBatchWriter",
+        "deltalake_core::writer::json::JsonWriter",
+        "deltalake_core::protocol::SaveMode"
+      ],
+      "extension_points": [
+        "deltalake_core::writer::DeltaWriter",
+        "DataFileWriter",
+        "DeltaDataWriter"
+      ],
+      "builder_types": [
+        "deltalake_core::operations::write::WriteBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/appending-overwriting-delta-lake-table.md",
+        "usage/working-with-partitions.md"
+      ],
+      "decision_rules": [
+        "Set a schema mode if incoming data may carry new columns; the default neither evolves nor merges.",
+        "Set commit properties with an application transaction id to make a retried write idempotent.",
+        "Partition on a low-cardinality column that queries actually filter on -- otherwise partitioning only multiplies small files."
+      ],
+      "anti_patterns": [
+        "Overwriting the whole table to replace one partition, when a predicate overwrite expresses it directly.",
+        "Leaving target file size at its default for a high-frequency writer and then wondering why reads are slow.",
+        "Partitioning on a high-cardinality column -- a run id, a uuid, a float -- which turns one small file per value into the table's dominant cost.",
+        "Writing Parquet files into the table directory directly. Nothing the log does not list exists."
+      ],
+      "checklist": [
+        "Is a schema mode set where the schema can change?",
+        "Are commit properties carrying an app transaction id?",
+        "Is the partition column one queries filter on?"
+      ]
+    },
+    {
+      "slug": "dml",
+      "title": "Delete, update and merge",
+      "covers": "Predicate DML, merge clause families, and what each rewrites",
+      "mental_model": "Delta has no in-place update. Every DML operation rewrites the files it touches and commits `Remove` plus `Add`, so the cost is set by how many files the predicate reaches, not by how many rows change. A predicate that prunes to one file is cheap; the same predicate over an unpartitioned column is a table rewrite.",
+      "entry_points": [
+        "deltalake_core::operations::delete::DeleteBuilder",
+        "deltalake_core::operations::update::UpdateBuilder",
+        "deltalake_core::operations::merge::MergeBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/deleting-rows-from-delta-lake-table.md",
+        "usage/merging-tables.md"
+      ],
+      "decision_rules": [
+        "Write the predicate against a partition or statistics column so file skipping can do the work.",
+        "Merge needs source and target aliases to disambiguate; set them rather than relying on defaults.",
+        "Deletion vectors turn a delete into a metadata operation instead of a rewrite -- but only if the table feature is enabled."
+      ],
+      "anti_patterns": [
+        "A merge predicate that matches more than one source row per target row. The result is not an error, it is wrong data -- deduplicate the source first.",
+        "Ordering merge clauses generic-before-specific. Clauses are evaluated in order and the first match wins, so a broad update clause placed first silently shadows the delete or the narrower update you wrote after it.",
+        "Unqualified column references in a merge predicate, which resolve ambiguously wherever the two schemas share a name -- the normal case for a join key.",
+        "Omitting the predicate on a delete or update. Both are legal without one and both then rewrite the entire table.",
+        "Using delete-then-append to emulate an update, which doubles the rewrite and breaks atomicity."
+      ],
+      "checklist": [
+        "Does the predicate prune files, or scan everything?",
+        "Are merge source and target aliases set?",
+        "Would deletion vectors avoid the rewrite entirely?"
+      ]
+    },
+    {
+      "slug": "change-data-feed",
+      "title": "Change data feed",
+      "covers": "Reading row-level changes between versions",
+      "mental_model": "With change data feed enabled, DML writes `_change_data` files recording per-row before and after images. Reading them gives row-level change history rather than a snapshot diff. The feature must be on *before* the changes happen -- it is not retroactive, and that is the mistake worth avoiding.",
+      "entry_points": [
+        "deltalake_core::operations::load_cdf::CdfLoadBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/read-cdf.md"
+      ],
+      "decision_rules": [
+        "Enable the feature before you need the history, not when you discover you needed it.",
+        "CDF output includes change type and commit version columns; treat them as part of the schema."
+      ],
+      "anti_patterns": [
+        "Expecting change data for versions written before the feature was enabled.",
+        "Treating `update_preimage` rows as current state. Each update emits a preimage and a postimage; consuming both as if they were rows doubles the change count and applies the old values last.",
+        "Checkpointing a consumer by commit timestamp rather than version. Timestamps are not monotonic across writers; versions are.",
+        "Using CDF as an audit log without a retention policy: the files vacuum away with everything else."
+      ],
+      "checklist": [
+        "Was the feature enabled before the window you are reading?",
+        "Does retention cover the window you intend to replay?"
+      ]
+    },
+    {
+      "slug": "maintenance",
+      "title": "Maintenance",
+      "covers": "Compaction, Z-order, vacuum, restore, filesystem check, manifest generation",
+      "mental_model": "Maintenance is what keeps a Delta table fast rather than merely correct. Optimize compacts small files and can Z-order for multi-column skipping; vacuum deletes files no longer referenced. Vacuum is the one irreversible operation here: it deletes data that time travel and in-flight readers still need, which is exactly why the retention default is conservative.",
+      "entry_points": [
+        "deltalake_core::operations::optimize::OptimizeBuilder",
+        "deltalake_core::operations::vacuum::VacuumBuilder",
+        "deltalake_core::operations::restore::RestoreBuilder",
+        "deltalake_core::operations::filesystem_check::FileSystemCheckBuilder",
+        "deltalake_core::operations::generate::GenerateBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/optimize",
+        "delta-lake-big-data-small-data.md"
+      ],
+      "decision_rules": [
+        "Run optimize on the partitions that changed, not the whole table.",
+        "Z-order only pays for columns that are actually filtered on, and costs a full rewrite of the files it touches.",
+        "Keep vacuum retention above the longest-running reader plus the time travel window you promise."
+      ],
+      "anti_patterns": [
+        "Lowering vacuum retention to reclaim space. It deletes files active readers are still using and destroys time travel. This is the one irreversible operation here.",
+        "Expecting vacuum to make queries faster. It removes unreferenced files, which the query path never reads; compaction is what changes read performance.",
+        "Z-ordering every column. The benefit dilutes with each column added, and the rewrite is not free.",
+        "Running optimize and vacuum concurrently with heavy writes and expecting no conflicts."
+      ],
+      "checklist": [
+        "Is vacuum retention longer than the longest reader and the promised time travel window?",
+        "Is optimize scoped to changed partitions?"
+      ]
+    },
+    {
+      "slug": "protocol-and-constraints",
+      "title": "Protocol, features and constraints",
+      "covers": "Reader and writer versions, table features, check constraints, column nullability",
+      "mental_model": "The protocol version and feature set are the compatibility contract. A client that does not implement a required writer feature must refuse to write rather than write something another reader will misinterpret. Adding a feature is therefore a one-way door: it can lock out older clients, which is the point.",
+      "entry_points": [
+        "buoyant_kernel::actions::Protocol",
+        "buoyant_kernel::table_features::TableFeature",
+        "deltalake_core::kernel::models::actions::TableFeatures",
+        "deltalake_core::operations::constraints::ConstraintBuilder",
+        "deltalake_core::operations::add_feature::AddTableFeatureBuilder",
+        "deltalake_core::operations::drop_column_not_null::DropColumnNotNullBuilder"
+      ],
+      "extension_points": [
+        "DataCheck"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "feature-table.md",
+        "usage/constraints.md"
+      ],
+      "decision_rules": [
+        "Add a table feature deliberately: it raises the protocol version and can make the table unreadable to older clients.",
+        "Constraints are enforced on write by this library; they are not enforced retroactively over existing data."
+      ],
+      "anti_patterns": [
+        "Enabling a feature to silence an error without checking which readers still need the table.",
+        "Assuming a constraint validates the rows already in the table."
+      ],
+      "checklist": [
+        "Which clients read this table, and do they support the features it requires?",
+        "Are constraints added before the data they are meant to guard?"
+      ]
+    },
+    {
+      "slug": "transactions",
+      "title": "Transactions and commits",
+      "covers": "Commit properties, application transaction ids, conflict handling, isolation",
+      "mental_model": "A commit is an atomic rename of a numbered log entry: exactly one writer wins version N. A loser retries against the new version, which is where conflict resolution lives. An application transaction id makes a retried write idempotent -- without one, a retry after an ambiguous failure appends the data twice.",
+      "entry_points": [
+        "deltalake_core::kernel::transaction::CommitBuilder",
+        "deltalake_core::kernel::transaction::CommitProperties",
+        "buoyant_kernel::committer::commit_types::CommitMetadata"
+      ],
+      "extension_points": [
+        "CustomExecuteHandler",
+        "Committer"
+      ],
+      "builder_types": [
+        "deltalake_core::kernel::transaction::CommitBuilder"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "how-delta-lake-works/delta-lake-acid-transactions.md"
+      ],
+      "decision_rules": [
+        "Set an app transaction id on any write that a scheduler or queue might retry.",
+        "Put operation metadata in commit properties: it is the only durable record of why a version exists."
+      ],
+      "anti_patterns": [
+        "Retrying a failed write without an app transaction id, which silently duplicates data.",
+        "Treating a commit failure as fatal when it is a conflict that a reload and retry resolves."
+      ],
+      "checklist": [
+        "Is an app transaction id set where retries are possible?",
+        "Do commit properties record enough to explain the version later?"
+      ]
+    },
+    {
+      "slug": "storage",
+      "title": "Storage and log stores",
+      "covers": "Object stores, log store factories, backend registration, S3 and the conditional-put problem",
+      "mental_model": "A `LogStore` is what makes commits atomic, and it is separate from the object store that holds data files. The split exists because atomic rename is not universal: S3 historically needed external coordination, which is why a backend is registered as a factory pair rather than a single store. Registration is by URL scheme, so a backend that is not registered fails at open time with an unhelpful scheme error.",
+      "entry_points": [
+        "deltalake_core::logstore::storage::runtime::DeltaIOStorageBackend",
+        "deltalake_aws::storage::S3StorageBackend",
+        "deltalake_aws::logstore::default_logstore::S3LogStore",
+        "deltalake_opendal::shim::ConditionalPutShim"
+      ],
+      "extension_points": [
+        "LogStore",
+        "LogStoreFactory",
+        "ObjectStoreFactory",
+        "ObjectStoreRegistry",
+        "ObjectStoreRetryExt",
+        "AsObjectStoreUrl",
+        "OpendalAdapter"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "integrations/object-storage"
+      ],
+      "decision_rules": [
+        "Register the backend crate's handlers before opening a URL with its scheme; nothing does it implicitly.",
+        "On S3, confirm whether the deployment provides conditional put or needs a locking provider -- the two configurations fail very differently."
+      ],
+      "anti_patterns": [
+        "Putting credentials in the table URL instead of storage options.",
+        "Assuming a scheme is supported because the crate is a dependency. It has to be registered."
+      ],
+      "checklist": [
+        "Are the backend handlers registered for every scheme in use?",
+        "Is concurrent-writer safety established for this store, not assumed?"
+      ]
+    },
+    {
+      "slug": "datafusion",
+      "title": "The DataFusion seam",
+      "covers": "Table providers, scans, pushdown, expressions, and session wiring",
+      "mental_model": "Delta tables reach DataFusion as a `TableProvider` built from a snapshot, so the provider is pinned to the version it was built from and does not refresh itself. Pushdown is where the performance is: partition and statistics pruning happen during scan planning, and a scan configured without them reads everything and filters afterwards.",
+      "entry_points": [
+        "deltalake_core::delta_datafusion::table_provider::TableProviderBuilder",
+        "deltalake_core::delta_datafusion::table_provider::DeltaScanConfig",
+        "deltalake_core::delta_datafusion::table_provider::next::DeltaScan",
+        "deltalake_core::delta_datafusion::table_provider::next::scan::exec::DeltaScanExec"
+      ],
+      "extension_points": [
+        "DataFusionMixins"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "integrations/delta-lake-datafusion.md",
+        "usage/querying-delta-tables.md"
+      ],
+      "decision_rules": [
+        "Reuse one `SessionContext` across queries; building one per query discards every cache.",
+        "Rebuild the provider when you need a newer version -- it is bound to the snapshot it was made from.",
+        "Check `EXPLAIN` for the file count actually scanned before concluding pruning works."
+      ],
+      "anti_patterns": [
+        "Registering a provider once and expecting it to see later commits.",
+        "Overriding the session's object store registry and losing the table's own backend wiring."
+      ],
+      "checklist": [
+        "Is the session reused?",
+        "Does EXPLAIN show pruning reaching the file level?",
+        "Is the provider rebuilt when freshness matters?"
+      ]
+    },
+    {
+      "slug": "catalogs",
+      "title": "Catalogs",
+      "covers": "Unity Catalog, Glue, and the catalog trait",
+      "mental_model": "A catalog resolves a table name to a storage URL, and sometimes to credentials. It is deliberately outside the table format: Delta works without one, and a catalog adds naming, discovery and access control on top. Credential vending is the part that changes the security model, because the catalog then holds the keys rather than the client.",
+      "entry_points": [
+        "deltalake_catalog_unity::UnityCatalogBuilderBuilder",
+        "deltalake_catalog_unity::client::ClientOptionsBuilder"
+      ],
+      "extension_points": [
+        "DataCatalog",
+        "TokenCredential"
+      ],
+      "example_dirs": [
+        "catalog-unity"
+      ],
+      "guides": [
+        "integrations/object-storage"
+      ],
+      "decision_rules": [
+        "Prefer catalog credential vending to long-lived static keys where the catalog supports it.",
+        "Cache catalog lookups: they are network calls on the open path."
+      ],
+      "anti_patterns": [
+        "Treating a catalog as the source of truth for table state. The log is.",
+        "Hardcoding a resolved URL and losing the catalog's ability to move the table."
+      ],
+      "checklist": [
+        "Are catalog lookups cached?",
+        "Is credential lifetime shorter than the token refresh interval?"
+      ]
+    },
+    {
+      "slug": "kernel",
+      "title": "The kernel boundary",
+      "covers": "What delta-rs delegates to the Delta kernel, and the engine traits",
+      "mental_model": "This library does not implement the Delta protocol itself any more. Schema, actions, log replay, scans and checkpointing come from the kernel crate, which is generic over an `Engine` supplying IO, JSON, Parquet and expression evaluation. That is why kernel types appear throughout the public API: `Schema` is the kernel's `StructType`, and the types are re-exported, not wrapped.",
+      "entry_points": [
+        "buoyant_kernel::snapshot::Snapshot",
+        "buoyant_kernel::scan::Scan",
+        "buoyant_kernel::scan::ScanBuilder",
+        "buoyant_kernel::engine::arrow_data::ArrowEngineData",
+        "buoyant_kernel_engine::DefaultEngine",
+        "buoyant_kernel::table_configuration::TableConfiguration"
+      ],
+      "extension_points": [
+        "Engine",
+        "EngineData",
+        "JsonHandler",
+        "ParquetHandler",
+        "StorageHandler",
+        "EvaluationHandler",
+        "ExpressionEvaluator",
+        "PredicateEvaluator",
+        "RowVisitor",
+        "IntoEngineData",
+        "TaskExecutor"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "how-delta-lake-works/architecture-of-delta-table.md"
+      ],
+      "decision_rules": [
+        "Implement `Engine` only to run Delta on a runtime the default engine does not cover; it is a large surface.",
+        "Read kernel types under their canonical crate, and remember the Cargo rename: the crate is published as `buoyant_kernel` and used as `delta_kernel`."
+      ],
+      "anti_patterns": [
+        "Reimplementing log replay or checkpoint writing outside the kernel.",
+        "Assuming a kernel type is a delta-rs type because it is re-exported through this crate."
+      ],
+      "checklist": [
+        "Is the work already done by the kernel?",
+        "Are kernel types resolved to their canonical crate before being attributed?"
+      ]
+    },
+    {
+      "slug": "expressions",
+      "title": "Expressions and predicates",
+      "covers": "Kernel expressions, predicates, data skipping, and column references",
+      "mental_model": "Two expression languages meet here. DataFusion expressions drive DML predicates and queries; kernel expressions drive data skipping and log replay. Data skipping evaluates a predicate against per-file statistics rather than rows, so a predicate it cannot interpret is not wrong -- it simply prunes nothing, and the scan silently reads everything.",
+      "entry_points": [
+        "buoyant_kernel::expressions::Expression",
+        "buoyant_kernel::expressions::Predicate",
+        "buoyant_kernel::expressions::column_names::ColumnName",
+        "buoyant_kernel::expressions::scalars::Scalar"
+      ],
+      "extension_points": [
+        "ExpressionTransform",
+        "SchemaTransform",
+        "ExpressionEvaluator",
+        "PredicateEvaluator"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "how-delta-lake-works/delta-lake-file-skipping.md"
+      ],
+      "decision_rules": [
+        "Reference partition and statistics columns directly in a predicate; wrapping one in a function defeats skipping.",
+        "Confirm pruning by the number of files read, not by the predicate looking correct."
+      ],
+      "anti_patterns": [
+        "Assuming a predicate prunes because it is selective. Skipping needs statistics it can interpret.",
+        "Mixing the two expression languages without noticing which one an API takes."
+      ],
+      "checklist": [
+        "Does the predicate touch columns that carry statistics?",
+        "Was pruning measured rather than assumed?"
+      ]
+    },
+    {
+      "slug": "errors",
+      "title": "Errors and observability",
+      "covers": "The error taxonomy, operation metrics, and execution hooks",
+      "mental_model": "Errors are enums for a reason: the retry decision depends on which variant it is, and a stringified error cannot be matched. A commit conflict is retryable, a protocol mismatch never is, and an object-store failure depends. Operations return metrics alongside the new table, which is the only record of what the operation actually did.",
+      "entry_points": [
+        "deltalake_core::errors::DeltaTableError",
+        "buoyant_kernel::error::Error"
+      ],
+      "extension_points": [
+        "CustomExecuteHandler",
+        "MetricsReporter"
+      ],
+      "example_dirs": [
+        "."
+      ],
+      "guides": [
+        "usage/delta-lake-best-practices.md"
+      ],
+      "decision_rules": [
+        "Match on the variant to decide retryability; never on the message.",
+        "Record operation metrics: they are how you find out an optimize compacted nothing."
+      ],
+      "anti_patterns": [
+        "Collapsing every failure into one error type and retrying all of them.",
+        "Discarding the metrics an operation returns and inferring success from the absence of an error."
+      ],
+      "checklist": [
+        "Does the retry policy branch on variants?",
+        "Are operation metrics recorded somewhere durable?"
+      ]
+    }
+  ]
+}

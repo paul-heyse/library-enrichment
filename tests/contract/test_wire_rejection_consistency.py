@@ -9,7 +9,7 @@ nothing would notice. So one corpus — defined once in ``tests/wire_corpus.py``
 to every boundary, and the verdicts are compared per document:
 
 1. **CLI** — `library-enrichmentd validate`, a real subprocess reading the document;
-2. **Candidate schema** — `contracts/research-v2/research-envelope.schema.json`;
+2. **Candidate schema** — `python/enrichment_mcp/_schemas/research-envelope.schema.json`;
 3. **Generated schema** — emitted from the Rust wire types by `emit-schemas`;
 4. **Adapter** — `enrichment_mcp.envelope.validate_document`, which `server._emit` runs over
    every tool response.
@@ -51,7 +51,7 @@ from wire_corpus import wire_corpus
 
 ROOT = Path(__file__).resolve().parents[2]
 DAEMON_BIN = ROOT / "target/debug/library-enrichmentd"
-FROZEN_SCHEMA = ROOT / "contracts/research-v2/research-envelope.schema.json"
+PACKAGED_SCHEMA = ROOT / "python/enrichment_mcp/_schemas/research-envelope.schema.json"
 GENERATED_SCHEMA = ROOT / "schemas/generated/research-envelope.schema.json"
 
 CORPUS = wire_corpus()
@@ -114,14 +114,14 @@ def test_every_boundary_agrees_on_every_document(name: str, document: str, is_va
     cli, verdict = _cli_accepts(document)
     verdicts = {
         "cli": cli,
-        "frozen_schema": _schema_accepts(FROZEN_SCHEMA, document),
+        "packaged_schema": _schema_accepts(PACKAGED_SCHEMA, document),
         "generated_schema": _schema_accepts(GENERATED_SCHEMA, document),
         "adapter": _adapter_accepts(document),
     }
 
     # Pin the boundary set: deleting a key above would otherwise silently drop a boundary and
     # leave this test passing with less coverage than its name claims.
-    assert set(verdicts) == {"cli", "frozen_schema", "generated_schema", "adapter"}
+    assert set(verdicts) == {"cli", "packaged_schema", "generated_schema", "adapter"}
 
     disagreements = {b: v for b, v in verdicts.items() if v != is_valid}
     assert not disagreements, (
@@ -139,7 +139,7 @@ def test_the_cli_reports_a_typed_code_on_rejection() -> None:
     rejected = [(n, d) for n, d, valid in CORPUS if not valid]
     assert rejected, "the corpus must contain rejection cases"
 
-    frozen = json.loads(FROZEN_SCHEMA.read_text())
+    frozen = json.loads(PACKAGED_SCHEMA.read_text())
     codes = set(frozen["$defs"]["Error"]["properties"]["code"]["enum"])
 
     for name, document in rejected:

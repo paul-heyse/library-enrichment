@@ -1,0 +1,100 @@
+{
+  "module": "buoyant_kernel::log_segment",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.log_segment.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::log_segment::ActionsWithCheckpointInfo",
+      "name": "ActionsWithCheckpointInfo",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ActionsWithCheckpointInfo<A: Iterator<Item = DeltaResult<log_replay::ActionsBatch>>>",
+      "summary": "Result of reading actions from a log segment, containing both the actions iterator and checkpoint metadata.",
+      "doc": "api/buoyant_kernel.log_segment.md#actionswithcheckpointinfo",
+      "aliases": [
+        "delta_kernel::log_segment::ActionsWithCheckpointInfo"
+      ],
+      "fields": [
+        "actions",
+        "checkpoint_info"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_segment::CheckpointReadInfo",
+      "name": "CheckpointReadInfo",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct CheckpointReadInfo",
+      "summary": "Information about checkpoint reading for data skipping optimization.",
+      "doc": "api/buoyant_kernel.log_segment.md#checkpointreadinfo",
+      "aliases": [
+        "delta_kernel::log_segment::CheckpointReadInfo"
+      ],
+      "fields": [
+        "has_stats_parsed",
+        "has_partition_values_parsed",
+        "checkpoint_read_schema"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_segment::LogSegment",
+      "name": "LogSegment",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct LogSegment",
+      "summary": "A [`LogSegment`] represents a contiguous section of the log and is made of checkpoint files and commit files and guarantees the following:     1. Commit file versions will not have any gaps between them.     2. If checkpoint(s) is/are pres…",
+      "doc": "api/buoyant_kernel.log_segment.md#logsegment",
+      "aliases": [
+        "delta_kernel::log_segment::LogSegment"
+      ],
+      "fields": [
+        "end_version",
+        "checkpoint_version",
+        "log_root",
+        "listed"
+      ],
+      "methods": [
+        {
+          "name": "for_snapshot",
+          "signature": "fn for_snapshot(storage: &dyn StorageHandler, log_root: Url, log_tail: Vec<ParsedLogPath>, time_travel_version: impl Into<Option<Version>>, metric_context: SnapshotLoadMetricContext) -> DeltaResult<Self>",
+          "summary": "Constructs a [`LogSegment`] to be used for [`Snapshot`]. For a `Snapshot` at version `n`: Its LogSegment is made of zero or one checkpoint, and all commits between the checkpoint up to and including the end version `n`. Note that a checkpo…"
+        },
+        {
+          "name": "for_table_changes",
+          "signature": "fn for_table_changes(storage: &dyn StorageHandler, log_root: Url, start_version: Version, end_version: impl Into<Option<Version>>) -> DeltaResult<Self>",
+          "summary": "Constructs a [`LogSegment`] to be used for `TableChanges`. For a TableChanges between versions `start_version` and `end_version`: Its LogSegment is made of zero checkpoints and all commits between versions `start_version` (inclusive) and `…"
+        },
+        {
+          "name": "read_actions",
+          "signature": "fn read_actions(&self, engine: &dyn Engine, action_schema: SchemaRef) -> DeltaResult<impl Iterator<Item = DeltaResult<ActionsBatch>> + Send>",
+          "summary": "Same as [`Self::read_actions_with_projected_checkpoint_actions`], but uses the same schema for reading checkpoints and commits. IS NOT NULL predicates are automatically derived from the schema, so callers do not need to supply them."
+        },
+        {
+          "name": "read_actions_with_projected_checkpoint_actions",
+          "signature": "fn read_actions_with_projected_checkpoint_actions(&self, engine: &dyn Engine, commit_read_schema: SchemaRef, checkpoint_read_schema: SchemaRef, meta_predicate: Option<PredicateRef>, stats_schema: Option<&StructType>, partition_schema: Option<&StructType>) -> DeltaResult<ActionsWithCheckpointInfo<impl Iterator<Item = DeltaResult<ActionsBatch>> + Send>>",
+          "summary": "Read a stream of actions from this log segment. This returns an iterator of [`ActionsBatch`]s which includes EngineData of actions + a boolean flag indicating whether the data was read from a commit file (true) or a checkpoint file (false)."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(listed_files: LogSegmentFiles, log_root: Url, end_version: Option<Version>, last_checkpoint_metadata: Option<LastCheckpointHint>) -> DeltaResult<Self>"
+        }
+      ]
+    }
+  ]
+}

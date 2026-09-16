@@ -1,0 +1,307 @@
+{
+  "module": "buoyant_kernel::transforms::expression",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.transforms.expression.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::transforms::expression::ExpressionDepthChecker",
+      "name": "ExpressionDepthChecker",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ExpressionDepthChecker",
+      "summary": "An expression \"transform\" that doesn't actually change the expression at all. Instead, it measures the maximum depth of a expression, with a depth limit to prevent stack overflow. Useful for verifying that a expression has reasonable depth…",
+      "doc": "api/buoyant_kernel.transforms.expression.md#expressiondepthchecker",
+      "aliases": [
+        "buoyant_kernel::transforms::ExpressionDepthChecker",
+        "delta_kernel::transforms::expression::ExpressionDepthChecker"
+      ],
+      "implements": [
+        "buoyant_kernel::transforms::expression::ExpressionTransform"
+      ],
+      "methods": [
+        {
+          "name": "check_expr",
+          "signature": "fn check_expr(expr: &Expression, depth_limit: usize) -> usize",
+          "summary": "Depth-checks the given expression against a given depth limit. The return value is the largest depth seen, which is capped at one more than the depth limit (indicating the recursion was terminated)."
+        },
+        {
+          "name": "check_pred",
+          "signature": "fn check_pred(pred: &Predicate, depth_limit: usize) -> usize",
+          "summary": "Depth-checks the given predicate against a given depth limit. The return value is the largest depth seen, which is capped at one more than the depth limit (indicating the recursion was terminated)."
+        },
+        {
+          "name": "transform_expr_binary",
+          "signature": "fn transform_expr_binary(&mut self, expr: &'a BinaryExpression) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_expr_map_to_struct",
+          "signature": "fn transform_expr_map_to_struct(&mut self, expr: &'a MapToStructExpression) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_expr_opaque",
+          "signature": "fn transform_expr_opaque(&mut self, expr: &'a OpaqueExpression) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_expr_pred",
+          "signature": "fn transform_expr_pred(&mut self, pred: &'a Predicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_expr_struct",
+          "signature": "fn transform_expr_struct(&mut self, fields: &'a [ExpressionRef]) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_pred_binary",
+          "signature": "fn transform_pred_binary(&mut self, pred: &'a BinaryPredicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_pred_junction",
+          "signature": "fn transform_pred_junction(&mut self, pred: &'a JunctionPredicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_pred_not",
+          "signature": "fn transform_pred_not(&mut self, pred: &'a Predicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_pred_opaque",
+          "signature": "fn transform_pred_opaque(&mut self, pred: &'a OpaquePredicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        },
+        {
+          "name": "transform_pred_unary",
+          "signature": "fn transform_pred_unary(&mut self, pred: &'a UnaryPredicate) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::transforms::expression::ExpressionTransform"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transforms::expression::ExpressionTransform",
+      "name": "ExpressionTransform",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ExpressionTransform<'a>",
+      "summary": "Generic framework for recursive bottom-up transforms of expressions and predicates.",
+      "doc": "api/buoyant_kernel.transforms.expression.md#expressiontransform",
+      "aliases": [
+        "buoyant_kernel::transforms::ExpressionTransform",
+        "delta_kernel::transforms::expression::ExpressionTransform"
+      ],
+      "implementors": [
+        "buoyant_kernel::expressions::GetColumnReferences",
+        "buoyant_kernel::scan::ApplyColumnMappings",
+        "buoyant_kernel::scan::PrefixColumns",
+        "buoyant_kernel::transforms::expression::ExpressionDepthChecker"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "recurse_into_expr_binary",
+        "recurse_into_expr_map_to_struct",
+        "recurse_into_expr_opaque",
+        "recurse_into_expr_parse_json",
+        "recurse_into_expr_pred",
+        "recurse_into_expr_struct",
+        "recurse_into_expr_unary",
+        "recurse_into_expr_variadic",
+        "recurse_into_pred_binary",
+        "recurse_into_pred_junction",
+        "recurse_into_pred_not",
+        "recurse_into_pred_opaque",
+        "recurse_into_pred_unary",
+        "transform_expr",
+        "transform_expr_binary",
+        "transform_expr_column",
+        "transform_expr_literal",
+        "transform_expr_map_to_struct",
+        "transform_expr_opaque",
+        "transform_expr_parse_json",
+        "transform_expr_pred",
+        "transform_expr_struct",
+        "transform_expr_struct_patch",
+        "transform_expr_unary",
+        "transform_expr_unknown",
+        "transform_expr_variadic",
+        "transform_pred",
+        "transform_pred_binary",
+        "transform_pred_junction",
+        "transform_pred_not",
+        "transform_pred_opaque",
+        "transform_pred_unary",
+        "transform_pred_unknown"
+      ],
+      "methods": [
+        {
+          "name": "recurse_into_expr_binary",
+          "signature": "fn recurse_into_expr_binary(&mut self, b: &'a BinaryExpression) -> Self::Output<BinaryExpression>",
+          "summary": "Recursively transforms a binary expression's children (binary)."
+        },
+        {
+          "name": "recurse_into_expr_map_to_struct",
+          "signature": "fn recurse_into_expr_map_to_struct(&mut self, expr: &'a MapToStructExpression) -> Self::Output<MapToStructExpression>",
+          "summary": "Recursively transforms the child expression of a map-to-struct expression (unary)."
+        },
+        {
+          "name": "recurse_into_expr_opaque",
+          "signature": "fn recurse_into_expr_opaque(&mut self, o: &'a OpaqueExpression) -> Self::Output<OpaqueExpression>",
+          "summary": "Recursively transforms the children of an opaque expression (variadic)."
+        },
+        {
+          "name": "recurse_into_expr_parse_json",
+          "signature": "fn recurse_into_expr_parse_json(&mut self, expr: &'a ParseJsonExpression) -> Self::Output<ParseJsonExpression>",
+          "summary": "Recursively transforms the child expression of a parse-json expression (unary)."
+        },
+        {
+          "name": "recurse_into_expr_pred",
+          "signature": "fn recurse_into_expr_pred(&mut self, pred: &'a Predicate) -> Self::Output<Predicate>",
+          "summary": "Recursively transforms the child of a predicate expression (unary)."
+        },
+        {
+          "name": "recurse_into_expr_struct",
+          "signature": "fn recurse_into_expr_struct(&mut self, fields: &'a [ExpressionRef]) -> Self::Output<[ExpressionRef]>",
+          "summary": "Recursively transforms a struct's child expressions (variadic)."
+        },
+        {
+          "name": "recurse_into_expr_unary",
+          "signature": "fn recurse_into_expr_unary(&mut self, u: &'a UnaryExpression) -> Self::Output<UnaryExpression>",
+          "summary": "Recursively transforms a unary expression's child (unary)."
+        },
+        {
+          "name": "recurse_into_expr_variadic",
+          "signature": "fn recurse_into_expr_variadic(&mut self, v: &'a VariadicExpression) -> Self::Output<VariadicExpression>",
+          "summary": "Recursively transforms a variadic expression's children (variadic)."
+        },
+        {
+          "name": "recurse_into_pred_binary",
+          "signature": "fn recurse_into_pred_binary(&mut self, b: &'a BinaryPredicate) -> Self::Output<BinaryPredicate>",
+          "summary": "Recursively transforms a binary predicate's children (binary)."
+        },
+        {
+          "name": "recurse_into_pred_junction",
+          "signature": "fn recurse_into_pred_junction(&mut self, j: &'a JunctionPredicate) -> Self::Output<JunctionPredicate>",
+          "summary": "Recursively transforms a junction predicate's children (variadic)."
+        },
+        {
+          "name": "recurse_into_pred_not",
+          "signature": "fn recurse_into_pred_not(&mut self, p: &'a Predicate) -> Self::Output<Predicate>",
+          "summary": "Recursively transforms the child of a not predicate expression (unary)."
+        },
+        {
+          "name": "recurse_into_pred_opaque",
+          "signature": "fn recurse_into_pred_opaque(&mut self, o: &'a OpaquePredicate) -> Self::Output<OpaquePredicate>",
+          "summary": "Recursively transforms an opaque predicate's children (variadic)."
+        },
+        {
+          "name": "recurse_into_pred_unary",
+          "signature": "fn recurse_into_pred_unary(&mut self, u: &'a UnaryPredicate) -> Self::Output<UnaryPredicate>",
+          "summary": "Recursively transforms a unary predicate's child (unary)."
+        },
+        {
+          "name": "transform_expr",
+          "signature": "fn transform_expr(&mut self, expr: &'a Expression) -> Self::Output<Expression>",
+          "summary": "General entry point for transforming an expression. This method will dispatch to the specific transform for each expression variant. Also invoked internally in order to recurse on the child(ren) of non-leaf expressions."
+        },
+        {
+          "name": "transform_expr_binary",
+          "signature": "fn transform_expr_binary(&mut self, expr: &'a BinaryExpression) -> Self::Output<BinaryExpression>",
+          "summary": "Called for each binary expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_binary`]."
+        },
+        {
+          "name": "transform_expr_column",
+          "signature": "fn transform_expr_column(&mut self, name: &'a ColumnName) -> Self::Output<ColumnName>",
+          "summary": "Called for each column reference encountered during the traversal (leaf)."
+        },
+        {
+          "name": "transform_expr_literal",
+          "signature": "fn transform_expr_literal(&mut self, value: &'a Scalar) -> Self::Output<Scalar>",
+          "summary": "Called for each literal encountered during the traversal (leaf)."
+        },
+        {
+          "name": "transform_expr_map_to_struct",
+          "signature": "fn transform_expr_map_to_struct(&mut self, expr: &'a MapToStructExpression) -> Self::Output<MapToStructExpression>",
+          "summary": "Called for each map-to-struct expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_map_to_struct`]."
+        },
+        {
+          "name": "transform_expr_opaque",
+          "signature": "fn transform_expr_opaque(&mut self, expr: &'a OpaqueExpression) -> Self::Output<OpaqueExpression>",
+          "summary": "Called for each opaque expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_opaque`]."
+        },
+        {
+          "name": "transform_expr_parse_json",
+          "signature": "fn transform_expr_parse_json(&mut self, expr: &'a ParseJsonExpression) -> Self::Output<ParseJsonExpression>",
+          "summary": "Called for each parse-json expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_parse_json`]."
+        },
+        {
+          "name": "transform_expr_pred",
+          "signature": "fn transform_expr_pred(&mut self, pred: &'a Predicate) -> Self::Output<Predicate>",
+          "summary": "Called for the child of each predicate expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_pred`]."
+        },
+        {
+          "name": "transform_expr_struct",
+          "signature": "fn transform_expr_struct(&mut self, fields: &'a [ExpressionRef]) -> Self::Output<[ExpressionRef]>",
+          "summary": "Called for the expression list of each struct expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_struct`]."
+        },
+        {
+          "name": "transform_expr_struct_patch",
+          "signature": "fn transform_expr_struct_patch(&mut self, patch: &'a ExpressionStructPatch) -> Self::Output<ExpressionStructPatch>",
+          "summary": "Called for each struct patch expression encountered during the traversal (leaf)."
+        },
+        {
+          "name": "transform_expr_unary",
+          "signature": "fn transform_expr_unary(&mut self, expr: &'a UnaryExpression) -> Self::Output<UnaryExpression>",
+          "summary": "Called for each unary expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_unary`]."
+        },
+        {
+          "name": "transform_expr_unknown",
+          "signature": "fn transform_expr_unknown(&mut self, name: &'a String) -> Self::Output<String>",
+          "summary": "Called for each unknown expression encountered during the traversal (leaf)."
+        },
+        {
+          "name": "transform_expr_variadic",
+          "signature": "fn transform_expr_variadic(&mut self, expr: &'a VariadicExpression) -> Self::Output<VariadicExpression>",
+          "summary": "Called for each variadic expression encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_expr_variadic`]."
+        },
+        {
+          "name": "transform_pred",
+          "signature": "fn transform_pred(&mut self, pred: &'a Predicate) -> Self::Output<Predicate>",
+          "summary": "General entry point for transforming a predicate. This method will dispatch to the specific transform for each predicate variant. Also invoked internally in order to recurse on the child(ren) of non-leaf variants."
+        },
+        {
+          "name": "transform_pred_binary",
+          "signature": "fn transform_pred_binary(&mut self, pred: &'a BinaryPredicate) -> Self::Output<BinaryPredicate>",
+          "summary": "Called for each binary predicate encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_pred_binary`]."
+        },
+        {
+          "name": "transform_pred_junction",
+          "signature": "fn transform_pred_junction(&mut self, pred: &'a JunctionPredicate) -> Self::Output<JunctionPredicate>",
+          "summary": "Called for each junction predicate encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_pred_junction`]."
+        },
+        {
+          "name": "transform_pred_not",
+          "signature": "fn transform_pred_not(&mut self, pred: &'a Predicate) -> Self::Output<Predicate>",
+          "summary": "Called for the child of each NOT predicate encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_pred_not`]."
+        },
+        {
+          "name": "transform_pred_opaque",
+          "signature": "fn transform_pred_opaque(&mut self, pred: &'a OpaquePredicate) -> Self::Output<OpaquePredicate>",
+          "summary": "Called for each opaque predicate encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_pred_opaque`]."
+        },
+        {
+          "name": "transform_pred_unary",
+          "signature": "fn transform_pred_unary(&mut self, pred: &'a UnaryPredicate) -> Self::Output<UnaryPredicate>",
+          "summary": "Called for each unary predicate encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_pred_unary`]."
+        },
+        {
+          "name": "transform_pred_unknown",
+          "signature": "fn transform_pred_unknown(&mut self, name: &'a String) -> Self::Output<String>",
+          "summary": "Called for each unknown predicate encountered during the traversal (leaf)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,872 @@
+{
+  "module": "pyrefly::alt::types::class_metadata",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.alt.types.class_metadata.md",
+  "items": [
+    {
+      "path": "pyrefly::alt::types::class_metadata::ClassMro",
+      "name": "ClassMro",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ClassMro",
+      "summary": "A struct representing a class's ancestors, in method resolution order (MRO) and after dropping cycles and nonlinearizable inheritance.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#classmro",
+      "variants": [
+        "Resolved",
+        "Cyclic"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "ancestors",
+          "signature": "fn ancestors<'a>(&'a self, stdlib: &'a Stdlib) -> impl Iterator<Item = &'a ClassType>"
+        },
+        {
+          "name": "ancestors_no_object",
+          "signature": "fn ancestors_no_object(&self) -> &[ClassType]",
+          "summary": "The MRO doesn't track `object` directly for efficiency, since it always comes last, and some use cases (for example checking if the type is an enum) do not care about `object`."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "linearization_complete",
+          "signature": "fn linearization_complete(&self) -> bool",
+          "summary": "Whether `ancestors_no_object` is the complete C3 MRO rather than a recovery prefix."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(cls: &Class, bases_with_mro: Vec<(&ClassType, &ClassMro)>, errors: &ErrorCollector) -> Self",
+          "summary": "Compute all ancestors the method resolution order (MRO)."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "recursive",
+          "signature": "fn recursive() -> &'static Self"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::DataclassKind",
+      "name": "DataclassKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DataclassKind",
+      "summary": "The dataclass flavor. `auto_attribs` is attrs-only; both variants carry the `field_specifiers` recognized as field declarations (e.g. `attr.ib`).",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#dataclasskind",
+      "variants": [
+        "Dataclass",
+        "Attrs"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "field_specifiers",
+          "signature": "fn field_specifiers(&self) -> &[CalleeKind]"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::DjangoRestFrameworkSerializerKind",
+      "name": "DjangoRestFrameworkSerializerKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum DjangoRestFrameworkSerializerKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Serializer",
+        "ModelSerializer"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ExplicitSlots",
+      "name": "ExplicitSlots",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ExplicitSlots",
+      "summary": "Whether a class body declares `__slots__`, and whether the slot names are known. Dynamic `__slots__` values are present but not usable for slot-name enforcement or explicit-slot disjoint-base promotion.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#explicitslots",
+      "variants": [
+        "Absent",
+        "Unknown",
+        "Known"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "has_explicit_slots",
+          "signature": "fn has_explicit_slots(&self) -> bool"
+        },
+        {
+          "name": "slots_info",
+          "signature": "fn slots_info(&self) -> Option<&SlotsInfo>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ClassDisjointBase",
+      "name": "ClassDisjointBase",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassDisjointBase",
+      "summary": "A class's disjoint-base representative for PEP 800 narrowing and downstream inheritance checks.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#classdisjointbase",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_representative",
+          "signature": "fn from_representative(representative: Option<Class>) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "recursive",
+          "signature": "fn recursive() -> &'static Self"
+        },
+        {
+          "name": "representative",
+          "signature": "fn representative(&self) -> Option<&Class>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ClassMetadata",
+      "name": "ClassMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassMetadata",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "base_class_objects",
+          "signature": "fn base_class_objects(&self) -> &[Class]"
+        },
+        {
+          "name": "capture_init",
+          "signature": "fn capture_init(&self) -> Option<&[Name]>"
+        },
+        {
+          "name": "custom_metaclass",
+          "signature": "fn custom_metaclass(&self) -> Option<&ClassType>",
+          "summary": "The class's custom (non-`type`) metaclass, if it has one."
+        },
+        {
+          "name": "dataclass_metadata",
+          "signature": "fn dataclass_metadata(&self) -> Option<&DataclassMetadata>"
+        },
+        {
+          "name": "dataclass_transform_metadata",
+          "signature": "fn dataclass_transform_metadata(&self) -> Option<&DataclassTransformMetadata>"
+        },
+        {
+          "name": "deprecation",
+          "signature": "fn deprecation(&self) -> Option<&Deprecation>"
+        },
+        {
+          "name": "django_model_metadata",
+          "signature": "fn django_model_metadata(&self) -> Option<&DjangoModelMetadata>"
+        },
+        {
+          "name": "enum_metadata",
+          "signature": "fn enum_metadata(&self) -> Option<&EnumMetadata>"
+        },
+        {
+          "name": "extends_abc",
+          "signature": "fn extends_abc(&self) -> bool"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "has_base_any",
+          "signature": "fn has_base_any(&self) -> bool"
+        },
+        {
+          "name": "has_explicit_slots",
+          "signature": "fn has_explicit_slots(&self) -> bool"
+        },
+        {
+          "name": "has_generic_base_class",
+          "signature": "fn has_generic_base_class(&self) -> bool"
+        },
+        {
+          "name": "has_local_dataclass_slots_request",
+          "signature": "fn has_local_dataclass_slots_request(&self) -> bool"
+        },
+        {
+          "name": "is_attrs_class",
+          "signature": "fn is_attrs_class(&self) -> bool"
+        },
+        {
+          "name": "is_django_model",
+          "signature": "fn is_django_model(&self) -> bool"
+        },
+        {
+          "name": "is_django_rest_framework_model_serializer",
+          "signature": "fn is_django_rest_framework_model_serializer(&self) -> bool"
+        },
+        {
+          "name": "is_django_rest_framework_serializer",
+          "signature": "fn is_django_rest_framework_serializer(&self) -> bool"
+        },
+        {
+          "name": "is_enum",
+          "signature": "fn is_enum(&self) -> bool"
+        },
+        {
+          "name": "is_explicitly_abstract",
+          "signature": "fn is_explicitly_abstract(&self) -> bool"
+        },
+        {
+          "name": "is_factory_boy_factory",
+          "signature": "fn is_factory_boy_factory(&self) -> bool"
+        },
+        {
+          "name": "is_final",
+          "signature": "fn is_final(&self) -> bool"
+        },
+        {
+          "name": "is_local_disjoint_base",
+          "signature": "fn is_local_disjoint_base(&self) -> bool"
+        },
+        {
+          "name": "is_marshmallow_schema",
+          "signature": "fn is_marshmallow_schema(&self) -> bool"
+        },
+        {
+          "name": "is_metaclass",
+          "signature": "fn is_metaclass(&self) -> bool",
+          "summary": "Whether this class is a metaclass (i.e., a subclass of `type`)."
+        },
+        {
+          "name": "is_new_type",
+          "signature": "fn is_new_type(&self) -> bool"
+        },
+        {
+          "name": "is_protocol",
+          "signature": "fn is_protocol(&self) -> bool"
+        },
+        {
+          "name": "is_pydantic_model",
+          "signature": "fn is_pydantic_model(&self) -> bool",
+          "summary": "Returns true if this class is a pydantic model (BaseModel, RootModel, or BaseSettings)."
+        },
+        {
+          "name": "is_runtime_checkable_protocol",
+          "signature": "fn is_runtime_checkable_protocol(&self) -> bool"
+        },
+        {
+          "name": "is_shaped_array",
+          "signature": "fn is_shaped_array(&self) -> bool"
+        },
+        {
+          "name": "is_total_ordering",
+          "signature": "fn is_total_ordering(&self) -> bool"
+        },
+        {
+          "name": "is_typed_dict",
+          "signature": "fn is_typed_dict(&self) -> bool"
+        },
+        {
+          "name": "keywords",
+          "signature": "fn keywords(&self) -> &[(Name, Type)]"
+        },
+        {
+          "name": "metaclass",
+          "signature": "fn metaclass<'a>(&'a self, stdlib: &'a Stdlib) -> &'a ClassType",
+          "summary": "The class's metaclass."
+        },
+        {
+          "name": "named_tuple_metadata",
+          "signature": "fn named_tuple_metadata(&self) -> Option<&NamedTupleMetadata>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(bases: Vec<Class>, metaclass: Option<Metaclass>, keywords: Vec<(Name, Type)>, typed_dict_metadata: Option<TypedDictMetadata>, named_tuple_metadata: Option<NamedTupleMetadata>, enum_metadata: Option<EnumMetadata>, protocol_metadata: Option<ProtocolMetadata>, dataclass_metadata: Option<DataclassMetadata>, extends_abc: bool, has_generic_base_class: bool, has_base_any: bool, is_new_type: bool, is_final: bool, deprecation: Option<Deprecation>, is_local_disjoint_base: bool, has_local_dataclass_slots_request: bool, total_ordering_metadata: Option<TotalOrderingMetadata>, dataclass_transform_metadata: Option<DataclassTransformMetadata>, pydantic_model_kind: Option<PydanticModelKind>, is_attrs_class: bool, django_model_metadata: Option<DjangoModelMetadata>, django_rest_framework_serializer_kind: Option<DjangoRestFrameworkSerializerKind>, is_marshmallow_schema: bool, is_factory_boy_factory: bool, is_metaclass: bool, explicit_slots: ExplicitSlots, capture_init: Option<Vec<Name>>, shaped_array: Option<ShapedArrayMetadata>) -> ClassMetadata"
+        },
+        {
+          "name": "protocol_metadata",
+          "signature": "fn protocol_metadata(&self) -> Option<&ProtocolMetadata>"
+        },
+        {
+          "name": "pydantic_model_kind",
+          "signature": "fn pydantic_model_kind(&self) -> Option<PydanticModelKind>"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "recursive",
+          "signature": "fn recursive() -> &'static Self"
+        },
+        {
+          "name": "shaped_array_shape",
+          "signature": "fn shaped_array_shape(&self) -> Option<&Quantified>"
+        },
+        {
+          "name": "slots_info",
+          "signature": "fn slots_info(&self) -> Option<&SlotsInfo>"
+        },
+        {
+          "name": "total_ordering_metadata",
+          "signature": "fn total_ordering_metadata(&self) -> Option<&TotalOrderingMetadata>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "typed_dict_metadata",
+          "signature": "fn typed_dict_metadata(&self) -> Option<&TypedDictMetadata>"
+        },
+        {
+          "name": "uses_builtin_shaped_array_indexing",
+          "signature": "fn uses_builtin_shaped_array_indexing(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ClassSynthesizedField",
+      "name": "ClassSynthesizedField",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassSynthesizedField",
+      "summary": "A field that we synthesize and add to a class. Note that if a non-synthesized field already exists on the class, it will take precedence over the synthesized field in attribute lookup. If you want to modify the type of a non-synthesized fi…",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#classsynthesizedfield",
+      "fields": [
+        "inner"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(ty: Type) -> Self"
+        },
+        {
+          "name": "new_classvar",
+          "signature": "fn new_classvar(ty: Type) -> Self"
+        },
+        {
+          "name": "new_instance_attribute",
+          "signature": "fn new_instance_attribute(ty: Type) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ClassSynthesizedFields",
+      "name": "ClassSynthesizedFields",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ClassSynthesizedFields",
+      "summary": "A class's synthesized fields, such as a dataclass's `__init__` method.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#classsynthesizedfields",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "combine",
+          "signature": "fn combine(self, other: Self) -> Self",
+          "summary": "Combines two sets of synthesized fields, with the second set overwriting any fields in the first set that have the same name."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> impl ExactSizeIterator<Item = (&Name, &ClassSynthesizedField)>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, name: &Name) -> Option<&ClassSynthesizedField>"
+        },
+        {
+          "name": "get_index_of",
+          "signature": "fn get_index_of(&self, name: &Name) -> Option<usize>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(fields: SmallMap<Name, ClassSynthesizedField>) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::DataclassMetadata",
+      "name": "DataclassMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct DataclassMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "fields",
+        "pseudo_field_names",
+        "kws",
+        "alias_keyword",
+        "init_defaults",
+        "default_can_be_positional",
+        "pydantic_before_validator_fields",
+        "kind"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "instance_fields",
+          "signature": "fn instance_fields(&self) -> impl Iterator<Item = &Name> + '_",
+          "summary": "Matches CPython's `fields(cls)`, in declaration order."
+        },
+        {
+          "name": "is_instance_field",
+          "signature": "fn is_instance_field(&self, name: &Name) -> bool"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::DjangoModelMetadata",
+      "name": "DjangoModelMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct DjangoModelMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "custom_primary_key_field",
+        "foreign_key_like_fields",
+        "fields_with_choices"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::DjangoReverseRelationIndex",
+      "name": "DjangoReverseRelationIndex",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct DjangoReverseRelationIndex",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, cls: &Class) -> Option<&ClassSynthesizedFields>"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl ExactSizeIterator<Item = (&Class, &ClassSynthesizedFields)>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(map: SmallMap<Class, ClassSynthesizedFields>) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::EnumMetadata",
+      "name": "EnumMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct EnumMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "cls",
+        "has_value",
+        "is_django"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::InitDefaults",
+      "name": "InitDefaults",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct InitDefaults",
+      "summary": "Defaults for per-field flags that control `__init__` parameter names. Pydantic validation options retain `None` so subclasses can distinguish defaults from inherited configuration.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#initdefaults",
+      "fields": [
+        "init_by_name",
+        "init_by_alias",
+        "alias_generator",
+        "pydantic_validation_flags"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::Metaclass",
+      "name": "Metaclass",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Metaclass",
+      "summary": "A struct representing a class's metaclass.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#metaclass",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self) -> &ClassType"
+        },
+        {
+          "name": "get_mut",
+          "signature": "fn get_mut(&mut self) -> &mut ClassType"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(metaclass: ClassType, is_explicitly_abstract: bool) -> Self"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::NamedTupleMetadata",
+      "name": "NamedTupleMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct NamedTupleMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "elements",
+        "has_dynamic_fields",
+        "directly_extends_named_tuple"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ProtocolMetadata",
+      "name": "ProtocolMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ProtocolMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "members",
+        "is_runtime_checkable"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::ShapedArrayMetadata",
+      "name": "ShapedArrayMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ShapedArrayMetadata",
+      "summary": "Metadata for a class registered with `@shaped_array`.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#shapedarraymetadata",
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(shape: Quantified, builtin_indexing: bool) -> Self"
+        },
+        {
+          "name": "shape",
+          "signature": "fn shape(&self) -> &Quantified"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "uses_builtin_indexing",
+          "signature": "fn uses_builtin_indexing(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::SlotsInfo",
+      "name": "SlotsInfo",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct SlotsInfo",
+      "summary": "Slot names declared directly on a class via `__slots__`, when the value is statically extractable.",
+      "doc": "api/pyrefly.alt.types.class_metadata.md#slotsinfo",
+      "fields": [
+        "names"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "has_dict",
+          "signature": "fn has_dict(&self) -> bool",
+          "summary": "Whether `__dict__` appears among the slot names, which disables enforcement."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::TotalOrderingMetadata",
+      "name": "TotalOrderingMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TotalOrderingMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "location"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::alt::types::class_metadata::TypedDictMetadata",
+      "name": "TypedDictMetadata",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TypedDictMetadata",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "fields",
+        "extra_items"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq"
+      ],
+      "methods": [
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    }
+  ]
+}

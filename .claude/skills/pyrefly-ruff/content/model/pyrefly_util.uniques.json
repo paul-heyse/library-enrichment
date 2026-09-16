@@ -1,0 +1,64 @@
+{
+  "module": "pyrefly_util::uniques",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.uniques.md",
+  "items": [
+    {
+      "path": "pyrefly_util::uniques::Unique",
+      "name": "Unique",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Unique",
+      "summary": "A unique value, provided two given values were produced by the same factory.",
+      "doc": "api/pyrefly_util.uniques.md#unique",
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::uniques::UniqueFactory",
+      "name": "UniqueFactory",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct UniqueFactory",
+      "summary": "Vend fresh unique `Var`s. Deliberately NOT Clone.",
+      "doc": "api/pyrefly_util.uniques.md#uniquefactory",
+      "methods": [
+        {
+          "name": "fresh",
+          "signature": "fn fresh(&self) -> Unique"
+        },
+        {
+          "name": "get_or_fresh",
+          "signature": "fn get_or_fresh(&self, key: usize) -> Unique",
+          "summary": "Return a cached `Unique` for `key`, allocating a fresh one on first access. Thread-safe: all threads see the same `Unique` for a given key."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    }
+  ]
+}

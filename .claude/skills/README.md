@@ -12,6 +12,27 @@ actually repeated, not in anticipation of one.
 | [`acceptance-report/`](acceptance-report/SKILL.md) | Run before any delivery report, and audited by a subagent rather than trusted. |
 | [`handoff/`](handoff/SKILL.md) | Run at the end of any session that changed what is true. |
 
+## Capability repositories
+
+A second, different kind of skill lives here: a **pinned, offline index of a library**, built
+once and queried with ripgrep, ast-grep and `Read`. These are not workflows. They exist because
+an agent writing against a fast-moving library will otherwise write the API it remembers, and be
+wrong in the way that is hardest to notice -- code that reads correctly and fails at runtime.
+
+| Repository | Indexes | Built from |
+|---|---|---|
+| [`datafusion/`](datafusion/SKILL.md) | DataFusion and the Arrow family | hosted rustdoc JSON |
+| [`deltalake/`](deltalake/SKILL.md) | delta-rs and the kernel | rustdoc JSON, part locally built |
+| [`fastmcp/`](fastmcp/SKILL.md) | `fastmcp`, `mcp`, `mcp-types`, plus 774 files of upstream docs, examples and tests | Griffe + the ty language server + pinned GitHub tarballs |
+| [`pyrefly-ruff/`](pyrefly-ruff/SKILL.md) | 42 ruff and pyrefly crates, and every catalog the two tools emit about themselves | rustdoc JSON + the tools' own JSON oracles |
+
+Each carries a `build/` that can reproduce it, a `verify.py` whose checks include a byte-for-byte
+determinism rebuild, and a `reference.md` stating what it deliberately does **not** claim. Read
+that section before concluding a capability is absent: silence in an index is not evidence.
+
+They are development skills, not products. `skills/library-research/` remains the skill this
+service ships.
+
 **Everything an agent workflow needs lives here, not in a runtime-specific directory.** A Claude
 Code slash-command directory is visible to Claude Code alone; Codex never sees it. The five
 workflows that used to live in one — `adr`, `phase-gate`, `verify-upstream`,

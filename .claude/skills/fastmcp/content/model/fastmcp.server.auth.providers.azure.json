@@ -1,0 +1,256 @@
+{
+ "api": "api/fastmcp.server.auth.providers.azure.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#oidc_scopes",
+   "inferred": "frozenset[str]",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "OIDC_SCOPES",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.azure.OIDC_SCOPES",
+   "preferred": "fastmcp.server.auth.providers.azure.OIDC_SCOPES",
+   "signature": "OIDC_SCOPES = frozenset({'openid', 'profile', 'email', 'offline_access'})",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.azure.logger",
+   "preferred": "fastmcp.server.auth.providers.azure.logger",
+   "signature": "logger = get_logger(__name__)",
+   "summary": ""
+  },
+  {
+   "bases": [
+    "JWTVerifier"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#azurejwtverifier",
+   "inherits": {
+    "fastmcp.server.auth.auth.AuthProvider": [
+     "base_url",
+     "challenge_scopes",
+     "get_middleware",
+     "get_routes",
+     "get_well_known_routes",
+     "required_scopes",
+     "resource_base_url",
+     "set_mcp_path"
+    ],
+    "fastmcp.server.auth.providers.jwt.JWTVerifier": [
+     "algorithm",
+     "audience",
+     "issuer",
+     "jwks_uri",
+     "load_access_token",
+     "logger",
+     "public_key",
+     "ssrf_safe",
+     "verify_token"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "get_challenge_scopes",
+     "signature": "def get_challenge_scopes(self, required_scopes: list[str] | None = None) -> list[str]",
+     "summary": "Prefix any effective validation scopes for Azure authorization."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "scopes_supported",
+     "signature": "scopes_supported: list[str]",
+     "summary": "Return scopes with Azure URI prefix for OAuth metadata."
+    }
+   ],
+   "name": "AzureJWTVerifier",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.azure.AzureJWTVerifier",
+   "preferred": "fastmcp.server.auth.providers.azure.AzureJWTVerifier",
+   "signature": "class AzureJWTVerifier(JWTVerifier)",
+   "summary": "JWT verifier pre-configured for Azure AD / Microsoft Entra ID."
+  },
+  {
+   "bases": [
+    "OAuthProxy"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#azureprovider",
+   "inherits": {
+    "fastmcp.server.auth.auth.AuthProvider": [
+     "base_url",
+     "challenge_scopes",
+     "get_challenge_scopes",
+     "get_middleware",
+     "required_scopes",
+     "resource_base_url"
+    ],
+    "fastmcp.server.auth.auth.OAuthProvider": [
+     "client_registration_options",
+     "get_well_known_routes",
+     "issuer_url",
+     "revocation_options",
+     "scopes_supported",
+     "service_documentation_url",
+     "verify_token"
+    ],
+    "fastmcp.server.auth.oauth_proxy.proxy.OAuthProxy": [
+     "exchange_authorization_code",
+     "exchange_identity_assertion",
+     "exchange_refresh_token",
+     "get_client",
+     "get_routes",
+     "jwt_issuer",
+     "load_access_token",
+     "load_authorization_code",
+     "load_refresh_token",
+     "register_client",
+     "revoke_token",
+     "set_mcp_path",
+     "token_endpoint_url",
+     "update_default_scopes"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "additional_authorize_scopes",
+     "signature": "additional_authorize_scopes: list[str] = parsed_additional_scopes"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "authorize",
+     "signature": "async def authorize(self, client: OAuthClientInformationFull, params: AuthorizationParams) -> str",
+     "summary": "Start OAuth transaction and redirect to Azure AD."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "close_obo_credentials",
+     "signature": "async def close_obo_credentials(self) -> None",
+     "summary": "Close all cached OBO credentials."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "from_b2c",
+     "signature": "def from_b2c(cls, tenant_name: str, policy_name: str, client_id: str, client_secret: str | None = None, required_scopes: list[str], base_url: str, custom_domain: str | None = None, identifier_uri: str | None = None, token_issuer: str | None = None, kwargs: Any = {}) -> AzureProvider",
+     "summary": "Create an AzureProvider pre-configured for Azure AD B2C."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_obo_credential",
+     "signature": "async def get_obo_credential(self, user_assertion: str) -> OnBehalfOfCredential",
+     "summary": "Get a cached or new OnBehalfOfCredential for OBO token exchange."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "identifier_uri",
+     "signature": "identifier_uri = identifier_uri or f'api://{client_id}'"
+    }
+   ],
+   "name": "AzureProvider",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.azure.AzureProvider",
+   "preferred": "fastmcp.server.auth.providers.azure.AzureProvider",
+   "signature": "class AzureProvider(OAuthProxy)",
+   "summary": "Azure (Microsoft Entra) OAuth provider for FastMCP."
+  },
+  {
+   "bases": [
+    "Dependency[str]"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#_entraobotoken",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "scopes",
+     "signature": "scopes = scopes"
+    }
+   ],
+   "name": "_EntraOBOToken",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.azure._EntraOBOToken",
+   "preferred": "fastmcp.server.auth.providers.azure._EntraOBOToken",
+   "signature": "class _EntraOBOToken(Dependency[str])",
+   "summary": "Dependency that performs OBO token exchange for Microsoft Entra."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#entraobotoken",
+   "kind": "function",
+   "name": "EntraOBOToken",
+   "nameable": true,
+   "path": "fastmcp.server.auth.providers.azure.EntraOBOToken",
+   "preferred": "fastmcp.server.auth.providers.azure.EntraOBOToken",
+   "signature": "def EntraOBOToken(scopes: list[str]) -> str",
+   "summary": "Exchange the user's Entra token for a downstream API token via OBO."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#_find_azure_provider",
+   "kind": "function",
+   "name": "_find_azure_provider",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.azure._find_azure_provider",
+   "preferred": "fastmcp.server.auth.providers.azure._find_azure_provider",
+   "signature": "def _find_azure_provider(auth: AuthProvider | None) -> AzureProvider | None",
+   "summary": "Extract an AzureProvider from an auth provider, unwrapping MultiAuth if needed.",
+   "types_used": [
+    "fastmcp.server.auth.providers.azure.AzureProvider"
+   ]
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.providers.azure.md#_require_azure_identity",
+   "kind": "function",
+   "name": "_require_azure_identity",
+   "nameable": false,
+   "path": "fastmcp.server.auth.providers.azure._require_azure_identity",
+   "preferred": "fastmcp.server.auth.providers.azure._require_azure_identity",
+   "signature": "def _require_azure_identity(feature: str) -> None",
+   "summary": "Raise ImportError with install instructions if azure-identity is not available."
+  }
+ ],
+ "module": "fastmcp.server.auth.providers.azure"
+}

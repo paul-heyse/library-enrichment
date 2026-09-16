@@ -1,0 +1,70 @@
+{
+  "module": "deltalake_core::writer",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.writer.md",
+  "items": [
+    {
+      "path": "deltalake_core::writer::WriteMode",
+      "name": "WriteMode",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum WriteMode",
+      "summary": "Write mode for the [DeltaWriter]",
+      "doc": "api/deltalake_core.writer.md#writemode",
+      "aliases": [
+        "deltalake::writer::WriteMode"
+      ],
+      "variants": [
+        "Default",
+        "MergeSchema"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::writer::DeltaWriter",
+      "name": "DeltaWriter",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DeltaWriter<T>",
+      "summary": "Trait for writing data to Delta tables",
+      "doc": "api/deltalake_core.writer.md#deltawriter",
+      "aliases": [
+        "deltalake::writer::DeltaWriter"
+      ],
+      "implementors": [
+        "deltalake_core::writer::json::JsonWriter",
+        "deltalake_core::writer::record_batch::RecordBatchWriter"
+      ],
+      "required_methods": [
+        "flush",
+        "write",
+        "write_with_mode"
+      ],
+      "provided_methods": [
+        "flush_and_commit"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "async fn flush(&mut self) -> Result<Vec<Add>, DeltaTableError>",
+          "summary": "Flush the internal write buffers to files in the delta table folder structure. The corresponding delta [`Add`] actions are returned and should be committed via a transaction."
+        },
+        {
+          "name": "flush_and_commit",
+          "signature": "async fn flush_and_commit(&mut self, table: &mut DeltaTable) -> Result<Version, DeltaTableError>",
+          "summary": "Flush the internal write buffers to files in the delta table folder structure. and commit the changes to the Delta log, creating a new table version."
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, values: T) -> Result<(), DeltaTableError>",
+          "summary": "Write a chunk of values into the internal write buffers with the default write mode"
+        },
+        {
+          "name": "write_with_mode",
+          "signature": "async fn write_with_mode(&mut self, values: T, mode: WriteMode) -> Result<(), DeltaTableError>",
+          "summary": "Wreite a chunk of values into the internal write buffers with the specified [WriteMode]"
+        }
+      ]
+    }
+  ]
+}

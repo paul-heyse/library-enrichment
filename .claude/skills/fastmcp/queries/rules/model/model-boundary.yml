@@ -1,0 +1,21 @@
+id: model-boundary
+language: json
+severity: hint
+message: This name is re-exported from a distribution this repository does not index.
+note: |
+  The name is findable here because an indexed package deliberately re-exports it, but its
+  definition lives outside the indexed set, so there is no documentation, no members and no
+  signature detail for it. `fastmcp.dependencies.Depends` is the case worth knowing -- the
+  dependency-injection entry point, defined in `uncalled_for`.
+
+  This is a boundary, not a gap. Use that library's own reference.
+metadata:
+  record: boundary
+  reads: content/model
+rule:
+  matches: json-record
+  has:
+    kind: pair
+    all:
+      - has: {field: key, regex: '^"boundary"$'}
+      - has: {field: value, regex: '^true$'}

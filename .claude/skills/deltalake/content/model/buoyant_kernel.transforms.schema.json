@@ -1,0 +1,179 @@
+{
+  "module": "buoyant_kernel::transforms::schema",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.transforms.schema.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::transforms::schema::SchemaDepthChecker",
+      "name": "SchemaDepthChecker",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct SchemaDepthChecker",
+      "summary": "A schema \"transform\" that doesn't actually change the schema at all. Instead, it measures the maximum depth of a schema, with a depth limit to prevent stack overflow. Useful for verifying that a schema has reasonable depth before attemptin…",
+      "doc": "api/buoyant_kernel.transforms.schema.md#schemadepthchecker",
+      "aliases": [
+        "buoyant_kernel::transforms::SchemaDepthChecker",
+        "delta_kernel::transforms::schema::SchemaDepthChecker"
+      ],
+      "implements": [
+        "buoyant_kernel::transforms::schema::SchemaTransform"
+      ],
+      "methods": [
+        {
+          "name": "check",
+          "signature": "fn check(data_type: &DataType, depth_limit: usize) -> usize",
+          "summary": "Depth-checks the given data type against a given depth limit. The return value is the largest depth seen, which is capped at one more than the depth limit (indicating the recursion was terminated)."
+        },
+        {
+          "name": "transform_array",
+          "signature": "fn transform_array(&mut self, atype: &'a ArrayType) -> Result<(), ()>",
+          "via_trait": "buoyant_kernel::transforms::schema::SchemaTransform"
+        },
+        {
+          "name": "transform_map",
+          "signature": "fn transform_map(&mut self, mtype: &'a MapType) -> Result<(), ()>",
+          "via_trait": "buoyant_kernel::transforms::schema::SchemaTransform"
+        },
+        {
+          "name": "transform_struct",
+          "signature": "fn transform_struct(&mut self, stype: &'a StructType) -> Result<(), ()>",
+          "via_trait": "buoyant_kernel::transforms::schema::SchemaTransform"
+        },
+        {
+          "name": "transform_struct_field",
+          "signature": "fn transform_struct_field(&mut self, field: &'a StructField) -> Result<(), ()>",
+          "via_trait": "buoyant_kernel::transforms::schema::SchemaTransform"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transforms::schema::SchemaTransform",
+      "name": "SchemaTransform",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait SchemaTransform<'a>",
+      "summary": "Generic framework for describing recursive bottom-up schema transforms.",
+      "doc": "api/buoyant_kernel.transforms.schema.md#schematransform",
+      "aliases": [
+        "buoyant_kernel::transforms::SchemaTransform",
+        "delta_kernel::transforms::schema::SchemaTransform"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_utils::StringifyFailureProneLeaves",
+        "buoyant_kernel::expressions::literal_expression_transform::LiteralExpressionTransform",
+        "buoyant_kernel::scan::GetReferencedFields",
+        "buoyant_kernel::scan::data_skipping::stats_schema::BaseStatsTransform",
+        "buoyant_kernel::scan::data_skipping::stats_schema::MinMaxStatsTransform",
+        "buoyant_kernel::scan::data_skipping::stats_schema::NullCountStatsTransform",
+        "buoyant_kernel::scan::data_skipping::stats_schema::NullableStatsTransform",
+        "buoyant_kernel::scan::data_skipping::stats_schema::StripFieldMetadataTransform",
+        "buoyant_kernel::schema::GetSchemaLeaves",
+        "buoyant_kernel::schema::InvariantChecker",
+        "buoyant_kernel::schema::MakePhysical",
+        "buoyant_kernel::schema::NonNullFieldChecker",
+        "buoyant_kernel::schema::validation::SchemaValidator",
+        "buoyant_kernel::schema::variant_utils::UsesVariant",
+        "buoyant_kernel::schema::void_utils::StripVoidFields",
+        "buoyant_kernel::schema::void_utils::ValidateForWrite",
+        "buoyant_kernel::table_features::column_mapping::MaxColumnId",
+        "buoyant_kernel::table_features::iceberg_compat::LegacyNestedIdsVisitor",
+        "buoyant_kernel::table_features::iceberg_compat::TypeAllowListVisitor",
+        "buoyant_kernel::table_features::timestamp_nanos::UsesTimestampNanos",
+        "buoyant_kernel::table_features::timestamp_ntz::UsesTimestampNtz",
+        "buoyant_kernel::transforms::schema::SchemaDepthChecker",
+        "deltalake_core::kernel::arrow::engine_ext::BaseStatsTransform",
+        "deltalake_core::kernel::arrow::engine_ext::MinMaxStatsTransform",
+        "deltalake_core::kernel::arrow::engine_ext::NullCountStatsTransform"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "recurse_into_array",
+        "recurse_into_map",
+        "recurse_into_struct",
+        "recurse_into_struct_field",
+        "transform",
+        "transform_array",
+        "transform_array_element",
+        "transform_map",
+        "transform_map_key",
+        "transform_map_value",
+        "transform_primitive",
+        "transform_struct",
+        "transform_struct_field",
+        "transform_variant"
+      ],
+      "methods": [
+        {
+          "name": "recurse_into_array",
+          "signature": "fn recurse_into_array(&mut self, atype: &'a ArrayType) -> Self::Output<ArrayType>",
+          "summary": "Recursively transforms an array's element type (unary)."
+        },
+        {
+          "name": "recurse_into_map",
+          "signature": "fn recurse_into_map(&mut self, mtype: &'a MapType) -> Self::Output<MapType>",
+          "summary": "Recursively transforms a map's key and value types (binary)."
+        },
+        {
+          "name": "recurse_into_struct",
+          "signature": "fn recurse_into_struct(&mut self, stype: &'a StructType) -> Self::Output<StructType>",
+          "summary": "Recursively transforms a struct's fields (variadic)."
+        },
+        {
+          "name": "recurse_into_struct_field",
+          "signature": "fn recurse_into_struct_field(&mut self, field: &'a StructField) -> Self::Output<StructField>",
+          "summary": "Recursively transforms a struct field's data type (unary)."
+        },
+        {
+          "name": "transform",
+          "signature": "fn transform(&mut self, data_type: &'a DataType) -> Self::Output<DataType>",
+          "summary": "General entry point for a recursive traversal over any data type. Also invoked internally to dispatch on nested data types encountered during the traversal."
+        },
+        {
+          "name": "transform_array",
+          "signature": "fn transform_array(&mut self, atype: &'a ArrayType) -> Self::Output<ArrayType>",
+          "summary": "Called for each array encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_array`]."
+        },
+        {
+          "name": "transform_array_element",
+          "signature": "fn transform_array_element(&mut self, etype: &'a DataType) -> Self::Output<DataType>",
+          "summary": "Called for each array element type encountered during the traversal. The provided implementation forwards to [`Self::transform`]."
+        },
+        {
+          "name": "transform_map",
+          "signature": "fn transform_map(&mut self, mtype: &'a MapType) -> Self::Output<MapType>",
+          "summary": "Called for each map encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_map`]."
+        },
+        {
+          "name": "transform_map_key",
+          "signature": "fn transform_map_key(&mut self, etype: &'a DataType) -> Self::Output<DataType>",
+          "summary": "Called for each map key encountered during the traversal. The provided implementation forwards to [`Self::transform`]."
+        },
+        {
+          "name": "transform_map_value",
+          "signature": "fn transform_map_value(&mut self, etype: &'a DataType) -> Self::Output<DataType>",
+          "summary": "Called for each map value encountered during the traversal. The provided implementation forwards to [`Self::transform`]."
+        },
+        {
+          "name": "transform_primitive",
+          "signature": "fn transform_primitive(&mut self, ptype: &'a PrimitiveType) -> Self::Output<PrimitiveType>",
+          "summary": "Called for each primitive encountered during the traversal (leaf)."
+        },
+        {
+          "name": "transform_struct",
+          "signature": "fn transform_struct(&mut self, stype: &'a StructType) -> Self::Output<StructType>",
+          "summary": "Called for each struct encountered during the traversal. The provided implementation just forwards to [`Self::recurse_into_struct`]."
+        },
+        {
+          "name": "transform_struct_field",
+          "signature": "fn transform_struct_field(&mut self, field: &'a StructField) -> Self::Output<StructField>",
+          "summary": "Called for each struct field encountered during the traversal. The provided implementation forwards to [`Self::recurse_into_struct_field`]."
+        },
+        {
+          "name": "transform_variant",
+          "signature": "fn transform_variant(&mut self, stype: &'a StructType) -> Self::Output<StructType>",
+          "summary": "Called for each variant value encountered. The provided implementation just forwards to [`Self::recurse_into_struct`]."
+        }
+      ]
+    }
+  ]
+}

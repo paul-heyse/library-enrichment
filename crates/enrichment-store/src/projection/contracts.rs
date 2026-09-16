@@ -1,11 +1,12 @@
 //! Encoders are the schema authority for the bounded native contract projection.
 use super::cells::{batch, column, optional, text};
-use crate::native_catalog::{FieldInfo, InventorySummary, RelationInfo, RuleInfo};
+use crate::native_catalog::{FieldInfo, RelationInfo, RuleInfo};
 use arrow::{
     array::{BooleanArray, UInt64Array},
     error::ArrowError,
     record_batch::RecordBatch,
 };
+use enrichment_core::telemetry::InventorySummary;
 use std::sync::Arc;
 
 pub(crate) fn relations(rows: &[RelationInfo]) -> Result<RecordBatch, ArrowError> {
@@ -95,6 +96,16 @@ pub(crate) fn fields(rows: &[FieldInfo]) -> Result<RecordBatch, ArrowError> {
                 )),
                 false,
                 "nullable",
+            ),
+            column(
+                "required_by_contract",
+                Arc::new(BooleanArray::from(
+                    rows.iter()
+                        .map(|r| r.required_by_contract)
+                        .collect::<Vec<_>>(),
+                )),
+                false,
+                "declared-semantic-presence",
             ),
             column(
                 "semantic_role",

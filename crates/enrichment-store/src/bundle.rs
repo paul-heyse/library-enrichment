@@ -40,7 +40,8 @@ struct Description {
     bundle_version: String,
     context_id: ContextId,
     snapshot_id: SnapshotId,
-    source_catalog_generation: u64,
+    source_control: String,
+    control: String,
     exported_at: String,
 }
 
@@ -107,6 +108,14 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
     fs::create_dir_all(root.join("data/blobs/sha256"))?;
     let mut artifact_count = 0usize;
     let mut artifact_bytes = 0u64;
+    let native =
+        crate::delta_evidence::EvidenceTables::new(&root.join("data/delta"), runtime.clone())
+            .map_err(error)?;
+    let mut rebound = Vec::new();
+    let mut projections = Vec::new();
+    let search =
+        crate::search_projection::SearchProjection::new(&root.join("data/delta"), runtime.clone())
+            .map_err(error)?;
     for input_snapshot in snapshots {
         let reader = SnapshotReader::open(&repository, catalog.clone(), &input_snapshot)
             .await
@@ -114,28 +123,51 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         if input_snapshot == snapshot && reader.manifest().context_id != id {
             return Err(error("snapshot does not belong to this context"));
         }
-        let manifest = reader.manifest();
-        let target = root.join("data/snapshots").join(input_snapshot.as_str());
-        fs::create_dir_all(&target)?;
-        let entry = catalog
-            .snapshot(&runtime, &input_snapshot)
-            .await
-            .map_err(error)?
-            .ok_or_else(|| error("catalog membership disappeared"))?;
-        copy_exact(
-            &reader.dir().join("manifest.json"),
-            &target.join("manifest.json"),
-            &entry.manifest_digest,
-            entry.manifest_bytes,
-        )?;
-        for table in &manifest.tables {
-            copy_exact(
-                &reader.dir().join(&table.file),
-                &target.join(&table.file),
-                &table.sha256,
-                table.bytes,
-            )?;
+        let mut publication = reader.manifest().clone();
+        let mut tables = Vec::new();
+        let cohort = uuid::Uuid::new_v4().to_string();
+        for binding in &publication.tables {
+            let relation = crate::admission::Relation::ALL
+                .into_iter()
+                .find(|r| r.name() == binding.relation)
+                .ok_or_else(|| error("unknown exported relation"))?;
+            tables.push(
+                native
+                    .append(
+                        relation,
+                        &cohort,
+                        reader
+                            .session()
+                            .table(relation.reference())
+                            .await
+                            .map_err(error)?,
+                        binding.rows,
+                    )
+                    .await
+                    .map_err(error)?,
+            );
         }
+        publication.tables = tables;
+        let opened = repository
+            .open_snapshot(catalog.clone(), &input_snapshot)
+            .await
+            .map_err(error)?;
+        let full = opened
+            .binding
+            .research_session(&runtime, None)
+            .await
+            .map_err(error)?;
+        projections.push(
+            search
+                .prepare(&publication, &full, None, true)
+                .await
+                .map_err(error)?,
+        );
+        rebound.push(enrichment_core::evidence::catalog::SnapshotEntry {
+            snapshot_id: publication.snapshot_id.clone(),
+            context_id: publication.context_id.clone(),
+            publication,
+        });
         let inputs = reader
             .session()
             .table("snapshot.evidence.input_artifacts")
@@ -197,13 +229,11 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         // mandatory offline provenance with exact acquisition descriptors and retained bytes.
         let mut operational = reader.attempt_logs().await.map_err(error)?;
         for delivery in reader.job_deliveries().await.map_err(error)? {
-            let owned = blobs.clone();
-            let selected = delivery.clone();
             operational.extend(
-                runtime
-                    .blocking(move || owned.result_dependencies(&selected))
+                catalog
+                    .result_dependencies(&runtime, &blobs, &delivery)
                     .await
-                    .map_err(error)??,
+                    .map_err(error)?,
             );
             operational.push(delivery);
         }
@@ -230,22 +260,29 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
                 )?;
                 artifact_count += 1;
             }
-            // Result handles are operational references and may have no producer-input row.
-            // Carry their exact verified descriptors so offline reads resolve those handles too.
-            let mut metadata_path = target.into_os_string();
-            metadata_path.push(".meta.json");
-            fs::write(PathBuf::from(metadata_path), serde_json::to_vec(&log)?)?;
         }
     }
     catalog
-        .export_snapshot(&runtime, &snapshot, &root.join("data"))
+        .export_snapshot(
+            &runtime,
+            &snapshot,
+            &root.join("data"),
+            &rebound,
+            &projections,
+        )
         .await
         .map_err(error)?;
+    let target_control =
+        crate::control::ControlStore::read_only(&root.join("data"), runtime.clone())?
+            .pin()
+            .await
+            .map_err(error)?;
     let description = Description {
-        bundle_version: "typed-evidence-bundle/5".into(),
+        bundle_version: "delta-evidence-bundle/1".into(),
         context_id: id.clone(),
         snapshot_id: snapshot.clone(),
-        source_catalog_generation: catalog.generation(),
+        source_control: catalog.identity().into(),
+        control: target_control.identity().into(),
         exported_at: enrichment_core::clock::now_rfc3339(),
     };
     fs::write(root.join(BUNDLE), serde_json::to_vec_pretty(&description)?)?;
@@ -341,7 +378,7 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     }
     let description: Description =
         serde_json::from_slice(&read_small(&root.join(BUNDLE), 4 * 1024 * 1024)?)?;
-    if description.bundle_version != "typed-evidence-bundle/5" {
+    if description.bundle_version != "delta-evidence-bundle/1" {
         return Err(error("unsupported bundle contract"));
     }
     let scratch = tempfile::tempdir()?;
@@ -357,7 +394,7 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     )
     .map_err(error)?;
     let catalog = repository.catalog.pin().await.map_err(error)?;
-    if catalog.generation() != description.source_catalog_generation
+    if catalog.identity() != description.control
         || catalog
             .current(&runtime, &description.context_id)
             .await

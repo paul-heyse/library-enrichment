@@ -1,0 +1,739 @@
+{
+  "module": "ruff_formatter",
+  "crate": "ruff_formatter",
+  "api": "api/ruff_formatter.md",
+  "items": [
+    {
+      "path": "ruff_formatter::IndentStyle",
+      "name": "IndentStyle",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum IndentStyle",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Tab",
+        "Space"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "ruff_cache::cache_key::CacheKey"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "const fn as_str(&self) -> &'static str",
+          "summary": "Returns the string representation of the indent style."
+        },
+        {
+          "name": "cache_key",
+          "signature": "fn cache_key(&self, key: &mut ruff_cache::CacheKeyHasher)",
+          "via_trait": "ruff_cache::cache_key::CacheKey"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_space",
+          "signature": "const fn is_space(&self) -> bool",
+          "summary": "Returns `true` if this is an [`IndentStyle::Space`]."
+        },
+        {
+          "name": "is_tab",
+          "signature": "const fn is_tab(&self) -> bool",
+          "summary": "Returns `true` if this is an [`IndentStyle::Tab`]."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::write",
+      "name": "write",
+      "kind": "function",
+      "crate": "ruff_formatter",
+      "signature": "fn write<Context>(output: &mut dyn Buffer<Context = Context>, args: Arguments<'_, Context>) -> FormatResult<()>",
+      "summary": "The `write` function takes a target buffer and an `Arguments` struct that can be precompiled with the `format_args!` macro.",
+      "doc": "api/ruff_formatter.md#write",
+      "aliases": [
+        "ruff_formatter::prelude::write"
+      ]
+    },
+    {
+      "path": "ruff_formatter::best_fitting",
+      "name": "best_fitting",
+      "kind": "macro",
+      "crate": "ruff_formatter",
+      "signature": "macro_rules! best_fitting",
+      "summary": "Provides multiple different alternatives and the printer picks the first one that fits. Use this as last resort because it requires that the printer must try all variants in the worst case. The passed variants must be in the following orde…",
+      "doc": "api/ruff_formatter.md#best_fitting",
+      "aliases": [
+        "ruff_formatter::prelude::best_fitting"
+      ]
+    },
+    {
+      "path": "ruff_formatter::dbg_write",
+      "name": "dbg_write",
+      "kind": "macro",
+      "crate": "ruff_formatter",
+      "signature": "macro_rules! dbg_write",
+      "summary": "Writes formatted data into the given buffer and prints all written elements for a quick and dirty debugging.",
+      "doc": "api/ruff_formatter.md#dbg_write",
+      "aliases": [
+        "ruff_formatter::prelude::dbg_write"
+      ]
+    },
+    {
+      "path": "ruff_formatter::format",
+      "name": "format",
+      "kind": "macro",
+      "crate": "ruff_formatter",
+      "signature": "macro_rules! format",
+      "summary": "Creates the Format IR for a value.",
+      "doc": "api/ruff_formatter.md#format",
+      "aliases": [
+        "ruff_formatter::prelude::format"
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_args",
+      "name": "format_args",
+      "kind": "macro",
+      "crate": "ruff_formatter",
+      "signature": "macro_rules! format_args",
+      "summary": "Constructs the parameters for other formatting macros.",
+      "doc": "api/ruff_formatter.md#format_args",
+      "aliases": [
+        "ruff_formatter::prelude::format_args"
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatOwnedWithRule",
+      "name": "FormatOwnedWithRule",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct FormatOwnedWithRule<T, R, C> where R: FormatRule<T, C>",
+      "summary": "Formats the `item` with the specified rule.",
+      "doc": "api/ruff_formatter.md#formatownedwithrule",
+      "implements": [
+        "ruff_formatter::Format",
+        "ruff_formatter::FormatWithRule"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_, C>) -> FormatResult<()>",
+          "via_trait": "ruff_formatter::Format"
+        },
+        {
+          "name": "item",
+          "signature": "fn item(&self) -> &Self::Item",
+          "via_trait": "ruff_formatter::FormatWithRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(item: T, rule: R) -> Self"
+        },
+        {
+          "name": "with_item",
+          "signature": "fn with_item(self, item: T) -> Self"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: O) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatRefWithRule",
+      "name": "FormatRefWithRule",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct FormatRefWithRule<'a, T, R, C> where R: FormatRule<T, C>",
+      "summary": "Formats the referenced `item` with the specified rule.",
+      "doc": "api/ruff_formatter.md#formatrefwithrule",
+      "implements": [
+        "ruff_formatter::Format",
+        "ruff_formatter::FormatWithRule"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_, C>) -> FormatResult<()>",
+          "via_trait": "ruff_formatter::Format"
+        },
+        {
+          "name": "item",
+          "signature": "fn item(&self) -> &Self::Item",
+          "via_trait": "ruff_formatter::FormatWithRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(item: &'a T, rule: R) -> Self"
+        },
+        {
+          "name": "rule",
+          "signature": "fn rule(&self) -> &R"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: O) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatState",
+      "name": "FormatState",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct FormatState<Context>",
+      "summary": "This structure stores the state that is relevant for the formatting of the whole document.",
+      "doc": "api/ruff_formatter.md#formatstate",
+      "methods": [
+        {
+          "name": "context_mut",
+          "signature": "fn context_mut(&mut self) -> &mut Context",
+          "summary": "Returns a mutable reference to the context"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(context: Context) -> Self",
+          "summary": "Creates a new state with the given language specific context"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::Formatted",
+      "name": "Formatted",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct Formatted<Context>",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "context",
+          "signature": "fn context(&self) -> &Context",
+          "summary": "Returns the context used during formatting."
+        },
+        {
+          "name": "document",
+          "signature": "fn document(&self) -> &Document",
+          "summary": "Returns the formatted document."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "into_document",
+          "signature": "fn into_document(self) -> Document",
+          "summary": "Consumes `self` and returns the formatted document."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(document: Document, context: Context) -> Self"
+        },
+        {
+          "name": "print",
+          "signature": "fn print(&self) -> PrintResult<Printed>"
+        },
+        {
+          "name": "print_with_indent",
+          "signature": "fn print_with_indent(&self, indent: u16) -> PrintResult<Printed>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::IndentWidth",
+      "name": "IndentWidth",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct IndentWidth",
+      "summary": "The visual width of an indentation.",
+      "doc": "api/ruff_formatter.md#indentwidth",
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "ruff_cache::cache_key::CacheKey"
+      ],
+      "methods": [
+        {
+          "name": "cache_key",
+          "signature": "fn cache_key(&self, key: &mut ruff_cache::CacheKeyHasher)",
+          "via_trait": "ruff_cache::cache_key::CacheKey"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: NonZeroU8) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: u8) -> Result<Self, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "value",
+          "signature": "const fn value(&self) -> u32",
+          "summary": "Return the numeric value for this [`LineWidth`]"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::LineWidth",
+      "name": "LineWidth",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct LineWidth",
+      "summary": "The maximum visual width to which the formatter should try to limit a line.",
+      "doc": "api/ruff_formatter.md#linewidth",
+      "implements": [
+        "core::convert::From",
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "ruff_cache::cache_key::CacheKey"
+      ],
+      "methods": [
+        {
+          "name": "cache_key",
+          "signature": "fn cache_key(&self, key: &mut ruff_cache::CacheKeyHasher)",
+          "via_trait": "ruff_cache::cache_key::CacheKey"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: NonZeroU16) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: u16) -> Result<LineWidth, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        },
+        {
+          "name": "value",
+          "signature": "const fn value(&self) -> u16",
+          "summary": "Return the numeric value for this [`LineWidth`]"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::Printed",
+      "name": "Printed",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct Printed",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "as_code",
+          "signature": "fn as_code(&self) -> &str",
+          "summary": "Access the resulting code, borrowing the result"
+        },
+        {
+          "name": "into_code",
+          "signature": "fn into_code(self) -> String",
+          "summary": "Access the resulting code, consuming the result"
+        },
+        {
+          "name": "into_sourcemap",
+          "signature": "fn into_sourcemap(self) -> Vec<SourceMarker>",
+          "summary": "Returns a list of [`SourceMarker`] mapping byte positions in the output string to the input source code, consuming the result"
+        },
+        {
+          "name": "new_empty",
+          "signature": "fn new_empty() -> Self",
+          "summary": "Construct an empty formatter result"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Option<TextRange>",
+          "summary": "Range of the input source file covered by this formatted code, or None if the entire file is covered in this instance"
+        },
+        {
+          "name": "slice_range",
+          "signature": "fn slice_range(self, source_range: TextRange, source: &str) -> PrintedRange",
+          "summary": "Slices the formatted code to the sub-slices that covers the passed `source_range` in `source`."
+        },
+        {
+          "name": "sourcemap",
+          "signature": "fn sourcemap(&self) -> &[SourceMarker]",
+          "summary": "Returns a list of [`SourceMarker`] mapping byte positions in the output string to the input source code. It's not guaranteed that the markers are sorted by source position."
+        },
+        {
+          "name": "take_sourcemap",
+          "signature": "fn take_sourcemap(&mut self) -> Vec<SourceMarker>",
+          "summary": "Takes the list of [`SourceMarker`] mapping byte positions in the output string to the input source code."
+        },
+        {
+          "name": "take_verbatim_ranges",
+          "signature": "fn take_verbatim_ranges(&mut self) -> Vec<TextRange>",
+          "summary": "Takes the ranges of nodes that have been formatted as verbatim, replacing them with an empty list."
+        },
+        {
+          "name": "verbatim",
+          "signature": "fn verbatim(&self) -> impl Iterator<Item = (TextRange, &str)>",
+          "summary": "The text in the formatted code that has been formatted as verbatim."
+        },
+        {
+          "name": "verbatim_ranges",
+          "signature": "fn verbatim_ranges(&self) -> &[TextRange]",
+          "summary": "Ranges of the formatted code that have been formatted as verbatim."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::PrintedRange",
+      "name": "PrintedRange",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct PrintedRange",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "as_code",
+          "signature": "fn as_code(&self) -> &str",
+          "summary": "The formatted code."
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self"
+        },
+        {
+          "name": "into_code",
+          "signature": "fn into_code(self) -> String"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(code: String, source_range: TextRange) -> Self"
+        },
+        {
+          "name": "source_range",
+          "signature": "fn source_range(&self) -> TextRange",
+          "summary": "The range the formatted code corresponds to in the source document."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::SimpleFormatContext",
+      "name": "SimpleFormatContext",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct SimpleFormatContext",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::SimpleFormatContext"
+      ],
+      "implements": [
+        "ruff_formatter::FormatContext"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(options: SimpleFormatOptions) -> Self"
+        },
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &Self::Options",
+          "via_trait": "ruff_formatter::FormatContext"
+        },
+        {
+          "name": "source_code",
+          "signature": "fn source_code(&self) -> SourceCode<'_>",
+          "via_trait": "ruff_formatter::FormatContext"
+        },
+        {
+          "name": "with_source_code",
+          "signature": "fn with_source_code(self, code: &str) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::SimpleFormatOptions",
+      "name": "SimpleFormatOptions",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct SimpleFormatOptions",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "indent_style",
+        "indent_width",
+        "line_width"
+      ],
+      "implements": [
+        "ruff_formatter::FormatOptions"
+      ],
+      "methods": [
+        {
+          "name": "as_print_options",
+          "signature": "fn as_print_options(&self) -> PrinterOptions",
+          "via_trait": "ruff_formatter::FormatOptions"
+        },
+        {
+          "name": "indent_style",
+          "signature": "fn indent_style(&self) -> IndentStyle",
+          "via_trait": "ruff_formatter::FormatOptions"
+        },
+        {
+          "name": "indent_width",
+          "signature": "fn indent_width(&self) -> IndentWidth",
+          "via_trait": "ruff_formatter::FormatOptions"
+        },
+        {
+          "name": "line_width",
+          "signature": "fn line_width(&self) -> LineWidth",
+          "via_trait": "ruff_formatter::FormatOptions"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::SourceMarker",
+      "name": "SourceMarker",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct SourceMarker",
+      "summary": "Lightweight sourcemap marker between source and output tokens",
+      "doc": "api/ruff_formatter.md#sourcemarker",
+      "fields": [
+        "source",
+        "dest"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_formatter::Format",
+      "name": "Format",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait Format<Context>",
+      "summary": "Formatting trait for types that can create a formatted representation. The `ruff_formatter` equivalent to [`std::fmt::Display`].",
+      "doc": "api/ruff_formatter.md#format",
+      "aliases": [
+        "ruff_formatter::prelude::Format"
+      ],
+      "implementors": [
+        "core::option::Option",
+        "ruff_formatter::FormatOwnedWithRule",
+        "ruff_formatter::FormatRefWithRule",
+        "ruff_formatter::arguments::Arguments",
+        "ruff_formatter::builders::Align",
+        "ruff_formatter::builders::BestFitParenthesize",
+        "ruff_formatter::builders::BestFitting",
+        "ruff_formatter::builders::BlockIndent",
+        "ruff_formatter::builders::ConditionalGroup",
+        "ruff_formatter::builders::Dedent",
+        "ruff_formatter::builders::ExpandParent",
+        "ruff_formatter::builders::FitsExpanded",
+        "ruff_formatter::builders::FormatLabelled",
+        "ruff_formatter::builders::FormatOnce",
+        "ruff_formatter::builders::FormatWith",
+        "ruff_formatter::builders::Group",
+        "ruff_formatter::builders::IfGroupBreaks",
+        "ruff_formatter::builders::Indent",
+        "ruff_formatter::builders::IndentIfGroupBreaks",
+        "ruff_formatter::builders::Line",
+        "ruff_formatter::builders::LineSuffix",
+        "ruff_formatter::builders::LineSuffixBoundary",
+        "ruff_formatter::builders::SourcePosition",
+        "ruff_formatter::builders::SourceTextSliceBuilder",
+        "ruff_formatter::builders::Space",
+        "ruff_formatter::builders::Text",
+        "ruff_formatter::builders::Token",
+        "ruff_formatter::format_extensions::Memoized",
+        "ruff_python_ast::str_prefix::AnyStringPrefix"
+      ],
+      "required_methods": [
+        "fmt"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_, Context>) -> FormatResult<()>",
+          "summary": "Formats the object using the given formatter."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatContext",
+      "name": "FormatContext",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatContext",
+      "summary": "Context object storing data relevant when formatting an object.",
+      "doc": "api/ruff_formatter.md#formatcontext",
+      "implementors": [
+        "ruff_formatter::SimpleFormatContext",
+        "ruff_python_formatter::context::PyFormatContext"
+      ],
+      "required_methods": [
+        "options",
+        "source_code"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "options",
+          "signature": "fn options(&self) -> &Self::Options",
+          "summary": "Returns the formatting options"
+        },
+        {
+          "name": "source_code",
+          "signature": "fn source_code(&self) -> SourceCode<'_>",
+          "summary": "Returns the source code from the document that gets formatted."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatOptions",
+      "name": "FormatOptions",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatOptions",
+      "summary": "Options customizing how the source code should be formatted.",
+      "doc": "api/ruff_formatter.md#formatoptions",
+      "implementors": [
+        "ruff_formatter::SimpleFormatOptions",
+        "ruff_python_formatter::options::PyFormatOptions"
+      ],
+      "required_methods": [
+        "as_print_options",
+        "indent_style",
+        "indent_width",
+        "line_width"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_print_options",
+          "signature": "fn as_print_options(&self) -> PrinterOptions",
+          "summary": "Derives the print options from these format options"
+        },
+        {
+          "name": "indent_style",
+          "signature": "fn indent_style(&self) -> IndentStyle",
+          "summary": "The indent style."
+        },
+        {
+          "name": "indent_width",
+          "signature": "fn indent_width(&self) -> IndentWidth",
+          "summary": "The visual width of an indent"
+        },
+        {
+          "name": "line_width",
+          "signature": "fn line_width(&self) -> LineWidth",
+          "summary": "What's the max width of a line. Defaults to 80."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatRule",
+      "name": "FormatRule",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatRule<T, C>",
+      "summary": "Rule that knows how to format an object of type `T`.",
+      "doc": "api/ruff_formatter.md#formatrule",
+      "aliases": [
+        "ruff_formatter::prelude::FormatRule"
+      ],
+      "required_methods": [
+        "fmt"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, item: &T, f: &mut Formatter<'_, C>) -> FormatResult<()>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatRuleWithOptions",
+      "name": "FormatRuleWithOptions",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatRuleWithOptions<T, C>: FormatRule<T, C>",
+      "summary": "Rule that supports customizing how it formats an object of type `T`.",
+      "doc": "api/ruff_formatter.md#formatrulewithoptions",
+      "required_methods": [
+        "with_options"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "with_options",
+          "signature": "fn with_options(self, options: Self::Options) -> Self",
+          "summary": "Returns a new rule that uses the given options to format an object."
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatWithRule",
+      "name": "FormatWithRule",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatWithRule<Context>: Format<Context>",
+      "summary": "Trait for an object that formats an object with a specified rule.",
+      "doc": "api/ruff_formatter.md#formatwithrule",
+      "aliases": [
+        "ruff_formatter::prelude::_"
+      ],
+      "implementors": [
+        "ruff_formatter::FormatOwnedWithRule",
+        "ruff_formatter::FormatRefWithRule"
+      ],
+      "required_methods": [
+        "item"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "item",
+          "signature": "fn item(&self) -> &Self::Item",
+          "summary": "Returns the associated item"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::FormatResult",
+      "name": "FormatResult",
+      "kind": "type_alias",
+      "crate": "ruff_formatter",
+      "signature": "type FormatResult<F> = Result<F, FormatError>",
+      "summary": "Public return type of the formatter",
+      "doc": "api/ruff_formatter.md#formatresult",
+      "aliases": [
+        "ruff_formatter::prelude::FormatResult"
+      ]
+    },
+    {
+      "path": "ruff_formatter::PrintResult",
+      "name": "PrintResult",
+      "kind": "type_alias",
+      "crate": "ruff_formatter",
+      "signature": "type PrintResult<T> = Result<T, PrintError>",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

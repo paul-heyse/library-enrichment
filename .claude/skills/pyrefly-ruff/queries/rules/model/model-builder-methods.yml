@@ -1,0 +1,20 @@
+id: model-builder-methods
+language: json
+severity: hint
+message: Builder method. Chainable configuration point, easy to miss by reading constructors only.
+note: |
+  DataFusion concentrates configuration in `with_*` chains on SessionConfig, SessionStateBuilder,
+  RuntimeEnvBuilder, ListingOptions and the file sources. These are the knobs that do not appear
+  in any constructor signature, so a reader who only inspects `new()` never finds them.
+metadata:
+  record: builder-method
+  reads: content/model
+rule:
+  kind: pair
+  all:
+    - has:
+        field: key
+        regex: '^"signature"$'
+    - has:
+        field: value
+        regex: '^"fn with_\w+.*-> Self"$'

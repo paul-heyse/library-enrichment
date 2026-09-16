@@ -8,7 +8,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::canonical;
 use crate::wire::EvidenceClass;
 
 /// What kind of item a symbol is.
@@ -43,6 +42,7 @@ pub enum SymbolKind {
     AssocConst,
     Primitive,
     ExternCrate,
+    ExternType,
     Import,
 }
 
@@ -72,6 +72,7 @@ impl SymbolKind {
             Self::AssocConst => "assoc_const",
             Self::Primitive => "primitive",
             Self::ExternCrate => "extern_crate",
+            Self::ExternType => "extern_type",
             Self::Import => "import",
         }
     }
@@ -101,6 +102,7 @@ impl SymbolKind {
             Self::AssocConst,
             Self::Primitive,
             Self::ExternCrate,
+            Self::ExternType,
             Self::Import,
         ]
         .into_iter()
@@ -161,9 +163,6 @@ pub struct Symbol {
     /// `cfg`-shaped attribute strings the producer preserved, as declared hints only. Never
     /// a feature predicate: items compiled out are absent, not annotated (§4.3).
     pub cfg_hints: Vec<String>,
-    /// Separate Python source/stub observations; absent in legacy/Rust snapshots.
-    #[serde(default)]
-    pub python: Option<crate::producer::python::PythonSymbol>,
 }
 
 impl Symbol {
@@ -175,12 +174,21 @@ impl Symbol {
         kind: SymbolKind,
         qualifier: Option<&str>,
     ) -> String {
-        canonical::short_id(
-            "sym",
-            &serde_json::json!({
-                "crate": crate_name, "path": path, "kind": kind, "qualifier": qualifier
-            }),
-        )
+        #[derive(Serialize)]
+        struct KeyInput<'a> {
+            package: &'a str,
+            path: &'a str,
+            kind: SymbolKind,
+            qualifier: Option<&'a str>,
+        }
+        crate::native_key::Key::ProducerSymbol
+            .value(&KeyInput {
+                package: crate_name,
+                path,
+                kind,
+                qualifier,
+            })
+            .expect("declared native declaration identity")
     }
 
     /// Derive a definition identity.
@@ -191,12 +199,21 @@ impl Symbol {
         kind: SymbolKind,
         qualifier: Option<&str>,
     ) -> String {
-        canonical::short_id(
-            "def",
-            &serde_json::json!({
-                "crate": crate_name, "path": definition_path, "kind": kind, "qualifier": qualifier
-            }),
-        )
+        #[derive(Serialize)]
+        struct KeyInput<'a> {
+            package: &'a str,
+            path: &'a str,
+            kind: SymbolKind,
+            qualifier: Option<&'a str>,
+        }
+        crate::native_key::Key::Definition
+            .value(&KeyInput {
+                package: crate_name,
+                path: definition_path,
+                kind,
+                qualifier,
+            })
+            .expect("declared native declaration identity")
     }
 }
 
@@ -246,59 +263,6 @@ impl RelationKind {
         ]
         .into_iter()
         .find(|k| k.as_str() == text)
-    }
-}
-
-/// One typed edge.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct Relationship {
-    /// Content-derived identity.
-    pub relationship_id: String,
-    /// The source symbol.
-    pub source_id: String,
-    /// The source path, for display without a join.
-    pub source_path: String,
-    /// The target symbol or definition, when it is in this snapshot.
-    pub target_id: Option<String>,
-    /// The target path as written, even when the target is external.
-    pub target_path: String,
-    /// The relation.
-    pub relation: RelationKind,
-    /// A qualifier such as `blanket`, `auto` or `trait_impl`.
-    pub detail: Option<String>,
-    /// Which producer emitted it.
-    pub producer: String,
-}
-
-impl Relationship {
-    /// Build an edge with a content-derived identity.
-    #[must_use]
-    pub fn new(
-        source_id: &str,
-        source_path: &str,
-        target_id: Option<&str>,
-        target_path: &str,
-        relation: RelationKind,
-        detail: Option<&str>,
-        producer: &str,
-    ) -> Self {
-        let relationship_id = canonical::short_id(
-            "rel8",
-            &serde_json::json!({
-                "source": source_id, "target": target_id, "target_path": target_path,
-                "relation": relation, "detail": detail
-            }),
-        );
-        Self {
-            relationship_id,
-            source_id: source_id.to_owned(),
-            source_path: source_path.to_owned(),
-            target_id: target_id.map(str::to_owned),
-            target_path: target_path.to_owned(),
-            relation,
-            detail: detail.map(str::to_owned),
-            producer: producer.to_owned(),
-        }
     }
 }
 
@@ -392,45 +356,6 @@ pub struct EvidenceFragment {
     /// This fragment's acquisition locator, not the blob's first retrieval locator.
     #[serde(default)]
     pub source_uri: Option<String>,
-}
-
-impl EvidenceFragment {
-    /// Build a fragment with a content-derived identity.
-    /// # Errors
-    /// A locator must be an object; malformed coordinates are never replaced with emptiness.
-    pub fn new(
-        kind: FragmentKind,
-        subject: &str,
-        artifact_id: &str,
-        locator: serde_json::Value,
-        text: String,
-        evidence_class: EvidenceClass,
-        producer: &str,
-        producer_version: &str,
-    ) -> Result<Self, String> {
-        let serde_json::Value::Object(locator) = locator else {
-            return Err("fragment locator must be an object".into());
-        };
-        let fragment_id = canonical::short_id(
-            "frag",
-            &serde_json::json!({
-                "kind": kind, "subject": subject, "artifact": artifact_id, "locator": locator
-            }),
-        );
-        Ok(Self {
-            fragment_id,
-            kind,
-            subject: subject.to_owned(),
-            artifact_id: artifact_id.to_owned(),
-            locator,
-            text,
-            evidence_class,
-            producer: producer.to_owned(),
-            producer_version: producer_version.to_owned(),
-            source_version_match: None,
-            source_uri: None,
-        })
-    }
 }
 
 /// The configuration a documentation build was observed under (§4.3).

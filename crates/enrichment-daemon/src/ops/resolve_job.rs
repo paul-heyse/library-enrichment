@@ -49,7 +49,7 @@ pub(super) async fn cancelled(cancel: &AtomicBool) {
 }
 
 pub(super) async fn submit(service: &Service, request: ResolveRequest) -> Envelope {
-    let (record, token, new) = match subscribe(service, request) {
+    let (record, token, new) = match subscribe(service, request).await {
         Ok(v) => v,
         Err(e) => return common::operation_error(&e, "resolve_job"),
     };
@@ -58,19 +58,21 @@ pub(super) async fn submit(service: &Service, request: ResolveRequest) -> Envelo
 
 /// Register interest before waiting, so a concrete parent operation owns cancellation even
 /// when its request disconnects before the first pending response.
-pub(super) fn subscribe(
+pub(super) async fn subscribe(
     service: &Service,
     request: ResolveRequest,
 ) -> io::Result<(jobs::JobRecord, String, bool)> {
-    let key = resolve::acquisition_key(service, &request);
     let (record, token, new) = service
         .jobs
-        .submit(key, jobs::JobSpec::Resolve(request.clone()))?;
+        .submit(jobs::JobSpec::Resolve(request.clone()))
+        .await?;
     service.single_flight.submitted(new);
     if new {
         let service = service.clone();
         let id = record.job_id.clone();
-        tokio::spawn(async move {
+        let jobs = std::sync::Arc::clone(&service.jobs);
+        let runtime = service.repository.runtime.clone();
+        jobs.spawn(&runtime, id.clone(), async move {
             if let Err(e) = service
                 .repository
                 .runtime
@@ -84,10 +86,10 @@ pub(super) fn subscribe(
                 )
                 .await
             {
-                // Journal errors and unresolved cleanup remain visible; never report completion.
+                // Control errors and unresolved cleanup remain visible; never report completion.
                 eprintln!("acquisition job {id}: {e}");
             }
-        });
+        })?;
     }
     Ok((record, token, new))
 }
@@ -153,15 +155,18 @@ async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result
                 ),
                 Ok(Some(_)) => unreachable!(),
             };
-            return service.jobs.finish(id, state, failure(detail));
+            return service.jobs.finish(id, state, failure(detail)).await;
         }
     };
-    if !service.jobs.start(id)? {
-        return service.jobs.finish(
-            id,
-            JobState::Cancelled,
-            failure("acquisition cancelled while queued"),
-        );
+    if !service.jobs.start(id).await? {
+        return service
+            .jobs
+            .finish(
+                id,
+                JobState::Cancelled,
+                failure("acquisition cancelled while queued"),
+            )
+            .await;
     }
     let _timing = service.single_flight.running();
     let work = Work {
@@ -195,7 +200,7 @@ async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result
     service.execution.wait_for_cleanup(&work.lease).await?;
     // A catalog commit wins cancellation that arrived after publication admission.
     if let Some((state, _, result)) = work.committed.get() {
-        return service.jobs.finish(id, *state, result.clone());
+        return service.jobs.finish(id, *state, result.clone()).await;
     }
     let (state, result) = if timed_out {
         (
@@ -215,7 +220,7 @@ async fn run(service: &Service, id: &str, request: ResolveRequest) -> io::Result
         };
         (state, result)
     };
-    service.jobs.finish(id, state, result)
+    service.jobs.finish(id, state, result).await
 }
 fn failure(detail: impl Into<String>) -> Envelope {
     envelope::error(
@@ -376,7 +381,7 @@ pub(super) fn prepare(
         if !template
             .artifacts
             .iter()
-            .any(|handle| handle.artifact_id == artifact.artifact_id)
+            .any(|handle| handle.receipt.artifact_id == artifact.artifact_id)
             && let Some(handle) = common::handle_for(
                 artifact,
                 "Acquisition input, result or attempt receipt".into(),
@@ -441,6 +446,11 @@ pub(super) fn prepare(
     Ok(Some((
         stage.clone(),
         enrichment_store::repository::JobCompletion {
+            publication_fence: acq
+                .service
+                .jobs
+                .publication_fence(&work.id)
+                .map_err(|e| e.to_string())?,
             job_id: work.id.clone(),
             kind: PublishedJobKind::Resolve,
             state,

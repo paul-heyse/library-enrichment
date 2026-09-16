@@ -1,76 +1,19 @@
 //! Bounded operational observations copied from the physical plan that actually ran.
+use crate::telemetry_history::History;
 use datafusion::{
     logical_expr::LogicalPlan,
     physical_plan::{ExecutionPlan, display::DisplayableExecutionPlan, metrics::MetricValue},
 };
-use serde::{Deserialize, Serialize};
+use enrichment_core::telemetry::{Label, Metric, QueryDiagnostics, RuleTransition};
 use std::{
-    collections::VecDeque,
     fmt::{self, Write},
-    sync::{Arc, Mutex},
+    sync::Arc,
     time::Instant,
 };
 
 const TEXT_BYTES: usize = 16 * 1024;
 const NODES: usize = 128;
 const METRICS: usize = 1024;
-const HISTORY: usize = 8;
-const FAILURE_HISTORY: usize = 32;
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Metric {
-    pub node: usize,
-    pub name: String,
-    pub partition: Option<usize>,
-    pub labels: Vec<(String, String)>,
-    /// Counts/gauges/time values are copied, never live shared counters.
-    pub value: Option<usize>,
-    pub unit: String,
-    pub pruned: Option<usize>,
-    pub matched: Option<usize>,
-    pub part: Option<usize>,
-    pub total: Option<usize>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct QueryDiagnostics {
-    pub catalog: crate::native_catalog::InventorySummary,
-    pub rules: Vec<RuleTransition>,
-    pub rules_truncated: bool,
-    pub query_id: u64,
-    pub operation_id: Option<String>,
-    pub binding: Option<crate::runtime::OperationBinding>,
-    pub relations: Vec<String>,
-    pub functions: Vec<String>,
-    pub inventory_truncated: bool,
-    pub logical: String,
-    pub stage: String,
-    pub family: Option<String>,
-    pub analyzed: String,
-    pub analysis_micros: u64,
-    pub optimization_micros: u64,
-    pub physical: String,
-    pub truncated: bool,
-    pub metrics_truncated: bool,
-    /// False includes failed execution, timeout and dropped requests; counters may be partial.
-    pub completed: bool,
-    /// Time waiting for the shared query permit before native planning starts.
-    #[serde(default)]
-    pub queue_micros: u64,
-    pub planning_micros: u64,
-    pub elapsed_micros: u64,
-    pub output_rows: usize,
-    pub output_arrow_bytes: usize,
-    pub metrics: Vec<Metric>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RuleTransition {
-    pub phase: String,
-    pub rule: String,
-    /// Unknown if the plan exceeded the bounded fingerprint traversal.
-    pub changed: Option<bool>,
-}
 
 fn fingerprint(plan: &LogicalPlan) -> Option<u64> {
     use datafusion::common::tree_node::{TreeNode, TreeNodeRecursion};
@@ -110,168 +53,6 @@ fn fingerprint(plan: &LogicalPlan) -> Option<u64> {
     let mut hasher = std::hash::DefaultHasher::new();
     plan.hash(&mut hasher);
     Some(hasher.finish())
-}
-
-#[derive(Clone, Debug, Default, Serialize)]
-pub struct Summary {
-    pub executions: u64,
-    pub completed: u64,
-    pub planning_micros: u64,
-    /// Sum of query elapsed durations; concurrent durations overlap and are not wall time.
-    pub elapsed_micros: u64,
-    pub index_materializations: u64,
-    pub index_spill_bytes: u64,
-    pub index_reads: u64,
-    pub queue_micros: u64,
-    pub output_rows: u64,
-    pub output_arrow_bytes: u64,
-}
-impl Summary {
-    pub(crate) fn query(&mut self, query: &QueryDiagnostics) {
-        self.executions = self.executions.saturating_add(1);
-        self.completed = self.completed.saturating_add(u64::from(query.completed));
-        self.planning_micros = self.planning_micros.saturating_add(query.planning_micros);
-        self.elapsed_micros = self.elapsed_micros.saturating_add(query.elapsed_micros);
-        self.queue_micros = self.queue_micros.saturating_add(query.queue_micros);
-        self.output_rows = self.output_rows.saturating_add(query.output_rows as u64);
-        self.output_arrow_bytes = self
-            .output_arrow_bytes
-            .saturating_add(query.output_arrow_bytes as u64);
-    }
-}
-#[derive(Default)]
-struct HistoryState {
-    next_query_id: u64,
-    entries: VecDeque<QueryDiagnostics>,
-    summary: Summary,
-    failures: VecDeque<Failure>,
-    operations: VecDeque<crate::runtime::OperationDiagnostics>,
-}
-#[derive(Clone, Serialize, Deserialize)]
-struct Failure {
-    recorded_at: String,
-    diagnostic: enrichment_core::wire::Diagnostic,
-    /// The most recent executed query for this operation, if available. This is supporting
-    /// operation context, not a claim that preparation necessarily reached physical execution.
-    last_operation_query: Option<QueryDiagnostics>,
-}
-#[derive(Clone, Default)]
-pub(crate) struct History(Arc<Mutex<HistoryState>>, Option<std::path::PathBuf>);
-impl History {
-    pub(crate) fn persistent(path: std::path::PathBuf) -> std::io::Result<Self> {
-        use std::io::Read;
-        let failures = match std::fs::File::open(&path) {
-            Ok(file) => {
-                let mut bytes = Vec::new();
-                file.take(8 * 1024 * 1024 + 1).read_to_end(&mut bytes)?;
-                if bytes.len() > 8 * 1024 * 1024 {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        "native failure history exceeds bound",
-                    ));
-                }
-                serde_json::from_slice::<VecDeque<Failure>>(&bytes)?
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => VecDeque::new(),
-            Err(e) => return Err(e),
-        };
-        if failures.len() > FAILURE_HISTORY {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "native failure history exceeds entry bound",
-            ));
-        }
-        Ok(Self(
-            Arc::new(Mutex::new(HistoryState {
-                failures,
-                ..Default::default()
-            })),
-            Some(path),
-        ))
-    }
-
-    pub(crate) fn failure(&self, diagnostic: enrichment_core::wire::Diagnostic) {
-        let Ok(mut history) = self.0.lock() else {
-            return;
-        };
-        let last_operation_query = diagnostic.correlation_id.as_ref().and_then(|id| {
-            history
-                .entries
-                .iter()
-                .rev()
-                .find(|q| q.operation_id.as_ref() == Some(id))
-                .cloned()
-        });
-        while history.failures.len() >= FAILURE_HISTORY {
-            history.failures.pop_front();
-        }
-        history.failures.push_back(Failure {
-            recorded_at: enrichment_core::clock::now_rfc3339(),
-            diagnostic,
-            last_operation_query,
-        });
-        if let Some(path) = &self.1 {
-            let written = (|| -> std::io::Result<()> {
-                loop {
-                    let bytes = serde_json::to_vec(&history.failures)?;
-                    if bytes.len() <= 4 * 1024 * 1024 {
-                        return crate::atomic::write_atomic(path, &bytes);
-                    }
-                    if history.failures.len() > 1 {
-                        history.failures.pop_front();
-                    } else if let Some(failure) = history.failures.front_mut()
-                        && failure.last_operation_query.is_some()
-                    {
-                        failure.last_operation_query = None;
-                    } else {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::OutOfMemory,
-                            "failure diagnostic exceeds retained history byte bound",
-                        ));
-                    }
-                }
-            })();
-            if let Err(error) = written {
-                eprintln!("native failure diagnostics could not be retained: {error}");
-            }
-        }
-    }
-    pub(crate) fn read(&self) -> Vec<QueryDiagnostics> {
-        self.0
-            .lock()
-            .map(|h| h.entries.iter().cloned().collect())
-            .unwrap_or_default()
-    }
-    pub(crate) fn summary(&self) -> Summary {
-        self.0.lock().map(|h| h.summary.clone()).unwrap_or_default()
-    }
-    pub(crate) fn materialized_index(&self, bytes: u64) {
-        if let Ok(mut history) = self.0.lock() {
-            history.summary.index_materializations =
-                history.summary.index_materializations.saturating_add(1);
-            history.summary.index_spill_bytes =
-                history.summary.index_spill_bytes.saturating_add(bytes);
-        }
-    }
-    pub(crate) fn index_read(&self) {
-        if let Ok(mut history) = self.0.lock() {
-            history.summary.index_reads = history.summary.index_reads.saturating_add(1);
-        }
-    }
-    pub(crate) fn operation(&self, observation: crate::runtime::OperationDiagnostics) {
-        if let Ok(mut history) = self.0.lock() {
-            while history.operations.len() >= 32 {
-                history.operations.pop_front();
-            }
-            history.operations.push_back(observation);
-        }
-    }
-    pub(crate) fn operations(&self) -> Vec<crate::runtime::OperationDiagnostics> {
-        self.0
-            .lock()
-            .map(|history| history.operations.iter().cloned().collect())
-            .unwrap_or_default()
-    }
 }
 
 struct Capped {
@@ -318,7 +99,7 @@ pub(crate) struct Trace {
     history: History,
     start: Instant,
     diagnostic: QueryDiagnostics,
-    operation: crate::runtime::OperationContext,
+    _operation: crate::runtime::OperationContext,
 }
 impl Trace {
     pub(crate) fn new(logical: &LogicalPlan, history: History, start: Instant) -> Self {
@@ -341,22 +122,15 @@ impl Trace {
             }
             nodes.extend(children.into_iter().rev().map(|child| (child, depth + 1)));
         }
-        let query_id = history
-            .0
-            .lock()
-            .map(|mut h| {
-                h.next_query_id = h.next_query_id.saturating_add(1);
-                h.next_query_id
-            })
-            .unwrap_or(0);
+        let query_id = history.next_query();
         Self {
             previous_fingerprint: fingerprint(logical),
-            operation: crate::runtime::capture_operation(),
+            _operation: crate::runtime::capture_operation(),
             plan: None,
             history,
             start,
             diagnostic: QueryDiagnostics {
-                catalog: crate::native_catalog::InventorySummary::default(),
+                catalog: enrichment_core::telemetry::InventorySummary::default(),
                 rules: Vec::new(),
                 rules_truncated: false,
                 query_id,
@@ -519,6 +293,9 @@ impl Trace {
 }
 impl Drop for Trace {
     fn drop(&mut self) {
+        if !self.history.enabled() {
+            return;
+        }
         let mut text = Capped::new(TEXT_BYTES);
         let mut stack = self
             .plan
@@ -607,11 +384,9 @@ impl Drop for Trace {
                             .labels()
                             .iter()
                             .take(4)
-                            .map(|label| {
-                                (
-                                    short(label.name(), 64, truncated),
-                                    short(label.value(), 128, truncated),
-                                )
+                            .map(|label| Label {
+                                name: short(label.name(), 64, truncated),
+                                value: short(label.value(), 128, truncated),
                             })
                             .collect(),
                         value: scalar,
@@ -640,15 +415,7 @@ impl Drop for Trace {
         self.diagnostic.truncated |= text.truncated || self.diagnostic.metrics_truncated;
         self.diagnostic.elapsed_micros =
             u64::try_from(self.start.elapsed().as_micros()).unwrap_or(u64::MAX);
-        self.operation.query(&self.diagnostic);
-        if let Ok(mut history) = self.history.0.lock() {
-            history.summary.query(&self.diagnostic);
-
-            while history.entries.len() >= HISTORY {
-                history.entries.pop_front();
-            }
-            history.entries.push_back(self.diagnostic.clone());
-        }
+        self.history.query(&self.diagnostic);
     }
 }
 
@@ -700,21 +467,37 @@ mod tests {
         first.try_grow(1024).unwrap();
         second.try_grow(2048).unwrap();
         assert_eq!(
-            runtime.operational_counters().managed_memory_reserved_bytes,
+            runtime
+                .operational_counters()
+                .await
+                .unwrap()
+                .managed_memory_reserved_bytes,
             3072
         );
         drop(first);
         assert_eq!(
-            runtime.operational_counters().managed_memory_peak_bytes,
+            runtime
+                .operational_counters()
+                .await
+                .unwrap()
+                .managed_memory_peak_bytes,
             3072
         );
         drop(second);
         assert_eq!(
-            runtime.operational_counters().managed_memory_reserved_bytes,
+            runtime
+                .operational_counters()
+                .await
+                .unwrap()
+                .managed_memory_reserved_bytes,
             0
         );
         assert_eq!(
-            runtime.operational_counters().managed_memory_peak_bytes,
+            runtime
+                .operational_counters()
+                .await
+                .unwrap()
+                .managed_memory_peak_bytes,
             3072
         );
     }

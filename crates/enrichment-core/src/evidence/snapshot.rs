@@ -8,7 +8,7 @@ use crate::identity::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-pub const FORMAT: &str = "6.0";
+pub const FORMAT: &str = "7.0";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -83,11 +83,13 @@ pub struct SnapshotDescriptor {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct PhysicalTable {
+pub struct DeltaBinding {
     pub relation: String,
-    pub file: String,
-    pub sha256: String,
-    pub bytes: u64,
+    pub table_uri: String,
+    pub table_id: String,
+    pub version: u64,
+    pub cohort_id: String,
+    pub contract_id: String,
     pub rows: u64,
 }
 
@@ -98,7 +100,7 @@ pub struct EvidenceManifest {
     pub schema_version: String,
     pub metadata: SnapshotDescriptor,
     pub components: BTreeMap<String, String>,
-    pub tables: Vec<PhysicalTable>,
+    pub tables: Vec<DeltaBinding>,
     pub counts: SnapshotCounts,
     pub indexed: Vec<EvidenceKind>,
     pub missing: Vec<EvidenceKind>,
@@ -144,7 +146,7 @@ impl EvidenceManifest {
     }
 
     /// # Errors
-    /// Historical versions, semantic ID mismatch and unsafe table filenames are rejected.
+    /// Reject foreign epochs, incoherent identities and unsafe native table references.
     pub fn validate(&self) -> Result<(), String> {
         if self.schema_version != FORMAT
             || self.snapshot_id != Self::derive_id(&self.metadata, &self.components)?
@@ -152,19 +154,20 @@ impl EvidenceManifest {
             return Err("unsupported or inconsistent snapshot identity".into());
         }
         for table in &self.tables {
-            if table.file != format!("{}.parquet", table.relation)
+            if table.table_uri != format!("evidence_{}", table.relation)
                 || !table
                     .relation
                     .bytes()
                     .all(|b| b.is_ascii_lowercase() || b == b'_')
-                || table.sha256.len() != 64
+                || table.table_id.is_empty()
+                || table.cohort_id.is_empty()
+                || table.contract_id.len() != 64
                 || !table
-                    .sha256
+                    .contract_id
                     .bytes()
                     .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-                || table.bytes == 0
             {
-                return Err("invalid exact snapshot file reference".into());
+                return Err("invalid exact Delta table binding".into());
             }
         }
         Ok(())

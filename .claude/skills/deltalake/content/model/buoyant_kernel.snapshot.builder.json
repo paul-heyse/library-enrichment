@@ -1,0 +1,71 @@
+{
+  "module": "buoyant_kernel::snapshot::builder",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.snapshot.builder.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::snapshot::builder::IncrementalReplay",
+      "name": "IncrementalReplay",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum IncrementalReplay",
+      "summary": "Controls whether kernel replays commits to advance a stale base CRC (the existing snapshot's in-memory CRC, or an on-disk CRC) to the target snapshot version on load. A CRC already at the target version is always used regardless of this se…",
+      "doc": "api/buoyant_kernel.snapshot.builder.md#incrementalreplay",
+      "aliases": [
+        "buoyant_kernel::snapshot::IncrementalReplay",
+        "delta_kernel::snapshot::builder::IncrementalReplay"
+      ],
+      "variants": [
+        "Disabled",
+        "UpToCommits",
+        "Unlimited"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::snapshot::builder::SnapshotBuilder",
+      "name": "SnapshotBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct SnapshotBuilder",
+      "summary": "Builder for creating [`Snapshot`] instances.",
+      "doc": "api/buoyant_kernel.snapshot.builder.md#snapshotbuilder",
+      "aliases": [
+        "buoyant_kernel::snapshot::SnapshotBuilder",
+        "delta_kernel::snapshot::builder::SnapshotBuilder"
+      ],
+      "methods": [
+        {
+          "name": "at_version",
+          "signature": "fn at_version(self, version: Version) -> Self",
+          "summary": "Set the target version of the [`Snapshot`]. When omitted, the Snapshot is created at the latest version of the table."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self, engine: &dyn Engine) -> DeltaResult<SnapshotRef>",
+          "summary": "Create a new [`Snapshot`]. This returns a [`SnapshotRef`] (`Arc<Snapshot>`), perhaps returning a reference to an existing snapshot if the request to build a new snapshot matches the version of an existing snapshot."
+        },
+        {
+          "name": "with_correlation_id",
+          "signature": "fn with_correlation_id(self, correlation_id: impl Into<Arc<str>>) -> Self",
+          "summary": "Attach an opaque, caller-supplied correlation id for joining this build's metric events to the caller's own request or operation id. An empty id is treated as unset. When unset, behavior is unchanged."
+        },
+        {
+          "name": "with_incremental_crc_replay",
+          "signature": "fn with_incremental_crc_replay(self, mode: IncrementalReplay) -> Self",
+          "summary": "Bound how many commits kernel will replay to advance a stale CRC to the target version. See [`IncrementalReplay`]. Defaults to [`IncrementalReplay::Disabled`]."
+        },
+        {
+          "name": "with_log_tail",
+          "signature": "fn with_log_tail(self, log_tail: Vec<LogPath>) -> Self",
+          "summary": "Set the log tail to use when building the snapshot. This allows catalogs or external systems to provide an up-to-date log tail when used to build a snapshot."
+        },
+        {
+          "name": "with_max_catalog_version",
+          "signature": "fn with_max_catalog_version(self, max_catalog_version: Version) -> Self",
+          "summary": "Set the maximum catalog-ratified version. When set, the snapshot will not load versions beyond this limit, even if later commits exist on the filesystem. This ensures the catalog remains the source of truth for catalog-managed tables."
+        }
+      ]
+    }
+  ]
+}

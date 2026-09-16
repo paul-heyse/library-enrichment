@@ -1,0 +1,327 @@
+{
+  "module": "ruff_formatter::format_element",
+  "crate": "ruff_formatter",
+  "api": "api/ruff_formatter.format_element.md",
+  "items": [
+    {
+      "path": "ruff_formatter::format_element::BestFittingMode",
+      "name": "BestFittingMode",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum BestFittingMode",
+      "summary": "Mode used to determine if any variant (except the most expanded) fits for [`BestFittingVariants`].",
+      "doc": "api/ruff_formatter.format_element.md#bestfittingmode",
+      "aliases": [
+        "ruff_formatter::prelude::BestFittingMode"
+      ],
+      "variants": [
+        "FirstLine",
+        "AllLines"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_formatter::format_element::FormatElement",
+      "name": "FormatElement",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum FormatElement",
+      "summary": "Language agnostic IR for formatting source code.",
+      "doc": "api/ruff_formatter.format_element.md#formatelement",
+      "aliases": [
+        "ruff_formatter::FormatElement",
+        "ruff_formatter::prelude::FormatElement"
+      ],
+      "variants": [
+        "Space",
+        "Line",
+        "ExpandParent",
+        "SourcePosition",
+        "Token",
+        "Text",
+        "SourceCodeSlice",
+        "LineSuffixBoundary",
+        "Interned",
+        "BestFitting",
+        "Tag"
+      ],
+      "implements": [
+        "ruff_formatter::format_element::FormatElements"
+      ],
+      "methods": [
+        {
+          "name": "end_tag",
+          "signature": "fn end_tag(&self, kind: TagKind) -> Option<&Tag>",
+          "via_trait": "ruff_formatter::format_element::FormatElements"
+        },
+        {
+          "name": "has_label",
+          "signature": "fn has_label(&self, label_id: LabelId) -> bool",
+          "via_trait": "ruff_formatter::format_element::FormatElements"
+        },
+        {
+          "name": "is_start_tag",
+          "signature": "const fn is_start_tag(&self) -> bool",
+          "summary": "Returns `true` if self is a [`FormatElement::Tag`] and `Tag::is_start` is `true`."
+        },
+        {
+          "name": "is_tag",
+          "signature": "const fn is_tag(&self) -> bool",
+          "summary": "Returns `true` if self is a [`FormatElement::Tag`]"
+        },
+        {
+          "name": "start_tag",
+          "signature": "fn start_tag(&self, _: TagKind) -> Option<&Tag>",
+          "via_trait": "ruff_formatter::format_element::FormatElements"
+        },
+        {
+          "name": "will_break",
+          "signature": "fn will_break(&self) -> bool",
+          "via_trait": "ruff_formatter::format_element::FormatElements"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::LineMode",
+      "name": "LineMode",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum LineMode",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::LineMode"
+      ],
+      "variants": [
+        "SoftOrSpace",
+        "Soft",
+        "Hard",
+        "Empty"
+      ],
+      "methods": [
+        {
+          "name": "is_hard",
+          "signature": "const fn is_hard(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::PrintMode",
+      "name": "PrintMode",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum PrintMode",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::PrintMode"
+      ],
+      "variants": [
+        "Flat",
+        "Expanded"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: GroupMode) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is_expanded",
+          "signature": "const fn is_expanded(&self) -> bool"
+        },
+        {
+          "name": "is_flat",
+          "signature": "const fn is_flat(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::TextWidth",
+      "name": "TextWidth",
+      "kind": "enum",
+      "crate": "ruff_formatter",
+      "signature": "enum TextWidth",
+      "summary": "The pre-computed unicode width of a text if it is a single-line text or a marker that it is a multiline text if it contains a line feed.",
+      "doc": "api/ruff_formatter.format_element.md#textwidth",
+      "aliases": [
+        "ruff_formatter::prelude::TextWidth"
+      ],
+      "variants": [
+        "Width",
+        "Multiline"
+      ],
+      "methods": [
+        {
+          "name": "from_text",
+          "signature": "fn from_text(text: &str, indent_width: IndentWidth) -> TextWidth"
+        },
+        {
+          "name": "width",
+          "signature": "const fn width(self) -> Option<Width>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::normalize_newlines",
+      "name": "normalize_newlines",
+      "kind": "function",
+      "crate": "ruff_formatter",
+      "signature": "fn normalize_newlines<const N: usize>(text: &str, terminators: [char; N]) -> std::borrow::Cow<'_, str>",
+      "summary": "Replace the line terminators matching the provided list with \"\\n\" since its the only line break type supported by the printer",
+      "doc": "api/ruff_formatter.format_element.md#normalize_newlines",
+      "aliases": [
+        "ruff_formatter::normalize_newlines",
+        "ruff_formatter::prelude::normalize_newlines"
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::BestFittingVariants",
+      "name": "BestFittingVariants",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct BestFittingVariants",
+      "summary": "The different variants for this element. The first element is the one that takes up the most space horizontally (the most flat), The last element takes up the least space horizontally (but most horizontal space).",
+      "doc": "api/ruff_formatter.format_element.md#bestfittingvariants",
+      "aliases": [
+        "ruff_formatter::prelude::BestFittingVariants"
+      ],
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "most_expanded",
+          "signature": "fn most_expanded(&self) -> &[FormatElement]",
+          "summary": "Returns the most expanded variant"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::BestFittingVariantsIter",
+      "name": "BestFittingVariantsIter",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct BestFittingVariantsIter<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::BestFittingVariantsIter"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "last",
+          "signature": "fn last(self) -> Option<Self::Item> where Self: Sized",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::Interned",
+      "name": "Interned",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct Interned",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::Interned"
+      ],
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::Width",
+      "name": "Width",
+      "kind": "struct",
+      "crate": "ruff_formatter",
+      "signature": "struct Width",
+      "summary": "New-type wrapper for a single-line text unicode width. Mainly to prevent access to the inner value.",
+      "doc": "api/ruff_formatter.format_element.md#width",
+      "aliases": [
+        "ruff_formatter::prelude::Width"
+      ],
+      "methods": [
+        {
+          "name": "value",
+          "signature": "const fn value(self) -> u32"
+        }
+      ]
+    },
+    {
+      "path": "ruff_formatter::format_element::FormatElements",
+      "name": "FormatElements",
+      "kind": "trait",
+      "crate": "ruff_formatter",
+      "signature": "trait FormatElements",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_formatter::prelude::FormatElements"
+      ],
+      "implementors": [
+        "ruff_formatter::format_element::FormatElement"
+      ],
+      "required_methods": [
+        "end_tag",
+        "has_label",
+        "start_tag",
+        "will_break"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "end_tag",
+          "signature": "fn end_tag(&self, kind: TagKind) -> Option<&Tag>",
+          "summary": "Returns the end tag if: - the last element is an end tag of `kind`"
+        },
+        {
+          "name": "has_label",
+          "signature": "fn has_label(&self, label: LabelId) -> bool",
+          "summary": "Returns true if the element has the given label."
+        },
+        {
+          "name": "start_tag",
+          "signature": "fn start_tag(&self, kind: TagKind) -> Option<&Tag>",
+          "summary": "Returns the start tag of `kind` if: - the last element is an end tag of `kind`. - there's a matching start tag in this document (may not be true if this slice is an interned element and the `start` is in the document storing the interned e…"
+        },
+        {
+          "name": "will_break",
+          "signature": "fn will_break(&self) -> bool",
+          "summary": "Returns true if this [`FormatElement`] is guaranteed to break across multiple lines by the printer. This is the case if this format element recursively contains a: - [`crate::builders::empty_line`] or [`crate::builders::hard_line_break`] -…"
+        }
+      ]
+    }
+  ]
+}

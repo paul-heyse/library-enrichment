@@ -11,9 +11,7 @@ use arrow::{
 };
 use enrichment_core::{
     evidence::Artifact,
-    evidence::catalog::{
-        JobPublication, PublishedJobKind, SnapshotAttempt, SnapshotEntry, SnapshotSelection,
-    },
+    evidence::catalog::{JobPublication, PublishedJobKind, SnapshotAttempt, SnapshotSelection},
     identity::{
         Context, Ecosystem, Environment, EnvironmentResolution, Release, ReleaseKey, ReleaseLinks,
         ResearchMode,
@@ -441,60 +439,7 @@ pub fn contexts_from_batch(input: &RecordBatch) -> Result<Vec<Context>, ArrowErr
         .collect()
 }
 
-/// # Errors
-/// The physical manifest identity must be valid.
-pub fn snapshots(rows: &[SnapshotEntry]) -> Result<RecordBatch, ArrowError> {
-    for r in rows {
-        r.validate().map_err(invalid)?;
-    }
-    batch(
-        "catalog_snapshots",
-        vec![
-            required!(rows, "snapshot_id", "key:snapshot", |r| r
-                .snapshot_id
-                .as_str()),
-            required!(rows, "context_id", "ref:context", |r| r.context_id.as_str()),
-            required!(rows, "manifest_digest", "sha256", |r| r
-                .manifest_digest
-                .as_str()),
-            column(
-                "manifest_bytes",
-                Arc::new(UInt64Array::from_iter_values(
-                    rows.iter().map(|r| r.manifest_bytes),
-                )),
-                false,
-                "byte-count",
-            ),
-        ],
-    )
-}
-
-/// # Errors
-/// Invalid manifest or context/snapshot identity domains are rejected.
-pub fn snapshots_from_batch(input: &RecordBatch) -> Result<Vec<SnapshotEntry>, ArrowError> {
-    let columns = RowSet::batch(input)?;
-    (0..input.num_rows())
-        .map(|i| {
-            let r = columns.row(i);
-            let value = SnapshotEntry {
-                snapshot_id: r
-                    .text("snapshot_id")?
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| invalid(format!("{e}")))?,
-                context_id: r
-                    .text("context_id")?
-                    .to_owned()
-                    .try_into()
-                    .map_err(|e| invalid(format!("{e}")))?,
-                manifest_digest: r.text("manifest_digest")?.into(),
-                manifest_bytes: r.number("manifest_bytes")?,
-            };
-            value.validate().map_err(invalid)?;
-            Ok(value)
-        })
-        .collect()
-}
+pub use super::publication::{decode as snapshots_from_batch, encode as snapshots};
 
 /// # Errors
 /// Arrow shape failures are propagated.
@@ -545,23 +490,6 @@ pub fn selections_from_batch(input: &RecordBatch) -> Result<Vec<SnapshotSelectio
 /// # Errors
 /// Attempt provenance uses the same typed producer projection as evidence snapshots.
 pub fn attempts(rows: &[SnapshotAttempt]) -> Result<RecordBatch, ArrowError> {
-    for row in rows {
-        if row.artifacts.iter().any(|a| {
-            !row.run.inputs.values().any(|d| d == &a.sha256)
-                && row.run.log.as_ref() != Some(&a.artifact_id)
-        }) {
-            return Err(invalid("acquisition outside attempt input closure"));
-        }
-        if row.run.log.as_ref().is_some_and(|log| {
-            row.artifacts
-                .iter()
-                .filter(|a| &a.artifact_id == log)
-                .count()
-                != 1
-        }) {
-            return Err(invalid("attempt log requires one exact output descriptor"));
-        }
-    }
     let runs: Vec<_> = rows.iter().map(|r| r.run.clone()).collect();
     let runs = super::producer_runs(&runs)?;
     let ids: Vec<_> = rows.iter().map(SnapshotAttempt::association_id).collect();
@@ -617,22 +545,6 @@ pub fn attempts_from_batch(input: &RecordBatch) -> Result<Vec<SnapshotAttempt>, 
             };
             if value.association_id() != r.text("association_id")? {
                 return Err(invalid("invalid attempt association identity"));
-            }
-            if value.artifacts.iter().any(|a| {
-                !value.run.inputs.values().any(|d| d == &a.sha256)
-                    && value.run.log.as_ref() != Some(&a.artifact_id)
-            }) {
-                return Err(invalid("acquisition outside attempt input closure"));
-            }
-            if value.run.log.as_ref().is_some_and(|log| {
-                value
-                    .artifacts
-                    .iter()
-                    .filter(|a| &a.artifact_id == log)
-                    .count()
-                    != 1
-            }) {
-                return Err(invalid("attempt log requires one exact output descriptor"));
             }
             Ok(value)
         })

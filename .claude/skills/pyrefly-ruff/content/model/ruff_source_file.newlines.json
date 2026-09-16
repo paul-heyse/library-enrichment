@@ -1,0 +1,223 @@
+{
+  "module": "ruff_source_file::newlines",
+  "crate": "ruff_source_file",
+  "api": "api/ruff_source_file.newlines.md",
+  "items": [
+    {
+      "path": "ruff_source_file::newlines::LineEnding",
+      "name": "LineEnding",
+      "kind": "enum",
+      "crate": "ruff_source_file",
+      "signature": "enum LineEnding",
+      "summary": "The line ending style used in Python source code. See <https://docs.python.org/3/reference/lexical_analysis.html#physical-lines>",
+      "doc": "api/ruff_source_file.newlines.md#lineending",
+      "aliases": [
+        "ruff_source_file::LineEnding"
+      ],
+      "variants": [
+        "Lf",
+        "Cr",
+        "CrLf"
+      ],
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "const fn as_str(&self) -> &'static str"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "len",
+          "signature": "const fn len(&self) -> usize"
+        },
+        {
+          "name": "text_len",
+          "signature": "const fn text_len(&self) -> TextSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::newlines::find_newline",
+      "name": "find_newline",
+      "kind": "function",
+      "crate": "ruff_source_file",
+      "signature": "fn find_newline(text: &str) -> Option<(usize, LineEnding)>",
+      "summary": "Finds the next newline character. Returns its position and the [`LineEnding`].",
+      "doc": "api/ruff_source_file.newlines.md#find_newline",
+      "aliases": [
+        "ruff_source_file::find_newline"
+      ]
+    },
+    {
+      "path": "ruff_source_file::newlines::Line",
+      "name": "Line",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct Line<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_source_file::Line"
+      ],
+      "implements": [
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "as_full_str",
+          "signature": "fn as_full_str(&self) -> &'a str",
+          "summary": "Returns the line's text, including the terminating new line character."
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'a str",
+          "summary": "Returns the text of the line, excluding the terminating new line character."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&self) -> TextSize",
+          "summary": "Returns the byte offset where the line ends, excluding its new line character"
+        },
+        {
+          "name": "full_end",
+          "signature": "fn full_end(&self) -> TextSize",
+          "summary": "Returns the byte offset where the line ends, including its terminating new line character."
+        },
+        {
+          "name": "full_range",
+          "signature": "fn full_range(&self) -> TextRange",
+          "summary": "Returns the range of the line, including its terminating new line character."
+        },
+        {
+          "name": "line_ending",
+          "signature": "fn line_ending(&self) -> Option<LineEnding>",
+          "summary": "Returns the line's new line character, if any."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(text: &'a str, offset: TextSize) -> Self"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange",
+          "summary": "Returns the range of the line, excluding its terminating new line character"
+        },
+        {
+          "name": "start",
+          "signature": "const fn start(&self) -> TextSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::newlines::NewlineWithTrailingNewline",
+      "name": "NewlineWithTrailingNewline",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct NewlineWithTrailingNewline<'a>",
+      "summary": "Like [`UniversalNewlineIterator`], but includes a trailing newline as an empty line.",
+      "doc": "api/ruff_source_file.newlines.md#newlinewithtrailingnewline",
+      "aliases": [
+        "ruff_source_file::NewlineWithTrailingNewline"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(input: &'a str) -> NewlineWithTrailingNewline<'a>"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "with_offset",
+          "signature": "fn with_offset(input: &'a str, offset: TextSize) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::newlines::UniversalNewlineIterator",
+      "name": "UniversalNewlineIterator",
+      "kind": "struct",
+      "crate": "ruff_source_file",
+      "signature": "struct UniversalNewlineIterator<'a>",
+      "summary": "Like [`str::lines`], but accommodates LF, CRLF, and CR line endings, the latter of which are not supported by [`str::lines`].",
+      "doc": "api/ruff_source_file.newlines.md#universalnewlineiterator",
+      "aliases": [
+        "ruff_source_file::UniversalNewlineIterator"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(text: &'a str) -> UniversalNewlineIterator<'a>"
+        },
+        {
+          "name": "last",
+          "signature": "fn last(self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Line<'a>>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "with_offset",
+          "signature": "fn with_offset(text: &'a str, offset: TextSize) -> UniversalNewlineIterator<'a>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_source_file::newlines::UniversalNewlines",
+      "name": "UniversalNewlines",
+      "kind": "trait",
+      "crate": "ruff_source_file",
+      "signature": "trait UniversalNewlines",
+      "summary": "Extension trait for [`str`] that provides a [`UniversalNewlineIterator`].",
+      "doc": "api/ruff_source_file.newlines.md#universalnewlines",
+      "aliases": [
+        "ruff_source_file::UniversalNewlines"
+      ],
+      "required_methods": [
+        "universal_newlines"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "universal_newlines",
+          "signature": "fn universal_newlines(&self) -> UniversalNewlineIterator<'_>"
+        }
+      ]
+    }
+  ]
+}

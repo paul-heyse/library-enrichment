@@ -1,0 +1,255 @@
+{
+ "api": "api/mcp.client.subscriptions.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#onevent",
+   "inferred": "```xml <Callable special-form '(ToolsListChanged | PromptsListChanged | ResourcesListChanged | ResourceUpdated, /) -> Awaitable[None]'> ``` --- Per-event barrier awaited before a `Subscription` returns each event to its consumer.",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "OnEvent",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.OnEvent",
+   "preferred": "mcp.client.subscriptions.OnEvent",
+   "signature": "OnEvent = Callable[[ServerEvent], Awaitable[None]]",
+   "summary": "Per-event barrier awaited before a `Subscription` returns each event to its consumer."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#_max_pending_events",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_MAX_PENDING_EVENTS",
+   "nameable": false,
+   "path": "mcp.client.subscriptions._MAX_PENDING_EVENTS",
+   "preferred": "mcp.client.subscriptions._MAX_PENDING_EVENTS",
+   "signature": "_MAX_PENDING_EVENTS = 1024",
+   "summary": "Backlog backstop: the spec allows sub-resource URIs, so distinct pending `ResourceUpdated` events are unbounded; overflowing this cap settles the subscription lost rather than growing client memory."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#_subscriptionend",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_SubscriptionEnd",
+   "nameable": false,
+   "path": "mcp.client.subscriptions._SubscriptionEnd",
+   "preferred": "mcp.client.subscriptions._SubscriptionEnd",
+   "signature": "_SubscriptionEnd = Literal['graceful', 'lost', 'local']",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#__all__",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "__all__",
+   "nameable": false,
+   "path": "mcp.client.subscriptions.__all__",
+   "preferred": "mcp.client.subscriptions.__all__",
+   "signature": "__all__ = ['ListenNotSupportedError', 'OnEvent', 'PromptsListChanged', 'ResourceUpdated', 'ResourcesListChanged', 'ServerEvent', 'Subscription', 'SubscriptionLost', 'ToolsListChanged', 'listen']",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#_listen_ids",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_listen_ids",
+   "nameable": false,
+   "path": "mcp.client.subscriptions._listen_ids",
+   "preferred": "mcp.client.subscriptions._listen_ids",
+   "signature": "_listen_ids = count(1)",
+   "summary": "Process-wide `listen-N` sequence: string ids can never collide with a dispatcher's minted ints."
+  },
+  {
+   "bases": [
+    "RuntimeError"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#listennotsupportederror",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "negotiated_version",
+     "signature": "negotiated_version = negotiated_version"
+    }
+   ],
+   "name": "ListenNotSupportedError",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.ListenNotSupportedError",
+   "preferred": "mcp.client.subscriptions.ListenNotSupportedError",
+   "signature": "class ListenNotSupportedError(RuntimeError)",
+   "summary": "`subscriptions/listen` requires a 2026-07-28 connection."
+  },
+  {
+   "aliases": [
+    "mcp.client.session.ListenRoute"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#listenroute",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "acked",
+     "signature": "acked = anyio.Event()"
+    },
+    {
+     "kind": "function",
+     "name": "consume",
+     "signature": "def consume(self, event: ServerEvent) -> None",
+     "summary": "Remove a peeked event from the backlog."
+    },
+    {
+     "kind": "function",
+     "name": "deliver",
+     "signature": "def deliver(self, event: ServerEvent) -> None",
+     "summary": "Queue an event within the honored filter, deduplicated against the backlog."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "end",
+     "signature": "end: _SubscriptionEnd | None = None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "error",
+     "signature": "error: MCPError | None = None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "honored",
+     "signature": "honored: types.SubscriptionFilter | None = None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "next_event",
+     "signature": "async def next_event(self) -> ServerEvent | _SubscriptionEnd",
+     "summary": "Peek the next pending event, or the stream's end once the backlog drains."
+    },
+    {
+     "kind": "function",
+     "name": "set_acked",
+     "signature": "def set_acked(self, honored: types.SubscriptionFilter) -> None",
+     "summary": "Record the acknowledged filter; the first ack wins."
+    },
+    {
+     "kind": "function",
+     "name": "settle",
+     "signature": "def settle(self, end: _SubscriptionEnd, error: MCPError | None = None) -> None",
+     "summary": "Record the stream's end; the first reason wins and wakes both waiters."
+    }
+   ],
+   "name": "ListenRoute",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.ListenRoute",
+   "preferred": "mcp.client.session.ListenRoute",
+   "signature": "class ListenRoute",
+   "summary": "Package-internal demux state for one listen stream, fed synchronously in receive order by the session."
+  },
+  {
+   "aliases": [
+    "mcp.client.client.Subscription"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#subscription",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "honored",
+     "signature": "honored = honored",
+     "summary": "The subset of the requested filter the server agreed to deliver."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "subscription_id",
+     "signature": "subscription_id = subscription_id",
+     "summary": "The listen request's JSON-RPC id, stamped into every frame's `_meta`."
+    }
+   ],
+   "name": "Subscription",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.Subscription",
+   "preferred": "mcp.client.client.Subscription",
+   "signature": "class Subscription",
+   "summary": "One open `subscriptions/listen` stream: an async iterator of typed events."
+  },
+  {
+   "bases": [
+    "RuntimeError"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#subscriptionlost",
+   "kind": "class",
+   "name": "SubscriptionLost",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.SubscriptionLost",
+   "preferred": "mcp.client.subscriptions.SubscriptionLost",
+   "signature": "class SubscriptionLost(RuntimeError)",
+   "summary": "The stream ended without the server's graceful close; re-listen and refetch."
+  },
+  {
+   "aliases": [
+    "mcp.client.client._listen"
+   ],
+   "decorators": [
+    "asynccontextmanager"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.client.subscriptions.md#listen",
+   "kind": "function",
+   "labels": [
+    "async"
+   ],
+   "name": "listen",
+   "nameable": true,
+   "path": "mcp.client.subscriptions.listen",
+   "preferred": "mcp.client.subscriptions.listen",
+   "signature": "async def listen(session: ClientSession, tools_list_changed: bool = False, prompts_list_changed: bool = False, resources_list_changed: bool = False, resource_subscriptions: Sequence[str] = (), on_event: OnEvent | None = None) -> AsyncIterator[Subscription]",
+   "summary": "Open one `subscriptions/listen` stream on `session` (2026-07-28 only).",
+   "types_used": [
+    "mcp.client.subscriptions.Subscription"
+   ]
+  }
+ ],
+ "module": "mcp.client.subscriptions"
+}

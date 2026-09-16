@@ -1,0 +1,17 @@
+id: project-deltaops-entry-point
+language: rust
+severity: hint
+message: DeltaOps no longer exists at this pin; operations are inherent methods on DeltaTable.
+note: |
+  `DeltaOps(table).delete()` was the documented entry point for most of delta-rs's life, and
+  it is what every older write-up, blog post and training corpus teaches. It is gone at this
+  commit: the operations are now inherent methods, so the call is `table.delete()`.
+  This rule exists because the old form is the single most likely thing to be written from
+  memory, and it fails at compile time with an error that does not suggest the fix.
+  See content/catalogs/operations.md for the current entry point of every operation.
+metadata:
+  record: removed-api
+  capability: operations
+rule:
+  kind: identifier
+  regex: '^DeltaOps$'

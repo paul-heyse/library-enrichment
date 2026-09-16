@@ -1,0 +1,74 @@
+{
+  "module": "buoyant_kernel::table_changes::scan",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.table_changes.scan.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::table_changes::scan::TableChangesScan",
+      "name": "TableChangesScan",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct TableChangesScan",
+      "summary": "The result of building a [`TableChanges`] scan over a table. This can be used to get the change data feed from the table.",
+      "doc": "api/buoyant_kernel.table_changes.scan.md#tablechangesscan",
+      "aliases": [
+        "delta_kernel::table_changes::scan::TableChangesScan"
+      ],
+      "methods": [
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, engine: Arc<dyn Engine>) -> DeltaResult<impl Iterator<Item = DeltaResult<Box<dyn EngineData>>>>",
+          "summary": "Perform an \"all in one\" scan to get the change data feed. This will use the provided `engine` to read and process all the data for the query. Each [`EngineData`] in the resultant iterator is a portion of the final set of data."
+        },
+        {
+          "name": "logical_schema",
+          "signature": "fn logical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the logical [`Schema`] of the table changes scan."
+        },
+        {
+          "name": "physical_schema",
+          "signature": "fn physical_schema(&self) -> &SchemaRef",
+          "summary": "Get a shared reference to the physical [`Schema`] of the table changes scan."
+        },
+        {
+          "name": "table_root",
+          "signature": "fn table_root(&self) -> &Url"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::table_changes::scan::TableChangesScanBuilder",
+      "name": "TableChangesScanBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct TableChangesScanBuilder",
+      "summary": "This builder constructs a [`TableChangesScan`] that can be used to read the [`TableChanges`] of a table. [`TableChangesScanBuilder`] allows you to specify a schema to project the columns or specify a predicate to filter rows in the Change…",
+      "doc": "api/buoyant_kernel.table_changes.scan.md#tablechangesscanbuilder",
+      "aliases": [
+        "delta_kernel::table_changes::scan::TableChangesScanBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<TableChangesScan>",
+          "summary": "Build the [`TableChangesScan`]."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(table_changes: impl Into<Arc<TableChanges>>) -> Self",
+          "summary": "Create a new [`TableChangesScanBuilder`] instance."
+        },
+        {
+          "name": "with_predicate",
+          "signature": "fn with_predicate(self, predicate: impl Into<Option<PredicateRef>>) -> Self",
+          "summary": "Optionally provide an expression to filter rows. For example, using the predicate `x < 4` to return a subset of the rows in the scan which satisfy the filter. If `predicate_opt` is `None`, this is a no-op."
+        },
+        {
+          "name": "with_schema",
+          "signature": "fn with_schema(self, schema: impl Into<Option<SchemaRef>>) -> Self",
+          "summary": "Provide [`Schema`] for columns to select from the [`TableChanges`]."
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,12 @@
-mod support;
+#[path = "support/native_tables.rs"]
+mod native_tables;
+pub mod support;
 
 use arrow::{array::UInt64Array, record_batch::RecordBatch};
 use datafusion::prelude::{col, lit};
 use enrichment_core::{evidence::path::PublicPath, identity::Ecosystem};
 use enrichment_store::{
-    admission::{AdmissionCache, AdmissionLimits, EvidenceScope},
-    dataset::{self, WriteLimits},
+    admission::{AdmissionLimits, EvidenceScope, NativeAdmission},
     projection::TextColumn,
     runtime::{QueryLimits, QueryRuntime},
     views,
@@ -54,24 +55,17 @@ async fn inspection_projection(leased: bool) {
         )
         .unwrap();
     }
-    let files = dataset::write(
-        &dir.path().join("files"),
-        &evidence,
-        &WriteLimits::default(),
-    )
-    .unwrap();
     let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
-    let admitted = AdmissionCache::new(runtime.clone(), AdmissionLimits::default())
+    let admitted = NativeAdmission::new(runtime.clone(), AdmissionLimits::default())
         .unwrap()
-        .admit(
-            "large-doc-fixture",
+        .admit_native(
             &EvidenceScope {
                 ecosystem: Ecosystem::Rust,
                 symbol_package: "enr_fixture".into(),
                 release_id: "rel_fixture".into(),
                 environment_id: "env_fixture".into(),
             },
-            &files,
+            native_tables::providers(&dir.path().join("tables"), &runtime, &evidence).await,
         )
         .await
         .unwrap();
@@ -86,16 +80,22 @@ async fn inspection_projection(leased: bool) {
         .execute(session.table("snapshot.domain.api_surface").await.unwrap())
         .await
         .unwrap();
-    let bytes = |d: &enrichment_store::query_diagnostics::QueryDiagnostics| {
+    let bytes = |d: &enrichment_core::telemetry::QueryDiagnostics| {
         d.metrics
             .iter()
             .filter(|m| m.name == "bytes_scanned")
             .filter_map(|m| m.value)
             .sum::<usize>()
     };
-    let full_bytes = bytes(runtime.diagnostics().last().unwrap());
+    let full_bytes = bytes(runtime.diagnostics().await.unwrap().last().unwrap());
     assert!(
-        !runtime.diagnostics().last().unwrap().metrics_truncated,
+        !runtime
+            .diagnostics()
+            .await
+            .unwrap()
+            .last()
+            .unwrap()
+            .metrics_truncated,
         "full diagnostic was truncated"
     );
     let selected = runtime
@@ -107,10 +107,16 @@ async fn inspection_projection(leased: bool) {
         )
         .await
         .unwrap();
-    let selected_bytes = bytes(runtime.diagnostics().last().unwrap());
+    let selected_bytes = bytes(runtime.diagnostics().await.unwrap().last().unwrap());
     eprintln!("leased={leased}, selected_bytes={selected_bytes}, full_bytes={full_bytes}");
     assert!(
-        !runtime.diagnostics().last().unwrap().metrics_truncated,
+        !runtime
+            .diagnostics()
+            .await
+            .unwrap()
+            .last()
+            .unwrap()
+            .metrics_truncated,
         "selected diagnostic was truncated"
     );
     assert_eq!(selected.rows, full.rows);
@@ -128,6 +134,7 @@ async fn inspection_projection(leased: bool) {
         assert!(enrichment_store::leases::exclusive(dir.path()).is_ok());
     }
     for batch in selected.batches {
+        assert!(batch.column_by_name("docs").is_none());
         let payload = batch
             .column_by_name("payload")
             .unwrap()
@@ -144,22 +151,22 @@ async fn inspection_projection(leased: bool) {
 async fn admitted_views_preserve_observations_and_derive_ancestry_without_cross_scans() {
     let dir = tempfile::tempdir().expect("directory");
     let evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
-    let files = dataset::write(
-        &dir.path().join("files"),
-        &evidence,
-        &WriteLimits::default(),
-    )
-    .expect("write");
     let runtime =
         QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).expect("runtime");
-    let cache = AdmissionCache::new(runtime.clone(), AdmissionLimits::default()).expect("cache");
+    let cache = NativeAdmission::new(runtime.clone(), AdmissionLimits::default()).expect("cache");
     let scope = EvidenceScope {
         ecosystem: Ecosystem::Rust,
         symbol_package: "enr_fixture".into(),
         release_id: "rel_fixture".into(),
         environment_id: "env_fixture".into(),
     };
-    let admitted = cache.admit("fixture", &scope, &files).await.expect("admit");
+    let admitted = cache
+        .admit_native(
+            &scope,
+            native_tables::providers(&dir.path().join("tables"), &runtime, &evidence).await,
+        )
+        .await
+        .expect("admit");
     let session = admitted
         .research_session(&runtime, None)
         .await
@@ -349,24 +356,17 @@ async fn overview_keeps_documentation_when_an_undocumented_observation_sorts_fir
 async fn documentation_folds_only_the_same_definition_and_source() {
     let dir = tempfile::tempdir().unwrap();
     let evidence = support::rust_evidence_for("rel_fixture", "env_fixture");
-    let files = dataset::write(
-        &dir.path().join("files"),
-        &evidence,
-        &WriteLimits::default(),
-    )
-    .unwrap();
     let runtime = QueryRuntime::new(&dir.path().join("spill"), QueryLimits::default()).unwrap();
-    let cache = AdmissionCache::new(runtime.clone(), AdmissionLimits::default()).unwrap();
+    let cache = NativeAdmission::new(runtime.clone(), AdmissionLimits::default()).unwrap();
     let admitted = cache
-        .admit(
-            "fixture",
+        .admit_native(
             &EvidenceScope {
                 ecosystem: Ecosystem::Rust,
                 symbol_package: "enr_fixture".into(),
                 release_id: "rel_fixture".into(),
                 environment_id: "env_fixture".into(),
             },
-            &files,
+            native_tables::providers(&dir.path().join("tables"), &runtime, &evidence).await,
         )
         .await
         .unwrap();

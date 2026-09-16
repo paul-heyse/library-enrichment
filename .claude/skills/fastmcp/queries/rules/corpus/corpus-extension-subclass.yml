@@ -1,0 +1,28 @@
+id: corpus-extension-subclass
+language: python
+severity: hint
+message: An upstream implementation of an extension point — read one before writing your own.
+note: |
+  `content/catalogs/extension-points.md` names the five base classes and
+  `content/index/overrides.tsv` says what you must implement. Neither shows you a worked one.
+
+  The bases here are the ones the corpus actually subclasses, counted rather than guessed:
+  `Middleware` (13), `TokenVerifier` (10), `Provider` (5), `ClientTransport` (4),
+  `CatalogTransform` (2). `AuthProvider` itself is never subclassed directly upstream — callers
+  extend `TokenVerifier` or `OAuthProxy` instead, which is worth knowing before you start from
+  the abstract base the catalog points at.
+
+  Matches the base by name, so a class of your own inheriting an unrelated `Provider` matches
+  too. ast-grep resolves no imports.
+metadata:
+  record: usage
+  capability: extension-points
+  reads: content/corpus
+rule:
+  kind: class_definition
+  has:
+    field: superclasses
+    has:
+      stopBy: end
+      kind: identifier
+      regex: '^(Middleware|Provider|Transform|CatalogTransform|AuthProvider|TokenVerifier|OAuthProxy|ClientTransport)$'

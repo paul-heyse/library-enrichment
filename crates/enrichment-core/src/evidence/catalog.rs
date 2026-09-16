@@ -53,7 +53,7 @@ fn validate_delivery(delivery: &super::Artifact) -> Result<(), String> {
         || delivery.size_bytes > 32 * 1024 * 1024
         || delivery.kind != super::ArtifactKind::Other
         || delivery.media_type != "application/json"
-        || delivery.source_uri != "service:job-delivery/2"
+        || delivery.source_uri != "service:job-delivery/3"
         || delivery.retrieved_at.is_empty()
         || delivery.final_url.is_some()
         || delivery.etag.is_some()
@@ -81,7 +81,7 @@ pub struct JobPublication {
     pub delivery: super::Artifact,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PublishedJobKind {
     Verify,
@@ -128,22 +128,18 @@ impl JobPublication {
 pub struct SnapshotEntry {
     pub snapshot_id: SnapshotId,
     pub context_id: ContextId,
-    pub manifest_digest: String,
-    pub manifest_bytes: u64,
+    pub publication: super::snapshot::EvidenceManifest,
 }
 
 impl SnapshotEntry {
     /// # Errors
     /// Reject invalid physical identity rather than accepting an unverifiable reference.
     pub fn validate(&self) -> Result<(), String> {
-        if self.manifest_digest.len() != 64
-            || !self
-                .manifest_digest
-                .bytes()
-                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            || self.manifest_bytes == 0
+        self.publication.validate()?;
+        if self.snapshot_id != self.publication.snapshot_id
+            || self.context_id != self.publication.context_id
         {
-            return Err("invalid snapshot manifest identity".into());
+            return Err("invalid snapshot publication scope".into());
         }
         Ok(())
     }
@@ -172,13 +168,11 @@ pub struct SnapshotAttempt {
 impl SnapshotAttempt {
     #[must_use]
     pub fn association_id(&self) -> String {
-        format!(
-            "association_{}",
-            crate::canonical::digest_hex(&serde_json::json!([
-                "snapshot-attempt/1",
-                self.snapshot_id,
-                self.run.attempt_id,
-            ]))
-        )
+        crate::native_key::Key::SnapshotAttempt
+            .value(&serde_json::json!({
+                "snapshot_id": self.snapshot_id,
+                "attempt_id": self.run.attempt_id,
+            }))
+            .expect("typed snapshot attempt identity")
     }
 }

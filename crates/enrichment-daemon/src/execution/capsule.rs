@@ -330,11 +330,12 @@ pub async fn prepare(
             if !python_target_accepted(opened.environment.target.as_deref()) {
                 return Err("admitted Python capsule target is linux/x86_64; requested target is not reproduced".into());
             }
-            let artifact = service
-                .blobs
-                .artifact(digest)
+            let artifact = opened
+                .reader
+                .source_artifact()
+                .await
                 .map_err(|e| e.to_string())?
-                .ok_or("missing source artifact record")?;
+                .ok_or("selected snapshot lacks its source acquisition")?;
             let url = url::Url::parse(&artifact.source_uri).map_err(|e| e.to_string())?;
             let filename = url
                 .path_segments()

@@ -1,0 +1,176 @@
+{
+  "module": "ruff_linter::violation",
+  "crate": "ruff_linter",
+  "api": "api/ruff_linter.violation.md",
+  "items": [
+    {
+      "path": "ruff_linter::violation::FixAvailability",
+      "name": "FixAvailability",
+      "kind": "enum",
+      "crate": "ruff_linter",
+      "signature": "enum FixAvailability",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_linter::FixAvailability"
+      ],
+      "variants": [
+        "Sometimes",
+        "Always",
+        "None"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::violation::AlwaysFixableViolation",
+      "name": "AlwaysFixableViolation",
+      "kind": "trait",
+      "crate": "ruff_linter",
+      "signature": "trait AlwaysFixableViolation: ViolationMetadata",
+      "summary": "This trait exists just to make implementing the [`Violation`] trait more convenient for violations that can always be fixed.",
+      "doc": "api/ruff_linter.violation.md#alwaysfixableviolation",
+      "aliases": [
+        "ruff_linter::AlwaysFixableViolation"
+      ],
+      "required_methods": [
+        "fix_title",
+        "message",
+        "message_formats"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "fix_title",
+          "signature": "fn fix_title(&self) -> String",
+          "summary": "The title displayed for the available fix."
+        },
+        {
+          "name": "message",
+          "signature": "fn message(&self) -> String",
+          "summary": "The message used to describe the violation."
+        },
+        {
+          "name": "message_formats",
+          "signature": "fn message_formats() -> &'static [&'static str]",
+          "summary": "Returns the format strings used by [`message`](AlwaysFixableViolation::message)."
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::violation::Violation",
+      "name": "Violation",
+      "kind": "trait",
+      "crate": "ruff_linter",
+      "signature": "trait Violation: ViolationMetadata + Sized",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_linter::Violation"
+      ],
+      "implementors": [
+        "ruff_linter::rules::pycodestyle::rules::errors::IOError"
+      ],
+      "required_methods": [
+        "message",
+        "message_formats"
+      ],
+      "provided_methods": [
+        "fix_title",
+        "into_diagnostic"
+      ],
+      "methods": [
+        {
+          "name": "fix_title",
+          "signature": "fn fix_title(&self) -> Option<String>",
+          "summary": "Returns the title for the fix. The message is also shown as an advice as part of the diagnostics."
+        },
+        {
+          "name": "into_diagnostic",
+          "signature": "fn into_diagnostic(self, range: TextRange, file: &SourceFile) -> Diagnostic",
+          "summary": "Convert the violation into a [`Diagnostic`]."
+        },
+        {
+          "name": "message",
+          "signature": "fn message(&self) -> String",
+          "summary": "The message used to describe the violation."
+        },
+        {
+          "name": "message_formats",
+          "signature": "fn message_formats() -> &'static [&'static str]",
+          "summary": "Returns the format strings used by [`message`](Violation::message)."
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::violation::ViolationMetadata",
+      "name": "ViolationMetadata",
+      "kind": "trait",
+      "crate": "ruff_linter",
+      "signature": "trait ViolationMetadata",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_linter::ViolationMetadata"
+      ],
+      "implementors": [
+        "ruff_linter::rules::pycodestyle::rules::errors::IOError"
+      ],
+      "required_methods": [
+        "category",
+        "explain",
+        "file",
+        "line",
+        "rule",
+        "status"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "category",
+          "signature": "fn category() -> Category",
+          "summary": "Returns the category for this violation."
+        },
+        {
+          "name": "explain",
+          "signature": "fn explain() -> Option<&'static str>",
+          "summary": "Returns an explanation of what this violation catches, why it's bad, and what users should do instead."
+        },
+        {
+          "name": "file",
+          "signature": "fn file() -> &'static str",
+          "summary": "Returns the file where the violation is declared."
+        },
+        {
+          "name": "line",
+          "signature": "fn line() -> u32",
+          "summary": "Returns the 1-based line where the violation is declared."
+        },
+        {
+          "name": "rule",
+          "signature": "fn rule() -> Rule",
+          "summary": "Returns the rule for this violation"
+        },
+        {
+          "name": "status",
+          "signature": "fn status() -> RuleStatus",
+          "summary": "Returns the rule status for this violation."
+        }
+      ]
+    }
+  ]
+}

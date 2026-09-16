@@ -3,6 +3,8 @@ use crate::policy::ExecutionProfile;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub mod facts;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 #[schemars(inline)]
@@ -191,7 +193,23 @@ pub enum ProcessEnd {
 
 /// Raw bounded process observation, independent of what a probe establishes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ProcessAuthority {
+    Command {
+        effect_id: String,
+        grant_id: String,
+        environment_id: Option<String>,
+        snapshot_id: Option<String>,
+    },
+    Qualification {
+        definition_id: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ProcessObservation {
+    pub operation_id: String,
+    pub authority: ProcessAuthority,
     pub image_id: String,
     pub command: Vec<String>,
     pub started_at: String,
@@ -230,10 +248,9 @@ mod research_contract_tests {
     use super::*;
     #[test]
     fn terminal_outcome_and_error_are_consistent() {
-        let source: crate::wire::Envelope = serde_json::from_str(include_str!(
-            "../../../contracts/research-v2/examples/ok.fixture.json"
-        ))
-        .expect("fixture");
+        let source: crate::wire::Envelope =
+            serde_json::from_str(include_str!("../../../tests/fixtures/wire/ok.fixture.json"))
+                .expect("fixture");
         let valid = serde_json::to_value(JobResult::from(&source)).expect("serialize");
         assert!(serde_json::from_value::<JobResult>(valid.clone()).is_ok());
         for outcome in ["pending", "error"] {

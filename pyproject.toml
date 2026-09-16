@@ -20,6 +20,8 @@ dependencies = [
   # Static Python API extraction. Always with allow_inspection=False and explicit search_paths
   # (blueprint §5.2 [S12]); rules/griffe-static-only.yml enforces it.
   "griffe==2.3.0",
+  # Mechanical IPC V5 worker encoding of the generated Rust Arrow contract (Plan 15).
+  "pyarrow==25.0.1",
   # The adapter validates envelopes against the schema generated from the Rust wire types.
   # It is a RUNTIME dependency, not just a test one: the generated Pydantic DTOs enforce field
   # types and reject unknown fields, but datamodel-codegen does not translate the contract's
@@ -38,8 +40,12 @@ library-enrichment-worker = "enrichment_worker.__main__:main"
 dev = [
   # ty is the Python semantic engine (blueprint §1.1, §5.4). It belongs in the lockfile, not
   # in a global `uv tool install`, so the analysed version is reproducible (§12.1).
-  # pyrefly/pyright/mypy are installed on this workstation and are NOT this project's engine.
+  # pyright/mypy are installed on this workstation and are NOT admissible engines here.
   "ty==0.0.80",
+  # pyrefly is admissible alongside ty (ADR-0046) and is the producer the fastmcp capability
+  # skill runs for cross-references and call graphs. Pinned exactly, and in the lockfile rather
+  # than a global `uv tool`, for the same reason ty is: the analysed version must be reproducible.
+  "pyrefly==1.3.1",
   # Validates the frozen response envelope and the generated schemas against the fixture corpus.
   "jsonschema==4.26.0",
   "pytest==9.0.1",

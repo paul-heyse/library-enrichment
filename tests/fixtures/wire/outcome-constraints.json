@@ -1,0 +1,83 @@
+[
+  {
+    "if": {
+      "properties": {
+        "status": {
+          "const": "pending"
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "delivery": {
+          "properties": {
+            "mode": {
+              "const": "inline"
+            }
+          }
+        },
+        "error": {
+          "type": "null"
+        },
+        "job": {
+          "$ref": "#/$defs/JobHandle"
+        }
+      }
+    }
+  },
+  {
+    "if": {
+      "properties": {
+        "status": {
+          "const": "error"
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/Error"
+        }
+      }
+    }
+  },
+  {
+    "if": {
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "partial"
+          ]
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "error": {
+          "type": "null"
+        }
+      }
+    }
+  },
+  {
+    "if": {
+      "properties": {
+        "delivery": {
+          "properties": {
+            "mode": {
+              "const": "artifact"
+            }
+          }
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "data": {
+          "maxProperties": 0
+        }
+      }
+    }
+  }
+]

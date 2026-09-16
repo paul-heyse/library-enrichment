@@ -1,0 +1,81 @@
+{
+  "module": "pyrefly_config::error",
+  "crate": "pyrefly_config",
+  "api": "api/pyrefly_config.error.md",
+  "items": [
+    {
+      "path": "pyrefly_config::error::ErrorConfig",
+      "name": "ErrorConfig",
+      "kind": "struct",
+      "crate": "pyrefly_config",
+      "signature": "struct ErrorConfig<'a>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "display_config",
+        "ignore_errors_in_generated_code",
+        "enabled_ignores",
+        "type_ignore_unknown_tag_behavior"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(display_config: Cow<'a, ErrorDisplayConfig>, ignore_errors_in_generated_code: bool, enabled_ignores: SmallSet<Tool>, type_ignore_unknown_tag_behavior: TypeIgnoreUnknownTagBehavior) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_config::error::ErrorDisplayConfig",
+      "name": "ErrorDisplayConfig",
+      "kind": "struct",
+      "crate": "pyrefly_config",
+      "signature": "struct ErrorDisplayConfig",
+      "summary": "Represents overrides for errors to emit when collecting/printing errors. Not all error kinds are required to be defined in this map. Any that are missing will use the default severity associated with that error kind.",
+      "doc": "api/pyrefly_config.error.md#errordisplayconfig",
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (ErrorKind, Severity)> + '_",
+          "summary": "Iterate over `(ErrorKind, Severity)` entries in this config."
+        },
+        {
+          "name": "merge_user_overrides",
+          "signature": "fn merge_user_overrides(&mut self, user: &ErrorDisplayConfig)",
+          "summary": "Merge user overrides on top of `self` (the preset base), ensuring that user-level settings win even when they target a parent kind or a deprecated alias whose children/canonical form the preset sets directly."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(config: HashMap<ErrorKind, Severity>) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "set_default_severity",
+          "signature": "fn set_default_severity(&mut self, kind: ErrorKind, severity: Severity)",
+          "summary": "Sets the severity only if this error kind is not already explicitly configured."
+        },
+        {
+          "name": "set_error_severity",
+          "signature": "fn set_error_severity(&mut self, kind: ErrorKind, severity: Severity)"
+        },
+        {
+          "name": "severity",
+          "signature": "fn severity(&self, kind: ErrorKind) -> Severity",
+          "summary": "Gets the severity for the given `ErrorKind`. Checks in order: 1. Explicit override for this kind 2. Override for a deprecated alias of this kind 3. Override for the parent kind (sub-kind relationship) 4. Default severity for this kind"
+        }
+      ]
+    }
+  ]
+}

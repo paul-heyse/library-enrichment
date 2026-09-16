@@ -1,0 +1,158 @@
+{
+  "module": "pyrefly::query",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.query.md",
+  "items": [
+    {
+      "path": "pyrefly::query::TypeShapeTrait",
+      "name": "TypeShapeTrait",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum TypeShapeTrait",
+      "summary": "Traits surfaced for collapsed `named` shapes when the outer Pyrefly `Type` already carries a value-shape property.",
+      "doc": "api/pyrefly.query.md#typeshapetrait",
+      "variants": [
+        "TypedDict",
+        "PartialTypedDict",
+        "Tuple"
+      ],
+      "implements": [
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::query::python_ast_range_for_expr",
+      "name": "python_ast_range_for_expr",
+      "kind": "function",
+      "crate": "pyrefly",
+      "signature": "fn python_ast_range_for_expr(module_info: &pyrefly_python::module::Module, original_range: ruff_text_size::TextRange, expr: &ruff_python_ast::Expr, parent_expr: Option<&ruff_python_ast::Expr>) -> pyrefly_util::lined_buffer::PythonASTRange",
+      "summary": "Thin wrapper around `LinedBuffer::python_ast_range_for_expr` that accepts a `ModuleInfo` for convenience. Callers with direct access to a `LinedBuffer` can call the method directly.",
+      "doc": "api/pyrefly.query.md#python_ast_range_for_expr"
+    },
+    {
+      "path": "pyrefly::query::Attribute",
+      "name": "Attribute",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Attribute",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "name",
+        "kind",
+        "annotation",
+        "is_final"
+      ]
+    },
+    {
+      "path": "pyrefly::query::Callee",
+      "name": "Callee",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Callee",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "kind",
+        "target",
+        "class_name"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::query::Query",
+      "name": "Query",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Query",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "add_files",
+          "signature": "fn add_files(&self, files: Vec<(ModuleName, ModulePath)>) -> Vec<String>",
+          "summary": "Load the given files and return any errors associated with them"
+        },
+        {
+          "name": "change_files",
+          "signature": "fn change_files(&self, events: &CategorizedEvents)"
+        },
+        {
+          "name": "get_attributes",
+          "signature": "fn get_attributes(&self, name: ModuleName, path: ModulePath, class_name: &str) -> Option<Vec<Attribute>>"
+        },
+        {
+          "name": "get_callees_with_location",
+          "signature": "fn get_callees_with_location(&self, name: ModuleName, path: ModulePath, location: Option<PythonASTRange>) -> Option<Vec<(PythonASTRange, Callee)>>"
+        },
+        {
+          "name": "get_type_table_in_file",
+          "signature": "fn get_type_table_in_file(&self, name: ModuleName, path: ModulePath, walker: Option<&TypeQueryStmtWalker>) -> Option<TypeTableResponseData>",
+          "summary": "The type-table response never carries per-location display strings: clients resolve types from the deduped `type_table` alone, so the server skips per-location `type_to_string` (and the write-only type-cache population)."
+        },
+        {
+          "name": "get_type_table_in_file_with_timing",
+          "signature": "fn get_type_table_in_file_with_timing(&self, name: ModuleName, path: ModulePath) -> Option<(TypeTableResponseData, TypeQueryTiming)>"
+        },
+        {
+          "name": "get_type_table_in_file_with_timing_filtered",
+          "signature": "fn get_type_table_in_file_with_timing_filtered(&self, name: ModuleName, path: ModulePath, walker: Option<&TypeQueryStmtWalker>) -> Option<(TypeTableResponseData, TypeQueryTiming)>"
+        },
+        {
+          "name": "is_subtype",
+          "signature": "fn is_subtype(&self, name: ModuleName, path: PathBuf, lt: &str, gt: &str) -> Result<bool, String>",
+          "summary": "Return `Err` if you can't resolve them to types, otherwise return `lt <: gt`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(config_finder: ConfigFinder, thread_count: ThreadCount) -> Self"
+        },
+        {
+          "name": "resolve_target_from_qualified_name",
+          "signature": "fn resolve_target_from_qualified_name(&self, name: ModuleName, path: PathBuf, qualified_name: &str) -> Option<Vec<Callee>>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::query::TypeQueryTiming",
+      "name": "TypeQueryTiming",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TypeQueryTiming",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "located_count",
+        "setup",
+        "transform",
+        "total"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::query::TypeQueryExprVisitor",
+      "name": "TypeQueryExprVisitor",
+      "kind": "type_alias",
+      "crate": "pyrefly",
+      "signature": "type TypeQueryExprVisitor<'a> = dyn FnMut(&'a ruff_python_ast::Expr, Option<&'a ruff_python_ast::Expr>) -> bool + 'a",
+      "summary": "Records a single expression selected by a filtered query walker.",
+      "doc": "api/pyrefly.query.md#typequeryexprvisitor"
+    },
+    {
+      "path": "pyrefly::query::TypeQueryStmtWalker",
+      "name": "TypeQueryStmtWalker",
+      "kind": "type_alias",
+      "crate": "pyrefly",
+      "signature": "type TypeQueryStmtWalker = dyn Fn(&'a [ruff_python_ast::Stmt], &mut TypeQueryExprVisitor<'a>)",
+      "summary": "",
+      "doc": null
+    }
+  ]
+}

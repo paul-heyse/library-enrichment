@@ -1,0 +1,99 @@
+{
+  "module": "pyrefly_util::task_heap",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.task_heap.md",
+  "items": [
+    {
+      "path": "pyrefly_util::task_heap::CancellationHandle",
+      "name": "CancellationHandle",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct CancellationHandle",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "cancel",
+          "signature": "fn cancel(&self)"
+        },
+        {
+          "name": "is_cancelled",
+          "signature": "fn is_cancelled(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::task_heap::Cancelled",
+      "name": "Cancelled",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct Cancelled",
+      "summary": "Used to signal that all the tasks should be cancelled.",
+      "doc": "api/pyrefly_util.task_heap.md#cancelled",
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::task_heap::TaskHeap",
+      "name": "TaskHeap",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TaskHeap<K, V>",
+      "summary": "A heap of tasks, where `K` represents the priority of the task and `V` represents the task. Add tasks with `push_lifo` and `push_fifo`, and process them with `work`.",
+      "doc": "api/pyrefly_util.task_heap.md#taskheap",
+      "implements": [
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "get_cancellation_handle",
+          "signature": "fn get_cancellation_handle(&self) -> CancellationHandle"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&self, k: K, v: V, is_lifo: bool)",
+          "summary": "Push a task into the heap with specified ordering. If `is_lifo` is true, the task will be processed in LIFO order for equal values of `K`. If `is_lifo` is false, the task will be processed in FIFO order for equal values of `K`."
+        },
+        {
+          "name": "push_fifo",
+          "signature": "fn push_fifo(&self, k: K, v: V)",
+          "summary": "Push a task into the heap. For equal values of `K`, the task will be processed in FIFO order."
+        },
+        {
+          "name": "push_lifo",
+          "signature": "fn push_lifo(&self, k: K, v: V)",
+          "summary": "Push a task into the heap. For equal values of `K`, the task will be processed in LIFO order."
+        },
+        {
+          "name": "reset_cancellation",
+          "signature": "fn reset_cancellation(&mut self)",
+          "summary": "Replace the cancellation handle with a fresh one, so that a previously cancelled TaskHeap can process work again. The old handle becomes orphaned."
+        },
+        {
+          "name": "work",
+          "signature": "fn work(&self, f: impl FnMut(K, V)) -> Result<(), Cancelled>",
+          "summary": "Process items in the heap, in order of decreasing `K`. Continues processing successive items until all items have been processed, and there are no active calls to any `f` from all `work` calls."
+        },
+        {
+          "name": "work_without_cancellation",
+          "signature": "fn work_without_cancellation(&self, f: impl FnMut(K, V))"
+        }
+      ]
+    }
+  ]
+}

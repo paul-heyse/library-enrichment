@@ -12,7 +12,7 @@
 use std::collections::BTreeSet;
 
 use enrichment_core::config::Config;
-use enrichment_core::producer::{cratesio, normalize, rustdoc};
+use enrichment_core::producer::{cratesio, rustdoc};
 use enrichment_core::wire::status::{
     EvidenceCounters, FetchCounters, LspMetrics, SingleFlightCounts, VerificationCounters,
 };
@@ -111,20 +111,25 @@ pub fn from_config(config: &Config) -> ServiceStatus {
 }
 
 /// Report status for a running service: configuration plus what the open store enables.
-#[must_use]
-pub fn from_service(service: &Service) -> ServiceStatus {
+pub async fn from_service(service: &Service) -> std::io::Result<ServiceStatus> {
     let mut status = from_config(&service.config);
     let cache_ready = service.cache_ready();
     // Read fresh rather than caching at startup: an operator may qualify while the daemon runs,
     // and a cached "not qualified" would be a stale answer presented as a current one.
-    let qualification = crate::execution::admission::qualification(
-        &service.config.execution,
-        &service.paths.cache_root,
-    );
-    status.sandbox.execution_routes = crate::execution::readiness::routes(service, &qualification);
-    status.sandbox.execution_qualified = qualification.is_qualified();
-    status.sandbox.execution_readiness = qualification.detail();
-    status.sandbox.admitted_images = qualification.admitted_images();
+    let policy = crate::execution::readiness::policy(service)
+        .await
+        .map_err(std::io::Error::other)?;
+    let qualification = policy
+        .qualification()
+        .await
+        .map_err(std::io::Error::other)?;
+    status.sandbox.execution_routes = policy.routes().await.map_err(std::io::Error::other)?;
+    status.sandbox.execution_qualified = qualification.qualified;
+    status.sandbox.execution_readiness = qualification.detail.clone();
+    status.sandbox.admitted_images = policy
+        .admitted_images()
+        .await
+        .map_err(std::io::Error::other)?;
     for producer in &mut status.producers {
         if producer.name == "crates-io-registry" {
             *producer = if cache_ready {
@@ -187,9 +192,7 @@ pub fn from_service(service: &Service) -> ServiceStatus {
             // image and no Rust one can run ty and cannot run rust-analyzer -- and saying
             // otherwise would advertise a capability that has no image to run in.
             if producer.name == "ty" {
-                *producer = if qualification.is_qualified()
-                    && service.config.execution.python_image.is_some()
-                {
+                *producer = if status.sandbox.admitted_images.contains_key("python") {
                     ComponentStatus::available(
                         "ty",
                         "0.0.80",
@@ -209,15 +212,13 @@ pub fn from_service(service: &Service) -> ServiceStatus {
                         detail: format!(
                             "ty probes and warm sessions are implemented, but no qualified Python \
                              producer image is available: {}",
-                            qualification.detail()
+                            qualification.detail
                         ),
                     }
                 };
             }
             if producer.name == "rust-analyzer" {
-                *producer = if qualification.is_qualified()
-                    && service.config.execution.rust_image.is_some()
-                {
+                *producer = if status.sandbox.admitted_images.contains_key("rust") {
                     ComponentStatus::available(
                         "rust-analyzer",
                         "1.98.1",
@@ -233,7 +234,7 @@ pub fn from_service(service: &Service) -> ServiceStatus {
                         detail: format!(
                             "Warm rust-analyzer sessions are implemented, but no qualified Rust \
                              producer image is available: {}",
-                            qualification.detail()
+                            qualification.detail
                         ),
                     }
                 };
@@ -243,10 +244,10 @@ pub fn from_service(service: &Service) -> ServiceStatus {
                     "rustdoc-json",
                     rustdoc::NORMALIZER_VERSION,
                     &format!(
-                        "hosted docs.rs rustdoc JSON in formats {}, normalized to symbols, \
+                        "hosted docs.rs rustdoc JSON in formats {}d to symbols, \
                          relationships and fragments; signatures rendered by public-api {}",
                         formats.join("/"),
-                        normalize::public_api_version()
+                        enrichment_core::producer::rustdoc::facts::PUBLIC_API_VERSION
                     ),
                 );
             }
@@ -267,14 +268,14 @@ pub fn from_service(service: &Service) -> ServiceStatus {
                 );
             }
             if feature.name == "usage-verification" {
-                *feature = if qualification.is_qualified() {
+                *feature = if qualification.qualified {
                     ComponentStatus::available(
                         "usage-verification",
                         "1",
                         &format!(
                             "Compile/typecheck/runtime probes in an admitted image; {}. Each \
                              request still requires an operator-enabled build or runtime profile.",
-                            qualification.detail()
+                            qualification.detail
                         ),
                     )
                 } else {
@@ -285,7 +286,7 @@ pub fn from_service(service: &Service) -> ServiceStatus {
                         detail: format!(
                             "Compile/typecheck/runtime probes are implemented, but execution is \
                              not qualified: {}",
-                            qualification.detail()
+                            qualification.detail
                         ),
                     }
                 };
@@ -300,7 +301,7 @@ pub fn from_service(service: &Service) -> ServiceStatus {
             }
         }
     }
-    let (queued, running) = service.jobs.counts();
+    let (queued, running) = service.jobs.counts().await?;
     status.health.queued_jobs = queued as u64;
     status.health.running_jobs = running as u64;
     status.health.cache_ready = cache_ready;
@@ -312,9 +313,16 @@ pub fn from_service(service: &Service) -> ServiceStatus {
     status.health.fetch = service.metrics.fetch();
     status.health.evidence = service.metrics.evidence();
     status.health.verification = service.metrics.verification();
-    status.health.native_queries = Some(service.repository.runtime.operational_counters());
+    status.health.native_queries = Some(
+        service
+            .repository
+            .runtime
+            .operational_counters()
+            .await
+            .map_err(std::io::Error::other)?,
+    );
     status.health.uptime_seconds = service.started_instant.elapsed().as_secs();
-    status
+    Ok(status)
 }
 
 /// Which isolation runtimes are on PATH.
@@ -346,8 +354,14 @@ fn which(program: &str) -> bool {
 /// Those are different facts — "this build has no such component" is a much stronger claim than
 /// "the filter matched nothing" — and a caller can only tell them apart if `coverage` says so.
 #[must_use]
-pub fn status_envelope(service: Option<&Service>, component: Option<&str>) -> Envelope {
-    let status = service.map_or_else(service_status, from_service);
+pub async fn status_envelope(service: Option<&Service>, component: Option<&str>) -> Envelope {
+    let status = match service {
+        Some(service) => match from_service(service).await {
+            Ok(status) => status,
+            Err(error) => return crate::ops::common::operation_error(&error, "service_status"),
+        },
+        None => service_status(),
+    };
     let mut data: JsonObject = serde_json::to_value(&status)
         .ok()
         .and_then(|v| v.as_object().cloned())
@@ -463,8 +477,8 @@ mod tests {
         "jobs",
     ];
 
-    #[test]
-    fn a_component_that_shipped_never_tells_a_caller_to_wait_for_a_phase() {
+    #[tokio::test]
+    async fn a_component_that_shipped_never_tells_a_caller_to_wait_for_a_phase() {
         // The failure this catches: `from_config` seeds every component with
         // "not implemented; scheduled for phase N", and a branch that only fills in the
         // *available* case leaves that default standing on an unqualified host. The caller is
@@ -475,7 +489,7 @@ mod tests {
         // A service with no qualified image is the interesting case, because it is the one where
         // the default survives. `open_service` has none.
         let (_dir, service) = open_service();
-        let status = service.into_status();
+        let status = service.into_status().await;
         for component in status.producers.iter().chain(status.features.iter()) {
             if SHIPPED.contains(&component.name.as_str()) {
                 assert!(
@@ -494,9 +508,9 @@ mod tests {
         }
     }
 
-    #[test]
-    fn every_absent_producer_names_a_reason() {
-        for status in [service_status(), open_service().1.into_status()] {
+    #[tokio::test]
+    async fn every_absent_producer_names_a_reason() {
+        for status in [service_status(), open_service().1.into_status().await] {
             assert!(!status.producers.is_empty());
             for producer in status.producers.iter().filter(|p| !p.available) {
                 assert!(
@@ -517,10 +531,10 @@ mod tests {
         );
     }
 
-    #[test]
-    fn an_open_store_makes_the_registry_producer_available_and_the_cache_ready() {
+    #[tokio::test]
+    async fn an_open_store_makes_the_registry_producer_available_and_the_cache_ready() {
         let (_dir, service) = open_service();
-        let status = from_service(&service);
+        let status = from_service(&service).await.unwrap();
         assert!(status.health.cache_ready);
         let registry = status
             .producers
@@ -613,8 +627,8 @@ mod tests {
     }
 
     impl Service {
-        fn into_status(self) -> ServiceStatus {
-            from_service(&self)
+        async fn into_status(self) -> ServiceStatus {
+            from_service(&self).await.unwrap()
         }
     }
 }

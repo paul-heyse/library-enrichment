@@ -1,0 +1,474 @@
+{
+  "module": "deltalake_core::kernel::transaction",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.kernel.transaction.md",
+  "items": [
+    {
+      "path": "deltalake_core::kernel::transaction::CommitBuilderError",
+      "name": "CommitBuilderError",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum CommitBuilderError",
+      "summary": "Error raised while commititng transaction",
+      "doc": "api/deltalake_core.kernel.transaction.md#commitbuildererror",
+      "aliases": [
+        "deltalake::kernel::transaction::CommitBuilderError"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::TransactionError",
+      "name": "TransactionError",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum TransactionError",
+      "summary": "Error raised while commititng transaction",
+      "doc": "api/deltalake_core.kernel.transaction.md#transactionerror",
+      "aliases": [
+        "deltalake::kernel::transaction::TransactionError"
+      ],
+      "variants": [
+        "VersionAlreadyExists",
+        "SerializeLogJson",
+        "ObjectStore",
+        "CommitConflict",
+        "MaxCommitAttempts",
+        "DeltaTableAppendOnly",
+        "UnsupportedTableFeatures",
+        "TableFeaturesRequired",
+        "LogStoreError"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(source: ObjectStoreError) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::CommitBuilder",
+      "name": "CommitBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct CommitBuilder",
+      "summary": "Prepare data to be committed to the Delta log and control how the commit is performed",
+      "doc": "api/deltalake_core.kernel.transaction.md#commitbuilder",
+      "aliases": [
+        "deltalake::kernel::transaction::CommitBuilder"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self, table_data: Option<&'a dyn TableReference>, log_store: LogStoreRef, operation: DeltaOperation) -> PreCommit<'a>",
+          "summary": "Prepare a Commit operation using the configured builder"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: CommitProperties) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "with_actions",
+          "signature": "fn with_actions(self, actions: Vec<Action>) -> Self",
+          "summary": "Actions to be included in the commit"
+        },
+        {
+          "name": "with_app_metadata",
+          "signature": "fn with_app_metadata(self, app_metadata: HashMap<String, Value>) -> Self",
+          "summary": "Metadata for the operation performed like metrics, user, and notebook"
+        },
+        {
+          "name": "with_max_retries",
+          "signature": "fn with_max_retries(self, max_retries: usize) -> Self",
+          "summary": "Maximum number of times to retry the transaction before failing to commit"
+        },
+        {
+          "name": "with_operation_id",
+          "signature": "fn with_operation_id(self, operation_id: Uuid) -> Self",
+          "summary": "Propagate operation id to log store"
+        },
+        {
+          "name": "with_post_commit_hook",
+          "signature": "fn with_post_commit_hook(self, post_commit_hook: PostCommitHookProperties) -> Self",
+          "summary": "Specify all the post commit hook properties"
+        },
+        {
+          "name": "with_post_commit_hook_handler",
+          "signature": "fn with_post_commit_hook_handler(self, handler: Option<Arc<dyn CustomExecuteHandler>>) -> Self",
+          "summary": "Set a custom execute handler, for pre and post execution"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::CommitData",
+      "name": "CommitData",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct CommitData",
+      "summary": "Data that was actually written to the log store.",
+      "doc": "api/deltalake_core.kernel.transaction.md#commitdata",
+      "aliases": [
+        "deltalake::kernel::transaction::CommitData"
+      ],
+      "fields": [
+        "actions",
+        "operation",
+        "app_metadata",
+        "app_transactions"
+      ],
+      "methods": [
+        {
+          "name": "get_bytes",
+          "signature": "fn get_bytes(&self) -> Result<bytes::Bytes, TransactionError>",
+          "summary": "Obtain the byte representation of the commit."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(actions: Vec<Action>, operation: DeltaOperation, app_metadata: HashMap<String, Value>, app_transactions: Vec<Transaction>) -> Self",
+          "summary": "Create new data to be committed"
+        },
+        {
+          "name": "update_retry_count_in_bytes",
+          "signature": "fn update_retry_count_in_bytes(bytes: &Bytes, num_retries: u64) -> Result<Bytes, TransactionError>",
+          "summary": "Update num_retries in operationMetrics within serialized bytes. This allows updating the retry count without re-serializing all actions."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::CommitMetrics",
+      "name": "CommitMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct CommitMetrics",
+      "summary": "Metrics describing the work performed to land a single commit.",
+      "doc": "api/deltalake_core.kernel.transaction.md#commitmetrics",
+      "aliases": [
+        "deltalake::kernel::transaction::CommitMetrics"
+      ],
+      "fields": [
+        "num_retries"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::CommitProperties",
+      "name": "CommitProperties",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct CommitProperties",
+      "summary": "End user facing interface to be used by operations on the table. Enable controlling commit behaviour and modifying metadata that is written during a commit.",
+      "doc": "api/deltalake_core.kernel.transaction.md#commitproperties",
+      "aliases": [
+        "deltalake::kernel::transaction::CommitProperties"
+      ],
+      "methods": [
+        {
+          "name": "with_application_transaction",
+          "signature": "fn with_application_transaction(self, txn: Transaction) -> Self",
+          "summary": "Add an additional application transaction to the commit"
+        },
+        {
+          "name": "with_application_transactions",
+          "signature": "fn with_application_transactions(self, txn: Vec<Transaction>) -> Self",
+          "summary": "Override application transactions for the commit"
+        },
+        {
+          "name": "with_cleanup_expired_logs",
+          "signature": "fn with_cleanup_expired_logs(self, cleanup_expired_logs: Option<bool>) -> Self",
+          "summary": "Specify if it should clean up the logs when the logRetentionDuration interval is met"
+        },
+        {
+          "name": "with_create_checkpoint",
+          "signature": "fn with_create_checkpoint(self, create_checkpoint: bool) -> Self",
+          "summary": "Specify if it should create a checkpoint when the commit interval condition is met"
+        },
+        {
+          "name": "with_max_retries",
+          "signature": "fn with_max_retries(self, max_retries: usize) -> Self",
+          "summary": "Specify maximum number of times to retry the transaction before failing to commit"
+        },
+        {
+          "name": "with_metadata",
+          "signature": "fn with_metadata(self, metadata: impl IntoIterator<Item = (String, serde_json::Value)>) -> Self",
+          "summary": "Specify metadata the be committed"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::FinalizedCommit",
+      "name": "FinalizedCommit",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct FinalizedCommit",
+      "summary": "A commit that successfully completed",
+      "doc": "api/deltalake_core.kernel.transaction.md#finalizedcommit",
+      "aliases": [
+        "deltalake::kernel::transaction::FinalizedCommit"
+      ],
+      "fields": [
+        "snapshot",
+        "version",
+        "metrics"
+      ],
+      "methods": [
+        {
+          "name": "snapshot",
+          "signature": "fn snapshot(&self) -> DeltaTableState",
+          "summary": "The new table state after a commit"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Version",
+          "summary": "Version of the finalized commit"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::Metrics",
+      "name": "Metrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct Metrics",
+      "summary": "Aggregate metrics for a commit, combining commit-time and post-commit measurements.",
+      "doc": "api/deltalake_core.kernel.transaction.md#metrics",
+      "aliases": [
+        "deltalake::kernel::transaction::Metrics"
+      ],
+      "fields": [
+        "num_retries",
+        "new_checkpoint_created",
+        "num_log_files_cleaned_up"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::PostCommit",
+      "name": "PostCommit",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PostCommit",
+      "summary": "Represents items for the post commit hook",
+      "doc": "api/deltalake_core.kernel.transaction.md#postcommit",
+      "aliases": [
+        "deltalake::kernel::transaction::PostCommit"
+      ],
+      "fields": [
+        "version",
+        "data"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture"
+      ],
+      "methods": [
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::PostCommitHookProperties",
+      "name": "PostCommitHookProperties",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PostCommitHookProperties",
+      "summary": "Properties for post commit hook.",
+      "doc": "api/deltalake_core.kernel.transaction.md#postcommithookproperties",
+      "aliases": [
+        "deltalake::kernel::transaction::PostCommitHookProperties"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::PostCommitMetrics",
+      "name": "PostCommitMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PostCommitMetrics",
+      "summary": "Metrics describing work performed by post-commit hooks (checkpointing, log cleanup).",
+      "doc": "api/deltalake_core.kernel.transaction.md#postcommitmetrics",
+      "aliases": [
+        "deltalake::kernel::transaction::PostCommitMetrics"
+      ],
+      "fields": [
+        "new_checkpoint_created",
+        "num_log_files_cleaned_up"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::PreCommit",
+      "name": "PreCommit",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PreCommit<'a>",
+      "summary": "Represents a commit that has not yet started but all details are finalized",
+      "doc": "api/deltalake_core.kernel.transaction.md#precommit",
+      "aliases": [
+        "deltalake::kernel::transaction::PreCommit"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture"
+      ],
+      "methods": [
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        },
+        {
+          "name": "into_prepared_commit_future",
+          "signature": "fn into_prepared_commit_future(self) -> BoxFuture<'a, DeltaResult<PreparedCommit<'a>>>",
+          "summary": "Prepare the commit but do not finalize it"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::PreparedCommit",
+      "name": "PreparedCommit",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PreparedCommit<'a>",
+      "summary": "Represents a inflight commit",
+      "doc": "api/deltalake_core.kernel.transaction.md#preparedcommit",
+      "aliases": [
+        "deltalake::kernel::transaction::PreparedCommit"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture"
+      ],
+      "methods": [
+        {
+          "name": "commit_or_bytes",
+          "signature": "fn commit_or_bytes(&self) -> &CommitOrBytes",
+          "summary": "The temporary commit file created"
+        },
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::transaction::TableReference",
+      "name": "TableReference",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait TableReference: Send + Sync",
+      "summary": "Reference to some structure that contains mandatory attributes for performing a commit.",
+      "doc": "api/deltalake_core.kernel.transaction.md#tablereference",
+      "aliases": [
+        "deltalake::kernel::transaction::TableReference"
+      ],
+      "implementors": [
+        "deltalake_core::kernel::snapshot::EagerSnapshot",
+        "deltalake_core::table::state::DeltaTableState"
+      ],
+      "required_methods": [
+        "config",
+        "eager_snapshot",
+        "metadata",
+        "protocol"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "config",
+          "signature": "fn config(&self) -> &TableProperties",
+          "summary": "Well known table configuration"
+        },
+        {
+          "name": "eager_snapshot",
+          "signature": "fn eager_snapshot(&self) -> &EagerSnapshot",
+          "summary": "Try to cast this table reference to a `EagerSnapshot`"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &Metadata",
+          "summary": "Get the table metadata of the snapshot"
+        },
+        {
+          "name": "protocol",
+          "signature": "fn protocol(&self) -> &Protocol",
+          "summary": "Get the table protocol of the snapshot"
+        }
+      ]
+    }
+  ]
+}

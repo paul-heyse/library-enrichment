@@ -14,39 +14,11 @@ targets = [
 ]
 
 [bans]
-# Blueprint §8.4: pin Arrow/DataFusion to a verified mutually compatible set. Do not force
-# unrelated major versions into one Rust type universe -- a second arrow major means two
-# incompatible RecordBatch types and silent conversion cost.
-multiple-versions = "deny"
+# ADR-0043: native interface crates must have one exact type universe. The architecture
+# check rejects duplicate Arrow/DataFusion/Parquet/object_store/kernel versions. Utility
+# major versions are reported here; they are not coerced across unrelated upstream APIs.
+multiple-versions = "warn"
 wildcards = "deny"
-
-# What §8.4 actually requires is ONE Arrow type universe: two arrow majors means two
-# incompatible RecordBatch types and silent conversion cost. Verified 2026-09-13 that
-# datafusion 55.1.0 yields exactly one arrow/parquet/object_store version each.
-#
-# These are low-level transitive crates the ecosystem is midway through migrating, plus two
-# that only build for targets we do not ship. None appears in our own types or in an Arrow
-# schema, so a duplicate costs binary size, not correctness. Each is listed deliberately with
-# a reason, and cargo-deny rejects an unnecessary skip, so this list cannot quietly rot.
-#
-# Do NOT widen it to silence an arrow, parquet, datafusion or object_store duplicate -- that
-# is the exact failure this setting exists to catch.
-skip = [
-  { crate = "block-buffer", reason = "digest 0.10 vs 0.11 migration; block hashing internals only" },
-  { crate = "crypto-common", reason = "digest 0.10 vs 0.11 migration; hashing internals only" },
-  { crate = "digest", reason = "0.10 vs 0.11 migration is mid-flight across the ecosystem" },
-  { crate = "foldhash", reason = "hashbrown's internal hasher; never in a public type" },
-  { crate = "getrandom", reason = "0.2/0.3/0.4 migration; entropy source only" },
-  { crate = "hashbrown", reason = "std, arrow and datafusion track different releases" },
-  { crate = "itertools", reason = "iterator adapters; never in a public type" },
-  { crate = "num-bigint", reason = "parquet decimal support vs a transitive consumer" },
-  { crate = "syn", reason = "proc-macro expansion only; never in a runtime type" },
-  { crate = "zstd", reason = "parquet compression vs a transitive consumer" },
-  { crate = "zstd-safe", reason = "zstd binding, same reason" },
-  # hyper-util 0.1.20 (its newest, 2026-02-02) still declares base64 0.22 while reqwest 0.13.5
-  # and arrow-cast 59.3.0 use 0.23. Encoding only; never in a public type. Verified 2026-09-13.
-  { crate = "base64", reason = "hyper-util 0.22 vs reqwest/arrow-cast 0.23; encoding internals only" },
-]
 
 # Blueprint §1.1: do not add a graph database, embeddings, a vector database, a GPU workload,
 # a generic workflow engine, or an additional server framework to the initial implementation.
@@ -98,3 +70,7 @@ yanked = "deny"
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+allow-git = [
+  "https://github.com/delta-io/delta-rs.git",
+  "https://github.com/buoyant-data/delta-kernel-rs.git",
+]

@@ -1,0 +1,166 @@
+{
+  "module": "deltalake_core::datafile",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.datafile.md",
+  "items": [
+    {
+      "path": "deltalake_core::datafile::ReadOptions",
+      "name": "ReadOptions",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ReadOptions",
+      "summary": "Options for a basic (DataFusion-free) read. Richer predicate/projection pushdown is the DataFusion extension's job ([`datafusion_ext::DeltaDataReaderExt`]).",
+      "doc": "api/deltalake_core.datafile.md#readoptions",
+      "aliases": [
+        "deltalake::datafile::ReadOptions"
+      ],
+      "fields": [
+        "projection",
+        "limit"
+      ],
+      "methods": [
+        {
+          "name": "with_limit",
+          "signature": "fn with_limit(self, limit: usize) -> Self",
+          "summary": "Limit the number of rows returned."
+        },
+        {
+          "name": "with_projection",
+          "signature": "fn with_projection(self, projection: impl Into<Vec<String>>) -> Self",
+          "summary": "Project to the given logical column names."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::DataFileReader",
+      "name": "DataFileReader",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DataFileReader: Send + Sync",
+      "summary": "File tier: reads a single parquet data file (the per-file decryption seam, mirroring [`DataFileWriter`]). Impl: [`reader::ParquetFileReader`].",
+      "doc": "api/deltalake_core.datafile.md#datafilereader",
+      "aliases": [
+        "deltalake::datafile::DataFileReader"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::reader::KernelDataFileReader",
+        "deltalake_core::datafile::reader::ParquetFileReader"
+      ],
+      "required_methods": [
+        "read_file"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "read_file",
+          "signature": "async fn read_file(&self, path: object_store::path::Path) -> DeltaResult<BatchStream>",
+          "summary": "Read the parquet data file at `path` into a stream of record batches."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::DataFileWriter",
+      "name": "DataFileWriter",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DataFileWriter: Send",
+      "summary": "File tier: writes a single Delta data file (or size-split set for one partition). The per-file seam where parquet `WriterProperties`/encryption attach. Impl: [`writer::PartitionWriter`].",
+      "doc": "api/deltalake_core.datafile.md#datafilewriter",
+      "aliases": [
+        "deltalake::datafile::DataFileWriter"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::writer::PartitionWriter"
+      ],
+      "required_methods": [
+        "abort",
+        "close",
+        "write"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(Box<self>) -> DeltaResult<()>",
+          "summary": "Abandon the writer after an error, aborting its in-progress multipart uploads. Dropping the writer instead leaks upload parts vacuum cannot see, and `close`-ing it finalizes files for partially-written data; error-path callers should use t…"
+        },
+        {
+          "name": "close",
+          "signature": "async fn close(Box<self>) -> DeltaResult<Vec<Add>>",
+          "summary": "Finish writing and return the uncommitted [`Add`] actions for the files that were produced."
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, batch: &RecordBatch) -> DeltaResult<()>",
+          "summary": "Buffer a record batch, writing to one or more parquet files as needed. The batch must match the writer's (partition-stripped) file schema."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::DeltaDataReader",
+      "name": "DeltaDataReader",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DeltaDataReader: Send + Sync",
+      "summary": "Dataset tier: a DataFusion-free reader that composes the file tier ([`DataFileReader`]) across a table's data files, applying deletion vectors, partition values, and column-mapping transforms.",
+      "doc": "api/deltalake_core.datafile.md#deltadatareader",
+      "aliases": [
+        "deltalake::datafile::DeltaDataReader"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::datafusion_ext::DataFusionDataReader",
+        "deltalake_core::datafile::reader::KernelDataReader",
+        "deltalake_core::datafile::reader::ParquetTableReader"
+      ],
+      "required_methods": [
+        "read"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "read",
+          "signature": "async fn read(&self, options: ReadOptions) -> DeltaResult<BatchStream>",
+          "summary": "Read the selected data as a batch stream."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::DeltaDataWriter",
+      "name": "DeltaDataWriter",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait DeltaDataWriter: Send",
+      "summary": "Dataset tier: a DataFusion-free writer that drains a batch stream into a table's data files (partitioning and composing a [`DataFileWriter`] per partition). Batches must already conform to the table schema and constraints (callers on the b…",
+      "doc": "api/deltalake_core.datafile.md#deltadatawriter",
+      "aliases": [
+        "deltalake::datafile::DeltaDataWriter"
+      ],
+      "implementors": [
+        "deltalake_core::datafile::writer::DeltaWriter"
+      ],
+      "required_methods": [
+        "write_all"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "write_all",
+          "signature": "async fn write_all(Box<self>, batches: BatchStream) -> DeltaResult<Vec<Add>>",
+          "summary": "Drain the batch stream into data files, returning the uncommitted [`Add`] actions (still to be committed via a transaction)."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::BatchStream",
+      "name": "BatchStream",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type BatchStream = futures::stream::BoxStream<'static, errors::DeltaResult<arrow_array::RecordBatch>>",
+      "summary": "A fallible stream of [`RecordBatch`]es — the common currency of both tiers. Producers that parallelize (concurrent file opens, partitioned scans) do so upstream and merge into this stream.",
+      "doc": "api/deltalake_core.datafile.md#batchstream",
+      "aliases": [
+        "deltalake::datafile::BatchStream"
+      ]
+    }
+  ]
+}

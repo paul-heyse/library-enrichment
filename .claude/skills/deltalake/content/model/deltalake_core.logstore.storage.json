@@ -1,0 +1,165 @@
+{
+  "module": "deltalake_core::logstore::storage",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.logstore.storage.md",
+  "items": [
+    {
+      "path": "deltalake_core::logstore::storage::client_options_from_certificate",
+      "name": "client_options_from_certificate",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn client_options_from_certificate(path: &str) -> DeltaResult<object_store::ClientOptions>",
+      "summary": "Read a PEM certificate file and build [`object_store::ClientOptions`] with it.",
+      "doc": "api/deltalake_core.logstore.storage.md#client_options_from_certificate",
+      "aliases": [
+        "deltalake::logstore::client_options_from_certificate",
+        "deltalake_core::logstore::client_options_from_certificate"
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::CertificateConfig",
+      "name": "CertificateConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct CertificateConfig",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "certificate_path"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator",
+        "deltalake_core::logstore::config::TryUpdateKey"
+      ],
+      "methods": [
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "load_from_environment",
+          "signature": "fn load_from_environment(&mut self) -> DeltaResult<()>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        },
+        {
+          "name": "try_update_key",
+          "signature": "fn try_update_key(&mut self, key: &str, v: &str) -> DeltaResult<Option<()>>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::DefaultObjectStoreRegistry",
+      "name": "DefaultObjectStoreRegistry",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DefaultObjectStoreRegistry",
+      "summary": "The default [`ObjectStoreRegistry`]",
+      "doc": "api/deltalake_core.logstore.storage.md#defaultobjectstoreregistry",
+      "aliases": [
+        "deltalake::logstore::DefaultObjectStoreRegistry",
+        "deltalake_core::logstore::DefaultObjectStoreRegistry"
+      ],
+      "implements": [
+        "deltalake_core::logstore::storage::ObjectStoreRegistry"
+      ],
+      "methods": [
+        {
+          "name": "get_store",
+          "signature": "fn get_store(&self, url: &Url) -> DeltaResult<Arc<dyn ObjectStore>>",
+          "via_trait": "deltalake_core::logstore::storage::ObjectStoreRegistry"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Create an empty registry with no stores registered."
+        },
+        {
+          "name": "register_store",
+          "signature": "fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "via_trait": "deltalake_core::logstore::storage::ObjectStoreRegistry"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::LimitConfig",
+      "name": "LimitConfig",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct LimitConfig",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "max_concurrency"
+      ],
+      "implements": [
+        "core::iter::traits::collect::FromIterator",
+        "deltalake_core::logstore::config::TryUpdateKey"
+      ],
+      "methods": [
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "load_from_environment",
+          "signature": "fn load_from_environment(&mut self) -> DeltaResult<()>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        },
+        {
+          "name": "try_update_key",
+          "signature": "fn try_update_key(&mut self, key: &str, v: &str) -> DeltaResult<Option<()>>",
+          "via_trait": "deltalake_core::logstore::config::TryUpdateKey"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::ObjectStoreRegistry",
+      "name": "ObjectStoreRegistry",
+      "kind": "trait",
+      "crate": "deltalake-core",
+      "signature": "trait ObjectStoreRegistry: Send + Sync + std::fmt::Debug + 'static",
+      "summary": "A registry mapping URLs to [`ObjectStore`] instances, supporting registration and lookup (with optional lazy, ad-hoc discovery on miss).",
+      "doc": "api/deltalake_core.logstore.storage.md#objectstoreregistry",
+      "aliases": [
+        "deltalake::logstore::ObjectStoreRegistry",
+        "deltalake_core::logstore::ObjectStoreRegistry"
+      ],
+      "implementors": [
+        "deltalake_core::logstore::storage::DefaultObjectStoreRegistry"
+      ],
+      "required_methods": [
+        "get_store",
+        "register_store"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_store",
+          "signature": "fn get_store(&self, url: &Url) -> DeltaResult<Arc<dyn ObjectStore>>",
+          "summary": "Get a suitable store for the provided URL. For example: If no [`ObjectStore`] found for the `url`, ad-hoc discovery may be executed depending on the `url` and [`ObjectStoreRegistry`] implementation. An [`ObjectStore`] may be lazily created…"
+        },
+        {
+          "name": "register_store",
+          "signature": "fn register_store(&self, url: &Url, store: Arc<dyn ObjectStore>) -> Option<Arc<dyn ObjectStore>>",
+          "summary": "If a store with the same key existed before, it is replaced and returned"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::logstore::storage::ObjectStoreRef",
+      "name": "ObjectStoreRef",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type ObjectStoreRef = std::sync::Arc<object_store::DynObjectStore>",
+      "summary": "Sharable reference to [`ObjectStore`]",
+      "doc": "api/deltalake_core.logstore.storage.md#objectstoreref",
+      "aliases": [
+        "deltalake::logstore::ObjectStoreRef",
+        "deltalake_core::logstore::ObjectStoreRef"
+      ]
+    }
+  ]
+}

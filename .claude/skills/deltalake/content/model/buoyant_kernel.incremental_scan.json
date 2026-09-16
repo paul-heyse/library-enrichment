@@ -1,0 +1,150 @@
+{
+  "module": "buoyant_kernel::incremental_scan",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.incremental_scan.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalListing",
+      "name": "IncrementalListing",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalListing",
+      "summary": "Eager output of [`IncrementalScanStream::into_listing`]: the buffered Add batches plus the summary (no cross-snapshot classification).",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementallisting",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalListing"
+      ],
+      "fields": [
+        "summary",
+        "add_files"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalListingAgainstBase",
+      "name": "IncrementalListingAgainstBase",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalListingAgainstBase",
+      "summary": "Eager output of [`IncrementalScanStream::into_listing_against_base_iter`] (or its closure variant): the buffered Add batches plus the classified summary.",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementallistingagainstbase",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalListingAgainstBase"
+      ],
+      "fields": [
+        "summary",
+        "add_files"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalScanBuilder",
+      "name": "IncrementalScanBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalScanBuilder",
+      "summary": "Builder for an incremental scan over `(base_version, target_version]`. Construct via [`crate::Snapshot::incremental_scan_builder`] and drive with [`IncrementalScanBuilder::build`].",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementalscanbuilder",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalScanBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self, engine: &dyn Engine) -> DeltaResult<Option<IncrementalScanStream>>",
+          "summary": "Build the incremental scan stream, or `None` if the target snapshot's commit list cannot serve `(base_version, target_version]` (consumers should fall back to a full scan via [`crate::Snapshot::scan_builder`])."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalScanStream",
+      "name": "IncrementalScanStream",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalScanStream",
+      "summary": "Streaming output of an incremental scan over `(base_version, target_version]`. Yields live Add batches as [`FilteredEngineData`] in newest-first order via [`Iterator::next`]; call [`into_summary`] or [`into_listing`] to terminate and recov…",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementalscanstream",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalScanStream"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "into_listing",
+          "signature": "fn into_listing(self) -> DeltaResult<IncrementalListing>",
+          "summary": "Eager helper: collect every live Add batch into a [`Vec`], then call [`into_summary`] to recover the file-key sets. Use this when the diff fits in memory and the consumer prefers the simpler eager shape over the iterator pattern."
+        },
+        {
+          "name": "into_listing_against_base_closure",
+          "signature": "fn into_listing_against_base_closure(self, base_contains: impl Fn(&FileActionKey) -> bool) -> DeltaResult<IncrementalListingAgainstBase>",
+          "summary": "Predicate form of [`into_listing_against_base_iter`]; see [`into_summary_against_base_closure`] for the rationale."
+        },
+        {
+          "name": "into_listing_against_base_iter",
+          "signature": "fn into_listing_against_base_iter<'a>(self, base_keys: impl IntoIterator<Item = &'a FileActionKey>) -> DeltaResult<IncrementalListingAgainstBase>",
+          "summary": "Eager classified helper: collect every live Add batch and call [`into_summary_against_base_iter`] against `base_keys`. Returns an [`IncrementalListingAgainstBase`] with the classified summary."
+        },
+        {
+          "name": "into_summary",
+          "signature": "fn into_summary(self) -> DeltaResult<IncrementalScanSummary>",
+          "summary": "Drain any unread batches, then return the live file-key sets without applying cross-snapshot dedup. Consumers can intersect these against whatever base data structure they prefer."
+        },
+        {
+          "name": "into_summary_against_base_closure",
+          "signature": "fn into_summary_against_base_closure(self, base_contains: impl Fn(&FileActionKey) -> bool) -> DeltaResult<IncrementalScanSummaryAgainstBase>",
+          "summary": "Predicate form of [`into_summary_against_base_iter`]: pass a closure that answers \"is this key in your base?\" Iterates the live-Add set (typically much smaller than the base) and calls `base_contains` once per live-Add key."
+        },
+        {
+          "name": "into_summary_against_base_iter",
+          "signature": "fn into_summary_against_base_iter<'a>(self, base_keys: impl IntoIterator<Item = &'a FileActionKey>) -> DeltaResult<IncrementalScanSummaryAgainstBase>",
+          "summary": "Drain any unread batches, then intersect `base_keys` against the live-Add file-key set to compute `duplicate_adds` (file keys in the consumer's base listing that the range re-adds with new metadata, e.g. OPTIMIZE / liquid clustering re-tag…"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalScanSummary",
+      "name": "IncrementalScanSummary",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalScanSummary",
+      "summary": "Live file-key sets without cross-snapshot classification, returned by [`IncrementalScanStream::into_summary`].",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementalscansummary",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalScanSummary"
+      ],
+      "fields": [
+        "base_version",
+        "target_version",
+        "live_adds",
+        "removes"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::incremental_scan::IncrementalScanSummaryAgainstBase",
+      "name": "IncrementalScanSummaryAgainstBase",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct IncrementalScanSummaryAgainstBase",
+      "summary": "Cross-snapshot-classified file-key sets, returned by [`IncrementalScanStream::into_summary_against_base_iter`] (or its closure variant).",
+      "doc": "api/buoyant_kernel.incremental_scan.md#incrementalscansummaryagainstbase",
+      "aliases": [
+        "delta_kernel::incremental_scan::IncrementalScanSummaryAgainstBase"
+      ],
+      "fields": [
+        "base_version",
+        "target_version",
+        "duplicate_adds",
+        "removes"
+      ],
+      "methods": []
+    }
+  ]
+}

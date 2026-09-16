@@ -1,0 +1,420 @@
+{
+ "api": "api/mcp.server.mcpserver.resources.types.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#_textual_application_types",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_TEXTUAL_APPLICATION_TYPES",
+   "nameable": false,
+   "path": "mcp.server.mcpserver.resources.types._TEXTUAL_APPLICATION_TYPES",
+   "preferred": "mcp.server.mcpserver.resources.types._TEXTUAL_APPLICATION_TYPES",
+   "signature": "_TEXTUAL_APPLICATION_TYPES = frozenset({'application/json', 'application/xml'})",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.resources.BinaryResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#binaryresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "mime_type",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "data",
+     "signature": "data: bytes = Field(description='Binary content of the resource')"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> bytes",
+     "summary": "Read the binary content."
+    }
+   ],
+   "name": "BinaryResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.BinaryResource",
+   "preferred": "mcp.server.mcpserver.resources.BinaryResource",
+   "signature": "class BinaryResource(Resource)",
+   "summary": "A resource that reads from bytes."
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.resources.DirectoryResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#directoryresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "name": "list_files",
+     "signature": "def list_files(self) -> list[Path]",
+     "summary": "List files in the directory."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "mime_type",
+     "signature": "mime_type: str = Field(default='application/json', description='MIME type of the resource content')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "path",
+     "signature": "path: Path = Field(description='Path to the directory')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "pattern",
+     "signature": "pattern: str | None = Field(default=None, description='Optional glob pattern to filter files')"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> str",
+     "summary": "Read the directory listing."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "recursive",
+     "signature": "recursive: bool = Field(default=False, description='Whether to list files recursively')"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "validate_absolute_path",
+     "signature": "def validate_absolute_path(cls, path: Path) -> Path",
+     "summary": "Ensure path is absolute."
+    }
+   ],
+   "name": "DirectoryResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.DirectoryResource",
+   "preferred": "mcp.server.mcpserver.resources.DirectoryResource",
+   "signature": "class DirectoryResource(Resource)",
+   "summary": "A resource that lists files in a directory."
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.resources.FileResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#fileresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "mime_type",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "encoding",
+     "signature": "encoding: str | None = Field(default_factory=lambda data: _default_file_encoding(data['mime_type']), description='Text encoding used to decode the file, or None to serve its bytes as a blob')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "path",
+     "signature": "path: Path = Field(description='Path to the file')"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> str | bytes",
+     "summary": "Read the file content."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "validate_absolute_path",
+     "signature": "def validate_absolute_path(cls, path: Path) -> Path",
+     "summary": "Ensure path is absolute."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "validate_text_encoding",
+     "signature": "def validate_text_encoding(cls, encoding: str | None) -> str | None",
+     "summary": "Ensure the encoding names a usable text codec, so a mistake fails at construction not at read."
+    }
+   ],
+   "name": "FileResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.FileResource",
+   "preferred": "mcp.server.mcpserver.resources.FileResource",
+   "signature": "class FileResource(Resource)",
+   "summary": "A resource that reads from a file."
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.resources.FunctionResource",
+    "mcp.server.mcpserver.resources.templates.FunctionResource",
+    "mcp.server.mcpserver.server.FunctionResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#functionresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "mime_type",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "fn",
+     "signature": "fn: Callable[[], Any] = Field(exclude=True)"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "from_function",
+     "signature": "def from_function(cls, fn: Callable[..., Any], uri: str, name: str | None = None, title: str | None = None, description: str | None = None, mime_type: str | None = None, icons: list[Icon] | None = None, annotations: Annotations | None = None, meta: dict[str, Any] | None = None) -> FunctionResource",
+     "summary": "Create a FunctionResource from a function."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> str | bytes",
+     "summary": "Read the resource by calling the wrapped function."
+    }
+   ],
+   "name": "FunctionResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.FunctionResource",
+   "preferred": "mcp.server.mcpserver.resources.FunctionResource",
+   "signature": "class FunctionResource(Resource)",
+   "summary": "A resource that defers data loading by wrapping a function."
+  },
+  {
+   "aliases": [
+    "mcp.server.mcpserver.resources.HttpResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#httpresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "mime_type",
+     "signature": "mime_type: str = Field(default='application/json', description='MIME type of the resource content')"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> str | bytes",
+     "summary": "Read the HTTP content."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "url",
+     "signature": "url: str = Field(description='URL to fetch content from')"
+    }
+   ],
+   "name": "HttpResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.HttpResource",
+   "preferred": "mcp.server.mcpserver.resources.HttpResource",
+   "signature": "class HttpResource(Resource)",
+   "summary": "A resource that reads from an HTTP endpoint."
+  },
+  {
+   "aliases": [
+    "mcp.server.apps.TextResource",
+    "mcp.server.mcpserver.resources.TextResource"
+   ],
+   "bases": [
+    "Resource"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#textresource",
+   "inherits": {
+    "mcp.server.mcpserver.resources.base.Resource": [
+     "annotations",
+     "description",
+     "icons",
+     "meta",
+     "mime_type",
+     "name",
+     "set_default_name",
+     "title",
+     "uri"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "read",
+     "signature": "async def read(self) -> str",
+     "summary": "Read the text content."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "text",
+     "signature": "text: str = Field(description='Text content of the resource')"
+    }
+   ],
+   "name": "TextResource",
+   "nameable": true,
+   "path": "mcp.server.mcpserver.resources.types.TextResource",
+   "preferred": "mcp.server.mcpserver.resources.TextResource",
+   "signature": "class TextResource(Resource)",
+   "summary": "A resource that reads from a string."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.server.mcpserver.resources.types.md#_default_file_encoding",
+   "kind": "function",
+   "name": "_default_file_encoding",
+   "nameable": false,
+   "path": "mcp.server.mcpserver.resources.types._default_file_encoding",
+   "preferred": "mcp.server.mcpserver.resources.types._default_file_encoding",
+   "signature": "def _default_file_encoding(mime_type: str) -> str | None",
+   "summary": "The encoding a file of this mime type is decoded with by default."
+  }
+ ],
+ "module": "mcp.server.mcpserver.resources.types"
+}

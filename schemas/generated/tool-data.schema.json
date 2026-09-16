@@ -152,6 +152,7 @@
             "assoc_const",
             "primitive",
             "extern_crate",
+            "extern_type",
             "import"
           ],
           "type": "string"
@@ -207,10 +208,10 @@
       "type": "object"
     },
     "Artifact": {
-      "description": "An immutable, content-addressed artifact (§6.1).\n\nThe digest is the identity; everything else is provenance. Two retrievals of identical bytes\nshare one artifact, and the **stored** record keeps the first retrieval's provenance.\n\nThat is not only about an earlier clock. Per-file `source_uri`s are version- or\ncommit-qualified (`…/serde/1.0.0#README.md`), and a file unchanged between two releases hashes\nidentically — so a stored record can name a *different release* than the one being reported\non. Acquisition results carry the current call's locator instead, but a citation resolved from\na published snapshot reads the stored record, and there `source_uri` should be read as \"a\nplace these exact bytes were retrieved from\", not \"the place this release served them from\".\nThe digest is what is guaranteed.",
+      "description": "An immutable, content-addressed artifact (§6.1).\n\nThe digest identifies immutable bytes. Every acquisition keeps its own exact receipt,\nincluding source locator and retrieval time, in the native Delta catalog. Evidence resolves\nprovenance through its selected attempt; byte delivery resolves the complete digest.",
       "properties": {
         "artifact_id": {
-          "description": "`art_<32 hex>`, derived from the digest; the handle callers pass to `read_artifact`.",
+          "description": "`art_<64 hex>`, derived from the complete digest; used by `read_artifact`.",
           "type": "string"
         },
         "compression": {
@@ -298,17 +299,13 @@
       "additionalProperties": false,
       "description": "A pointer to a bounded, readable artifact.",
       "properties": {
-        "artifact_id": {
-          "description": "Stable handle, usable with `read_artifact`.",
-          "type": "string"
-        },
         "description": {
           "description": "What the artifact contains, so a caller can decide whether to read it.",
           "type": "string"
         },
-        "media_type": {
-          "description": "The artifact's media type.",
-          "type": "string"
+        "receipt": {
+          "$ref": "#/$defs/Artifact",
+          "description": "Exact content identity and this acquisition's provenance. Pass receipt.artifact_id\nto read_artifact; repeated bytes may have different acquisition receipts."
         },
         "uri": {
           "description": "Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.",
@@ -317,9 +314,8 @@
         }
       },
       "required": [
-        "artifact_id",
+        "receipt",
         "uri",
-        "media_type",
         "description"
       ],
       "type": "object"
@@ -750,12 +746,12 @@
       "properties": {
         "context_id": {
           "description": "Derived from release, environment and mode.",
-          "pattern": "^ctx_[0-9a-f]{16}$",
+          "pattern": "^ctx_[0-9a-f]{64}$",
           "type": "string"
         },
         "environment_id": {
           "description": "The environment it is studied in.",
-          "pattern": "^env_[0-9a-f]{16}$",
+          "pattern": "^env_[0-9a-f]{64}$",
           "type": "string"
         },
         "mode": {
@@ -770,7 +766,7 @@
         },
         "parent_context_id": {
           "description": "The context this one was derived from, if any.",
-          "pattern": "^ctx_[0-9a-f]{16}$",
+          "pattern": "^ctx_[0-9a-f]{64}$",
           "type": [
             "string",
             "null"
@@ -778,7 +774,7 @@
         },
         "release_id": {
           "description": "The release under study.",
-          "pattern": "^rel_[0-9a-f]{16}$",
+          "pattern": "^rel_[0-9a-f]{64}$",
           "type": "string"
         }
       },
@@ -930,6 +926,46 @@
       "required": [
         "requested_max_bytes",
         "effective_max_bytes"
+      ],
+      "type": "object"
+    },
+    "DeltaBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "cohort_id": {
+          "type": "string"
+        },
+        "contract_id": {
+          "type": "string"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "rows": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "table_id": {
+          "type": "string"
+        },
+        "table_uri": {
+          "type": "string"
+        },
+        "version": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "relation",
+        "table_uri",
+        "table_id",
+        "version",
+        "cohort_id",
+        "contract_id",
+        "rows"
       ],
       "type": "object"
     },
@@ -1332,7 +1368,7 @@
         },
         "environment_id": {
           "description": "Derived from every other field.",
-          "pattern": "^env_[0-9a-f]{16}$",
+          "pattern": "^env_[0-9a-f]{64}$",
           "type": "string"
         },
         "features": {
@@ -1343,8 +1379,7 @@
           "type": "array"
         },
         "features_known": {
-          "default": false,
-          "description": "Whether an empty feature selection was explicitly supplied. Older records did not\nretain this distinction; their empty selections remain unknown when read.",
+          "description": "Whether an empty feature selection was explicitly supplied.",
           "type": "boolean"
         },
         "lock_digest": {
@@ -1666,12 +1701,12 @@
         },
         "snapshot_id": {
           "description": "Names one immutable set of evidence available for a context.",
-          "pattern": "^snap_[0-9a-f]{16}$",
+          "pattern": "^snap_[0-9a-f]{64}$",
           "type": "string"
         },
         "tables": {
           "items": {
-            "$ref": "#/$defs/PhysicalTable"
+            "$ref": "#/$defs/DeltaBinding"
           },
           "type": "array"
         }
@@ -2475,6 +2510,7 @@
             "assoc_const",
             "primitive",
             "extern_crate",
+            "extern_type",
             "import"
           ],
           "type": "string"
@@ -3056,7 +3092,7 @@
       "additionalProperties": false,
       "description": "The snapshot manifest resource: what a snapshot contains.",
       "properties": {
-        "catalog_generation": {
+        "control_version": {
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
@@ -3069,10 +3105,22 @@
           "$ref": "#/$defs/EvidenceManifest",
           "description": "The immutable manifest as published."
         },
+        "previous_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "producer_runs": {
           "description": "Operational attribution from the catalog generation pinned by this request.",
           "items": {
             "$ref": "#/$defs/ProducerRun"
+          },
+          "type": "array"
+        },
+        "publication_changes": {
+          "items": {
+            "$ref": "#/$defs/RelationChanges"
           },
           "type": "array"
         }
@@ -3081,7 +3129,9 @@
         "manifest",
         "is_current",
         "producer_runs",
-        "catalog_generation"
+        "control_version",
+        "previous_snapshot_id",
+        "publication_changes"
       ],
       "type": "object"
     },
@@ -3207,6 +3257,11 @@
           "minimum": 0,
           "type": "integer"
         },
+        "diagnostic_observations_dropped": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
         "effective_native_settings": {
           "additionalProperties": {
             "type": "string"
@@ -3268,6 +3323,7 @@
         }
       },
       "required": [
+        "diagnostic_observations_dropped",
         "managed_memory_reserved_bytes",
         "managed_memory_peak_bytes",
         "effective_native_settings",
@@ -3281,90 +3337,6 @@
         "managed_memory_limit_bytes",
         "spill_limit_bytes",
         "metadata_cache_limit_bytes"
-      ],
-      "type": "object"
-    },
-    "Observation": {
-      "additionalProperties": false,
-      "description": "One independent declaration emitted by Griffe.",
-      "properties": {
-        "alias_target": {
-          "description": "Alias target even if unresolved.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "bases": {
-          "description": "Declared base expressions, not resolved inheritance claims.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "docs": {
-          "description": "Full bounded docstring.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "file": {
-          "description": "Relative archive path, never an arbitrary local path.",
-          "type": "string"
-        },
-        "kind": {
-          "description": "Module, class, function or attribute.",
-          "type": "string"
-        },
-        "line": {
-          "description": "First declaration line.",
-          "format": "uint32",
-          "minimum": 0,
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "origin": {
-          "$ref": "#/$defs/ObservationOrigin",
-          "description": "Source versus stub provenance."
-        },
-        "overloads": {
-          "description": "Every declared overload, including stub-only overload groups.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "path": {
-          "description": "Qualified Python path.",
-          "type": "string"
-        },
-        "publicness": {
-          "$ref": "#/$defs/Publicness",
-          "description": "Signals remain separate."
-        },
-        "signature": {
-          "description": "Rendered signature or annotation.",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "required": [
-        "path",
-        "kind",
-        "origin",
-        "file",
-        "line",
-        "signature",
-        "overloads",
-        "docs",
-        "alias_target",
-        "bases",
-        "publicness"
       ],
       "type": "object"
     },
@@ -3462,6 +3434,7 @@
             "assoc_const",
             "primitive",
             "extern_crate",
+            "extern_type",
             "import"
           ],
           "type": "string"
@@ -3639,38 +3612,6 @@
       ],
       "type": "object"
     },
-    "PhysicalTable": {
-      "additionalProperties": false,
-      "properties": {
-        "bytes": {
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "file": {
-          "type": "string"
-        },
-        "relation": {
-          "type": "string"
-        },
-        "rows": {
-          "format": "uint64",
-          "minimum": 0,
-          "type": "integer"
-        },
-        "sha256": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "relation",
-        "file",
-        "sha256",
-        "bytes",
-        "rows"
-      ],
-      "type": "object"
-    },
     "PlannedFallback": {
       "description": "A producer that could supply missing evidence, and whether policy currently allows it.",
       "properties": {
@@ -3699,9 +3640,68 @@
       ],
       "type": "object"
     },
-    "ProcessObservation": {
+    "ProcessAuthority": {
       "description": "Raw bounded process observation, independent of what a probe establishes.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "effect_id": {
+              "type": "string"
+            },
+            "environment_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "grant_id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "command",
+              "type": "string"
+            },
+            "snapshot_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "effect_id",
+            "grant_id",
+            "environment_id",
+            "snapshot_id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "definition_id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "qualification",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "definition_id"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ProcessObservation": {
       "properties": {
+        "authority": {
+          "$ref": "#/$defs/ProcessAuthority"
+        },
         "cleanup_confirmed": {
           "type": "boolean"
         },
@@ -3733,6 +3733,9 @@
         "image_id": {
           "type": "string"
         },
+        "operation_id": {
+          "type": "string"
+        },
         "started_at": {
           "type": "string"
         },
@@ -3744,6 +3747,8 @@
         }
       },
       "required": [
+        "operation_id",
+        "authority",
         "image_id",
         "command",
         "started_at",
@@ -3920,27 +3925,6 @@
       ],
       "type": "object"
     },
-    "PythonSymbol": {
-      "description": "Facts attached to one shared symbol row.",
-      "properties": {
-        "observations": {
-          "description": "All source/stub observations of this public path.",
-          "items": {
-            "$ref": "#/$defs/Observation"
-          },
-          "type": "array"
-        },
-        "signature_conflict": {
-          "description": "Distinct nonempty signatures disagree; neither is promoted to runtime truth.",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "observations",
-        "signature_conflict"
-      ],
-      "type": "object"
-    },
     "RecoveryAction": {
       "description": "An actionable follow-up, never an instruction to execute automatically.",
       "oneOf": [
@@ -4073,6 +4057,37 @@
         }
       ]
     },
+    "RelationChanges": {
+      "additionalProperties": false,
+      "description": "Semantic row changes between publication cohorts, derived from bounded native CDF inputs.",
+      "properties": {
+        "inserted": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "relation": {
+          "type": "string"
+        },
+        "removed": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "updated": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "relation",
+        "inserted",
+        "removed",
+        "updated"
+      ],
+      "type": "object"
+    },
     "RelationshipObservation": {
       "additionalProperties": false,
       "description": "Observed semantic relationships are separate from derived lexical ancestry.",
@@ -4172,7 +4187,7 @@
         },
         "release_id": {
           "description": "Derived from `key`; never set independently.",
-          "pattern": "^rel_[0-9a-f]{16}$",
+          "pattern": "^rel_[0-9a-f]{64}$",
           "type": "string"
         },
         "root_module": {
@@ -4833,6 +4848,7 @@
             "assoc_const",
             "primitive",
             "extern_crate",
+            "extern_type",
             "import",
             null
           ],
@@ -5037,7 +5053,7 @@
       "properties": {
         "context_id": {
           "description": "Binds a release to an environment and a research mode.",
-          "pattern": "^ctx_[0-9a-f]{16}$",
+          "pattern": "^ctx_[0-9a-f]{64}$",
           "type": "string"
         },
         "crate_name": {
@@ -5059,7 +5075,7 @@
         },
         "environment_id": {
           "description": "Identifies the declared or resolved environment.",
-          "pattern": "^env_[0-9a-f]{16}$",
+          "pattern": "^env_[0-9a-f]{64}$",
           "type": "string"
         },
         "normalizer_version": {
@@ -5082,7 +5098,7 @@
         },
         "release_id": {
           "description": "Identifies the actual library release: ecosystem, registry, package, exact version and\nthe selected artifact digest.",
-          "pattern": "^rel_[0-9a-f]{16}$",
+          "pattern": "^rel_[0-9a-f]{64}$",
           "type": "string"
         },
         "symbol_package": {
@@ -5418,6 +5434,7 @@
             "assoc_const",
             "primitive",
             "extern_crate",
+            "extern_type",
             "import"
           ],
           "type": "string"
@@ -5442,18 +5459,6 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
-        },
-        "python": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PythonSymbol"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Separate Python source/stub observations; absent in legacy/Rust snapshots."
         },
         "qualifier": {
           "description": "Trait or declaration qualifier included in symbol/definition identity.",
@@ -5508,8 +5513,7 @@
         "defined_in_crate",
         "producer_local_id",
         "qualifier",
-        "cfg_hints",
-        "python"
+        "cfg_hints"
       ],
       "type": "object"
     },
@@ -6713,7 +6717,7 @@
       "additionalProperties": false,
       "description": "The snapshot manifest resource.",
       "properties": {
-        "catalog_generation": {
+        "control_version": {
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
@@ -6726,10 +6730,22 @@
           "$ref": "#/$defs/EvidenceManifest",
           "description": "The immutable manifest as published."
         },
+        "previous_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "producer_runs": {
           "description": "Operational attribution from the catalog generation pinned by this request.",
           "items": {
             "$ref": "#/$defs/ProducerRun"
+          },
+          "type": "array"
+        },
+        "publication_changes": {
+          "items": {
+            "$ref": "#/$defs/RelationChanges"
           },
           "type": "array"
         },
@@ -6743,7 +6759,9 @@
         "manifest",
         "is_current",
         "producer_runs",
-        "catalog_generation"
+        "control_version",
+        "previous_snapshot_id",
+        "publication_changes"
       ],
       "type": "object"
     },

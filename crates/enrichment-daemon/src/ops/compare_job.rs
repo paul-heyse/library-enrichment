@@ -13,10 +13,10 @@ use std::{
 };
 
 pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelope {
-    let key = canonical::digest_hex(&serde_json::json!(["comparison-job/1", request]));
     let (record, token, new) = match service
         .jobs
-        .submit(key, jobs::JobSpec::Compare(request.clone()))
+        .submit(jobs::JobSpec::Compare(request.clone()))
+        .await
     {
         Ok(value) => value,
         Err(error) => return common::operation_error(&error, "comparison_job"),
@@ -24,7 +24,9 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
     if new {
         let owned = service.clone();
         let id = record.job_id.clone();
-        tokio::spawn(async move {
+        let jobs = std::sync::Arc::clone(&owned.jobs);
+        let runtime = owned.repository.runtime.clone();
+        if let Err(error) = jobs.spawn(&runtime, id.clone(), async move {
             if let Err(error) = owned
                 .repository
                 .runtime
@@ -40,13 +42,13 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
             {
                 eprintln!("comparison job {id}: {error}");
                 let recovery = async {
-                    let record = owned.jobs.get(&id)?;
+                    let record = owned.jobs.get(&id).await?;
                     if let Some((state, result)) =
                         recover(&owned.repository, &owned.blobs, &record).await?
                     {
-                        owned.jobs.finish(&id, state, result)
+                        owned.jobs.finish(&id, state, result).await
                     } else {
-                        owned.jobs.fail_unfinished(&id, &error)
+                        owned.jobs.fail_unfinished(&id, &error).await
                     }
                 }
                 .await;
@@ -54,7 +56,9 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
                     eprintln!("comparison job {id} terminal recovery: {recovery}");
                 }
             }
-        });
+        }) {
+            return common::operation_error(&error, "native_effect_owner");
+        }
     }
     match verify::wait(
         service,
@@ -73,20 +77,27 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
 
 async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result<()> {
     let cancel = service.jobs.cancellation(id)?;
-    if !service.jobs.start(id)? {
-        return service.jobs.finish(
-            id,
-            JobState::Cancelled,
-            failure("comparison cancelled before acquisition"),
-        );
+    if !service.jobs.start(id).await? {
+        return service
+            .jobs
+            .finish(
+                id,
+                JobState::Cancelled,
+                failure("comparison cancelled before acquisition"),
+            )
+            .await;
     }
     let digest = canonical::digest_hex(&serde_json::json!(["comparison-request/1", request]));
     let mut result = execute(service, request, &cancel, id, &digest).await;
     // Catalog visibility wins a cancellation racing the commit. Reuse admitted bytes.
-    if let Some((state, committed)) =
-        recover(&service.repository, &service.blobs, &service.jobs.get(id)?).await?
+    if let Some((state, committed)) = recover(
+        &service.repository,
+        &service.blobs,
+        &service.jobs.get(id).await?,
+    )
+    .await?
     {
-        return service.jobs.finish(id, state, committed);
+        return service.jobs.finish(id, state, committed).await;
     }
     let state = if cancel.load(Ordering::Acquire) {
         result = failure("comparison cancelled before terminal delivery");
@@ -98,7 +109,7 @@ async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result
             _ => JobState::Failed,
         }
     };
-    service.jobs.finish(id, state, result)
+    service.jobs.finish(id, state, result).await
 }
 
 async fn execute(
@@ -132,7 +143,7 @@ async fn execute(
             };
             context
         } else {
-            let (child, token, _) = match resolve_job::subscribe(service, prerequisite) {
+            let (child, token, _) = match resolve_job::subscribe(service, prerequisite).await {
                 Ok(value) => value,
                 Err(error) => return common::operation_error(&error, "comparison_job"),
             };
@@ -217,9 +228,9 @@ async fn child_context(
 ) -> io::Result<Result<String, Box<Envelope>>> {
     let mut detached = false;
     loop {
-        let mut record = service.jobs.get(id)?;
+        let mut record = service.jobs.get(id).await?;
         if cancel.load(Ordering::Acquire) && !detached {
-            record = service.jobs.cancel(id, token)?;
+            record = service.jobs.cancel(id, token).await?;
             detached = true;
         }
         if detached && !record.interests.is_empty() {
@@ -283,15 +294,9 @@ mod tests {
     async fn comparison_cancellation_preserves_another_subscriber() {
         let root = tempfile::tempdir().unwrap();
         let service = service(root.path());
-        let (child, comparison_interest, _) = service
-            .jobs
-            .submit("shared".into(), specification())
-            .unwrap();
-        let (_, surviving_interest, _) = service
-            .jobs
-            .submit("shared".into(), specification())
-            .unwrap();
-        assert!(service.jobs.start(&child.job_id).unwrap());
+        let (child, comparison_interest, _) = service.jobs.submit(specification()).await.unwrap();
+        let (_, surviving_interest, _) = service.jobs.submit(specification()).await.unwrap();
+        assert!(service.jobs.start(&child.job_id).await.unwrap());
         let cancelled = AtomicBool::new(true);
         assert!(
             child_context(&service, &child.job_id, &comparison_interest, &cancelled)
@@ -299,7 +304,7 @@ mod tests {
                 .unwrap()
                 .is_err()
         );
-        let record = service.jobs.get(&child.job_id).unwrap();
+        let record = service.jobs.get(&child.job_id).await.unwrap();
         assert_eq!(record.state, JobState::Running);
         assert_eq!(record.interests, [surviving_interest].into());
         assert!(
@@ -316,17 +321,15 @@ mod tests {
                 JobState::Failed,
                 failure("test owner completed"),
             )
+            .await
             .unwrap();
     }
     #[tokio::test]
     async fn comparison_uses_terminal_context_when_resolution_delivery_overflows() {
         let root = tempfile::tempdir().unwrap();
         let service = service(root.path());
-        let (child, token, _) = service
-            .jobs
-            .submit("large".into(), specification())
-            .unwrap();
-        service.jobs.start(&child.job_id).unwrap();
+        let (child, token, _) = service.jobs.submit(specification()).await.unwrap();
+        service.jobs.start(&child.job_id).await.unwrap();
         let mut result = envelope::ok(
             "resolved",
             common::to_object(&serde_json::json!({"text":"\\🌎".repeat(200_000)})),
@@ -344,8 +347,9 @@ mod tests {
         service
             .jobs
             .finish(&child.job_id, JobState::Succeeded, result)
+            .await
             .unwrap();
-        let record = service.jobs.get(&child.job_id).unwrap();
+        let record = service.jobs.get(&child.job_id).await.unwrap();
         assert!(matches!(
             record.result.unwrap().outcome(),
             Some(Outcome::Ok { .. })

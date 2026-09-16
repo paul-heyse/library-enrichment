@@ -1,0 +1,333 @@
+{
+  "_comment": [
+    "Capability axes, operator-first. The ordering is deliberate: the first three answer 'how do",
+    "I get facts out of these tools', which is why someone reaches for this repository, and the",
+    "rest answer 'what can I build with the crates'.",
+    "",
+    "Every seed is a fully-qualified path, not a leaf name. topics.py resolves a leaf too, but a",
+    "leaf that becomes ambiguous in a later release fails the build, and `Scope`, `ErrorKind`,",
+    "`Diagnostic` and `ParseError` are already ambiguous across these 42 crates."
+  ],
+  "preamble": "Each page maps one capability to the types that implement it, the upstream guide that explains it, and the decisions worth making deliberately.",
+  "topics": [
+    {
+      "slug": "machine-readable-output",
+      "title": "Getting machine-readable output",
+      "covers": "JSON from both tools, the formats, and the two traps",
+      "mental_model": "Never parse either tool's human output. Both emit structured forms for everything that matters, and both say their human formats are unstable. `ruff check` alone offers twelve formats including SARIF and rdjson. The two traps are measured and recorded in `../catalogs/structured-outputs.md`: `ruff analyze graph` is the one subcommand with **no** `--output-format` flag, and `ruff check` exits non-zero when it finds diagnostics, which is a finding rather than a failure -- use `--exit-zero` when the JSON is the product.",
+      "entry_points": [
+        "ruff::args::CheckCommand",
+        "ruff::args::AnalyzeGraphCommand",
+        "ruff::args::FormatCommand",
+        "ruff_db::diagnostic::Diagnostic"
+      ],
+      "guides": ["corpus/ruff/linter.md", "corpus/pyrefly/report.mdx"],
+      "decision_rules": [
+        "Want diagnostics for a human? `full`. For a machine? `json`. For CI? `github` or `sarif`.",
+        "Want the import graph? `analyze graph`, and check the key count rather than the exit status.",
+        "Want references or call edges? Neither of those -- see the cross-references topic."
+      ],
+      "anti_patterns": [
+        "Regex over `ruff check` text output, which changes between patch releases.",
+        "Treating a non-zero `ruff check` status as a crash."
+      ],
+      "checklist": [
+        "Pin the tool version; the catalogs here describe 0.16.7 and 1.3.1 exactly.",
+        "Redirect stderr separately -- `analyze graph` always prints an experimental banner."
+      ]
+    },
+    {
+      "slug": "cross-references-and-calls",
+      "title": "Cross-references and call graphs",
+      "covers": "who calls this, where is this referenced, and the Glean report that answers both",
+      "mental_model": "This is the capability neither project advertises and the reason this repository exists. `pyrefly check --report-glean <dir>` writes one JSON document per module containing `python.CalleeToCaller` (the call edge, reversed), `python.XRefsViaNameByTarget` (every reference to a target) and `python.DeclarationLocation` / `python.DefinitionLocation`. An LSP answers one position at a time; this answers the whole project at once. The full predicate inventory, measured from a real payload, is in `../catalogs/cross-references.md`. `--report-pysa` is **not** an alternative: despite its help text promising JSON, it writes Cap'n Proto binary plus a copy of the bundled typeshed.",
+      "entry_points": [
+        "pyrefly_glean_schema::report::glean::schema::digest::FileDigest",
+        "pyrefly_python::module_name::ModuleName",
+        "pyrefly_python::module::Module"
+      ],
+      "guides": ["corpus/pyrefly/report.mdx"],
+      "decision_rules": [
+        "One position, interactively? LSP `references` or `callHierarchy`.",
+        "Whole project, as data? The Glean report.",
+        "Imports only, and cheaply? `ruff analyze graph`."
+      ],
+      "anti_patterns": [
+        "Reading `--report-pysa` output as JSON.",
+        "Inferring a call graph from import edges -- an import is not a call."
+      ],
+      "checklist": [
+        "The filenames are content digests, so enumerate the directory rather than guessing names.",
+        "Facts are interned by id; resolve `python.Name` before reporting a name to a human."
+      ]
+    },
+    {
+      "slug": "import-graph",
+      "title": "The import and module graph",
+      "covers": "ruff analyze graph, its four silent limits, and the crate behind it",
+      "mental_model": "`ruff analyze graph` maps each **file** to the files it imports -- not modules, not symbols, not calls. It is fast and needs no configuration, and it is narrower than its name in four ways that are all silent. `../catalogs/import-graph.md` states each with the measurement behind it; the one that bites hardest is that a path which does not exist returns `{}` with exit status 0.",
+      "entry_points": [
+        "ruff_graph::ModuleImports",
+        "ruff_graph::db::ModuleDb",
+        "ruff_graph::settings::Direction"
+      ],
+      "guides": ["corpus/pyrefly/import-resolution.mdx", "corpus/ruff/configuration.md"],
+      "decision_rules": [
+        "Need third-party edges? Pass `--python <venv>`; without it only first-party files resolve.",
+        "Need edges the scanner cannot see? `analyze.include-dependencies` in configuration.",
+        "Need dotted module names? You will have to map paths yourself; the tool has no such notion."
+      ],
+      "anti_patterns": [
+        "Checking the exit status instead of the key count.",
+        "Assuming `--detect-string-imports` is on by default."
+      ],
+      "checklist": [
+        "Point it at a package root; a wrong path is indistinguishable from an empty result.",
+        "`--direction dependents` inverts the map without a second parse."
+      ]
+    },
+    {
+      "slug": "type-inference",
+      "title": "Type inference and annotation recovery",
+      "covers": "the type representation, the solver, and how to recover types the source omits",
+      "mental_model": "The checker infers types everywhere except function parameters: `def foo(x): return True` is treated as `def foo(x: Any) -> bool`. That asymmetry is the whole game when recovering annotations for an under-typed codebase -- returns and variables come back, parameters do not. `pyrefly_types::types::Type` is the representation; `AnswersSolver` is the engine, with 352 methods, and is the largest single type in this index.",
+      "entry_points": [
+        "pyrefly_types::types::Type",
+        "pyrefly_types::stdlib::Stdlib",
+        "pyrefly_types::heap::TypeHeap",
+        "pyrefly::alt::answers_solver::AnswersSolver"
+      ],
+      "guides": [
+        "corpus/pyrefly/python-features-and-peps.mdx",
+        "corpus/pyrefly/autotype.mdx"
+      ],
+      "decision_rules": [
+        "Want annotations written into source? `pyrefly infer`, not a hand-rolled pass.",
+        "Want the inferred type at one position? The LSP `hover` or `inlayHint`.",
+        "Want to know whether a typing feature is supported at all? The conformance corpus."
+      ],
+      "anti_patterns": [
+        "Expecting inferred parameter types; they are `Any` by design.",
+        "Treating an inferred type as a promise upstream made."
+      ],
+      "checklist": [
+        "`--untyped-def-behavior` changes what an unannotated def means; record which you used.",
+        "Inference is flow-sensitive, so a type can narrow between two lines."
+      ]
+    },
+    {
+      "slug": "parsing-python",
+      "title": "Parsing Python",
+      "covers": "the parser, its result type, and error recovery",
+      "mental_model": "`ruff_python_parser` is the front end for both toolchains. It parses to a concrete syntax tree with full trivia preserved and recovers from errors rather than bailing, which is what lets a formatter and a language server share one parser. A `Parsed` carries both the tree and the errors; an error does not mean you have no tree.",
+      "entry_points": [
+        "ruff_python_parser::Parsed",
+        "ruff_python_parser::error::ParseError",
+        "ruff_python_ast::generated::Mod"
+      ],
+      "decision_rules": [
+        "Parsing a whole file? `parse_module`. An expression? `parse_expression`.",
+        "Need the original text ranges? Everything is a `TextRange` into the source; keep the source."
+      ],
+      "anti_patterns": [
+        "Discarding the source after parsing -- every range is an offset into it.",
+        "Assuming a parse error means an empty tree."
+      ],
+      "checklist": [
+        "Pick the target Python version explicitly; the grammar depends on it."
+      ]
+    },
+    {
+      "slug": "the-ast",
+      "title": "The AST and traversal",
+      "covers": "node types, the reference enums, and the three visitor flavours",
+      "mental_model": "`ruff_python_ast` is generated code, and its scale is the point: `AnyNodeRef` has 610 methods and `Expr` 211. There are three traversal styles -- `Visitor` (owned), `SourceOrderVisitor` (in source order, which is what you want for anything position-sensitive) and `Transformer` (rewriting). Choosing the wrong one produces subtly wrong ordering rather than an error.",
+      "entry_points": [
+        "ruff_python_ast::generated::Stmt",
+        "ruff_python_ast::generated::Expr",
+        "ruff_python_ast::generated::AnyNodeRef",
+        "ruff_python_ast::visitor::Visitor",
+        "ruff_python_ast::visitor::source_order::SourceOrderVisitor",
+        "ruff_python_ast::visitor::transformer::Transformer"
+      ],
+      "decision_rules": [
+        "Position-sensitive work? `SourceOrderVisitor`.",
+        "Rewriting? `Transformer`.",
+        "Just looking for a shape? Consider ast-grep instead of a Rust visitor."
+      ],
+      "anti_patterns": [
+        "Matching on `AnyNodeRef` when a narrower enum would be exhaustive.",
+        "Assuming visitor order is source order -- only one of the three guarantees it."
+      ],
+      "checklist": [
+        "Trivia (comments, whitespace) is not in the AST; it comes from `ruff_python_trivia`."
+      ]
+    },
+    {
+      "slug": "semantic-model",
+      "title": "The semantic model: bindings and scopes",
+      "covers": "what ruff knows beyond syntax, and what it deliberately does not",
+      "mental_model": "`ruff_python_semantic` is the layer that makes a lint rule more than a pattern: it resolves names to bindings, tracks scopes, and knows whether an identifier refers to a builtin, an import or a local. It is not a type checker -- it has no types. That boundary is exactly why the two projects compose: ruff resolves names, the checker resolves types.",
+      "entry_points": [
+        "ruff_python_semantic::model::SemanticModel",
+        "ruff_python_semantic::binding::BindingKind",
+        "ruff_python_semantic::scope::Scope"
+      ],
+      "decision_rules": [
+        "Need to know what a name refers to? `SemanticModel`.",
+        "Need to know its type? A different toolchain -- see the type-inference topic."
+      ],
+      "anti_patterns": [
+        "Expecting type information from the semantic model.",
+        "Resolving imports by string matching when `BindingKind` already says."
+      ],
+      "checklist": [
+        "Scope is a tree; a name can bind differently in a comprehension than in its parent."
+      ]
+    },
+    {
+      "slug": "diagnostics-and-fixes",
+      "title": "Diagnostics, edits and fixes",
+      "covers": "the diagnostic model, applicability, and why some fixes are withheld",
+      "mental_model": "A `Fix` is a set of `Edit`s plus an `Applicability`, and applicability is a safety claim, not a confidence score: `Safe` fixes are applied by default, `Unsafe` ones only with `--unsafe-fixes`, and `DisplayOnly` never. Of the 970 rules, 233 always offer a fix and 221 sometimes do; the rest are findings only. `../catalogs/rules.md` has the breakdown.",
+      "entry_points": [
+        "ruff_db::diagnostic::Diagnostic",
+        "ruff_diagnostics::fix::Fix",
+        "ruff_diagnostics::edit::Edit",
+        "ruff_diagnostics::fix::Applicability"
+      ],
+      "guides": ["corpus/ruff/linter.md"],
+      "decision_rules": [
+        "Automating a codemod? Filter to `Safe` unless you are reviewing every diff.",
+        "Need the edits without applying them? `--diff`, or read the JSON `fix` field."
+      ],
+      "anti_patterns": [
+        "Applying unsafe fixes in CI without review.",
+        "Assuming every rule has a fix -- 480 of 970 do not."
+      ],
+      "checklist": [
+        "Edits are byte offsets; apply them back-to-front or use the provided applier."
+      ]
+    },
+    {
+      "slug": "the-formatter",
+      "title": "The formatter",
+      "covers": "the IR, the printer, and range formatting",
+      "mental_model": "The formatter is a two-stage design: `ruff_formatter` is a language-agnostic document IR and printer, and `ruff_python_formatter` lowers Python into it. That split is why `--range` formatting works at all, and why the formatter can be embedded without the linter.",
+      "entry_points": [
+        "ruff_formatter::formatter::Formatter",
+        "ruff_formatter::Printed",
+        "ruff_formatter::buffer::VecBuffer"
+      ],
+      "guides": ["corpus/ruff/formatter.md"],
+      "decision_rules": [
+        "Formatting a fragment? `--range=start-end`, 1-based, end exclusive.",
+        "Formatting code inside docstrings? `docstring-code-format`."
+      ],
+      "anti_patterns": [
+        "Running the formatter and linter in the wrong order in a hook; format last."
+      ],
+      "checklist": [
+        "`--check` and `--diff` both avoid writing; only `--diff` shows what would change."
+      ]
+    },
+    {
+      "slug": "writing-a-lint-rule",
+      "title": "Writing and selecting lint rules",
+      "covers": "the rule enum, selectors, and the three statuses that decide whether selection works",
+      "mental_model": "Every rule is a variant of `ruff_linter::codes::Rule`, and selection goes through `RuleSelector`, which understands prefixes as well as exact codes. The trap is status: 141 of the 970 rules are `Preview` and do nothing unless preview mode is on, and 17 are `Removed`, where selecting them is an error. Neither fact is visible in the code being linted.",
+      "entry_points": [
+        "ruff_linter::codes::Rule",
+        "ruff_linter::rule_selector::RuleSelector",
+        "ruff_linter::codes::RuleCodePrefix",
+        "ruff_linter::locator::Locator"
+      ],
+      "guides": ["corpus/ruff/linter.md", "corpus/ruff/rule-proposals.md"],
+      "decision_rules": [
+        "Selecting by prefix pulls in future rules; selecting by code does not.",
+        "A rule that seems inert is usually `Preview`. Check `../catalogs/rules.md`."
+      ],
+      "anti_patterns": [
+        "Putting a `Removed` code in a config file -- it fails rather than being ignored.",
+        "Assuming `select = [\"ALL\"]` is stable across releases."
+      ],
+      "checklist": [
+        "`rg -P '\\tRemoved\\t' content/index/rules.tsv` before trusting an inherited config."
+      ]
+    },
+    {
+      "slug": "language-servers",
+      "title": "Language servers: LSP and TSP",
+      "covers": "what each server advertises, and when to use a server rather than a report",
+      "mental_model": "Both `pyrefly lsp` and `pyrefly tsp` speak framed JSON-RPC on stdio, and both advertise `referencesProvider`, `callHierarchyProvider`, `typeHierarchyProvider` and `inlayHintProvider` -- capabilities a weaker server either lacks or answers unreliably. TSP adds `typeServerMultiConnection` over IPC. The captured handshakes are in `../catalogs/protocols.md`, and `tsp_types` is indexed here so the protocol is readable as declarations rather than inferred from traffic.",
+      "entry_points": [
+        "ruff_server::server::Server",
+        "pyrefly_config::config::ConfigFile"
+      ],
+      "guides": ["corpus/pyrefly/IDE.mdx", "corpus/pyrefly/IDE-features.mdx"],
+      "decision_rules": [
+        "Interactive, one position at a time? A server.",
+        "Batch, whole project? A report -- see the cross-references topic."
+      ],
+      "anti_patterns": [
+        "Driving a language server in a loop to build a project-wide index."
+      ],
+      "checklist": [
+        "Send `initialize`, then `initialized`, before any request; capabilities arrive in the reply."
+      ]
+    },
+    {
+      "slug": "configuration",
+      "title": "Configuration surfaces",
+      "covers": "ruff's 173 keys, the checker's config and its CLI overrides, and error kinds",
+      "mental_model": "ruff's configuration is one flat namespace of dotted keys discoverable with `ruff config`; the checker's is a TOML file with a published JSON Schema, and every key also has a CLI override under `Config Overrides`. Its `ErrorKind` enum is the taxonomy you filter on with `--only`, `--error`, `--warn` and `--ignore`.",
+      "entry_points": [
+        "pyrefly_config::config::ConfigFile",
+        "pyrefly_config::error_kind::ErrorKind",
+        "pyrefly_config::args::ConfigOverrideArgs",
+        "ruff_options_metadata::OptionSet"
+      ],
+      "guides": [
+        "corpus/ruff/configuration.md",
+        "corpus/pyrefly/configuration.mdx",
+        "corpus/pyrefly/error-kinds.mdx",
+        "corpus/pyrefly/error-suppressions.mdx"
+      ],
+      "decision_rules": [
+        "Need one key's default? `ruff config <key>`, or `content/index/config.tsv`.",
+        "Migrating from another checker? `pyrefly init` reads mypy and pyright configs."
+      ],
+      "anti_patterns": [
+        "Hand-writing a config from memory when both tools can print the schema."
+      ],
+      "checklist": [
+        "`pyrefly dump-config` shows which config actually applied and which files it covers."
+      ]
+    },
+    {
+      "slug": "embedding-the-crates",
+      "title": "Embedding the crates in Rust",
+      "covers": "the two version lines, what is publishable, and what to depend on",
+      "mental_model": "One release, two version lines: `ruff`, `ruff_linter` and `ruff_wasm` are 0.16.7 while every library crate is 0.0.13, and `ruff_linter 0.16.7` depends on the library crates at `^0.0.13`. Writing `ruff_python_ast = \"0.16.7\"` selects a version that does not exist. The checker publishes nothing usable at all -- its crates.io entry is a name squat at 0.0.1 -- so embedding it means vendoring from the tagged source. `../catalogs/crate-map.md` has the per-crate breakdown.",
+      "entry_points": [
+        "ruff_text_size::range::TextRange",
+        "ruff_source_file::SourceFile",
+        "ruff_index::vec::IndexVec",
+        "ruff_db::files::File"
+      ],
+      "guides": ["corpus/ruff/versioning.md"],
+      "decision_rules": [
+        "Want to parse and inspect Python from Rust? `ruff_python_parser` + `ruff_python_ast`.",
+        "Want name resolution too? Add `ruff_python_semantic`.",
+        "Want types? You are vendoring the checker; there is no published crate."
+      ],
+      "anti_patterns": [
+        "Pinning a library crate to the product version.",
+        "Depending on `ruff_linter` to get at the AST -- it pulls in everything."
+      ],
+      "checklist": [
+        "`content/index/features.tsv` is the only source of feature gating; signatures never say."
+      ]
+    }
+  ]
+}

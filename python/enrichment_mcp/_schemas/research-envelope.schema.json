@@ -1,20 +1,104 @@
 {
   "$defs": {
+    "Artifact": {
+      "description": "An immutable, content-addressed artifact (§6.1).\n\nThe digest identifies immutable bytes. Every acquisition keeps its own exact receipt,\nincluding source locator and retrieval time, in the native Delta catalog. Evidence resolves\nprovenance through its selected attempt; byte delivery resolves the complete digest.",
+      "properties": {
+        "artifact_id": {
+          "description": "`art_<64 hex>`, derived from the complete digest; used by `read_artifact`.",
+          "type": "string"
+        },
+        "compression": {
+          "description": "Transport compression that was removed before storage, e.g. `zstd`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "etag": {
+          "description": "HTTP validator, when the server supplied one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "final_url": {
+          "description": "Where it was actually served from after redirects, when different.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "What the artifact is.",
+          "enum": [
+            "registry_index_entry",
+            "registry_version_metadata",
+            "crate_tarball",
+            "rustdoc_json",
+            "cargo_manifest",
+            "readme",
+            "changelog",
+            "source_file",
+            "other"
+          ],
+          "type": "string"
+        },
+        "last_modified": {
+          "description": "HTTP validator, when the server supplied one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "media_type": {
+          "description": "Media type of the stored bytes (after any transport decompression).",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "description": "When it was retrieved, RFC 3339. Provenance only; never part of any identity.",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "Full SHA-256 of the stored bytes, lower-case hex.",
+          "type": "string"
+        },
+        "size_bytes": {
+          "description": "Size of the stored bytes.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_uri": {
+          "description": "Where it was requested from.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "sha256",
+        "media_type",
+        "size_bytes",
+        "kind",
+        "source_uri",
+        "final_url",
+        "retrieved_at",
+        "etag",
+        "last_modified",
+        "compression"
+      ],
+      "type": "object"
+    },
     "ArtifactHandle": {
       "additionalProperties": false,
       "description": "A pointer to a bounded, readable artifact.",
       "properties": {
-        "artifact_id": {
-          "description": "Stable handle, usable with `read_artifact`.",
-          "type": "string"
-        },
         "description": {
           "description": "What the artifact contains, so a caller can decide whether to read it.",
           "type": "string"
         },
-        "media_type": {
-          "description": "The artifact's media type.",
-          "type": "string"
+        "receipt": {
+          "$ref": "#/$defs/Artifact",
+          "description": "Exact content identity and this acquisition's provenance. Pass receipt.artifact_id\nto read_artifact; repeated bytes may have different acquisition receipts."
         },
         "uri": {
           "description": "Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.",
@@ -23,9 +107,8 @@
         }
       },
       "required": [
-        "artifact_id",
+        "receipt",
         "uri",
-        "media_type",
         "description"
       ],
       "type": "object"
@@ -980,9 +1063,9 @@
       "type": "string"
     },
     "schema_version": {
-      "description": "Always `2.0` for this contract.",
+      "description": "Always `3.0` for this contract.",
       "enum": [
-        "2.0"
+        "3.0"
       ],
       "type": "string"
     },

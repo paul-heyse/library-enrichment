@@ -1,0 +1,295 @@
+{
+  "module": "buoyant_kernel::transaction",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.transaction.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::transaction::CommitResult",
+      "name": "CommitResult",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum CommitResult<S = ExistingTable>",
+      "summary": "The result of attempting to commit this transaction. If the commit was successful/conflicted/retryable, the result is Ok(CommitResult), otherwise, if a nonrecoverable error occurred, the result is Err(Error).",
+      "doc": "api/buoyant_kernel.transaction.md#commitresult",
+      "aliases": [
+        "delta_kernel::transaction::CommitResult"
+      ],
+      "variants": [
+        "CommittedTransaction",
+        "ConflictedTransaction",
+        "RetryableTransaction"
+      ],
+      "methods": [
+        {
+          "name": "is_committed",
+          "signature": "fn is_committed(&self) -> bool",
+          "summary": "Returns true if the commit was successful."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::AlterTable",
+      "name": "AlterTable",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct AlterTable",
+      "summary": "Marker type for alter-table (schema evolution) transactions.",
+      "doc": "api/buoyant_kernel.transaction.md#altertable",
+      "aliases": [
+        "delta_kernel::transaction::AlterTable"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::transaction::CommittedTransaction",
+      "name": "CommittedTransaction",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct CommittedTransaction",
+      "summary": "This is the result of a successfully committed [Transaction]. One can retrieve the [post_commit_stats], [commit version], and optionally the [post-commit snapshot] from this struct.",
+      "doc": "api/buoyant_kernel.transaction.md#committedtransaction",
+      "aliases": [
+        "delta_kernel::transaction::CommittedTransaction"
+      ],
+      "methods": [
+        {
+          "name": "commit_version",
+          "signature": "fn commit_version(&self) -> Version",
+          "summary": "The version of the table that was just sucessfully committed"
+        },
+        {
+          "name": "post_commit_snapshot",
+          "signature": "fn post_commit_snapshot(&self) -> Option<&SnapshotRef>",
+          "summary": "The [`SnapshotRef`] of the table after this transaction was committed."
+        },
+        {
+          "name": "post_commit_stats",
+          "signature": "fn post_commit_stats(&self) -> &PostCommitStats",
+          "summary": "The [`PostCommitStats`] for this transaction"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::ConflictedTransaction",
+      "name": "ConflictedTransaction",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ConflictedTransaction<S = ExistingTable>",
+      "summary": "This is the result of a conflicted [Transaction]. One can retrieve the [conflict version] from this struct. In the future a rebase API will be provided (issue #1389).",
+      "doc": "api/buoyant_kernel.transaction.md#conflictedtransaction",
+      "aliases": [
+        "delta_kernel::transaction::ConflictedTransaction"
+      ],
+      "methods": [
+        {
+          "name": "conflict_version",
+          "signature": "fn conflict_version(&self) -> Version",
+          "summary": "The version attempted commit that yielded a conflict"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::CreateTable",
+      "name": "CreateTable",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct CreateTable",
+      "summary": "Marker type for create-table transactions.",
+      "doc": "api/buoyant_kernel.transaction.md#createtable",
+      "aliases": [
+        "delta_kernel::transaction::CreateTable"
+      ],
+      "implements": [
+        "buoyant_kernel::transaction::SupportsDataFiles"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::transaction::ExistingTable",
+      "name": "ExistingTable",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ExistingTable",
+      "summary": "Marker type for transactions on existing tables.",
+      "doc": "api/buoyant_kernel.transaction.md#existingtable",
+      "aliases": [
+        "delta_kernel::transaction::ExistingTable"
+      ],
+      "implements": [
+        "buoyant_kernel::transaction::SupportsDataFiles"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::transaction::PostCommitStats",
+      "name": "PostCommitStats",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct PostCommitStats",
+      "summary": "Kernel exposes information about the state of the table that engines might want to use to trigger actions like checkpointing or log compaction. This struct holds that information.",
+      "doc": "api/buoyant_kernel.transaction.md#postcommitstats",
+      "aliases": [
+        "delta_kernel::transaction::PostCommitStats"
+      ],
+      "fields": [
+        "commits_since_checkpoint",
+        "commits_since_log_compaction"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::transaction::RetryableTransaction",
+      "name": "RetryableTransaction",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct RetryableTransaction<S = ExistingTable>",
+      "summary": "A transaction that failed to commit due to a retryable error (e.g. IO error). The transaction can be recovered with `RetryableTransaction::transaction` and retried without rebasing. The associated error can be inspected via `RetryableTrans…",
+      "doc": "api/buoyant_kernel.transaction.md#retryabletransaction",
+      "aliases": [
+        "delta_kernel::transaction::RetryableTransaction"
+      ],
+      "fields": [
+        "transaction",
+        "error"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::transaction::Transaction",
+      "name": "Transaction",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Transaction<S = ExistingTable>",
+      "summary": "A transaction represents an in-progress write to a table. After creating a transaction, changes to the table may be staged via the transaction methods before calling `commit` to commit the changes to the table.",
+      "doc": "api/buoyant_kernel.transaction.md#transaction",
+      "aliases": [
+        "delta_kernel::transaction::Transaction"
+      ],
+      "methods": [
+        {
+          "name": "add_files",
+          "signature": "fn add_files(&mut self, add_metadata: Box<dyn EngineData>)",
+          "summary": "Add files to include in this transaction. This API generally enables the engine to add/append/insert data (files) to the table. Note that this API can be called multiple times to add multiple batches."
+        },
+        {
+          "name": "add_files_schema",
+          "signature": "fn add_files_schema(&self) -> &'static SchemaRef",
+          "summary": "The schema that the [`Engine`]'s [`ParquetHandler`] is expected to use when reporting information about a Parquet write operation back to Kernel."
+        },
+        {
+          "name": "commit",
+          "signature": "fn commit(self, engine: &dyn Engine) -> DeltaResult<CommitResult<S>>",
+          "summary": "Consume the transaction and commit it to the table. The result is a result of [CommitResult] with the following semantics: - Ok(CommitResult) for either success or a recoverable error (includes the failed   transaction in case of a conflic…"
+        },
+        {
+          "name": "logical_partition_columns",
+          "signature": "fn logical_partition_columns(&self) -> &[String]",
+          "summary": "Returns the logical partition column names for this table."
+        },
+        {
+          "name": "partitioned_write_context",
+          "signature": "fn partitioned_write_context(&self, partition_values: HashMap<String, Scalar>) -> DeltaResult<WriteContext>",
+          "summary": "Creates a write context for writing data to a specific partition."
+        },
+        {
+          "name": "remove_files",
+          "signature": "fn remove_files(&mut self, remove_metadata: FilteredEngineData)",
+          "summary": "Remove files from the table in this transaction. This API generally enables the engine to delete data (at file-level granularity) from the table. Note that this API can be called multiple times to remove multiple batches."
+        },
+        {
+          "name": "scan_metadata_to_engine_data",
+          "signature": "fn scan_metadata_to_engine_data(scan_metadata: impl Iterator<Item = DeltaResult<scan::ScanMetadata>>) -> impl Iterator<Item = DeltaResult<FilteredEngineData>>",
+          "summary": "Helper function to convert scan metadata iterator to filtered engine data iterator."
+        },
+        {
+          "name": "set_data_change",
+          "signature": "fn set_data_change(&mut self, data_change: bool)",
+          "summary": "Same as [`Transaction::with_data_change`] but set the value directly instead of using a fluent API."
+        },
+        {
+          "name": "stats_columns",
+          "signature": "fn stats_columns(&self) -> Vec<ColumnName>",
+          "summary": "Returns the list of column names that should have statistics collected."
+        },
+        {
+          "name": "stats_schema",
+          "signature": "fn stats_schema(&self) -> DeltaResult<SchemaRef>",
+          "summary": "Returns the expected schema for file statistics."
+        },
+        {
+          "name": "unpartitioned_write_context",
+          "signature": "fn unpartitioned_write_context(&self) -> DeltaResult<WriteContext>",
+          "summary": "Creates a write context for writing data to an unpartitioned table."
+        },
+        {
+          "name": "update_deletion_vectors",
+          "signature": "fn update_deletion_vectors(&mut self, new_dv_descriptors: HashMap<String, DeletionVectorDescriptor>, existing_data_files: impl Iterator<Item = DeltaResult<FilteredEngineData>>) -> DeltaResult<()>",
+          "summary": "Update deletion vectors for files in the table."
+        },
+        {
+          "name": "with_blind_append",
+          "signature": "fn with_blind_append(self) -> Self",
+          "summary": "Mark this transaction as a blind append."
+        },
+        {
+          "name": "with_commit_info",
+          "signature": "fn with_commit_info(self, engine_commit_info: Box<dyn EngineData>, commit_info_schema: SchemaRef) -> Self",
+          "summary": "Set the content of the commitInfo action for this transaction. Note that kernel will _always_ write a commitInfo, this function simply allows engines to add their own data into that action if they wish. Note that the following fields in `e…"
+        },
+        {
+          "name": "with_correlation_id",
+          "signature": "fn with_correlation_id(self, correlation_id: impl Into<Arc<str>>) -> Self",
+          "summary": "Attach an opaque, caller-supplied correlation id for joining this transaction's commit metric events to the caller's own request or operation id. An empty id is treated as unset. When unset, behavior is unchanged."
+        },
+        {
+          "name": "with_data_change",
+          "signature": "fn with_data_change(self, data_change: bool) -> Self",
+          "summary": "Set the data change flag."
+        },
+        {
+          "name": "with_domain_metadata",
+          "signature": "fn with_domain_metadata(self, domain: String, configuration: String) -> Self",
+          "summary": "Set domain metadata to be written to the Delta log. Note that each domain can only appear once per transaction. That is, multiple configurations of the same domain are disallowed in a single transaction, as well as setting and removing the…"
+        },
+        {
+          "name": "with_domain_metadata_removed",
+          "signature": "fn with_domain_metadata_removed(self, domain: String) -> Self",
+          "summary": "Remove domain metadata from the Delta log. If the domain exists in the Delta log, this creates a tombstone to logically delete the domain. The tombstone preserves the previous configuration value. If the domain does not exist in the Delta…"
+        },
+        {
+          "name": "with_engine_info",
+          "signature": "fn with_engine_info(self, engine_info: impl Into<String>) -> Self",
+          "summary": "Set the engine info field of this transaction's commit info action. This field is optional."
+        },
+        {
+          "name": "with_operation",
+          "signature": "fn with_operation(self, operation: String) -> Self",
+          "summary": "Set the operation that this transaction is performing. This string will be persisted in the commit and visible to anyone who describes the table history."
+        },
+        {
+          "name": "with_transaction_id",
+          "signature": "fn with_transaction_id(self, app_id: String, version: i64) -> Self",
+          "summary": "Include a SetTransaction (app_id and version) action for this transaction (with an optional `last_updated` timestamp). Note that each app_id can only appear once per transaction. That is, multiple app_ids with different versions are disall…"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::transaction::SupportsDataFiles",
+      "name": "SupportsDataFiles",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait SupportsDataFiles",
+      "summary": "Marker trait for transaction states that support data file operations.",
+      "doc": "api/buoyant_kernel.transaction.md#supportsdatafiles",
+      "aliases": [
+        "delta_kernel::transaction::SupportsDataFiles"
+      ],
+      "implementors": [
+        "buoyant_kernel::transaction::CreateTable",
+        "buoyant_kernel::transaction::ExistingTable"
+      ],
+      "required_methods": [],
+      "provided_methods": []
+    }
+  ]
+}

@@ -17,7 +17,7 @@ cd "$root" 2>/dev/null || exit 0
   else
     echo "ty:        NOT INSTALLED -- Python semantic gates are 'blocked', not skipped."
     echo "           pyrefly/pyright are present on this workstation but are NOT this"
-    echo "           project's engine. Do not substitute them (blueprint §1.1)."
+    echo "           project's engine at this time. Pyrefly is an acceptable alternative we may pivot to in the future."
   fi
 
   if [ -f docs/reports/acceptance.json ]; then

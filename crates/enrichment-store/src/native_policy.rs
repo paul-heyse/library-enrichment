@@ -3,7 +3,6 @@
 use datafusion::{
     catalog::Session,
     common::config::{ConfigEntry, ConfigExtension, ExtensionOptions, TableParquetOptions},
-    datasource::file_format::parquet::ParquetFormat,
     error::{DataFusionError, Result},
 };
 use std::{any::Any, sync::Arc};
@@ -48,6 +47,28 @@ impl ExtensionOptions for NativePolicy {
     fn entries(&self) -> Vec<ConfigEntry> {
         [
             (
+                "native_workers",
+                self.limits.concurrency.to_string(),
+                "Shared native async worker count",
+            ),
+            (
+                "native_blocking_threads",
+                self.limits.native.blocking_threads.to_string(),
+                "Shared native blocking-worker ceiling",
+            ),
+            (
+                "native_worker_stack_bytes",
+                self.limits.native.worker_stack_bytes.to_string(),
+                "Stack capacity of each native worker",
+            ),
+            (
+                "native_stack_capacity_bytes",
+                (self.limits.native.worker_stack_bytes
+                    * (self.limits.concurrency + self.limits.native.blocking_threads))
+                    .to_string(),
+                "Maximum configured thread stack capacity; separate from Arrow reservations",
+            ),
+            (
                 "decoder_filter",
                 self.parquet.global.pushdown_filters.to_string(),
                 "Effective native Parquet decoder filtering",
@@ -60,17 +81,12 @@ impl ExtensionOptions for NativePolicy {
             (
                 "observation_bloom",
                 self.limits.native.observation_bloom.to_string(),
-                "Writer Bloom filter on admitted observation_id only",
+                "Writer Bloom filter on declared observation_id fields",
             ),
             (
                 "bloom_filter_on_read",
                 self.parquet.global.bloom_filter_on_read.to_string(),
                 "Native Parquet Bloom metadata consumer",
-            ),
-            (
-                "scan_file_grouping",
-                "native_whole_files".into(),
-                "Native whole-file grouping bounded by partitions and exact file count",
             ),
             (
                 "skip_metadata",
@@ -83,9 +99,24 @@ impl ExtensionOptions for NativePolicy {
                 "Storage rows per group, independent of execution batches",
             ),
             (
-                "catalog_file_rows",
-                self.limits.native.catalog_file_rows.to_string(),
-                "Catalog compaction file target independent of transaction rows",
+                "storage_row_group_bytes",
+                self.limits.native.row_group_bytes.to_string(),
+                "Native Parquet row-group byte target",
+            ),
+            (
+                "target_file_bytes",
+                self.limits.native.target_file_bytes.to_string(),
+                "Native Delta writer file-size target",
+            ),
+            (
+                "claim_lease_seconds",
+                self.limits.native.claim_lease_seconds.to_string(),
+                "Captured native claim horizon; expiry does not prove owner cleanup",
+            ),
+            (
+                "normalization_depth",
+                self.limits.native.normalization_depth.to_string(),
+                "Captured native closure depth; exhaustion produces partial evidence",
             ),
             (
                 "memory_bytes",
@@ -121,13 +152,15 @@ impl ExtensionOptions for NativePolicy {
 /// Measured writer choices shared by evidence, staging and catalog files.
 pub(crate) fn writer_properties(
     row_group_rows: usize,
+    row_group_bytes: usize,
     bloom_key: Option<&str>,
 ) -> Result<parquet::file::properties::WriterProperties> {
     let mut builder = parquet::file::properties::WriterProperties::builder()
         .set_compression(parquet::basic::Compression::ZSTD(
             parquet::basic::ZstdLevel::try_new(3)?,
         ))
-        .set_max_row_group_row_count(Some(row_group_rows));
+        .set_max_row_group_row_count(Some(row_group_rows))
+        .set_max_row_group_bytes(Some(row_group_bytes));
     if let Some(key) = bloom_key {
         builder = builder
             .set_column_bloom_filter_enabled(key.into(), true)
@@ -136,22 +169,91 @@ pub(crate) fn writer_properties(
     Ok(builder.build())
 }
 
-pub(crate) fn bloom_key(
-    relation: crate::admission::Relation,
-    enabled: bool,
-) -> Option<&'static str> {
-    (enabled && relation == crate::admission::Relation::ApiObservations).then(|| relation.key())
-}
-
-pub(crate) fn parquet_format(state: &dyn Session) -> Result<ParquetFormat> {
+/// Every qualified Delta builder consumes the same resolved native writer policy.
+pub(crate) fn delta_writer_properties(
+    state: &dyn Session,
+    schema: Option<&arrow_schema::Schema>,
+) -> Result<parquet::file::properties::WriterProperties> {
     let policy = state
         .config_options()
         .extensions
         .get::<NativePolicy>()
         .ok_or_else(|| {
-            DataFusionError::Configuration("native source requires bound enrichment policy".into())
+            DataFusionError::Configuration("Delta writer requires bound native policy".into())
         })?;
-    Ok(ParquetFormat::default().with_options(policy.table_options()))
+    let key = (policy.limits.native.observation_bloom
+        && schema.is_some_and(|schema| schema.field_with_name("observation_id").is_ok()))
+    .then_some("observation_id");
+    writer_properties(
+        policy.limits.native.row_group_rows,
+        policy.limits.native.row_group_bytes,
+        key,
+    )
+}
+
+/// Batching and target file size come from the same captured session policy as Parquet layout.
+pub(crate) fn delta_write_options(state: &dyn Session) -> Result<(usize, std::num::NonZeroU64)> {
+    let policy = state
+        .config_options()
+        .extensions
+        .get::<NativePolicy>()
+        .ok_or_else(|| {
+            DataFusionError::Configuration("Delta writer requires bound native policy".into())
+        })?;
+    let target =
+        std::num::NonZeroU64::new(policy.limits.native.target_file_bytes).ok_or_else(|| {
+            DataFusionError::Configuration("Delta file target must be positive".into())
+        })?;
+    Ok((policy.limits.batch_rows, target))
+}
+
+pub(crate) fn claim_lease_seconds(state: &dyn Session) -> Result<u64> {
+    let seconds = state
+        .config_options()
+        .extensions
+        .get::<NativePolicy>()
+        .map(|policy| policy.limits.native.claim_lease_seconds)
+        .ok_or_else(|| {
+            DataFusionError::Configuration("claim requires bound native policy".into())
+        })?;
+    if !(1..=86400).contains(&seconds) {
+        return Err(DataFusionError::Configuration(
+            "claim lease must be in 1..=86400 seconds".into(),
+        ));
+    }
+    Ok(seconds)
+}
+
+/// Native UTC time and interval arithmetic own both initial and renewed lease deadlines.
+pub(crate) fn claim_deadline(state: &dyn Session) -> Result<datafusion::logical_expr::Expr> {
+    let seconds = claim_lease_seconds(state)?;
+    Ok(datafusion::functions::datetime::expr_fn::now()
+        + datafusion::prelude::lit(datafusion::common::ScalarValue::new_interval_mdn(
+            0,
+            0,
+            i64::try_from(seconds * 1_000_000_000).map_err(|_| {
+                DataFusionError::Configuration("native lease interval overflow".into())
+            })?,
+        )))
+}
+
+pub(crate) fn normalization_depth(state: &dyn Session) -> Result<u32> {
+    let depth = state
+        .config_options()
+        .extensions
+        .get::<NativePolicy>()
+        .ok_or_else(|| {
+            DataFusionError::Configuration("normalization requires bound native policy".into())
+        })?
+        .limits
+        .native
+        .normalization_depth;
+    if !(1..=4096).contains(&depth) {
+        return Err(DataFusionError::Configuration(
+            "normalization depth must be in 1..=4096".into(),
+        ));
+    }
+    Ok(depth)
 }
 
 #[cfg(test)]
@@ -172,10 +274,15 @@ mod tests {
         let runtime = crate::runtime::QueryRuntime::new(dir.path(), limits).unwrap();
         let session = runtime.session();
         let mut state = session.state();
-        let format = parquet_format(&state).unwrap();
-        assert!(format.options().global.pushdown_filters);
-        assert!(format.options().global.reorder_filters);
-        assert!(!format.options().global.skip_metadata);
+        let format = state
+            .config_options()
+            .extensions
+            .get::<NativePolicy>()
+            .unwrap()
+            .table_options();
+        assert!(format.global.pushdown_filters);
+        assert!(format.global.reorder_filters);
+        assert!(!format.global.skip_metadata);
         assert!(
             state
                 .config_mut()
@@ -184,9 +291,12 @@ mod tests {
                 .is_err()
         );
         assert!(
-            parquet_format(&state)
+            state
+                .config_options()
+                .extensions
+                .get::<NativePolicy>()
                 .unwrap()
-                .options()
+                .table_options()
                 .global
                 .pushdown_filters
         );
@@ -199,7 +309,11 @@ mod tests {
             Some("true")
         );
         assert_eq!(
-            runtime.operational_counters().effective_native_settings["enrichment.storage_row_group_rows"],
+            runtime
+                .operational_counters()
+                .await
+                .unwrap()
+                .effective_native_settings["enrichment.storage_row_group_rows"],
             "4096"
         );
     }

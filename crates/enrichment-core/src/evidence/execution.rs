@@ -407,27 +407,22 @@ impl ExecutionObservation {
         if !valid_class {
             return Err("execution evidence class disagrees with producer operation".into());
         }
-        let observation_id = format!(
-            "exec_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "execution-observation/1",
-                subject,
-                environment_id,
-                image_id,
-                containment_identity,
-                payload,
-                source
-            ]))
-        );
-        Ok(Self {
-            observation_id,
+        let mut value = Self {
+            observation_id: String::new(),
             subject,
             environment_id,
             image_id,
             containment_identity,
             payload,
             source,
-        })
+        };
+        value.observation_id = crate::native_key::Key::ExecutionObservation
+            .batch_value(
+                &super::arrow_model::execution::fields(std::slice::from_ref(&value))
+                    .map_err(|e| e.to_string())?,
+            )
+            .map_err(|e| e.to_string())?;
+        Ok(value)
     }
     pub fn validate(&self) -> Result<(), String> {
         let expected = Self::new(

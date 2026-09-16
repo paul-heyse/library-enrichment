@@ -1,0 +1,112 @@
+{
+  "module": "pyrefly_types::shape_index",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.shape_index.md",
+  "items": [
+    {
+      "path": "pyrefly_types::shape_index::IndexComponent",
+      "name": "IndexComponent",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum IndexComponent",
+      "summary": "One component of a lowered indexing operation.",
+      "doc": "api/pyrefly_types.shape_index.md#indexcomponent",
+      "variants": [
+        "Operation",
+        "Ellipsis"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::shape_index::IndexOp",
+      "name": "IndexOp",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum IndexOp",
+      "summary": "A single index operation, pre-classified by the type checker. The type checker resolves Expr nodes into these before calling shape functions.",
+      "doc": "api/pyrefly_types.shape_index.md#indexop",
+      "variants": [
+        "Int",
+        "Slice",
+        "ShapedArrayIndex",
+        "Fancy",
+        "NewAxis"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::shape_index::IndexTypeLowering",
+      "name": "IndexTypeLowering",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum IndexTypeLowering",
+      "summary": "The syntax-free result of interpreting an ordinary type as an index value.",
+      "doc": "api/pyrefly_types.shape_index.md#indextypelowering",
+      "variants": [
+        "Precise",
+        "Gradual",
+        "Invalid"
+      ],
+      "methods": [
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::shape_index::index_shape_from_type",
+      "name": "index_shape_from_type",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn index_shape_from_type(shape: &shaped_array::IntTuple, index: &types::Type) -> Result<shaped_array::IntTuple, dimension::ShapeError>",
+      "summary": "Apply an ordinary retained index type to a shape.",
+      "doc": "api/pyrefly_types.shape_index.md#index_shape_from_type"
+    },
+    {
+      "path": "pyrefly_types::shape_index::index_shape_int",
+      "name": "index_shape_int",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn index_shape_int(shape: &shaped_array::IntTuple) -> Result<shaped_array::IntTuple, dimension::ShapeError>",
+      "summary": "Apply a single integer index — removes first dimension. E.g. `Tensor[10, 20][i]` -> `Tensor[20]`",
+      "doc": "api/pyrefly_types.shape_index.md#index_shape_int"
+    },
+    {
+      "path": "pyrefly_types::shape_index::index_shape_multi",
+      "name": "index_shape_multi",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn index_shape_multi(shape: &shaped_array::IntTuple, pre_ops: &[IndexOp], post_ops: &[IndexOp], has_ellipsis: bool) -> Result<shaped_array::IntTuple, dimension::ShapeError>",
+      "summary": "Apply multi-axis indexing with optional ellipsis. `pre_ops` are applied left-to-right from dim 0. `post_ops` are applied from the end (only when `has_ellipsis` is true). Dims between pre and post (the ellipsis range) are preserved.",
+      "doc": "api/pyrefly_types.shape_index.md#index_shape_multi"
+    },
+    {
+      "path": "pyrefly_types::shape_index::index_shape_slice",
+      "name": "index_shape_slice",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn index_shape_slice(shape: &shaped_array::IntTuple, start: Option<dimension::Int>, stop: Option<dimension::Int>, step: Option<dimension::Int>) -> Result<shaped_array::IntTuple, dimension::ShapeError>",
+      "summary": "Apply a single slice to first dimension. E.g. `Tensor[10, 20][2:5]` -> `Tensor[3, 20]` With step: `Tensor[100][::2]` -> `Tensor[50]` (ceil_div(100, 2))",
+      "doc": "api/pyrefly_types.shape_index.md#index_shape_slice"
+    },
+    {
+      "path": "pyrefly_types::shape_index::index_shape_tensor",
+      "name": "index_shape_tensor",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn index_shape_tensor(shape: &shaped_array::IntTuple, idx_dims: &[dimension::Int]) -> Result<shaped_array::IntTuple, dimension::ShapeError>",
+      "summary": "Apply tensor-as-index — replaces first dim with index tensor's dims. E.g. `Tensor[B, D1, D2][Tensor[T]]` -> `Tensor[T, D1, D2]`",
+      "doc": "api/pyrefly_types.shape_index.md#index_shape_tensor"
+    },
+    {
+      "path": "pyrefly_types::shape_index::lower_index_type",
+      "name": "lower_index_type",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn lower_index_type(ty: &types::Type) -> IndexTypeLowering",
+      "summary": "Interpret an ordinary runtime type as the supported shape-index grammar.",
+      "doc": "api/pyrefly_types.shape_index.md#lower_index_type"
+    }
+  ]
+}

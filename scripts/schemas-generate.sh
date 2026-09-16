@@ -24,6 +24,10 @@ cp schemas/generated/*.json python/enrichment_mcp/_schemas/
 mkdir -p python/enrichment_mcp/_guidance
 cp skills/library-research/references/tool-contract.md python/enrichment_mcp/_guidance/tool-contract.md
 
+echo "==> Arrow worker contract from its Rust owner"
+mkdir -p python/enrichment_worker/_schemas
+cargo run --locked --quiet -p enrichment-core --bin emit-worker-schema -- python/enrichment_worker/_schemas/worker.arrow
+
 echo "==> Pydantic boundary DTOs from those schemas"
 uv run --frozen datamodel-codegen \
     --input schemas/generated --input-file-type jsonschema \
@@ -32,5 +36,5 @@ uv run --frozen datamodel-codegen \
     --use-standard-collections --use-union-operator --target-python-version 3.14 \
     --field-constraints --formatters ruff-format --disable-timestamp --deserialize-default-values enum
 
-echo "==> verifying the result still satisfies the frozen contract"
+echo "==> verifying the native wire contract and independent fixtures"
 ./scripts/schema-conformance.sh

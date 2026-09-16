@@ -201,4 +201,4 @@ async def test_nothing_is_written_to_protocol_stdout(adapter_env: dict[str, str]
     # parsed as a JSON-RPC frame. FastMCP's own startup banner goes to stderr, where it belongs.
     assert len(tools) == len(TOOL_NAMES)
     assert isinstance(result.structured_content, dict)
-    assert result.structured_content["schema_version"] == "2.0"
+    assert result.structured_content["schema_version"] == "3.0"

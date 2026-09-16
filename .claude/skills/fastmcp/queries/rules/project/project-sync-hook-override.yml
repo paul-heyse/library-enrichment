@@ -1,0 +1,31 @@
+id: project-sync-hook-override
+language: python
+severity: hint
+message: An `on_*` hook is declared with `def` where the base declares `async def`.
+note: |
+  Every Provider hook, every Transform hook and every Middleware hook in FastMCP is `async`,
+  and so are 24 of the ~35 members of `Context`. Declaring one with plain `def` compiles, runs,
+  and returns a coroutine where the caller expected a value -- so the failure surfaces
+  somewhere else entirely, usually as a response that is empty rather than an error that names
+  the cause.
+
+  Precision note: this matches syntax. It fires on any `on_*` method in any class body, so a
+  class of your own with an unrelated `on_click` will match. Treat a hit as a question about
+  which base you are extending, not as proof of a defect.
+  See content/catalogs/middleware.md and content/index/overrides.tsv.
+metadata:
+  record: capability-gap
+  capability: async-hooks
+rule:
+  kind: function_definition
+  all:
+    - has:
+        field: name
+        regex: '^on_[a-z_]+$'
+    # `async` is an unnamed token, so `kind: async` is rejected. The node's own text is the
+    # reliable discriminator: an async definition begins with it.
+    - not:
+        regex: '^async'
+    - inside:
+        kind: class_definition
+        stopBy: end

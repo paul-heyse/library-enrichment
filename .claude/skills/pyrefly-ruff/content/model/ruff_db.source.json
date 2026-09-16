@@ -1,0 +1,119 @@
+{
+  "module": "ruff_db::source",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.source.md",
+  "items": [
+    {
+      "path": "ruff_db::source::SourceTextError",
+      "name": "SourceTextError",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum SourceTextError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "FailedToReadNotebook",
+        "FailedToReadFile"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::source::line_index",
+      "name": "line_index",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn line_index<'db>(db: &'db dyn Db, file: files::File) -> ruff_source_file::LineIndex",
+      "summary": "Computes the [`LineIndex`] for `file`.",
+      "doc": "api/ruff_db.source.md#line_index"
+    },
+    {
+      "path": "ruff_db::source::source_text",
+      "name": "source_text",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn source_text<'db>(db: &'db dyn Db, file: files::File) -> SourceText",
+      "summary": "Reads the source text of a python text file (must be valid UTF8) or notebook.",
+      "doc": "api/ruff_db.source.md#source_text"
+    },
+    {
+      "path": "ruff_db::source::SourceText",
+      "name": "SourceText",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SourceText",
+      "summary": "The source text of a file containing python code.",
+      "doc": "api/ruff_db.source.md#sourcetext",
+      "implements": [
+        "core::ops::deref::Deref",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_notebook",
+          "signature": "fn as_notebook(&self) -> Option<&Notebook>",
+          "summary": "Returns the underlying notebook if this is a notebook file."
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns the python code as a `str`."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &str",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "is_notebook",
+          "signature": "fn is_notebook(&self) -> bool",
+          "summary": "Returns `true` if this is a notebook source file."
+        },
+        {
+          "name": "read_error",
+          "signature": "fn read_error(&self) -> Option<&SourceTextError>",
+          "summary": "Returns `true` if there was an error when reading the content of the file."
+        },
+        {
+          "name": "to_bytes",
+          "signature": "fn to_bytes(&self) -> Cow<'_, [u8]>"
+        },
+        {
+          "name": "with_text",
+          "signature": "fn with_text(&self, new_text: String, source_map: &SourceMap) -> Self",
+          "summary": "Returns a new instance for this file with the updated source text (Python code)."
+        }
+      ]
+    }
+  ]
+}

@@ -17,7 +17,6 @@ use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
 use enrichment_core::config::Config;
-use enrichment_core::policy::FetchPolicy;
 use enrichment_daemon::fetch::{FetchError, Fetcher};
 use enrichment_daemon::server;
 use enrichment_daemon::service::Service;
@@ -361,7 +360,11 @@ async fn a_recorded_resolution_replays_offline_with_the_same_context() {
             serde_json::json!({ "name": "enr-fixture", "version": "0.1.0" }),
         )
         .await;
-        assert_eq!(envelope["data"]["answered_from_cache"], false);
+        assert_eq!(envelope["data"]["answered_from_cache"], false, "{envelope}");
+        service
+            .shutdown()
+            .await
+            .expect("owned acquisition and its terminal reconciliation drain");
         (
             envelope["context_id"].as_str().expect("ctx").to_owned(),
             envelope["data"].clone(),
@@ -427,16 +430,52 @@ async fn a_recorded_resolution_replays_offline_with_the_same_context() {
     assert_eq!(envelope["error"]["retryable"], true);
 }
 
+async fn owned_fetch(
+    service: &Service,
+    url: Url,
+) -> Result<enrichment_daemon::fetch::Fetched, FetchError> {
+    let (record, _, fresh) = service
+        .jobs
+        .submit(enrichment_daemon::jobs::JobSpec::Resolve(
+            enrichment_core::request::ResolveRequest {
+                name: "enr-fixture".into(),
+                version: Some("0.1.0".into()),
+                ..Default::default()
+            },
+        ))
+        .await
+        .unwrap();
+    assert!(fresh);
+    let jobs = service.jobs.clone();
+    let driver_jobs = jobs.clone();
+    let id = record.job_id;
+    let fetcher = service.fetcher.clone();
+    let (send, receive) = tokio::sync::oneshot::channel();
+    jobs.spawn(&service.repository.runtime, id.clone(), async move {
+        assert!(driver_jobs.start(&id).await.unwrap());
+        let result = fetcher.get(&url, None).await;
+        send.send(result).unwrap();
+    })
+    .unwrap();
+    let result = receive.await.unwrap();
+    tokio::time::timeout(Duration::from_secs(60), async {
+        while jobs.has_owned_work() {
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+    })
+    .await
+    .expect("physical driver and durable settlement complete");
+    result
+}
 #[tokio::test]
 async fn the_fetch_policy_holds_against_the_fixture_upstream() {
     let upstream = Upstream::start();
     let dir = tempfile::tempdir().expect("dir");
     let service = service_for(&upstream, dir.path());
-    let fetcher = &service.fetcher;
 
     // A redirect to a link-local address is refused at the hop.
     let url = Url::parse(&format!("{}/_test/redirect-private", upstream.base)).expect("url");
-    let err = fetcher.get(&url, None).await.expect_err("refused");
+    let err = owned_fetch(&service, url).await.expect_err("refused");
     assert!(matches!(err, FetchError::RedirectRefused { .. }), "{err}");
     assert!(matches!(
         err.code(),
@@ -445,23 +484,36 @@ async fn the_fetch_policy_holds_against_the_fixture_upstream() {
 
     // A redirect loop stops at the configured hop count.
     let url = Url::parse(&format!("{}/_test/redirect-loop", upstream.base)).expect("url");
-    let err = fetcher.get(&url, None).await.expect_err("loop refused");
+    let err = owned_fetch(&service, url).await.expect_err("loop refused");
     assert!(matches!(err, FetchError::RedirectRefused { .. }), "{err}");
 
     // A body over the download bound is refused without being buffered.
     let mut small = service.config.clone();
     small.network.max_download_bytes = 1024;
-    let small_fetcher = Fetcher::new(FetchPolicy::from_config(&small)).expect("client");
+    let small_service = Service::open(
+        small,
+        StatePaths::explicit(
+            dir.path().join("small-cache"),
+            dir.path().join("small-data"),
+        ),
+    )
+    .unwrap();
     let url = Url::parse(&format!("{}/_test/oversized/4096", upstream.base)).expect("url");
-    let err = small_fetcher.get(&url, None).await.expect_err("too large");
+    let err = owned_fetch(&small_service, url)
+        .await
+        .expect_err("too large");
     assert!(
         matches!(err, FetchError::TooLarge { limit: 1024, .. }),
         "{err}"
     );
 
     // Loopback is reachable only because it is configured: a default policy refuses it.
-    let default_fetcher =
-        Fetcher::new(FetchPolicy::from_config(&Config::default())).expect("client");
+    let default_fetcher = Fetcher::new(
+        &Config::default(),
+        &service.repository.runtime,
+        &service.paths.data_root,
+    )
+    .expect("client");
     let url = Url::parse(&format!("{}/index/en/r-/enr-fixture", upstream.base)).expect("url");
     let err = default_fetcher.get(&url, None).await.expect_err("refused");
     assert!(matches!(err, FetchError::Policy(_)), "{err}");

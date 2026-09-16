@@ -9,11 +9,9 @@ mod inventory;
 pub(crate) mod ownership;
 mod python_closure;
 pub(crate) mod readiness;
-pub mod resources;
 pub mod rustdoc;
 use cleanup::{ContainerGuard, Supervisor};
 use enrichment_core::{
-    canonical,
     capsule_protocol::{self as protocol, Mode, Operation, OutputKind},
     clock,
     config::Execution,
@@ -35,6 +33,11 @@ use tokio::process::Command;
 /// Holds the [`ContainerGuard`], so dropping this removes the container and its descendants
 /// rather than merely detaching from them.
 pub struct ServedSession {
+    pub operation_id: String,
+    pub authority: enrichment_core::execution::ProcessAuthority,
+    operation: Operation,
+    runner: Runner,
+    dispatch: Dispatch,
     /// The exact immutable host generation copied into this server's private scratch.
     pub inputs_root: PathBuf,
     /// The owned container's name.
@@ -55,6 +58,22 @@ pub struct ServedSession {
     pub image_id: String,
 }
 
+impl ServedSession {
+    /// Warm resources retain physical ownership, not permission from an earlier job.
+    pub(crate) async fn admit_current_command(&mut self) -> io::Result<()> {
+        let dispatch = self
+            .runner
+            .authorize_process(&self.image_id, &self.operation, false)
+            .await?;
+        self.authority = dispatch.observation();
+        self.dispatch = dispatch;
+        Ok(())
+    }
+    pub(crate) async fn check_authority(&self) -> io::Result<()> {
+        self.dispatch.check().await
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Runner {
     root: PathBuf,
@@ -64,6 +83,50 @@ pub struct Runner {
     broker: PathBuf,
     supervisor: Arc<Supervisor>,
     lease: Option<Arc<cleanup::Lease>>,
+    authority: Authority,
+}
+
+#[derive(Debug, Clone)]
+enum Authority {
+    Command,
+    Qualification(Arc<description::Qualification>),
+}
+
+#[derive(Clone)]
+enum Dispatch {
+    Command(Arc<enrichment_store::process_grants::ProcessGrant>),
+    Qualification(String),
+}
+impl Dispatch {
+    fn operation(&self, probe: Operation) -> Operation {
+        match self {
+            Self::Command(grant) => grant.operation().clone(),
+            Self::Qualification(_) => probe,
+        }
+    }
+    async fn check(&self) -> io::Result<()> {
+        match self {
+            Self::Command(grant) => grant.check().await.map_err(io::Error::other),
+            Self::Qualification(_) => Ok(()),
+        }
+    }
+    fn observation(&self) -> enrichment_core::execution::ProcessAuthority {
+        use enrichment_core::execution::ProcessAuthority;
+        match self {
+            Self::Command(grant) => {
+                let w = grant.witness();
+                ProcessAuthority::Command {
+                    effect_id: w.effect_id.clone(),
+                    grant_id: w.grant_id.clone(),
+                    environment_id: w.environment_id.clone(),
+                    snapshot_id: w.snapshot_id.clone(),
+                }
+            }
+            Self::Qualification(definition_id) => ProcessAuthority::Qualification {
+                definition_id: definition_id.clone(),
+            },
+        }
+    }
 }
 
 /// Local ownership lasts until container registration transfers the operation to cleanup.
@@ -145,7 +208,46 @@ impl Runner {
             limits: config.clone(),
             supervisor,
             lease: None,
+            authority: Authority::Command,
         })
+    }
+
+    async fn authorize_process(
+        &self,
+        image: &str,
+        operation: &Operation,
+        acquisition: bool,
+    ) -> io::Result<Dispatch> {
+        match &self.authority {
+            Authority::Command => {
+                let grant = enrichment_store::native_effect::authorize()
+                    .await
+                    .map_err(io::Error::other)?;
+                let capture = admission::capture(
+                    &self.limits,
+                    &self.cache,
+                    match self.supervisor.admission() {
+                        cleanup::Admission::Open => None,
+                        cleanup::Admission::Quarantined { detail, .. } => Some(detail),
+                    },
+                );
+                grant
+                    .process(enrichment_store::process_grants::Facts {
+                        execution: &self.limits,
+                        capture,
+                        image_id: image,
+                        operation,
+                        acquisition,
+                    })
+                    .await
+                    .map(|grant| Dispatch::Command(Arc::new(grant)))
+                    .map_err(io::Error::other)
+            }
+            Authority::Qualification(qualification) => {
+                qualification.admit(image, operation, acquisition).await?;
+                Ok(Dispatch::Qualification(operation.id()))
+            }
+        }
     }
 
     /// Carry one execution lease across all preparation and execution stages.
@@ -221,16 +323,20 @@ impl Runner {
         &self,
         mut command: Command,
         ownership: PathBuf,
+        dispatch: Dispatch,
     ) -> tokio::task::JoinHandle<io::Result<std::process::Output>> {
         let runner = self.clone();
         tokio::spawn(async move {
             let mut record: serde_json::Value =
                 serde_json::from_slice(&std::fs::read(&ownership)?)?;
-            let child = match command
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-            {
+            let created = match dispatch.check().await {
+                Ok(()) => command
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn(),
+                Err(error) => Err(error),
+            };
+            let child = match created {
                 Ok(child) => child,
                 Err(error) => {
                     // A failed spawn created no process. Record that certainty so ordinary
@@ -295,9 +401,8 @@ impl Runner {
             data_bytes: self.limits.scratch_bytes(),
             output_bytes: self.limits.output_bytes.clamp(1024, 1048576),
             deadline_millis: self.limits.deadline_seconds.clamp(1, 600) * 1000,
-            binding: canonical::digest_hex(
-                &serde_json::json!({"image":image,"containment":self.containment_identity()?}),
-            ),
+            binding: Operation::binding(image, &self.containment_identity()?)
+                .map_err(io::Error::other)?,
         };
         operation.validate()?;
         let bytes = serde_json::to_vec(&operation)?;
@@ -447,6 +552,8 @@ impl Runner {
             Mode::LanguageServer,
             Default::default(),
         )?;
+        let dispatch = self.authorize_process(image, &operation, false).await?;
+        let operation = dispatch.operation(operation);
         let create_args = self.create_args(&name, image, &capsule, false, None, true)?;
         let mut operation_record = OperationRecord::write(&self.root, &name, &operation)?;
         let started_at = clock::now_rfc3339();
@@ -454,7 +561,7 @@ impl Runner {
         operation_record.ownership = Some(ownership.clone());
         std::fs::create_dir_all(self.root.join("owned"))?;
         let bytes = serde_json::to_vec(
-            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"owner":self.owner,"kind":"lsp","creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
+            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"operation_id":operation.id(),"authority":dispatch.observation(),"owner":self.owner,"kind":"lsp","creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
         )?;
         enrichment_store::atomic::write_atomic(&ownership, &bytes)?;
         std::fs::File::open(&ownership)?.sync_all()?;
@@ -465,7 +572,7 @@ impl Runner {
 
         let mut command = self.broker();
         command.args(create_args);
-        let creator = self.create_supervised(command, ownership);
+        let creator = self.create_supervised(command, ownership, dispatch.clone());
         let created = tokio::time::timeout(Duration::from_secs(15), creator).await;
         match created {
             Ok(Ok(Ok(output))) if output.status.success() => {}
@@ -489,6 +596,7 @@ impl Runner {
             }
         }
 
+        dispatch.check().await?;
         let mut child = match self
             .broker()
             .args(["start", "--attach", "--interactive", &name])
@@ -536,6 +644,11 @@ impl Runner {
             });
         }
         Ok(ServedSession {
+            operation_id: operation.id(),
+            authority: dispatch.observation(),
+            operation,
+            runner: self.clone(),
+            dispatch,
             inputs_root: capsule,
             name,
             child,
@@ -616,6 +729,10 @@ impl Runner {
         let name = format!("libenr-{}", uuid::Uuid::new_v4().simple());
         let deadline = self.limits.deadline_seconds.clamp(1, 600);
         let operation = self.operation(&name, image, &capsule, args, Mode::Command, outputs)?;
+        let dispatch = self
+            .authorize_process(image, &operation, acquisition)
+            .await?;
+        let operation = dispatch.operation(operation);
         let reservation = budget::Reservation::acquire(
             &self.cache,
             if operation.outputs.is_empty() {
@@ -643,7 +760,7 @@ impl Runner {
         operation_record.ownership = Some(ownership.clone());
         std::fs::create_dir_all(self.root.join("owned"))?;
         let bytes = serde_json::to_vec(
-            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"owner":self.owner,"creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
+            &serde_json::json!({"name":name,"capsule":capsule,"image":image,"created_at":started_at,"operation_id":operation.id(),"authority":dispatch.observation(),"owner":self.owner,"creation_in_progress":true,"creator_boot_id":std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?.trim()}),
         )?;
         enrichment_store::atomic::write_atomic(&ownership, &bytes)?;
         std::fs::File::open(&ownership)?.sync_all()?;
@@ -656,7 +773,7 @@ impl Runner {
         let mut guard =
             ContainerGuard::register(self.clone(), Arc::clone(&self.supervisor), name.clone())?;
         operation_record.registered = true;
-        let creator = self.create_supervised(cmd, ownership);
+        let creator = self.create_supervised(cmd, ownership, dispatch.clone());
         let created = tokio::time::timeout_at(
             until.min(tokio::time::Instant::now() + Duration::from_secs(15)),
             creator,
@@ -694,6 +811,8 @@ impl Runner {
             };
             let cleanup_confirmed = guard.remove_now().await;
             return Ok(ProcessObservation {
+                operation_id: operation.id(),
+                authority: dispatch.observation(),
                 image_id: image.into(),
                 command: args.to_vec(),
                 started_at,
@@ -710,6 +829,7 @@ impl Runner {
             .args(["start", "--attach", &name])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        dispatch.check().await?;
         let mut child = match start_command.spawn() {
             Ok(child) => child,
             Err(e) => {
@@ -844,6 +964,8 @@ impl Runner {
             &broker_stderr[..broker_stderr.len().min(limit.saturating_sub(stderr.len()))],
         );
         Ok(ProcessObservation {
+            operation_id: operation.id(),
+            authority: dispatch.observation(),
             image_id: image.into(),
             command: args.to_vec(),
             started_at,
@@ -1047,7 +1169,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refused_capacity_and_unstarted_registration_leave_no_operation_files() {
+    async fn unclaimed_process_and_unstarted_registration_leave_no_operation_files() {
         let cache = tempfile::tempdir().unwrap();
         let input = tempfile::tempdir().unwrap();
         let config = Execution {
@@ -1070,7 +1192,7 @@ mod tests {
                 result
                     .unwrap_err()
                     .to_string()
-                    .contains("capacity exhausted")
+                    .contains("claimed native command")
             );
         }
         assert!(!runner.root.join("operations").exists());
@@ -1114,7 +1236,11 @@ mod tests {
         std::fs::write(&ownership, br#"{"creation_in_progress":true}"#).expect("record");
         let absent = dir.path().join("no-such-executable");
         let error = runner
-            .create_supervised(Command::new(absent), ownership.clone())
+            .create_supervised(
+                Command::new(absent),
+                ownership.clone(),
+                Dispatch::Qualification("unspawned-fixture".into()),
+            )
             .await
             .expect("task")
             .expect_err("spawn fails");

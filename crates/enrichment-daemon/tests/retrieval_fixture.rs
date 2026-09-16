@@ -19,14 +19,14 @@ mod parquet_read;
 mod parquet_write;
 
 #[path = "../../enrichment-store/tests/support/native_ingest.rs"]
-mod native_ingest;
+pub mod native_ingest;
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 
 use enrichment_core::config::Config;
-use enrichment_core::producer::normalize::{self, NormalizeInput};
+
 use enrichment_daemon::server;
 use enrichment_daemon::service::Service;
 use enrichment_store::StatePaths;
@@ -97,7 +97,12 @@ fn service_with(config: Config, dir: &Path) -> Service {
 }
 
 async fn call(service: &Service, method: &str, params: serde_json::Value) -> serde_json::Value {
-    let before = service.repository.runtime.diagnostic_summary();
+    let before = service
+        .repository
+        .runtime
+        .diagnostic_summary()
+        .await
+        .unwrap();
     let frame = serde_json::json!({
         "jsonrpc": "2.0", "id": 1, "method": method, "params": params
     })
@@ -111,8 +116,8 @@ async fn call(service: &Service, method: &str, params: serde_json::Value) -> ser
         eprintln!(
             "PLAN11_QUERY_DIAGNOSTICS {}",
             serde_json::json!({
-                "method":method,"before":before,"after":service.repository.runtime.diagnostic_summary(),
-                "recent":service.repository.runtime.diagnostics(),
+                "method":method,"before":before,"after":service.repository.runtime.diagnostic_summary().await.unwrap(),
+                "recent":service.repository.runtime.diagnostics().await.unwrap(),
             })
         );
     }
@@ -152,6 +157,8 @@ async fn cold_version_comparison_waits_for_exact_acquisitions() {
                 .repository
                 .runtime
                 .operation_diagnostics()
+                .await
+                .unwrap()
                 .into_iter()
                 .find(|v| v.operation_id == job_id)
                 .expect("completed comparison operation");
@@ -283,8 +290,8 @@ async fn resolve_0_2_0(service: &Service) -> serde_json::Value {
     let envelope = complete_answer(service, envelope).await;
     assert_eq!(
         envelope["status"], "ok",
-        "0.2.0 has JSON and a tarball: {}",
-        envelope["summary"]
+        "0.2.0 has JSON and a tarball: {}; coverage: {}; producer runs: {}",
+        envelope["summary"], envelope["coverage"], envelope["data"]["producer_runs"]
     );
     assert!(
         envelope["snapshot_id"]
@@ -439,25 +446,63 @@ async fn hosted_json_indexes_the_api_without_compiling_the_crate() {
 
 #[test]
 fn feature_gated_items_follow_the_documented_build_configuration() {
+    use enrichment_core::{
+        evidence::{
+            Artifact, ArtifactKind, EvidenceKind,
+            ingest::{DocumentBatch, IngestContext},
+        },
+        policy::ExecutionProfile,
+        producer::{ProducerRun, RunOutcome},
+        wire::SourceVersionMatch,
+    };
     // The two captures of 0.2.0 differ only in features. The normalizer reports what each
     // build contained; it does not attach a feature predicate to `extra_only`.
     let root = repo_root().join("tests/fixtures/rustdoc");
     let paths_for = |name: &str| {
         let payload = std::fs::read_to_string(root.join(name)).expect(name);
+        let artifact = Artifact::describe(
+            payload.as_bytes(),
+            ArtifactKind::RustdocJson,
+            "application/json",
+            "https://docs.rs/enr-fixture/rustdoc.json",
+            "2026-09-16T00:00:00Z",
+        );
+        let run = ProducerRun {
+            attempt_id: "fixture".into(),
+            producer: "rustdoc-json".into(),
+            producer_version: enrichment_core::producer::rustdoc::NORMALIZER_VERSION.into(),
+            config_digest: "fixture".into(),
+            inputs: [("rustdoc_json".into(), artifact.sha256.clone())].into(),
+            profile: ExecutionProfile::Static,
+            started_at: "2026-09-16T00:00:00Z".into(),
+            finished_at: "2026-09-16T00:00:01Z".into(),
+            outcome: RunOutcome::Succeeded,
+            gaps: vec![],
+            log: None,
+        };
         let normalized = producer_records::collect(
-            normalize::prepare(&NormalizeInput {
-                payload: &payload,
-                rustdoc_artifact_id: "art_00000000000000000000000000000000",
-                json_path: Some(&root.join(name)),
-                summary_chars: 200,
-            })
-            .expect("prepared fixture producer"),
+            &payload,
+            IngestContext {
+                ecosystem: enrichment_core::identity::Ecosystem::Rust,
+                symbol_package: "enr_fixture".into(),
+                release_id: "rel_fixture".into(),
+                environment_id: "env_fixture".into(),
+                source_version_match: SourceVersionMatch::Exact,
+                producing_attempt: run.attempt_id.clone(),
+                producer_runs: vec![run],
+                artifacts: vec![artifact],
+                indexed: vec![EvidenceKind::PublicApi],
+                missing: vec![],
+                gaps: vec![],
+            },
+            DocumentBatch::default(),
         )
-        .expect("fixture JSON normalizes");
+        .expect("native fixture plans");
         normalized
+            .1
             .symbols
             .iter()
-            .map(|s| s.path.clone())
+            .map(|s| s.path.display())
             .collect::<Vec<_>>()
     };
     let default = paths_for("enr-fixture-0.2.0-default.json");
@@ -976,7 +1021,7 @@ async fn measure_research_operations_one_and_eight_clients() {
         "PLAN13_ACQUISITION {}",
         serde_json::json!({
             "elapsed_micros": acquisition.elapsed().as_micros(), "status":resolved["status"],
-            "operations": service.repository.runtime.operation_diagnostics(),
+            "operations": service.repository.runtime.operation_diagnostics().await.unwrap(),
         })
     );
     drop(upstream);
@@ -1019,7 +1064,7 @@ async fn measure_research_operations_one_and_eight_clients() {
                         assert!(response.error.is_none(), "{:?}", response.error);
                         let answer = response.result.unwrap();
                         let first_response_micros = start.elapsed().as_micros();
-                        let observation = service.repository.runtime.operation_diagnostics().into_iter().find(|v| Some(v.operation_id.as_str()) == answer["request_id"].as_str()).expect("the response owns its native query observations");
+                        let observation = service.repository.runtime.operation_diagnostics().await.unwrap().into_iter().find(|v| Some(v.operation_id.as_str()) == answer["request_id"].as_str()).expect("the response owns its native query observations");
                         let (answer, delivery) = complete_answer::complete_answer_measured(&service, answer).await;
                         (start.elapsed().as_micros(), first_response_micros, answer, observation, delivery)
                     });
@@ -1253,9 +1298,9 @@ async fn invalid_catalog_selection_cannot_redirect_retained_resolution() {
         service
             .repository
             .catalog
-            .commit(enrichment_store::catalog_generation::CatalogDelta {
+            .commit(enrichment_store::control::ControlBatch {
                 publication: None,
-                selection: Some(enrichment_store::catalog_generation::SelectionChange {
+                selection: Some(enrichment_store::control::SelectionChange {
                     context_id: context,
                     snapshot_id: different,
                     expected_base: Some(original_id)
@@ -1342,8 +1387,9 @@ async fn publish_comparison_variant(
 ) -> (String, String) {
     use enrichment_core::{
         evidence::{
-            Artifact, ArtifactKind, EvidenceFragment, EvidenceKind, FragmentKind,
-            ingest::{IngestContext, ProducerBatch},
+            Artifact, ArtifactKind, EvidenceKind, FragmentKind,
+            document::DocumentFact,
+            ingest::{DocumentBatch, IngestContext},
             snapshot::SnapshotMetadata,
         },
         identity::Context,
@@ -1383,16 +1429,6 @@ async fn publish_comparison_variant(
         .remove(0);
     let payload =
         String::from_utf8(service.blobs.read(&input.sha256).expect("rustdoc bytes")).expect("utf8");
-    let produced = producer_records::collect(
-        normalize::prepare(&NormalizeInput {
-            payload: &payload,
-            rustdoc_artifact_id: &input.artifact_id,
-            json_path: Some(&service.blobs.path_for(&input.sha256)),
-            summary_chars: 240,
-        })
-        .expect("prepared fixture producer"),
-    )
-    .expect("normalize actual Rust fixture");
     let source = original
         .reader
         .artifacts()
@@ -1401,24 +1437,23 @@ async fn publish_comparison_variant(
         .into_iter()
         .find(|a| a.artifact_id == input.artifact_id && a.source_uri == input.source_uri)
         .expect("rustdoc source");
-    let mut fragments = produced.fragments;
-    fragments.push(
-        EvidenceFragment::new(
+    let fragments = vec![
+        DocumentFact::new(
             FragmentKind::ChangelogSection,
             "Behavior",
             &artifact.artifact_id,
-            serde_json::json!({"path":"CHANGELOG.md","line":1,"heading":"Behavior"}),
+            enrichment_core::evidence::relational::Locator::MarkdownSection {
+                file: "CHANGELOG.md".into(),
+                heading: "Behavior".into(),
+                line: 1,
+            },
             note.into(),
             EvidenceClass::Declared,
             "comparison-fixture",
             "1",
         )
         .expect("valid fixture locator"),
-    );
-    let components = fragments
-        .iter()
-        .map(|f| (f.producer.clone(), f.producer_version.clone()))
-        .collect();
+    ];
     let run = ProducerRun {
         attempt_id: format!("fixture-{version}-{}", environment.environment_id),
         producer: "comparison-fixture".into(),
@@ -1437,17 +1472,17 @@ async fn publish_comparison_variant(
         gaps: vec![],
         log: None,
     };
-    let evidence = native_ingest::normalize(
+    let produced = producer_records::collect(
+        &payload,
         IngestContext {
             ecosystem: release.key.ecosystem,
-            symbol_package: produced.source.crate_name.clone(),
+            symbol_package: original.reader.manifest().crate_name.clone(),
             release_id: release.release_id.to_string(),
             environment_id: environment.environment_id.to_string(),
             source_version_match: SourceVersionMatch::Unknown,
             producing_attempt: run.attempt_id.clone(),
             producer_runs: vec![run],
             artifacts: vec![artifact, source],
-            component_versions: components,
             indexed: vec![
                 EvidenceKind::PublicApi,
                 EvidenceKind::Documentation,
@@ -1465,32 +1500,28 @@ async fn publish_comparison_variant(
                 }]
             },
         },
-        ProducerBatch {
-            symbols: produced.symbols,
-            relationships: produced.relationships,
-            fragments,
-        },
+        DocumentBatch { fragments },
     )
     .expect("typed fixture evidence");
-    let published = service
-        .repository
-        .publish(
-            SnapshotMetadata {
-                context: context.clone(),
-                release,
-                environment,
-                symbol_package: produced.source.crate_name.clone(),
-                crate_name: produced.source.crate_name,
-                crate_version: Some(version.into()),
-                normalizer_version: original.reader.manifest().normalizer_version.clone(),
-                observed_configuration: original.reader.manifest().observed_configuration.clone(),
-                producer_items: produced.source.producer_items,
-            },
-            evidence,
-            None,
-        )
-        .await
-        .expect("publish typed fixture");
+    let published = native_ingest::publish_rows(
+        &service.repository,
+        SnapshotMetadata {
+            context: context.clone(),
+            release,
+            environment,
+            symbol_package: produced.0.crate_name.clone(),
+            crate_name: produced.0.crate_name,
+            crate_version: Some(version.into()),
+            normalizer_version: original.reader.manifest().normalizer_version.clone(),
+            observed_configuration: original.reader.manifest().observed_configuration.clone(),
+            producer_items: produced.0.producer_items,
+        },
+        produced.1,
+        None,
+        None,
+    )
+    .await
+    .expect("publish typed fixture");
     (
         context.context_id.to_string(),
         published.snapshot_id.to_string(),
@@ -1535,7 +1566,18 @@ async fn comparison_surfaces_behavior_only_release_notes_with_unchanged_rust_api
     let artifact = note["after"][0]["source"]["artifact_id"]
         .as_str()
         .expect("source");
-    assert!(service.blobs.find(artifact).expect("read").is_some());
+    assert!(
+        service
+            .repository
+            .catalog
+            .pin()
+            .await
+            .unwrap()
+            .artifact(&service.repository.runtime, artifact)
+            .await
+            .expect("read")
+            .is_some()
+    );
     assert!(!result["data"]["same_release"].as_bool().expect("identity"));
 }
 
@@ -1656,7 +1698,7 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
             )
         })
         .expect("artifact")
-        .artifact;
+        .acquired;
     let mut cursor = None;
     let mut recovered = String::new();
     loop {
@@ -1688,7 +1730,7 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
         },
     );
     let bounded =
-        enrichment_daemon::ops::common::enforce_budget(&service, answer.clone(), Some(1024));
+        enrichment_daemon::ops::common::enforce_budget(&service, answer.clone(), Some(1024)).await;
     assert!(serde_json::to_vec(&bounded).expect("json").len() <= 1024);
     assert_eq!(bounded.status(), enrichment_core::wire::Status::Ok);
     let enrichment_core::wire::DeliveryDescriptor::Artifact {
@@ -1699,11 +1741,20 @@ async fn escaped_unicode_answers_fit_complete_envelope_and_overflow_is_retrievab
     };
     let mut second = answer.clone();
     second.request_id = enrichment_daemon::envelope::new_request_id();
-    let second = enrichment_daemon::ops::common::enforce_budget(&service, second, Some(1024));
+    let second = enrichment_daemon::ops::common::enforce_budget(&service, second, Some(1024)).await;
     assert!(
         matches!(&second.delivery, enrichment_core::wire::DeliveryDescriptor::Artifact { artifact_id, .. } if artifact_id == id)
     );
-    let artifact = service.blobs.find(id).expect("lookup").expect("saved");
+    let artifact = service
+        .repository
+        .catalog
+        .pin()
+        .await
+        .unwrap()
+        .artifact(&service.repository.runtime, id)
+        .await
+        .expect("lookup")
+        .expect("saved");
     let saved: serde_json::Value =
         serde_json::from_slice(&service.blobs.read(&artifact.sha256).expect("read")).expect("JSON");
     assert_eq!(saved["result"]["data"], serde_json::json!(answer.data));

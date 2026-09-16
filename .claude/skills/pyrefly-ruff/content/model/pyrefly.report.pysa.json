@@ -1,0 +1,87 @@
+{
+  "module": "pyrefly::report::pysa",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.report.pysa.md",
+  "items": [
+    {
+      "path": "pyrefly::report::pysa::PysaFormat",
+      "name": "PysaFormat",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum PysaFormat",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Capnp",
+        "Json"
+      ],
+      "implements": [
+        "clap_builder::derive::ValueEnum"
+      ],
+      "methods": [
+        {
+          "name": "to_possible_value",
+          "signature": "fn to_possible_value<'a>(&self) -> ::std::option::Option<clap::builder::PossibleValue>",
+          "via_trait": "clap_builder::derive::ValueEnum"
+        },
+        {
+          "name": "value_variants",
+          "signature": "fn value_variants<'a>() -> &'a [Self]",
+          "via_trait": "clap_builder::derive::ValueEnum"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::report::pysa::PysaReporter",
+      "name": "PysaReporter",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct PysaReporter",
+      "summary": "Marker stored in `Transaction` to indicate that Pysa reporting is in progress.",
+      "doc": "api/pyrefly.report.pysa.md#pysareporter",
+      "fields": [
+        "module_ids",
+        "pysa_directory",
+        "definitions_directory",
+        "type_of_expressions_directory",
+        "call_graphs_directory",
+        "format"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(pysa_directory: &Path, handles: &[Handle], format: PysaFormat) -> anyhow::Result<Box<Self>>",
+          "summary": "Create a new PysaReporter, setting up report directories."
+        },
+        {
+          "name": "report_module",
+          "signature": "fn report_module(&self, handle: &Handle, transaction: &Transaction<'_>)",
+          "summary": "Write output files about the current module/handle."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::report::pysa::PysaSolutions",
+      "name": "PysaSolutions",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct PysaSolutions",
+      "summary": "Per-module intermediate information required by Pysa for its report step. Stored as `Arc<PysaSolutions>` inside pyrefly `Solutions` when pysa reporting is enabled.",
+      "doc": "api/pyrefly.report.pysa.md#pysasolutions",
+      "fields": [
+        "module_id",
+        "module_index",
+        "function_base_definitions",
+        "global_variables",
+        "is_test_module"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(context: &ModuleAnswersContext) -> Arc<Self>",
+          "summary": "Build per-module intermediate information required by Pysa for its report step. This only depends on non-cross-module information, currently represented as `ModuleAnswersContext`."
+        }
+      ]
+    }
+  ]
+}

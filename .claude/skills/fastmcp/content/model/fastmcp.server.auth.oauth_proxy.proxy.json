@@ -1,0 +1,272 @@
+{
+ "api": "api/fastmcp.server.auth.oauth_proxy.proxy.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#_id_jag_grant_marker",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_ID_JAG_GRANT_MARKER",
+   "nameable": false,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy._ID_JAG_GRANT_MARKER",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy._ID_JAG_GRANT_MARKER",
+   "signature": "_ID_JAG_GRANT_MARKER = 'id_jag'",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#_refresh_lock_cache_size",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_REFRESH_LOCK_CACHE_SIZE",
+   "nameable": false,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy._REFRESH_LOCK_CACHE_SIZE",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy._REFRESH_LOCK_CACHE_SIZE",
+   "signature": "_REFRESH_LOCK_CACHE_SIZE = 10000",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#_pending_application_type",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_pending_application_type",
+   "nameable": false,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy._pending_application_type",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy._pending_application_type",
+   "signature": "_pending_application_type: ContextVar[Literal['web', 'native'] | None] = ContextVar('_pending_application_type', default=None)",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy.logger",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy.logger",
+   "signature": "logger = get_logger(__name__)",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.server.auth.OAuthProxy",
+    "fastmcp.server.auth.oauth_proxy.OAuthProxy",
+    "fastmcp.server.auth.oauth_proxy.consent.OAuthProxy",
+    "fastmcp.server.auth.oidc_proxy.OAuthProxy",
+    "fastmcp.server.auth.providers.azure.OAuthProxy",
+    "fastmcp.server.auth.providers.clerk.OAuthProxy",
+    "fastmcp.server.auth.providers.discord.OAuthProxy",
+    "fastmcp.server.auth.providers.github.OAuthProxy",
+    "fastmcp.server.auth.providers.google.OAuthProxy",
+    "fastmcp.server.auth.providers.huggingface.OAuthProxy",
+    "fastmcp.server.auth.providers.workos.OAuthProxy"
+   ],
+   "bases": [
+    "OAuthProvider",
+    "ConsentMixin"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#oauthproxy",
+   "inherits": {
+    "fastmcp.server.auth.auth.AuthProvider": [
+     "base_url",
+     "challenge_scopes",
+     "get_challenge_scopes",
+     "get_middleware",
+     "required_scopes",
+     "resource_base_url"
+    ],
+    "fastmcp.server.auth.auth.OAuthProvider": [
+     "client_registration_options",
+     "get_well_known_routes",
+     "issuer_url",
+     "revocation_options",
+     "scopes_supported",
+     "service_documentation_url",
+     "verify_token"
+    ]
+   },
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "authorize",
+     "signature": "async def authorize(self, client: OAuthClientInformationFull, params: AuthorizationParams) -> str",
+     "summary": "Start OAuth transaction and route through consent interstitial."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "exchange_authorization_code",
+     "signature": "async def exchange_authorization_code(self, client: OAuthClientInformationFull, authorization_code: AuthorizationCode) -> OAuthToken",
+     "summary": "Exchange authorization code for FastMCP-issued tokens."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "exchange_identity_assertion",
+     "signature": "async def exchange_identity_assertion(self, client: OAuthClientInformationFull, params: IdentityAssertionParams) -> OAuthToken",
+     "summary": "Exchange a SEP-990 ID-JAG for a short-lived FastMCP access token."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "exchange_refresh_token",
+     "signature": "async def exchange_refresh_token(self, client: OAuthClientInformationFull, refresh_token: RefreshToken, scopes: list[str]) -> OAuthToken",
+     "summary": "Exchange FastMCP refresh token for new FastMCP access token."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_client",
+     "signature": "async def get_client(self, client_id: str) -> OAuthClientInformationFull | None",
+     "summary": "Get client information by ID. This is generally the random ID provided to the DCR client during registration, not the upstream client ID."
+    },
+    {
+     "kind": "function",
+     "name": "get_routes",
+     "signature": "def get_routes(self, mcp_path: str | None = None) -> list[Route]",
+     "summary": "Get OAuth routes with custom handlers for better error UX."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "jwt_issuer",
+     "signature": "jwt_issuer: JWTIssuer",
+     "summary": "Get the JWT issuer, ensuring it has been initialized."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "load_access_token",
+     "signature": "async def load_access_token(self, token: str) -> AccessToken | None",
+     "summary": "Validate FastMCP JWT by swapping for upstream token."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "load_authorization_code",
+     "signature": "async def load_authorization_code(self, client: OAuthClientInformationFull, authorization_code: str) -> AuthorizationCode | None",
+     "summary": "Load authorization code for validation."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "load_refresh_token",
+     "signature": "async def load_refresh_token(self, client: OAuthClientInformationFull, refresh_token: str) -> RefreshToken | None",
+     "summary": "Load refresh token metadata from distributed storage."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "register_client",
+     "signature": "async def register_client(self, client_info: OAuthClientInformationFull) -> None",
+     "summary": "Register a client locally"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "revoke_token",
+     "signature": "async def revoke_token(self, token: AccessToken | RefreshToken) -> None",
+     "summary": "Revoke token locally and with upstream server if supported."
+    },
+    {
+     "kind": "function",
+     "name": "set_mcp_path",
+     "signature": "def set_mcp_path(self, mcp_path: str | None) -> None",
+     "summary": "Set the MCP endpoint path and create JWTIssuer with correct audience."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "token_endpoint_url",
+     "signature": "token_endpoint_url: str",
+     "summary": "The token endpoint URL, as advertised in the authorization server metadata."
+    },
+    {
+     "kind": "function",
+     "name": "update_default_scopes",
+     "signature": "def update_default_scopes(self, scopes: list[str]) -> None",
+     "summary": "Update the default scopes advertised to clients and used for DCR/CIMD fallback."
+    }
+   ],
+   "name": "OAuthProxy",
+   "nameable": true,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy.OAuthProxy",
+   "preferred": "fastmcp.server.auth.OAuthProxy",
+   "signature": "class OAuthProxy(OAuthProvider, ConsentMixin)",
+   "summary": "OAuth provider that presents a DCR-compliant interface while proxying to non-DCR IDPs."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#_applicationtyperegistrationhandler",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "handle",
+     "signature": "async def handle(self, request: Request) -> Response"
+    }
+   ],
+   "name": "_ApplicationTypeRegistrationHandler",
+   "nameable": false,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy._ApplicationTypeRegistrationHandler",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy._ApplicationTypeRegistrationHandler",
+   "signature": "class _ApplicationTypeRegistrationHandler",
+   "summary": "Recover the DCR `application_type` the SDK handler drops (SEP-837)."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.oauth_proxy.proxy.md#_assertion_granted_scopes",
+   "kind": "function",
+   "name": "_assertion_granted_scopes",
+   "nameable": false,
+   "path": "fastmcp.server.auth.oauth_proxy.proxy._assertion_granted_scopes",
+   "preferred": "fastmcp.server.auth.oauth_proxy.proxy._assertion_granted_scopes",
+   "signature": "def _assertion_granted_scopes(claims: dict[str, Any]) -> list[str]",
+   "summary": "Scopes granted by an ID-JAG, from its `scope` or `scp` claim."
+  }
+ ],
+ "module": "fastmcp.server.auth.oauth_proxy.proxy"
+}

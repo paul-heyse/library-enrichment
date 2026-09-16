@@ -1,0 +1,340 @@
+{
+  "_comment": [
+    "Each probe is a capability question, the file the documented route leads to, and the",
+    "pattern that proves the answer is actually there. They are deliberately brittle: a probe",
+    "that keeps passing while its subject changes certifies a route that no longer leads",
+    "anywhere.",
+    "",
+    "Several exist because the thing they guard was measured and found broken during the",
+    "build -- the wire types vanishing behind a private module, namespace packages Griffe",
+    "cannot see, assignment aliases that never became aliases. Those are the rows most likely",
+    "to regress silently, so they get an assertion rather than a comment."
+  ],
+  "probes": [
+    {
+      "question": "Do the MCP wire types survive the private module they are defined in?",
+      "file": "index/symbols.tsv",
+      "expect": "^mcp_types\\._types\\.Tool\\tmcp_types\\.Tool\\tclass\\t"
+    },
+    {
+      "question": "Is the importable spelling preferred over the defining path?",
+      "file": "index/symbols.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\tfastmcp\\.FastMCP\\t"
+    },
+    {
+      "question": "Does the two-hop alias chain for Client land on the real class?",
+      "file": "index/aliases.tsv",
+      "expect": "^fastmcp\\.Client\\tfastmcp\\.client\\.client\\.Client\\t"
+    },
+    {
+      "question": "Are namespace-package subpackages indexed rather than silently dropped?",
+      "file": "index/symbols.tsv",
+      "expect": "^fastmcp\\.contrib\\.mcp_mixin\\.mcp_mixin\\.MCPMixin\\t"
+    },
+    {
+      "question": "Did anything fail to index without being recorded?",
+      "file": "PROVENANCE.json",
+      "expect": "\"not_indexed\": 0"
+    },
+    {
+      "question": "Is an importable class that is absent from __all__ still present?",
+      "file": "index/symbols.tsv",
+      "expect": "^fastmcp\\.settings\\.Settings\\t"
+    },
+    {
+      "question": "Is a module-level assignment alias recorded as an alias?",
+      "file": "index/aliases.tsv",
+      "expect": "^fastmcp\\.exceptions\\.McpError\\t"
+    },
+    {
+      "question": "Is a re-export from an unindexed distribution findable by name?",
+      "file": "index/symbols.tsv",
+      "expect": "^fastmcp\\.dependencies\\.Depends\\tfastmcp\\.dependencies\\.Depends\\treexport\\t"
+    },
+    {
+      "question": "Are intended re-exports distinguished from incidental import sites?",
+      "file": "index/aliases.tsv",
+      "expect": "\\timport-site$"
+    },
+    {
+      "question": "Are all eighteen removed constructor keywords catalogued?",
+      "file": "catalogs/removed-api.md",
+      "expect": "^18 keyword arguments"
+    },
+    {
+      "question": "Does the removed-API catalog carry upstream's own replacement text?",
+      "file": "catalogs/removed-api.md",
+      "expect": "^\\| `stateless_http` \\| Pass `stateless_http` to"
+    },
+    {
+      "question": "Is a FastMCP server recorded as being itself a Provider?",
+      "file": "index/descendants.tsv",
+      "expect": "^fastmcp\\.server\\.providers\\.base\\.Provider\\tfastmcp\\.server\\.server\\.FastMCP\\t"
+    },
+    {
+      "question": "Does the extension-point catalog report the transitive closure, not direct children?",
+      "file": "catalogs/extension-points.md",
+      "expect": "\\| `Provider` \\| Where components come from \\| 26 \\|"
+    },
+    {
+      "question": "Are the protocol eras enumerated rather than collapsed?",
+      "file": "catalogs/protocol-eras.md",
+      "expect": "^\\| `2026-07-28` \\| \\d+ \\|"
+    },
+    {
+      "question": "Is a conditionally defined name recorded with the branch it took?",
+      "file": "index/conditional.tsv",
+      "expect": "^fastmcp\\.exceptions\\tMCPError\\ttry-except-ImportError\\tfallback-defined$"
+    },
+    {
+      "question": "Does the registration catalog state what the decorator actually returns?",
+      "file": "catalogs/registration.md",
+      "expect": "returns \\*\\*the function unchanged\\*\\*"
+    },
+    {
+      "question": "Are inferred types marked as second-class rather than presented as declared?",
+      "file": "index/inferred.tsv",
+      "expect": "\\tty\\t(agree|differ|unanswered)$"
+    },
+    {
+      "question": "Is the async obligation on Middleware hooks stated?",
+      "file": "catalogs/middleware.md",
+      "expect": "Every hook is `async`"
+    },
+    {
+      "question": "Does the distribution map say where FastMCP's code actually lives?",
+      "file": "catalogs/distribution-map.md",
+      "expect": "metapackage that ships no code"
+    },
+    {
+      "question": "Is the vendored SDK module never offered as a usable import?",
+      "file": "catalogs/removed-api.md",
+      "reject": "^Use `from mcp\\.server\\.fastmcp import"
+    },
+    {
+      "question": "Does any symbol claim to be nameable while preferring a private path?",
+      "file": "index/symbols.tsv",
+      "reject": "^\\S+\\t\\S*\\._[A-Za-z0-9_]*\\.\\S+\\t\\S+\\t\\S+\\t\\S+\\tyes\\t"
+    },
+    {
+      "question": "Which construct do I want: a Provider, a Transform, or middleware?",
+      "file": "topics/00-map.md",
+      "expect": "\\[Composing servers"
+    },
+    {
+      "question": "The capability map must lead with composition, not with an alphabetical list.",
+      "file": "topics/00-map.md",
+      "expect": "\\|---\\|---\\|\\n\\| \\[Composing servers"
+    },
+    {
+      "question": "Does the composition topic actually reach the removed-API answer?",
+      "file": "topics/composition.md",
+      "expect": "import_server.*removed in 4\\.0"
+    },
+    {
+      "question": "Does a topic page link into the vendored upstream prose?",
+      "file": "topics/composition.md",
+      "expect": "\\.\\./corpus/docs/servers/composition\\.mdx"
+    },
+    {
+      "question": "What must I implement to write a Middleware, and what is already defaulted?",
+      "file": "extension-points/Middleware.md",
+      "expect": "## Provided"
+    },
+    {
+      "question": "Does the Middleware page carry full hook signatures, not just names?",
+      "file": "extension-points/Middleware.md",
+      "expect": "async def on_call_tool\\(self, context: MiddlewareContext"
+    },
+    {
+      "question": "Which auth class does upstream actually subclass?",
+      "file": "extension-points/00-map.md",
+      "expect": "TokenVerifier"
+    },
+    {
+      "question": "AuthProvider must be shown as having real obligations, not zero.",
+      "file": "extension-points/00-map.md",
+      "expect": "\\[`AuthProvider`\\]\\(AuthProvider\\.md\\) \\| 11 \\|"
+    },
+    {
+      "question": "Where is FastMCP defined, and over what line range?",
+      "file": "index/locations.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\tclass\\tfastmcp/server/server\\.py\\t\\d+\\t\\d+$"
+    },
+    {
+      "question": "Does the location table carry members, not only top-level items?",
+      "file": "index/locations.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\.tool\\t"
+    },
+    {
+      "question": "Which optional install unlocks the Azure auth provider?",
+      "file": "index/extras.tsv",
+      "expect": "^_extra\\tazure\\tazure-core,azure-identity\\t"
+    },
+    {
+      "question": "The extras table must map extras to modules, not just repeat the lockfile.",
+      "file": "index/extras.tsv",
+      "expect": "^_extra\\tapps\\t.*fastmcp\\.apps\\.approval"
+    },
+    {
+      "question": "Which members are abstract, so that a subclass must supply them?",
+      "file": "index/decorators.tsv",
+      "expect": "\\tabstractmethod$"
+    },
+    {
+      "question": "Is the removed-keyword rule generated from the data rather than typed?",
+      "file": "../queries/rules/generated/project-removed-constructor-kwarg.yml",
+      "expect": "# Generated by build/queries\\.py"
+    },
+    {
+      "question": "Does the generated rule still carry all eighteen keywords?",
+      "file": "../queries/rules/generated/project-removed-constructor-kwarg.yml",
+      "expect": "tool_transformations\\)\\$"
+    },
+    {
+      "question": "Is there a worked upstream example of registering a tool?",
+      "file": "corpus/docs/servers/tools.mdx",
+      "expect": "@mcp\\.tool"
+    },
+    {
+      "question": "Does the corpus carry the deployment guidance, not just the API?",
+      "file": "corpus/docs/deployment/running-server.mdx",
+      "expect": "\\w"
+    },
+    {
+      "question": "Is the MCP specification text available for the current protocol era?",
+      "file": "corpus/spec/2026-07-28/architecture/index.mdx",
+      "expect": "\\w"
+    },
+    {
+      "question": "A dispatcher signature must still be marked, now that the flag is emitted.",
+      "file": "model/fastmcp.tools.function_tool.json",
+      "expect": "\"dispatch_only\": true"
+    },
+    {
+      "question": "The index must not offer a removed constructor keyword as current API.",
+      "file": "catalogs/removed-api.md",
+      "reject": "`host`.*still accepted"
+    },
+    {
+      "question": "The extras table must not have degraded back to bare lockfile rows.",
+      "file": "index/extras.tsv",
+      "reject": "\\A_resolved\\t"
+    },
+    {
+      "question": "Who calls FastMCP? The index used to say this was unanswerable.",
+      "file": "index/callers.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\tfastmcp\\."
+    },
+    {
+      "question": "Is import-time code named as a caller, rather than reported as a raw id?",
+      "file": "index/callers.tsv",
+      "expect": "\\(module level\\)\\t"
+    },
+    {
+      "question": "A decorator expression is a real call site; is it named as one?",
+      "file": "index/callers.tsv",
+      "expect": "\\(decorator\\)\\t"
+    },
+    {
+      "question": "Where is Context referenced, and in how many files?",
+      "file": "index/references.tsv",
+      "expect": "^fastmcp\\.server\\.context\\.Context\\tfastmcp/"
+    },
+    {
+      "question": "Are references into typeshed separated from references into this library?",
+      "file": "index/external-refs.tsv",
+      "expect": "\\t\\d+$"
+    },
+    {
+      "question": "Which parameters of FastMCP.__init__ are keyword-only, and required?",
+      "file": "index/parameters.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\.__init__\\t\\d+\\t\\d+\\tname\\tPos\\toptional\\t"
+    },
+    {
+      "question": "Does the parameter table carry resolved annotations, not local spellings?",
+      "file": "index/parameters.tsv",
+      "expect": "\\tmcp_types\\._types\\."
+    },
+    {
+      "question": "What is the resolved MRO of FastMCP, as against its declared bases?",
+      "file": "index/mro.tsv",
+      "expect": "^fastmcp\\.server\\.server\\.FastMCP\\t1\\tfastmcp\\.server\\.providers\\.aggregate\\."
+    },
+    {
+      "question": "Which symbols are least typed, and where did upstream suppress?",
+      "file": "index/type-coverage.tsv",
+      "expect": "^fastmcp\\."
+    },
+    {
+      "question": "Which items does this library use most? The triage question.",
+      "file": "index/usage.tsv",
+      "expect": "^fastmcp\\.server\\.context\\.Context\\t\\d+"
+    },
+    {
+      "question": "What imports what, at file level?",
+      "file": "index/imports.tsv",
+      "expect": "^fastmcp/server/server\\.py\\tfastmcp/"
+    },
+    {
+      "question": "Where do I start for 'who calls this'?",
+      "file": "catalogs/cross-references.md",
+      "expect": "## Who calls this\\?"
+    },
+    {
+      "question": "Does the cross-reference page say a constructor call resolves to the class?",
+      "file": "catalogs/cross-references.md",
+      "expect": "recorded against the \\*\\*class\\*\\*"
+    },
+    {
+      "question": "Which of 3,056 symbols will I actually meet?",
+      "file": "catalogs/most-used.md",
+      "expect": "\\| Item \\| Import as \\| Callers \\| References \\|"
+    },
+    {
+      "question": "How well typed is this library, and where is it weakest?",
+      "file": "catalogs/typing-health.md",
+      "expect": "% covered"
+    },
+    {
+      "question": "The typing page must distinguish Any from untyped, not merge them.",
+      "file": "catalogs/typing-health.md",
+      "expect": "`Any` and untyped are different failures"
+    },
+    {
+      "question": "The import graph must not be offered as a call graph.",
+      "file": "catalogs/import-graph.md",
+      "expect": "It is not a call graph"
+    },
+    {
+      "question": "The cross-reference page must not claim coverage outside the indexed set.",
+      "file": "catalogs/cross-references.md",
+      "reject": "every caller anywhere"
+    },
+    {
+      "question": "Do the two engines agree about an inferred type, and is disagreement findable?",
+      "file": "catalogs/inference-agreement.md",
+      "expect": "\\d+ agree \u00b7 \\d+ where ty is narrower \u00b7 \\d+ differ"
+    },
+    {
+      "question": "Which classes actually satisfy a Protocol, and what disqualifies a near miss?",
+      "file": "catalogs/protocols.md",
+      "expect": "probed pairs are assignable"
+    },
+    {
+      "question": "Does the conformance page keep the variance caveat?",
+      "file": "catalogs/protocols.md",
+      "expect": "variance"
+    },
+    {
+      "question": "Do the older catalogs now say which of their entries matter?",
+      "file": "catalogs/middleware.md",
+      "expect": "## Referenced how often"
+    },
+    {
+      "question": "Does the agreement page separate precision from conflict?",
+      "file": "catalogs/inference-agreement.md",
+      "expect": "precision, not conflict"
+    }
+  ]
+}

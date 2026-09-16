@@ -16,7 +16,7 @@ from pathlib import Path
 # e2e tiers submit identical documents to different boundaries and compare verdicts -- rather
 # than each tier inventing its own cases and agreeing only by coincidence.
 
-_CONTRACTS = Path(__file__).resolve().parent.parent / "contracts/research-v2"
+_FIXTURES = Path(__file__).resolve().parent / "fixtures/wire"
 
 _ERROR_OBJECT = {
     "code": "POLICY_DENIED",
@@ -38,7 +38,7 @@ _JOB_OBJECT = {"job_id": "job_x", "state": "queued", "stage": "s", "poll_after_m
 
 
 def _ok_fixture() -> dict[str, object]:
-    text = (_CONTRACTS / "examples" / "ok.fixture.json").read_text()
+    text = (_FIXTURES / "ok.fixture.json").read_text()
     loaded: dict[str, object] = json.loads(text)
     return loaded
 
@@ -63,7 +63,7 @@ def wire_corpus() -> list[tuple[str, str, bool]]:
     """
     cases: list[tuple[str, str, bool]] = []
     for name in ("ok", "partial", "pending", "error"):
-        text = (_CONTRACTS / "examples" / f"{name}.fixture.json").read_text()
+        text = (_FIXTURES / f"{name}.fixture.json").read_text()
         cases.append((f"{name}_fixture", text, True))
 
     cases += [
@@ -88,6 +88,7 @@ def wire_corpus() -> list[tuple[str, str, bool]]:
         ),
         ("missing_required_root_field", _without("coverage"), False),
         ("wrong_schema_version", _mutate(schema_version="1.0"), False),
+        ("obsolete_wire_epoch", _mutate(schema_version="2.0"), False),
         ("not_an_object", json.dumps([]), False),
     ]
     artifact = {

@@ -36,14 +36,6 @@ class WorkerFile(BaseModel):
     origin: ObservationOrigin = Field(..., description="Whether it is .py or .pyi.")
 
 
-class WorkerGap(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    file: str = Field(..., description="Archive path.")
-    reason: str = Field(..., description="Why it could not be fully characterized.")
-
-
 class WorkerRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -85,22 +77,8 @@ class Observation(BaseModel):
     signature: str | None = Field(..., description="Rendered signature or annotation.")
 
 
-class WorkerResponse(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    gaps: list[WorkerGap] = Field(..., description="Explicit limitations/errors.")
-    griffe_version: str = Field(..., description="Griffe version actually used.")
-    observations: list[Observation] = Field(..., description="One or more facts per file.")
-    processed_files: list[str] = Field(
-        ..., description="Files successfully visited, including files with no declarations."
-    )
-    schema_version: str = Field(..., description="Protocol version.")
-    worker_python: str = Field(
-        ..., description="The worker's own interpreter, never the analyzed interpreter."
-    )
-
-
 class WorkerProtocol(BaseModel):
+    observation: Observation = Field(
+        ..., description="The mechanical observation encoded under the generated Arrow schema."
+    )
     request: WorkerRequest = Field(..., description="Input.")
-    response: WorkerResponse = Field(..., description="Output.")

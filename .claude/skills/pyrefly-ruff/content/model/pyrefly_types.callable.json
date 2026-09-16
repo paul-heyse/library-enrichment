@@ -1,0 +1,510 @@
+{
+  "module": "pyrefly_types::callable",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.callable.md",
+  "items": [
+    {
+      "path": "pyrefly_types::callable::Param",
+      "name": "Param",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Param",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "PosOnly",
+        "Pos",
+        "Varargs",
+        "KwOnly",
+        "Kwargs"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_type",
+          "signature": "fn as_type(&self) -> &Type"
+        },
+        {
+          "name": "as_type_mut",
+          "signature": "fn as_type_mut(&mut self) -> &mut Type"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_with_type",
+          "signature": "fn fmt_with_type<O: TypeOutput>(&self, output: &mut O, write_type: &impl Fn(&Type, &mut O) -> fmt::Result) -> fmt::Result"
+        },
+        {
+          "name": "format_for_signature",
+          "signature": "fn format_for_signature(&self, type_ctx: &TypeDisplayContext<'_>) -> String",
+          "summary": "Format a parameter for display using the proper type display infrastructure. This ensures consistent formatting with default values, position-only markers, etc."
+        },
+        {
+          "name": "is_required",
+          "signature": "fn is_required(&self) -> bool"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> Option<&Name>"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::ParamOverlay",
+      "name": "ParamOverlay",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum ParamOverlay",
+      "summary": "Controls which parameters are displayed by `ParamList::fmt_with_type`",
+      "doc": "api/pyrefly_types.callable.md#paramoverlay",
+      "variants": [
+        "All",
+        "Subset"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::callable::Params",
+      "name": "Params",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Params",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "List",
+        "Partial",
+        "Ellipsis",
+        "Materialization",
+        "ParamSpec"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::PrefixParam",
+      "name": "PrefixParam",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum PrefixParam",
+      "summary": "Represents a prefix parameter in `Concatenate`. Prefix params can be either positional-only or positional (named).",
+      "doc": "api/pyrefly_types.callable.md#prefixparam",
+      "variants": [
+        "PosOnly",
+        "Pos"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "into_posonly_param",
+          "signature": "fn into_posonly_param(self) -> Param",
+          "summary": "Convert to a positional-only `Param`. Per the typing spec, params in `Concatenate` are positional-only at the call site. This is also appropriate for ParamSpec forwarding where prefix params must be passed positionally."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(ty: Type, required: Required) -> Self",
+          "summary": "Create a positional-only prefix param (no name)."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "to_param_preserve_name",
+          "signature": "fn to_param_preserve_name(&self) -> Param",
+          "summary": "Convert to a `Param` preserving the Pos vs PosOnly distinction. Used for subset/subtype checking where name matching matters, and for direct calls where prefix params should remain keyword-passable."
+        },
+        {
+          "name": "ty",
+          "signature": "fn ty(&self) -> &Type"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::Required",
+      "name": "Required",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Required",
+      "summary": "Requiredness for a function parameter.",
+      "doc": "api/pyrefly_types.callable.md#required",
+      "variants": [
+        "Required",
+        "Optional"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::params_are_gradual_variadic",
+      "name": "params_are_gradual_variadic",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn params_are_gradual_variadic(params: &[Param]) -> bool",
+      "summary": "True if `params` has both a `*args` and a `**kwargs` parameter and both are typed `Any` (explicitly, or implicitly because they are unannotated). Per the typing spec such a signature is equivalent to `...`.",
+      "doc": "api/pyrefly_types.callable.md#params_are_gradual_variadic"
+    },
+    {
+      "path": "pyrefly_types::callable::unexpected_keyword",
+      "name": "unexpected_keyword",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn unexpected_keyword(error: &dyn Fn(String), func: &str, keyword: &ruff_python_ast::Keyword)",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly_types::callable::ArgCount",
+      "name": "ArgCount",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ArgCount",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "min",
+        "max"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::callable::ArgCounts",
+      "name": "ArgCounts",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ArgCounts",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "positional",
+        "keyword",
+        "overall"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::callable::Callable",
+      "name": "Callable",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Callable",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "params",
+        "ret"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "accepts_single_positional_arg",
+          "signature": "fn accepts_single_positional_arg(&self) -> bool",
+          "summary": "Whether this signature can be called with a single positional argument, i.e. none of the parameters after the first is required (positional or keyword-only). `*args`/`**kwargs` don't prevent it."
+        },
+        {
+          "name": "arg_counts",
+          "signature": "fn arg_counts(&self) -> ArgCounts"
+        },
+        {
+          "name": "concatenate",
+          "signature": "fn concatenate(args: Box<[PrefixParam]>, param_spec: Type, ret: Type) -> Self"
+        },
+        {
+          "name": "contains_callable_residual",
+          "signature": "fn contains_callable_residual(&self) -> bool"
+        },
+        {
+          "name": "ellipsis",
+          "signature": "fn ellipsis(ret: Type) -> Self"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_with_type",
+          "signature": "fn fmt_with_type<O: TypeOutput>(&self, output: &mut O, write_type: &impl Fn(&Type, &mut O) -> fmt::Result) -> fmt::Result"
+        },
+        {
+          "name": "fmt_with_type_with_newlines",
+          "signature": "fn fmt_with_type_with_newlines<O: TypeOutput>(&self, output: &mut O, write_type: &impl Fn(&Type, &mut O, usize) -> fmt::Result, indent: usize) -> fmt::Result",
+          "summary": "Format the function type for use in a hover tooltip. This is similar to `fmt_with_type`, but it puts args on new lines if there is more than one argument"
+        },
+        {
+          "name": "get_first_param",
+          "signature": "fn get_first_param(&self) -> Option<&Type>"
+        },
+        {
+          "name": "get_positional_param",
+          "signature": "fn get_positional_param(&self, index: usize) -> Option<&Type>",
+          "summary": "Type of the parameter at `index`, but only when it is a positional parameter of a concrete parameter list. Returns `None` for a non-positional param, an out-of-range index, or a non-`List`/`Partial` signature. A bound `self`/`cls` counts a…"
+        },
+        {
+          "name": "is_args_kwargs_wrapper",
+          "signature": "fn is_args_kwargs_wrapper(&self) -> bool",
+          "summary": "Returns true if this callable has the `*args: Any, **kwargs: Any -> Any` signature (plus an optional unannotated self/cls at index 0). Used as a heuristic in decorator type resolution for union-typed decorators."
+        },
+        {
+          "name": "is_fully_unknown",
+          "signature": "fn is_fully_unknown(&self) -> bool",
+          "summary": "Returns true if this callable carries no real type information: all parameters and the return type are `Any(Implicit)` (i.e. Unknown)."
+        },
+        {
+          "name": "is_typeguard",
+          "signature": "fn is_typeguard(&self) -> bool"
+        },
+        {
+          "name": "is_typeis",
+          "signature": "fn is_typeis(&self) -> bool"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(params: ParamList, ret: Type) -> Self"
+        },
+        {
+          "name": "param_spec",
+          "signature": "fn param_spec(p: Type, ret: Type) -> Self"
+        },
+        {
+          "name": "partial",
+          "signature": "fn partial(params: ParamList, ret: Type) -> Self",
+          "summary": "Build a `Callable` carrying a [`Params::Partial`] residual signature, returning `ret`."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "split_first_param",
+          "signature": "fn split_first_param<'a>(&'a self, owner: &'a mut Owner<Type>) -> Option<(&'a Type, Self)>"
+        },
+        {
+          "name": "strip_first_param",
+          "signature": "fn strip_first_param(&self) -> Option<Self>",
+          "summary": "Return a new Callable with the first parameter removed (the `self` param for bound methods)."
+        },
+        {
+          "name": "subst_self_type_mut",
+          "signature": "fn subst_self_type_mut(&mut self, replacement: &Type)"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::DefaultValue",
+      "name": "DefaultValue",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct DefaultValue",
+      "summary": "The default value of an optional parameter, containing its type and an optional display string for values whose types don't preserve the literal value (e.g. floats).",
+      "doc": "api/pyrefly_types.callable.md#defaultvalue",
+      "fields": [
+        "ty",
+        "display"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(ty: Type) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "with_display",
+          "signature": "fn with_display(ty: Type, display: String) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::callable::ParamList",
+      "name": "ParamList",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ParamList",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "everything",
+          "signature": "fn everything() -> ParamList",
+          "summary": "Type signature that permits everything, namely `*args, **kwargs`."
+        },
+        {
+          "name": "fmt_with_type",
+          "signature": "fn fmt_with_type<O: TypeOutput>(&self, output: &mut O, write_type: &impl Fn(&Type, &mut O) -> fmt::Result, overlay: &ParamOverlay) -> fmt::Result"
+        },
+        {
+          "name": "fmt_with_type_with_newlines",
+          "signature": "fn fmt_with_type_with_newlines<O: TypeOutput>(&self, output: &mut O, write_type: &impl Fn(&Type, &mut O, usize) -> fmt::Result, indent: usize) -> fmt::Result",
+          "summary": "Format parameters each parameter on a new line"
+        },
+        {
+          "name": "into_items",
+          "signature": "fn into_items(self) -> Vec<Param>"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "items",
+          "signature": "fn items(&self) -> &[Param]"
+        },
+        {
+          "name": "items_mut",
+          "signature": "fn items_mut(&mut self) -> &mut [Param]"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(xs: Vec<Param>) -> Self"
+        },
+        {
+          "name": "new_types",
+          "signature": "fn new_types(xs: Vec<PrefixParam>) -> Self",
+          "summary": "Create a new ParamList from a list of types, converting each one into a positional-only param"
+        },
+        {
+          "name": "prepend_types",
+          "signature": "fn prepend_types(&self, pre: &[PrefixParam]) -> Cow<'_, ParamList>",
+          "summary": "Prepend some parameters for `Concatenate`"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+id: corpus-composition-site
+language: python
+severity: hint
+message: An upstream composition site — mount, proxy, or a provider/transform/middleware added.
+note: |
+  The three axes of 4.0 composition are easy to conflate: a **Provider** decides where
+  components come from, a **Transform** rewrites the catalog observably, and **Middleware**
+  intercepts requests. `mount()` and `create_proxy()` are thin wrappers over Providers.
+
+  Counted in the corpus: `mount` 186, `add_transform` 181, `add_provider` 169,
+  `add_middleware` 138, `create_proxy` 8. If you are reaching for `import_server` or `as_proxy`,
+  both removed in 4.0, these are the sites that show what replaced them.
+metadata:
+  record: usage
+  capability: composition
+  reads: content/corpus
+rule:
+  kind: call
+  has:
+    field: function
+    kind: attribute
+    has:
+      field: attribute
+      regex: '^(mount|create_proxy|add_provider|add_transform|add_middleware)$'

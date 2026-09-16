@@ -1,15 +1,11 @@
 //! Static Python distribution selection and the Rust-owned Griffe worker protocol.
 use std::collections::BTreeMap;
-use std::str::FromStr;
 
-use pep440_rs::{Version, VersionSpecifiers};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::request::ResolveRequest;
-
 /// Normalization identity, independent of the frozen response envelope version.
-pub const VERSION: &str = "python-static-4";
+pub const VERSION: &str = "python-native-5";
 /// Canonical table version after adding independent Python observations.
 pub const TABLE_VERSION: &str = crate::SNAPSHOT_SCHEMA_VERSION;
 
@@ -66,15 +62,6 @@ pub struct Observation {
     pub publicness: Publicness,
 }
 
-/// Facts attached to one shared symbol row.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-pub struct PythonSymbol {
-    /// All source/stub observations of this public path.
-    pub observations: Vec<Observation>,
-    /// Distinct nonempty signatures disagree; neither is promoted to runtime truth.
-    pub signature_conflict: bool,
-}
-
 /// One source file selected by Rust for the static worker.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -103,34 +90,6 @@ pub struct WorkerRequest {
     pub max_memory_bytes: u64,
     /// Rust-owned CPU deadline installed before parsing studied source.
     pub max_cpu_seconds: u64,
-}
-
-/// An extraction gap, associated with its exact file.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct WorkerGap {
-    /// Archive path.
-    pub file: String,
-    /// Why it could not be fully characterized.
-    pub reason: String,
-}
-
-/// Raw worker output. Only Rust normalizes and publishes it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct WorkerResponse {
-    /// Protocol version.
-    pub schema_version: String,
-    /// Griffe version actually used.
-    pub griffe_version: String,
-    /// The worker's own interpreter, never the analyzed interpreter.
-    pub worker_python: String,
-    /// One or more facts per file.
-    pub observations: Vec<Observation>,
-    /// Files successfully visited, including files with no declarations.
-    pub processed_files: Vec<String>,
-    /// Explicit limitations/errors.
-    pub gaps: Vec<WorkerGap>,
 }
 
 /// Static distribution identity and inventory.
@@ -199,129 +158,6 @@ pub fn normalize_name(name: &str) -> String {
     result
 }
 
-/// Choose newest eligible release with at least one usable artifact, or the exact version.
-///
-/// # Errors
-/// Invalid versions/requirements or no compatible artifact are explicit errors.
-pub fn select<'a>(
-    releases: &'a BTreeMap<String, Vec<DistributionFile>>,
-    request: &ResolveRequest,
-) -> Result<(String, &'a DistributionFile), String> {
-    let exact = request
-        .version
-        .as_ref()
-        .map(|v| Version::from_str(v))
-        .transpose()
-        .map_err(|e| e.to_string())?;
-    let mut versions: Vec<_> = releases
-        .iter()
-        .filter_map(|(s, files)| s.parse::<Version>().ok().map(|v| (v, s, files)))
-        .collect();
-    versions.sort_by(|a, b| b.0.cmp(&a.0));
-    for (version, original, files) in versions {
-        if exact.as_ref().is_some_and(|v| v != &version)
-            || (!request.allow_prerelease && exact.is_none() && version.any_prerelease())
-        {
-            continue;
-        }
-        let mut eligible = Vec::new();
-        for file in files {
-            if file.yanked && !request.allow_yanked {
-                continue;
-            }
-            if let (Some(requirement), Some(interpreter)) =
-                (&file.requires_python, &request.python_version)
-            {
-                let spec = VersionSpecifiers::from_str(requirement).map_err(|e| e.to_string())?;
-                let py = Version::from_str(interpreter).map_err(|e| e.to_string())?;
-                if !spec.contains(&py) {
-                    continue;
-                }
-            }
-            let rank =
-                if file.packagetype == "bdist_wheel" && compatible_wheel(&file.filename, request) {
-                    0
-                } else if file.packagetype == "sdist"
-                    && (file.filename.ends_with(".tar.gz") || file.filename.ends_with(".zip"))
-                {
-                    1
-                } else {
-                    continue;
-                };
-            if !file
-                .digests
-                .get("sha256")
-                .is_some_and(|h| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit()))
-            {
-                continue;
-            }
-            eligible.push((rank, &file.filename, file));
-        }
-        eligible.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
-        if let Some((_, _, file)) = eligible.first() {
-            return Ok((original.clone(), *file));
-        }
-    }
-    Err("no eligible exact release/artifact for the declared interpreter, platform and prerelease/yanked policy".into())
-}
-
-/// Conservative tag matching. Unknown environments admit only universal pure wheels.
-#[must_use]
-pub fn compatible_wheel(filename: &str, request: &ResolveRequest) -> bool {
-    let Some(stem) = filename.strip_suffix(".whl") else {
-        return false;
-    };
-    let parts: Vec<_> = stem.rsplitn(4, '-').collect();
-    if parts.len() != 4 {
-        return false;
-    }
-    let platforms = parts[0];
-    let abis = parts[1];
-    let interpreters = parts[2];
-    let py = request
-        .python_version
-        .as_ref()
-        .and_then(|v| v.parse::<Version>().ok())
-        .filter(|v| v.release().len() >= 2);
-    for interpreter in interpreters.split('.') {
-        for abi in abis.split('.') {
-            for platform in platforms.split('.') {
-                if abi == "none" && platform == "any" {
-                    if let Some(py) = &py {
-                        let release = py.release();
-                        if interpreter == format!("py{}", release[0])
-                            || interpreter == format!("py{}{}", release[0], release[1])
-                        {
-                            return true;
-                        }
-                    } else if interpreter == "py3" {
-                        return true;
-                    }
-                }
-                if let (Some(py), Some(target)) = (&py, &request.target) {
-                    if platform != target {
-                        continue;
-                    }
-                    let r = py.release();
-                    let cp = format!("cp{}{}", r[0], r[1]);
-                    if interpreter == cp && (abi == cp || abi == "none" || abi == "abi3") {
-                        return true;
-                    }
-                    if abi == "abi3"
-                        && interpreter.starts_with("cp3")
-                        && r[0] == 3
-                        && let Ok(minor) = interpreter[3..].parse::<u64>()
-                        && minor <= r[1]
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
 /// Parse RFC822-style package metadata without interpreting requirement expressions.
 #[must_use]
 pub fn metadata_headers(text: &str) -> BTreeMap<String, Vec<String>> {
@@ -351,35 +187,25 @@ pub fn metadata_headers(text: &str) -> BTreeMap<String, Vec<String>> {
     out
 }
 
-/// JSON schema covering both halves of the worker boundary.
+/// Generated request and mechanical observation DTOs; output is the Arrow fact stream.
 #[derive(JsonSchema)]
 pub struct WorkerProtocol {
     /// Input.
     pub request: WorkerRequest,
-    /// Output.
-    pub response: WorkerResponse,
+    /// The mechanical observation encoded under the generated Arrow schema.
+    pub observation: Observation,
 }
 
 pub mod archive;
+pub mod facts;
 pub mod inventory;
-pub mod normalize;
 pub mod requirements;
-
-/// Order registry-provided versions without interpreting them as SemVer.
-#[must_use]
-pub fn ordered_versions(values: &[String]) -> Vec<String> {
-    let mut parsed: Vec<_> = values
-        .iter()
-        .filter_map(|s| s.parse::<Version>().ok().map(|v| (v, s)))
-        .collect();
-    parsed.sort_by(|a, b| b.0.cmp(&a.0));
-    parsed.into_iter().map(|(_, s)| s.clone()).collect()
-}
+pub mod worker;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::identity::Ecosystem;
+    use crate::{identity::Ecosystem, request::ResolveRequest};
     fn request() -> ResolveRequest {
         ResolveRequest {
             ecosystem: Ecosystem::Python,
@@ -387,76 +213,6 @@ mod tests {
             python_version: Some("3.12".into()),
             ..ResolveRequest::default()
         }
-    }
-    fn file(name: &str) -> DistributionFile {
-        DistributionFile {
-            filename: name.into(),
-            packagetype: "bdist_wheel".into(),
-            url: "https://example.org/file.whl".into(),
-            digests: BTreeMap::from([("sha256".into(), "a".repeat(64))]),
-            requires_python: Some(">=3.10".into()),
-            yanked: false,
-        }
-    }
-    #[test]
-    fn exact_pep440_selection_respects_yanked_requires_python_and_prerelease() {
-        let mut r = request();
-        r.version = Some("1.0.post1".into());
-        let releases = BTreeMap::from([
-            (
-                "1.0.post1".into(),
-                vec![file("example-1.0.post1-py3-none-any.whl")],
-            ),
-            ("2.0".into(), vec![file("example-2.0-py3-none-any.whl")]),
-            (
-                "3.0rc1".into(),
-                vec![file("example-3.0rc1-py3-none-any.whl")],
-            ),
-        ]);
-        assert_eq!(select(&releases, &r).expect("exact").0, "1.0.post1");
-        r.version = None;
-        assert_eq!(select(&releases, &r).expect("stable").0, "2.0");
-        r.allow_prerelease = true;
-        assert_eq!(select(&releases, &r).expect("pre").0, "3.0rc1");
-        r.python_version = Some("3.9".into());
-        assert!(select(&releases, &r).is_err());
-        let mut yanked = file("example-1.0-py3-none-any.whl");
-        yanked.yanked = true;
-        r = request();
-        r.version = Some("1.0".into());
-        let releases = BTreeMap::from([("1.0".into(), vec![yanked])]);
-        assert!(select(&releases, &r).is_err());
-        r.allow_yanked = true;
-        assert!(select(&releases, &r).is_ok());
-    }
-    #[test]
-    fn tags_do_not_infer_the_workers_platform_or_interpreter() {
-        let mut r = request();
-        assert!(!compatible_wheel(
-            "example-1.0-cp312-cp312-linux_x86_64.whl",
-            &r
-        ));
-        r.target = Some("linux_x86_64".into());
-        assert!(compatible_wheel(
-            "example-1.0-cp312-cp312-linux_x86_64.whl",
-            &r
-        ));
-        assert!(!compatible_wheel(
-            "example-1.0-cp313-cp313-linux_x86_64.whl",
-            &r
-        ));
-        assert!(compatible_wheel(
-            "example-1.0-cp310-abi3-linux_x86_64.whl",
-            &r
-        ));
-        assert!(compatible_wheel("example-1.0-py2.py3-none-any.whl", &r));
-        r.python_version = None;
-        r.target = None;
-        assert!(compatible_wheel("example-1.0-py3-none-any.whl", &r));
-        assert!(!compatible_wheel(
-            "example-1.0-cp312-cp312-linux_x86_64.whl",
-            &r
-        ));
     }
     #[test]
     fn python_names_and_request_fields_are_ecosystem_specific() {

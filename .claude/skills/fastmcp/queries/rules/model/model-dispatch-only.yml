@@ -1,0 +1,23 @@
+id: model-dispatch-only
+language: json
+severity: hint
+message: The single signature on this item is a runtime dispatcher, not the callable contract.
+note: |
+  The item carries `@overload` variants. The implementation signature exists to accept every
+  call shape at once, so it is wider -- and sometimes plainly different -- from what any real
+  call sees. `FastMCP.tool` is the case that matters: its implementation is annotated as
+  returning a `FunctionTool`, while both overloads and the runtime return the decorated
+  function unchanged.
+
+  Read `overloads` on the record, or `content/index/overloads.tsv`, before trusting a single
+  signature on anything that dispatches.
+metadata:
+  record: signature-fidelity
+  reads: content/model
+rule:
+  matches: json-record
+  has:
+    kind: pair
+    all:
+      - has: {field: key, regex: '^"dispatch_only"$'}
+      - has: {field: value, regex: '^true$'}

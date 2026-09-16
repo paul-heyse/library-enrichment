@@ -1,0 +1,595 @@
+{
+  "module": "pyrefly_util::telemetry",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.telemetry.md",
+  "items": [
+    {
+      "path": "pyrefly_util::telemetry::DefinitionContext",
+      "name": "DefinitionContext",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum DefinitionContext",
+      "summary": "What kind of symbol the cursor was on when a definition lookup failed.",
+      "doc": "api/pyrefly_util.telemetry.md#definitioncontext",
+      "variants": [
+        "NameUse",
+        "NameDef",
+        "Attribute",
+        "KeywordArgument",
+        "ImportedModule",
+        "ImportedName",
+        "Definition",
+        "LocalBinding",
+        "MutableCapture",
+        "Operator",
+        "NoneLiteral"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::EmptyResponseReason",
+      "name": "EmptyResponseReason",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum EmptyResponseReason",
+      "summary": "Why an LSP handler returned an empty/null response. Used for telemetry to distinguish expected cases (whitespace, comments) from unexpected failures (module not found, internal bugs).",
+      "doc": "api/pyrefly_util.telemetry.md#emptyresponsereason",
+      "variants": [
+        "NoFilePath",
+        "LanguageServicesDisabled",
+        "MethodDisabled",
+        "NotebookNotSupported",
+        "ModuleInfoNotFound",
+        "AstNotFound",
+        "AnswersNotFound",
+        "BindingsNotFound",
+        "TypeTraceNotFound",
+        "ModuleNotFound",
+        "NotAnIdentifier",
+        "DefinitionNotFound",
+        "BundledModuleNotMaterialized"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str",
+          "summary": "Snake_case variant name for the telemetry `empty_response_reason` column."
+        },
+        {
+          "name": "detail",
+          "signature": "fn detail(&self) -> String",
+          "summary": "Detail string for the telemetry `empty_response_detail` column."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::QueueName",
+      "name": "QueueName",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum QueueName",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "LspQueue",
+        "RecheckQueue",
+        "FindReferenceQueue",
+        "SourceDbQueue"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryEventKind",
+      "name": "TelemetryEventKind",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum TelemetryEventKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "LspEvent",
+        "CodeAction",
+        "AdHocSolve",
+        "SetMemory",
+        "InvalidateDisk",
+        "InvalidateFind",
+        "InvalidateEvents",
+        "InvalidateConfig",
+        "InvalidateOnClose",
+        "PopulateProjectFiles",
+        "PopulateWorkspaceFiles",
+        "WorkspaceDiagnosticsRepopulation",
+        "SourceDbRebuild",
+        "SourceDbRebuildInstance",
+        "FindFromDefinition",
+        "ExternalReferences",
+        "ExternalWorkspaceSymbols",
+        "LspStartup"
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryInvalidateFindReason",
+      "name": "TelemetryInvalidateFindReason",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum TelemetryInvalidateFindReason",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "WatcherEvents",
+        "SourceDbConfigChanged"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::ActivityKey",
+      "name": "ActivityKey",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct ActivityKey",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "id",
+        "name"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::NoTelemetry",
+      "name": "NoTelemetry",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct NoTelemetry",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_util::telemetry::Telemetry"
+      ],
+      "methods": [
+        {
+          "name": "agent_invocation_id",
+          "signature": "fn agent_invocation_id(&self) -> Option<String>",
+          "via_trait": "pyrefly_util::telemetry::Telemetry"
+        },
+        {
+          "name": "agent_session_id",
+          "signature": "fn agent_session_id(&self) -> Option<String>",
+          "via_trait": "pyrefly_util::telemetry::Telemetry"
+        },
+        {
+          "name": "record_event",
+          "signature": "fn record_event(&self, _event: TelemetryEvent, _process: Duration, _error: Option<&Error>)",
+          "via_trait": "pyrefly_util::telemetry::Telemetry"
+        },
+        {
+          "name": "surface",
+          "signature": "fn surface(&self) -> Option<String>",
+          "via_trait": "pyrefly_util::telemetry::Telemetry"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::SubTaskTelemetry",
+      "name": "SubTaskTelemetry",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct SubTaskTelemetry<'a>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "finish_task",
+          "signature": "fn finish_task(&self, telemetry_event: TelemetryEvent, error: Option<&Error>)"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(telemetry: &'a dyn Telemetry, event: &TelemetryEvent) -> Self"
+        },
+        {
+          "name": "new_task",
+          "signature": "fn new_task(&self, kind: TelemetryEventKind, start: Instant) -> TelemetryEvent"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryCommonSourceDbStats",
+      "name": "TelemetryCommonSourceDbStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryCommonSourceDbStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "files",
+        "changed",
+        "forced"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryDidChangeWatchedFilesStats",
+      "name": "TelemetryDidChangeWatchedFilesStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryDidChangeWatchedFilesStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "created_count",
+        "modified_count",
+        "removed_count",
+        "unknown_count",
+        "created",
+        "modified",
+        "removed",
+        "unknown"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryEvent",
+      "name": "TelemetryEvent",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryEvent",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "kind",
+        "queue",
+        "start",
+        "invalidate",
+        "validate",
+        "transaction_stats",
+        "server_state",
+        "file_stats",
+        "queue_name",
+        "task_id",
+        "sourcedb_rebuild_stats",
+        "sourcedb_rebuild_instance_stats",
+        "file_watcher_stats",
+        "did_change_watched_files_stats",
+        "invalidate_find_reason",
+        "external_references_stats",
+        "external_workspace_symbols_stats",
+        "activity_key",
+        "canceled",
+        "empty_response_reason",
+        "request_id",
+        "error_detail"
+      ],
+      "methods": [
+        {
+          "name": "finish_and_record",
+          "signature": "fn finish_and_record(self, telemetry: &dyn Telemetry, error: Option<&Error>) -> Duration"
+        },
+        {
+          "name": "new_dequeued",
+          "signature": "fn new_dequeued(kind: TelemetryEventKind, enqueued_at: Instant, server_state: TelemetryServerState, queue_name: QueueName, task_id: usize) -> (Self, Duration)"
+        },
+        {
+          "name": "new_task",
+          "signature": "fn new_task(kind: TelemetryEventKind, server_state: TelemetryServerState, queue_name: QueueName, task_id: usize, start: Instant) -> Self"
+        },
+        {
+          "name": "set_activity_key",
+          "signature": "fn set_activity_key(&mut self, activity_key: Option<ActivityKey>)"
+        },
+        {
+          "name": "set_did_change_watched_files_stats",
+          "signature": "fn set_did_change_watched_files_stats(&mut self, stats: TelemetryDidChangeWatchedFilesStats)"
+        },
+        {
+          "name": "set_empty_response_reason",
+          "signature": "fn set_empty_response_reason(&mut self, reason: EmptyResponseReason)"
+        },
+        {
+          "name": "set_external_references_stats",
+          "signature": "fn set_external_references_stats(&mut self, stats: TelemetryExternalReferencesStats)"
+        },
+        {
+          "name": "set_external_workspace_symbols_stats",
+          "signature": "fn set_external_workspace_symbols_stats(&mut self, stats: TelemetryExternalWorkspaceSymbolsStats)"
+        },
+        {
+          "name": "set_file_stats",
+          "signature": "fn set_file_stats(&mut self, stats: TelemetryFileStats)"
+        },
+        {
+          "name": "set_file_watcher_stats",
+          "signature": "fn set_file_watcher_stats(&mut self, stats: TelemetryFileWatcherStats)"
+        },
+        {
+          "name": "set_invalidate_duration",
+          "signature": "fn set_invalidate_duration(&mut self, duration: Duration)"
+        },
+        {
+          "name": "set_invalidate_find_reason",
+          "signature": "fn set_invalidate_find_reason(&mut self, reason: TelemetryInvalidateFindReason)"
+        },
+        {
+          "name": "set_sourcedb_rebuild_instance_stats",
+          "signature": "fn set_sourcedb_rebuild_instance_stats(&mut self, stats: TelemetrySourceDbRebuildInstanceStats)"
+        },
+        {
+          "name": "set_sourcedb_rebuild_stats",
+          "signature": "fn set_sourcedb_rebuild_stats(&mut self, stats: TelemetrySourceDbRebuildStats)"
+        },
+        {
+          "name": "set_transaction_stats",
+          "signature": "fn set_transaction_stats(&mut self, stats: TelemetryTransactionStats)"
+        },
+        {
+          "name": "set_validate_duration",
+          "signature": "fn set_validate_duration(&mut self, duration: Duration)"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryExternalReferencesStats",
+      "name": "TelemetryExternalReferencesStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryExternalReferencesStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "qualified_name",
+        "db_name",
+        "result_file_count",
+        "result_span_count",
+        "find_repo_ms",
+        "warmup_wait_ms",
+        "angle_query_ms",
+        "cas_init_error",
+        "resolve_locations_ms",
+        "resolve_disk_read_ms",
+        "resolve_hash_ms",
+        "resolve_cas_download_ms",
+        "resolve_textdiff_ms",
+        "resolve_unchanged_file_count",
+        "resolve_changed_file_count",
+        "resolve_unreadable_file_count"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryExternalWorkspaceSymbolsStats",
+      "name": "TelemetryExternalWorkspaceSymbolsStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryExternalWorkspaceSymbolsStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "query",
+        "db_name",
+        "result_count",
+        "find_repo_ms",
+        "warmup_wait_ms",
+        "angle_query_ms"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryFileStats",
+      "name": "TelemetryFileStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryFileStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "uri",
+        "config_root"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryFileWatcherStats",
+      "name": "TelemetryFileWatcherStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryFileWatcherStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "duration",
+        "count"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryServerState",
+      "name": "TelemetryServerState",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryServerState",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "has_sourcedb",
+        "id",
+        "surface",
+        "server_start_time",
+        "agent_session_id",
+        "agent_invocation_id",
+        "active_experiments"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetrySourceDbRebuildInstanceStats",
+      "name": "TelemetrySourceDbRebuildInstanceStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetrySourceDbRebuildInstanceStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "common",
+        "build_id",
+        "build_time",
+        "parse_time",
+        "process_time",
+        "raw_size",
+        "exit_reason"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetrySourceDbRebuildStats",
+      "name": "TelemetrySourceDbRebuildStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetrySourceDbRebuildStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "count",
+        "had_error",
+        "common"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::TelemetryTransactionStats",
+      "name": "TelemetryTransactionStats",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct TelemetryTransactionStats",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "modules",
+        "dirty_rdeps",
+        "cycle_rdeps",
+        "run_steps",
+        "run_time",
+        "committed",
+        "state_lock_blocked",
+        "fresh",
+        "set_memory_dirty",
+        "compute_stdlib_time",
+        "compute_stdlib_cached",
+        "compute_stdlib_prewarm_time",
+        "run_dirty_count",
+        "run_todo_count",
+        "run_work_time",
+        "search_exports_time",
+        "search_exports_dispatch_time",
+        "cancelled",
+        "step_load_time",
+        "step_load_count",
+        "step_ast_time",
+        "step_ast_count",
+        "step_exports_time",
+        "step_exports_count",
+        "step_answers_time",
+        "step_answers_count",
+        "step_solutions_time",
+        "step_solutions_count",
+        "clean_time",
+        "clean_count",
+        "find_import_time",
+        "find_import_count",
+        "demand_wait_time",
+        "demand_wait_count",
+        "cold_modules",
+        "warm_modules",
+        "total_stat_count",
+        "slow_stat_count",
+        "slow_stat_time",
+        "total_read_count",
+        "slow_read_count",
+        "slow_read_time"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_util::telemetry::Telemetry",
+      "name": "Telemetry",
+      "kind": "trait",
+      "crate": "pyrefly_util",
+      "signature": "trait Telemetry: Send + Sync",
+      "summary": "",
+      "doc": null,
+      "implementors": [
+        "pyrefly_util::telemetry::NoTelemetry"
+      ],
+      "required_methods": [
+        "agent_invocation_id",
+        "agent_session_id",
+        "record_event",
+        "surface"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "agent_invocation_id",
+          "signature": "fn agent_invocation_id(&self) -> Option<String>"
+        },
+        {
+          "name": "agent_session_id",
+          "signature": "fn agent_session_id(&self) -> Option<String>"
+        },
+        {
+          "name": "record_event",
+          "signature": "fn record_event(&self, event: TelemetryEvent, process: Duration, error: Option<&Error>)"
+        },
+        {
+          "name": "surface",
+          "signature": "fn surface(&self) -> Option<String>"
+        }
+      ]
+    }
+  ]
+}

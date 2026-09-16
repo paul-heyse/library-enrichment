@@ -1,0 +1,20 @@
+id: model-inferred-type
+language: json
+severity: hint
+message: This type was inferred by ty, not declared in the source.
+note: |
+  The source states no annotation here. The type shown came from the `ty` language server at
+  the version recorded in PROVENANCE, and it is second-class evidence: correct today, not a
+  promise upstream has made, and not something a reader of the source would see.
+
+  Treat it as a strong hint about what you will receive, not as an interface you may rely on.
+metadata:
+  record: evidence-class
+  reads: content/model
+rule:
+  matches: json-record
+  has:
+    kind: pair
+    all:
+      - has: {field: key, regex: '^"inferred_by"$'}
+      - has: {field: value, regex: '^"ty"$'}

@@ -1,0 +1,1080 @@
+{
+  "module": "buoyant_kernel::expressions",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.expressions.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::expressions::BinaryExpressionOp",
+      "name": "BinaryExpressionOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum BinaryExpressionOp",
+      "summary": "A binary expression operator.",
+      "doc": "api/buoyant_kernel.expressions.md#binaryexpressionop",
+      "aliases": [
+        "delta_kernel::expressions::BinaryExpressionOp"
+      ],
+      "variants": [
+        "Plus",
+        "Minus",
+        "Multiply",
+        "Divide"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::BinaryPredicateOp",
+      "name": "BinaryPredicateOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum BinaryPredicateOp",
+      "summary": "A binary predicate operator.",
+      "doc": "api/buoyant_kernel.expressions.md#binarypredicateop",
+      "aliases": [
+        "delta_kernel::expressions::BinaryPredicateOp"
+      ],
+      "variants": [
+        "LessThan",
+        "GreaterThan",
+        "Equal",
+        "Distinct",
+        "In"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::Expression",
+      "name": "Expression",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum Expression",
+      "summary": "A SQL expression.",
+      "doc": "api/buoyant_kernel.expressions.md#expression",
+      "aliases": [
+        "buoyant_kernel::Expression",
+        "delta_kernel::expressions::Expression"
+      ],
+      "variants": [
+        "Literal",
+        "Column",
+        "Predicate",
+        "Struct",
+        "StructPatch",
+        "Unary",
+        "Binary",
+        "Variadic",
+        "Opaque",
+        "Unknown",
+        "ParseJson",
+        "MapToStruct"
+      ],
+      "implements": [
+        "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::ops::arith::Add",
+        "core::ops::arith::Div",
+        "core::ops::arith::Mul",
+        "core::ops::arith::Sub",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(self, rhs: R) -> Self::Output",
+          "via_trait": "core::ops::arith::Add"
+        },
+        {
+          "name": "array",
+          "signature": "fn array(exprs: impl IntoIterator<Item = impl Into<Expression>>) -> Self",
+          "summary": "Creates a new Array constructor expression. See [`VariadicExpressionOp::Array`]."
+        },
+        {
+          "name": "arrow_opaque",
+          "signature": "fn arrow_opaque(op: impl ArrowOpaqueExpressionOp, exprs: impl IntoIterator<Item = Expression>) -> Expression",
+          "via_trait": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression"
+        },
+        {
+          "name": "binary",
+          "signature": "fn binary(op: BinaryExpressionOp, lhs: impl Into<Expression>, rhs: impl Into<Expression>) -> Self",
+          "summary": "Creates a new binary expression lhs OP rhs"
+        },
+        {
+          "name": "coalesce",
+          "signature": "fn coalesce(exprs: impl IntoIterator<Item = impl Into<Expression>>) -> Self",
+          "summary": "Creates a new COALESCE expression that returns the first non-null value."
+        },
+        {
+          "name": "column",
+          "signature": "fn column(field_names: impl CollectInto<ColumnName>) -> Expression",
+          "summary": "Create a new column name expression from input satisfying `FromIterator for ColumnName`."
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `DISTINCT(self, other)`"
+        },
+        {
+          "name": "div",
+          "signature": "fn div(self, rhs: R) -> Self",
+          "via_trait": "core::ops::arith::Div"
+        },
+        {
+          "name": "eq",
+          "signature": "fn eq(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self == other`"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ColumnName) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_pred",
+          "signature": "fn from_pred(value: Predicate) -> Self",
+          "summary": "Wraps a predicate as a boolean-valued expression"
+        },
+        {
+          "name": "ge",
+          "signature": "fn ge(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self >= other`"
+        },
+        {
+          "name": "gt",
+          "signature": "fn gt(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self > other`"
+        },
+        {
+          "name": "is_not_null",
+          "signature": "fn is_not_null(self) -> Predicate",
+          "summary": "Create a new predicate `self IS NOT NULL`"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(self) -> Predicate",
+          "summary": "Create a new predicate `self IS NULL`"
+        },
+        {
+          "name": "le",
+          "signature": "fn le(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self <= other`"
+        },
+        {
+          "name": "literal",
+          "signature": "fn literal(value: impl Into<Scalar>) -> Self",
+          "summary": "Create a new expression for a literal value"
+        },
+        {
+          "name": "lt",
+          "signature": "fn lt(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self < other`"
+        },
+        {
+          "name": "map_to_struct",
+          "signature": "fn map_to_struct(map_expr: impl Into<Expression>) -> Self",
+          "summary": "Extracts keys from a `Map<String, String>` and parses values into a typed struct. The output struct schema is determined by the evaluator's `result_type`. An empty-string value is the exception (aligning with Spark): it casts to itself for…"
+        },
+        {
+          "name": "mul",
+          "signature": "fn mul(self, rhs: R) -> Self",
+          "via_trait": "core::ops::arith::Mul"
+        },
+        {
+          "name": "ne",
+          "signature": "fn ne(self, other: impl Into<Self>) -> Predicate",
+          "summary": "Create a new predicate `self != other`"
+        },
+        {
+          "name": "null_literal",
+          "signature": "const fn null_literal(data_type: DataType) -> Self",
+          "summary": "Creates a NULL literal expression"
+        },
+        {
+          "name": "opaque",
+          "signature": "fn opaque(op: impl OpaqueExpressionOp, exprs: impl IntoIterator<Item = Expression>) -> Self",
+          "summary": "Creates a new opaque expression"
+        },
+        {
+          "name": "parse_json",
+          "signature": "fn parse_json(json_expr: impl Into<Expression>, output_schema: SchemaRef) -> Self",
+          "summary": "Creates a new ParseJson expression that parses a JSON string column into a struct. This is the inverse of `ToJson` - it converts a JSON-encoded string into a struct."
+        },
+        {
+          "name": "references",
+          "signature": "fn references(&self) -> HashSet<&ColumnName>",
+          "summary": "Returns a set of columns referenced by this expression."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "struct_from",
+          "signature": "fn struct_from(exprs: impl IntoIterator<Item = impl Into<Arc<Self>>>) -> Self",
+          "summary": "Create a new struct expression."
+        },
+        {
+          "name": "struct_patch",
+          "signature": "fn struct_patch<P>(patch: P) -> DeltaResult<Self> where P: TryInto<ExpressionStructPatch>, Error: From<P::Error>",
+          "summary": "Creates a new struct patch expression from a raw patch or patch builder."
+        },
+        {
+          "name": "struct_with_nullability_from",
+          "signature": "fn struct_with_nullability_from(exprs: impl IntoIterator<Item = impl Into<Arc<Self>>>, nullability_predicate: impl Into<Arc<Self>>) -> Self",
+          "summary": "Create a new struct expression with a nullability predicate."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(self, rhs: R) -> Self",
+          "via_trait": "core::ops::arith::Sub"
+        },
+        {
+          "name": "unary",
+          "signature": "fn unary(op: UnaryExpressionOp, expr: impl Into<Expression>) -> Self",
+          "summary": "Creates a new unary expression"
+        },
+        {
+          "name": "unknown",
+          "signature": "fn unknown(name: impl Into<String>) -> Self",
+          "summary": "Creates a new unknown expression"
+        },
+        {
+          "name": "variadic",
+          "signature": "fn variadic(op: VariadicExpressionOp, exprs: impl IntoIterator<Item = impl Into<Expression>>) -> Self",
+          "summary": "Creates a new variadic expression"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::JunctionPredicateOp",
+      "name": "JunctionPredicateOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum JunctionPredicateOp",
+      "summary": "A junction (AND/OR) predicate operator.",
+      "doc": "api/buoyant_kernel.expressions.md#junctionpredicateop",
+      "aliases": [
+        "delta_kernel::expressions::JunctionPredicateOp"
+      ],
+      "variants": [
+        "And",
+        "Or"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::Predicate",
+      "name": "Predicate",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum Predicate",
+      "summary": "A SQL predicate.",
+      "doc": "api/buoyant_kernel.expressions.md#predicate",
+      "aliases": [
+        "buoyant_kernel::Predicate",
+        "delta_kernel::expressions::Predicate"
+      ],
+      "variants": [
+        "BooleanExpression",
+        "Not",
+        "Unary",
+        "Binary",
+        "Junction",
+        "Opaque",
+        "Unknown"
+      ],
+      "implements": [
+        "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate",
+        "core::convert::From",
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "and",
+          "signature": "fn and(a: impl Into<Self>, b: impl Into<Self>) -> Self",
+          "summary": "Create a new predicate `self AND other`"
+        },
+        {
+          "name": "and_from",
+          "signature": "fn and_from(preds: impl IntoIterator<Item = Self>) -> Self",
+          "summary": "Creates a new predicate AND(preds...). See [`Self::junction`] for normalization of empty and single-element inputs."
+        },
+        {
+          "name": "arrow_opaque",
+          "signature": "fn arrow_opaque<T: ArrowOpaquePredicateOp>(op: T, exprs: impl IntoIterator<Item = Expression>) -> Predicate",
+          "via_trait": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate"
+        },
+        {
+          "name": "binary",
+          "signature": "fn binary(op: BinaryPredicateOp, lhs: impl Into<Expression>, rhs: impl Into<Expression>) -> Self",
+          "summary": "Creates a new binary predicate lhs OP rhs"
+        },
+        {
+          "name": "column",
+          "signature": "fn column(field_names: impl CollectInto<ColumnName>) -> Predicate",
+          "summary": "Creates a new boolean column reference. See also [`Expression::column`]."
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "distinct",
+          "signature": "fn distinct(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `DISTINCT(self, other)`"
+        },
+        {
+          "name": "eq",
+          "signature": "fn eq(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self == other`"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: ColumnName) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_expr",
+          "signature": "fn from_expr(expr: impl Into<Expression>) -> Self",
+          "summary": "Converts a boolean-valued expression into a predicate"
+        },
+        {
+          "name": "ge",
+          "signature": "fn ge(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self >= other`"
+        },
+        {
+          "name": "gt",
+          "signature": "fn gt(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self > other`"
+        },
+        {
+          "name": "is_not_null",
+          "signature": "fn is_not_null(expr: impl Into<Expression>) -> Predicate",
+          "summary": "Create a new predicate `self IS NOT NULL`"
+        },
+        {
+          "name": "is_null",
+          "signature": "fn is_null(expr: impl Into<Expression>) -> Predicate",
+          "summary": "Create a new predicate `self IS NULL`"
+        },
+        {
+          "name": "junction",
+          "signature": "fn junction(op: JunctionPredicateOp, preds: impl IntoIterator<Item = Self>) -> Self",
+          "summary": "Creates a new junction predicate OP(preds...). Normalizes degenerate cases:"
+        },
+        {
+          "name": "le",
+          "signature": "fn le(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self <= other`"
+        },
+        {
+          "name": "literal",
+          "signature": "const fn literal(value: bool) -> Self",
+          "summary": "Create a new literal boolean value"
+        },
+        {
+          "name": "lt",
+          "signature": "fn lt(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self < other`"
+        },
+        {
+          "name": "ne",
+          "signature": "fn ne(a: impl Into<Expression>, b: impl Into<Expression>) -> Self",
+          "summary": "Create a new predicate `self != other`"
+        },
+        {
+          "name": "not",
+          "signature": "fn not(pred: impl Into<Self>) -> Self",
+          "summary": "Logical NOT (boolean inversion)"
+        },
+        {
+          "name": "null_literal",
+          "signature": "const fn null_literal() -> Self",
+          "summary": "Creates a NULL literal boolean value"
+        },
+        {
+          "name": "opaque",
+          "signature": "fn opaque(op: impl OpaquePredicateOp, exprs: impl IntoIterator<Item = Expression>) -> Self",
+          "summary": "Creates a new opaque predicate"
+        },
+        {
+          "name": "or",
+          "signature": "fn or(a: impl Into<Self>, b: impl Into<Self>) -> Self",
+          "summary": "Create a new predicate `self OR other`"
+        },
+        {
+          "name": "or_from",
+          "signature": "fn or_from(preds: impl IntoIterator<Item = Self>) -> Self",
+          "summary": "Creates a new predicate OR(preds...). See [`Self::junction`] for normalization of empty and single-element inputs."
+        },
+        {
+          "name": "references",
+          "signature": "fn references(&self) -> HashSet<&ColumnName>",
+          "summary": "Returns a set of columns referenced by this predicate."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "unary",
+          "signature": "fn unary(op: UnaryPredicateOp, expr: impl Into<Expression>) -> Self",
+          "summary": "Creates a new unary predicate OP expr"
+        },
+        {
+          "name": "unknown",
+          "signature": "fn unknown(name: impl Into<String>) -> Self",
+          "summary": "Creates a new unknown predicate"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::UnaryExpressionOp",
+      "name": "UnaryExpressionOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum UnaryExpressionOp",
+      "summary": "A unary expression operator.",
+      "doc": "api/buoyant_kernel.expressions.md#unaryexpressionop",
+      "aliases": [
+        "delta_kernel::expressions::UnaryExpressionOp"
+      ],
+      "variants": [
+        "ToJson"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::UnaryPredicateOp",
+      "name": "UnaryPredicateOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum UnaryPredicateOp",
+      "summary": "A unary predicate operator.",
+      "doc": "api/buoyant_kernel.expressions.md#unarypredicateop",
+      "aliases": [
+        "delta_kernel::expressions::UnaryPredicateOp"
+      ],
+      "variants": [
+        "IsNull"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::VariadicExpressionOp",
+      "name": "VariadicExpressionOp",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum VariadicExpressionOp",
+      "summary": "A variadic expression operator.",
+      "doc": "api/buoyant_kernel.expressions.md#variadicexpressionop",
+      "aliases": [
+        "delta_kernel::expressions::VariadicExpressionOp"
+      ],
+      "variants": [
+        "Coalesce",
+        "Array"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::lit",
+      "name": "lit",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn lit(value: impl Into<Scalar>) -> Expression",
+      "summary": "Build an [`Expression::Literal`] from anything that converts into a [`Scalar`].",
+      "doc": "api/buoyant_kernel.expressions.md#lit",
+      "aliases": [
+        "delta_kernel::expressions::lit"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::BinaryExpression",
+      "name": "BinaryExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct BinaryExpression",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::BinaryExpression"
+      ],
+      "fields": [
+        "op",
+        "left",
+        "right"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::BinaryPredicate",
+      "name": "BinaryPredicate",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct BinaryPredicate",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::BinaryPredicate"
+      ],
+      "fields": [
+        "op",
+        "left",
+        "right"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::JunctionPredicate",
+      "name": "JunctionPredicate",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct JunctionPredicate",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::JunctionPredicate"
+      ],
+      "fields": [
+        "op",
+        "preds"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::MapToStructExpression",
+      "name": "MapToStructExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct MapToStructExpression",
+      "summary": "Transforms a `Map<String, String>` column into a struct whose schema is provided by the evaluator's output type (via `result_type`). Each row in the map column becomes one row in the output struct column: a `key` -> `value` mapping in the…",
+      "doc": "api/buoyant_kernel.expressions.md#maptostructexpression",
+      "aliases": [
+        "delta_kernel::expressions::MapToStructExpression"
+      ],
+      "fields": [
+        "map_expr"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaqueExpression",
+      "name": "OpaqueExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct OpaqueExpression",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::OpaqueExpression"
+      ],
+      "fields": [
+        "op",
+        "exprs"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaquePredicate",
+      "name": "OpaquePredicate",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct OpaquePredicate",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::OpaquePredicate"
+      ],
+      "fields": [
+        "op",
+        "exprs"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::expressions::ParseJsonExpression",
+      "name": "ParseJsonExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ParseJsonExpression",
+      "summary": "An expression that parses a JSON string into a struct with the given schema. This is the inverse of `ToJson` - it converts a JSON-encoded string column into a struct column.",
+      "doc": "api/buoyant_kernel.expressions.md#parsejsonexpression",
+      "aliases": [
+        "delta_kernel::expressions::ParseJsonExpression"
+      ],
+      "fields": [
+        "json_expr",
+        "output_schema"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::UnaryExpression",
+      "name": "UnaryExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct UnaryExpression",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::UnaryExpression"
+      ],
+      "fields": [
+        "op",
+        "expr"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::UnaryPredicate",
+      "name": "UnaryPredicate",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct UnaryPredicate",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::UnaryPredicate"
+      ],
+      "fields": [
+        "op",
+        "expr"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::VariadicExpression",
+      "name": "VariadicExpression",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct VariadicExpression",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::expressions::VariadicExpression"
+      ],
+      "fields": [
+        "op",
+        "exprs"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaqueExpressionOp",
+      "name": "OpaqueExpressionOp",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait OpaqueExpressionOp: DynPartialEq + std::fmt::Debug",
+      "summary": "An opaque expression operation (ie defined and implemented by the engine).",
+      "doc": "api/buoyant_kernel.expressions.md#opaqueexpressionop",
+      "aliases": [
+        "delta_kernel::expressions::OpaqueExpressionOp"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpressionOpAdaptor"
+      ],
+      "required_methods": [
+        "eval_expr_scalar",
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "eval_expr_scalar",
+          "signature": "fn eval_expr_scalar(&self, eval_expr: &ScalarExpressionEvaluator<'_>, exprs: &[Expression]) -> DeltaResult<Scalar>",
+          "summary": "Attempts scalar evaluation of this opaque expression, e.g. for partition pruning."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Succinctly identifies this op"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaquePredicateOp",
+      "name": "OpaquePredicateOp",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait OpaquePredicateOp: DynPartialEq + std::fmt::Debug",
+      "summary": "An opaque predicate operation (ie defined and implemented by the engine).",
+      "doc": "api/buoyant_kernel.expressions.md#opaquepredicateop",
+      "aliases": [
+        "delta_kernel::expressions::OpaquePredicateOp"
+      ],
+      "implementors": [
+        "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicateOpAdaptor"
+      ],
+      "required_methods": [
+        "as_data_skipping_predicate",
+        "eval_as_data_skipping_predicate",
+        "eval_pred_scalar",
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_data_skipping_predicate",
+          "signature": "fn as_data_skipping_predicate(&self, evaluator: &IndirectDataSkippingPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> Option<Predicate>",
+          "summary": "Converts this (possibly inverted) opaque predicate to a data skipping predicate on behalf of an [`IndirectDataSkippingPredicateEvaluator`], e.g. for stats-based file pruning."
+        },
+        {
+          "name": "eval_as_data_skipping_predicate",
+          "signature": "fn eval_as_data_skipping_predicate(&self, evaluator: &DirectDataSkippingPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> Option<bool>",
+          "summary": "Evaluates this (possibly inverted) opaque predicate for data skipping on behalf of a [`DirectDataSkippingPredicateEvaluator`], e.g. for parquet row group skipping."
+        },
+        {
+          "name": "eval_pred_scalar",
+          "signature": "fn eval_pred_scalar(&self, eval_expr: &ScalarExpressionEvaluator<'_>, eval_pred: &DirectPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> DeltaResult<Option<bool>>",
+          "summary": "Attempts scalar evaluation of this (possibly inverted) opaque predicate on behalf of a [`DirectPredicateEvaluator`], e.g. for partition pruning or to evaluate an opaque data skipping predicate produced previously by an [`IndirectDataSkippi…"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Succinctly identifies this op"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::ExpressionRef",
+      "name": "ExpressionRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type ExpressionRef = std::sync::Arc<Expression>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "buoyant_kernel::ExpressionRef",
+        "delta_kernel::expressions::ExpressionRef"
+      ],
+      "implements": [
+        "buoyant_kernel::struct_patch::ExpressionItem"
+      ],
+      "methods": [
+        {
+          "name": "expr",
+          "signature": "fn expr(&self) -> &ExpressionRef",
+          "via_trait": "buoyant_kernel::struct_patch::ExpressionItem"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::ExpressionStructPatchBuilder",
+      "name": "ExpressionStructPatchBuilder",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type ExpressionStructPatchBuilder = struct_patch::StructPatchBuilder<ExpressionRef>",
+      "summary": "A [`StructPatchBuilder`](crate::struct_patch::StructPatchBuilder) whose emitted items are expressions, lowered into an [`ExpressionStructPatch`] that can be embedded in an [`Expression`].",
+      "doc": "api/buoyant_kernel.expressions.md#expressionstructpatchbuilder",
+      "aliases": [
+        "delta_kernel::expressions::ExpressionStructPatchBuilder"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaqueExpressionOpRef",
+      "name": "OpaqueExpressionOpRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type OpaqueExpressionOpRef = std::sync::Arc<dyn OpaqueExpressionOp>",
+      "summary": "A shared reference to an [`OpaqueExpressionOp`] instance.",
+      "doc": "api/buoyant_kernel.expressions.md#opaqueexpressionopref",
+      "aliases": [
+        "delta_kernel::expressions::OpaqueExpressionOpRef"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::OpaquePredicateOpRef",
+      "name": "OpaquePredicateOpRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type OpaquePredicateOpRef = std::sync::Arc<dyn OpaquePredicateOp>",
+      "summary": "A shared reference to an [`OpaquePredicateOp`] instance.",
+      "doc": "api/buoyant_kernel.expressions.md#opaquepredicateopref",
+      "aliases": [
+        "delta_kernel::expressions::OpaquePredicateOpRef"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::PredicateRef",
+      "name": "PredicateRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type PredicateRef = std::sync::Arc<Predicate>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "buoyant_kernel::PredicateRef",
+        "delta_kernel::expressions::PredicateRef"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::expressions::ScalarExpressionEvaluator",
+      "name": "ScalarExpressionEvaluator",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type ScalarExpressionEvaluator<'a> = dyn Fn(&Expression) -> Option<Scalar> + 'a",
+      "summary": "A kernel-supplied scalar expression evaluator which in particular can convert column references (i.e. [`Expression::Column`]) to [`Scalar`] values. [`OpaqueExpressionOp::eval_expr_scalar`] and [`OpaquePredicateOp::eval_pred_scalar`] rely o…",
+      "doc": "api/buoyant_kernel.expressions.md#scalarexpressionevaluator",
+      "aliases": [
+        "delta_kernel::expressions::ScalarExpressionEvaluator"
+      ]
+    }
+  ]
+}

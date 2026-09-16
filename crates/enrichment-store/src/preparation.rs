@@ -99,7 +99,7 @@ pub enum QueryFamily {
     InvariantWitness,
     PythonClassScope,
     Paths,
-    Catalog(crate::catalog_generation::Table),
+    Catalog(crate::control::Table),
     CatalogArtifact,
     StaticInputs,
     Coverage,
@@ -147,7 +147,11 @@ impl QueryFamily {
                     .schema()?
                     .fields()
                     .iter()
-                    .map(|f| f.as_ref().clone())
+                    // Native control views use Delta's nested read layout. Required values
+                    // are enforced by the shared semantic field predicates, not inferred.
+                    .map(|f| {
+                        enrichment_core::evidence::arrow_model::cells::native_read_field(f, true)
+                    })
                     .collect(),
             ),
             Self::CatalogArtifact => (
@@ -278,7 +282,7 @@ impl QueryFamily {
                     ),
                     Field::new(
                         "ranking",
-                        crate::projection::score::result(&[])?.data_type().clone(),
+                        crate::projection::score::field().data_type().clone(),
                         true,
                     ),
                     Field::new("rank_score", DataType::UInt32, true),

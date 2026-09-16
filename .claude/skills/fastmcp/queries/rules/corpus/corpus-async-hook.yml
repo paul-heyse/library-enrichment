@@ -1,0 +1,26 @@
+id: corpus-async-hook
+language: python
+severity: hint
+message: An upstream hook implementation — note that it is `async def`, without exception.
+note: |
+  This is the positive counterpart to `project-sync-hook-override`. That rule finds an `on_*`
+  hook you declared with plain `def`; this one shows every hook upstream declares, so the claim
+  "every hook is async" is checkable against the corpus rather than taken on trust.
+
+  A hook that runs is usually `async def on_call_tool(self, context, call_next)` and ends by
+  awaiting `call_next`. Forgetting the await is the failure that produces an empty response
+  rather than an error, and reading one of these is how you see the shape.
+metadata:
+  record: usage
+  capability: async-hooks
+  reads: content/corpus
+rule:
+  kind: function_definition
+  all:
+    - has:
+        field: name
+        regex: '^on_[a-z_]+$'
+    - regex: '^async'
+    - inside:
+        kind: class_definition
+        stopBy: end

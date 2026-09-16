@@ -1,0 +1,244 @@
+{
+  "_comment": [
+    "Twelve capability axes, ordered by what an agent reaches for first. Everything under",
+    "`entry_points` is a SEED: a canonical path resolved against the built model, and an",
+    "unresolved seed FAILS THE BUILD. A topic page that quietly dropped a type it could no",
+    "longer find would be worse than no page -- it would assert by omission that a capability",
+    "does not exist.",
+    "",
+    "`guides` are corpus-relative paths, checked for existence for the same reason. A dangling",
+    "guide link is the failure SKILL.md rung 5 already made once, when it promised a corpus",
+    "search against a corpus that was never fetched."
+  ],
+  "topics": [
+    {
+      "slug": "composition",
+      "title": "Composing servers: providers, transforms, mounts and proxies",
+      "covers": "the four routes, which one you actually want, and the two that 4.0 removed",
+      "mental_model": "Three distinct axes, and conflating them is the commonest 4.0 mistake. A **Provider** decides where components come from. A **Transform** rewrites the catalog, observably. **Middleware** intercepts requests in flight. `mount()` and `create_proxy()` are thin wrappers over Providers, and a `FastMCP` server is itself a Provider -- which is why mounting one into another works at all.",
+      "entry_points": [
+        "fastmcp.server.providers.base.Provider",
+        "fastmcp.server.transforms.Transform",
+        "fastmcp.server.providers.aggregate.AggregateProvider",
+        "fastmcp.server.server.FastMCP"
+      ],
+      "guides": ["docs/servers/composition.mdx", "docs/servers/extensions.mdx"],
+      "decision_rules": [
+        "Reaching for `import_server` or `as_proxy`? Both were removed in 4.0. You want `mount()` or `create_proxy()`.",
+        "Need components from elsewhere? Provider. Need to change how they look? Transform. Need to act per request? Middleware.",
+        "A Transform is observable by the system; a Provider that filters is not. If the catalog must honestly report what happened, use a Transform."
+      ],
+      "anti_patterns": [
+        "Writing a Provider hook as `def`. Every one is `async`.",
+        "Assuming `mount()` copies components. It composes Providers; the source stays live."
+      ],
+      "checklist": [
+        "Check `catalogs/removed-api.md` before writing any composition call from memory.",
+        "`extension-points/Provider.md` has 26 implementors -- read one."
+      ]
+    },
+    {
+      "slug": "registering-components",
+      "title": "Registering tools, resources and prompts",
+      "covers": "the decorator surface, what each decorator returns, and annotation requirements",
+      "mental_model": "`@mcp.tool` returns the decorated function unchanged, despite an implementation annotation that says `FunctionTool`. The overloads and the runtime agree with each other and disagree with the annotation, which is why `index/overloads.tsv` exists and why a type checker will mislead you here.",
+      "entry_points": [
+        "fastmcp.tools.base.Tool",
+        "fastmcp.resources.base.Resource",
+        "fastmcp.prompts.base.Prompt",
+        "fastmcp.utilities.components.FastMCPComponent"
+      ],
+      "guides": ["docs/servers/tools.mdx", "docs/servers/resources.mdx", "docs/servers/prompts.mdx"],
+      "decision_rules": [
+        "Parameter annotations drive the generated JSON schema. Unannotated parameters are tolerated, but the schema degrades.",
+        "Returning a non-serialisable object is a runtime failure, not a registration failure."
+      ],
+      "anti_patterns": [
+        "Treating the return of `@mcp.tool` as a `FunctionTool`. It is your function.",
+        "Assuming a resource URI template binds like a path. Read the template rules."
+      ],
+      "checklist": [
+        "`catalogs/registration.md` states what each decorator returns at runtime.",
+        "2,028 upstream registration sites: `ast-grep scan -c queries/sgconfig.yml --filter '^corpus-tool-registration$' content/corpus`"
+      ]
+    },
+    {
+      "slug": "middleware-and-hooks",
+      "title": "Intercepting requests with middleware",
+      "covers": "the twelve hooks, their signatures, and the async requirement",
+      "mental_model": "Every hook is `async def` and every hook receives `call_next`. Forgetting to await `call_next` returns a coroutine where a value was expected, so the failure surfaces as an empty response somewhere else entirely rather than as an error naming the cause.",
+      "entry_points": [
+        "fastmcp.server.middleware.middleware.Middleware",
+        "fastmcp.server.middleware.middleware.MiddlewareContext"
+      ],
+      "guides": ["docs/servers/middleware.mdx"],
+      "decision_rules": [
+        "Override only the hooks you need; the rest pass through.",
+        "`on_message` sees everything; the specific hooks see one kind. Prefer the specific one."
+      ],
+      "anti_patterns": [
+        "Declaring a hook with `def`. `project-sync-hook-override` finds this in your own code.",
+        "Returning without awaiting `call_next`."
+      ],
+      "checklist": [
+        "`extension-points/Middleware.md` lists all twelve with full signatures.",
+        "17 built-in middleware already exist -- check before writing one."
+      ]
+    },
+    {
+      "slug": "authentication",
+      "title": "Authenticating callers",
+      "covers": "the provider hierarchy, and which class to actually subclass",
+      "mental_model": "`AuthProvider` has 38 descendants and 11 abstract methods, and upstream never subclasses it directly. The useful entry points are `TokenVerifier` for bearer-token verification and `OAuthProxy` for fronting an existing OAuth server.",
+      "entry_points": [
+        "fastmcp.server.auth.auth.AuthProvider",
+        "fastmcp.server.auth.auth.TokenVerifier",
+        "fastmcp.server.auth.auth.OAuthProvider"
+      ],
+      "guides": ["docs/servers/authorization.mdx", "docs/clients/auth"],
+      "decision_rules": [
+        "Verifying a token someone else issued? `TokenVerifier`.",
+        "Fronting an existing OAuth server? `OAuthProxy`.",
+        "Issuing tokens yourself? `OAuthProvider`, and read the 13 existing implementations first."
+      ],
+      "anti_patterns": [
+        "Subclassing `AuthProvider` directly because the catalog names it first.",
+        "Assuming a provider named for a vendor implies that vendor's extra is installed."
+      ],
+      "checklist": [
+        "`catalogs/auth-providers.md` lists all 37.",
+        "`index/extras.tsv` says which optional install a vendor provider needs."
+      ]
+    },
+    {
+      "slug": "client-and-transports",
+      "title": "Connecting a client",
+      "covers": "the client session, the eleven transport classes, and what each accepts",
+      "mental_model": "`Client` is an async context manager. The connection opens on entry and closes on exit; a method called on a client you never entered raises rather than connecting lazily. 963 upstream sites open one the same way.",
+      "entry_points": [
+        "fastmcp.client.client.Client",
+        "fastmcp.client.transports.base.ClientTransport"
+      ],
+      "guides": ["docs/clients/client.mdx", "docs/clients/transports.mdx"],
+      "decision_rules": [
+        "In-process testing? Pass the server object; `FastMCPTransport` is inferred.",
+        "Remote HTTP? Pass the URL. The transport is inferred from its shape.",
+        "Need control over headers or auth? Construct the transport explicitly."
+      ],
+      "anti_patterns": [
+        "Calling `client.call_tool` outside `async with`.",
+        "Assuming transport inference from a string is unambiguous. It is documented, not obvious."
+      ],
+      "checklist": [
+        "`catalogs/transports.md` covers 4 server transports and 11 client classes.",
+        "`extension-points/ClientTransport.md` if you need a new one."
+      ]
+    },
+    {
+      "slug": "context-and-progress",
+      "title": "What a tool body can do: context, progress, logging",
+      "covers": "the Context object, and which of its members are async",
+      "mental_model": "Take `Context` as an annotated parameter and FastMCP injects it. Most of its surface is `async`, so the same sync/async trap that catches hooks catches tool bodies.",
+      "entry_points": ["fastmcp.server.context.Context"],
+      "guides": ["docs/servers/context.mdx", "docs/servers/progress.mdx", "docs/servers/logging.mdx"],
+      "decision_rules": [
+        "Long-running work? Report progress; the client may be waiting on it.",
+        "Need a value from the caller mid-call? That is elicitation, not logging."
+      ],
+      "anti_patterns": [
+        "Calling a `Context` method without awaiting it.",
+        "Constructing a `Context` yourself rather than taking it as a parameter."
+      ],
+      "checklist": ["`catalogs/context.md` lists all 34 members and marks the async ones."]
+    },
+    {
+      "slug": "elicitation-and-sampling",
+      "title": "Asking the caller: elicitation and sampling",
+      "covers": "the two round-trips from server back to client",
+      "mental_model": "Both invert the usual direction. Elicitation asks the user for structured input; sampling asks the client's model for a completion. Both require the client to have declared the capability, so both can fail for reasons your server cannot fix.",
+      "entry_points": ["fastmcp.server.context.Context", "fastmcp.client.sampling.SamplingHandler"],
+      "guides": ["docs/servers/elicitation.mdx", "docs/servers/sampling.mdx", "docs/clients/elicitation.mdx"],
+      "decision_rules": [
+        "Structured user input? Elicitation. Model output? Sampling.",
+        "A client that did not advertise the capability will refuse; handle that path."
+      ],
+      "anti_patterns": ["Treating a declined elicitation as an error rather than an answer."],
+      "checklist": ["23 upstream elicitation sites in the corpus; read one before designing a schema."]
+    },
+    {
+      "slug": "protocol-eras-and-wire-types",
+      "title": "The wire model and protocol eras",
+      "covers": "why the same type name exists more than once, and when that matters",
+      "mental_model": "`mcp_types` carries dated copies of the wire model because FastMCP negotiates a protocol era per connection. Same-named types in `_v2026_07_28` and `_v2025_11_25` are different classes. Never merge them on leaf name.",
+      "entry_points": ["mcp_types._types.Tool", "mcp_types._types.Result", "mcp_types._types.Request"],
+      "guides": ["spec/2026-07-28/architecture/index.mdx", "spec/2025-11-25/architecture/index.mdx"],
+      "decision_rules": [
+        "Writing a type in an annotation? Use the `mcp_types.X` re-export, never the `_types` path.",
+        "Proxying between eras is supported; assuming one era is not."
+      ],
+      "anti_patterns": ["Importing from `mcp_types._types`. The canonical path is not the writable one."],
+      "checklist": [
+        "`catalogs/protocol-eras.md` lists the eras.",
+        "The specification text is vendored under `corpus/spec/`."
+      ]
+    },
+    {
+      "slug": "errors-and-failure",
+      "title": "What fails, and what you catch",
+      "covers": "the exception hierarchy, and the one class that changes shape",
+      "mental_model": "`fastmcp.exceptions.MCPError` is bound under `try`/`except ImportError`: with `mcp` installed it is one class, without it another. Anything that branches on exception identity has to know which environment it is in.",
+      "entry_points": ["fastmcp.exceptions.FastMCPError", "fastmcp.exceptions.ToolError"],
+      "guides": ["docs/servers/tools.mdx"],
+      "decision_rules": [
+        "Raising from a tool body? `ToolError` reaches the caller as a tool error rather than a transport failure."
+      ],
+      "anti_patterns": ["Catching `Exception` in a hook and swallowing the cause."],
+      "checklist": ["`index/conditional.tsv` records the 17 names bound conditionally."]
+    },
+    {
+      "slug": "testing",
+      "title": "Testing a server",
+      "covers": "in-process clients, and what the upstream suite actually does",
+      "mental_model": "Pass the server object straight to `Client` and no process or socket is involved. That is how essentially all 420 upstream test files work, which makes them the readable specification of every capability here.",
+      "entry_points": ["fastmcp.client.client.Client", "fastmcp.server.server.FastMCP"],
+      "guides": ["docs/servers/testing.mdx"],
+      "decision_rules": [
+        "Testing behaviour? In-process. Testing transport? Then you need the transport."
+      ],
+      "anti_patterns": ["Spawning a subprocess server to test tool logic."],
+      "checklist": [
+        "`rg -l 'async with Client' content/corpus/tests | head` finds a worked example for nearly anything."
+      ]
+    },
+    {
+      "slug": "deployment",
+      "title": "Running and deploying a server",
+      "covers": "the server transports and the configuration surface",
+      "mental_model": "`run()` chooses a transport; the choice determines what deployment looks like. stdio is a subprocess contract, HTTP is a service.",
+      "entry_points": ["fastmcp.server.server.FastMCP", "fastmcp.settings.Settings"],
+      "guides": ["docs/deployment/running-server.mdx", "docs/deployment/http.mdx", "docs/deployment/server-configuration.mdx"],
+      "decision_rules": [
+        "Launched by a client as a child process? stdio.",
+        "Reachable over a network? HTTP, and then auth is not optional."
+      ],
+      "anti_patterns": ["Exposing an HTTP server with no `AuthProvider`."],
+      "checklist": ["`catalogs/transports.md` for the four server transports."]
+    },
+    {
+      "slug": "optional-extras",
+      "title": "What the optional installs unlock",
+      "covers": "the seven extras, their distributions and their modules",
+      "mental_model": "Twelve modules bind names under `try`/`except ImportError`, so the library describes itself differently depending on what is installed. This index was built with every extra present, which is what makes it describe the library as it runs rather than as it degrades.",
+      "entry_points": ["fastmcp.settings.Settings"],
+      "guides": ["docs/getting-started/installation.mdx"],
+      "decision_rules": [
+        "A vendor-named provider generally needs that vendor's extra.",
+        "`index/extras.tsv` maps each extra to the modules it unlocks."
+      ],
+      "anti_patterns": [
+        "Assuming a symbol in this index is importable in a slim install. Check `extras.tsv` and `conditional.tsv`."
+      ],
+      "checklist": ["`index/conditional.tsv` records which branch of each guard was live at build time."]
+    }
+  ]
+}

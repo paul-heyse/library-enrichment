@@ -11,7 +11,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::docsrs::ManifestFacts;
-use crate::evidence::{EvidenceFragment, FragmentKind};
+use crate::evidence::{FragmentKind, document::DocumentFact, relational::Locator};
 use crate::wire::EvidenceClass;
 
 /// Producer name.
@@ -96,7 +96,7 @@ pub fn text_files(crate_root: &Path) -> std::io::Result<Vec<(String, FragmentKin
 pub fn visit_features(
     facts: &ManifestFacts,
     manifest_artifact_id: &str,
-    emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+    emit: &mut dyn FnMut(DocumentFact) -> Result<(), String>,
 ) -> Result<(), String> {
     for (feature, enables) in &facts.features {
         crate::canonical::serialized_size(&(feature, enables), 256 * 1024)
@@ -106,11 +106,15 @@ pub fn visit_features(
         } else {
             format!("feature `{feature}` enables: {}", enables.join(", "))
         };
-        emit(EvidenceFragment::new(
+        emit(DocumentFact::new(
             FragmentKind::FeatureDefinition,
             feature,
             manifest_artifact_id,
-            serde_json::json!({ "path": "Cargo.toml", "table": "features", "key": feature }),
+            Locator::ManifestKey {
+                file: "Cargo.toml".into(),
+                table: "features".into(),
+                key: feature.clone(),
+            },
             text,
             EvidenceClass::Declared,
             PRODUCER,
@@ -128,7 +132,7 @@ pub fn visit_document(
     artifact: &str,
     kind: FragmentKind,
     rust_sections: bool,
-    emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+    emit: &mut dyn FnMut(DocumentFact) -> Result<(), String>,
 ) -> Result<(), String> {
     if text.len() > 64 * 1024 * 1024 {
         return Err("source document exceeds 64 MiB".into());
@@ -142,11 +146,14 @@ pub fn visit_document(
         } else {
             file
         };
-        emit(EvidenceFragment::new(
+        emit(DocumentFact::new(
             kind,
             subject,
             artifact,
-            serde_json::json!({"path":file,"line":1}),
+            Locator::SourceStart {
+                file: file.into(),
+                line: 1,
+            },
             bounded(text),
             EvidenceClass::Declared,
             PRODUCER,
@@ -154,11 +161,15 @@ pub fn visit_document(
         )?)?;
     } else {
         visit_markdown_sections(text, &mut |heading, line, body| {
-            emit(EvidenceFragment::new(
+            emit(DocumentFact::new(
                 kind,
                 heading,
                 artifact,
-                serde_json::json!({"path":file,"heading":heading,"line":line}),
+                Locator::MarkdownSection {
+                    file: file.into(),
+                    heading: heading.into(),
+                    line: u32::try_from(line).map_err(|e| e.to_string())?,
+                },
                 bounded(body),
                 EvidenceClass::Declared,
                 PRODUCER,
@@ -396,7 +407,7 @@ mod tests {
         manifest: &str,
         tarball: &str,
         artifact_for: &dyn Fn(&str) -> Option<String>,
-    ) -> Vec<EvidenceFragment> {
+    ) -> Vec<DocumentFact> {
         let mut out = Vec::new();
         visit_features(facts, manifest, &mut |row| {
             out.push(row);

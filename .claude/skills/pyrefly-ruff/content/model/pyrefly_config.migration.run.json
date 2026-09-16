@@ -1,0 +1,82 @@
+{
+  "module": "pyrefly_config::migration::run",
+  "crate": "pyrefly_config",
+  "api": "api/pyrefly_config.migration.run.md",
+  "items": [
+    {
+      "path": "pyrefly_config::migration::run::MigratedConfigSource",
+      "name": "MigratedConfigSource",
+      "kind": "enum",
+      "crate": "pyrefly_config",
+      "signature": "enum MigratedConfigSource",
+      "summary": "Where the migrated mypy / pyright settings physically lived: a dedicated config file (`mypy.ini` / `pyrightconfig.json`), or a `[tool.mypy]` / `[tool.pyright]` section of a `pyproject.toml`. The surfaced wording differs (\"`mypy.ini`\" vs \"`…",
+      "doc": "api/pyrefly_config.migration.run.md#migratedconfigsource",
+      "variants": [
+        "DedicatedFile",
+        "PyprojectToml"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_config::migration::run::MigratedFromKind",
+      "name": "MigratedFromKind",
+      "kind": "enum",
+      "crate": "pyrefly_config",
+      "signature": "enum MigratedFromKind",
+      "summary": "Which type checker config we successfully migrated from, plus the kind of file we read it out of. Used by the LSP/CLI to label the synthesized config and explain to the user where the imported settings came from.",
+      "doc": "api/pyrefly_config.migration.run.md#migratedfromkind",
+      "variants": [
+        "Mypy",
+        "Pyright"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_config::migration::run::MigrationSource",
+      "name": "MigrationSource",
+      "kind": "enum",
+      "crate": "pyrefly_config",
+      "signature": "enum MigrationSource",
+      "summary": "Which type checker config to migrate from.",
+      "doc": "api/pyrefly_config.migration.run.md#migrationsource",
+      "variants": [
+        "Auto",
+        "MyPy",
+        "Pyright"
+      ],
+      "implements": [
+        "clap_builder::derive::ValueEnum"
+      ],
+      "methods": [
+        {
+          "name": "to_possible_value",
+          "signature": "fn to_possible_value<'a>(&self) -> ::std::option::Option<clap::builder::PossibleValue>",
+          "via_trait": "clap_builder::derive::ValueEnum"
+        },
+        {
+          "name": "value_variants",
+          "signature": "fn value_variants<'a>() -> &'a [Self]",
+          "via_trait": "clap_builder::derive::ValueEnum"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_config::migration::run::config_migration",
+      "name": "config_migration",
+      "kind": "function",
+      "crate": "pyrefly_config",
+      "signature": "fn config_migration(path: &std::path::Path, migrate_from: MigrationSource, dry_run: bool, print_config: bool) -> anyhow::Result<std::path::PathBuf>",
+      "summary": "Migrate the config file at a given location (pyproject, mypy, pyright etc), producing a new file. In some cases, e.g. pyproject, we will modify the original file in-place.",
+      "doc": "api/pyrefly_config.migration.run.md#config_migration"
+    },
+    {
+      "path": "pyrefly_config::migration::run::find_and_migrate_in_memory",
+      "name": "find_and_migrate_in_memory",
+      "kind": "function",
+      "crate": "pyrefly_config",
+      "signature": "fn find_and_migrate_in_memory(start: &std::path::Path) -> anyhow::Result<Option<(config::ConfigFile, MigratedFromKind)>>",
+      "summary": "Search upward from `start` for a mypy or pyright config (`mypy.ini`, `pyrightconfig.json`, or a `pyproject.toml` with `[tool.mypy]` / `[tool.pyright]`) and migrate it to a Pyrefly `ConfigFile` entirely in memory — no files are written. The…",
+      "doc": "api/pyrefly_config.migration.run.md#find_and_migrate_in_memory"
+    }
+  ]
+}

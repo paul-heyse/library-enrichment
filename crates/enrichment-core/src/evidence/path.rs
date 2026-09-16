@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{canonical, identity::Ecosystem};
+use crate::identity::Ecosystem;
 
 /// A lexical path is a language and an ordered list of components, not a delimiter heuristic.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
@@ -96,14 +96,9 @@ impl PublicPath {
     /// Canonical path identity is independent of the display delimiter.
     #[must_use]
     pub fn id(&self) -> String {
-        format!(
-            "path_{}",
-            canonical::digest_hex(&serde_json::json!([
-                "public-path/1",
-                self.ecosystem,
-                self.components
-            ]))
-        )
+        crate::native_key::Key::PublicPath
+            .value(self)
+            .expect("declared native public path contract")
     }
 
     /// Display rendering. Callers use identity to disambiguate literal separator components.

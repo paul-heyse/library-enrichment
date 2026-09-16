@@ -1,0 +1,40 @@
+--- a/.claude/rules/rust-core-boundary.md
++++ b/.claude/rules/rust-core-boundary.md
+@@ -20,8 +20,10 @@
+ 
+ **Only the daemon publishes.** Workers write staged outputs under job-specific paths. Validate
+ schema, references, digest integrity, and expected coverage before publication; publish an
+-immutable snapshot directory, then atomically update the context's current pointer. Readers
+-must never observe a partially written table, including after a crash mid-publication (C06).
++validated candidate Delta versions, then commit the complete publication vector, expected
++context head and terminal/result in one Delta control transaction. Readers bind exact versions
++selected by one captured control snapshot. No directory manifest or current-pointer authority
++remains in the target (ADR-0042; Plan 15).
+ 
+ Producers are typed `ProducerSpec`/`ProducerPlan` records over a small explicit dependency
+ graph. Do not build a generic orchestration platform. A producer derives its command from
+@@ -32,9 +34,10 @@
+ `declared`, `resolved`, or `verified`. When later evidence resolves an unknown field, return a
+ **new derived context**; never mutate the meaning of an existing ID (C16).
+ 
+-One Arrow/DataFusion type universe. `deny.toml` sets `multiple-versions = "deny"`; pin
+-DataFusion first and derive `arrow`, `parquet`, and `object_store` from it. The reverse order
+-fails. Keep analysis dependencies for studied libraries out of our own dependency graph.
++One Arrow/DataFusion type universe. `scripts/architecture-check.py` enforces exact native
++anchor versions and rejects duplicates across every Arrow/DataFusion/Parquet/object_store,
++Delta and kernel interface crate. Cargo deny reports utility duplicates without a skip list;
++its source/license/wildcard and banned-class rules remain binding (ADR-0043).
+ 
+ Banned dependency classes: graph databases, embeddings, vector stores, gRPC, Redis, FastAPI.
+ `deny.toml` and `just deps-policy` are the oracles.
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -22,7 +22,7 @@
+ | Rust semantics | rust-analyzer over LSP, behind a producer adapter. |
+ | Static extraction | Griffe, with `allow_inspection=False` and explicit `search_paths`. |
+ | Rust API source | Hosted rustdoc JSON from docs.rs **before** any local compilation. |
+-| Storage | Immutable artifacts and Arrow/Parquet snapshots; DataFusion for retrieval. |
++| Storage/execution | DataFusion native plans over typed Arrow facts; Delta evidence and one control table; immutable source bytes. |
+ | Context7 | A separate MCP connection used by the calling agent. No proxy, no embedded LLM. |
+ | Transport | Per-client stdio adapters over one local Rust daemon. |
+ 

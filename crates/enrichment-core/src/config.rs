@@ -52,12 +52,10 @@ pub struct ArrowConfig {
     pub result_bytes: usize,
     pub query_deadline_seconds: u64,
     pub admission_deadline_seconds: u64,
-    pub cached_snapshots: usize,
     pub record_bytes: usize,
     pub batch_bytes: usize,
     pub file_bytes: u64,
     pub table_rows: usize,
-    pub row_groups: usize,
 }
 
 impl Default for ArrowConfig {
@@ -74,12 +72,10 @@ impl Default for ArrowConfig {
             result_bytes: 16 * 1024 * 1024,
             query_deadline_seconds: 30,
             admission_deadline_seconds: 30,
-            cached_snapshots: 32,
             record_bytes: 1024 * 1024,
             batch_bytes: 16 * 1024 * 1024,
             file_bytes: 256 * 1024 * 1024,
             table_rows: 1_000_000,
-            row_groups: 1024,
         }
     }
 }
@@ -88,21 +84,32 @@ impl Default for ArrowConfig {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct NativeQueryConfig {
+    /// Stack capacity for each native async and blocking worker; separate from Arrow memory.
+    pub worker_stack_bytes: usize,
+    pub blocking_threads: usize,
     pub decoder_filter: bool,
     pub observation_bloom: bool,
     pub reorder_filters: bool,
     pub row_group_rows: usize,
-    pub catalog_file_rows: usize,
+    pub row_group_bytes: usize,
+    pub target_file_bytes: u64,
+    pub claim_lease_seconds: u64,
+    pub normalization_depth: u32,
 }
 
 impl Default for NativeQueryConfig {
     fn default() -> Self {
         Self {
+            worker_stack_bytes: 16 * 1024 * 1024,
+            blocking_threads: 4,
             decoder_filter: true,
             observation_bloom: true,
             reorder_filters: true,
             row_group_rows: 1024,
-            catalog_file_rows: 4096,
+            row_group_bytes: 8 * 1024 * 1024,
+            target_file_bytes: 64 * 1024 * 1024,
+            claim_lease_seconds: 600,
+            normalization_depth: 64,
         }
     }
 }

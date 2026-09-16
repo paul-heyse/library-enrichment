@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 
 class SchemaVersion(StrEnum):
-    field_2_0 = "2.0"
+    field_3_0 = "3.0"
 
 
 class Status(StrEnum):
@@ -17,15 +17,57 @@ class Status(StrEnum):
     error = "error"
 
 
+class Kind(StrEnum):
+    registry_index_entry = "registry_index_entry"
+    registry_version_metadata = "registry_version_metadata"
+    crate_tarball = "crate_tarball"
+    rustdoc_json = "rustdoc_json"
+    cargo_manifest = "cargo_manifest"
+    readme = "readme"
+    changelog = "changelog"
+    source_file = "source_file"
+    other = "other"
+
+
+class Artifact(BaseModel):
+    artifact_id: str = Field(
+        ...,
+        description="`art_<64 hex>`, derived from the complete digest; used by `read_artifact`.",
+    )
+    compression: str | None = Field(
+        ..., description="Transport compression that was removed before storage, e.g. `zstd`."
+    )
+    etag: str | None = Field(..., description="HTTP validator, when the server supplied one.")
+    final_url: str | None = Field(
+        ..., description="Where it was actually served from after redirects, when different."
+    )
+    kind: Kind = Field(..., description="What the artifact is.")
+    last_modified: str | None = Field(
+        ..., description="HTTP validator, when the server supplied one."
+    )
+    media_type: str = Field(
+        ..., description="Media type of the stored bytes (after any transport decompression)."
+    )
+    retrieved_at: str = Field(
+        ...,
+        description="When it was retrieved, RFC 3339. Provenance only; never part of any identity.",
+    )
+    sha256: str = Field(..., description="Full SHA-256 of the stored bytes, lower-case hex.")
+    size_bytes: int = Field(..., description="Size of the stored bytes.", ge=0)
+    source_uri: str = Field(..., description="Where it was requested from.")
+
+
 class ArtifactHandle(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    artifact_id: str = Field(..., description="Stable handle, usable with `read_artifact`.")
     description: str = Field(
         ..., description="What the artifact contains, so a caller can decide whether to read it."
     )
-    media_type: str = Field(..., description="The artifact's media type.")
+    receipt: Artifact = Field(
+        ...,
+        description="Exact content identity and this acquisition's provenance. Pass receipt.artifact_id\nto read_artifact; repeated bytes may have different acquisition receipts.",
+    )
     uri: str = Field(
         ...,
         description="Always a `library-evidence://` URI -- enforced by [`ArtifactUri`], not only by the schema.",
@@ -219,7 +261,7 @@ class ResultSectionName(StrEnum):
     data = "data"
 
 
-class Kind(StrEnum):
+class Kind1(StrEnum):
     registry_metadata = "registry_metadata"
     crate_source = "crate_source"
     documentation_build_config = "documentation_build_config"
@@ -369,7 +411,7 @@ class ScopeAssessment(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    kind: Kind = Field(
+    kind: Kind1 = Field(
         ...,
         description="The kinds of evidence a producer can require or yield, and that `coverage.indexed` and\n`coverage.missing` name.\n\nThe values are, in order: `registry_metadata`, `crate_source`,\n`documentation_build_config`, `hosted_rustdoc_json`, `public_api`, `documentation`,\n`examples`, `release_notes`, `source_excerpts`.",
     )
@@ -463,7 +505,7 @@ class LibraryEnrichmentResponseEnvelope(BaseModel):
     freshness: Freshness = Field(..., description="Registry freshness.")
     job: JobHandle | None
     request_id: str = Field(..., description="Opaque per-request identifier.", min_length=1)
-    schema_version: SchemaVersion = Field(..., description="Always `2.0` for this contract.")
+    schema_version: SchemaVersion = Field(..., description="Always `3.0` for this contract.")
     snapshot_id: str | None = Field(..., description="The snapshot read, or `null`.")
     status: Status = Field(
         ...,

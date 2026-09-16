@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_large_diagnostic_preserves_bounded_error_and_native_recovery() -> None:
-    result = json.loads((ROOT / "contracts/research-v2/examples/error.fixture.json").read_text())
+    result = json.loads((ROOT / "tests/fixtures/wire/error.fixture.json").read_text())
     result["error"]["message"] = 'Escaped diagnostic: "\\\n🌍' * 1000
     actual = _tool_result(result, tool="inspect_symbol")
     assert actual.is_error
@@ -34,7 +34,7 @@ def test_large_diagnostic_preserves_bounded_error_and_native_recovery() -> None:
 
 
 def test_failed_job_without_an_artifact_preserves_its_inline_recovery() -> None:
-    result = json.loads((ROOT / "contracts/research-v2/examples/error.fixture.json").read_text())
+    result = json.loads((ROOT / "tests/fixtures/wire/error.fixture.json").read_text())
     terminal = {
         "outcome": "error",
         "error": result["error"],

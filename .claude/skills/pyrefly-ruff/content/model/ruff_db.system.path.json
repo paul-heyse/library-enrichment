@@ -1,0 +1,383 @@
+{
+  "module": "ruff_db::system::path",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.system.path.md",
+  "items": [
+    {
+      "path": "ruff_db::system::path::deduplicate_nested_paths",
+      "name": "deduplicate_nested_paths",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn deduplicate_nested_paths<P, I>(paths: I) -> DeduplicatedNestedPathsIter<P> where I: IntoIterator<Item = P>, P: AsRef<SystemPath>",
+      "summary": "Deduplicates identical paths and removes nested paths.",
+      "doc": "api/ruff_db.system.path.md#deduplicate_nested_paths",
+      "aliases": [
+        "ruff_db::system::deduplicate_nested_paths"
+      ]
+    },
+    {
+      "path": "ruff_db::system::path::DeduplicatedNestedPathsIter",
+      "name": "DeduplicatedNestedPathsIter",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DeduplicatedNestedPathsIter<P>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_db::system::DeduplicatedNestedPathsIter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::path::SystemPath",
+      "name": "SystemPath",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SystemPath",
+      "summary": "A slice of a path on [`System`](super::System) (akin to [`str`]).",
+      "doc": "api/ruff_db.system.path.md#systempath",
+      "aliases": [
+        "ruff_db::system::SystemPath"
+      ],
+      "implements": [
+        "alloc::borrow::ToOwned",
+        "core::convert::AsRef",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "absolute",
+          "signature": "fn absolute(path: impl AsRef<SystemPath>, cwd: impl AsRef<SystemPath>) -> SystemPathBuf",
+          "summary": "Makes a path absolute and normalizes it without accessing the file system."
+        },
+        {
+          "name": "ancestors",
+          "signature": "fn ancestors(&self) -> impl Iterator<Item = &SystemPath>",
+          "summary": "Produces an iterator over `SystemPath` and its ancestors."
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &SystemPath",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "as_std_path",
+          "signature": "fn as_std_path(&self) -> &Path",
+          "summary": "Returns the std path for the file."
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns the path as a string slice."
+        },
+        {
+          "name": "as_utf8_path",
+          "signature": "fn as_utf8_path(&self) -> &Utf8Path",
+          "summary": "Returns the [`Utf8Path`] for the file."
+        },
+        {
+          "name": "components",
+          "signature": "fn components(&self) -> camino::Utf8Components<'_>",
+          "summary": "Produces an iterator over the [`camino::Utf8Component`]s of the path."
+        },
+        {
+          "name": "ends_with",
+          "signature": "fn ends_with(&self, child: impl AsRef<SystemPath>) -> bool",
+          "summary": "Determines whether `child` is a suffix of `self`."
+        },
+        {
+          "name": "extension",
+          "signature": "fn extension(&self) -> Option<&str>",
+          "summary": "Extracts the file extension, if possible."
+        },
+        {
+          "name": "file_name",
+          "signature": "fn file_name(&self) -> Option<&str>",
+          "summary": "Returns the final component of the `FileSystemPath`, if there is one."
+        },
+        {
+          "name": "file_stem",
+          "signature": "fn file_stem(&self) -> Option<&str>",
+          "summary": "Extracts the stem (non-extension) portion of [`self.file_name`]."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_std_path",
+          "signature": "fn from_std_path(path: &Path) -> Option<&SystemPath>"
+        },
+        {
+          "name": "is_absolute",
+          "signature": "fn is_absolute(&self) -> bool",
+          "summary": "Returns `true` if the `SystemPath` is absolute, i.e., if it is independent of the current directory."
+        },
+        {
+          "name": "join",
+          "signature": "fn join(&self, path: impl AsRef<SystemPath>) -> SystemPathBuf",
+          "summary": "Creates an owned [`SystemPathBuf`] with `path` adjoined to `self`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(path: &impl AsRef<Utf8Path> + ?Sized) -> &Self"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<&SystemPath>",
+          "summary": "Returns the `FileSystemPath` without its final component, if there is one."
+        },
+        {
+          "name": "simplified",
+          "signature": "fn simplified(&self) -> &SystemPath",
+          "summary": "Takes any path, and when possible, converts Windows UNC paths to regular paths. If the path can't be converted, it's returned unmodified."
+        },
+        {
+          "name": "starts_with",
+          "signature": "fn starts_with(&self, base: impl AsRef<SystemPath>) -> bool",
+          "summary": "Determines whether `base` is a prefix of `self`."
+        },
+        {
+          "name": "strip_prefix",
+          "signature": "fn strip_prefix(&self, base: impl AsRef<SystemPath>) -> std::result::Result<&SystemPath, StripPrefixError>",
+          "summary": "Returns a path that, when joined onto `base`, yields `self`."
+        },
+        {
+          "name": "to_owned",
+          "signature": "fn to_owned(&self) -> Self::Owned",
+          "via_trait": "alloc::borrow::ToOwned"
+        },
+        {
+          "name": "to_path_buf",
+          "signature": "fn to_path_buf(&self) -> SystemPathBuf",
+          "summary": "Converts the path to an owned [`SystemPathBuf`]."
+        },
+        {
+          "name": "with_extension",
+          "signature": "fn with_extension(&self, extension: &str) -> SystemPathBuf",
+          "summary": "Creates an owned [`SystemPathBuf`] like `self` but with the given extension."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::path::SystemPathBuf",
+      "name": "SystemPathBuf",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SystemPathBuf",
+      "summary": "An owned, mutable path on [`System`](`super::System`) (akin to [`String`]).",
+      "doc": "api/ruff_db.system.path.md#systempathbuf",
+      "aliases": [
+        "ruff_db::system::SystemPathBuf"
+      ],
+      "implements": [
+        "core::borrow::Borrow",
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "core::ops::deref::Deref",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_path",
+          "signature": "fn as_path(&self) -> &SystemPath"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &SystemPath",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "borrow",
+          "signature": "fn borrow(&self) -> &SystemPath",
+          "via_trait": "core::borrow::Borrow"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<I: IntoIterator<Item = P>>(&mut self, iter: I)",
+          "via_trait": "core::iter::traits::collect::Extend"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: &str) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = P>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "from_path_buf",
+          "signature": "fn from_path_buf(path: std::path::PathBuf) -> std::result::Result<Self, std::path::PathBuf>"
+        },
+        {
+          "name": "from_path_buf_lossy",
+          "signature": "fn from_path_buf_lossy(path: std::path::PathBuf) -> Self",
+          "summary": "Try to convert from `path` directly, falling back to the lossy string representation on error."
+        },
+        {
+          "name": "from_utf8_path_buf",
+          "signature": "fn from_utf8_path_buf(path: Utf8PathBuf) -> Self"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<T: get_size2::GetSizeTracker>(&self, tracker: T) -> (usize, T)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "into_std_path_buf",
+          "signature": "fn into_std_path_buf(self) -> PathBuf"
+        },
+        {
+          "name": "into_string",
+          "signature": "fn into_string(self) -> String"
+        },
+        {
+          "name": "into_utf8_path_buf",
+          "signature": "fn into_utf8_path_buf(self) -> Utf8PathBuf"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "push",
+          "signature": "fn push(&mut self, path: impl AsRef<SystemPath>)",
+          "summary": "Extends `self` with `path`."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::path::SystemVirtualPath",
+      "name": "SystemVirtualPath",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SystemVirtualPath",
+      "summary": "A slice of a virtual path on [`System`](super::System) (akin to [`str`]).",
+      "doc": "api/ruff_db.system.path.md#systemvirtualpath",
+      "aliases": [
+        "ruff_db::system::SystemVirtualPath"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &SystemVirtualPath",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns the path as a string slice."
+        },
+        {
+          "name": "extension",
+          "signature": "fn extension(&self) -> Option<&str>",
+          "summary": "Extracts the file extension, if possible."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(path: &str) -> &SystemVirtualPath"
+        },
+        {
+          "name": "to_path_buf",
+          "signature": "fn to_path_buf(&self) -> SystemVirtualPathBuf",
+          "summary": "Converts the path to an owned [`SystemVirtualPathBuf`]."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::path::SystemVirtualPathBuf",
+      "name": "SystemVirtualPathBuf",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SystemVirtualPathBuf",
+      "summary": "An owned, virtual path on [`System`](`super::System`) (akin to [`String`]).",
+      "doc": "api/ruff_db.system.path.md#systemvirtualpathbuf",
+      "aliases": [
+        "ruff_db::system::SystemVirtualPathBuf"
+      ],
+      "implements": [
+        "core::borrow::Borrow",
+        "core::convert::AsRef",
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::ops::deref::Deref",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_path",
+          "signature": "const fn as_path(&self) -> &SystemVirtualPath"
+        },
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &SystemVirtualPath",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "borrow",
+          "signature": "fn borrow(&self) -> &SystemVirtualPath",
+          "via_trait": "core::borrow::Borrow"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: String) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    }
+  ]
+}

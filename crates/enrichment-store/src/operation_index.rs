@@ -80,7 +80,7 @@ struct IndexPartition {
     file: Arc<dyn SpillFile>,
     max_batch_bytes: usize,
     operation: OperationContext,
-    history: crate::query_diagnostics::History,
+    history: crate::telemetry_history::History,
 }
 
 impl fmt::Debug for IndexPartition {
@@ -97,8 +97,7 @@ impl PartitionStream for IndexPartition {
     }
 
     fn execute(&self, ctx: Arc<TaskContext>) -> SendableRecordBatchStream {
-        self.history.index_read();
-        self.operation.index(None);
+        self.history.index(self.operation.id(), None);
         let schema = Arc::clone(self.schema());
         let result = (|| {
             // One unbuffered IPC batch plus decode workspace. Charge before opening the
@@ -242,8 +241,9 @@ pub(crate) async fn materialize(
             "operation index needs an accounted local spill file".into(),
         )
     })?;
-    runtime.index_history().materialized_index(bytes);
-    crate::runtime::capture_operation().index(Some(bytes));
+    runtime
+        .index_history()
+        .index(crate::runtime::capture_operation().id(), Some(bytes));
     let partition = IndexPartition {
         schema: Arc::clone(&schema),
         file,
@@ -300,7 +300,7 @@ mod tests {
             .unwrap();
         assert_eq!(index.rows, 3);
         assert_eq!(
-            runtime.diagnostic_summary().index_reads,
+            runtime.diagnostic_summary().await.unwrap().index_reads,
             0,
             "count is completion metadata, not an IPC replay"
         );
@@ -400,7 +400,7 @@ mod tests {
             } else {
                 let index = result.unwrap();
                 assert_eq!(index.rows, 0);
-                assert_eq!(runtime.diagnostic_summary().index_reads, 0);
+                assert_eq!(runtime.diagnostic_summary().await.unwrap().index_reads, 0);
                 assert_eq!(
                     runtime
                         .execute(runtime.session().read_table(index.provider).unwrap())

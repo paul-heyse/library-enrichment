@@ -1,0 +1,115 @@
+{
+  "module": "ruff_python_trivia::comment_ranges",
+  "crate": "ruff_python_trivia",
+  "api": "api/ruff_python_trivia.comment_ranges.md",
+  "items": [
+    {
+      "path": "ruff_python_trivia::comment_ranges::CommentRanges",
+      "name": "CommentRanges",
+      "kind": "struct",
+      "crate": "ruff_python_trivia",
+      "signature": "struct CommentRanges",
+      "summary": "Stores the ranges of comments sorted by [`TextRange::start`] in increasing order. No two ranges are overlapping.",
+      "doc": "api/ruff_python_trivia.comment_ranges.md#commentranges",
+      "aliases": [
+        "ruff_python_trivia::CommentRanges"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::ops::deref::Deref"
+      ],
+      "methods": [
+        {
+          "name": "block_comments",
+          "signature": "fn block_comments(&self, source: &str) -> Vec<TextSize>",
+          "summary": "Given a [`CommentRanges`], determine which comments are grouped together in \"comment blocks\". A \"comment block\" is a sequence of consecutive own-line comments in which the comment hash (`#`) appears in the same column in each line, and at…"
+        },
+        {
+          "name": "comments_in_range",
+          "signature": "fn comments_in_range(&self, range: TextRange) -> &[TextRange]",
+          "summary": "Returns the comments who are within the range"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "has_comments",
+          "signature": "fn has_comments<T>(&self, node: &T, source: &str) -> bool where T: Ranged",
+          "summary": "Returns `true` if a statement or expression includes at least one comment."
+        },
+        {
+          "name": "intersects",
+          "signature": "fn intersects(&self, target: TextRange) -> bool",
+          "summary": "Returns `true` if the given range intersects with any comment range."
+        },
+        {
+          "name": "is_own_line",
+          "signature": "fn is_own_line(offset: TextSize, source: &str) -> bool",
+          "summary": "Returns `true` if a comment is an own-line comment (as opposed to an end-of-line comment)."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(ranges: Vec<TextRange>) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_trivia::comment_ranges::ParenthesizedExpressions",
+      "name": "ParenthesizedExpressions",
+      "kind": "struct",
+      "crate": "ruff_python_trivia",
+      "signature": "struct ParenthesizedExpressions",
+      "summary": "Index of source ranges enclosed by matching parentheses.",
+      "doc": "api/ruff_python_trivia.comment_ranges.md#parenthesizedexpressions",
+      "aliases": [
+        "ruff_python_trivia::ParenthesizedExpressions"
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, range: TextRange) -> bool",
+          "summary": "Returns `true` if the index contains `range`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(ranges: FxHashSet<TextRange>) -> Self",
+          "summary": "Creates an index from parenthesized expression ranges."
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_trivia::comment_ranges::TriviaRanges",
+      "name": "TriviaRanges",
+      "kind": "struct",
+      "crate": "ruff_python_trivia",
+      "signature": "struct TriviaRanges",
+      "summary": "Token-derived range indexes shared by comment placement and formatting.",
+      "doc": "api/ruff_python_trivia.comment_ranges.md#triviaranges",
+      "aliases": [
+        "ruff_python_trivia::TriviaRanges"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "comments",
+          "signature": "fn comments(&self) -> &CommentRanges",
+          "summary": "Returns the indexed comment ranges."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(comments: CommentRanges, parenthesized_expressions: ParenthesizedExpressions) -> Self",
+          "summary": "Creates a combined set of token-derived range indexes."
+        },
+        {
+          "name": "parenthesized",
+          "signature": "fn parenthesized(&self) -> &ParenthesizedExpressions",
+          "summary": "Returns the indexed parenthesized expression ranges."
+        }
+      ]
+    }
+  ]
+}

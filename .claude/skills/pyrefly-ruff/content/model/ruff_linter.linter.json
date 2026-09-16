@@ -1,0 +1,141 @@
+{
+  "module": "ruff_linter::linter",
+  "crate": "ruff_linter",
+  "api": "api/ruff_linter.linter.md",
+  "items": [
+    {
+      "path": "ruff_linter::linter::ParseSource",
+      "name": "ParseSource",
+      "kind": "enum",
+      "crate": "ruff_linter",
+      "signature": "enum ParseSource",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "None",
+        "Precomputed"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_linter::linter::add_suppressions_to_path",
+      "name": "add_suppressions_to_path",
+      "kind": "function",
+      "crate": "ruff_linter",
+      "signature": "fn add_suppressions_to_path(path: &std::path::Path, package: Option<package::PackageRoot<'_>>, source_kind: &source_kind::SourceKind, source_type: ruff_python_ast::PySourceType, settings: &settings::LinterSettings, reason: Option<&str>, suppression_kind: SuppressionKind) -> anyhow::Result<usize>",
+      "summary": "Add any missing suppression comments to the source code at the given `Path`.",
+      "doc": "api/ruff_linter.linter.md#add_suppressions_to_path"
+    },
+    {
+      "path": "ruff_linter::linter::check_path",
+      "name": "check_path",
+      "kind": "function",
+      "crate": "ruff_linter",
+      "signature": "fn check_path(path: &std::path::Path, package: Option<package::PackageRoot<'_>>, locator: &Locator<'_>, stylist: &ruff_python_codegen::Stylist<'_>, indexer: &ruff_python_index::Indexer, directives: &directives::Directives, settings: &settings::LinterSettings, noqa: flags::Noqa, source_kind: &source_kind::SourceKind, source_type: ruff_python_ast::PySourceType, parsed: &ruff_python_parser::Parsed<ruff_python_ast::ModModule>, target_version: settings::TargetVersion, suppressions: &suppression::Suppressions) -> Vec<ruff_db::diagnostic::Diagnostic>",
+      "summary": "Generate [`Diagnostic`]s from the source code contents at the given `Path`.",
+      "doc": "api/ruff_linter.linter.md#check_path"
+    },
+    {
+      "path": "ruff_linter::linter::lint_fix",
+      "name": "lint_fix",
+      "kind": "function",
+      "crate": "ruff_linter",
+      "signature": "fn lint_fix<'a>(path: &std::path::Path, package: Option<package::PackageRoot<'_>>, noqa: flags::Noqa, unsafe_fixes: settings::types::UnsafeFixes, settings: &settings::LinterSettings, source_kind: &'a source_kind::SourceKind, source_type: ruff_python_ast::PySourceType) -> anyhow::Result<FixerResult<'a>>",
+      "summary": "Generate `Diagnostic`s from source code content, iteratively fixing until stable.",
+      "doc": "api/ruff_linter.linter.md#lint_fix"
+    },
+    {
+      "path": "ruff_linter::linter::lint_only",
+      "name": "lint_only",
+      "kind": "function",
+      "crate": "ruff_linter",
+      "signature": "fn lint_only(path: &std::path::Path, package: Option<package::PackageRoot<'_>>, settings: &settings::LinterSettings, noqa: flags::Noqa, source_kind: &source_kind::SourceKind, source_type: ruff_python_ast::PySourceType, source: ParseSource) -> LinterResult",
+      "summary": "Generate a [`Diagnostic`] for each diagnostic triggered by the given source code.",
+      "doc": "api/ruff_linter.linter.md#lint_only"
+    },
+    {
+      "path": "ruff_linter::linter::parse_unchecked_source",
+      "name": "parse_unchecked_source",
+      "kind": "function",
+      "crate": "ruff_linter",
+      "signature": "fn parse_unchecked_source(source_kind: &source_kind::SourceKind, source_type: ruff_python_ast::PySourceType, target_version: ruff_python_ast::PythonVersion) -> ruff_python_parser::Parsed<ruff_python_ast::ModModule>",
+      "summary": "Like [`ruff_python_parser::parse_unchecked_source`], but with an explicit [`PythonVersion`] and per-cell notebook parsing.",
+      "doc": "api/ruff_linter.linter.md#parse_unchecked_source"
+    },
+    {
+      "path": "ruff_linter::linter::FixTable",
+      "name": "FixTable",
+      "kind": "struct",
+      "crate": "ruff_linter",
+      "signature": "struct FixTable",
+      "summary": "A mapping from a diagnostic's identifier to its optional noqa code and fix count.",
+      "doc": "api/ruff_linter.linter.md#fixtable",
+      "methods": [
+        {
+          "name": "counts",
+          "signature": "fn counts(&self) -> impl Iterator<Item = usize>"
+        },
+        {
+          "name": "entry",
+          "signature": "fn entry(&mut self, id: DiagnosticId) -> FixTableEntry<'_>"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (DiagnosticId, Option<&SecondaryCode>, usize)>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::linter::FixTableEntry",
+      "name": "FixTableEntry",
+      "kind": "struct",
+      "crate": "ruff_linter",
+      "signature": "struct FixTableEntry<'a>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "or_default",
+          "signature": "fn or_default(self, code: Option<&SecondaryCode>) -> &'a mut usize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_linter::linter::FixerResult",
+      "name": "FixerResult",
+      "kind": "struct",
+      "crate": "ruff_linter",
+      "signature": "struct FixerResult<'a>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "result",
+        "transformed",
+        "fixed"
+      ]
+    },
+    {
+      "path": "ruff_linter::linter::LinterResult",
+      "name": "LinterResult",
+      "kind": "struct",
+      "crate": "ruff_linter",
+      "signature": "struct LinterResult",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "diagnostics"
+      ],
+      "methods": [
+        {
+          "name": "has_invalid_syntax",
+          "signature": "fn has_invalid_syntax(&self) -> bool",
+          "summary": "Returns `true` if the parsed source code is invalid i.e., it has [`ParseError`]s."
+        }
+      ]
+    }
+  ]
+}

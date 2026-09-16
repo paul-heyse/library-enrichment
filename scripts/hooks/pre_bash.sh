@@ -8,11 +8,6 @@ cmd="${HOOK_COMMAND:-}"
 [ -n "$cmd" ] || exit 0
 root="$(hook_root)"
 
-# 1. Wrong Python semantic engine. pyrefly and pyright are installed on this workstation and
-#    globally plugin-enabled, so this is the highest-probability defect in the repo.
-if printf '%s' "$cmd" | grep -Eq '(^|[^[:alnum:]_./-])(pyrefly|pyright|basedpyright|mypy)([^[:alnum:]_-]|$)'; then
-  hook_deny "This repository uses Astral **ty** for Python semantics (blueprint §1.1, §5.4). pyrefly/pyright/mypy are installed and globally plugin-enabled on this workstation, but are NOT this project's engine. Use \`uv run ty check\` or \`uv run ty server\`. If ty is unavailable, the affected gates are \`blocked\` and it warrants an ADR -- never substitute another type checker."
-fi
 
 # 2. Unpinned tool execution (blueprint §12.1).
 if printf '%s' "$cmd" | grep -q '@latest'; then

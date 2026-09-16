@@ -42,4 +42,9 @@ if ! diff -ru --exclude=__pycache__ --exclude=.ruff_cache python/enrichment_mcp/
   echo "schema-conformance: FAILED -- generated Python models are stale" >&2
   exit 1
 fi
+cargo run --locked --quiet -p enrichment-core --bin emit-worker-schema -- "$model_check/worker.arrow" || exit 1
+if ! cmp -s "$model_check/worker.arrow" python/enrichment_worker/_schemas/worker.arrow; then
+  echo "schema-conformance: FAILED -- generated Arrow worker schema is stale" >&2
+  exit 1
+fi
 uv run python scripts/schema-conformance.py

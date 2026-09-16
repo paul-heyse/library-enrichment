@@ -1,0 +1,1131 @@
+{
+  "module": "buoyant_kernel::schema",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.schema.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::schema::ColumnMetadataKey",
+      "name": "ColumnMetadataKey",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum ColumnMetadataKey",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::ColumnMetadataKey",
+        "deltalake::ColumnMetadataKey",
+        "deltalake::kernel::ColumnMetadataKey",
+        "deltalake::kernel::schema::ColumnMetadataKey",
+        "deltalake::schema::ColumnMetadataKey",
+        "deltalake_core::ColumnMetadataKey",
+        "deltalake_core::kernel::ColumnMetadataKey",
+        "deltalake_core::kernel::schema::ColumnMetadataKey",
+        "deltalake_core::schema::ColumnMetadataKey"
+      ],
+      "variants": [
+        "ColumnMappingId",
+        "ColumnMappingPhysicalName",
+        "ColumnMappingNestedIds",
+        "ParquetFieldId",
+        "ParquetFieldNestedIds",
+        "GenerationExpression",
+        "CurrentDefault",
+        "IdentityStart",
+        "IdentityStep",
+        "IdentityHighWaterMark",
+        "IdentityAllowExplicitInsert",
+        "InternalColumn",
+        "Invariants",
+        "MetadataSpec"
+      ],
+      "implements": [
+        "core::convert::AsRef"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::DataType",
+      "name": "DataType",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum DataType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::DataType",
+        "deltalake::DataType",
+        "deltalake::kernel::DataType",
+        "deltalake::kernel::schema::DataType",
+        "deltalake::schema::DataType",
+        "deltalake_core::DataType",
+        "deltalake_core::kernel::DataType",
+        "deltalake_core::kernel::schema::DataType",
+        "deltalake_core::schema::DataType"
+      ],
+      "variants": [
+        "Primitive",
+        "Array",
+        "Struct",
+        "Map",
+        "Variant"
+      ],
+      "implements": [
+        "buoyant_kernel::engine::arrow_conversion::TryFromArrow",
+        "buoyant_kernel::schema::compare::SchemaComparison",
+        "core::convert::From",
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "as_primitive_opt",
+          "signature": "fn as_primitive_opt(&self) -> Option<&PrimitiveType>",
+          "summary": "Attempt to convert this data type to a [`PrimitiveType`]. Returns `None` if this is a non-primitive type."
+        },
+        {
+          "name": "can_read_as",
+          "signature": "fn can_read_as(&self, read_type: &Self) -> Result<(), Error>",
+          "via_trait": "buoyant_kernel::schema::compare::SchemaComparison",
+          "summary": "Returns `Ok` if this [`DataType`] can be read as `read_type`. This is the case when:     1. The data types are the same, OR the source type can be widened to the target type        (see [`PrimitiveType::can_widen_to`])     2. For complex d…"
+        },
+        {
+          "name": "decimal",
+          "signature": "fn decimal(precision: u8, scale: u8) -> DeltaResult<Self>",
+          "summary": "Create a new decimal type with the given precision and scale."
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(schema: SchemaRef) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "try_from_arrow",
+          "signature": "fn try_from_arrow(arrow_datatype: &ArrowDataType) -> Result<Self, ArrowError>",
+          "via_trait": "buoyant_kernel::engine::arrow_conversion::TryFromArrow"
+        },
+        {
+          "name": "try_struct_type",
+          "signature": "fn try_struct_type(fields: impl IntoIterator<Item = StructField>) -> DeltaResult<Self>",
+          "summary": "Create a new struct type with the given fields."
+        },
+        {
+          "name": "try_struct_type_from_results",
+          "signature": "fn try_struct_type_from_results<E: Into<Error>>(fields: impl IntoIterator<Item = Result<StructField, E>>) -> DeltaResult<Self>",
+          "summary": "Create a new struct type from a fallible iterator of fields."
+        },
+        {
+          "name": "unshredded_variant",
+          "signature": "fn unshredded_variant() -> Self",
+          "summary": "Create a new unshredded [`DataType::Variant`]. This data type is a struct of two not-null binary fields: `metadata` and `value`."
+        },
+        {
+          "name": "variant_type",
+          "signature": "fn variant_type(fields: impl IntoIterator<Item = StructField>) -> DeltaResult<Self>",
+          "summary": "Create a new [`DataType::Variant`] from the provided fields. For unshredded variants, you should prefer using [`DataType::unshredded_variant`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::MetadataColumnSpec",
+      "name": "MetadataColumnSpec",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum MetadataColumnSpec",
+      "summary": "Enumeration of metadata columns recognized by Delta Kernel.",
+      "doc": "api/buoyant_kernel.schema.md#metadatacolumnspec",
+      "aliases": [
+        "delta_kernel::schema::MetadataColumnSpec"
+      ],
+      "variants": [
+        "RowIndex",
+        "RowId",
+        "RowCommitVersion",
+        "FilePath"
+      ],
+      "implements": [
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "data_type",
+          "signature": "fn data_type(&self) -> DataType",
+          "summary": "The data type of the specified metadata column."
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(&self) -> bool",
+          "summary": "Whether the specified metadata column is nullable."
+        },
+        {
+          "name": "reserved_field_id",
+          "signature": "fn reserved_field_id(&self) -> Option<i64>",
+          "summary": "The reserved field ID for the specified metadata column, if any."
+        },
+        {
+          "name": "text_value",
+          "signature": "fn text_value(&self) -> &'static str",
+          "summary": "A human-readable name for the specified metadata column."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::MetadataValue",
+      "name": "MetadataValue",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum MetadataValue",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::MetadataValue",
+        "deltalake::MetadataValue",
+        "deltalake::kernel::MetadataValue",
+        "deltalake::kernel::schema::MetadataValue",
+        "deltalake::schema::MetadataValue",
+        "deltalake_core::MetadataValue",
+        "deltalake_core::kernel::MetadataValue",
+        "deltalake_core::kernel::schema::MetadataValue",
+        "deltalake_core::schema::MetadataValue"
+      ],
+      "variants": [
+        "Number",
+        "String",
+        "Boolean",
+        "Other"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: i64) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::PrimitiveType",
+      "name": "PrimitiveType",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum PrimitiveType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::PrimitiveType",
+        "deltalake::PrimitiveType",
+        "deltalake::kernel::PrimitiveType",
+        "deltalake::kernel::schema::PrimitiveType",
+        "deltalake::schema::PrimitiveType",
+        "deltalake_core::PrimitiveType",
+        "deltalake_core::kernel::PrimitiveType",
+        "deltalake_core::kernel::schema::PrimitiveType",
+        "deltalake_core::schema::PrimitiveType"
+      ],
+      "variants": [
+        "String",
+        "Long",
+        "Integer",
+        "Short",
+        "Byte",
+        "Float",
+        "Double",
+        "Boolean",
+        "Binary",
+        "Date",
+        "Timestamp",
+        "TimestampNtz",
+        "TimestampNanos",
+        "TimestampNanosNtz",
+        "Void",
+        "IntervalYearMonth",
+        "IntervalDayTime",
+        "Decimal"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "can_widen_to",
+          "signature": "fn can_widen_to(&self, target: &Self) -> bool",
+          "summary": "Returns `true` if this primitive type can be widened to the `target` type."
+        },
+        {
+          "name": "decimal",
+          "signature": "fn decimal(precision: u8, scale: u8) -> DeltaResult<Self>"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(dtype: DecimalType) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "parse_scalar",
+          "signature": "fn parse_scalar(&self, raw: &str) -> Result<Scalar, Error>",
+          "summary": "Parses a serialized string into a [`Scalar`] of this primitive type, per the Delta protocol's [partition value serialization] rules. An empty string parses as [`Scalar::Null`]."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::ArrayType",
+      "name": "ArrayType",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ArrayType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::ArrayType",
+        "deltalake::ArrayType",
+        "deltalake::kernel::ArrayType",
+        "deltalake::kernel::schema::ArrayType",
+        "deltalake::schema::ArrayType",
+        "deltalake_core::ArrayType",
+        "deltalake_core::kernel::ArrayType",
+        "deltalake_core::kernel::schema::ArrayType",
+        "deltalake_core::schema::ArrayType"
+      ],
+      "fields": [
+        "type_name",
+        "element_type",
+        "contains_null"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "contains_null",
+          "signature": "const fn contains_null(&self) -> bool"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "element_type",
+          "signature": "const fn element_type(&self) -> &DataType"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(element_type: impl Into<DataType>, contains_null: bool) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::ColumnNamesAndTypes",
+      "name": "ColumnNamesAndTypes",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ColumnNamesAndTypes",
+      "summary": "Helper for RowVisitor implementations",
+      "doc": "api/buoyant_kernel.schema.md#columnnamesandtypes",
+      "aliases": [
+        "delta_kernel::schema::ColumnNamesAndTypes"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> (&[ColumnName], &[DataType])"
+        },
+        {
+          "name": "from",
+          "signature": "fn from((names, fields): (Vec<ColumnName>, Vec<DataType>)) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::DecimalType",
+      "name": "DecimalType",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct DecimalType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::DecimalType",
+        "deltalake::DecimalType",
+        "deltalake::kernel::DecimalType",
+        "deltalake::kernel::schema::DecimalType",
+        "deltalake::schema::DecimalType",
+        "deltalake_core::DecimalType",
+        "deltalake_core::kernel::DecimalType",
+        "deltalake_core::kernel::schema::DecimalType",
+        "deltalake_core::schema::DecimalType"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "precision",
+          "signature": "fn precision(&self) -> u8"
+        },
+        {
+          "name": "scale",
+          "signature": "fn scale(&self) -> u8"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(precision: u8, scale: u8) -> DeltaResult<Self>",
+          "summary": "Check if the given precision and scale are valid for a decimal type."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::MapType",
+      "name": "MapType",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct MapType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::MapType",
+        "deltalake::MapType",
+        "deltalake::kernel::MapType",
+        "deltalake::kernel::schema::MapType",
+        "deltalake::schema::MapType",
+        "deltalake_core::MapType",
+        "deltalake_core::kernel::MapType",
+        "deltalake_core::kernel::schema::MapType",
+        "deltalake_core::schema::MapType"
+      ],
+      "fields": [
+        "type_name",
+        "key_type",
+        "value_type",
+        "value_contains_null"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "as_struct_schema",
+          "signature": "fn as_struct_schema(&self, key_name: String, val_name: String) -> Schema",
+          "summary": "Create a schema assuming the map is stored as a struct with the specified key and value field names"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "key_type",
+          "signature": "const fn key_type(&self) -> &DataType"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(key_type: impl Into<DataType>, value_type: impl Into<DataType>, value_contains_null: bool) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "value_contains_null",
+          "signature": "const fn value_contains_null(&self) -> bool"
+        },
+        {
+          "name": "value_type",
+          "signature": "const fn value_type(&self) -> &DataType"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::StructField",
+      "name": "StructField",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructField",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::StructField",
+        "deltalake::StructField",
+        "deltalake::kernel::StructField",
+        "deltalake::kernel::schema::StructField",
+        "deltalake::schema::StructField",
+        "deltalake_core::StructField",
+        "deltalake_core::kernel::StructField",
+        "deltalake_core::kernel::schema::StructField",
+        "deltalake_core::schema::StructField"
+      ],
+      "fields": [
+        "name",
+        "data_type",
+        "nullable",
+        "metadata"
+      ],
+      "implements": [
+        "buoyant_kernel::engine::arrow_conversion::TryFromArrow",
+        "buoyant_kernel::schema::ToSchemaField",
+        "buoyant_kernel::schema::compare::SchemaComparison",
+        "buoyant_kernel::struct_patch::SchemaPatchItem",
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add_metadata",
+          "signature": "fn add_metadata(self, metadata: impl IntoIterator<Item = (impl Into<String>, impl Into<MetadataValue>)>) -> Self",
+          "summary": "Extends `self.metadata` to include the <key, value> pairs in `metadata`."
+        },
+        {
+          "name": "as_internal_column",
+          "signature": "fn as_internal_column(self) -> Self",
+          "summary": "Marks this field as an internal column."
+        },
+        {
+          "name": "can_read_as",
+          "signature": "fn can_read_as(&self, read_field: &Self) -> Result<(), Error>",
+          "via_trait": "buoyant_kernel::schema::compare::SchemaComparison",
+          "summary": "Returns `Ok` if this [`StructField`] can be read as `read_field`. Three requirements must be satisfied:     1. The read schema field mustn't be non-nullable if this [`StructField`] is nullable.     2. The both this field and `read_field` m…"
+        },
+        {
+          "name": "column_mapping_id",
+          "signature": "fn column_mapping_id(&self) -> Option<i64>",
+          "summary": "Returns this field's `delta.columnMapping.id` annotation if present and well-formed. Returns `None` if the annotation is missing or carries a non-numeric value."
+        },
+        {
+          "name": "create_metadata_column",
+          "signature": "fn create_metadata_column(name: impl Into<String>, spec: MetadataColumnSpec) -> Self",
+          "summary": "Creates a metadata column of the given spec with the given name."
+        },
+        {
+          "name": "data_type",
+          "signature": "const fn data_type(&self) -> &DataType"
+        },
+        {
+          "name": "default_row_index_column",
+          "signature": "fn default_row_index_column() -> &'static StructField",
+          "summary": "Returns the default row index metadata column used by Kernel."
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_config_value",
+          "signature": "fn get_config_value(&self, key: &ColumnMetadataKey) -> Option<&MetadataValue>"
+        },
+        {
+          "name": "get_metadata_column_spec",
+          "signature": "fn get_metadata_column_spec(&self) -> Option<MetadataColumnSpec>",
+          "summary": "Returns the metadata column spec if this is a metadata column, otherwise returns None."
+        },
+        {
+          "name": "into_field",
+          "signature": "fn into_field(self) -> StructField",
+          "via_trait": "buoyant_kernel::struct_patch::SchemaPatchItem"
+        },
+        {
+          "name": "is_internal_column",
+          "signature": "fn is_internal_column(&self) -> bool",
+          "summary": "Returns true if this field is an internal column added by Kernel."
+        },
+        {
+          "name": "is_metadata_column",
+          "signature": "fn is_metadata_column(&self) -> bool",
+          "summary": "Returns true if this field is a metadata column."
+        },
+        {
+          "name": "is_nullable",
+          "signature": "fn is_nullable(&self) -> bool"
+        },
+        {
+          "name": "make_physical",
+          "signature": "fn make_physical(&self, column_mapping_mode: ColumnMappingMode) -> DeltaResult<Self>",
+          "summary": "Applies physical name and field ID mappings to this field."
+        },
+        {
+          "name": "metadata",
+          "signature": "const fn metadata(&self) -> &HashMap<String, MetadataValue>"
+        },
+        {
+          "name": "metadata_with_string_values",
+          "signature": "fn metadata_with_string_values(&self) -> HashMap<String, String>",
+          "summary": "Convert our metadata into a HashMap<String, String>. Note this copies all the data so can be expensive for large metadata"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &String"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(name: impl Into<String>, data_type: impl Into<DataType>, nullable: bool) -> Self",
+          "summary": "Creates a new field"
+        },
+        {
+          "name": "not_null",
+          "signature": "fn not_null(name: impl Into<String>, data_type: impl Into<DataType>) -> Self",
+          "summary": "Creates a new non-nullable field"
+        },
+        {
+          "name": "nullable",
+          "signature": "fn nullable(name: impl Into<String>, data_type: impl Into<DataType>) -> Self",
+          "summary": "Creates a new nullable field"
+        },
+        {
+          "name": "physical_name",
+          "signature": "fn physical_name(&self, column_mapping_mode: ColumnMappingMode) -> &str",
+          "summary": "Get the physical name for this field as it should be read from parquet."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "to_schema_field",
+          "signature": "fn to_schema_field(self) -> StructField",
+          "via_trait": "buoyant_kernel::schema::ToSchemaField"
+        },
+        {
+          "name": "try_from_arrow",
+          "signature": "fn try_from_arrow(arrow_field: &ArrowField) -> Result<Self, ArrowError>",
+          "via_trait": "buoyant_kernel::engine::arrow_conversion::TryFromArrow"
+        },
+        {
+          "name": "with_metadata",
+          "signature": "fn with_metadata(self, metadata: impl IntoIterator<Item = (impl Into<String>, impl Into<MetadataValue>)>) -> Self",
+          "summary": "Replaces `self.metadata` with the list of <key, value> pairs in `metadata`."
+        },
+        {
+          "name": "with_name",
+          "signature": "fn with_name(&self, new_name: impl Into<String>) -> Self",
+          "summary": "Change the name of a field. The field will preserve its data type and nullability. Note that this allocates a new field."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::StructFieldIntoIter",
+      "name": "StructFieldIntoIter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructFieldIntoIter",
+      "summary": "An iterator that yields owned [`StructField`]s from a [`StructType`].",
+      "doc": "api/buoyant_kernel.schema.md#structfieldintoiter",
+      "aliases": [
+        "delta_kernel::schema::StructFieldIntoIter"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "count",
+          "signature": "fn count(self) -> usize",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "last",
+          "signature": "fn last(self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "nth",
+          "signature": "fn nth(&mut self, n: usize) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::StructFieldRefIter",
+      "name": "StructFieldRefIter",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructFieldRefIter<'a>",
+      "summary": "An iterator that yields references to [`StructField`]s from a [`StructType`].",
+      "doc": "api/buoyant_kernel.schema.md#structfieldrefiter",
+      "aliases": [
+        "delta_kernel::schema::StructFieldRefIter"
+      ],
+      "implements": [
+        "core::iter::traits::double_ended::DoubleEndedIterator",
+        "core::iter::traits::exact_size::ExactSizeIterator",
+        "core::iter::traits::iterator::Iterator",
+        "core::iter::traits::marker::FusedIterator"
+      ],
+      "methods": [
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "core::iter::traits::exact_size::ExactSizeIterator"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "next_back",
+          "signature": "fn next_back(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::double_ended::DoubleEndedIterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::StructType",
+      "name": "StructType",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructType",
+      "summary": "A struct is used to represent both the top-level schema of the table as well as struct columns that contain nested columns.",
+      "doc": "api/buoyant_kernel.schema.md#structtype",
+      "aliases": [
+        "delta_kernel::schema::StructType",
+        "deltalake::StructType",
+        "deltalake::kernel::StructType",
+        "deltalake::kernel::schema::StructType",
+        "deltalake::schema::StructType",
+        "deltalake_core::StructType",
+        "deltalake_core::kernel::StructType",
+        "deltalake_core::kernel::schema::StructType",
+        "deltalake_core::schema::StructType"
+      ],
+      "implements": [
+        "buoyant_kernel::engine::arrow_conversion::TryFromArrow",
+        "buoyant_kernel::schema::compare::SchemaComparison",
+        "core::fmt::Display",
+        "core::iter::traits::collect::IntoIterator",
+        "deltalake_core::kernel::schema::schema::StructTypeExt",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&self, fields: impl IntoIterator<Item = StructField>) -> DeltaResult<Self>",
+          "summary": "Adds fields to this [`StructType`], returning a new [`StructType`]."
+        },
+        {
+          "name": "add_metadata_column",
+          "signature": "fn add_metadata_column(&self, name: impl Into<String>, spec: MetadataColumnSpec) -> DeltaResult<Self>",
+          "summary": "Adds a predefined metadata column to this [`StructType`], returning a new [`StructType`]."
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder() -> StructTypeBuilder"
+        },
+        {
+          "name": "can_read_as",
+          "signature": "fn can_read_as(&self, read_type: &Self) -> Result<(), Error>",
+          "via_trait": "buoyant_kernel::schema::compare::SchemaComparison",
+          "summary": "Returns `Ok` if this [`StructType`] can be read as `read_type`. This is the case when:     1. The set of fields in this struct type are a subset of the `read_type`.     2. For each field in this struct, you can read it as the `read_type`'s…"
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, name: impl AsRef<str>) -> bool",
+          "summary": "Checks if the [`StructType`] contains a field with the specified name."
+        },
+        {
+          "name": "contains_metadata_column",
+          "signature": "fn contains_metadata_column(&self, spec: &MetadataColumnSpec) -> bool",
+          "summary": "Checks if the [`StructType`] contains a metadata column with the given spec."
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>, Self: Sized",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "field",
+          "signature": "fn field(&self, name: impl AsRef<str>) -> Option<&StructField>",
+          "summary": "Gets the field with the given name."
+        },
+        {
+          "name": "field_at",
+          "signature": "fn field_at<'a>(&'a self, col: &ColumnName) -> DeltaResult<&'a StructField>",
+          "summary": "Retrieves the nested field named by the given column path."
+        },
+        {
+          "name": "field_at_index",
+          "signature": "fn field_at_index(&self, index: usize) -> Option<&StructField>",
+          "summary": "Gets the field at the given index."
+        },
+        {
+          "name": "field_names",
+          "signature": "fn field_names(&self) -> impl ExactSizeIterator<Item = &String>",
+          "summary": "Gets all the field names in this struct type in the order they are defined."
+        },
+        {
+          "name": "field_with_index",
+          "signature": "fn field_with_index(&self, name: impl AsRef<str>) -> Option<(usize, &StructField)>",
+          "summary": "Gets the field with the given name and its index."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> impl ExactSizeIterator<Item = &StructField> + DoubleEndedIterator + FusedIterator",
+          "summary": "Gets a reference to all the fields in this struct type."
+        },
+        {
+          "name": "fields_of_path",
+          "signature": "fn fields_of_path<'a>(&'a self, col: &ColumnName) -> DeltaResult<Vec<&'a StructField>>",
+          "summary": "Resolves a column path through nested structs, returning references to all [`StructField`]s along the path. The last element is the leaf field."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "index_of",
+          "signature": "fn index_of(&self, name: impl AsRef<str>) -> Option<usize>",
+          "summary": "Returns the index of the field with the given name, or None if not found."
+        },
+        {
+          "name": "index_of_metadata_column",
+          "signature": "fn index_of_metadata_column(&self, spec: &MetadataColumnSpec) -> Option<&usize>",
+          "summary": "Returns the index of the metadata column with the given spec, or None if not found."
+        },
+        {
+          "name": "into_fields",
+          "signature": "fn into_fields(self) -> impl ExactSizeIterator<Item = StructField> + DoubleEndedIterator + FusedIterator",
+          "summary": "Gets an iterator over all the fields in this struct type."
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "leaves",
+          "signature": "fn leaves<'s>(&self, own_name: impl Into<Option<&'s str>>) -> ColumnNamesAndTypes",
+          "summary": "Extracts the name and type of all leaf columns, in schema order. Caller should pass Some `own_name` if this schema is embedded in a larger struct (e.g. `add.*`) and None if the schema is a top-level result (e.g. `*`)."
+        },
+        {
+          "name": "make_physical",
+          "signature": "fn make_physical(&self, column_mapping_mode: ColumnMappingMode) -> DeltaResult<Self>",
+          "summary": "Applies physical name mappings to this field. If the `column_mapping_mode` is [`ColumnMappingMode::Id`], then each StructField will have its parquet field id in the [`ColumnMetadataKey::ParquetFieldId`] metadata field."
+        },
+        {
+          "name": "metadata_column",
+          "signature": "fn metadata_column(&self, spec: &MetadataColumnSpec) -> Option<&StructField>",
+          "summary": "Gets a reference to the metadata column with the given spec."
+        },
+        {
+          "name": "metadata_columns",
+          "signature": "fn metadata_columns(&self) -> impl Iterator<Item = &StructField>",
+          "summary": "Gets an iterator over all the metadata columns in this struct type."
+        },
+        {
+          "name": "new_unchecked",
+          "signature": "fn new_unchecked(fields: impl IntoIterator<Item = StructField>) -> Self",
+          "summary": "Creates a new [`StructType`] from the given fields without validating them."
+        },
+        {
+          "name": "num_fields",
+          "signature": "fn num_fields(&self) -> usize",
+          "summary": "Gets the number of fields in this struct type."
+        },
+        {
+          "name": "project",
+          "signature": "fn project(&self, names: &[impl AsRef<str>]) -> DeltaResult<SchemaRef>",
+          "summary": "Gets a [`SchemaRef`] containing [`StructField`]s of the given names. The order of fields in the returned schema will match the order passed to this function, which can be different from this order in this schema. Returns an Err if a specif…"
+        },
+        {
+          "name": "project_as_struct",
+          "signature": "fn project_as_struct(&self, names: &[impl AsRef<str>]) -> DeltaResult<StructType>",
+          "summary": "Gets a [`StructType`] containing [`StructField`]s of the given names. The order of fields in the returned schema will match the order passed to this function, which can be different from this order in this schema. Returns an Err if a speci…"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "total_struct_fields",
+          "signature": "fn total_struct_fields(&self) -> usize",
+          "summary": "Recursively counts all [`StructField`] nodes in this schema tree."
+        },
+        {
+          "name": "try_from_arrow",
+          "signature": "fn try_from_arrow(arrow_schema: &ArrowSchema) -> Result<Self, ArrowError>",
+          "via_trait": "buoyant_kernel::engine::arrow_conversion::TryFromArrow"
+        },
+        {
+          "name": "try_from_results",
+          "signature": "fn try_from_results<E: Into<Error>>(fields: impl IntoIterator<Item = Result<StructField, E>>) -> DeltaResult<Self>",
+          "summary": "Creates a new [`StructType`] from a fallible iterator of fields."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(fields: impl IntoIterator<Item = StructField>) -> DeltaResult<Self>",
+          "summary": "Creates a new [`StructType`] from the given fields."
+        },
+        {
+          "name": "visit_fields_of_path",
+          "signature": "fn visit_fields_of_path<'a>(&'a self, col: &ColumnName, visit_field: impl FnMut(&'a StructField)) -> DeltaResult<()>",
+          "summary": "Visits all fields along the given column path."
+        },
+        {
+          "name": "with_fields_filtered",
+          "signature": "fn with_fields_filtered(&self, predicate: impl Fn(&StructField) -> bool) -> DeltaResult<Self>",
+          "summary": "Returns a new [`StructType`] containing only the top-level fields for which `predicate` returns `true`. This does not recurse into nested [`StructType`] fields."
+        },
+        {
+          "name": "with_fields_filtered_nonempty",
+          "signature": "fn with_fields_filtered_nonempty(&self, predicate: impl Fn(&StructField) -> bool) -> DeltaResult<Option<Self>>",
+          "summary": "Returns an optional [`StructType`] containing only the top-level fields for which `predicate` returns `true`."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::StructTypeBuilder",
+      "name": "StructTypeBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructTypeBuilder",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::StructTypeBuilder"
+      ],
+      "methods": [
+        {
+          "name": "add_field",
+          "signature": "fn add_field(self, field: StructField) -> Self"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<StructType>"
+        },
+        {
+          "name": "build_arc_unchecked",
+          "signature": "fn build_arc_unchecked(self) -> Arc<StructType>"
+        },
+        {
+          "name": "from_schema",
+          "signature": "fn from_schema(schema: &StructType) -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::ToSchema",
+      "name": "ToSchema",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ToSchema",
+      "summary": "Converts a type to a [`Schema`] that represents that type. Derivable for struct types using the [`delta_kernel_derive::ToSchema`] derive macro.",
+      "doc": "api/buoyant_kernel.schema.md#toschema",
+      "aliases": [
+        "delta_kernel::schema::ToSchema"
+      ],
+      "implementors": [
+        "buoyant_kernel::actions::Add",
+        "buoyant_kernel::actions::Cdc",
+        "buoyant_kernel::actions::CheckpointMetadata",
+        "buoyant_kernel::actions::CommitInfo",
+        "buoyant_kernel::actions::DomainMetadata",
+        "buoyant_kernel::actions::Format",
+        "buoyant_kernel::actions::Metadata",
+        "buoyant_kernel::actions::Protocol",
+        "buoyant_kernel::actions::Remove",
+        "buoyant_kernel::actions::SetTransaction",
+        "buoyant_kernel::actions::Sidecar",
+        "buoyant_kernel::actions::deletion_vector::DeletionVectorDescriptor"
+      ],
+      "required_methods": [
+        "to_schema"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "to_schema",
+          "signature": "fn to_schema() -> StructType"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::ToSchemaField",
+      "name": "ToSchemaField",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ToSchemaField",
+      "summary": "Converts field interpolation inputs in [`schema!`] and [`try_schema!`] to [`StructField`].",
+      "doc": "api/buoyant_kernel.schema.md#toschemafield",
+      "aliases": [
+        "delta_kernel::schema::ToSchemaField"
+      ],
+      "implementors": [
+        "buoyant_kernel::schema::StructField"
+      ],
+      "required_methods": [
+        "to_schema_field"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "to_schema_field",
+          "signature": "fn to_schema_field(self) -> StructField"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::Schema",
+      "name": "Schema",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type Schema = StructType",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::Schema"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::SchemaRef",
+      "name": "SchemaRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type SchemaRef = std::sync::Arc<StructType>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::schema::SchemaRef"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::schema::SchemaStructPatchBuilder",
+      "name": "SchemaStructPatchBuilder",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type SchemaStructPatchBuilder = struct_patch::StructPatchBuilder<StructField>",
+      "summary": "A [`StructPatchBuilder`](crate::struct_patch::StructPatchBuilder) whose emitted items are schema fields, lowered into an output [`StructType`] directly from an input schema via [`build`](crate::struct_patch::StructPatchBuilder::<StructFiel…",
+      "doc": "api/buoyant_kernel.schema.md#schemastructpatchbuilder",
+      "aliases": [
+        "delta_kernel::schema::SchemaStructPatchBuilder"
+      ]
+    }
+  ]
+}

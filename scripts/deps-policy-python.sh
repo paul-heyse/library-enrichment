@@ -12,8 +12,11 @@ for pkg in $BANNED; do
   grep -qE "^name = \"${pkg}\"$" "$LOCK" && found="${found} ${pkg}"
 done
 
-# pyrefly/pyright/mypy are a separate class: not "heavy", just not this project's engine.
-WRONG_ENGINE='pyrefly pyright basedpyright mypy'
+# pyright/mypy are a separate class: not "heavy", just not admissible engines here.
+# pyrefly was removed from this list by ADR-0046, which admits it alongside ty. ty remains
+# the production producer; admitting pyrefly to the lockfile is what lets it be run and
+# indexed reproducibly rather than from whatever the workstation happens to carry.
+WRONG_ENGINE='pyright basedpyright mypy'
 engine=""
 for pkg in $WRONG_ENGINE; do
   grep -qE "^name = \"${pkg}\"$" "$LOCK" && engine="${engine} ${pkg}"

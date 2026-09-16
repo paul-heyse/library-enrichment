@@ -1,0 +1,513 @@
+{
+  "module": "pyrefly::solver::solver",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.solver.solver.md",
+  "items": [
+    {
+      "path": "pyrefly::solver::solver::ArgumentSide",
+      "name": "ArgumentSide",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ArgumentSide",
+      "summary": "Which side of a call argument check we are currently analyzing.",
+      "doc": "api/pyrefly.solver.solver.md#argumentside",
+      "variants": [
+        "Got",
+        "Want",
+        "NotAnalyzingACall"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::solver::solver::OpenTypedDictSubsetError",
+      "name": "OpenTypedDictSubsetError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum OpenTypedDictSubsetError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "MissingField",
+        "UnknownFields"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::solver::solver::PinError",
+      "name": "PinError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum PinError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "ImplicitPartialContained",
+        "UnfinishedQuantified"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::solver::solver::SubsetError",
+      "name": "SubsetError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum SubsetError",
+      "summary": "If a got <: want check fails, the failure reason",
+      "doc": "api/pyrefly.solver.solver.md#subseterror",
+      "variants": [
+        "PosParamName",
+        "CallableMissingPositionalParameters",
+        "TypeVarSpecialization",
+        "MissingAttribute",
+        "IncompatibleAttribute",
+        "TypedDict",
+        "OpenTypedDict",
+        "Shape",
+        "ShapedArraySubtyping",
+        "InternalError",
+        "TypeOfProtocolNeedsConcreteClass",
+        "TypeCannotAcceptSpecialForms",
+        "OpenTypedDictKwargs",
+        "Other"
+      ],
+      "methods": [
+        {
+          "name": "to_error_msg",
+          "signature": "fn to_error_msg(self) -> Option<String>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::SubsetWithSnapshotResult",
+      "name": "SubsetWithSnapshotResult",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum SubsetWithSnapshotResult",
+      "summary": "Result of `with_snapshot`, which performs an `is_subset_eq` call with var snapshotting.",
+      "doc": "api/pyrefly.solver.solver.md#subsetwithsnapshotresult",
+      "variants": [
+        "Ok",
+        "Err"
+      ],
+      "methods": [
+        {
+          "name": "is_ok",
+          "signature": "fn is_ok(&self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::TypeVarSpecializationError",
+      "name": "TypeVarSpecializationError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum TypeVarSpecializationError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "BadShapeExtensionSpecialization",
+        "ConflictingShapeExtensionSpecialization",
+        "BadBoundSpecialization",
+        "BadConstraintSpecialization",
+        "IncompatibleOverloadResidual"
+      ],
+      "methods": [
+        {
+          "name": "error_kind",
+          "signature": "fn error_kind(&self) -> ErrorKind"
+        },
+        {
+          "name": "to_error_msg",
+          "signature": "fn to_error_msg<Ans: LookupAnswer>(self, ans: &AnswersSolver<'_, '_, Ans>) -> String"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::TypedDictSubsetError",
+      "name": "TypedDictSubsetError",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum TypedDictSubsetError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "MissingField",
+        "ReadOnlyMismatch",
+        "RequiredMismatch",
+        "NotRequiredReadWriteMismatch",
+        "InvariantFieldMismatch",
+        "CovariantFieldMismatch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::solver::solver::ArgumentKey",
+      "name": "ArgumentKey",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ArgumentKey",
+      "summary": "Which argument of the call being checked is in hand.",
+      "doc": "api/pyrefly.solver.solver.md#argumentkey",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(index: usize) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::CallContext",
+      "name": "CallContext",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct CallContext<'subset>",
+      "summary": "Recursive subset-checking context. Boundary ownership remains with `CallBoundary`.",
+      "doc": "api/pyrefly.solver.solver.md#callcontext",
+      "methods": [
+        {
+          "name": "for_argument_outside_call",
+          "signature": "fn for_argument_outside_call() -> Self",
+          "summary": "Context for checking a call argument without a call boundary."
+        },
+        {
+          "name": "outside",
+          "signature": "fn outside() -> Self"
+        },
+        {
+          "name": "residual_witness",
+          "signature": "fn residual_witness(&self) -> Option<&ResidualWitnessContext>"
+        },
+        {
+          "name": "residual_witness_mut",
+          "signature": "fn residual_witness_mut(&mut self) -> Option<&mut ResidualWitnessContext>"
+        },
+        {
+          "name": "take_residual_witness",
+          "signature": "fn take_residual_witness(&mut self) -> Option<ResidualWitnessContext>"
+        },
+        {
+          "name": "with_argument",
+          "signature": "fn with_argument(self, argument: ArgumentKey) -> Self"
+        },
+        {
+          "name": "with_argument_side",
+          "signature": "fn with_argument_side(self, argument_side: ArgumentSide) -> Self"
+        },
+        {
+          "name": "with_outside_context",
+          "signature": "fn with_outside_context(self) -> Self"
+        },
+        {
+          "name": "with_residual_witness",
+          "signature": "fn with_residual_witness(self, witness: ResidualWitnessContext) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::QuantifiedHandle",
+      "name": "QuantifiedHandle",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct QuantifiedHandle",
+      "summary": "A linear obligation to finalize these created Var IDs. Handles may contain Vars that later share union-find roots; they do not exclusively own roots.",
+      "doc": "api/pyrefly.solver.solver.md#quantifiedhandle",
+      "methods": [
+        {
+          "name": "empty",
+          "signature": "fn empty() -> Self"
+        },
+        {
+          "name": "partition_by",
+          "signature": "fn partition_by(self, ty: &Type) -> (Self, Self)",
+          "summary": "Split the handle into (vars in ty, vars not in ty)"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::ResidualWitnessContext",
+      "name": "ResidualWitnessContext",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ResidualWitnessContext",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "for_forall",
+          "signature": "fn for_forall(argument: ArgumentKey, vars: &QuantifiedHandle, want: &Type, argument_side: ArgumentSide) -> Self",
+          "summary": "Build a witness for a Forall instantiation during subset checking."
+        },
+        {
+          "name": "for_overload",
+          "signature": "fn for_overload(argument: ArgumentKey, eligible_vars: &[Var], argument_side: ArgumentSide) -> Self",
+          "summary": "Build a witness for an overload residual during subset checking."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::Solver",
+      "name": "Solver",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Solver",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "infer_with_first_use",
+        "heap",
+        "tensor_shapes",
+        "strict_callable_subtyping",
+        "strict_partial_subtyping",
+        "spec_compliant_overloads",
+        "legacy_overload_expansion"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "add_lower_bound",
+          "signature": "fn add_lower_bound(&self, v: Var, bound: Type, is_subset: &mut dyn FnMut(&Type, &Type) -> Result<(), SubsetError>) -> Result<(), SubsetError>"
+        },
+        {
+          "name": "add_upper_bound",
+          "signature": "fn add_upper_bound(&self, v: Var, bound: Type, is_subset: &mut dyn FnMut(&Type, &Type) -> Result<(), SubsetError>) -> Result<(), SubsetError>"
+        },
+        {
+          "name": "check_protocol_cache",
+          "signature": "fn check_protocol_cache(&self, got: &Type, want: &Type) -> Option<Result<(), SubsetError>>",
+          "summary": "Look up a cached protocol conformance result."
+        },
+        {
+          "name": "check_typed_dict_cache",
+          "signature": "fn check_typed_dict_cache(&self, got: &TypedDict, want: &TypedDict) -> Option<Result<(), SubsetError>>"
+        },
+        {
+          "name": "error_builder",
+          "signature": "fn error_builder<'a>(&self, got: &Type, want: &Type, errors: &'a ErrorCollector, loc: TextRange, tcc: &dyn Fn() -> TypeCheckContext, subset_error: SubsetError) -> ErrorBuilder<'a>",
+          "summary": "Generate an error message that `got <: want` failed. Returns a builder so the caller can chain additional decorations before emitting."
+        },
+        {
+          "name": "expand",
+          "signature": "fn expand(&self, t: Type) -> Type",
+          "summary": "Expand a type. All variables that have been bound will be replaced with non-Var types, even if they are recursive (using `Any` for self-referential occurrences). Variables that have not yet been bound will remain as Var."
+        },
+        {
+          "name": "expand_mut",
+          "signature": "fn expand_mut(&self, t: &mut Type)",
+          "summary": "Like `expand`, but when you have a `&mut`."
+        },
+        {
+          "name": "expand_unwrap",
+          "signature": "fn expand_unwrap(&self, v: Var) -> Type",
+          "summary": "Expand `Variable::Unwrap` to its answer or its lower bounds accumulated so far."
+        },
+        {
+          "name": "expand_with_bounds",
+          "signature": "fn expand_with_bounds(&self, dim_ty: &mut Type)",
+          "summary": "Public wrapper to expand a dimension type by resolving bound Vars and canonicalizing the resulting symbolic dimension expression. Used by subset checking before comparing dimension expressions."
+        },
+        {
+          "name": "finish_all_quantified",
+          "signature": "fn finish_all_quantified<Ans: LookupAnswer>(&self, ty: &Type, type_order: TypeOrder<'_, Ans>) -> Result<(), Vec1<TypeVarSpecializationError>>",
+          "summary": "Finish all quantified vars reachable from `ty` using the solver default inference mode."
+        },
+        {
+          "name": "finish_class_targs",
+          "signature": "fn finish_class_targs(&self, targs: &mut TArgs, uniques: &UniqueFactory)",
+          "summary": "Finalize the tparam instantiations. Any targs which don't yet have an instantiation will resolve to their default, if one exists. Otherwise, create a \"partial\" var and try to find an instantiation at the first use, like finish_quantified."
+        },
+        {
+          "name": "finish_quantified",
+          "signature": "fn finish_quantified<Ans: LookupAnswer>(&self, vs: QuantifiedHandle, infer_with_first_use: bool, type_order: TypeOrder<'_, Ans>) -> Result<(), Vec1<TypeVarSpecializationError>>",
+          "summary": "Finish a specific quantified set, resolving type variables to their solved types or gradual fallbacks."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "for_display",
+          "signature": "fn for_display(&self, t: Type) -> Type"
+        },
+        {
+          "name": "for_return_boundary",
+          "signature": "fn for_return_boundary(&self, t: Type) -> Type",
+          "summary": "Finish the type returned from a function call. This entails expanding solved variables, erasing unsolved variables without defaults from unions, and canonicalizing dimension expressions so that all-literal `Int` trees fold to single litera…"
+        },
+        {
+          "name": "for_return_boundary_with_type_level_dsl_errors",
+          "signature": "fn for_return_boundary_with_type_level_dsl_errors(&self, t: Type) -> (Type, Vec<ShapeError>)"
+        },
+        {
+          "name": "force",
+          "signature": "fn force(&self, t: Type) -> Type",
+          "summary": "Like [`expand`], but also forces variables that haven't yet been bound to become `Any`, both in the result and in the `Solver` going forward. Guarantees there will be no `Var` in the result."
+        },
+        {
+          "name": "force_mut",
+          "signature": "fn force_mut(&self, t: &mut Type)",
+          "summary": "A version of `force` that works in-place on a `Type`."
+        },
+        {
+          "name": "force_var",
+          "signature": "fn force_var(&self, v: Var) -> Type",
+          "summary": "Given a `Var`, ensures that the solver has an answer for it (or inserts Any if not already), and returns that answer. Note that if the `Var` is already bound to something that contains a `Var` (including itself), then we will return the an…"
+        },
+        {
+          "name": "fresh_partial_contained",
+          "signature": "fn fresh_partial_contained(&self, uniques: &UniqueFactory, range: TextRange) -> Var",
+          "summary": "Generate a fresh variable based on code that is unspecified inside a container, e.g. `[]` with an unknown type of element. The `range` parameter is the location of the empty container literal."
+        },
+        {
+          "name": "fresh_quantified",
+          "signature": "fn fresh_quantified(&self, params: &TParams, t: Type, uniques: &UniqueFactory) -> (QuantifiedHandle, Type)",
+          "summary": "Generate fresh variables and substitute them in replacing a `Forall`."
+        },
+        {
+          "name": "fresh_recursive",
+          "signature": "fn fresh_recursive(&self, uniques: &UniqueFactory) -> Var",
+          "summary": "Generate a fresh variable used to tie recursive bindings."
+        },
+        {
+          "name": "fresh_unwrap",
+          "signature": "fn fresh_unwrap(&self, uniques: &UniqueFactory) -> Var"
+        },
+        {
+          "name": "freshen_class_targs",
+          "signature": "fn freshen_class_targs(&self, targs: &mut TArgs, uniques: &UniqueFactory) -> QuantifiedHandle",
+          "summary": "Given targs which contain quantified (as come from `instantiate`), replace the quantifieds with fresh vars. We can avoid substitution because tparams can not appear in the bounds of another tparam. tparams can appear in the default, but th…"
+        },
+        {
+          "name": "generalize_class_targs",
+          "signature": "fn generalize_class_targs(&self, targs: &mut TArgs, vars_with_residual_captures: &SmallSet<Var>)",
+          "summary": "Solve each fresh var created in freshen_class_targs. If we still have a Var, we do not yet have an instantiation, but one might come later. E.g., __new__ did not provide an instantiation, but __init__ will."
+        },
+        {
+          "name": "has_instantiation_errors",
+          "signature": "fn has_instantiation_errors(&self, vs: &QuantifiedHandle) -> bool"
+        },
+        {
+          "name": "has_new_instantiation_errors",
+          "signature": "fn has_new_instantiation_errors(&self, snapshot: &VarSnapshot) -> bool",
+          "summary": "Have these vars picked up any new instantiation errors since they were snapshotted?"
+        },
+        {
+          "name": "instantiate_callable_self",
+          "signature": "fn instantiate_callable_self(&self, tparams: &TParams, self_obj: &Type, self_param: &Type, callable: Callable, uniques: &UniqueFactory, is_subset: &mut dyn FnMut(&Type, &Type) -> bool) -> Callable",
+          "summary": "Partially instantiate a generic function using the first argument. Mainly, we use this to create a function type from a bound function, but also for calling the staticmethod `__new__`."
+        },
+        {
+          "name": "is_consistent",
+          "signature": "fn is_consistent<Ans: LookupAnswer>(&self, got: &Type, want: &Type, type_order: TypeOrder<'_, Ans>) -> Result<(), SubsetError>"
+        },
+        {
+          "name": "is_equivalent",
+          "signature": "fn is_equivalent<Ans: LookupAnswer>(&self, got: &Type, want: &Type, type_order: TypeOrder<'_, Ans>) -> Result<(), SubsetError>"
+        },
+        {
+          "name": "is_partial",
+          "signature": "fn is_partial(&self, ty: &Type) -> bool",
+          "summary": "Returns true if the given type is a Var that points to a partial variable."
+        },
+        {
+          "name": "is_subset_eq",
+          "signature": "fn is_subset_eq<'subset, Ans: LookupAnswer>(&self, got: &Type, want: &Type, type_order: TypeOrder<'_, Ans>, call_context: Option<&CallContext<'subset>>) -> Result<(), SubsetError>",
+          "summary": "Is `got <: want`? If you aren't sure, return `false`. May cause partial variables to be resolved to an answer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(infer_with_first_use: bool, tensor_shapes: bool, strict_callable_subtyping: bool, strict_partial_subtyping: bool, spec_compliant_overloads: bool, legacy_overload_expansion: bool) -> Self",
+          "summary": "Create a new solver."
+        },
+        {
+          "name": "partial_sort_by_vars",
+          "signature": "fn partial_sort_by_vars<'a>(&self, ts: &'a [Type]) -> impl Iterator<Item = (&'a Type, Vec<Var>)>"
+        },
+        {
+          "name": "pin_placeholder_type",
+          "signature": "fn pin_placeholder_type(&self, var: Var, pin_partial_types: bool) -> Option<PinError>",
+          "summary": "Force all non-recursive Vars in `vars`."
+        },
+        {
+          "name": "record_recursive",
+          "signature": "fn record_recursive(&self, var: Var, ty: Type) -> Type",
+          "summary": "Record a variable that is used recursively."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&self, var: Var, recurser: &'a VarRecurser) -> Option<Guard<'a, Var>>"
+        },
+        {
+          "name": "restore_vars",
+          "signature": "fn restore_vars(&self, snapshot: VarSnapshot)",
+          "summary": "Restore vars to a previously saved snapshot."
+        },
+        {
+          "name": "sanitize_type_vars",
+          "signature": "fn sanitize_type_vars(&self, ty: &Type, pin_partial_types: bool) -> Vec<PinError>",
+          "summary": "Resolve every solver variable reachable from `ty` without rewriting the type itself."
+        },
+        {
+          "name": "sanitize_vars",
+          "signature": "fn sanitize_vars(&self, pending: Vec<Var>, pin_partial_types: bool) -> Vec<PinError>",
+          "summary": "A `ResidualAnswer` is as final as an `Answer`, so it freezes the same way. Its `target_vars` only select who sees the residual read of the answer; the answer does not point at them, so they are neither traversed nor frozen here."
+        },
+        {
+          "name": "snapshot_vars",
+          "signature": "fn snapshot_vars(&self, vars: &[Var]) -> VarSnapshot",
+          "summary": "Snapshot the current state of the given vars so they can be restored later."
+        },
+        {
+          "name": "store_protocol_cache",
+          "signature": "fn store_protocol_cache<Ans: LookupAnswer>(&self, got: &Type, want: &Type, result: &Result<(), SubsetError>, type_order: TypeOrder<'_, Ans>)",
+          "summary": "Store a protocol conformance result."
+        },
+        {
+          "name": "store_typed_dict_cache",
+          "signature": "fn store_typed_dict_cache<Ans: LookupAnswer>(&self, got: &TypedDict, want: &TypedDict, result: &Result<(), SubsetError>, type_order: TypeOrder<'_, Ans>)"
+        },
+        {
+          "name": "unions",
+          "signature": "fn unions<Ans: LookupAnswer>(&self, branches: Vec<Type>, type_order: TypeOrder<'_, Ans>) -> Type",
+          "summary": "Union a list of types together. In the process may cause some variables to be forced."
+        },
+        {
+          "name": "var_is_partial",
+          "signature": "fn var_is_partial(&self, var: Var) -> bool",
+          "summary": "Check whether a Var represents a partial/placeholder type that would be pinned by `pin_placeholder_type` with `pin_partial_types=true`. This excludes Quantified (which represents an error case, not a normal partial type) and focuses on the…"
+        },
+        {
+          "name": "with_snapshot",
+          "signature": "fn with_snapshot(&self, vars: &[Var], f: impl FnOnce() -> Result<(), SubsetError>) -> SubsetWithSnapshotResult",
+          "summary": "Snapshots the given vars, calls `f`, and rolls back the vars if the call fails. Note that this only rolls back the var state and not: * `Ok` entries left in `subset_cache` (the rollback in `is_subset_eq_impl` only fires on   `Err` from the…"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::VarRecurser",
+      "name": "VarRecurser",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct VarRecurser",
+      "summary": "A recurser for Vars which is aware of unification. Prefer this over Recurser<Var> and use Solver::recurse.",
+      "doc": "api/pyrefly.solver.solver.md#varrecurser",
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::solver::solver::VarSnapshot",
+      "name": "VarSnapshot",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct VarSnapshot",
+      "summary": "Snapshot of solver variable state. IMPORTANT: this struct is deliberately opaque. Var state should not be exposed outside this file.",
+      "doc": "api/pyrefly.solver.solver.md#varsnapshot"
+    }
+  ]
+}

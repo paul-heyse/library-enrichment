@@ -1,7 +1,7 @@
 ---
 id: ADR-0023
 title: Publish the relational catalog through one coherent generation
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§B7, §6.3, §8.2, §8.4]
 review: docs/design_review/reviews/design_review_arrow-target-contract_2026-09-14.md
 evidence: Proposed
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0042
 revisit: A real transaction or storage workload cannot meet its bounded consistency/cost contract with immutable manifests.
 verification: snapshot_admission; catalog_generation; publication_crashes; concurrent_catalog_publishers; export_closure
 ---
@@ -110,3 +110,4 @@ or automatic project editing is added.
 
 - 2026-09-14 — proposed for target-contract review; implementation authorized.
 - 2026-09-14 — accepted at Proposed contract scope by the target-contract review; implementation and executable acceptance remain open.
+- 2026-09-15 — superseded by ADR-0042.

@@ -1,0 +1,585 @@
+{
+  "module": "ruff_python_semantic::scope",
+  "crate": "ruff_python_semantic",
+  "api": "api/ruff_python_semantic.scope.md",
+  "items": [
+    {
+      "path": "ruff_python_semantic::scope::GeneratorKind",
+      "name": "GeneratorKind",
+      "kind": "enum",
+      "crate": "ruff_python_semantic",
+      "signature": "enum GeneratorKind",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_python_semantic::GeneratorKind"
+      ],
+      "variants": [
+        "Generator",
+        "ListComprehension",
+        "DictComprehension",
+        "SetComprehension"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_python_semantic::scope::ScopeKind",
+      "name": "ScopeKind",
+      "kind": "enum",
+      "crate": "ruff_python_semantic",
+      "signature": "enum ScopeKind<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_python_semantic::ScopeKind"
+      ],
+      "variants": [
+        "Class",
+        "DunderClassCell",
+        "Function",
+        "Generator",
+        "Module",
+        "Type",
+        "Lambda"
+      ],
+      "methods": [
+        {
+          "name": "as_class",
+          "signature": "fn as_class(&self) -> Option<&&'a ast::StmtClassDef>",
+          "summary": "Returns `Some` if `self` is a reference of variant [`Class`], and `None` otherwise."
+        },
+        {
+          "name": "as_function",
+          "signature": "fn as_function(&self) -> Option<&&'a ast::StmtFunctionDef>",
+          "summary": "Returns `Some` if `self` is a reference of variant [`Function`], and `None` otherwise."
+        },
+        {
+          "name": "as_lambda",
+          "signature": "fn as_lambda(&self) -> Option<&&'a ast::ExprLambda>",
+          "summary": "Returns `Some` if `self` is a reference of variant [`Lambda`], and `None` otherwise."
+        },
+        {
+          "name": "as_mut_class",
+          "signature": "fn as_mut_class(&mut self) -> Option<&mut &'a ast::StmtClassDef>",
+          "summary": "Returns `Some` if `self` is a mutable reference of variant [`Class`], and `None` otherwise."
+        },
+        {
+          "name": "as_mut_function",
+          "signature": "fn as_mut_function(&mut self) -> Option<&mut &'a ast::StmtFunctionDef>",
+          "summary": "Returns `Some` if `self` is a mutable reference of variant [`Function`], and `None` otherwise."
+        },
+        {
+          "name": "as_mut_lambda",
+          "signature": "fn as_mut_lambda(&mut self) -> Option<&mut &'a ast::ExprLambda>",
+          "summary": "Returns `Some` if `self` is a mutable reference of variant [`Lambda`], and `None` otherwise."
+        },
+        {
+          "name": "class",
+          "signature": "fn class(self) -> Option<&'a ast::StmtClassDef>",
+          "summary": "Returns `Some` if `self` is of variant [`Class`], and `None` otherwise."
+        },
+        {
+          "name": "expect_class",
+          "signature": "fn expect_class(self) -> &'a ast::StmtClassDef where Self: ::std::fmt::Debug",
+          "summary": "Unwraps the value, yielding the content of [`Class`]."
+        },
+        {
+          "name": "expect_function",
+          "signature": "fn expect_function(self) -> &'a ast::StmtFunctionDef where Self: ::std::fmt::Debug",
+          "summary": "Unwraps the value, yielding the content of [`Function`]."
+        },
+        {
+          "name": "expect_lambda",
+          "signature": "fn expect_lambda(self) -> &'a ast::ExprLambda where Self: ::std::fmt::Debug",
+          "summary": "Unwraps the value, yielding the content of [`Lambda`]."
+        },
+        {
+          "name": "function",
+          "signature": "fn function(self) -> Option<&'a ast::StmtFunctionDef>",
+          "summary": "Returns `Some` if `self` is of variant [`Function`], and `None` otherwise."
+        },
+        {
+          "name": "is_class",
+          "signature": "const fn is_class(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Class`]."
+        },
+        {
+          "name": "is_dunder_class_cell",
+          "signature": "const fn is_dunder_class_cell(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`DunderClassCell`]."
+        },
+        {
+          "name": "is_function",
+          "signature": "const fn is_function(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Function`]."
+        },
+        {
+          "name": "is_generator",
+          "signature": "const fn is_generator(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Generator`]."
+        },
+        {
+          "name": "is_lambda",
+          "signature": "const fn is_lambda(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Lambda`]."
+        },
+        {
+          "name": "is_module",
+          "signature": "const fn is_module(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Module`]."
+        },
+        {
+          "name": "is_type",
+          "signature": "const fn is_type(&self) -> bool",
+          "summary": "Returns `true` if `self` is of variant [`Type`]."
+        },
+        {
+          "name": "lambda",
+          "signature": "fn lambda(self) -> Option<&'a ast::ExprLambda>",
+          "summary": "Returns `Some` if `self` is of variant [`Lambda`], and `None` otherwise."
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::scope::Scope",
+      "name": "Scope",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct Scope<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_python_semantic::Scope"
+      ],
+      "fields": [
+        "kind"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, name: &'a str, id: BindingId) -> Option<BindingId>",
+          "summary": "Adds a new binding with the given name to this scope."
+        },
+        {
+          "name": "add_star_import",
+          "signature": "fn add_star_import(&mut self, import: StarImport<'a>)",
+          "summary": "Adds a reference to a star import (e.g., `from sys import *`) to this scope."
+        },
+        {
+          "name": "all_bindings",
+          "signature": "fn all_bindings(&self) -> impl Iterator<Item = (&str, BindingId)> + '_",
+          "summary": "Like [`Scope::bindings`], but returns all bindings added to the scope, including those that were shadowed by later bindings."
+        },
+        {
+          "name": "binding_ids",
+          "signature": "fn binding_ids(&self) -> impl Iterator<Item = BindingId> + '_",
+          "summary": "Returns the IDs of all bindings defined in this scope."
+        },
+        {
+          "name": "bindings",
+          "signature": "fn bindings(&self) -> impl Iterator<Item = (&'a str, BindingId)> + '_",
+          "summary": "Returns a tuple of the name and ID of all bindings defined in this scope."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, name: &str) -> Option<BindingId>",
+          "summary": "Returns the [id](BindingId) of the binding bound to the given name."
+        },
+        {
+          "name": "get_all",
+          "signature": "fn get_all(&self, name: &str) -> impl Iterator<Item = BindingId> + '_",
+          "summary": "Like [`Scope::get`], but returns all bindings with the given name, including those that were shadowed by later bindings."
+        },
+        {
+          "name": "has",
+          "signature": "fn has(&self, name: &str) -> bool",
+          "summary": "Returns `true` if this scope has a binding with the given name."
+        },
+        {
+          "name": "set_uses_locals",
+          "signature": "fn set_uses_locals(&mut self)",
+          "summary": "Sets the [`ScopeFlags::USES_LOCALS`] flag."
+        },
+        {
+          "name": "shadowed_binding",
+          "signature": "fn shadowed_binding(&self, id: BindingId) -> Option<BindingId>",
+          "summary": "Returns the ID of the binding that the given binding shadows, if any."
+        },
+        {
+          "name": "shadowed_bindings",
+          "signature": "fn shadowed_bindings(&self, id: BindingId) -> impl Iterator<Item = BindingId> + '_",
+          "summary": "Returns an iterator over all bindings that the given binding shadows, including itself."
+        },
+        {
+          "name": "uses_locals",
+          "signature": "const fn uses_locals(&self) -> bool",
+          "summary": "Returns `true` if this scope uses locals (e.g., `locals()`)."
+        },
+        {
+          "name": "uses_star_imports",
+          "signature": "fn uses_star_imports(&self) -> bool",
+          "summary": "Returns `true` if this scope contains a star import (e.g., `from sys import *`)."
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::scope::ScopeFlags",
+      "name": "ScopeFlags",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct ScopeFlags",
+      "summary": "Flags on a [`Scope`].",
+      "doc": "api/ruff_python_semantic.scope.md#scopeflags",
+      "aliases": [
+        "ruff_python_semantic::ScopeFlags"
+      ],
+      "implements": [
+        "bitflags::traits::Flags",
+        "bitflags::traits::PublicFlags",
+        "core::fmt::Binary",
+        "core::fmt::LowerHex",
+        "core::fmt::Octal",
+        "core::fmt::UpperHex",
+        "core::iter::traits::collect::Extend",
+        "core::iter::traits::collect::FromIterator",
+        "core::iter::traits::collect::IntoIterator",
+        "core::ops::arith::Sub",
+        "core::ops::arith::SubAssign",
+        "core::ops::bit::BitAnd",
+        "core::ops::bit::BitAndAssign",
+        "core::ops::bit::BitOr",
+        "core::ops::bit::BitOrAssign",
+        "core::ops::bit::BitXor",
+        "core::ops::bit::BitXorAssign",
+        "core::ops::bit::Not"
+      ],
+      "methods": [
+        {
+          "name": "all",
+          "signature": "const fn all() -> Self",
+          "summary": "Get a flags value with all known bits set."
+        },
+        {
+          "name": "all_named",
+          "signature": "fn all_named() -> ScopeFlags",
+          "via_trait": "bitflags::traits::Flags"
+        },
+        {
+          "name": "bitand",
+          "signature": "fn bitand(self, other: Self) -> Self",
+          "via_trait": "core::ops::bit::BitAnd",
+          "summary": "The bitwise and (`&`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "bitand_assign",
+          "signature": "fn bitand_assign(&mut self, other: Self)",
+          "via_trait": "core::ops::bit::BitAndAssign",
+          "summary": "The bitwise and (`&`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "bitor",
+          "signature": "fn bitor(self, other: ScopeFlags) -> Self",
+          "via_trait": "core::ops::bit::BitOr",
+          "summary": "The bitwise or (`|`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "bitor_assign",
+          "signature": "fn bitor_assign(&mut self, other: Self)",
+          "via_trait": "core::ops::bit::BitOrAssign",
+          "summary": "The bitwise or (`|`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "bits",
+          "signature": "const fn bits(&self) -> u8",
+          "summary": "Get the underlying bits value."
+        },
+        {
+          "name": "bits",
+          "signature": "fn bits(&self) -> u8",
+          "via_trait": "bitflags::traits::Flags"
+        },
+        {
+          "name": "bitxor",
+          "signature": "fn bitxor(self, other: Self) -> Self",
+          "via_trait": "core::ops::bit::BitXor",
+          "summary": "The bitwise exclusive-or (`^`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "bitxor_assign",
+          "signature": "fn bitxor_assign(&mut self, other: Self)",
+          "via_trait": "core::ops::bit::BitXorAssign",
+          "summary": "The bitwise exclusive-or (`^`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "complement",
+          "signature": "const fn complement(self) -> Self",
+          "summary": "The bitwise negation (`!`) of the bits in `self`, truncating the result."
+        },
+        {
+          "name": "contains",
+          "signature": "const fn contains(&self, other: Self) -> bool",
+          "summary": "Whether all set bits in `other` are also set in `self`."
+        },
+        {
+          "name": "difference",
+          "signature": "const fn difference(self, other: Self) -> Self",
+          "summary": "The intersection of `self` with the complement of `other` (`&!`)."
+        },
+        {
+          "name": "empty",
+          "signature": "const fn empty() -> Self",
+          "summary": "Get a flags value with all bits unset."
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend<T: __private::core::iter::IntoIterator<Item = Self>>(&mut self, iterator: T)",
+          "via_trait": "core::iter::traits::collect::Extend",
+          "summary": "The bitwise or (`|`) of the bits in each flags value."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut __private::core::fmt::Formatter<'_>) -> __private::core::fmt::Result",
+          "via_trait": "core::fmt::Binary"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut __private::core::fmt::Formatter<'_>) -> __private::core::fmt::Result",
+          "via_trait": "core::fmt::LowerHex"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut __private::core::fmt::Formatter<'_>) -> __private::core::fmt::Result",
+          "via_trait": "core::fmt::Octal"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut __private::core::fmt::Formatter<'_>) -> __private::core::fmt::Result",
+          "via_trait": "core::fmt::UpperHex"
+        },
+        {
+          "name": "from_bits",
+          "signature": "const fn from_bits(bits: u8) -> __private::core::option::Option<Self>",
+          "summary": "Convert from a bits value."
+        },
+        {
+          "name": "from_bits_retain",
+          "signature": "const fn from_bits_retain(bits: u8) -> Self",
+          "summary": "Convert from a bits value exactly."
+        },
+        {
+          "name": "from_bits_retain",
+          "signature": "fn from_bits_retain(bits: u8) -> ScopeFlags",
+          "via_trait": "bitflags::traits::Flags"
+        },
+        {
+          "name": "from_bits_truncate",
+          "signature": "const fn from_bits_truncate(bits: u8) -> Self",
+          "summary": "Convert from a bits value, unsetting any unknown bits."
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<T: __private::core::iter::IntoIterator<Item = Self>>(iterator: T) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator",
+          "summary": "The bitwise or (`|`) of the bits in each flags value."
+        },
+        {
+          "name": "from_name",
+          "signature": "fn from_name(name: &str) -> __private::core::option::Option<Self>",
+          "summary": "Get a flags value with the bits of a flag with the given name set."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert(&mut self, other: Self)",
+          "summary": "The bitwise or (`|`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "intersection",
+          "signature": "const fn intersection(self, other: Self) -> Self",
+          "summary": "The bitwise and (`&`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "intersects",
+          "signature": "const fn intersects(&self, other: Self) -> bool",
+          "summary": "Whether any set bits in `other` are also set in `self`."
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "is_all",
+          "signature": "const fn is_all(&self) -> bool",
+          "summary": "Whether all known bits in this flags value are set."
+        },
+        {
+          "name": "is_empty",
+          "signature": "const fn is_empty(&self) -> bool",
+          "summary": "Whether all bits in `self` are unset."
+        },
+        {
+          "name": "iter",
+          "signature": "const fn iter(&self) -> iter::Iter<ScopeFlags>",
+          "summary": "Yield a set of contained flags values."
+        },
+        {
+          "name": "iter_names",
+          "signature": "const fn iter_names(&self) -> iter::IterNames<ScopeFlags>",
+          "summary": "Yield a set of contained named flags values."
+        },
+        {
+          "name": "not",
+          "signature": "fn not(self) -> Self",
+          "via_trait": "core::ops::bit::Not",
+          "summary": "The bitwise negation (`!`) of the bits in `self`, truncating the result."
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove(&mut self, other: Self)",
+          "summary": "The intersection of `self` with the complement of `other` (`&!`)."
+        },
+        {
+          "name": "set",
+          "signature": "fn set(&mut self, other: Self, value: bool)",
+          "summary": "Call `insert` when `value` is `true` or `remove` when `value` is `false`."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(self, other: Self) -> Self",
+          "via_trait": "core::ops::arith::Sub",
+          "summary": "The intersection of `self` with the complement of `other` (`&!`)."
+        },
+        {
+          "name": "sub_assign",
+          "signature": "fn sub_assign(&mut self, other: Self)",
+          "via_trait": "core::ops::arith::SubAssign",
+          "summary": "The intersection of `self` with the complement of `other` (`&!`)."
+        },
+        {
+          "name": "symmetric_difference",
+          "signature": "const fn symmetric_difference(self, other: Self) -> Self",
+          "summary": "The bitwise exclusive-or (`^`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "toggle",
+          "signature": "fn toggle(&mut self, other: Self)",
+          "summary": "The bitwise exclusive-or (`^`) of the bits in `self` and `other`."
+        },
+        {
+          "name": "union",
+          "signature": "const fn union(self, other: Self) -> Self",
+          "summary": "The bitwise or (`|`) of the bits in `self` and `other`."
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::scope::ScopeId",
+      "name": "ScopeId",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct ScopeId",
+      "summary": "Id uniquely identifying a scope in a program.",
+      "doc": "api/ruff_python_semantic.scope.md#scopeid",
+      "aliases": [
+        "ruff_python_semantic::ScopeId"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::ops::arith::Add",
+        "ruff_index::idx::Idx"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(self, rhs: usize) -> Self::Output",
+          "via_trait": "core::ops::arith::Add"
+        },
+        {
+          "name": "as_u32",
+          "signature": "const fn as_u32(self) -> u32",
+          "summary": "Returns the index as a `u32` value"
+        },
+        {
+          "name": "as_usize",
+          "signature": "const fn as_usize(self) -> usize",
+          "summary": "Returns the index as a `usize` value"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: usize) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_u32",
+          "signature": "const fn from_u32(value: u32) -> Self"
+        },
+        {
+          "name": "from_usize",
+          "signature": "const fn from_usize(value: usize) -> Self"
+        },
+        {
+          "name": "global",
+          "signature": "const fn global() -> Self",
+          "summary": "Returns the ID for the global scope"
+        },
+        {
+          "name": "index",
+          "signature": "const fn index(self) -> usize"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(self) -> usize",
+          "via_trait": "ruff_index::idx::Idx"
+        },
+        {
+          "name": "is_global",
+          "signature": "const fn is_global(&self) -> bool",
+          "summary": "Returns `true` if this is the id of the global scope"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(value: usize) -> Self",
+          "via_trait": "ruff_index::idx::Idx"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::scope::Scopes",
+      "name": "Scopes",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct Scopes<'a>",
+      "summary": "The scopes of a program indexed by [`ScopeId`]",
+      "doc": "api/ruff_python_semantic.scope.md#scopes",
+      "aliases": [
+        "ruff_python_semantic::Scopes"
+      ],
+      "implements": [
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut"
+      ],
+      "methods": [
+        {
+          "name": "ancestor_ids",
+          "signature": "fn ancestor_ids(&self, scope_id: ScopeId) -> impl Iterator<Item = ScopeId> + '_",
+          "summary": "Returns an iterator over all [`ScopeId`] ancestors, starting from the given [`ScopeId`]."
+        },
+        {
+          "name": "ancestors",
+          "signature": "fn ancestors(&self, scope_id: ScopeId) -> impl Iterator<Item = &Scope<'a>> + '_",
+          "summary": "Returns an iterator over all [`Scope`] ancestors, starting from the given [`ScopeId`]."
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut Self::Target",
+          "via_trait": "core::ops::deref::DerefMut"
+        }
+      ]
+    }
+  ]
+}

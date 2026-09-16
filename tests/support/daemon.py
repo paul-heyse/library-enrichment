@@ -181,7 +181,7 @@ async def read_complete_answer(client, result):
             content = b"".join(parts)
             assert hashlib.sha256(content).hexdigest() == data["artifact"]["sha256"]
             document = json.loads(content)
-            assert document["index"]["format"] == "research-result/2"
+            assert document["index"]["format"] == "research-result/3"
             return document["result"]
         assert chunk and following != cursor
         cursor = following

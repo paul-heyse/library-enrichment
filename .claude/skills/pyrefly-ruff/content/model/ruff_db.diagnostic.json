@@ -1,0 +1,995 @@
+{
+  "module": "ruff_db::diagnostic",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.diagnostic.md",
+  "items": [
+    {
+      "path": "ruff_db::diagnostic::ConciseMessage",
+      "name": "ConciseMessage",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum ConciseMessage<'a>",
+      "summary": "A representation of the kinds of messages inside a diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#concisemessage",
+      "variants": [
+        "MainDiagnostic",
+        "Both",
+        "Custom"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "to_str",
+          "signature": "fn to_str(&self) -> Cow<'a, str>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::DiagnosticFormat",
+      "name": "DiagnosticFormat",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum DiagnosticFormat",
+      "summary": "The diagnostic output format.",
+      "doc": "api/ruff_db.diagnostic.md#diagnosticformat",
+      "variants": [
+        "Full",
+        "Concise",
+        "Azure",
+        "Pylint",
+        "Github"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_db::diagnostic::DiagnosticId",
+      "name": "DiagnosticId",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum DiagnosticId",
+      "summary": "Uniquely identifies the kind of a diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#diagnosticid",
+      "variants": [
+        "Panic",
+        "Io",
+        "InvalidSyntax",
+        "Lint",
+        "RevealedType",
+        "UnknownRule",
+        "InvalidGlob",
+        "InvalidScriptMetadata",
+        "UvMetadata",
+        "EmptyInclude",
+        "UnnecessaryOverridesSection",
+        "UselessOverridesSection",
+        "DeprecatedSetting",
+        "UnsupportedPythonVersion",
+        "Unformatted",
+        "InvalidCliOption",
+        "PreviewFeature",
+        "InternalError"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_lint",
+          "signature": "const fn as_lint(&self) -> Option<LintName>"
+        },
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str",
+          "summary": "Returns a concise description of this diagnostic ID."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "is_lint",
+          "signature": "fn is_lint(&self) -> bool",
+          "summary": "Returns `true` if this `DiagnosticId` represents a lint."
+        },
+        {
+          "name": "is_lint_named",
+          "signature": "fn is_lint_named(&self, name: &str) -> bool",
+          "summary": "Returns `true` if this `DiagnosticId` represents a lint with the given name."
+        },
+        {
+          "name": "lint",
+          "signature": "const fn lint(name: &'static str) -> Self",
+          "summary": "Creates a new `DiagnosticId` for a lint with the given name."
+        },
+        {
+          "name": "strip_category",
+          "signature": "fn strip_category(code: &str) -> Option<&str>"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::DiagnosticTag",
+      "name": "DiagnosticTag",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum DiagnosticTag",
+      "summary": "Tags that can be associated with an annotation.",
+      "doc": "api/ruff_db.diagnostic.md#diagnostictag",
+      "variants": [
+        "Unnecessary",
+        "Deprecated"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::HyperlinkMode",
+      "name": "HyperlinkMode",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum HyperlinkMode",
+      "summary": "Controls whether colored diagnostic output includes hyperlinks.",
+      "doc": "api/ruff_db.diagnostic.md#hyperlinkmode",
+      "variants": [
+        "Auto",
+        "Always",
+        "Never"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_db::diagnostic::Severity",
+      "name": "Severity",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum Severity",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Info",
+        "Warning",
+        "Error",
+        "Fatal"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "is_fatal",
+          "signature": "const fn is_fatal(self) -> bool"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::SubDiagnosticSeverity",
+      "name": "SubDiagnosticSeverity",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum SubDiagnosticSeverity",
+      "summary": "Like [`Severity`] but exclusively for sub-diagnostics.",
+      "doc": "api/ruff_db.diagnostic.md#subdiagnosticseverity",
+      "variants": [
+        "Help",
+        "Info",
+        "Warning",
+        "Error",
+        "Fatal"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::UnifiedFile",
+      "name": "UnifiedFile",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum UnifiedFile",
+      "summary": "A unified file representation for both ruff and ty.",
+      "doc": "api/ruff_db.diagnostic.md#unifiedfile",
+      "variants": [
+        "Ty",
+        "Ruff"
+      ],
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::Annotation",
+      "name": "Annotation",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Annotation",
+      "summary": "A pointer to a subsequence in the end user's input.",
+      "doc": "api/ruff_db.diagnostic.md#annotation",
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_message",
+          "signature": "fn get_message(&self) -> Option<&str>",
+          "summary": "Returns the message attached to this annotation, if one exists."
+        },
+        {
+          "name": "get_span",
+          "signature": "fn get_span(&self) -> &Span",
+          "summary": "Returns the `Span` associated with this annotation."
+        },
+        {
+          "name": "hide_snippet",
+          "signature": "fn hide_snippet(&mut self, yes: bool)",
+          "summary": "Set whether or not the snippet on this annotation should be suppressed when rendering."
+        },
+        {
+          "name": "is_primary",
+          "signature": "fn is_primary(&self) -> bool"
+        },
+        {
+          "name": "message",
+          "signature": "fn message<'a>(self, message: impl IntoDiagnosticMessage + 'a) -> Annotation",
+          "summary": "Attach a message to this annotation."
+        },
+        {
+          "name": "primary",
+          "signature": "fn primary(span: Span) -> Annotation",
+          "summary": "Create a \"primary\" annotation."
+        },
+        {
+          "name": "push_tag",
+          "signature": "fn push_tag(&mut self, tag: DiagnosticTag)",
+          "summary": "Attaches an additional tag to this annotation."
+        },
+        {
+          "name": "secondary",
+          "signature": "fn secondary(span: Span) -> Annotation",
+          "summary": "Create a \"secondary\" annotation."
+        },
+        {
+          "name": "set_message",
+          "signature": "fn set_message<'a>(&mut self, message: impl IntoDiagnosticMessage + 'a)",
+          "summary": "Sets the message on this annotation."
+        },
+        {
+          "name": "set_span",
+          "signature": "fn set_span(&mut self, span: Span)",
+          "summary": "Sets the span on this annotation."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::Diagnostic",
+      "name": "Diagnostic",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Diagnostic",
+      "summary": "A collection of information that can be rendered into a diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#diagnostic",
+      "implements": [
+        "core::convert::From",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "add_bug_sub_diagnostics",
+          "signature": "fn add_bug_sub_diagnostics(&mut self, url_encoded_title: &str)",
+          "summary": "Adds sub diagnostics that tell the user that this is a bug in ty and asks them to open an issue on GitHub."
+        },
+        {
+          "name": "annotate",
+          "signature": "fn annotate(&mut self, ann: Annotation)",
+          "summary": "Add an annotation to this diagnostic."
+        },
+        {
+          "name": "annotations",
+          "signature": "fn annotations(&self) -> &[Annotation]",
+          "summary": "Returns all annotations in the order in which they were added."
+        },
+        {
+          "name": "annotations_mut",
+          "signature": "fn annotations_mut(&mut self) -> impl Iterator<Item = &mut Annotation>",
+          "summary": "Returns a mutable borrow of all annotations of this diagnostic."
+        },
+        {
+          "name": "clear_concise_message",
+          "signature": "fn clear_concise_message(&mut self)",
+          "summary": "Remove the custom concise message, restoring the default behavior of generating a concise message from the headline message and the primary annotation."
+        },
+        {
+          "name": "concise_message",
+          "signature": "fn concise_message(&self) -> ConciseMessage<'_>",
+          "summary": "Introspects this diagnostic and returns its message for concise formatting."
+        },
+        {
+          "name": "display",
+          "signature": "fn display<'a>(&'a self, resolver: &'a dyn FileResolver, config: &'a DisplayDiagnosticConfig) -> DisplayDiagnostic<'a>",
+          "summary": "Return a `std::fmt::Display` implementation that renders this diagnostic into a human readable format."
+        },
+        {
+          "name": "documentation_url",
+          "signature": "fn documentation_url(&self) -> Option<&str>"
+        },
+        {
+          "name": "expect_primary_span",
+          "signature": "fn expect_primary_span(&self) -> Span",
+          "summary": "Returns the \"primary\" span of this diagnostic, panicking if it does not exist."
+        },
+        {
+          "name": "expect_ruff_filename",
+          "signature": "fn expect_ruff_filename(&self) -> String",
+          "summary": "Returns the filename for the message."
+        },
+        {
+          "name": "first_help_text",
+          "signature": "fn first_help_text(&self) -> Option<&str>",
+          "summary": "Returns the message of the first sub-diagnostic with a `Help` severity."
+        },
+        {
+          "name": "fix",
+          "signature": "fn fix(&self) -> Option<&Fix>",
+          "summary": "Returns the fix for this diagnostic if it exists."
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "has_applicable_fix",
+          "signature": "fn has_applicable_fix(&self, fix_applicability: Applicability) -> bool",
+          "summary": "Returns `true` if the diagnostic has a fix that applies at the configured applicability level."
+        },
+        {
+          "name": "headline_message",
+          "signature": "fn headline_message(&self) -> &str",
+          "summary": "Returns the headline message for this diagnostic."
+        },
+        {
+          "name": "help",
+          "signature": "fn help<'a>(&mut self, message: impl IntoDiagnosticMessage + 'a)",
+          "summary": "Adds a \"help\" sub-diagnostic with the given message."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> DiagnosticId",
+          "summary": "Returns the identifier for this diagnostic."
+        },
+        {
+          "name": "info",
+          "signature": "fn info<'a>(&mut self, message: impl IntoDiagnosticMessage + 'a)",
+          "summary": "Adds an \"info\" sub-diagnostic with the given message."
+        },
+        {
+          "name": "invalid_syntax",
+          "signature": "fn invalid_syntax(span: impl Into<Span>, message: impl IntoDiagnosticMessage, range: impl Ranged) -> Diagnostic",
+          "summary": "Creates a `Diagnostic` for a syntax error."
+        },
+        {
+          "name": "is_invalid_syntax",
+          "signature": "fn is_invalid_syntax(&self) -> bool",
+          "summary": "Returns `true` if `self` is a syntax error message."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "summary": "Returns the name used to represent the diagnostic."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<'a>(id: DiagnosticId, severity: Severity, message: impl IntoDiagnosticMessage + 'a) -> Diagnostic",
+          "summary": "Create a new diagnostic with the given identifier, severity and message."
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<TextSize>",
+          "summary": "Returns the offset of the parent statement for this diagnostic if it exists."
+        },
+        {
+          "name": "prepend_info",
+          "signature": "fn prepend_info<'a>(&mut self, message: impl IntoDiagnosticMessage + 'a)",
+          "summary": "Adds an \"info\" sub-diagnostic before any existing sub-diagnostics."
+        },
+        {
+          "name": "primary_annotation",
+          "signature": "fn primary_annotation(&self) -> Option<&Annotation>",
+          "summary": "Returns a shared borrow of the \"primary\" annotation of this diagnostic if one exists."
+        },
+        {
+          "name": "primary_annotation_mut",
+          "signature": "fn primary_annotation_mut(&mut self) -> Option<&mut Annotation>",
+          "summary": "Returns a mutable borrow of the \"primary\" annotation of this diagnostic if one exists."
+        },
+        {
+          "name": "primary_span",
+          "signature": "fn primary_span(&self) -> Option<Span>",
+          "summary": "Returns the \"primary\" span of this diagnostic if one exists."
+        },
+        {
+          "name": "primary_tags",
+          "signature": "fn primary_tags(&self) -> Option<&[DiagnosticTag]>",
+          "summary": "Returns the tags from the primary annotation of this diagnostic if it exists."
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Option<TextRange>",
+          "summary": "Returns the [`TextRange`] for the diagnostic."
+        },
+        {
+          "name": "remove_fix",
+          "signature": "fn remove_fix(&mut self)",
+          "summary": "Remove the fix for this diagnostic."
+        },
+        {
+          "name": "rendering_sort_key",
+          "signature": "fn rendering_sort_key<'a>(&'a self, db: &'a dyn Db) -> impl Ord + 'a",
+          "summary": "Returns a key that can be used to sort two diagnostics into the canonical order in which they should appear when rendered."
+        },
+        {
+          "name": "ruff_end_location",
+          "signature": "fn ruff_end_location(&self) -> Option<LineColumn>",
+          "summary": "Computes the end source location for the message."
+        },
+        {
+          "name": "ruff_source_file",
+          "signature": "fn ruff_source_file(&self) -> Option<&SourceFile>",
+          "summary": "Returns the [`SourceFile`] which the message belongs to."
+        },
+        {
+          "name": "ruff_start_location",
+          "signature": "fn ruff_start_location(&self) -> Option<LineColumn>",
+          "summary": "Computes the start source location for the message."
+        },
+        {
+          "name": "ruff_start_ordering",
+          "signature": "fn ruff_start_ordering(&self, other: &Self) -> std::cmp::Ordering",
+          "summary": "Returns the ordering of diagnostics based on the start of their ranges, if they have any."
+        },
+        {
+          "name": "secondary_annotations",
+          "signature": "fn secondary_annotations(&self) -> impl Iterator<Item = &Annotation>",
+          "summary": "Returns all annotations, skipping the first primary annotation."
+        },
+        {
+          "name": "secondary_code",
+          "signature": "fn secondary_code(&self) -> Option<&SecondaryCode>",
+          "summary": "Returns the secondary code for the diagnostic if it exists."
+        },
+        {
+          "name": "secondary_code_or_id",
+          "signature": "fn secondary_code_or_id(&self) -> &str",
+          "summary": "Returns the secondary code for the diagnostic if it exists, or the lint name otherwise."
+        },
+        {
+          "name": "set_concise_message",
+          "signature": "fn set_concise_message(&mut self, message: impl IntoDiagnosticMessage)",
+          "summary": "Set a custom message for the concise formatting of this diagnostic."
+        },
+        {
+          "name": "set_documentation_url",
+          "signature": "fn set_documentation_url(&mut self, url: Option<String>)"
+        },
+        {
+          "name": "set_fix",
+          "signature": "fn set_fix(&mut self, fix: Fix)",
+          "summary": "Set the fix for this diagnostic."
+        },
+        {
+          "name": "set_header_offset",
+          "signature": "fn set_header_offset(&mut self, offset: usize)",
+          "summary": "Add an offset for aligning the header sigil with the line number separators in a diff."
+        },
+        {
+          "name": "set_headline_message",
+          "signature": "fn set_headline_message(&mut self, message: impl IntoDiagnosticMessage)",
+          "summary": "Sets the headline message for this diagnostic."
+        },
+        {
+          "name": "set_noqa_offset",
+          "signature": "fn set_noqa_offset(&mut self, noqa_offset: TextSize)",
+          "summary": "Set the remapped offset for a suppression comment."
+        },
+        {
+          "name": "set_optional_fix",
+          "signature": "fn set_optional_fix(&mut self, fix: Option<Fix>)",
+          "summary": "If `fix` is `Some`, set the fix for this diagnostic."
+        },
+        {
+          "name": "set_parent",
+          "signature": "fn set_parent(&mut self, parent: TextSize)",
+          "summary": "Set the offset of the diagnostic's parent statement."
+        },
+        {
+          "name": "set_secondary_code",
+          "signature": "fn set_secondary_code(&mut self, code: SecondaryCode)",
+          "summary": "Set the secondary code for this diagnostic."
+        },
+        {
+          "name": "severity",
+          "signature": "fn severity(&self) -> Severity",
+          "summary": "Returns the severity of this diagnostic."
+        },
+        {
+          "name": "sub",
+          "signature": "fn sub(&mut self, sub: SubDiagnostic)",
+          "summary": "Adds a \"sub\" diagnostic to this diagnostic."
+        },
+        {
+          "name": "sub_diagnostics",
+          "signature": "fn sub_diagnostics(&self) -> &[SubDiagnostic]"
+        },
+        {
+          "name": "sub_diagnostics_mut",
+          "signature": "fn sub_diagnostics_mut(&mut self) -> impl Iterator<Item = &mut SubDiagnostic>",
+          "summary": "Returns a mutable borrow of the sub-diagnostics of this diagnostic."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::DiagnosticMessage",
+      "name": "DiagnosticMessage",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DiagnosticMessage",
+      "summary": "A diagnostic message string.",
+      "doc": "api/ruff_db.diagnostic.md#diagnosticmessage",
+      "implements": [
+        "core::convert::From",
+        "get_size2::GetSize",
+        "ruff_db::diagnostic::IntoDiagnosticMessage"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Returns this message as a borrowed string."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(s: String) -> DiagnosticMessage",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "into_diagnostic_message",
+          "signature": "fn into_diagnostic_message(self) -> DiagnosticMessage",
+          "via_trait": "ruff_db::diagnostic::IntoDiagnosticMessage"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::DisplayDiagnosticConfig",
+      "name": "DisplayDiagnosticConfig",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct DisplayDiagnosticConfig",
+      "summary": "Configuration for rendering diagnostics.",
+      "doc": "api/ruff_db.diagnostic.md#displaydiagnosticconfig",
+      "methods": [
+        {
+          "name": "anonymized_line_numbers",
+          "signature": "fn anonymized_line_numbers(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to anonymize line numbers in full diagnostic output."
+        },
+        {
+          "name": "color",
+          "signature": "fn color(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to enable colors or not."
+        },
+        {
+          "name": "context",
+          "signature": "fn context(self, lines: usize) -> DisplayDiagnosticConfig",
+          "summary": "Set the number of contextual lines to show around each snippet."
+        },
+        {
+          "name": "fix_applicability",
+          "signature": "fn fix_applicability(&self) -> Applicability"
+        },
+        {
+          "name": "format",
+          "signature": "fn format(self, format: DiagnosticFormat) -> DisplayDiagnosticConfig",
+          "summary": "Whether to enable concise diagnostic output or not."
+        },
+        {
+          "name": "hide_severity",
+          "signature": "fn hide_severity(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to hide a diagnostic's severity or not."
+        },
+        {
+          "name": "hyperlinks",
+          "signature": "fn hyperlinks(self, mode: HyperlinkMode) -> DisplayDiagnosticConfig",
+          "summary": "Configures hyperlink rendering for colored diagnostic output."
+        },
+        {
+          "name": "is_prefer_rule_codes_enabled",
+          "signature": "fn is_prefer_rule_codes_enabled(&self) -> bool",
+          "summary": "Whether rule codes are explicitly preferred over human-readable rule names."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(program: &'static str) -> DisplayDiagnosticConfig"
+        },
+        {
+          "name": "prefer_rule_codes",
+          "signature": "fn prefer_rule_codes(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to prefer rule codes over human-readable rule names, even in preview mode."
+        },
+        {
+          "name": "preview",
+          "signature": "fn preview(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to enable preview behavior or not."
+        },
+        {
+          "name": "preview_enabled",
+          "signature": "fn preview_enabled(&self) -> bool"
+        },
+        {
+          "name": "show_fix_status",
+          "signature": "fn show_fix_status(&self) -> bool"
+        },
+        {
+          "name": "with_cancellation_token",
+          "signature": "fn with_cancellation_token(self, token: Option<CancellationToken>) -> DisplayDiagnosticConfig"
+        },
+        {
+          "name": "with_fix_applicability",
+          "signature": "fn with_fix_applicability(self, applicability: Applicability) -> DisplayDiagnosticConfig",
+          "summary": "Set the lowest fix applicability that should be shown."
+        },
+        {
+          "name": "with_show_fix_status",
+          "signature": "fn with_show_fix_status(self, yes: bool) -> DisplayDiagnosticConfig",
+          "summary": "Whether to show a fix's availability or not."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::LintName",
+      "name": "LintName",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct LintName",
+      "summary": "A string identifier for a lint rule.",
+      "doc": "api/ruff_db.diagnostic.md#lintname",
+      "implements": [
+        "core::fmt::Display",
+        "core::ops::deref::Deref",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "const fn as_str(&self) -> &'static str"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "of",
+          "signature": "const fn of(name: &'static str) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::SecondaryCode",
+      "name": "SecondaryCode",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SecondaryCode",
+      "summary": "A secondary identifier for a lint diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#secondarycode",
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::ops::deref::Deref",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: &SecondaryCode) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(code: String) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::Span",
+      "name": "Span",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Span",
+      "summary": "A span represents the source of a diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#span",
+      "implements": [
+        "core::convert::From",
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "as_ruff_file",
+          "signature": "fn as_ruff_file(&self) -> Option<&SourceFile>",
+          "summary": "Returns the [`SourceFile`] attached to this [`Span`]."
+        },
+        {
+          "name": "expect_ty_file",
+          "signature": "fn expect_ty_file(&self) -> File",
+          "summary": "Returns the [`File`] attached to this [`Span`]."
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self) -> &UnifiedFile",
+          "summary": "Returns the `UnifiedFile` attached to this `Span`."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(file: SourceFile) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Option<TextRange>",
+          "summary": "Returns the range, if available, attached to this `Span`."
+        },
+        {
+          "name": "with_optional_range",
+          "signature": "fn with_optional_range(self, range: Option<TextRange>) -> Span",
+          "summary": "Returns a new `Span` with the given optional `range` attached to it."
+        },
+        {
+          "name": "with_range",
+          "signature": "fn with_range(self, range: TextRange) -> Span",
+          "summary": "Returns a new `Span` with the given `range` attached to it."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::SubDiagnostic",
+      "name": "SubDiagnostic",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct SubDiagnostic",
+      "summary": "A collection of information subservient to a diagnostic.",
+      "doc": "api/ruff_db.diagnostic.md#subdiagnostic",
+      "implements": [
+        "get_size2::GetSize"
+      ],
+      "methods": [
+        {
+          "name": "annotate",
+          "signature": "fn annotate(&mut self, ann: Annotation)",
+          "summary": "Add an annotation to this sub-diagnostic."
+        },
+        {
+          "name": "annotations",
+          "signature": "fn annotations(&self) -> &[Annotation]"
+        },
+        {
+          "name": "annotations_mut",
+          "signature": "fn annotations_mut(&mut self) -> impl Iterator<Item = &mut Annotation>",
+          "summary": "Returns a mutable borrow of the annotations of this sub-diagnostic."
+        },
+        {
+          "name": "concise_message",
+          "signature": "fn concise_message(&self) -> ConciseMessage<'_>",
+          "summary": "Introspects this sub-diagnostic and returns its message for concise formatting."
+        },
+        {
+          "name": "get_heap_size",
+          "signature": "fn get_heap_size(&self) -> usize",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "get_heap_size_with_tracker",
+          "signature": "fn get_heap_size_with_tracker<TRACKER: ::get_size2::GetSizeTracker>(&self, tracker: TRACKER) -> (usize, TRACKER)",
+          "via_trait": "get_size2::GetSize"
+        },
+        {
+          "name": "headline_message",
+          "signature": "fn headline_message(&self) -> &str",
+          "summary": "Returns the headline message for this sub-diagnostic."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<'a>(severity: SubDiagnosticSeverity, message: impl IntoDiagnosticMessage + 'a) -> SubDiagnostic",
+          "summary": "Create a new sub-diagnostic with the given severity and message."
+        },
+        {
+          "name": "primary_annotation",
+          "signature": "fn primary_annotation(&self) -> Option<&Annotation>",
+          "summary": "Returns a shared borrow of the \"primary\" annotation of this diagnostic if one exists."
+        },
+        {
+          "name": "primary_span_ref",
+          "signature": "fn primary_span_ref(&self) -> Option<&Span>",
+          "summary": "Returns a reference to the primary span of this sub-diagnostic."
+        },
+        {
+          "name": "secondary_annotations",
+          "signature": "fn secondary_annotations(&self) -> impl Iterator<Item = &Annotation>",
+          "summary": "Returns all annotations, skipping the first primary annotation."
+        },
+        {
+          "name": "severity",
+          "signature": "fn severity(&self) -> SubDiagnosticSeverity"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::diagnostic::IntoDiagnosticMessage",
+      "name": "IntoDiagnosticMessage",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait IntoDiagnosticMessage",
+      "summary": "A trait for values that can be converted into a diagnostic message.",
+      "doc": "api/ruff_db.diagnostic.md#intodiagnosticmessage",
+      "implementors": [
+        "ruff_db::diagnostic::DiagnosticMessage"
+      ],
+      "required_methods": [
+        "into_diagnostic_message"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "into_diagnostic_message",
+          "signature": "fn into_diagnostic_message(self) -> DiagnosticMessage"
+        }
+      ]
+    }
+  ]
+}

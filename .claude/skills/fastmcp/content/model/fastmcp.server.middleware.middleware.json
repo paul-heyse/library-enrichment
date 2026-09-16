@@ -1,0 +1,410 @@
+{
+ "api": "api/fastmcp.server.middleware.middleware.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "aliases": [
+    "fastmcp.server.server.MiddlewarePhase"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#middlewarephase",
+   "inferred": "```xml <special-form 'Literal[\"all\", \"outer\", \"typed\"]'> ``` --- Which slice of a middleware's hooks to run in a single dispatch pass. - ``\"all\"`` runs the whole chain in one pass (``on_message`` -&gt; ``on_request`` / &nbsp;&nbsp;``on_notification`` -&gt; the typed per-method hook). This is what the interior &nbsp;&nbsp;component methods (``call_tool``, ``list_tools``, ...) run for the methods they &nbsp;&nbsp;serve, and what the ``initialize`` request runs at the dispatch root. - ``\"outer\"`` runs only ``on_message`` and ``on_request``/``on_notification``. &nbsp;&nbsp;The root dispatch (in the SDK's middleware layer) runs this pass for the messages the interior never &nbsp;&nbsp;dispatches (notifications, cancellations, unroutable/non-component requests, &nbsp;&nbsp;and pre-handler failures), so ``on_message`` observes *every* inbound message &nbsp;&nbsp;without double-firing for the component methods the interior already covers. - ``\"typed\"`` runs only the per-method hook. Reserved for a future full split; &nbsp;&nbsp;no current dispatch path uses it.",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "MiddlewarePhase",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.MiddlewarePhase",
+   "preferred": "fastmcp.server.server.MiddlewarePhase",
+   "signature": "MiddlewarePhase = Literal['all', 'outer', 'typed']",
+   "summary": "Which slice of a middleware's hooks to run in a single dispatch pass."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#r",
+   "inferred": "TypeVar",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "R",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.R",
+   "preferred": "fastmcp.server.middleware.middleware.R",
+   "signature": "R = TypeVar('R', covariant=True, default=Any)",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#t",
+   "inferred": "TypeVar",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "T",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.T",
+   "preferred": "fastmcp.server.middleware.middleware.T",
+   "signature": "T = TypeVar('T', default=Any)",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#__all__",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "__all__",
+   "nameable": false,
+   "path": "fastmcp.server.middleware.middleware.__all__",
+   "preferred": "fastmcp.server.middleware.middleware.__all__",
+   "signature": "__all__ = ['CallNext', 'Middleware', 'MiddlewareContext']",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.server.server._dispatch_phase"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#_dispatch_phase",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_dispatch_phase",
+   "nameable": false,
+   "path": "fastmcp.server.middleware.middleware._dispatch_phase",
+   "preferred": "fastmcp.server.middleware.middleware._dispatch_phase",
+   "signature": "_dispatch_phase: ContextVar[MiddlewarePhase] = ContextVar('fastmcp_dispatch_phase', default='all')",
+   "summary": "The dispatch phase for the middleware chain currently running."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#_interior_dispatched",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_interior_dispatched",
+   "nameable": false,
+   "path": "fastmcp.server.middleware.middleware._interior_dispatched",
+   "preferred": "fastmcp.server.middleware.middleware._interior_dispatched",
+   "signature": "_interior_dispatched: ContextVar[bool] = ContextVar('fastmcp_interior_dispatched', default=False)",
+   "summary": "Set to True by an interior component dispatch when it runs its middleware chain."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.logger",
+   "preferred": "fastmcp.server.middleware.middleware.logger",
+   "signature": "logger = logging.getLogger(__name__)",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.server.low_level.FastMCPCallNext",
+    "fastmcp.server.middleware.CallNext",
+    "fastmcp.server.middleware.authorization.CallNext",
+    "fastmcp.server.middleware.caching.CallNext",
+    "fastmcp.server.middleware.dereference.CallNext",
+    "fastmcp.server.middleware.error_handling.CallNext",
+    "fastmcp.server.middleware.logging.CallNext",
+    "fastmcp.server.middleware.ping.CallNext",
+    "fastmcp.server.middleware.rate_limiting.CallNext",
+    "fastmcp.server.middleware.response_limiting.CallNext",
+    "fastmcp.server.middleware.timing.CallNext",
+    "fastmcp.server.middleware.tool_injection.CallNext",
+    "fastmcp.server.providers.proxy.CallNext",
+    "fastmcp.server.server.CallNext"
+   ],
+   "bases": [
+    "Protocol[T, R]"
+   ],
+   "decorators": [
+    "runtime_checkable"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#callnext",
+   "kind": "class",
+   "name": "CallNext",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.CallNext",
+   "preferred": "fastmcp.server.middleware.CallNext",
+   "signature": "class CallNext(Protocol[T, R])",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "fastmcp.server.middleware.Middleware",
+    "fastmcp.server.middleware.authorization.Middleware",
+    "fastmcp.server.middleware.caching.Middleware",
+    "fastmcp.server.middleware.dereference.Middleware",
+    "fastmcp.server.middleware.error_handling.Middleware",
+    "fastmcp.server.middleware.logging.Middleware",
+    "fastmcp.server.middleware.ping.Middleware",
+    "fastmcp.server.middleware.rate_limiting.Middleware",
+    "fastmcp.server.middleware.response_limiting.Middleware",
+    "fastmcp.server.middleware.timing.Middleware",
+    "fastmcp.server.middleware.tool_injection.Middleware",
+    "fastmcp.server.providers.proxy.Middleware",
+    "fastmcp.server.server.Middleware"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#middleware",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_call_tool",
+     "signature": "async def on_call_tool(self, context: MiddlewareContext[mt.CallToolRequestParams], call_next: CallNext[mt.CallToolRequestParams, ToolResult]) -> ToolResult"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_discover",
+     "signature": "async def on_discover(self, context: MiddlewareContext[mt.DiscoverRequest], call_next: CallNext[mt.DiscoverRequest, mt.DiscoverResult | dict[str, Any]]) -> mt.DiscoverResult | dict[str, Any]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_get_prompt",
+     "signature": "async def on_get_prompt(self, context: MiddlewareContext[mt.GetPromptRequestParams], call_next: CallNext[mt.GetPromptRequestParams, PromptResult]) -> PromptResult"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_initialize",
+     "signature": "async def on_initialize(self, context: MiddlewareContext[mt.InitializeRequest], call_next: CallNext[mt.InitializeRequest, mt.InitializeResult | None]) -> mt.InitializeResult | None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_list_prompts",
+     "signature": "async def on_list_prompts(self, context: MiddlewareContext[mt.ListPromptsRequest], call_next: CallNext[mt.ListPromptsRequest, Sequence[Prompt]]) -> Sequence[Prompt]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_list_resource_templates",
+     "signature": "async def on_list_resource_templates(self, context: MiddlewareContext[mt.ListResourceTemplatesRequest], call_next: CallNext[mt.ListResourceTemplatesRequest, Sequence[ResourceTemplate]]) -> Sequence[ResourceTemplate]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_list_resources",
+     "signature": "async def on_list_resources(self, context: MiddlewareContext[mt.ListResourcesRequest], call_next: CallNext[mt.ListResourcesRequest, Sequence[Resource]]) -> Sequence[Resource]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_list_tools",
+     "signature": "async def on_list_tools(self, context: MiddlewareContext[mt.ListToolsRequest], call_next: CallNext[mt.ListToolsRequest, Sequence[Tool]]) -> Sequence[Tool]"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_message",
+     "signature": "async def on_message(self, context: MiddlewareContext[Any], call_next: CallNext[Any, Any]) -> Any"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_notification",
+     "signature": "async def on_notification(self, context: MiddlewareContext[mt.Notification[Any, Any]], call_next: CallNext[mt.Notification[Any, Any], Any]) -> Any"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_read_resource",
+     "signature": "async def on_read_resource(self, context: MiddlewareContext[mt.ReadResourceRequestParams], call_next: CallNext[mt.ReadResourceRequestParams, ResourceResult]) -> ResourceResult"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "on_request",
+     "signature": "async def on_request(self, context: MiddlewareContext[mt.Request[Any, Any]], call_next: CallNext[mt.Request[Any, Any], Any]) -> Any"
+    }
+   ],
+   "name": "Middleware",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.Middleware",
+   "preferred": "fastmcp.server.middleware.Middleware",
+   "signature": "class Middleware",
+   "summary": "Base class for FastMCP middleware with dispatching hooks."
+  },
+  {
+   "aliases": [
+    "fastmcp.server.middleware.MiddlewareContext",
+    "fastmcp.server.middleware.authorization.MiddlewareContext",
+    "fastmcp.server.middleware.caching.MiddlewareContext",
+    "fastmcp.server.middleware.dereference.MiddlewareContext",
+    "fastmcp.server.middleware.error_handling.MiddlewareContext",
+    "fastmcp.server.middleware.logging.MiddlewareContext",
+    "fastmcp.server.middleware.ping.MiddlewareContext",
+    "fastmcp.server.middleware.rate_limiting.MiddlewareContext",
+    "fastmcp.server.middleware.response_limiting.MiddlewareContext",
+    "fastmcp.server.middleware.timing.MiddlewareContext",
+    "fastmcp.server.middleware.tool_injection.MiddlewareContext",
+    "fastmcp.server.providers.proxy.MiddlewareContext",
+    "fastmcp.server.server.MiddlewareContext"
+   ],
+   "bases": [
+    "Generic[T]"
+   ],
+   "decorators": [
+    "dataclass(kw_only=True, frozen=True)"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#middlewarecontext",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "fastmcp_context",
+     "signature": "fastmcp_context: Context | None = None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "message",
+     "signature": "message: T"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "method",
+     "signature": "method: str | None = None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "source",
+     "signature": "source: Literal['client', 'server'] = 'client'"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "timestamp",
+     "signature": "timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "type",
+     "signature": "type: Literal['request', 'notification'] = 'request'"
+    }
+   ],
+   "name": "MiddlewareContext",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.MiddlewareContext",
+   "preferred": "fastmcp.server.middleware.MiddlewareContext",
+   "signature": "class MiddlewareContext(Generic[T])",
+   "summary": "Unified context for all middleware operations."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#make_handler_wrapper",
+   "kind": "function",
+   "name": "make_handler_wrapper",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.make_handler_wrapper",
+   "preferred": "fastmcp.server.middleware.middleware.make_handler_wrapper",
+   "signature": "def make_handler_wrapper(handler: Callable[..., Awaitable[Any]], call_next: CallNext[Any, Any]) -> CallNext[Any, Any]",
+   "summary": "",
+   "types_used": [
+    "fastmcp.server.middleware.middleware.CallNext"
+   ]
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#make_middleware_wrapper",
+   "kind": "function",
+   "name": "make_middleware_wrapper",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.make_middleware_wrapper",
+   "preferred": "fastmcp.server.middleware.middleware.make_middleware_wrapper",
+   "signature": "def make_middleware_wrapper(middleware: Middleware, call_next: CallNext[T, R]) -> CallNext[T, R]",
+   "summary": "Create a wrapper that applies a single middleware to a context. The closure bakes in the middleware and call_next function, so it can be passed to other functions that expect a call_next function.",
+   "types_used": [
+    "fastmcp.server.middleware.middleware.CallNext",
+    "fastmcp.server.middleware.middleware.R",
+    "fastmcp.server.middleware.middleware.T"
+   ]
+  },
+  {
+   "aliases": [
+    "fastmcp.server.server.mark_interior_dispatched"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.middleware.middleware.md#mark_interior_dispatched",
+   "kind": "function",
+   "name": "mark_interior_dispatched",
+   "nameable": true,
+   "path": "fastmcp.server.middleware.middleware.mark_interior_dispatched",
+   "preferred": "fastmcp.server.server.mark_interior_dispatched",
+   "signature": "def mark_interior_dispatched() -> None",
+   "summary": "Record that an interior component middleware chain ran for this message."
+  }
+ ],
+ "module": "fastmcp.server.middleware.middleware"
+}

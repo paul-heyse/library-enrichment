@@ -1,0 +1,105 @@
+{
+  "module": "deltalake_core::datafile::reader",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.datafile.reader.md",
+  "items": [
+    {
+      "path": "deltalake_core::datafile::reader::KernelDataFileReader",
+      "name": "KernelDataFileReader",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct KernelDataFileReader",
+      "summary": "File-tier reader backed by `delta-kernel`'s parquet handler (placeholder).",
+      "doc": "api/deltalake_core.datafile.reader.md#kerneldatafilereader",
+      "aliases": [
+        "deltalake::datafile::reader::KernelDataFileReader"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DataFileReader"
+      ],
+      "methods": [
+        {
+          "name": "read_file",
+          "signature": "async fn read_file(&self, _path: Path) -> DeltaResult<BatchStream>",
+          "via_trait": "deltalake_core::datafile::DataFileReader"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::reader::KernelDataReader",
+      "name": "KernelDataReader",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct KernelDataReader",
+      "summary": "Dataset-tier reader backed by `delta-kernel`'s scan engine (placeholder).",
+      "doc": "api/deltalake_core.datafile.reader.md#kerneldatareader",
+      "aliases": [
+        "deltalake::datafile::reader::KernelDataReader"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DeltaDataReader"
+      ],
+      "methods": [
+        {
+          "name": "read",
+          "signature": "async fn read(&self, _options: ReadOptions) -> DeltaResult<BatchStream>",
+          "via_trait": "deltalake_core::datafile::DeltaDataReader"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::reader::ParquetFileReader",
+      "name": "ParquetFileReader",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ParquetFileReader",
+      "summary": "File-tier reader that reads a single parquet data file directly from object storage, with no DataFusion. A concrete [`DataFileReader`] — the per-file read seam where parquet decryption will later attach, mirroring the write side.",
+      "doc": "api/deltalake_core.datafile.reader.md#parquetfilereader",
+      "aliases": [
+        "deltalake::datafile::reader::ParquetFileReader"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DataFileReader"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>) -> Self",
+          "summary": "Create a reader over the given object store."
+        },
+        {
+          "name": "read_file",
+          "signature": "async fn read_file(&self, path: Path) -> DeltaResult<BatchStream>",
+          "via_trait": "deltalake_core::datafile::DataFileReader"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::datafile::reader::ParquetTableReader",
+      "name": "ParquetTableReader",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct ParquetTableReader",
+      "summary": "Dataset-tier reader that reads all of a table's parquet data files directly — no DataFusion, no predicate — composing [`ParquetFileReader`] across the table.",
+      "doc": "api/deltalake_core.datafile.reader.md#parquettablereader",
+      "aliases": [
+        "deltalake::datafile::reader::ParquetTableReader"
+      ],
+      "implements": [
+        "deltalake_core::datafile::DeltaDataReader"
+      ],
+      "methods": [
+        {
+          "name": "read",
+          "signature": "async fn read(&self, options: ReadOptions) -> DeltaResult<BatchStream>",
+          "via_trait": "deltalake_core::datafile::DeltaDataReader"
+        },
+        {
+          "name": "try_new",
+          "signature": "async fn try_new(table: &DeltaTable) -> DeltaResult<Self>",
+          "summary": "Build a reader over the table's current data files."
+        }
+      ]
+    }
+  ]
+}

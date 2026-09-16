@@ -1,0 +1,103 @@
+{
+  "module": "pyrefly::report::pysa::context",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.report.pysa.context.md",
+  "items": [
+    {
+      "path": "pyrefly::report::pysa::context::ModuleAnswersContext",
+      "name": "ModuleAnswersContext",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ModuleAnswersContext",
+      "summary": "Pyrefly information about a single module.",
+      "doc": "api/pyrefly.report.pysa.context.md#moduleanswerscontext",
+      "fields": [
+        "handle",
+        "module_id",
+        "module_info",
+        "stdlib",
+        "ast",
+        "bindings",
+        "answers"
+      ],
+      "implements": [
+        "dupe::Dupe"
+      ],
+      "methods": [
+        {
+          "name": "create",
+          "signature": "fn create(handle: Handle, transaction: &Transaction<'_>, module_ids: &ModuleIds) -> ModuleAnswersContext"
+        },
+        {
+          "name": "undecorated_function",
+          "signature": "fn undecorated_function(&self, idx: Idx<KeyDecoratedFunction>) -> &UndecoratedFunction"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::report::pysa::context::ModuleContext",
+      "name": "ModuleContext",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ModuleContext<'a>",
+      "summary": "Pyrefly information about a module.",
+      "doc": "api/pyrefly.report.pysa.context.md#modulecontext",
+      "fields": [
+        "answers_context",
+        "resolver"
+      ],
+      "methods": [
+        {
+          "name": "module_ids",
+          "signature": "fn module_ids(&self) -> &ModuleIds",
+          "summary": "Convenience accessor for module_ids."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::report::pysa::context::PysaResolver",
+      "name": "PysaResolver",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct PysaResolver<'a>",
+      "summary": "Wraps `&Transaction` to provide only the cross-module operations that pysa needs. Owns a local cache of resolved PysaSolutions to avoid redundant lookups.",
+      "doc": "api/pyrefly.report.pysa.context.md#pysaresolver",
+      "methods": [
+        {
+          "name": "current_module_solutions",
+          "signature": "fn current_module_solutions(&self) -> &PysaSolutions"
+        },
+        {
+          "name": "find_definition",
+          "signature": "fn find_definition(&self, position: TextSize, preference: FindPreference) -> Vec<FindDefinitionItemWithDocstring>"
+        },
+        {
+          "name": "find_definition_for_attribute",
+          "signature": "fn find_definition_for_attribute(&self, base_range: TextRange, name: &Name, preference: FindPreference) -> Vec<FindDefinitionItemWithDocstring>"
+        },
+        {
+          "name": "find_definition_for_name_use",
+          "signature": "fn find_definition_for_name_use(&self, name: &Identifier, preference: FindPreference) -> Option<FindDefinitionItemWithDocstring>"
+        },
+        {
+          "name": "get_cached_solutions",
+          "signature": "fn get_cached_solutions(&self, module_id: ModuleId) -> Arc<PysaSolutions>",
+          "summary": "Look up cached pysa solutions by ModuleId. The module must have been previously resolved via `resolve_pysa_solutions`."
+        },
+        {
+          "name": "module_ids",
+          "signature": "fn module_ids(&self) -> &ModuleIds"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(transaction: &'a Transaction<'a>, module_ids: &'a ModuleIds, current_handle: Handle) -> Self"
+        },
+        {
+          "name": "resolve_pysa_solutions",
+          "signature": "fn resolve_pysa_solutions(&self, module: &Module) -> Arc<PysaSolutions>",
+          "summary": "Resolve pysa solutions for a given module, demanding it to Solutions if needed. Caches the result for subsequent lookups by ModuleId."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Custom outline extractors for delta-rs domain constructs.
+#
+#     ast-grep outline --no-default-outline-rules --outline-rules <this file> <paths>
+#
+# `ast-grep outline` already knows Rust's grammar, so it surfaces structs, traits and functions
+# on its own. What it cannot know is which of them matter here. This extractor promotes the one
+# delta-specific shape that is a top-level declaration -- an extension point implementation --
+# so a directory map answers "what does this code plug into" rather than "what types are
+# declared". It works against any checkout without modifying it.
+#
+# Deliberately only one extractor. `outline` reports top-level items and their direct members,
+# so an extractor for *call sites* -- which operation a file performs, where a backend is
+# registered -- can never fire: those live inside function bodies. Call sites are `scan`
+# territory, and they are covered by queries/rules/corpus/corpus-operation-chain.yml. An
+# extractor that silently matches nothing would be worse than not shipping one.
+id: deltalake-extension-impl
+language: rust
+role: item
+symbolType: class
+rule:
+  kind: impl_item
+  all:
+    - has:
+        field: trait
+        regex: '^(LogStore|LogStoreFactory|ObjectStoreFactory|ObjectStoreRegistry|DataCatalog|CustomExecuteHandler|DeltaWriter|DataFileWriter|DataFileReader|DataCheck|FileAction|DataFusionMixins|TableReference|TokenCredential|Engine|EngineData|JsonHandler|ParquetHandler|StorageHandler|EvaluationHandler|ExpressionEvaluator|PredicateEvaluator|RowVisitor|Committer|IntoEngineData|ToSchema|TaskExecutor|MetricsReporter|TableProvider|ExecutionPlan|ExtensionPlanner|UserDefinedLogicalNodeCore|ScalarUDFImpl|PruningStatistics)\b'
+    - has:
+        field: type
+        pattern: $TYPE
+    - has:
+        field: trait
+        pattern: $TRAIT
+name: $TYPE
+signature: impl $TRAIT for $TYPE
+isExported: true

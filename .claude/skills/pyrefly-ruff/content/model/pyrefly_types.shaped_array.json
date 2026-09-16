@@ -1,0 +1,374 @@
+{
+  "module": "pyrefly_types::shaped_array",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.shaped_array.md",
+  "items": [
+    {
+      "path": "pyrefly_types::shaped_array::IntTupleView",
+      "name": "IntTupleView",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum IntTupleView<'a>",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Concrete",
+        "Gradual",
+        "Unpacked"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly_types::shaped_array::ShapedArraySyntax",
+      "name": "ShapedArraySyntax",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum ShapedArraySyntax",
+      "summary": "Whether a shaped-array type was constructed using native (`Tensor[N, M]`) or jaxtyping (`Float[Tensor, \"N M\"]`) syntax. Controls display rendering and enables diagnostic checks (e.g., mixing both syntaxes in one function).",
+      "doc": "api/pyrefly_types.shaped_array.md#shapedarraysyntax",
+      "variants": [
+        "Native",
+        "Jaxtyping"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::shaped_array::broadcast_shapes",
+      "name": "broadcast_shapes",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn broadcast_shapes(a: &IntTuple, b: &IntTuple) -> Result<IntTuple, dimension::ShapeError>",
+      "summary": "Compute the broadcasted shape of two tensor shapes following NumPy/PyTorch broadcasting rules: - Dimensions are aligned from right to left - Each dimension must either match or one of them must be 1 - Missing dimensions are treated as 1",
+      "doc": "api/pyrefly_types.shaped_array.md#broadcast_shapes"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::is_int_tuples_type",
+      "name": "is_int_tuples_type",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_int_tuples_type(ty: &types::Type) -> bool",
+      "summary": "Whether `ty` is a structural `IntTuples` value.",
+      "doc": "api/pyrefly_types.shaped_array.md#is_int_tuples_type"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::is_tuple_carrier_shape_middle",
+      "name": "is_tuple_carrier_shape_middle",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn is_tuple_carrier_shape_middle(ty: &types::Type) -> bool",
+      "summary": "Detects a tuple-carrier shape variable occupying the variadic middle of an unpacked shape.",
+      "doc": "api/pyrefly_types.shaped_array.md#is_tuple_carrier_shape_middle"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::shape_to_tuple_carrier",
+      "name": "shape_to_tuple_carrier",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn shape_to_tuple_carrier(shape: &IntTuple) -> types::Type",
+      "summary": "Convert an `IntTuple` into the equivalent tuple-carrier `Type`.",
+      "doc": "api/pyrefly_types.shaped_array.md#shape_to_tuple_carrier"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::shape_to_tuple_carrier_arg",
+      "name": "shape_to_tuple_carrier_arg",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn shape_to_tuple_carrier_arg(shape: &IntTuple) -> types::Type",
+      "summary": "Convert a projected tuple-carrier shape back to the class type argument.",
+      "doc": "api/pyrefly_types.shaped_array.md#shape_to_tuple_carrier_arg"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::tuple_carrier_to_shape",
+      "name": "tuple_carrier_to_shape",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn tuple_carrier_to_shape(carrier: &types::Type) -> Option<IntTuple>",
+      "summary": "Convert a tuple-carrier `Type` into an `IntTuple`.",
+      "doc": "api/pyrefly_types.shaped_array.md#tuple_carrier_to_shape"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::type_to_dim",
+      "name": "type_to_dim",
+      "kind": "function",
+      "crate": "pyrefly_types",
+      "signature": "fn type_to_dim(dim: &types::Type) -> Option<dimension::Int>",
+      "summary": "Convert a `Type` into an internal shape dimension, accepting only types that form a valid `Int` dimension. Returns `None` for anything else, so callers fail cleanly instead of treating an unrelated type as a dimension.",
+      "doc": "api/pyrefly_types.shaped_array.md#type_to_dim"
+    },
+    {
+      "path": "pyrefly_types::shaped_array::IntTuple",
+      "name": "IntTuple",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct IntTuple",
+      "summary": "Shape of a shaped array.",
+      "doc": "api/pyrefly_types.shaped_array.md#inttuple",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "all_literal",
+          "signature": "fn all_literal(&self) -> bool",
+          "summary": "Check if all dimensions are literal (concrete integers) Returns false for variadic shapes"
+        },
+        {
+          "name": "as_concrete",
+          "signature": "fn as_concrete(&self) -> Option<&[Int]>",
+          "summary": "Get the concrete dims if this is a concrete shape."
+        },
+        {
+          "name": "as_literals",
+          "signature": "fn as_literals(&self) -> Option<Vec<i64>>",
+          "summary": "Extract literal dimension values if all are literal Returns None for variadic shapes"
+        },
+        {
+          "name": "dims",
+          "signature": "fn dims(&self) -> &Vec<Int>",
+          "summary": "Get dims as a Vec for concrete shapes, panics for unpacked This is used by meta-shape code that doesn't support variadic shapes yet"
+        },
+        {
+          "name": "dims_mut",
+          "signature": "fn dims_mut(&mut self) -> &mut Vec<Int>",
+          "summary": "Get a mutable reference to concrete dims (for meta-shape operations) Panics if called on Unpacked shape"
+        },
+        {
+          "name": "dims_slice",
+          "signature": "fn dims_slice(&self) -> &[Int]",
+          "summary": "Get a slice of dimensions (only valid for concrete shapes)"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "fmt_jaxtyping",
+          "signature": "fn fmt_jaxtyping(&self) -> String",
+          "summary": "Format the shape using jaxtyping syntax (space-separated, no parens for scalar)."
+        },
+        {
+          "name": "from_shape_arg_or_tuple_carrier",
+          "signature": "fn from_shape_arg_or_tuple_carrier(arg: &Type) -> Option<Self>",
+          "summary": "Recover a whole shape from either an `IntTuple` shape argument or a tuple carrier that has already passed annotation validation."
+        },
+        {
+          "name": "from_shape_arg_type",
+          "signature": "fn from_shape_arg_type(arg: &Type) -> Option<Self>",
+          "summary": "Recover a shape from an `IntTuple` shape argument, canonicalizing it via `normalize`. Returns `None` for any other type."
+        },
+        {
+          "name": "from_tuple",
+          "signature": "fn from_tuple(tuple: Tuple) -> Self"
+        },
+        {
+          "name": "from_types",
+          "signature": "fn from_types(dims: Vec<Type>) -> Self",
+          "summary": "Create a concrete shape from dimension types, recovering invalid dimensions to `int`."
+        },
+        {
+          "name": "get_dim",
+          "signature": "fn get_dim(&self, index: usize) -> Type",
+          "summary": "Get a dimension by index (only for concrete shapes)"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "is_shapeless",
+          "signature": "fn is_shapeless(&self) -> bool"
+        },
+        {
+          "name": "materialize",
+          "signature": "fn materialize(&mut self)",
+          "summary": "Materialize gradual dimensions and rank in place (see `Int::materialize`). The `Unpacked` middle is a `Type` and is materialized by the generic `Type::materialize` traversal that recurses into it."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(dims: Vec<Int>) -> Self"
+        },
+        {
+          "name": "normalize",
+          "signature": "fn normalize(&self) -> Self",
+          "summary": "Rebuild this shape through the canonical constructors."
+        },
+        {
+          "name": "normalize_dim",
+          "signature": "fn normalize_dim(&self, dim: i64) -> Result<usize, ShapeError>",
+          "summary": "Normalize a dimension index to handle negative indices"
+        },
+        {
+          "name": "rank",
+          "signature": "fn rank(&self) -> usize"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "shapeless",
+          "signature": "fn shapeless() -> Self"
+        },
+        {
+          "name": "to_shape_arg_type",
+          "signature": "fn to_shape_arg_type(&self) -> Type",
+          "summary": "Wrap this shape as the `IntTuple` type argument used to carry a whole shape (e.g. the `S` in `Tensor[S]`)."
+        },
+        {
+          "name": "to_tuple",
+          "signature": "fn to_tuple(&self) -> Tuple"
+        },
+        {
+          "name": "to_tuple_type",
+          "signature": "fn to_tuple_type(&self) -> Type",
+          "summary": "Project this shape to the ordinary tuple type it denotes."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "unpacked",
+          "signature": "fn unpacked(prefix: Vec<Int>, middle: Type, suffix: Vec<Int>) -> Self",
+          "summary": "Create and canonicalize a variadic shape with fixed dimensions around its middle."
+        },
+        {
+          "name": "unpacked_from_types",
+          "signature": "fn unpacked_from_types(prefix: Vec<Type>, middle: Type, suffix: Vec<Type>) -> Self",
+          "summary": "Create an unpacked shape from a boundary that represents fixed dimensions as `Type`s."
+        },
+        {
+          "name": "view",
+          "signature": "fn view(&self) -> IntTupleView<'_>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::shaped_array::ShapedArrayType",
+      "name": "ShapedArrayType",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct ShapedArrayType",
+      "summary": "A class instance with shape information. Example: Tensor[[2, 3]] represents a 2x3 tensor Example: Tensor (no brackets) represents a shapeless tensor (`IntTuple`)",
+      "doc": "api/pyrefly_types.shaped_array.md#shapedarraytype",
+      "fields": [
+        "base_class",
+        "syntax"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_shapeless",
+          "signature": "fn is_shapeless(&self) -> bool",
+          "summary": "Returns true if the shaped array has no shape information. (represented as a gradual `IntTuple`)"
+        },
+        {
+          "name": "materialize_inline_shape",
+          "signature": "fn materialize_inline_shape(&mut self)",
+          "summary": "Materialize gradual dimensions of an inline shape (see `Int::materialize`). `TupleCarrier` shapes store their dimensions as `Type` arguments on `base_class`, so they are materialized by the generic `Type::materialize` traversal instead."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(base_class: ClassType, shape: IntTuple) -> Self",
+          "summary": "Create a shaped-array type with shape information (defaults to Native syntax)."
+        },
+        {
+          "name": "rank",
+          "signature": "fn rank(&self) -> Option<usize>",
+          "summary": "Returns rank if shape is concrete, None for variadic/shapeless"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "set_shape",
+          "signature": "fn set_shape(&mut self, shape: IntTuple)"
+        },
+        {
+          "name": "set_tuple_carrier_shape_arg",
+          "signature": "fn set_tuple_carrier_shape_arg(&mut self, index: usize)"
+        },
+        {
+          "name": "shape",
+          "signature": "fn shape(&self) -> IntTuple"
+        },
+        {
+          "name": "shapeless",
+          "signature": "fn shapeless(base_class: ClassType) -> Self",
+          "summary": "Create a shapeless shaped-array type (compatible with any shape)."
+        },
+        {
+          "name": "to_type",
+          "signature": "fn to_type(self) -> Type"
+        },
+        {
+          "name": "tuple_carrier_shape_arg_index",
+          "signature": "fn tuple_carrier_shape_arg_index(&self) -> Option<usize>"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "with_syntax",
+          "signature": "fn with_syntax(self, syntax: ShapedArraySyntax) -> Self",
+          "summary": "Set the syntax for this shaped-array type."
+        },
+        {
+          "name": "with_tuple_carrier_shape_arg",
+          "signature": "fn with_tuple_carrier_shape_arg(self, index: usize) -> Self"
+        }
+      ]
+    }
+  ]
+}

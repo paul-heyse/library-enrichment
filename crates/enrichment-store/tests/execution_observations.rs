@@ -1,9 +1,13 @@
+#[path = "support/native_ingest.rs"]
+pub mod native_ingest;
+use native_ingest::EvidenceRows;
+#[path = "support/claims.rs"]
+mod claims;
 use enrichment_core::{
     canonical,
     evidence::{
         Artifact, ArtifactKind,
         execution::*,
-        ingest::EvidenceBatch,
         relational::{FactSource, InputArtifact, Locator, SubjectRef},
         snapshot::SnapshotMetadata,
     },
@@ -53,14 +57,14 @@ fn metadata() -> SnapshotMetadata {
         producer_items: 0,
     }
 }
-fn evidence(blobs: &BlobStore, metadata: &SnapshotMetadata) -> EvidenceBatch {
+fn evidence(blobs: &BlobStore, metadata: &SnapshotMetadata) -> EvidenceRows {
     evidence_with_position(blobs, metadata, Utf8Position { line: 1, byte: 3 })
 }
 fn evidence_with_position(
     blobs: &BlobStore,
     metadata: &SnapshotMetadata,
     position: Utf8Position,
-) -> EvidenceBatch {
+) -> EvidenceRows {
     let put = |bytes: &[u8], uri: &str| {
         blobs
             .put(bytes, |_| {
@@ -141,7 +145,7 @@ fn evidence_with_position(
             stderr: "NameError: fixture is not defined\n".into(),
         }),
     ];
-    let mut evidence = EvidenceBatch::default();
+    let mut evidence = EvidenceRows::default();
     for (index, payload) in payloads.into_iter().enumerate() {
         let result = put(
             &payload.canonical_bytes().unwrap(),
@@ -273,18 +277,19 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
         is_reexport: false,
         qualifier: None,
     };
-    repository
-        .publish(
-            metadata.clone(),
-            EvidenceBatch {
-                definitions: vec![definition],
-                symbols: vec![symbol.clone()],
-                ..Default::default()
-            },
-            None,
-        )
-        .await
-        .unwrap();
+    native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        EvidenceRows {
+            definitions: vec![definition],
+            symbols: vec![symbol.clone()],
+            ..Default::default()
+        },
+        None,
+        None,
+    )
+    .await
+    .unwrap();
     let object = evidence.execution_observations[2].clone();
     evidence.execution_observations[2] = ExecutionObservation::new(
         SubjectRef::Symbol {
@@ -299,10 +304,10 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
     .unwrap();
     // This delta intentionally omits its referenced static symbol. Native assembly must add
     // the pinned base before full foreign-key admission, without publishing a dangling delta.
-    let manifest = repository
-        .publish(metadata.clone(), evidence.clone(), None)
-        .await
-        .unwrap();
+    let manifest =
+        native_ingest::publish_rows(&repository, metadata.clone(), evidence.clone(), None, None)
+            .await
+            .unwrap();
     let reader = SnapshotReader::open(
         &repository,
         repository.catalog.pin().await.unwrap(),
@@ -359,8 +364,7 @@ async fn typed_execution_roundtrip_reuse_native_queries_and_complete_export() {
     let mut reordered = evidence.clone();
     reordered.execution_observations.reverse();
     reordered.input_artifacts.reverse();
-    let again = repository
-        .contribute(metadata.clone(), reordered)
+    let again = native_ingest::publish_rows(&repository, metadata.clone(), reordered, None, None)
         .await
         .unwrap();
     assert_eq!(again.snapshot_id, manifest.snapshot_id);
@@ -462,7 +466,7 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
     let prepare_delivery: enrichment_store::repository::JobDeliveryFactory =
         std::sync::Arc::new(move |manifest, _coverage| {
             let mut result: enrichment_core::wire::Envelope = serde_json::from_str(include_str!(
-                "../../../contracts/research-v2/examples/error.fixture.json"
+                "../../../tests/fixtures/wire/error.fixture.json"
             ))?;
             result.context_id = Some(manifest.context_id.to_string());
             result.snapshot_id = Some(manifest.snapshot_id.to_string());
@@ -473,14 +477,13 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             result
                 .artifacts
                 .push(enrichment_core::wire::ArtifactHandle {
-                    artifact_id: delivery_dependency.artifact_id.clone(),
+                    receipt: delivery_dependency.clone(),
                     uri: format!(
                         "library-evidence://artifacts/{}",
                         delivery_dependency.artifact_id
                     )
                     .try_into()
                     .unwrap(),
-                    media_type: delivery_dependency.media_type.clone(),
                     description: "Complete observed value".into(),
                 });
             Ok(enrichment_store::result::store(
@@ -490,7 +493,25 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             )?
             .0)
         });
+    let publication_fence = claims::publication_fence(
+        &repository,
+        &job_id,
+        enrichment_store::control_jobs::Arguments {
+            verify: Some(enrichment_core::execution::VerifyRequest {
+                context_id: metadata.context.context_id.to_string(),
+                snapshot_id: None,
+                snippet: "print(1)".into(),
+                mode: enrichment_core::execution::ProbeMode::Runtime,
+                profile: ExecutionProfile::Runtime,
+                test_intent: None,
+                max_bytes: None,
+            }),
+            ..Default::default()
+        },
+    )
+    .await;
     let completion = JobCompletion {
+        publication_fence,
         job_id: job_id.clone(),
         prepare_delivery,
         kind: PublishedJobKind::Verify,
@@ -508,10 +529,15 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
         std::fs::remove_dir(&staging).unwrap();
         std::fs::write(&staging, b"artifact write must fail").unwrap();
         assert!(
-            repository
-                .publish_job(metadata.clone(), evidence.clone(), completion.clone())
-                .await
-                .is_err()
+            native_ingest::publish_rows(
+                &repository,
+                metadata.clone(),
+                evidence.clone(),
+                None,
+                Some(completion.clone())
+            )
+            .await
+            .is_err()
         );
         let catalog = repository.catalog.pin().await.unwrap();
         assert!(
@@ -531,10 +557,15 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
         std::fs::remove_file(&staging).unwrap();
         std::fs::create_dir(staging).unwrap();
     }
-    let manifest = repository
-        .publish_job(metadata.clone(), evidence.clone(), completion.clone())
-        .await
-        .unwrap();
+    let manifest = native_ingest::publish_rows(
+        &repository,
+        metadata.clone(),
+        evidence.clone(),
+        None,
+        Some(completion.clone()),
+    )
+    .await
+    .unwrap();
     let publication = repository
         .catalog
         .pin()
@@ -570,15 +601,35 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
             "bundle verification is read-only"
         );
         let offline = BlobStore::read_only(&bundle.join("data")).unwrap();
-        let copied = offline.find(&dependency.artifact_id).unwrap().unwrap();
+        let native = enrichment_store::control::ControlStore::read_only(
+            &bundle.join("data"),
+            runtime.clone(),
+        )
+        .unwrap()
+        .pin()
+        .await
+        .unwrap();
+        let copied = native
+            .artifact(&runtime, &dependency.artifact_id)
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(offline.read(&copied.sha256).unwrap(), dependency_bytes);
         assert_eq!(
-            offline.result_dependencies(&publication.delivery).unwrap(),
+            native
+                .result_dependencies(&runtime, &offline, &publication.delivery)
+                .await
+                .unwrap(),
             vec![copied.clone()]
         );
         // The result is still present; removing only its referenced value breaks the closure.
         std::fs::remove_file(offline.path_for(&copied.sha256)).unwrap();
-        assert!(offline.result_dependencies(&publication.delivery).is_err());
+        assert!(
+            native
+                .result_dependencies(&runtime, &offline, &publication.delivery)
+                .await
+                .is_err()
+        );
         assert!(
             !enrichment_store::bundle::verify(&bundle)
                 .await
@@ -610,8 +661,7 @@ async fn publication_case(write_failure: bool, export_delivery: bool) {
     invalid.job_id = format!("job_{}", "2".repeat(32));
     invalid.result_artifact_ids = vec![enrichment_core::evidence::artifact_id_for(&"e".repeat(64))];
     assert!(
-        reopened
-            .publish_job(metadata, evidence, invalid.clone())
+        native_ingest::publish_rows(&reopened, metadata, evidence, None, Some(invalid.clone()))
             .await
             .is_err()
     );
@@ -649,10 +699,10 @@ async fn canonical_results_with_nonexistent_or_split_character_positions_are_not
             AdmissionLimits::default(),
         )
         .unwrap();
-        let error = repository
-            .publish(metadata.clone(), evidence, None)
-            .await
-            .unwrap_err();
+        let error =
+            native_ingest::publish_rows(&repository, metadata.clone(), evidence, None, None)
+                .await
+                .unwrap_err();
         assert!(error.to_string().contains("position"), "{error}");
         assert!(
             repository
@@ -681,14 +731,15 @@ async fn repeated_environment_derivation_preserves_child_execution_observations(
     )
     .unwrap();
     let parent_metadata = metadata();
-    let parent_manifest = repository
-        .publish(
-            parent_metadata.clone(),
-            evidence(&blobs, &parent_metadata),
-            None,
-        )
-        .await
-        .unwrap();
+    let parent_manifest = native_ingest::publish_rows(
+        &repository,
+        parent_metadata.clone(),
+        evidence(&blobs, &parent_metadata),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
     let parent = repository
         .open_snapshot(
             repository.catalog.pin().await.unwrap(),
@@ -732,8 +783,7 @@ async fn repeated_environment_derivation_preserves_child_execution_observations(
     let child_evidence = evidence(&blobs, &child_metadata);
     let mut expected = child_evidence.execution_observations.clone();
     expected.sort_by(|a, b| a.observation_id.cmp(&b.observation_id));
-    repository
-        .contribute(child_metadata, child_evidence)
+    native_ingest::publish_rows(&repository, child_metadata, child_evidence, None, None)
         .await
         .unwrap();
     let repeated = repository
@@ -804,7 +854,9 @@ async fn execution_coverage_does_not_borrow_a_different_query_on_the_same_subjec
         AdmissionLimits::default(),
     )
     .unwrap();
-    let manifest = repository.publish(metadata, evidence, None).await.unwrap();
+    let manifest = native_ingest::publish_rows(&repository, metadata, evidence, None, None)
+        .await
+        .unwrap();
     let reader = SnapshotReader::open(
         &repository,
         repository.catalog.pin().await.unwrap(),

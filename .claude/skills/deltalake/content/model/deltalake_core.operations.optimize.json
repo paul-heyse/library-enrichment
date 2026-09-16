@@ -1,0 +1,309 @@
+{
+  "module": "deltalake_core::operations::optimize",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.operations.optimize.md",
+  "items": [
+    {
+      "path": "deltalake_core::operations::optimize::OptimizeType",
+      "name": "OptimizeType",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum OptimizeType",
+      "summary": "Type of optimization to perform.",
+      "doc": "api/deltalake_core.operations.optimize.md#optimizetype",
+      "aliases": [
+        "deltalake::operations::optimize::OptimizeType"
+      ],
+      "variants": [
+        "Compact",
+        "ZOrder"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::operations::optimize::PlannerStrategy",
+      "name": "PlannerStrategy",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum PlannerStrategy",
+      "summary": "Planner used by optimize.",
+      "doc": "api/deltalake_core.operations.optimize.md#plannerstrategy",
+      "aliases": [
+        "deltalake::operations::optimize::PlannerStrategy"
+      ],
+      "variants": [
+        "UnknownLegacy",
+        "PreserveLocality",
+        "ZOrder"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::create_merge_plan",
+      "name": "create_merge_plan",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "async fn create_merge_plan(log_store: &dyn LogStore, optimize_type: OptimizeType, snapshot: &kernel::EagerSnapshot, filters: &[FilterLiteral<'_>], target_size: Option<std::num::NonZeroU64>, writer_properties: parquet::file::properties::WriterProperties, session: datafusion::execution::context::SessionState) -> Result<MergePlan, errors::DeltaTableError>",
+      "summary": "Build a Plan on which files to merge together. See [OptimizeBuilder]",
+      "doc": "api/deltalake_core.operations.optimize.md#create_merge_plan",
+      "aliases": [
+        "deltalake::operations::optimize::create_merge_plan"
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::MergePlan",
+      "name": "MergePlan",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct MergePlan",
+      "summary": "Encapsulates the operations required to optimize a Delta Table",
+      "doc": "api/deltalake_core.operations.optimize.md#mergeplan",
+      "aliases": [
+        "deltalake::operations::optimize::MergePlan"
+      ],
+      "methods": [
+        {
+          "name": "execute",
+          "signature": "async fn execute(self, log_store: LogStoreRef, snapshot: &EagerSnapshot, max_concurrent_tasks: usize, min_commit_interval: Option<Duration>, commit_properties: CommitProperties, operation_id: Uuid, handle: Option<&Arc<dyn CustomExecuteHandler>>) -> Result<Metrics, DeltaTableError>",
+          "summary": "Perform the operations outlined in the plan."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::MergeTaskParameters",
+      "name": "MergeTaskParameters",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct MergeTaskParameters",
+      "summary": "Parameters passed to individual merge tasks",
+      "doc": "api/deltalake_core.operations.optimize.md#mergetaskparameters",
+      "aliases": [
+        "deltalake::operations::optimize::MergeTaskParameters"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::operations::optimize::MetricDetails",
+      "name": "MetricDetails",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct MetricDetails",
+      "summary": "Statistics on files for a particular operation Operation can be remove or add",
+      "doc": "api/deltalake_core.operations.optimize.md#metricdetails",
+      "aliases": [
+        "deltalake::operations::optimize::MetricDetails"
+      ],
+      "fields": [
+        "avg",
+        "max",
+        "min",
+        "total_files",
+        "total_size"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, partial: &MetricDetails)",
+          "summary": "Add a partial metric to the metrics"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display",
+          "summary": "Display the metric details using serde serialization"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::Metrics",
+      "name": "Metrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct Metrics",
+      "summary": "Metrics from Optimize",
+      "doc": "api/deltalake_core.operations.optimize.md#metrics",
+      "aliases": [
+        "deltalake::operations::optimize::Metrics"
+      ],
+      "fields": [
+        "num_files_added",
+        "num_files_removed",
+        "files_added",
+        "files_removed",
+        "partitions_optimized",
+        "num_batches",
+        "total_considered_files",
+        "total_files_skipped",
+        "preserve_insertion_order",
+        "planner_strategy",
+        "preserved_stable_order",
+        "max_bin_span_files"
+      ],
+      "implements": [
+        "core::convert::From",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(&mut self, partial: &PartialMetrics)",
+          "summary": "Add a partial metric to the metrics"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: MetricsSerde) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::OptimizeBuilder",
+      "name": "OptimizeBuilder",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct OptimizeBuilder<'a>",
+      "summary": "Optimize a Delta table with given options",
+      "doc": "api/deltalake_core.operations.optimize.md#optimizebuilder",
+      "aliases": [
+        "deltalake::operations::optimize::OptimizeBuilder"
+      ],
+      "implements": [
+        "core::future::into_future::IntoFuture",
+        "deltalake_core::operations::Operation"
+      ],
+      "methods": [
+        {
+          "name": "get_custom_execute_handler",
+          "signature": "fn get_custom_execute_handler(&self) -> Option<Arc<dyn CustomExecuteHandler>>",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "into_future",
+          "signature": "fn into_future(self) -> Self::IntoFuture",
+          "via_trait": "core::future::into_future::IntoFuture"
+        },
+        {
+          "name": "log_store",
+          "signature": "fn log_store(&self) -> &LogStoreRef",
+          "via_trait": "deltalake_core::operations::Operation"
+        },
+        {
+          "name": "with_commit_properties",
+          "signature": "fn with_commit_properties(self, commit_properties: CommitProperties) -> Self",
+          "summary": "Additional information to write to the commit"
+        },
+        {
+          "name": "with_custom_execute_handler",
+          "signature": "fn with_custom_execute_handler(self, handler: Arc<dyn CustomExecuteHandler>) -> Self",
+          "summary": "Set a custom execute handler, for pre and post execution"
+        },
+        {
+          "name": "with_filters",
+          "signature": "fn with_filters(self, filters: &'a [FilterLiteral<'a>]) -> Self",
+          "summary": "Only optimize files matching the given conjunction of `(column, op, value)` partition filter literals"
+        },
+        {
+          "name": "with_max_concurrent_tasks",
+          "signature": "fn with_max_concurrent_tasks(self, max_concurrent_tasks: usize) -> Self",
+          "summary": "Max number of concurrent tasks"
+        },
+        {
+          "name": "with_min_commit_interval",
+          "signature": "fn with_min_commit_interval(self, min_commit_interval: Duration) -> Self",
+          "summary": "Min commit interval"
+        },
+        {
+          "name": "with_preserve_insertion_order",
+          "signature": "fn with_preserve_insertion_order(self, _preserve_insertion_order: bool) -> Self",
+          "summary": "Deprecated. This setting has no effect."
+        },
+        {
+          "name": "with_session_fallback_policy",
+          "signature": "fn with_session_fallback_policy(self, policy: SessionFallbackPolicy) -> Self",
+          "summary": "Control how delta-rs resolves the provided session when it is not a concrete `SessionState`."
+        },
+        {
+          "name": "with_session_state",
+          "signature": "fn with_session_state(self, session: Arc<dyn Session>) -> Self",
+          "summary": "Set the DataFusion session used for planning and execution."
+        },
+        {
+          "name": "with_target_size",
+          "signature": "fn with_target_size(self, target: NonZeroU64) -> Self",
+          "summary": "Set the target file size"
+        },
+        {
+          "name": "with_type",
+          "signature": "fn with_type(self, optimize_type: OptimizeType) -> Self",
+          "summary": "Choose the type of optimization to perform. Defaults to [OptimizeType::Compact]."
+        },
+        {
+          "name": "with_writer_properties",
+          "signature": "fn with_writer_properties(self, writer_properties: WriterProperties) -> Self",
+          "summary": "Writer properties passed to parquet writer"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::operations::optimize::PartialMetrics",
+      "name": "PartialMetrics",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PartialMetrics",
+      "summary": "Metrics for a single partition",
+      "doc": "api/deltalake_core.operations.optimize.md#partialmetrics",
+      "aliases": [
+        "deltalake::operations::optimize::PartialMetrics"
+      ],
+      "fields": [
+        "num_files_added",
+        "num_files_removed",
+        "files_added",
+        "files_removed",
+        "num_batches"
+      ],
+      "methods": []
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "module": "deltalake_aws::storage",
+  "crate": "deltalake-aws",
+  "api": "api/deltalake_aws.storage.md",
+  "items": [
+    {
+      "path": "deltalake_aws::storage::S3ObjectStoreFactory",
+      "name": "S3ObjectStoreFactory",
+      "kind": "struct",
+      "crate": "deltalake-aws",
+      "signature": "struct S3ObjectStoreFactory",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "deltalake_aws::storage::S3StorageOptionsConversion",
+        "deltalake_core::logstore::factories::ObjectStoreFactory"
+      ],
+      "methods": [
+        {
+          "name": "parse_url_opts",
+          "signature": "fn parse_url_opts(&self, url: &Url, config: &StorageConfig) -> DeltaResult<(ObjectStoreRef, Path)>",
+          "via_trait": "deltalake_core::logstore::factories::ObjectStoreFactory"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_aws::storage::S3StorageBackend",
+      "name": "S3StorageBackend",
+      "kind": "struct",
+      "crate": "deltalake-aws",
+      "signature": "struct S3StorageBackend",
+      "summary": "An S3 implementation of the [ObjectStore] trait",
+      "doc": "api/deltalake_aws.storage.md#s3storagebackend",
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore"
+      ],
+      "methods": [
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> ObjectStoreResult<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, ObjectStoreResult<Path>>) -> BoxStream<'static, ObjectStoreResult<Path>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> ObjectStoreResult<GetResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "get_ranges",
+          "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> ObjectStoreResult<Vec<Bytes>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, ObjectStoreResult<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> ObjectStoreResult<ListResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, ObjectStoreResult<ObjectMeta>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, options: PutMultipartOptions) -> ObjectStoreResult<Box<dyn MultipartUpload>>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, bytes: PutPayload, options: PutOptions) -> ObjectStoreResult<PutResult>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "rename_opts",
+          "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> ObjectStoreResult<()>",
+          "via_trait": "object_store::ObjectStore"
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(storage: ObjectStoreRef, allow_unsafe_rename: bool) -> ObjectStoreResult<Self>",
+          "summary": "Creates a new S3StorageBackend."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_aws::storage::S3StorageOptions",
+      "name": "S3StorageOptions",
+      "kind": "struct",
+      "crate": "deltalake-aws",
+      "signature": "struct S3StorageOptions",
+      "summary": "Options used to configure the [S3StorageBackend].",
+      "doc": "api/deltalake_aws.storage.md#s3storageoptions",
+      "fields": [
+        "locking_provider",
+        "allow_unsafe_rename"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> S3StorageOptionsBuilder<((), ())>",
+          "summary": "Create a builder for building `S3StorageOptions`. On the builder, call `.locking_provider(...)`(optional), `.allow_unsafe_rename(...)`(optional) to set the values of the fields. Finally, call `.build()` to create the instance of `S3Storage…"
+        },
+        {
+          "name": "from_map",
+          "signature": "fn from_map(options: &HashMap<String, String>) -> DeltaResult<S3StorageOptions>",
+          "summary": "Creates an instance of [`S3StorageOptions`] from the given HashMap."
+        },
+        {
+          "name": "try_default",
+          "signature": "fn try_default() -> DeltaResult<Self>"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_aws::storage::S3StorageOptionsBuilder",
+      "name": "S3StorageOptionsBuilder",
+      "kind": "struct",
+      "crate": "deltalake-aws",
+      "signature": "struct S3StorageOptionsBuilder<TypedBuilderFields = ((), ())>",
+      "summary": "Builder for [`S3StorageOptions`] instances.",
+      "doc": "api/deltalake_aws.storage.md#s3storageoptionsbuilder",
+      "methods": [
+        {
+          "name": "allow_unsafe_rename",
+          "signature": "fn allow_unsafe_rename(self, allow_unsafe_rename: bool) -> S3StorageOptionsBuilder<(__locking_provider, (bool,))>",
+          "summary": "Allow unsafe rename operations"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> S3StorageOptions",
+          "summary": "Finalise the builder and create its [`S3StorageOptions`] instance"
+        },
+        {
+          "name": "locking_provider",
+          "signature": "fn locking_provider(self, locking_provider: impl ::core::convert::Into<String>) -> S3StorageOptionsBuilder<((Option<String>,), __allow_unsafe_rename)>",
+          "summary": "Locking provider to use (e.g., \"dynamodb\")"
+        }
+      ]
+    }
+  ]
+}

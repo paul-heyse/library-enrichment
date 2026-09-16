@@ -1,0 +1,203 @@
+{
+  "verified_at_utc": "2026-09-15T22:57:58.460198+00:00",
+  "head": "9c154de8b2ead1d082fd253399bb1694627395c1",
+  "service_source_digest": "5b2640ca15e4e1e6bb3355eda84edb89d4bcdab3e390897513648c0581d4026a",
+  "review_scope": "documentation plus isolated native mechanism probe; existing service source unchanged",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+  "dependency_universe": {
+    "datafusion": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-session": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-expr": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-datasource": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "datafusion-proto": [
+      {
+        "version": "55.1.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow-array": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "arrow-schema": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "parquet": [
+      {
+        "version": "59.3.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "object_store": [
+      {
+        "version": "0.13.2",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "deltalake": [
+      {
+        "version": "1.0.0",
+        "source": "git+https://github.com/delta-io/delta-rs.git?rev=58f07cd62bfbce3649a7e1c87c696288068ae184#58f07cd62bfbce3649a7e1c87c696288068ae184"
+      }
+    ],
+    "deltalake-core": [
+      {
+        "version": "1.0.0",
+        "source": "git+https://github.com/delta-io/delta-rs.git?rev=58f07cd62bfbce3649a7e1c87c696288068ae184#58f07cd62bfbce3649a7e1c87c696288068ae184"
+      }
+    ],
+    "buoyant_kernel": [
+      {
+        "version": "0.25.1",
+        "source": "git+https://github.com/buoyant-data/delta-kernel-rs?branch=buoyant/main#8ba063f8f84fec222000f66d40d70911d7c79675"
+      }
+    ],
+    "buoyant_kernel_engine": [
+      {
+        "version": "0.25.1",
+        "source": "git+https://github.com/buoyant-data/delta-kernel-rs?branch=buoyant/main#8ba063f8f84fec222000f66d40d70911d7c79675"
+      }
+    ]
+  },
+  "delta_checkout_note": "Tracked sources match 58f07cd62bfbce3649a7e1c87c696288068ae184; kernel dependency is the selected Buoyant git source, not the separate delta-io kernel HEAD.",
+  "commands": [
+    {
+      "command": "cargo metadata --format-version 1 --manifest-path .dev-state/unified-datafusion-review/latest/Cargo.toml",
+      "exit_code": 0,
+      "log": "metadata.log"
+    },
+    {
+      "command": "CARGO_TARGET_DIR=/home/paul/library-enrichment/target cargo build --locked --offline --manifest-path .dev-state/unified-datafusion-review/latest/Cargo.toml -j 8",
+      "exit_code": 0,
+      "log": "probe-build-initial.log"
+    },
+    {
+      "command": "CARGO_TARGET_DIR=/home/paul/library-enrichment/target cargo build --locked --offline --manifest-path .dev-state/unified-datafusion-review/latest/Cargo.toml -j 8",
+      "exit_code": 0,
+      "log": "probe-build.log",
+      "detail": "Adds explicit current-revision plain-session diagnostic assertion"
+    },
+    {
+      "command": "target/debug/unified-datafusion-review /home/paul/library-enrichment/.dev-state/unified-datafusion-review/delta-table-latest-final",
+      "exit_code": 0,
+      "log": "probe-run.log"
+    },
+    {
+      "command": "ast-grep scan -c .claude/skills/datafusion/queries/sgconfig.yml --filter '^project-' crates",
+      "exit_code": 0,
+      "log": "capability-gap.log",
+      "interpretation": "heuristic leads, including a lease-statistics false positive; not an acceptance gate"
+    },
+    {
+      "command": "ast-grep test",
+      "exit_code": 0,
+      "log": "rule-tests.log",
+      "interpretation": "11 rule fixture tests; not product acceptance"
+    },
+    {
+      "command": "typos docs/design_review/reviews/design_review_unified-datafusion-delta-runtime_2026-09-15.md docs/design_review/reviews/evidence/unified-datafusion-delta-runtime-2026-09-15/README.md",
+      "exit_code": 0
+    }
+  ],
+  "setup_failures": [
+    {
+      "stage": "initial compile",
+      "detail": "ConstraintBuilder returns DeltaTable, not a tuple; corrected."
+    },
+    {
+      "stage": "probe runs 1 and 2",
+      "exit_code": 101,
+      "detail": "Plain DataFusion SessionState could not lower Delta MetricObserver; initial any-error assertion was insufficient to prove CHECK rejection. Final probe installs DeltaPlanner and asserts a validation-specific diagnostic. Failed setup is retained in probe-setup-failure.log."
+    }
+  ],
+  "warnings": [
+    "Scratch build reports future-incompatible code in proc-macro-error2 2.0.1; not a change to production Cargo dependencies."
+  ],
+  "not_run": [
+    "full service implementation",
+    "full acceptance suite",
+    "installed MCP clients",
+    "real external producer execution",
+    "multi-table control-publication protocol",
+    "complete claim/retry/recovery implementation",
+    "power-loss durability",
+    "retention and vacuum races",
+    "full Arrow-Delta round trips",
+    "production-scale recursive closure"
+  ],
+  "artifact_sha256": {
+    "Cargo.lock": "98428db3788584fe0bb3e26218ff693cdf783041717034351d153f345f053785",
+    "Cargo.toml": "8da26d029c485db5e44a46ed036948071b6867b117fbe1bb6ab679732fd632db",
+    "README.md": "77ea7c9e363fa463c264303cc6de89ada7ad90ed8938f7e89350f9fe14d92b9e",
+    "capability-gap.log": "59cda807430a9b9cc816ae89630775fe9ff41e955df6abff47685f26d48d71f5",
+    "capability_probe.rs": "9583481a586aab30c5382cda00e11f51fd2dc71ef23374f2e7370660df98ad59",
+    "context7-research.json": "f466e92a3070cc3c2b0ea1b82c0e4f1f9b185320ea4e18fb309c3665f2b52c88",
+    "metadata.log": "c2a832826cd626a00783b30670dd5a5175f8542d6819b5b082dccaa3e771ff8f",
+    "probe-build-initial.log": "56a1fd257d8e16d4bcdc24e3d5dcdd89d4f1e35341b38835fa2a0a0589a3b548",
+    "probe-build.log": "2012a3beb9a73ab21294c406f92958e15cb56e09d17ca8cc33a0be8efbd77726",
+    "probe-run.log": "067b1a7ecce05d47a7e48fb42ddabca0372c97242bc95c979fa3faf09683f975",
+    "probe-setup-failure.log": "271f89edc0b59649572f37418d7077a97fa80d80bb71960e732e0cc8bb82232c",
+    "rule-tests.log": "e43c39eedb6df6e63a138570409aaa3d94f9326cbca567102378bd9aab954f21"
+  },
+  "probe_binary_sha256": "893c6db4f93d3802fc13174734d41d518b228616df4edc56576cb7fb736e2a54",
+  "review_sha256": "2cde63df32e2dff664c662010af9398283a518a1c0d98f7739133f176ea53749",
+  "upstream_head_checks": {
+    "delta-rs": {
+      "url": "https://github.com/delta-io/delta-rs.git",
+      "command": "git ls-remote --symref https://github.com/delta-io/delta-rs.git HEAD",
+      "output": "ref: refs/heads/main\tHEAD\n58f07cd62bfbce3649a7e1c87c696288068ae184\tHEAD\n",
+      "exit_code": 0
+    },
+    "selected-kernel": {
+      "url": "https://github.com/buoyant-data/delta-kernel-rs.git",
+      "command": "git ls-remote --symref https://github.com/buoyant-data/delta-kernel-rs.git HEAD",
+      "output": "ref: refs/heads/buoyant/main\tHEAD\n8ba063f8f84fec222000f66d40d70911d7c79675\tHEAD\n",
+      "exit_code": 0
+    }
+  },
+  "setup_failures_revision": "43a0cf10a313e5077c48637ad786a05359136bbb; retained as historical setup evidence. Current probe tests the plain-session failure explicitly.",
+  "earlier_revision_evidence": "../unified-datafusion-delta-runtime-2026-09-15-43a0cf10",
+  "document_validation": {
+    "result": "passed",
+    "local_links": 6,
+    "sections": 11,
+    "findings": 14,
+    "gates": 7,
+    "tables": "consistent column counts",
+    "service_source_unchanged": true
+  },
+  "review_before_followup_link_sha256": "9b5ba2c57a8a7a7a4b338059830f5fe27626b1371a48c7707b770ea6f4434f5e",
+  "review_followup_annotation": "Added link to focused Delta integration follow-up; probe source, lockfile and outputs unchanged."
+}

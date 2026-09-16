@@ -1,0 +1,350 @@
+{
+  "module": "annotate_snippets::snippet",
+  "crate": "ruff_annotate_snippets",
+  "api": "api/annotate_snippets.snippet.md",
+  "items": [
+    {
+      "path": "annotate_snippets::snippet::AnnotationKind",
+      "name": "AnnotationKind",
+      "kind": "enum",
+      "crate": "ruff_annotate_snippets",
+      "signature": "enum AnnotationKind",
+      "summary": "The type of [`Annotation`] being applied to a [`Snippet`]",
+      "doc": "api/annotate_snippets.snippet.md#annotationkind",
+      "aliases": [
+        "ruff_annotate_snippets::AnnotationKind"
+      ],
+      "variants": [
+        "Primary",
+        "Context",
+        "Visible"
+      ],
+      "methods": [
+        {
+          "name": "span",
+          "signature": "fn span<'a>(self, span: Range<usize>) -> Annotation<'a>",
+          "summary": "Annotate a byte span within [`Snippet`]"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Element",
+      "name": "Element",
+      "kind": "enum",
+      "crate": "ruff_annotate_snippets",
+      "signature": "enum Element<'a>",
+      "summary": "A section of content within a [`Group`]",
+      "doc": "api/annotate_snippets.snippet.md#element",
+      "aliases": [
+        "ruff_annotate_snippets::Element"
+      ],
+      "variants": [
+        "Message",
+        "Cause",
+        "Suggestion",
+        "Origin",
+        "Padding"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: Padding) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Annotation",
+      "name": "Annotation",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Annotation<'a>",
+      "summary": "Highlight and describe a span of text within a [`Snippet`]",
+      "doc": "api/annotate_snippets.snippet.md#annotation",
+      "aliases": [
+        "ruff_annotate_snippets::Annotation"
+      ],
+      "methods": [
+        {
+          "name": "hide_snippet",
+          "signature": "fn hide_snippet(self, yes: bool) -> Self"
+        },
+        {
+          "name": "highlight_source",
+          "signature": "fn highlight_source(self, highlight_source: bool) -> Self",
+          "summary": "Style the source according to the [`AnnotationKind`]"
+        },
+        {
+          "name": "label",
+          "signature": "fn label(self, label: impl Into<OptionCow<'a>>) -> Self",
+          "summary": "Describe the reason the span is highlighted"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Group",
+      "name": "Group",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Group<'a>",
+      "summary": "A [`Title`] with supporting [context][Element] within a [`Report`]",
+      "doc": "api/annotate_snippets.snippet.md#group",
+      "aliases": [
+        "ruff_annotate_snippets::Group"
+      ],
+      "methods": [
+        {
+          "name": "element",
+          "signature": "fn element(self, section: impl Into<Element<'a>>) -> Self",
+          "summary": "Append an [`Element`] that adds context to the [`Title`]"
+        },
+        {
+          "name": "elements",
+          "signature": "fn elements(self, sections: impl IntoIterator<Item = impl Into<Element<'a>>>) -> Self",
+          "summary": "Append [`Element`]s that adds context to the [`Title`]"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "lineno_offset",
+          "signature": "fn lineno_offset(self, offset: usize) -> Self",
+          "summary": "Add an offset used for aligning the header sigil (`-->`) with the line number separators."
+        },
+        {
+          "name": "with_level",
+          "signature": "fn with_level(level: Level<'a>) -> Self",
+          "summary": "Create a title-less group with a primary [`Level`] for [`AnnotationKind::Primary`]"
+        },
+        {
+          "name": "with_title",
+          "signature": "fn with_title(title: Title<'a>) -> Self",
+          "summary": "Create group with a [`Title`], deriving [`AnnotationKind::Primary`] from its [`Level`]"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Message",
+      "name": "Message",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Message<'a>",
+      "summary": "A text [`Element`] in a [`Group`]",
+      "doc": "api/annotate_snippets.snippet.md#message",
+      "aliases": [
+        "ruff_annotate_snippets::Message"
+      ],
+      "methods": []
+    },
+    {
+      "path": "annotate_snippets::snippet::OptionCow",
+      "name": "OptionCow",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct OptionCow<'a>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "ruff_annotate_snippets::OptionCow"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: &'a String) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Origin",
+      "name": "Origin",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Origin<'a>",
+      "summary": "A source location [`Element`] in a [`Group`]",
+      "doc": "api/annotate_snippets.snippet.md#origin",
+      "aliases": [
+        "ruff_annotate_snippets::Origin"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "cell_index",
+          "signature": "fn cell_index(self, index: Option<usize>) -> Self",
+          "summary": "Attach a Jupyter notebook cell index."
+        },
+        {
+          "name": "char_column",
+          "signature": "fn char_column(self, char_column: usize) -> Self",
+          "summary": "Set the default column to display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(origin: Cow<'a, str>) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "line",
+          "signature": "fn line(self, line: usize) -> Self",
+          "summary": "Set the default line number to display"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(path: impl Into<Cow<'a, str>>) -> Self",
+          "summary": "<div class=\"warning\">"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Padding",
+      "name": "Padding",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Padding",
+      "summary": "A whitespace [`Element`] in a [`Group`]",
+      "doc": "api/annotate_snippets.snippet.md#padding",
+      "aliases": [
+        "ruff_annotate_snippets::Padding"
+      ],
+      "methods": []
+    },
+    {
+      "path": "annotate_snippets::snippet::Patch",
+      "name": "Patch",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Patch<'a>",
+      "summary": "Suggested edit to the [`Snippet`]",
+      "doc": "api/annotate_snippets.snippet.md#patch",
+      "aliases": [
+        "ruff_annotate_snippets::Patch"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(span: Range<usize>, replacement: impl Into<Cow<'a, str>>) -> Self",
+          "summary": "Splice `replacement` into the [`Snippet`] at the specified byte span"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Snippet",
+      "name": "Snippet",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Snippet<'a, T>",
+      "summary": "A source view [`Element`] in a [`Group`]",
+      "doc": "api/annotate_snippets.snippet.md#snippet",
+      "aliases": [
+        "ruff_annotate_snippets::Snippet"
+      ],
+      "methods": [
+        {
+          "name": "annotation",
+          "signature": "fn annotation(self, annotation: Annotation<'a>) -> Snippet<'a, Annotation<'a>>",
+          "summary": "Highlight and describe a span of text within the [`source`][Self::source]"
+        },
+        {
+          "name": "annotations",
+          "signature": "fn annotations(self, annotation: impl IntoIterator<Item = Annotation<'a>>) -> Self",
+          "summary": "Highlight and describe spans of text within the [`source`][Self::source]"
+        },
+        {
+          "name": "cell_index",
+          "signature": "fn cell_index(self, index: Option<usize>) -> Self",
+          "summary": "Attach a Jupyter notebook cell index."
+        },
+        {
+          "name": "fold",
+          "signature": "fn fold(self, fold: bool) -> Self",
+          "summary": "Control whether lines without [`Annotation`]s are shown"
+        },
+        {
+          "name": "line_start",
+          "signature": "fn line_start(self, line_start: usize) -> Self",
+          "summary": "When manually [`fold`][Self::fold]ing, the [`source`][Self::source]s line offset from the original start"
+        },
+        {
+          "name": "patch",
+          "signature": "fn patch(self, patch: Patch<'a>) -> Snippet<'a, Patch<'a>>",
+          "summary": "Suggest to the user an edit to the [`source`][Self::source]"
+        },
+        {
+          "name": "patches",
+          "signature": "fn patches(self, patches: impl IntoIterator<Item = Patch<'a>>) -> Self",
+          "summary": "Suggest to the user edits to the [`source`][Self::source]"
+        },
+        {
+          "name": "path",
+          "signature": "fn path(self, path: impl Into<OptionCow<'a>>) -> Self",
+          "summary": "The location of the [`source`][Self::source] (e.g. a path)"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(source: impl Into<Cow<'a, str>>) -> Self",
+          "summary": "The source code to be rendered"
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Title",
+      "name": "Title",
+      "kind": "struct",
+      "crate": "ruff_annotate_snippets",
+      "signature": "struct Title<'a>",
+      "summary": "A title that introduces a [`Group`], describing the main point",
+      "doc": "api/annotate_snippets.snippet.md#title",
+      "aliases": [
+        "ruff_annotate_snippets::Title"
+      ],
+      "methods": [
+        {
+          "name": "element",
+          "signature": "fn element(self, section: impl Into<Element<'a>>) -> Group<'a>",
+          "summary": "Append an [`Element`] that adds context to the [`Title`]"
+        },
+        {
+          "name": "elements",
+          "signature": "fn elements(self, sections: impl IntoIterator<Item = impl Into<Element<'a>>>) -> Group<'a>",
+          "summary": "Append [`Element`]s that adds context to the [`Title`]"
+        },
+        {
+          "name": "id",
+          "signature": "fn id(self, id: impl Into<Cow<'a, str>>) -> Self",
+          "summary": "The category for this [`Report`]"
+        },
+        {
+          "name": "id_url",
+          "signature": "fn id_url(self, url: impl Into<Cow<'a, str>>) -> Self",
+          "summary": "Provide a URL for [`Title::id`] for more information on this diagnostic"
+        },
+        {
+          "name": "is_fixable",
+          "signature": "fn is_fixable(self, yes: bool) -> Self",
+          "summary": "Whether or not the diagnostic for this message is fixable."
+        }
+      ]
+    },
+    {
+      "path": "annotate_snippets::snippet::Report",
+      "name": "Report",
+      "kind": "type_alias",
+      "crate": "ruff_annotate_snippets",
+      "signature": "type Report<'a> = &'a [Group<'a>]",
+      "summary": "A [diagnostic message][Title] and any associated [context][Element] to help users understand it",
+      "doc": "api/annotate_snippets.snippet.md#report",
+      "aliases": [
+        "ruff_annotate_snippets::Report"
+      ]
+    }
+  ]
+}

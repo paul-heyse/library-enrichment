@@ -1,7 +1,7 @@
 //! Declared document visits from qualified immutable artifacts, never a fragment corpus.
 use enrichment_core::{
     evidence::{
-        Artifact, EvidenceFragment, FragmentKind, Relationship, Symbol, ingest::ProducerSource,
+        Artifact, FragmentKind, document::DocumentFact, ingest::DocumentSource, relational::Locator,
     },
     producer::{docsrs::ManifestFacts, source},
 };
@@ -12,7 +12,7 @@ pub(super) struct SourceDocuments {
     blobs: BlobStore,
     features: Option<(ManifestFacts, Artifact)>,
     files: Vec<(String, FragmentKind, Artifact, bool)>,
-    declarations: Vec<EvidenceFragment>,
+    declarations: Vec<DocumentFact>,
     inventory_bytes: usize,
     inventory: Option<Inventory>,
 }
@@ -68,7 +68,7 @@ impl SourceDocuments {
         Ok(())
     }
     /// Small explicit declarations such as a documentation URL, never extracted API text.
-    pub fn declaration(&mut self, value: EvidenceFragment) -> Result<(), String> {
+    pub fn declaration(&mut self, value: DocumentFact) -> Result<(), String> {
         self.charge(&value)?;
         self.declarations.push(value);
         Ok(())
@@ -125,27 +125,23 @@ impl SourceDocuments {
             })
     }
 }
-impl ProducerSource for SourceDocuments {
-    fn visit_symbols(&self, _: &mut dyn FnMut(Symbol) -> Result<(), String>) -> Result<(), String> {
-        Ok(())
-    }
-    fn visit_relationships(
+impl DocumentSource for SourceDocuments {
+    fn decode(
         &self,
-        _: &mut dyn FnMut(Relationship) -> Result<(), String>,
-    ) -> Result<(), String> {
-        Ok(())
-    }
-    fn visit_fragments(
-        &self,
-        emit: &mut dyn FnMut(EvidenceFragment) -> Result<(), String>,
+        emit: &mut dyn FnMut(DocumentFact) -> Result<(), String>,
     ) -> Result<(), String> {
         if let Some(inventory) = &self.inventory {
             for entry in &inventory.entries {
-                let mut row = EvidenceFragment::new(
+                let mut row = DocumentFact::new(
                     FragmentKind::DocText,
                     &entry.name,
                     &inventory.artifact.artifact_id,
-                    serde_json::json!({"uri":entry.uri,"role":entry.role,"project":inventory.project,"inventory_version":inventory.version}),
+                    Locator::SphinxInventory {
+                        uri: entry.uri.clone(),
+                        role: entry.role.clone(),
+                        project: inventory.project.clone(),
+                        inventory_version: inventory.version.clone(),
+                    },
                     format!("{} ({}) → {}", entry.display, entry.role, entry.uri),
                     enrichment_core::wire::EvidenceClass::Declared,
                     "sphinx-inventory",

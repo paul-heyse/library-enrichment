@@ -1,0 +1,248 @@
+{
+  "module": "pyrefly_util::lined_buffer",
+  "crate": "pyrefly_util",
+  "api": "api/pyrefly_util.lined_buffer.md",
+  "items": [
+    {
+      "path": "pyrefly_util::lined_buffer::DisplayPos",
+      "name": "DisplayPos",
+      "kind": "enum",
+      "crate": "pyrefly_util",
+      "signature": "enum DisplayPos",
+      "summary": "The line and column of an offset in a source file.",
+      "doc": "api/pyrefly_util.lined_buffer.md#displaypos",
+      "variants": [
+        "Source",
+        "Notebook"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "cell",
+          "signature": "fn cell(self) -> Option<NonZeroU32>"
+        },
+        {
+          "name": "column",
+          "signature": "fn column(self) -> NonZeroU32"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "line_within_cell",
+          "signature": "fn line_within_cell(self) -> LineNumber"
+        },
+        {
+          "name": "line_within_file",
+          "signature": "fn line_within_file(self) -> LineNumber"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::lined_buffer::DisplayRange",
+      "name": "DisplayRange",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct DisplayRange",
+      "summary": "A range in a file, with a start and end, both containing line and column. Stored in terms of characters, not including any BOM.",
+      "doc": "api/pyrefly_util.lined_buffer.md#displayrange",
+      "fields": [
+        "start",
+        "end"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::lined_buffer::LineNumber",
+      "name": "LineNumber",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct LineNumber",
+      "summary": "A line number in a file.",
+      "doc": "api/pyrefly_util.lined_buffer.md#linenumber",
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "decrement",
+          "signature": "fn decrement(&self) -> Option<Self>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_one_indexed",
+          "signature": "fn from_one_indexed(x: OneIndexed) -> Self"
+        },
+        {
+          "name": "from_zero_indexed",
+          "signature": "fn from_zero_indexed(x: u32) -> Self"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(self) -> u32"
+        },
+        {
+          "name": "increment",
+          "signature": "fn increment(self) -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(x: u32) -> Option<Self>"
+        },
+        {
+          "name": "to_one_indexed",
+          "signature": "fn to_one_indexed(self) -> OneIndexed"
+        },
+        {
+          "name": "to_zero_indexed",
+          "signature": "fn to_zero_indexed(self) -> u32"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::lined_buffer::LinedBuffer",
+      "name": "LinedBuffer",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct LinedBuffer",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "clamp_position",
+          "signature": "fn clamp_position(&self, offset: TextSize) -> TextSize",
+          "summary": "Clamp a byte offset so it is safe to pass to `LineIndex::source_location`. Handles offsets past EOF (#1698) and offsets inside multi-byte UTF-8 characters (#3041)."
+        },
+        {
+          "name": "code_at",
+          "signature": "fn code_at(&self, range: TextRange) -> &str"
+        },
+        {
+          "name": "content_in_line_range",
+          "signature": "fn content_in_line_range(&self, start_line: LineNumber, end_line: LineNumber) -> &str",
+          "summary": "Gets the content from the beginning of start_line to the end of end_line."
+        },
+        {
+          "name": "contents",
+          "signature": "fn contents(&self) -> &Arc<String>"
+        },
+        {
+          "name": "display_pos",
+          "signature": "fn display_pos(&self, offset: TextSize, notebook: Option<&Notebook>) -> DisplayPos"
+        },
+        {
+          "name": "display_range",
+          "signature": "fn display_range(&self, range: TextRange, notebook: Option<&Notebook>) -> DisplayRange"
+        },
+        {
+          "name": "from_display_pos",
+          "signature": "fn from_display_pos(&self, pos: DisplayPos) -> TextSize",
+          "summary": "Convert from a user position to a `TextSize`. Doesn't take account of a leading BOM, so should be used carefully."
+        },
+        {
+          "name": "from_display_range",
+          "signature": "fn from_display_range(&self, source_range: &DisplayRange) -> TextRange",
+          "summary": "Convert from a user range to a `TextRange`. Doesn't take account of a leading BOM, so should be used carefully."
+        },
+        {
+          "name": "from_lsp_position",
+          "signature": "fn from_lsp_position(&self, position: lsp_types::Position, notebook_and_cell: Option<(&Notebook, usize)>) -> TextSize",
+          "summary": "Translates an LSP position to a text size. For notebooks, the input position is relative to a notebook cell and the output position is relative to the concatenated contents of the notebook."
+        },
+        {
+          "name": "from_lsp_range",
+          "signature": "fn from_lsp_range(&self, position: lsp_types::Range, notebook_and_cell: Option<(&Notebook, usize)>) -> TextRange",
+          "summary": "Translates an LSP position to a text range. For notebooks, the input range is relative to a notebook cell and the output position is range to the concatenated contents of the notebook."
+        },
+        {
+          "name": "line_count",
+          "signature": "fn line_count(&self) -> usize"
+        },
+        {
+          "name": "line_index",
+          "signature": "fn line_index(&self) -> &LineIndex"
+        },
+        {
+          "name": "line_start",
+          "signature": "fn line_start(&self, line: LineNumber) -> TextSize"
+        },
+        {
+          "name": "lines",
+          "signature": "fn lines(&self) -> Lines<'_>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(buffer: Arc<String>) -> Self"
+        },
+        {
+          "name": "python_ast_range_for_expr",
+          "signature": "fn python_ast_range_for_expr(&self, original_range: TextRange, expr: &Expr, parent_expr: Option<&Expr>) -> PythonASTRange",
+          "summary": "Convert an expression's range into a `PythonASTRange`."
+        },
+        {
+          "name": "to_cell_for_lsp",
+          "signature": "fn to_cell_for_lsp(&self, x: TextSize, notebook: Option<&Notebook>) -> Option<usize>",
+          "summary": "If the module is a notebook, take an input position relative to the concatenated contents and return the index of the corresponding notebook cell."
+        },
+        {
+          "name": "to_lsp_position",
+          "signature": "fn to_lsp_position(&self, x: TextSize, notebook: Option<&Notebook>) -> lsp_types::Position",
+          "summary": "Translates a text size to a LSP position. For notebook, the input position is relative to the concatenated contents of the whole notebook and the output position is relative to a specific cell."
+        },
+        {
+          "name": "to_lsp_range",
+          "signature": "fn to_lsp_range(&self, x: TextRange, notebook: Option<&Notebook>) -> lsp_types::Range",
+          "summary": "Translates a text range to a LSP range. For notebook, the input range is relative to the concatenated contents of the whole notebook and the output range is relative to a specific cell."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_util::lined_buffer::PythonASTRange",
+      "name": "PythonASTRange",
+      "kind": "struct",
+      "crate": "pyrefly_util",
+      "signature": "struct PythonASTRange",
+      "summary": "Source location in Python AST conventions: 1-indexed lines, 0-indexed columns.",
+      "doc": "api/pyrefly_util.lined_buffer.md#pythonastrange",
+      "fields": [
+        "start_line",
+        "start_col",
+        "end_line",
+        "end_col"
+      ],
+      "implements": [
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    }
+  ]
+}

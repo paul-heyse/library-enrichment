@@ -1,0 +1,22 @@
+id: project-sdk-server-confusion
+language: python
+severity: hint
+message: This imports the official SDK's server, not FastMCP.
+note: |
+  Three things share this territory and they are not interchangeable:
+
+    fastmcp.FastMCP                  the standalone project, what this repository indexes
+    mcp.server.mcpserver.MCPServer   the official SDK's own server, renamed from FastMCP in 2.x
+    mcp.server.fastmcp               a tombstone; importing it raises ModuleNotFoundError
+
+  The tombstone at least fails loudly. `MCPServer` does not -- it is a working server with a
+  different feature set, so code written against FastMCP guides will reach for methods that do
+  not exist on it. If you meant the standalone project, import `from fastmcp import FastMCP`.
+metadata:
+  record: removed-api
+  capability: entry-point
+rule:
+  any:
+    - pattern: from mcp.server.fastmcp import $$$
+    - pattern: import mcp.server.fastmcp
+    - pattern: from mcp.server.mcpserver import $$$

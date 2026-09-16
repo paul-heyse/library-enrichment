@@ -1,0 +1,143 @@
+{
+  "module": "ruff_python_semantic::cfg::graph",
+  "crate": "ruff_python_semantic",
+  "api": "api/ruff_python_semantic.cfg.graph.md",
+  "items": [
+    {
+      "path": "ruff_python_semantic::cfg::graph::Condition",
+      "name": "Condition",
+      "kind": "enum",
+      "crate": "ruff_python_semantic",
+      "signature": "enum Condition",
+      "summary": "Represents a condition to be tested in a multi-way branch",
+      "doc": "api/ruff_python_semantic.cfg.graph.md#condition",
+      "variants": [
+        "Always"
+      ],
+      "methods": []
+    },
+    {
+      "path": "ruff_python_semantic::cfg::graph::build_cfg",
+      "name": "build_cfg",
+      "kind": "function",
+      "crate": "ruff_python_semantic",
+      "signature": "fn build_cfg(stmts: &[ruff_python_ast::Stmt]) -> ControlFlowGraph<'_>",
+      "summary": "Returns the control flow graph associated to an array of statements",
+      "doc": "api/ruff_python_semantic.cfg.graph.md#build_cfg"
+    },
+    {
+      "path": "ruff_python_semantic::cfg::graph::BlockId",
+      "name": "BlockId",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct BlockId",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::convert::From",
+        "core::ops::arith::Add",
+        "ruff_index::idx::Idx"
+      ],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "fn add(self, rhs: usize) -> Self::Output",
+          "via_trait": "core::ops::arith::Add"
+        },
+        {
+          "name": "as_u32",
+          "signature": "const fn as_u32(self) -> u32",
+          "summary": "Returns the index as a `u32` value"
+        },
+        {
+          "name": "as_usize",
+          "signature": "const fn as_usize(self) -> usize",
+          "summary": "Returns the index as a `usize` value"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: usize) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_u32",
+          "signature": "const fn from_u32(value: u32) -> Self"
+        },
+        {
+          "name": "from_usize",
+          "signature": "const fn from_usize(value: usize) -> Self"
+        },
+        {
+          "name": "index",
+          "signature": "const fn index(self) -> usize"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(self) -> usize",
+          "via_trait": "ruff_index::idx::Idx"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(value: usize) -> Self",
+          "via_trait": "ruff_index::idx::Idx"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::cfg::graph::ControlFlowGraph",
+      "name": "ControlFlowGraph",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct ControlFlowGraph<'stmt>",
+      "summary": "Control flow graph",
+      "doc": "api/ruff_python_semantic.cfg.graph.md#controlflowgraph",
+      "methods": [
+        {
+          "name": "initial",
+          "signature": "fn initial(&self) -> BlockId",
+          "summary": "Index of entry point to the control flow graph"
+        },
+        {
+          "name": "num_blocks",
+          "signature": "fn num_blocks(&self) -> usize",
+          "summary": "Number of basic blocks, or nodes, in the graph"
+        },
+        {
+          "name": "outgoing",
+          "signature": "fn outgoing(&self, block: BlockId) -> &Edges",
+          "summary": "Returns the [`Edges`] going out of the basic block at the given index"
+        },
+        {
+          "name": "predecessors",
+          "signature": "fn predecessors(&self, block: BlockId) -> impl ExactSizeIterator<Item = BlockId> + '_",
+          "summary": "Returns an iterator over the indices of the direct predecessors of the block at the given index"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self, block: BlockId) -> TextRange",
+          "summary": "Returns the range of the statements comprising the basic block at the given index"
+        },
+        {
+          "name": "stmts",
+          "signature": "fn stmts(&self, block: BlockId) -> &'stmt [Stmt]",
+          "summary": "Returns the statements comprising the basic block at the given index"
+        }
+      ]
+    },
+    {
+      "path": "ruff_python_semantic::cfg::graph::Edges",
+      "name": "Edges",
+      "kind": "struct",
+      "crate": "ruff_python_semantic",
+      "signature": "struct Edges",
+      "summary": "Holds a collection of edges. Each edge is determined by:  - a [`Condition`] for traversing the edge, and  - a target block, specified by its [`BlockId`].",
+      "doc": "api/ruff_python_semantic.cfg.graph.md#edges",
+      "methods": [
+        {
+          "name": "filter_targets_by_conditions",
+          "signature": "fn filter_targets_by_conditions<'a, T: FnMut(&Condition) -> bool + 'a>(&'a self, predicate: T) -> impl Iterator<Item = BlockId> + 'a"
+        }
+      ]
+    }
+  ]
+}

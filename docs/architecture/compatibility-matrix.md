@@ -1416,3 +1416,91 @@ Exact installed evidence and executed upstream probes are recorded in
 | Authored Pydantic views can compose generated domain DTOs | [Pydantic serialization](https://docs.pydantic.dev/latest/concepts/serialization/) and installed 2.13.5 probe in the verification record | 2026-09-15 | `model_json_schema(mode='serialization', by_alias=True)` | Match advertised schema to JSON-mode serialization; keep semantic lowering and native bounds explicit. |
 | Distinct difference uses null-equal anti joins | [DataFusion 55.1.0 logical builder](https://github.com/apache/datafusion/blob/55.1.0/datafusion/expr/src/logical_plan/builder.rs) | 2026-09-15 | `JoinType::LeftAnti`; `NullEquality::NullEqualsNull` | Flat set reconciliation is valid; EXCEPT ALL is not assumed to subtract multiplicities. |
 | Result field inference supports precise nullability | [DataFusion 55.1.0 UDF](https://github.com/apache/datafusion/blob/55.1.0/datafusion/expr/src/udf.rs) | 2026-09-15 | `fn return_field_from_args` | Identity UDF is nonnullable; scoring retains nullable nonmatches and captured query identity. |
+
+
+## Plan 15 Python Arrow fact transport — verified 2026-09-16
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict / consequence |
+|---|---|---|---|---|
+| PyArrow 25.0.1 supplies the required CPython 3.14 Linux wheel | [PyPI release metadata](https://pypi.org/pypi/pyarrow/25.0.1/json) | 2026-09-16 | `pyarrow-25.0.1-cp314-cp314-manylinux_2_28_x86_64.whl` | Verified by upstream-verifier; selected and installed exact `pyarrow==25.0.1`. SHA256 `9171748cdf796972d85a4b60157c279913e242992e350c90c7450182a9838b2a`. |
+| The encoder accepts an explicit schema and IPC options | [pinned Arrow Python IPC API](https://github.com/apache/arrow/blob/apache-arrow-25.0.1/python/pyarrow/ipc.py#L151) | 2026-09-16 | `new_stream(sink, schema, *, options=None)` | Verified source and local encoding probe; Rust generates and packages the exact schema. |
+| IPC metadata version can be selected independently of the package release | [pinned IPC options](https://github.com/apache/arrow/blob/apache-arrow-25.0.1/python/pyarrow/ipc.pxi#L267), [format versioning](https://arrow.apache.org/docs/format/Versioning.html) | 2026-09-16 | `MetadataVersion.V5` | V5, modern framing, no compression; package version equality with Arrow Rust is not assumed. |
+| DataFusion reads IPC stream sources directly | Installed `datafusion-datasource-arrow-55.1.0/src/file_format.rs:208` and `src/source.rs:88` | 2026-09-16 | `ArrowSource::new_stream_file_source(table_schema)` | Verified exact source; no intermediary conversion to IPC file or Parquet required. Native worker-to-evidence qualification is recorded separately in Plan 15. |
+
+
+## Plan 15 Rust fact extraction — verified 2026-09-16
+
+Selected existing pins: **public-api 0.52.2**, **rustdoc-types 0.59.0** (format version 59).
+These rows establish interfaces; native Rust fact/normalization qualification is not yet run.
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict / consequence |
+|---|---|---|---|---|
+| One rustdoc ID can have several rendered public occurrences | [pinned item processor](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/item_processor.rs#L335) | 2026-09-16 | “The reason this is a one-to-many mapping is because of re-exports.” | Verified; emit individual Arrow occurrences instead of the existing HashMap overwrite. |
+| Builder omission flags discard implementation evidence | [pinned builder options](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/lib.rs#L134) | 2026-09-16 | “at the cost of not fully describing the public API” | Verified; mechanical extraction retains blanket, auto-trait and derived occurrences for later native selection. |
+| Occurrence iteration transfers an already built corpus | [pinned iterator](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/lib.rs#L248) | 2026-09-16 | “ownership of all `PublicItem`s are transferred to the caller” | Verified; iteration is not streaming construction. The isolated producer must retain a measured external memory boundary. |
+| Reexport target IDs are typed and may be absent | [pinned rustdoc-types Use](https://github.com/rust-lang/rustdoc-types/blob/5680fd81c93996938ce2e8e7034b09fee491f4a4/src/lib.rs#L1719) | 2026-09-16 | `pub id: Option<Id>` | Verified; retain missing/external targets as facts and classify them in native plans. |
+| Rendered tokens and parent IDs do not identify an alias occurrence uniquely | [pinned tokens](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/tokens.rs#L6), [pinned reexport processing](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/item_processor.rs#L156) | 2026-09-16 | `Token::Type`; `Some(item.id)` | Verified; repeated aliases may share item/parent IDs. Treat joins as candidate associations; retain ambiguity or definition-scoped evidence. Do not attach every rendering to every alias or infer a structured path from token categories. |
+
+## Plan 15 native Delta reads and planning stacks — verified 2026-09-16
+
+Read-only upstream-verifier checks and exact installed source. Interface checks do not establish
+end-to-end resource safety; scoped executable receipts are in Plan 15.
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict and consequence |
+|---|---|---|---|---|
+| The native scan accepts an application schema | [DeltaScanConfig](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/table_provider.rs#L230) | 2026-09-16 | `pub fn with_schema(mut self, schema: SchemaRef) -> Self` | Verified; semantic metadata and unsigned output use this public route. |
+| A captured scan can be constructed directly; runtime log-store attachment is private | [DeltaScan](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/table_provider/next/mod.rs#L518) | 2026-09-16 | `pub fn new(snapshot: impl Into<SnapshotWrapper>, config: DeltaScanConfig)`; `pub(crate) fn with_log_store` | Verified; reads register the shared root ObjectStore explicitly. Published ViewTable exposes no mutation route. |
+| Schema override does not supply nested leaf pruning at this pin | [kernel projection](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/table_provider/next/scan/plan.rs#L297) | 2026-09-16 | `.map(|field| field.name().as_str())`; `kernel_logical_schema.project(&kernel_projection_names)` | Verified source; executed narrow-output probes read unchanged bytes. Store bulky documentation as a separately projectable top-level column. No copied private reader or optimizer disable. |
+| Changed storage/override field types can disable filter pushdown | [override type guard](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/table_provider/next/scan/plan.rs#L642) | 2026-09-16 | `TableProviderFilterPushDown::Unsupported` | Verified; retain native post-scan predicates. Schema availability is not proof of exact pushdown. |
+| Session setup does not replace an existing file backend | [DeltaSessionExt](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/session.rs#L105) | 2026-09-16 | `if self.runtime_env().object_store(&url).is_err()` | Verified; QueryRuntime registers DurableLocalStore first and builders reuse the same Arc. Executed pointer-identity check passed. |
+| Recursive protection is not a blanket optimizer guarantee | [EliminateJoin](https://github.com/apache/datafusion/blob/55.1.0/datafusion/optimizer/src/eliminate_join.rs#L193), [SQL stack](https://github.com/apache/datafusion/blob/55.1.0/datafusion/sql/src/stack.rs#L24) | 2026-09-16 | `rewrite_subtree`; `rewrite_node`; `maybe_grow` | Verified source: recursive optimizer functions are not all guarded; actual daemon traces overflow there and during SQL/plan work. Feature is already enabled. |
+| Tokio's default worker stack is bounded but insufficient for the failing route | [Tokio 1.53.1 Builder](https://github.com/tokio-rs/tokio/blob/tokio-1.53.1/tokio/src/runtime/builder.rs#L657) | 2026-09-16 | “The default stack size for spawned threads is 2 MiB” | Verified; thread_stack_size also applies to blocking workers. SpawnedTask owns cancellation but does not enlarge stacks. Runtime/block_on caller and shared worker/resource limits need explicit qualification. |
+| A late environment change cannot reliably resize Rust test threads | Installed Rust 1.98.1 `library/std/src/thread/mod.rs:133`; `library/test/src/lib.rs:695` | 2026-09-16 | “changes to `RUST_MIN_STACK` may be ignored after program start” | Verified; 8 MiB environment run was a diagnostic, not the service architecture or a qualified resource policy. |
+
+## Plan 15 executor ownership — verified 2026-09-16
+
+Read-only upstream verification at the selected Delta/kernel commits and Tokio 1.53.1. These
+interface facts do not certify physical-effect cleanup or the final installed service.
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict and consequence |
+|---|---|---|---|---|
+| Default kernel engines use the current Tokio runtime | [Delta engine construction](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L594), [kernel executor](https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/default-engine/src/executor.rs#L202) | 2026-09-16 | `Handle::current()`; `TokioMultiThreadExecutor::new(handle)` | Verified; metadata and full native operations run on the service multi-thread executor. On current-thread runtimes the kernel constructs a background executor instead; its bounded submission channel is not an active-task bound. |
+| Selecting an I/O handle does not wrap a custom backend | [table builder](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/table/builder.rs#L265), [log store decoration](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L122) | 2026-09-16 | `with_storage_backend`; `logstore_with` | Verified; custom-backend decoration adds the prefix, not DeltaIOStorageBackend. The ineffective I/O-handle setting is removed. The public experimental wrapper remains excluded from this selected local route. |
+| Background shutdown does not wait for completion | [Tokio Runtime](https://github.com/tokio-rs/tokio/blob/tokio-1.53.1/tokio/src/runtime/runtime.rs#L459) | 2026-09-16 | “Shuts down the runtime, without waiting for any spawned work to stop.” | Verified; runtime-owner drop uses this fallback inside async contexts. Running callbacks retain their owner and permits; shutdown_background is not a graceful-drain receipt. |
+| Entering a runtime selects task spawning but does not relocate future construction | [Tokio Handle](https://github.com/tokio-rs/tokio/blob/tokio-1.53.1/tokio/src/runtime/handle.rs#L40), [DataFusion SpawnedTask](https://github.com/apache/datafusion/blob/55.1.0/datafusion/common-runtime/src/common.rs#L40) | 2026-09-16 | `tokio::task::spawn(trace_future(task))`; `tokio::task::spawn_blocking(trace_block(task))` | Verified; enter guards end before await. The actual default-stack trace failed in tracing's future boxing; boxing before wrapper composition removed that startup failure. |
+
+## Plan 15 rustdoc declaration scope — verified 2026-09-16
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict and consequence |
+|---|---|---|---|---|
+| public-api missing IDs are lookup diagnostics, not a missing-local-declaration count | [public-api 0.52.2 CrateWrapper](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/crate_wrapper.rs#L8) | 2026-09-16 | “to aid with debugging” | The pinned implementation records any failed index lookup without severity or deduplication. Native rules classify known external trait enrichment separately; unknown inputs and missing required public edges remain gaps with bounded witnesses. |
+| Trait lookup can be for inherited details of an otherwise present impl | [public-api item processor](https://github.com/cargo-public-api/cargo-public-api/blob/56b483933ceb741978a9f59228e48cae2013e74d/public-api/src/item_processor.rs#L283) | 2026-09-16 | “also include default trait methods” | Declaration coverage excludes expansion of external trait definitions and inherited method details, explicitly reported in MCP coverage. The fixture includes external Clone::clone_from enrichment, so complete inherited API coverage is not claimed. |
+
+The fixture declares rustdoc format 61 while the pinned rustdoc-types package describes format 59.
+Successful deserialization alone does not qualify that producer/format pairing; format admission
+remains a separate open check.
+
+## Plan 15 captured network destinations — verified 2026-09-16
+
+The upstream verifier checked installed reqwest 0.13.5, hyper-rustls 0.27.9 and hyper-util
+0.1.20 against their exact source. Context7 was a discovery lead. These are interface facts;
+the native HTTP path has separate functional qualification.
+
+| Claim | Primary source | Retrieved | Exact evidence | Verdict and consequence |
+|---|---|---|---|---|
+| Per-host overrides use captured addresses without a second DNS lookup | [reqwest resolver](https://github.com/seanmonstar/reqwest/blob/v0.13.5/src/dns/resolve.rs#L148) | 2026-09-16 | `Some(dest)` | Verified; the original URI still supplies HTTP authority and Rustls server-name verification. Bind a fresh client/pool to each admitted address set; unmatched names and literal addresses need independent admission. |
+| URL ports take precedence over override ports | [reqwest builder](https://github.com/seanmonstar/reqwest/blob/v0.13.5/src/async_impl/client.rs#L2312) | 2026-09-16 | `resolve_to_addrs` | Verified; capture addresses using the URL's effective port. Overrides are not a global allowlist. |
+| Explicit proxy disabling prevents ambient proxy routing | [reqwest builder](https://github.com/seanmonstar/reqwest/blob/v0.13.5/src/async_impl/client.rs#L1429) | 2026-09-16 | “system” | Verified; no_proxy clears proxies and disables system proxy discovery. The finite network driver uses direct, admitted destinations. |
+| Manual redirect handling requires one outer deadline | [redirect policy](https://github.com/seanmonstar/reqwest/blob/v0.13.5/src/redirect.rs#L57), [timeout](https://github.com/seanmonstar/reqwest/blob/v0.13.5/src/async_impl/client.rs#L1444) | 2026-09-16 | “does not follow any redirect”; “until the response body has finished” | Verified; Policy::none returns redirect responses. A fresh request starts a new timer, so the driver retains one monotonic deadline across DNS, admissions, requests and final body chunks. |
+
+
+### DataFusion 55.1 map entry layout — 2026-09-16
+
+Verified against `datafusion-functions-nested` 55.1.0 `map_entries.rs` and the process identity
+probe: `MapEntries::return_type` and `map_entries_inner` force the value field nullable while
+reusing the input entries array. Supplying a non-nullable value field panicked in Arrow 59.3.0
+`ListArray::new` with a nested type mismatch. The process Arrow map uses the native nullable read
+layout; typed executor input and admission require actual `Entry`/`OutputKind` values. No dependency
+or semantic-presence rule was relaxed. Native map ordering/identity and Delta-retained process
+admission subsequently passed (`native-process-identity-tests.log`, `native-process-route-tests.log`).
+Primary source: [DataFusion 55.1 map_entries implementation](https://docs.rs/datafusion-functions-nested/55.1.0/src/datafusion_functions_nested/map_entries.rs.html).

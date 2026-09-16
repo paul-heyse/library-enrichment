@@ -1,4 +1,4 @@
-//! One immutable JSON result with a bounded leading section index (research-result/2).
+//! One immutable JSON result with a bounded leading section index (research-result/3).
 //!
 //! Index ranges are relative to the result object. Large values are serialized from borrowed
 //! JSON, never copied into a second complete document. A section read parses only the index.
@@ -17,12 +17,12 @@ use std::{
 
 pub const MAX_BYTES: u64 = 32 * 1024 * 1024;
 const INDEX_BYTES: u64 = 16 * 1024;
-pub const JOB_URI: &str = "service:job-delivery/2";
+pub const JOB_URI: &str = "service:job-delivery/3";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 enum Format {
-    #[serde(rename = "research-result/2")]
-    V2,
+    #[serde(rename = "research-result/3")]
+    V3,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,6 +38,13 @@ pub struct Index {
     body_bytes: u64,
     format: Format,
     pub sections: BTreeMap<String, Window>,
+    pub references: Vec<Reference>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Reference {
+    pub receipt: Artifact,
 }
 
 #[derive(Deserialize)]
@@ -159,8 +166,15 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
     out.flush()?;
     Ok(Index {
         body_bytes: out.bytes,
-        format: Format::V2,
+        format: Format::V3,
         sections,
+        references: result
+            .artifacts
+            .iter()
+            .map(|handle| Reference {
+                receipt: handle.receipt.clone(),
+            })
+            .collect(),
     })
 }
 
@@ -211,7 +225,6 @@ pub fn store(blobs: &BlobStore, result: &Envelope, uri: &str) -> io::Result<(Art
             compression: None,
         },
     )?;
-    blobs.result_dependencies(&artifact.acquired)?;
     Ok((artifact.acquired, index))
 }
 
@@ -238,7 +251,7 @@ pub fn index(file: &mut (impl Read + Seek), total: u64) -> io::Result<(Index, u6
         || !prefix.ends_with(b",\"result\":\n")
         || !prefix.starts_with(b"{\"index\":")
     {
-        return Err(io::Error::other("invalid research-result/2 framing"));
+        return Err(io::Error::other("invalid research-result/3 framing"));
     }
     let index: Index = serde_json::from_slice(&prefix[9..prefix.len() - 11])?;
     if index

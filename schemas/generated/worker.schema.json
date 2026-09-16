@@ -163,25 +163,6 @@
       ],
       "type": "object"
     },
-    "WorkerGap": {
-      "additionalProperties": false,
-      "description": "An extraction gap, associated with its exact file.",
-      "properties": {
-        "file": {
-          "description": "Archive path.",
-          "type": "string"
-        },
-        "reason": {
-          "description": "Why it could not be fully characterized.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "file",
-        "reason"
-      ],
-      "type": "object"
-    },
     "WorkerRequest": {
       "additionalProperties": false,
       "description": "A static extraction request, generated into Python boundary DTOs.",
@@ -229,71 +210,23 @@
         "max_cpu_seconds"
       ],
       "type": "object"
-    },
-    "WorkerResponse": {
-      "additionalProperties": false,
-      "description": "Raw worker output. Only Rust normalizes and publishes it.",
-      "properties": {
-        "gaps": {
-          "description": "Explicit limitations/errors.",
-          "items": {
-            "$ref": "#/$defs/WorkerGap"
-          },
-          "type": "array"
-        },
-        "griffe_version": {
-          "description": "Griffe version actually used.",
-          "type": "string"
-        },
-        "observations": {
-          "description": "One or more facts per file.",
-          "items": {
-            "$ref": "#/$defs/Observation"
-          },
-          "type": "array"
-        },
-        "processed_files": {
-          "description": "Files successfully visited, including files with no declarations.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "schema_version": {
-          "description": "Protocol version.",
-          "type": "string"
-        },
-        "worker_python": {
-          "description": "The worker's own interpreter, never the analyzed interpreter.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "schema_version",
-        "griffe_version",
-        "worker_python",
-        "observations",
-        "processed_files",
-        "gaps"
-      ],
-      "type": "object"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "JSON schema covering both halves of the worker boundary.",
+  "description": "Generated request and mechanical observation DTOs; output is the Arrow fact stream.",
   "properties": {
+    "observation": {
+      "$ref": "#/$defs/Observation",
+      "description": "The mechanical observation encoded under the generated Arrow schema."
+    },
     "request": {
       "$ref": "#/$defs/WorkerRequest",
       "description": "Input."
-    },
-    "response": {
-      "$ref": "#/$defs/WorkerResponse",
-      "description": "Output."
     }
   },
   "required": [
     "request",
-    "response"
+    "observation"
   ],
   "title": "WorkerProtocol",
   "type": "object"

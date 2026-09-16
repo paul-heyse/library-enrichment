@@ -1,0 +1,45 @@
+{
+  "module": "buoyant_kernel::metrics::metered_json",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.metrics.metered_json.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::metrics::metered_json::MeteredJsonHandler",
+      "name": "MeteredJsonHandler",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct MeteredJsonHandler",
+      "summary": "Decorator over an engine-provided `Arc<dyn JsonHandler>` that emits a `JsonReadCompleted` span on every `read_json_files` call. `parse_json` and `write_json_file` are pass-through and emit nothing.",
+      "doc": "api/buoyant_kernel.metrics.metered_json.md#meteredjsonhandler",
+      "aliases": [
+        "buoyant_kernel::metrics::MeteredJsonHandler",
+        "delta_kernel::metrics::metered_json::MeteredJsonHandler"
+      ],
+      "implements": [
+        "buoyant_kernel::JsonHandler"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn JsonHandler>) -> Self",
+          "summary": "Wrap `inner`. Debug-asserts that `inner` is not already a [`MeteredJsonHandler`] so spans are emitted exactly once."
+        },
+        {
+          "name": "parse_json",
+          "signature": "fn parse_json(&self, json_strings: Box<dyn EngineData>, output_schema: SchemaRef) -> DeltaResult<Box<dyn EngineData>>",
+          "via_trait": "buoyant_kernel::JsonHandler"
+        },
+        {
+          "name": "read_json_files",
+          "signature": "fn read_json_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+          "via_trait": "buoyant_kernel::JsonHandler"
+        },
+        {
+          "name": "write_json_file",
+          "signature": "fn write_json_file(&self, path: &url::Url, data: DeltaResultIterator<'_, FilteredEngineData>, overwrite: bool) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::JsonHandler"
+        }
+      ]
+    }
+  ]
+}

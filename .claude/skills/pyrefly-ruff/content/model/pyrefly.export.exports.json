@@ -1,0 +1,217 @@
+{
+  "module": "pyrefly::export::exports",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.export.exports.md",
+  "items": [
+    {
+      "path": "pyrefly::export::exports::ExportLocation",
+      "name": "ExportLocation",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ExportLocation",
+      "summary": "Where is this export defined?",
+      "doc": "api/pyrefly.export.exports.md#exportlocation",
+      "variants": [
+        "ThisModule",
+        "OtherModule"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::export::exports::Export",
+      "name": "Export",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Export",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "location",
+        "symbol_kind",
+        "docstring_range",
+        "deprecation",
+        "is_final",
+        "special_export"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::export::exports::ExportOrigin",
+      "name": "ExportOrigin",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct ExportOrigin",
+      "summary": "Result of checking whether an export is `Final`, including the defining module and name found by following re-export chains.",
+      "doc": "api/pyrefly.export.exports.md#exportorigin",
+      "fields": [
+        "origin",
+        "is_final"
+      ]
+    },
+    {
+      "path": "pyrefly::export::exports::Exports",
+      "name": "Exports",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct Exports",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "changed_exports",
+          "signature": "fn changed_exports(&self, other: &Exports, lookup: &dyn LookupExport, changed: &mut ModuleChanges)",
+          "summary": "Diff two Exports and merge changes into `changed`."
+        },
+        {
+          "name": "docstring_range",
+          "signature": "fn docstring_range(&self) -> Option<TextRange>",
+          "summary": "Get the docstring for this module."
+        },
+        {
+          "name": "dunder_all_name_at",
+          "signature": "fn dunder_all_name_at(&self, position: TextSize) -> Option<(TextRange, Name)>",
+          "summary": "If `position` is inside a user-specified `__all__` string entry, return its range and name."
+        },
+        {
+          "name": "explicit_dunder_all_names",
+          "signature": "fn explicit_dunder_all_names(&self) -> Option<&SmallSet<Name>>",
+          "summary": "Returns the entries in a user-defined `__all__`, or `None` if `__all__` was not present."
+        },
+        {
+          "name": "exports",
+          "signature": "fn exports(&self, lookup: &dyn LookupExport) -> Arc<SmallMap<Name, ExportLocation>>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_partially_known_dunder_all",
+          "signature": "fn get_partially_known_dunder_all(definitions: &Definitions) -> SmallSet<Name>"
+        },
+        {
+          "name": "invalid_dunder_all_entries",
+          "signature": "fn invalid_dunder_all_entries(&self, lookup: &dyn LookupExport) -> Vec<(TextRange, Name)>",
+          "summary": "Returns entries in `__all__` that don't exist in the module's definitions. Only validates explicitly user-defined `__all__` entries, not synthesized ones. Returns a vector of (range, name) tuples for invalid entries."
+        },
+        {
+          "name": "is_explicit_reexport",
+          "signature": "fn is_explicit_reexport(&self, name: &Name) -> bool"
+        },
+        {
+          "name": "is_implicit_reexport",
+          "signature": "fn is_implicit_reexport(&self, name: &Name) -> bool",
+          "summary": "Returns true if `name` is available from this module only as an *implicit* re-export: it was brought in by a plain `import`/`from ... import ...` (without a redundant `as` alias) and is not listed in an explicit `__all__`. Per the typing s…"
+        },
+        {
+          "name": "is_submodule_imported_implicitly",
+          "signature": "fn is_submodule_imported_implicitly(&self, name: &Name) -> bool"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(x: &[Stmt], module_info: &pyrefly_python::module::Module, sys_info: SysInfo, build_symbols: bool) -> Self",
+          "summary": "When `build_symbols` is true, retain the flat table of supported source declarations used by IDE symbol features; exports are always built."
+        },
+        {
+          "name": "symbols",
+          "signature": "fn symbols(&self) -> Option<&FlatSymbols>",
+          "summary": "The flat symbol table, if one was built for this module."
+        },
+        {
+          "name": "unresolvable_dunder_all_range",
+          "signature": "fn unresolvable_dunder_all_range(&self) -> Option<TextRange>",
+          "summary": "Returns the range of the unresolvable `__all__` RHS, if applicable."
+        },
+        {
+          "name": "wildcard",
+          "signature": "fn wildcard(&self, lookup: &dyn LookupExport) -> Arc<SmallSet<Name>>",
+          "summary": "What symbols will I get if I do `from <this_module> import *`?"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::export::exports::LookupExport",
+      "name": "LookupExport",
+      "kind": "trait",
+      "crate": "pyrefly",
+      "signature": "trait LookupExport",
+      "summary": "Find the exports of a given module. Beware: these APIs record dependencies between modules during lookups. Using the wrong API can lead to invalidation bugs.",
+      "doc": "api/pyrefly.export.exports.md#lookupexport",
+      "required_methods": [
+        "docstring_range",
+        "export_exists",
+        "export_origin",
+        "get_deprecated",
+        "get_every_export_untracked",
+        "get_wildcard",
+        "is_implicit_reexport",
+        "is_special_export",
+        "is_submodule_imported_implicitly",
+        "module_exists",
+        "reexport_source"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "docstring_range",
+          "signature": "fn docstring_range(&self, module: ModuleName, name: &Name) -> Option<TextRange>",
+          "summary": "Get the docstring range for an export. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "export_exists",
+          "signature": "fn export_exists(&self, module: ModuleName, name: &Name) -> bool",
+          "summary": "Check if a specific export exists in a module. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "export_origin",
+          "signature": "fn export_origin(&self, module: ModuleName, name: &Name) -> ExportOrigin",
+          "summary": "Get where an export originates. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "get_deprecated",
+          "signature": "fn get_deprecated(&self, module: ModuleName, name: &Name) -> Option<Deprecation>",
+          "summary": "Get deprecation info for an export. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "get_every_export_untracked",
+          "signature": "fn get_every_export_untracked(&self, module: ModuleName) -> Option<SmallSet<Name>>",
+          "summary": "Get all export names for a module. Records no dependencies."
+        },
+        {
+          "name": "get_wildcard",
+          "signature": "fn get_wildcard(&self, module: ModuleName) -> Option<Arc<SmallSet<Name>>>",
+          "summary": "Get the wildcard exports for a module. Records a dependency on `module` regardless of if it exists."
+        },
+        {
+          "name": "is_implicit_reexport",
+          "signature": "fn is_implicit_reexport(&self, module: ModuleName, name: &Name) -> bool",
+          "summary": "Check if a name is only an *implicit* re-export (available via a plain import, not part of the module's public interface). Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "is_special_export",
+          "signature": "fn is_special_export(&self, module: ModuleName, name: &Name) -> Option<SpecialExport>",
+          "summary": "Check if an export is a special export. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "is_submodule_imported_implicitly",
+          "signature": "fn is_submodule_imported_implicitly(&self, module: ModuleName, name: &Name) -> bool",
+          "summary": "Check if a submodule is imported implicitly. Records a dependency on `name` from `module` regardless of if it exists."
+        },
+        {
+          "name": "module_exists",
+          "signature": "fn module_exists(&self, module: ModuleName) -> FindingOrError<()>",
+          "summary": "Check if a module exists and do nothing with it. Note: if we rely on the exports of `module`, we need to call `module_exists_and_record_export_dependency` instead."
+        },
+        {
+          "name": "reexport_source",
+          "signature": "fn reexport_source(&self, module: ModuleName, name: &Name) -> Option<ModuleName>",
+          "summary": "If `name` is a re-export, return the module it is re-exported from. Records a dependency on `name` from `module` regardless of if it exists."
+        }
+      ]
+    }
+  ]
+}

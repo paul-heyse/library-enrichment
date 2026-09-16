@@ -1,0 +1,338 @@
+{
+  "module": "ruff_db::files",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.files.md",
+  "items": [
+    {
+      "path": "ruff_db::files::FileError",
+      "name": "FileError",
+      "kind": "enum",
+      "crate": "ruff_db",
+      "signature": "enum FileError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "IsADirectory",
+        "NotFound"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::files::system_path_to_file",
+      "name": "system_path_to_file",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn system_path_to_file(db: &dyn Db, path: impl AsRef<system::SystemPath>) -> Result<File, FileError>",
+      "summary": "Interns a file system path and returns a salsa `File` ingredient.",
+      "doc": "api/ruff_db.files.md#system_path_to_file"
+    },
+    {
+      "path": "ruff_db::files::vendored_path_to_file",
+      "name": "vendored_path_to_file",
+      "kind": "function",
+      "crate": "ruff_db",
+      "signature": "fn vendored_path_to_file(db: &dyn Db, path: impl AsRef<vendored::VendoredPath>) -> Result<File, FileError>",
+      "summary": "Interns a vendored file path. Returns `Some` if the vendored file for `path` exists and `None` otherwise.",
+      "doc": "api/ruff_db.files.md#vendored_path_to_file"
+    },
+    {
+      "path": "ruff_db::files::File",
+      "name": "File",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct File",
+      "summary": "A file-system path that's either stored on the host system's file system or in the vendored file system.",
+      "doc": "api/ruff_db.files.md#file",
+      "implements": [
+        "get_size2::GetSize",
+        "salsa::id::AsId",
+        "salsa::id::FromId",
+        "salsa::input::Configuration",
+        "salsa::input::HasBuilder",
+        "salsa::salsa_struct::SalsaStructInDb",
+        "salsa::salsa_value::SalsaValue",
+        "salsa::zalsa::HasJar"
+      ],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> salsa::Id",
+          "via_trait": "salsa::id::AsId"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder(path: FilePath) -> <Self as zalsa_struct_::HasBuilder>::Builder"
+        },
+        {
+          "name": "cast",
+          "signature": "fn cast(id: zalsa_::Id, type_id: zalsa_::TypeId) -> zalsa_::Option<Self>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "default_debug_fmt",
+          "signature": "fn default_debug_fmt(this: Self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result where for<'__trivial_bounds> FilePath: ::std::fmt::Debug, for<'__trivial_bounds> Option<u32>: ::std::fmt::Debug, for<'__trivial_bounds> FileRevision: ::std::fmt::Debug, for<'__trivial_bounds> FileStatus: ::std::fmt::Debug, for<'__trivial_bounds> Option<SourceText>: ::std::fmt::Debug",
+          "summary": "Default debug formatting for this struct (may be useful if you define your own `Debug` impl)"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<'de, D: zalsa_::serde::Deserializer<'de>>(deserializer: D) -> ::std::result::Result<Self::Fields, D::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "entries",
+          "signature": "fn entries(zalsa: &zalsa_::Zalsa) -> impl Iterator<Item = zalsa_::DatabaseKeyIndex> + '_",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "exists",
+          "signature": "fn exists(self, db: &dyn Db) -> bool",
+          "summary": "Returns `true` if the file exists."
+        },
+        {
+          "name": "from_id",
+          "signature": "fn from_id(id: salsa::Id) -> Self",
+          "via_trait": "salsa::id::FromId"
+        },
+        {
+          "name": "heap_size",
+          "signature": "fn heap_size(value: &Self::Fields) -> Option<usize>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "ingredient",
+          "signature": "fn ingredient(db: &dyn zalsa_::Database) -> &zalsa_struct_::IngredientImpl<Self>"
+        },
+        {
+          "name": "ingredient_mut",
+          "signature": "fn ingredient_mut(zalsa_mut: &mut zalsa_::Zalsa) -> (&mut zalsa_struct_::IngredientImpl<Self>, &mut zalsa_::Runtime)"
+        },
+        {
+          "name": "is_package",
+          "signature": "fn is_package(self, db: &dyn Db) -> bool",
+          "summary": "Returns `true` if the file is an `__init__.pyi`"
+        },
+        {
+          "name": "is_stub",
+          "signature": "fn is_stub(self, db: &dyn Db) -> bool",
+          "summary": "Returns `true` if the file should be analyzed as a type stub."
+        },
+        {
+          "name": "lookup_ingredient_index",
+          "signature": "fn lookup_ingredient_index(aux: &zalsa_::Zalsa) -> zalsa_::IngredientIndices",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "memo_table",
+          "signature": "unsafe fn memo_table(zalsa: &zalsa_::Zalsa, id: zalsa_::Id, current_revision: zalsa_::Revision) -> zalsa_::MemoTableWithTypes<'_>",
+          "via_trait": "salsa::salsa_struct::SalsaStructInDb"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<Db_>(db: &Db_, path: FilePath) -> Self where Db_: ?Sized + salsa::Database"
+        },
+        {
+          "name": "path",
+          "signature": "fn path<'db, Db_>(self, db: &'db Db_) -> &'db FilePath where Db_: ?Sized + zalsa_::Database",
+          "summary": "The path of the file (immutable)."
+        },
+        {
+          "name": "permissions",
+          "signature": "fn permissions<'db, Db_>(self, db: &'db Db_) -> Option<u32> where Db_: ?Sized + zalsa_::Database",
+          "summary": "The unix permissions of the file. Only supported on unix systems. Always `None` on Windows or when the file has been deleted."
+        },
+        {
+          "name": "revision",
+          "signature": "fn revision<'db, Db_>(self, db: &'db Db_) -> FileRevision where Db_: ?Sized + zalsa_::Database",
+          "summary": "The path revision. A file or directory has changed if the revisions don't compare equal."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: zalsa_::serde::Serializer>(fields: &Self::Fields, serializer: S) -> ::std::result::Result<S::Ok, S::Error>",
+          "via_trait": "salsa::input::Configuration"
+        },
+        {
+          "name": "set_path",
+          "signature": "fn set_path<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = FilePath> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "set_permissions",
+          "signature": "fn set_permissions<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = Option<u32>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "set_revision",
+          "signature": "fn set_revision<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = FileRevision> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "set_source_text_override",
+          "signature": "fn set_source_text_override<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = Option<SourceText>> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status<'db, Db_>(self, db: &'db mut Db_) -> impl salsa::Setter<FieldTy = FileStatus> where Db_: ?Sized + zalsa_::Database"
+        },
+        {
+          "name": "source_text_override",
+          "signature": "fn source_text_override<'db, Db_>(self, db: &'db Db_) -> &'db Option<SourceText> where Db_: ?Sized + zalsa_::Database",
+          "summary": "Overrides the result of [`source_text`](crate::source::source_text)."
+        },
+        {
+          "name": "source_type",
+          "signature": "fn source_type(self, db: &dyn Db) -> PySourceType"
+        },
+        {
+          "name": "status",
+          "signature": "fn status<'db, Db_>(self, db: &'db Db_) -> FileStatus where Db_: ?Sized + zalsa_::Database",
+          "summary": "The status of the file."
+        },
+        {
+          "name": "sync",
+          "signature": "fn sync(self, db: &mut dyn Db)",
+          "summary": "Syncs the [`File`]'s state with the state of the file on the system."
+        },
+        {
+          "name": "sync_path",
+          "signature": "fn sync_path(db: &mut dyn Db, path: &SystemPath)",
+          "summary": "Refreshes the file metadata by querying the file system if needed."
+        },
+        {
+          "name": "sync_path_only",
+          "signature": "fn sync_path_only(db: &mut dyn Db, path: &SystemPath)",
+          "summary": "Refreshes *only* the file metadata by querying the file system if needed."
+        },
+        {
+          "name": "sync_virtual_path",
+          "signature": "fn sync_virtual_path(db: &mut dyn Db, path: &SystemVirtualPath)",
+          "summary": "Increments the revision for the virtual file at `path`."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::files::FileRange",
+      "name": "FileRange",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct FileRange",
+      "summary": "Range with its corresponding file.",
+      "doc": "api/ruff_db.files.md#filerange",
+      "implements": [
+        "core::convert::TryFrom",
+        "ruff_text_size::traits::Ranged"
+      ],
+      "methods": [
+        {
+          "name": "cover_range",
+          "signature": "fn cover_range(self, range: TextRange) -> Self",
+          "summary": "Return a new [`FileRange`] instance where `self.range` has been extended to cover `range` as well."
+        },
+        {
+          "name": "file",
+          "signature": "const fn file(&self) -> File"
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(file: File, range: TextRange) -> Self"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> TextRange",
+          "via_trait": "ruff_text_size::traits::Ranged"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: &Span) -> Result<Self, Self::Error>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::files::Files",
+      "name": "Files",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Files",
+      "summary": "Lookup table that maps [file paths](`FilePath`) to salsa interned [`File`] instances.",
+      "doc": "api/ruff_db.files.md#files",
+      "implements": [
+        "core::panic::unwind_safe::RefUnwindSafe"
+      ],
+      "methods": [
+        {
+          "name": "freeze",
+          "signature": "fn freeze(&self)",
+          "summary": "Freezes all inputs on files created from now on."
+        },
+        {
+          "name": "root",
+          "signature": "fn root(&self, db: &dyn Db, path: &SystemPath) -> Option<FileRoot>",
+          "summary": "Looks up the closest  root for `path`. Returns `None` if `path` isn't enclosed by any source root."
+        },
+        {
+          "name": "sync_all",
+          "signature": "fn sync_all(db: &mut dyn Db)",
+          "summary": "Refreshes the state of all known files."
+        },
+        {
+          "name": "sync_all_recursive",
+          "signature": "fn sync_all_recursive<P, I>(db: &mut dyn Db, paths: I) where P: AsRef<SystemPath>, I: IntoIterator<Item = P>",
+          "summary": "Refreshes the state of all known files under `paths` recursively."
+        },
+        {
+          "name": "try_add_root",
+          "signature": "fn try_add_root(&self, db: &dyn Db, path: &SystemPath, kind: FileRootKind) -> FileRoot",
+          "summary": "Adds a new root for `path` and returns the root."
+        },
+        {
+          "name": "try_system",
+          "signature": "fn try_system(&self, db: &dyn Db, path: &SystemPath) -> Option<File>",
+          "summary": "Tries to look up the file for the given system path, returns `None` if no such file exists yet"
+        },
+        {
+          "name": "try_virtual_file",
+          "signature": "fn try_virtual_file(&self, path: &SystemVirtualPath) -> Option<VirtualFile>",
+          "summary": "Tries to look up a virtual file by its path. Returns `None` if no such file exists yet."
+        },
+        {
+          "name": "virtual_file",
+          "signature": "fn virtual_file(&self, db: &dyn Db, path: &SystemVirtualPath) -> VirtualFile",
+          "summary": "Create a new virtual file at the given path and store it for future lookups."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::files::VirtualFile",
+      "name": "VirtualFile",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct VirtualFile",
+      "summary": "A virtual file that doesn't exist on the file system.",
+      "doc": "api/ruff_db.files.md#virtualfile",
+      "methods": [
+        {
+          "name": "close",
+          "signature": "fn close(&self, db: &mut dyn Db)",
+          "summary": "Closes the virtual file."
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self) -> File",
+          "summary": "Returns the underlying [`File`]."
+        },
+        {
+          "name": "sync",
+          "signature": "fn sync(&self, db: &mut dyn Db)",
+          "summary": "Increments the revision of the underlying [`File`]."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "module": "pyrefly_build::source_db",
+  "crate": "pyrefly_build",
+  "api": "api/pyrefly_build.source_db.md",
+  "items": [
+    {
+      "path": "pyrefly_build::source_db::ConfigName",
+      "name": "ConfigName",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct ConfigName",
+      "summary": "The name of an entry in the top-level `configs` map of a build system response. Targets refer to their config by name so that a config shared by many targets is sent, stored, and parsed only once.",
+      "doc": "api/pyrefly_build.source_db.md#configname",
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe",
+        "serde_core::de::Deserialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __derive_more_f: &mut derive_more::core::fmt::Formatter<'_>) -> derive_more::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::source_db::ModulePathCache",
+      "name": "ModulePathCache",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct ModulePathCache",
+      "summary": "A `ModulePath` is optimised so that equal paths compare equal with `Arc::ptr_eq`, that only works if we reuse the `ModulePath` and don't create new ones each time. Use this cache to ensure we are reusing them.",
+      "doc": "api/pyrefly_build.source_db.md#modulepathcache",
+      "methods": [
+        {
+          "name": "get",
+          "signature": "fn get(&self, path: &Path) -> ModulePath"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::source_db::Target",
+      "name": "Target",
+      "kind": "struct",
+      "crate": "pyrefly_build",
+      "signature": "struct Target",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_string",
+          "signature": "fn from_string(x: String) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "to_os_str",
+          "signature": "fn to_os_str(&self) -> &OsStr"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::source_db::LiveSourceDatabase",
+      "name": "LiveSourceDatabase",
+      "kind": "trait",
+      "crate": "pyrefly_build",
+      "signature": "trait LiveSourceDatabase: SourceDatabase",
+      "summary": "Source database functionality for build-system-backed databases that can be queried again as the project changes.",
+      "doc": "api/pyrefly_build.source_db.md#livesourcedatabase",
+      "implementors": [
+        "pyrefly_build::source_db::query_source_db::QuerySourceDatabase"
+      ],
+      "required_methods": [
+        "get_config",
+        "get_generated_files",
+        "get_paths_to_watch",
+        "get_target",
+        "get_target_config_name",
+        "get_target_root",
+        "query_source_db"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "get_config",
+          "signature": "fn get_config(&self, name: &ConfigName) -> Option<serde_json::Value>",
+          "summary": "Get the raw JSON for a named config. Callers are expected to deserialize the result once and key their own cache on the [`ConfigName`], since there may be many targets per config and many lookups per target."
+        },
+        {
+          "name": "get_generated_files",
+          "signature": "fn get_generated_files(&self) -> SmallSet<InternedPath>",
+          "summary": "Get any generated files for which we might have to override the config finder."
+        },
+        {
+          "name": "get_paths_to_watch",
+          "signature": "fn get_paths_to_watch(&self) -> SmallSet<WatchPattern>",
+          "summary": "The source database-related configuration files a watcher should wait for changes on. Changes to one of these returned watchfiles should force a sourcedb rebuild."
+        },
+        {
+          "name": "get_target",
+          "signature": "fn get_target(&self, origin: Option<&Path>) -> Option<Target>",
+          "summary": "Get the target for the given [`ModulePath`], if one exists."
+        },
+        {
+          "name": "get_target_config_name",
+          "signature": "fn get_target_config_name(&self, origin: Option<&Path>) -> Option<ConfigName>",
+          "summary": "Get the name of the config that applies to the target owning the given file."
+        },
+        {
+          "name": "get_target_root",
+          "signature": "fn get_target_root(&self, origin: Option<&Path>) -> Option<PathBuf>",
+          "summary": "Get the per-target root for the target that owns the given file."
+        },
+        {
+          "name": "query_source_db",
+          "signature": "fn query_source_db(&self, files: SmallSet<InternedPath>, force: bool) -> (anyhow::Result<bool>, TelemetrySourceDbRebuildInstanceStats)",
+          "summary": "Queries this sourcedb for the provided set of open files. Will short-circuit querying if there are no changes from the set of files previously queried for, unless `force` is provided, which will unconditionally requery the source DB."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::source_db::ModuleEnumerator",
+      "name": "ModuleEnumerator",
+      "kind": "trait",
+      "crate": "pyrefly_build",
+      "signature": "trait ModuleEnumerator: SourceDatabase",
+      "summary": "A source database that can enumerate the module handles that should seed a checking run.",
+      "doc": "api/pyrefly_build.source_db.md#moduleenumerator",
+      "implementors": [
+        "pyrefly::playground::PlaygroundSourceDatabase",
+        "pyrefly_build::source_db::buck_check::BuckCheckSourceDatabase",
+        "pyrefly_build::source_db::map_db::MapDatabase"
+      ],
+      "required_methods": [
+        "modules_to_check"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "modules_to_check",
+          "signature": "fn modules_to_check(&self) -> Vec<Handle>"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_build::source_db::SourceDatabase",
+      "name": "SourceDatabase",
+      "kind": "trait",
+      "crate": "pyrefly_build",
+      "signature": "trait SourceDatabase: Send + Sync + fmt::Debug",
+      "summary": "Represents a virtual filesystem provided by a build system. A build system should understand the relationship between targets and importable qualified paths to the files contained in the build system.",
+      "doc": "api/pyrefly_build.source_db.md#sourcedatabase",
+      "implementors": [
+        "pyrefly::playground::PlaygroundSourceDatabase",
+        "pyrefly_build::source_db::buck_check::BuckCheckSourceDatabase",
+        "pyrefly_build::source_db::map_db::MapDatabase",
+        "pyrefly_build::source_db::query_source_db::QuerySourceDatabase"
+      ],
+      "required_methods": [
+        "as_live_source_database",
+        "handle_from_module_path",
+        "lookup"
+      ],
+      "provided_methods": [
+        "may_contain_module"
+      ],
+      "methods": [
+        {
+          "name": "as_live_source_database",
+          "signature": "fn as_live_source_database(&self) -> Option<&dyn LiveSourceDatabase>",
+          "summary": "Returns live source database functionality, when this source database can be queried again."
+        },
+        {
+          "name": "handle_from_module_path",
+          "signature": "fn handle_from_module_path(&self, module_path: &ModulePath) -> Option<Handle>",
+          "summary": "Get the handle for the given module path, including its Python platform and version settings."
+        },
+        {
+          "name": "lookup",
+          "signature": "fn lookup(&self, module: ModuleName, origin: Option<&Path>, style_filter: Option<ModuleStyle>) -> Option<ModulePath>",
+          "summary": "Find the given module in the sourcedb, given the module it's originating from."
+        },
+        {
+          "name": "may_contain_module",
+          "signature": "fn may_contain_module(&self, _module: ModuleName) -> bool",
+          "summary": "Return whether this source database may contain `module`."
+        }
+      ]
+    }
+  ]
+}

@@ -439,7 +439,7 @@ async fn publish_rust(
             observed_configuration: None,
             producer_items: 0,
         },
-        documents,
+        (documents, None),
         producers,
         acq.indexed.iter().copied().collect(),
         acq.gaps

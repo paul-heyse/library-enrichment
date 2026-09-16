@@ -8,7 +8,6 @@
 
 pub mod cratesio;
 pub mod docsrs;
-pub mod normalize;
 pub mod rustdoc;
 pub mod source;
 pub mod spec;

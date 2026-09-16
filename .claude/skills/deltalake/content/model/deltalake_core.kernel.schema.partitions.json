@@ -1,0 +1,225 @@
+{
+  "module": "deltalake_core::kernel::schema::partitions",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.kernel.schema.partitions.md",
+  "items": [
+    {
+      "path": "deltalake_core::kernel::schema::partitions::NULL_PARTITION_VALUE_DATA_PATH",
+      "name": "NULL_PARTITION_VALUE_DATA_PATH",
+      "kind": "constant",
+      "crate": "deltalake-core",
+      "signature": "const NULL_PARTITION_VALUE_DATA_PATH: &str = \"__HIVE_DEFAULT_PARTITION__\"",
+      "summary": "A special value used in Hive to represent the null partition in partitioned tables",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#null_partition_value_data_path",
+      "aliases": [
+        "deltalake::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake::kernel::partitions::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake::kernel::schema::partitions::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake::partitions::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake_core::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake_core::kernel::partitions::NULL_PARTITION_VALUE_DATA_PATH",
+        "deltalake_core::partitions::NULL_PARTITION_VALUE_DATA_PATH"
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::FilterOp",
+      "name": "FilterOp",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum FilterOp",
+      "summary": "The comparison operator of a `(column, op, value)` filter literal.",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#filterop",
+      "aliases": [
+        "deltalake::FilterOp",
+        "deltalake::kernel::partitions::FilterOp",
+        "deltalake::kernel::schema::partitions::FilterOp",
+        "deltalake::partitions::FilterOp",
+        "deltalake_core::FilterOp",
+        "deltalake_core::kernel::partitions::FilterOp",
+        "deltalake_core::partitions::FilterOp"
+      ],
+      "variants": [
+        "Eq",
+        "Ne",
+        "Lt",
+        "Le",
+        "Gt",
+        "Ge",
+        "In",
+        "NotIn"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(self) -> &'static str",
+          "summary": "The operator string accepted by [`FromStr`], e.g. `\"=\"` or `\"not in\"`."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::FilterValue",
+      "name": "FilterValue",
+      "kind": "enum",
+      "crate": "deltalake-core",
+      "signature": "enum FilterValue<'a>",
+      "summary": "The value of a `(column, op, value)` filter literal: a single partition-value encoded string, or a set of them for `in` / `not in`.",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#filtervalue",
+      "aliases": [
+        "deltalake::FilterValue",
+        "deltalake::kernel::partitions::FilterValue",
+        "deltalake::kernel::schema::partitions::FilterValue",
+        "deltalake::partitions::FilterValue",
+        "deltalake_core::FilterValue",
+        "deltalake_core::kernel::partitions::FilterValue",
+        "deltalake_core::partitions::FilterValue"
+      ],
+      "variants": [
+        "Scalar",
+        "Set"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::conjunction_to_kernel_predicate",
+      "name": "conjunction_to_kernel_predicate",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn conjunction_to_kernel_predicate(literals: &[FilterLiteral<'_>], table_schema: &delta_kernel::schema::StructType) -> errors::DeltaResult<delta_kernel::expressions::Predicate>",
+      "summary": "Translate a conjunction (AND) of filter literals into a kernel [`Predicate`].",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#conjunction_to_kernel_predicate",
+      "aliases": [
+        "deltalake::conjunction_to_kernel_predicate",
+        "deltalake::kernel::partitions::conjunction_to_kernel_predicate",
+        "deltalake::kernel::schema::partitions::conjunction_to_kernel_predicate",
+        "deltalake::partitions::conjunction_to_kernel_predicate",
+        "deltalake_core::conjunction_to_kernel_predicate",
+        "deltalake_core::kernel::partitions::conjunction_to_kernel_predicate",
+        "deltalake_core::partitions::conjunction_to_kernel_predicate"
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::dnf_to_kernel_predicate",
+      "name": "dnf_to_kernel_predicate",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn dnf_to_kernel_predicate(dnf: &[Vec<FilterLiteral<'_>>], table_schema: &delta_kernel::schema::StructType) -> errors::DeltaResult<delta_kernel::expressions::Predicate>",
+      "summary": "Translate filters in disjunctive normal form -- an OR across conjunctions (AND groups) of `(column, op, value)` literals -- into a kernel [`Predicate`].",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#dnf_to_kernel_predicate",
+      "aliases": [
+        "deltalake::dnf_to_kernel_predicate",
+        "deltalake::kernel::partitions::dnf_to_kernel_predicate",
+        "deltalake::kernel::schema::partitions::dnf_to_kernel_predicate",
+        "deltalake::partitions::dnf_to_kernel_predicate",
+        "deltalake_core::dnf_to_kernel_predicate",
+        "deltalake_core::kernel::partitions::dnf_to_kernel_predicate",
+        "deltalake_core::partitions::dnf_to_kernel_predicate"
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::filter_literal",
+      "name": "filter_literal",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn filter_literal<'a>(column: &'a str, op: &str, value: FilterValue<'a>) -> errors::DeltaResult<FilterLiteral<'a>>",
+      "summary": "Validate a raw `(column, op, value)` tuple into a [`FilterLiteral`], parsing the operator string.",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#filter_literal",
+      "aliases": [
+        "deltalake::filter_literal",
+        "deltalake::kernel::partitions::filter_literal",
+        "deltalake::kernel::schema::partitions::filter_literal",
+        "deltalake::partitions::filter_literal",
+        "deltalake_core::filter_literal",
+        "deltalake_core::kernel::partitions::filter_literal",
+        "deltalake_core::partitions::filter_literal"
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::literal_to_kernel_predicate",
+      "name": "literal_to_kernel_predicate",
+      "kind": "function",
+      "crate": "deltalake-core",
+      "signature": "fn literal_to_kernel_predicate(literal: &FilterLiteral<'_>, table_schema: &delta_kernel::schema::StructType) -> errors::DeltaResult<delta_kernel::expressions::Predicate>",
+      "summary": "Translate a single filter literal into a kernel [`Predicate`].",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#literal_to_kernel_predicate",
+      "aliases": [
+        "deltalake::kernel::partitions::literal_to_kernel_predicate",
+        "deltalake::kernel::schema::partitions::literal_to_kernel_predicate",
+        "deltalake::literal_to_kernel_predicate",
+        "deltalake::partitions::literal_to_kernel_predicate",
+        "deltalake_core::kernel::partitions::literal_to_kernel_predicate",
+        "deltalake_core::literal_to_kernel_predicate",
+        "deltalake_core::partitions::literal_to_kernel_predicate"
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::DeltaTablePartition",
+      "name": "DeltaTablePartition",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct DeltaTablePartition",
+      "summary": "A Struct DeltaTablePartition used to represent a partition of a DeltaTable.",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#deltatablepartition",
+      "aliases": [
+        "deltalake::DeltaTablePartition",
+        "deltalake::kernel::partitions::DeltaTablePartition",
+        "deltalake::kernel::schema::partitions::DeltaTablePartition",
+        "deltalake::partitions::DeltaTablePartition",
+        "deltalake_core::DeltaTablePartition",
+        "deltalake_core::kernel::partitions::DeltaTablePartition",
+        "deltalake_core::partitions::DeltaTablePartition"
+      ],
+      "fields": [
+        "key",
+        "value"
+      ],
+      "implements": [
+        "core::convert::TryFrom"
+      ],
+      "methods": [
+        {
+          "name": "from_partition_value",
+          "signature": "fn from_partition_value(partition_value: (&str, &Scalar)) -> Self",
+          "summary": "Create a DeltaTable partition from a Tuple of (key, value)."
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(partition: &str) -> Result<Self, DeltaTableError>",
+          "via_trait": "core::convert::TryFrom",
+          "summary": "Try to create a DeltaTable partition from a HivePartition string. Returns a DeltaTableError if the string is not in the form of a HivePartition."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_core::kernel::schema::partitions::FilterLiteral",
+      "name": "FilterLiteral",
+      "kind": "type_alias",
+      "crate": "deltalake-core",
+      "signature": "type FilterLiteral<'a> = (&'a str, FilterOp, FilterValue<'a>)",
+      "summary": "A `(column, op, value)` comparison, mirroring the tuple filters accepted by the Python bindings.",
+      "doc": "api/deltalake_core.kernel.schema.partitions.md#filterliteral",
+      "aliases": [
+        "deltalake::FilterLiteral",
+        "deltalake::kernel::partitions::FilterLiteral",
+        "deltalake::kernel::schema::partitions::FilterLiteral",
+        "deltalake::partitions::FilterLiteral",
+        "deltalake_core::FilterLiteral",
+        "deltalake_core::kernel::partitions::FilterLiteral",
+        "deltalake_core::partitions::FilterLiteral"
+      ]
+    }
+  ]
+}

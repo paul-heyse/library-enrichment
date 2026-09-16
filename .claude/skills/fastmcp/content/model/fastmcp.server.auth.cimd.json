@@ -1,0 +1,567 @@
+{
+ "api": "api/fastmcp.server.auth.cimd.md",
+ "dist": "fastmcp",
+ "items": [
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.logger",
+   "preferred": "fastmcp.server.auth.cimd.logger",
+   "signature": "logger = get_logger(__name__)",
+   "summary": ""
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimdassertionvalidator",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "MAX_ASSERTION_LIFETIME",
+     "signature": "MAX_ASSERTION_LIFETIME = 300"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "logger",
+     "signature": "logger = get_logger(__name__)"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "validate_assertion",
+     "signature": "async def validate_assertion(self, assertion: str, client_id: str, token_endpoint: str, cimd_doc: CIMDDocument) -> bool",
+     "summary": "Validate JWT assertion from client."
+    }
+   ],
+   "name": "CIMDAssertionValidator",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDAssertionValidator",
+   "preferred": "fastmcp.server.auth.cimd.CIMDAssertionValidator",
+   "signature": "class CIMDAssertionValidator",
+   "summary": "Validates JWT assertions for private_key_jwt CIMD clients."
+  },
+  {
+   "aliases": [
+    "fastmcp.server.auth.auth.CIMDClientManager",
+    "fastmcp.server.auth.oauth_proxy.proxy.CIMDClientManager"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimdclientmanager",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "allowed_redirect_uri_patterns",
+     "signature": "allowed_redirect_uri_patterns = allowed_redirect_uri_patterns"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "default_scope",
+     "signature": "default_scope = default_scope"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "enabled",
+     "signature": "enabled = enable_cimd"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "get_client",
+     "signature": "async def get_client(self, client_id_url: str)",
+     "summary": "Fetch CIMD document and create synthetic OAuth client."
+    },
+    {
+     "kind": "function",
+     "name": "is_cimd_client_id",
+     "signature": "def is_cimd_client_id(self, client_id: str) -> bool",
+     "summary": "Check if client_id is a CIMD URL."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "logger",
+     "signature": "logger = get_logger(__name__)"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "validate_private_key_jwt",
+     "signature": "async def validate_private_key_jwt(self, assertion: str, client, token_endpoint: str) -> bool",
+     "summary": "Validate JWT assertion for private_key_jwt auth."
+    }
+   ],
+   "name": "CIMDClientManager",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDClientManager",
+   "preferred": "fastmcp.server.auth.auth.CIMDClientManager",
+   "signature": "class CIMDClientManager",
+   "summary": "Manages all CIMD client operations for OAuth proxy."
+  },
+  {
+   "aliases": [
+    "fastmcp.server.auth.oauth_proxy.models.CIMDDocument"
+   ],
+   "bases": [
+    "BaseModel"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimddocument",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "client_id",
+     "signature": "client_id: AnyHttpUrl = Field(..., description='Must match the URL where this document is hosted')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "client_name",
+     "signature": "client_name: str | None = Field(default=None, description='Human-readable name of the client')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "client_uri",
+     "signature": "client_uri: AnyHttpUrl | None = Field(default=None, description=\"URL of the client's home page\")"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "contacts",
+     "signature": "contacts: list[str] | None = Field(default=None, description='Contact information for the client developer')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "grant_types",
+     "signature": "grant_types: list[str] = Field(default_factory=lambda: ['authorization_code'], description='OAuth grant types the client will use')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "jwks",
+     "signature": "jwks: dict[str, Any] | None = Field(default=None, description=\"Client's JSON Web Key Set (for private_key_jwt)\")"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "jwks_uri",
+     "signature": "jwks_uri: AnyHttpUrl | None = Field(default=None, description=\"URL of the client's JSON Web Key Set (for private_key_jwt)\")"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "logo_uri",
+     "signature": "logo_uri: AnyHttpUrl | None = Field(default=None, description=\"URL of the client's logo image\")"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "policy_uri",
+     "signature": "policy_uri: AnyHttpUrl | None = Field(default=None, description=\"URL of the client's privacy policy\")"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "redirect_uris",
+     "signature": "redirect_uris: list[str] = Field(..., description='Array of allowed redirect URIs (may include wildcards like http://localhost:*/callback)')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "response_types",
+     "signature": "response_types: list[str] = Field(default_factory=lambda: ['code'], description='OAuth response types the client will use')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "scope",
+     "signature": "scope: str | None = Field(default=None, description='Space-separated list of scopes the client may request')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "software_id",
+     "signature": "software_id: str | None = Field(default=None, description='Unique identifier for the client software')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "software_version",
+     "signature": "software_version: str | None = Field(default=None, description='Version of the client software')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "token_endpoint_auth_method",
+     "signature": "token_endpoint_auth_method: Literal['none', 'private_key_jwt'] = Field(default='none', description='Authentication method for token endpoint (no shared secrets allowed)')"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "tos_uri",
+     "signature": "tos_uri: AnyHttpUrl | None = Field(default=None, description=\"URL of the client's terms of service\")"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "validate_auth_method",
+     "signature": "def validate_auth_method(cls, v: str) -> str",
+     "summary": "Ensure no shared-secret auth methods are used."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "classmethod"
+     ],
+     "name": "validate_redirect_uris",
+     "signature": "def validate_redirect_uris(cls, v: list[str]) -> list[str]",
+     "summary": "Ensure redirect_uris is non-empty and each entry is a valid URI."
+    }
+   ],
+   "name": "CIMDDocument",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDDocument",
+   "preferred": "fastmcp.server.auth.oauth_proxy.models.CIMDDocument",
+   "signature": "class CIMDDocument(BaseModel)",
+   "summary": "CIMD document per draft-parecki-oauth-client-id-metadata-document."
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.cimd.CIMDFetchError"
+   ],
+   "bases": [
+    "Exception"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimdfetcherror",
+   "kind": "class",
+   "name": "CIMDFetchError",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDFetchError",
+   "preferred": "fastmcp.cli.cimd.CIMDFetchError",
+   "signature": "class CIMDFetchError(Exception)",
+   "summary": "Raised when CIMD document fetching fails."
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.cimd.CIMDFetcher"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimdfetcher",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "DEFAULT_CACHE_TTL_SECONDS",
+     "signature": "DEFAULT_CACHE_TTL_SECONDS = 3600"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "MAX_CACHE_SIZE",
+     "signature": "MAX_CACHE_SIZE = 1000"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "MAX_RESPONSE_SIZE",
+     "signature": "MAX_RESPONSE_SIZE = 5120"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "fetch",
+     "signature": "async def fetch(self, client_id_url: str) -> CIMDDocument",
+     "summary": "Fetch and validate a CIMD document with SSRF protection."
+    },
+    {
+     "kind": "function",
+     "name": "is_cimd_client_id",
+     "signature": "def is_cimd_client_id(self, client_id: str) -> bool",
+     "summary": "Check if a client_id looks like a CIMD URL."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "timeout",
+     "signature": "timeout = timeout"
+    },
+    {
+     "kind": "function",
+     "name": "validate_redirect_uri",
+     "signature": "def validate_redirect_uri(self, doc: CIMDDocument, redirect_uri: str) -> bool",
+     "summary": "Validate that a redirect_uri is allowed by the CIMD document."
+    }
+   ],
+   "name": "CIMDFetcher",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDFetcher",
+   "preferred": "fastmcp.cli.cimd.CIMDFetcher",
+   "signature": "class CIMDFetcher",
+   "summary": "Fetch and validate CIMD documents with SSRF protection."
+  },
+  {
+   "aliases": [
+    "fastmcp.cli.cimd.CIMDValidationError"
+   ],
+   "bases": [
+    "Exception"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#cimdvalidationerror",
+   "kind": "class",
+   "name": "CIMDValidationError",
+   "nameable": true,
+   "path": "fastmcp.server.auth.cimd.CIMDValidationError",
+   "preferred": "fastmcp.cli.cimd.CIMDValidationError",
+   "signature": "class CIMDValidationError(Exception)",
+   "summary": "Raised when CIMD document validation fails."
+  },
+  {
+   "decorators": [
+    "dataclass"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#_cimdcacheentry",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "doc",
+     "signature": "doc: CIMDDocument"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "etag",
+     "signature": "etag: str | None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "expires_at",
+     "signature": "expires_at: float"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "freshness_lifetime",
+     "signature": "freshness_lifetime: float"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "last_modified",
+     "signature": "last_modified: str | None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "must_revalidate",
+     "signature": "must_revalidate: bool"
+    }
+   ],
+   "name": "_CIMDCacheEntry",
+   "nameable": false,
+   "path": "fastmcp.server.auth.cimd._CIMDCacheEntry",
+   "preferred": "fastmcp.server.auth.cimd._CIMDCacheEntry",
+   "signature": "class _CIMDCacheEntry",
+   "summary": "Cached CIMD document and associated HTTP cache metadata."
+  },
+  {
+   "decorators": [
+    "dataclass"
+   ],
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#_cimdcachepolicy",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "etag",
+     "signature": "etag: str | None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "expires_at",
+     "signature": "expires_at: float"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "freshness_lifetime",
+     "signature": "freshness_lifetime: float"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "last_modified",
+     "signature": "last_modified: str | None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "must_revalidate",
+     "signature": "must_revalidate: bool"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "no_store",
+     "signature": "no_store: bool"
+    }
+   ],
+   "name": "_CIMDCachePolicy",
+   "nameable": false,
+   "path": "fastmcp.server.auth.cimd._CIMDCachePolicy",
+   "preferred": "fastmcp.server.auth.cimd._CIMDCachePolicy",
+   "signature": "class _CIMDCachePolicy",
+   "summary": "Normalized cache directives parsed from HTTP response headers."
+  },
+  {
+   "dist": "fastmcp",
+   "doc": "api/fastmcp.server.auth.cimd.md#_jwk_to_pem",
+   "kind": "function",
+   "name": "_jwk_to_pem",
+   "nameable": false,
+   "path": "fastmcp.server.auth.cimd._jwk_to_pem",
+   "preferred": "fastmcp.server.auth.cimd._jwk_to_pem",
+   "signature": "def _jwk_to_pem(key_data: dict[str, Any]) -> str",
+   "summary": ""
+  }
+ ],
+ "module": "fastmcp.server.auth.cimd"
+}

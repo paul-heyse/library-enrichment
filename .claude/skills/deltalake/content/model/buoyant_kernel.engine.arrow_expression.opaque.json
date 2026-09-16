@@ -1,0 +1,141 @@
+{
+  "module": "buoyant_kernel::engine::arrow_expression::opaque",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.engine.arrow_expression.opaque.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression",
+      "name": "ArrowOpaqueExpression",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ArrowOpaqueExpression",
+      "summary": "Extension trait for turning [`ArrowOpaqueExpressionOp`] into an [`Expression`].",
+      "doc": "api/buoyant_kernel.engine.arrow_expression.opaque.md#arrowopaqueexpression",
+      "aliases": [
+        "delta_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpression"
+      ],
+      "implementors": [
+        "buoyant_kernel::expressions::Expression"
+      ],
+      "required_methods": [
+        "arrow_opaque"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "arrow_opaque",
+          "signature": "fn arrow_opaque(op: impl ArrowOpaqueExpressionOp, exprs: impl IntoIterator<Item = Expression>) -> Expression",
+          "summary": "Creates a new opaque expression. See also [`Expression::opaque`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpressionOp",
+      "name": "ArrowOpaqueExpressionOp",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ArrowOpaqueExpressionOp: DynPartialEq + std::fmt::Debug",
+      "summary": "An arrow-enhanced opaque expression op that supports full expression evaluation over arrow data.",
+      "doc": "api/buoyant_kernel.engine.arrow_expression.opaque.md#arrowopaqueexpressionop",
+      "aliases": [
+        "delta_kernel::engine::arrow_expression::opaque::ArrowOpaqueExpressionOp"
+      ],
+      "required_methods": [
+        "eval_expr",
+        "eval_expr_scalar",
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "eval_expr",
+          "signature": "fn eval_expr(&self, args: &[Expression], batch: &RecordBatch, result_type: Option<&DataType>) -> DeltaResult<ArrayRef>",
+          "summary": "Evaluates this expression over the provided input expressions, returning `Err` in case of an incorrect or unsupported invocation (e.g. wrong number and/or types of arguments."
+        },
+        {
+          "name": "eval_expr_scalar",
+          "signature": "fn eval_expr_scalar(&self, eval_expr: &ScalarExpressionEvaluator<'_>, exprs: &[Expression]) -> DeltaResult<Scalar>",
+          "summary": "See [`OpaqueExpressionOp::eval_expr_scalar`]."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "See [`OpaqueExpressionOp::name`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate",
+      "name": "ArrowOpaquePredicate",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ArrowOpaquePredicate",
+      "summary": "Extension trait for safely turning [`ArrowOpaquePredicateOp`] into an opaque [`Predicate`].",
+      "doc": "api/buoyant_kernel.engine.arrow_expression.opaque.md#arrowopaquepredicate",
+      "aliases": [
+        "delta_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicate"
+      ],
+      "implementors": [
+        "buoyant_kernel::expressions::Predicate"
+      ],
+      "required_methods": [
+        "arrow_opaque"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "arrow_opaque",
+          "signature": "fn arrow_opaque<T: ArrowOpaquePredicateOp>(op: T, exprs: impl IntoIterator<Item = Expression>) -> Predicate",
+          "summary": "Creates a new opaque predicate. See also [`Predicate::opaque`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicateOp",
+      "name": "ArrowOpaquePredicateOp",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ArrowOpaquePredicateOp: DynPartialEq + std::fmt::Debug",
+      "summary": "An arrow-enhanced opaque predicate op that supports full predicate evaluation over arrow data.",
+      "doc": "api/buoyant_kernel.engine.arrow_expression.opaque.md#arrowopaquepredicateop",
+      "aliases": [
+        "delta_kernel::engine::arrow_expression::opaque::ArrowOpaquePredicateOp"
+      ],
+      "required_methods": [
+        "as_data_skipping_predicate",
+        "eval_as_data_skipping_predicate",
+        "eval_pred",
+        "eval_pred_scalar",
+        "name"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_data_skipping_predicate",
+          "signature": "fn as_data_skipping_predicate(&self, predicate_evaluator: &IndirectDataSkippingPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> Option<Predicate>",
+          "summary": "See [`OpaquePredicateOp::as_data_skipping_predicate`]."
+        },
+        {
+          "name": "eval_as_data_skipping_predicate",
+          "signature": "fn eval_as_data_skipping_predicate(&self, predicate_evaluator: &DirectDataSkippingPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> Option<bool>",
+          "summary": "See [`OpaquePredicateOp::eval_as_data_skipping_predicate`]."
+        },
+        {
+          "name": "eval_pred",
+          "signature": "fn eval_pred(&self, args: &[Expression], batch: &RecordBatch, inverted: bool) -> DeltaResult<BooleanArray>",
+          "summary": "Evaluates this (possibly inverted) predicate over the provided input args, returning `Err` in case of an incorrect or unsupported invocation (e.g. wrong number and/or types of arguments."
+        },
+        {
+          "name": "eval_pred_scalar",
+          "signature": "fn eval_pred_scalar(&self, eval_expr: &ScalarExpressionEvaluator<'_>, eval_pred: &DirectPredicateEvaluator<'_>, exprs: &[Expression], inverted: bool) -> DeltaResult<Option<bool>>",
+          "summary": "See [`OpaquePredicateOp::eval_pred_scalar`]."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "See [`OpaquePredicateOp::name`]."
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 //! Durable publication and admission own trust. These providers project already captured
 //! inputs; lookup never refreshes a generation, acquires evidence, or changes visibility.
 
+use enrichment_core::telemetry::InventorySummary;
 use std::{collections::BTreeMap, sync::Arc};
 
 use arrow_schema::SchemaRef;
@@ -134,7 +135,7 @@ const COVERAGE_REFERENCES: &[ReferenceRule] = &[
     },
 ];
 
-impl RelationContract for crate::catalog_generation::Table {
+impl RelationContract for crate::control::Table {
     fn name(self) -> &'static str {
         self.name()
     }
@@ -185,6 +186,14 @@ impl RelationContract for crate::catalog_generation::Table {
                 field: "snapshot_id",
                 target: "snapshots",
                 target_field: "snapshot_id",
+                nullable: false,
+                when: None,
+            }],
+            Self::JobTransitions | Self::Claims | Self::Interests => &[ReferenceRule {
+                id: "job_command",
+                field: "job_id",
+                target: "commands",
+                target_field: "job_id",
                 nullable: false,
                 when: None,
             }],
@@ -253,7 +262,6 @@ pub(crate) enum BindingKind {
     AdmittedEvidence,
     AdmittedDomain,
     CandidateEvidence,
-    CandidateProducer,
     FoldedRecords,
     ValidatedHistory,
     Metadata,
@@ -263,7 +271,6 @@ impl BindingKind {
         match self {
             Self::AdmittedEvidence | Self::CandidateEvidence => "evidence",
             Self::AdmittedDomain => "domain",
-            Self::CandidateProducer => "producer",
             Self::FoldedRecords => "records",
             Self::ValidatedHistory => "history",
             Self::Metadata => "metadata",
@@ -273,7 +280,7 @@ impl BindingKind {
         match self {
             Self::AdmittedEvidence => "admitted_evidence",
             Self::AdmittedDomain => "admitted_domain",
-            Self::CandidateEvidence | Self::CandidateProducer => "candidate",
+            Self::CandidateEvidence => "candidate",
             Self::FoldedRecords => "folded_records",
             Self::ValidatedHistory => "validated_history",
             Self::Metadata => "derived_metadata",
@@ -346,13 +353,6 @@ impl BoundCatalog {
 }
 
 /// Query diagnostics and native metadata derive from these same immutable bindings.
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
-pub struct InventorySummary {
-    pub relations: Vec<String>,
-    pub nested_fields: usize,
-    pub truncated: bool,
-}
-
 #[derive(Clone)]
 pub(crate) struct RelationInfo {
     pub catalog: String,
@@ -385,7 +385,7 @@ fn declaration(kind: BindingKind, name: &str) -> Option<(&'static str, &'static 
             .find(|relation| relation.name() == name)
             .map(|relation| (relation.key(), relation.references()))
     } else if kind == BindingKind::FoldedRecords {
-        crate::catalog_generation::Table::ALL
+        crate::control::Table::ALL
             .into_iter()
             .find(|table| table.name() == name)
             .map(|table| (table.key(), table.references()))
@@ -399,6 +399,7 @@ pub(crate) struct FieldInfo {
     pub path: String,
     pub kind: String,
     pub nullable: bool,
+    pub required_by_contract: bool,
     pub role: Option<String>,
 }
 
@@ -419,10 +420,7 @@ fn validate_inventory(catalogs: &BTreeMap<String, Arc<dyn CatalogProvider>>) -> 
                     schema.kind,
                     BindingKind::AdmittedEvidence | BindingKind::AdmittedDomain
                 ),
-                "candidate" => matches!(
-                    schema.kind,
-                    BindingKind::CandidateEvidence | BindingKind::CandidateProducer
-                ),
+                "candidate" => matches!(schema.kind, BindingKind::CandidateEvidence),
                 "state" => matches!(
                     schema.kind,
                     BindingKind::FoldedRecords | BindingKind::ValidatedHistory
@@ -539,7 +537,7 @@ pub(crate) fn metadata(
                     BindingKind::AdmittedEvidence | BindingKind::CandidateEvidence => {
                         crate::admission::CONDITIONAL_RULES
                     }
-                    BindingKind::FoldedRecords => crate::catalog_generation::CONDITIONAL_RULES,
+                    BindingKind::FoldedRecords => crate::control::CONDITIONAL_RULES,
                     _ => &[],
                 };
                 for rule in rule_set.iter().filter(|rule| rule.relation == name) {
@@ -630,6 +628,8 @@ pub(crate) fn metadata(
                         path: path.clone(),
                         kind,
                         nullable: field.is_nullable(),
+                        required_by_contract:
+                            enrichment_core::evidence::arrow_model::checks::required(field),
                         role,
                     });
                     match field.data_type() {
@@ -705,6 +705,26 @@ impl CatalogProvider for BoundCatalog {
 }
 
 /// Only temporary operation objects may be registered after immutable roots are installed.
+/// A finite Arrow protocol input gets its own native relation identity. Anonymous `?table?`
+/// sources become ambiguous when independent nested projections meet in a control union.
+pub(crate) fn batch(
+    session: &datafusion::prelude::SessionContext,
+    name: &str,
+    batch: arrow::record_batch::RecordBatch,
+) -> Result<datafusion::dataframe::DataFrame> {
+    let provider = Arc::new(datafusion::datasource::MemTable::try_new(
+        batch.schema(),
+        vec![vec![batch]],
+    )?);
+    let plan = datafusion::logical_expr::LogicalPlanBuilder::scan(
+        format!("{name}_{}", uuid::Uuid::new_v4().simple()),
+        datafusion::datasource::provider_as_source(provider),
+        None,
+    )?
+    .build()?;
+    Ok(datafusion::dataframe::DataFrame::new(session.state(), plan))
+}
+
 pub(crate) fn work(
     session: &SessionContext,
     name: impl AsRef<str>,

@@ -1,7 +1,7 @@
 //! Internal executor protocol. The daemon owns requests and validates every returned byte.
 //! This is not an MCP command surface and does not confer execution permission.
 pub mod inventory;
-use crate::{canonical, execution::ProcessEnd};
+use crate::execution::ProcessEnd;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
@@ -9,7 +9,7 @@ use std::{
     path::{Component, Path},
 };
 
-pub const VERSION: u32 = 2;
+pub const VERSION: u32 = 3;
 pub const DATA_LIMIT: u64 = 64 * 1024 * 1024 * 1024;
 pub const HEADER_LIMIT: usize = 16 * 1024 * 1024;
 pub const ENTRY_LIMIT: usize = 100_000;
@@ -45,8 +45,18 @@ pub struct Operation {
 }
 
 impl Operation {
+    pub fn binding(image: &str, containment: &str) -> datafusion::error::Result<String> {
+        #[derive(Serialize)]
+        struct Input<'a> {
+            image: &'a str,
+            containment: &'a str,
+        }
+        crate::native_key::Key::ProcessBinding.value(&Input { image, containment })
+    }
     pub fn id(&self) -> String {
-        canonical::digest_hex(&serde_json::json!(self))
+        crate::native_key::Key::ProcessOperation
+            .value(self)
+            .expect("declared bounded executor Arrow contract")
     }
 
     pub fn validate(&self) -> io::Result<()> {
@@ -153,4 +163,65 @@ pub fn write_frame(sink: &mut impl Write, frame: &Frame) -> io::Result<()> {
     sink.write_all(&length.to_be_bytes())?;
     sink.write_all(&bytes)?;
     sink.flush()
+}
+
+#[cfg(test)]
+mod native_identity_tests {
+    use super::*;
+    #[test]
+    fn process_identity_binds_program_bytes_inputs_outputs_and_limits() {
+        let original = Operation {
+            version: VERSION,
+            mode: Mode::Command,
+            argv: vec!["/bin/tool".into(), "input".into()],
+            inputs: [
+                (
+                    "input".into(),
+                    inventory::Entry::File {
+                        mode: 0o400,
+                        bytes: 3,
+                        sha256: "a".repeat(64),
+                    },
+                ),
+                (
+                    "directory".into(),
+                    inventory::Entry::Directory { mode: 0o700 },
+                ),
+            ]
+            .into(),
+            outputs: [("result".into(), OutputKind::File)].into(),
+            data_bytes: 1024,
+            output_bytes: 1024,
+            deadline_millis: 1000,
+            binding: "exact-image-and-helper".into(),
+        };
+        original.validate().unwrap();
+        let id = original.id();
+        assert!(id.starts_with("process_"));
+        for change in 0..8 {
+            let mut changed = original.clone();
+            match change {
+                0 => changed.argv.push("--other".into()),
+                1 => {
+                    changed.inputs.insert(
+                        "input".into(),
+                        inventory::Entry::File {
+                            mode: 0o400,
+                            bytes: 3,
+                            sha256: "b".repeat(64),
+                        },
+                    );
+                }
+                2 => {
+                    changed.outputs.insert("another".into(), OutputKind::File);
+                }
+                3 => changed.data_bytes += 1,
+                4 => changed.output_bytes += 1,
+                5 => changed.deadline_millis += 1,
+                6 => changed.binding.push('2'),
+                _ => changed.mode = Mode::LanguageServer,
+            }
+            assert_ne!(id, changed.id(), "changed process field {change}");
+        }
+    }
 }

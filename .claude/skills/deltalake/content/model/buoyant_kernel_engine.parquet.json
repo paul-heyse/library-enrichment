@@ -1,0 +1,82 @@
+{
+  "module": "buoyant_kernel_engine::parquet",
+  "crate": "buoyant_kernel_engine",
+  "api": "api/buoyant_kernel_engine.parquet.md",
+  "items": [
+    {
+      "path": "buoyant_kernel_engine::parquet::DataFileMetadata",
+      "name": "DataFileMetadata",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct DataFileMetadata",
+      "summary": "Metadata of a data file (typically a parquet file).",
+      "doc": "api/buoyant_kernel_engine.parquet.md#datafilemetadata",
+      "aliases": [
+        "delta_kernel_default_engine::parquet::DataFileMetadata"
+      ],
+      "methods": [
+        {
+          "name": "location",
+          "signature": "fn location(&self) -> &url::Url",
+          "summary": "Returns the absolute URL of the written file."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(file_meta: FileMeta, stats: StructArray) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel_engine::parquet::DefaultParquetHandler",
+      "name": "DefaultParquetHandler",
+      "kind": "struct",
+      "crate": "buoyant_kernel_engine",
+      "signature": "struct DefaultParquetHandler<E: TaskExecutor>",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel_default_engine::parquet::DefaultParquetHandler"
+      ],
+      "implements": [
+        "buoyant_kernel::ParquetHandler"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<DynObjectStore>, task_executor: Arc<E>) -> Self"
+        },
+        {
+          "name": "read_parquet_files",
+          "signature": "fn read_parquet_files(&self, files: &[FileMeta], physical_schema: SchemaRef, predicate: Option<PredicateRef>) -> DeltaResult<FileDataReadResultIterator>",
+          "via_trait": "buoyant_kernel::ParquetHandler"
+        },
+        {
+          "name": "read_parquet_footer",
+          "signature": "fn read_parquet_footer(&self, file: &FileMeta) -> DeltaResult<ParquetFooter>",
+          "via_trait": "buoyant_kernel::ParquetHandler"
+        },
+        {
+          "name": "with_batch_size",
+          "signature": "fn with_batch_size(self, batch_size: NonZero<usize>) -> Self",
+          "summary": "Set the maximum number of rows per RecordBatch yielded by [Self::read_parquet_files()]."
+        },
+        {
+          "name": "with_buffer_size",
+          "signature": "fn with_buffer_size(self, buffer_size: NonZero<usize>) -> Self",
+          "summary": "Set the maximum number of files to read concurrently in [Self::read_parquet_files()]."
+        },
+        {
+          "name": "write_parquet_file",
+          "signature": "async fn write_parquet_file(&self, data: Box<dyn EngineData>, write_context: &WriteContext) -> DeltaResult<Box<dyn EngineData>>",
+          "summary": "Write `data` to a new parquet file under the [`WriteContext::write_dir`] and return Add action metadata ready for [`Transaction::add_files`]."
+        },
+        {
+          "name": "write_parquet_file",
+          "signature": "fn write_parquet_file(&self, location: url::Url, data: DeltaResultIteratorStatic<Box<dyn EngineData>>) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::ParquetHandler",
+          "summary": "Writes engine data to a Parquet file at the specified location."
+        }
+      ]
+    }
+  ]
+}

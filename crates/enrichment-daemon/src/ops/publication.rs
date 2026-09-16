@@ -4,7 +4,7 @@ use crate::service::Service;
 use enrichment_core::{
     evidence::{
         Artifact, EvidenceKind,
-        ingest::{EvidenceSink, IngestContext, ProducerSource},
+        ingest::{DocumentSource, IngestContext},
         metadata::{ReleaseDetails, ReleaseMetadata},
         relational::{FactSource, Locator},
         snapshot::{EvidenceManifest, SnapshotMetadata},
@@ -19,16 +19,45 @@ pub(super) struct MetadataInput {
     pub locator: Locator,
 }
 
+pub(super) enum NativeFacts {
+    Python(enrichment_store::python_normalize::PythonFacts),
+    Rust(enrichment_store::rust_normalize::RustFacts),
+}
+impl NativeFacts {
+    fn input(&self) -> &'static str {
+        match self {
+            Self::Python(_) => "worker",
+            Self::Rust(_) => "rustdoc_json",
+        }
+    }
+    async fn evidence(
+        &self,
+        context: &IngestContext,
+        source: &FactSource,
+    ) -> Result<enrichment_store::repository::EvidencePlans, String> {
+        match self {
+            Self::Python(f) => Box::pin(f.evidence(context, source)).await,
+            Self::Rust(f) => Box::pin(f.evidence(context, source)).await,
+        }
+        .map_err(|e| e.to_string())
+    }
+}
+
 pub(super) async fn publish(
     service: &Service,
     acq: &mut Acquisition<'_>,
     metadata: SnapshotMetadata,
-    input: impl ProducerSource + 'static,
+    input: (impl DocumentSource + 'static, Option<NativeFacts>),
     mut components: BTreeMap<String, String>,
     indexed: Vec<EvidenceKind>,
     missing: Vec<EvidenceKind>,
     details: Option<MetadataInput>,
 ) -> Result<EvidenceManifest, String> {
+    let (input, native) = input;
+    components.insert(
+        "native-definition".into(),
+        enrichment_store::runtime::DEFINITION_REVISION.into(),
+    );
     components.insert(
         "evidence-normalizer".into(),
         enrichment_core::evidence::ingest::VERSION.into(),
@@ -74,38 +103,56 @@ pub(super) async fn publish(
         producing_attempt: attempt,
         producer_runs: acq.runs.clone(),
         artifacts: acq.artifacts.clone(),
-        component_versions: components,
         indexed,
         missing,
         gaps: acq.gaps.clone(),
     };
+    let native_plans = if let Some(native) = native {
+        let digest = run
+            .inputs
+            .get(native.input())
+            .ok_or("native producer input missing")?;
+        let mut artifacts = context.artifacts.iter().filter(|a| &a.sha256 == digest);
+        let artifact = artifacts.next().ok_or("native producer artifact missing")?;
+        if artifacts.any(|a| a.source_uri != artifact.source_uri) {
+            return Err("native producer acquisition provenance is ambiguous".into());
+        }
+        let source = FactSource {
+            producer_binding_id: run.semantic_binding_id(),
+            extractor: run.producer.clone(),
+            extractor_version: run.producer_version.clone(),
+            artifact_id: artifact.artifact_id.clone(),
+            source_uri: Some(artifact.source_uri.clone()),
+            source_version_match,
+            locator: Locator::Artifact,
+            evidence_class: EvidenceClass::StaticallyExtracted,
+        };
+        native
+            .evidence(&context, &source)
+            .await
+            .map_err(|e| e.to_string())?
+    } else {
+        Default::default()
+    };
     let release_id = metadata.release.release_id.to_string();
-    let runtime = service.repository.runtime.clone();
-    let executor = tokio::runtime::Handle::current();
-    let produce = move |sink: &mut enrichment_store::record_writer::RelationWriter| {
-        let runs = context.producer_runs.clone();
-        let root = sink.staging_root().to_owned();
-        let limits = sink.limits().clone();
-        let mut acquisitions = enrichment_store::ingest::normalize_into(
-            context, input, sink, &root, &runtime, &limits, &executor,
-        )
-        .map_err(|e| e.to_string())?;
-        if let Some(details) = details {
-            sink.metadata(ReleaseMetadata::new(
+    let details = details
+        .map(|details| {
+            Ok::<_, String>(ReleaseMetadata::new(
                 release_id,
                 details.details,
                 detail_source.ok_or("metadata source missing")?,
-            ))?;
-        }
-        runs.into_iter()
-            .map(|run| {
-                let artifacts = acquisitions
-                    .remove(&run.attempt_id)
-                    .ok_or("attempt inventory missing")?;
-                Ok((run, artifacts))
-            })
-            .collect()
-    };
+            ))
+        })
+        .transpose()?;
+    let (mut plans, attempts) = service
+        .repository
+        .prepare_documents(context, input, details)
+        .await
+        .map_err(|e| e.to_string())?;
+    for (relation, native) in native_plans {
+        let other = plans.remove(&relation).ok_or("producer relation missing")?;
+        plans.insert(relation, other.union(native).map_err(|e| e.to_string())?);
+    }
     match completion {
         Some((stage, completion, delivery)) => {
             let work = acq.work.ok_or("durable resolution owner disappeared")?;
@@ -113,10 +160,11 @@ pub(super) async fn publish(
             service
                 .jobs
                 .pin_resolution(&work.id, stage)
+                .await
                 .map_err(|e| e.to_string())?;
             let manifest = service
                 .repository
-                .publish_records(metadata, produce, None, Some(completion))
+                .publish_native(metadata, plans, attempts, None, Some(completion))
                 .await
                 .map_err(|e| e.to_string())?;
             let result = delivery
@@ -137,7 +185,7 @@ pub(super) async fn publish(
         }
         None => service
             .repository
-            .publish_records(metadata, produce, None, None)
+            .publish_native(metadata, plans, attempts, None, None)
             .await
             .map_err(|e| e.to_string()),
     }

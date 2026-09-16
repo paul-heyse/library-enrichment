@@ -33,7 +33,7 @@ def event(payload, *, status="completed", arguments=None):
 
 
 def test_model_mentions_and_pending_native_calls_cannot_establish_completion():
-    pending = json.loads((ROOT / "contracts/research-v2/examples/pending.fixture.json").read_text())
+    pending = json.loads((ROOT / "tests/fixtures/wire/pending.fixture.json").read_text())
     parsed = parse(
         "codex",
         stream(
@@ -54,7 +54,7 @@ def test_model_mentions_and_pending_native_calls_cannot_establish_completion():
 
 
 def test_conflicting_native_identity_duplicate_completion_and_malformed_result_reject():
-    pending = json.loads((ROOT / "contracts/research-v2/examples/pending.fixture.json").read_text())
+    pending = json.loads((ROOT / "tests/fixtures/wire/pending.fixture.json").read_text())
     with pytest.raises(ValueError, match="conflicting"):
         parse("codex", stream(event(pending), event(pending, arguments={"version": "different"})))
     with pytest.raises(ValueError, match="duplicate"):
@@ -67,7 +67,7 @@ def test_conflicting_native_identity_duplicate_completion_and_malformed_result_r
 
 
 def test_claude_results_correlate_by_id_and_cannot_borrow_another_result():
-    pending = (ROOT / "contracts/research-v2/examples/pending.fixture.json").read_text()
+    pending = (ROOT / "tests/fixtures/wire/pending.fixture.json").read_text()
     invocation = {
         "type": "assistant",
         "message": {
@@ -149,8 +149,8 @@ def test_teardown_failure_replaces_success_instead_of_hiding_behind_it(tmp_path,
 
 
 def test_complete_result_pages_can_restart_with_a_smaller_page_size():
-    document = json.loads((ROOT / "contracts/research-v2/examples/ok.fixture.json").read_text())
-    raw = json.dumps({"index": {"format": "research-result/2"}, "result": document}).encode()
+    document = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
+    raw = json.dumps({"index": {"format": "research-result/3"}, "result": document}).encode()
     artifact = {
         "artifact_id": "art_result",
         "sha256": hashlib.sha256(raw).hexdigest(),
@@ -215,7 +215,7 @@ def test_complete_result_pages_can_restart_with_a_smaller_page_size():
 
 
 def test_direct_data_section_requires_its_own_complete_digest_checked_cursor_chain():
-    document = json.loads((ROOT / "contracts/research-v2/examples/ok.fixture.json").read_text())
+    document = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
     raw = json.dumps(document["data"]).encode()
     offset, split = 123, len(raw) // 2
     artifact = {
@@ -290,7 +290,7 @@ def test_direct_data_section_requires_its_own_complete_digest_checked_cursor_cha
 
 
 def test_resource_link_presentation_cannot_replace_or_conflict_with_the_envelope():
-    document = json.loads((ROOT / "contracts/research-v2/examples/ok.fixture.json").read_text())
+    document = json.loads((ROOT / "tests/fixtures/wire/ok.fixture.json").read_text())
     link = {
         "type": "text",
         "text": "[Resource link: Complete result] library-evidence://artifacts/x",

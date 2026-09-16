@@ -82,7 +82,7 @@ async fn paired_retained_index_strategies() {
                             .await
                             .unwrap();
                         assert_eq!(completed.rows, rows as u64);
-                        assert_eq!(runtime.diagnostic_summary().index_reads, 0);
+                        assert_eq!(runtime.diagnostic_summary().await.unwrap().index_reads, 0);
                         completed.provider
                     }
                 };
@@ -119,7 +119,7 @@ async fn paired_retained_index_strategies() {
                 assert_eq!(session.runtime_env().disk_manager.used_disk_space(), 0);
                 eprintln!(
                     "P14_INDEX {}",
-                    serde_json::json!({"rows":rows,"round":round,"strategy":strategy,"construction_us":construction_us,"page_us":page_us,"retained_memory":retained_memory,"spill_bytes":spill_bytes,"counters":runtime.operational_counters()})
+                    serde_json::json!({"rows":rows,"round":round,"strategy":strategy,"construction_us":construction_us,"page_us":page_us,"retained_memory":retained_memory,"spill_bytes":spill_bytes,"counters":runtime.operational_counters().await.unwrap()})
                 );
             }
         }

@@ -1,28 +1,21 @@
-//! Bounded cold validation and reusable bindings for exact immutable evidence files.
+//! Native semantic admission for an exact immutable Delta provider inventory.
 
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use crate::native_catalog::{BoundCatalog, RelationContract, Tables};
-use arrow::record_batch::RecordBatch;
 use arrow_schema::SchemaRef;
 use datafusion::catalog::TableProvider;
-use datafusion::common::{Constraints, TableReference};
+use datafusion::common::TableReference;
 use datafusion::error::{DataFusionError, Result};
 use datafusion::functions::core::expr_ext::FieldAccessor;
 use datafusion::prelude::SessionContext;
 use datafusion::prelude::{col, lit};
-use enrichment_core::canonical;
 use enrichment_core::identity::Ecosystem;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    projection,
-    provider::{ExactParquet, FileWitness},
-    runtime::QueryRuntime,
-};
+use crate::{projection, runtime::QueryRuntime};
 
 /// This registry owns physical schemas and domain decoding; arbitrary tables cannot bypass it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -89,48 +82,6 @@ impl Relation {
         .schema())
     }
 
-    pub(crate) fn validate(self, batch: &RecordBatch, record_limit: usize) -> Result<()> {
-        fn records<T: serde::Serialize>(rows: Vec<T>, limit: usize) -> Result<()> {
-            for row in rows {
-                crate::dataset::record_bytes(&row, limit)?;
-            }
-            Ok(())
-        }
-        match self {
-            Self::Definitions => {
-                records(projection::decode::definitions(batch)?, record_limit)?;
-            }
-            Self::Symbols => {
-                records(projection::decode::bindings(batch)?, record_limit)?;
-            }
-            Self::ApiObservations => {
-                records(projection::decode::observations(batch)?, record_limit)?;
-            }
-            Self::ExecutionObservations => {
-                records(projection::execution::decode(batch)?, record_limit)?;
-            }
-            Self::Relationships => {
-                records(projection::relationships_from_batch(batch)?, record_limit)?;
-            }
-            Self::Fragments => {
-                records(projection::fragments_from_batch(batch)?, record_limit)?;
-            }
-            Self::ProducerRuns => {
-                records(projection::producer_runs_from_batch(batch)?, record_limit)?;
-            }
-            Self::InputArtifacts => {
-                records(projection::input_artifacts_from_batch(batch)?, record_limit)?;
-            }
-            Self::Coverage => {
-                records(projection::coverage_from_batch(batch)?, record_limit)?;
-            }
-            Self::ReleaseMetadata => {
-                records(projection::metadata::decode(batch)?, record_limit)?;
-            }
-        }
-        Ok(())
-    }
-
     /// Qualified admitted source reference; candidate validation has a distinct namespace.
     #[must_use]
     pub fn reference(self) -> TableReference {
@@ -151,17 +102,6 @@ impl Relation {
     }
 }
 
-/// Physical identity is separate from semantic snapshot identity.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct EvidenceFile {
-    pub relation: Relation,
-    pub path: PathBuf,
-    pub sha256: String,
-    pub bytes: u64,
-    pub rows: u64,
-}
-
 /// Semantic scope participates in admission identity; a validated table cannot be rebound to
 /// an unrelated release/environment merely because its physical file is unchanged.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -172,15 +112,10 @@ pub struct EvidenceScope {
     pub environment_id: String,
 }
 
-/// Logical and batch limits are checked inside a separately memory-bounded native decoder.
+/// Native evidence admission limits; producer decoding owns its separate physical bounds.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdmissionLimits {
     pub record_bytes: usize,
-    pub file_bytes: u64,
-    pub row_group_bytes: i64,
-    pub batch_rows: usize,
-    pub batch_bytes: usize,
-    pub cached_snapshots: usize,
     pub table_rows: usize,
     pub deadline: std::time::Duration,
 }
@@ -189,33 +124,29 @@ impl Default for AdmissionLimits {
     fn default() -> Self {
         Self {
             record_bytes: 1024 * 1024,
-            file_bytes: 256 * 1024 * 1024,
-            row_group_bytes: 64 * 1024 * 1024,
-            batch_rows: 1024,
-            batch_bytes: 16 * 1024 * 1024,
-            cached_snapshots: 32,
             table_rows: 1_000_000,
             deadline: std::time::Duration::from_secs(30),
         }
     }
 }
 
-/// An admitted relation set pins providers and their exact file identities for its lifetime.
+/// An admitted relation set pins the exact native provider inventory for its lifetime.
 pub struct AdmittedRelations {
-    providers: BTreeMap<Relation, Arc<ExactParquet>>,
+    providers: BTreeMap<Relation, Arc<dyn TableProvider>>,
     views: tokio::sync::OnceCell<BTreeMap<String, Arc<dyn TableProvider>>>,
 }
 
 impl AdmittedRelations {
-    /// Bind admitted sources atomically, checking witnesses before any optimizer can remove a scan.
+    /// Bind admitted sources atomically through the immutable catalog.
     /// # Errors
-    /// Changed files cannot be rebound; cached providers never acquire request leases.
+    /// Contract construction errors remain explicit; base providers never acquire request leases.
     pub fn session(
         &self,
         runtime: &QueryRuntime,
         lease: Option<Arc<File>>,
     ) -> Result<SessionContext> {
         let catalog = evidence_catalog(
+            runtime,
             &self.providers,
             lease.as_ref(),
             crate::native_catalog::BindingKind::AdmittedEvidence,
@@ -234,7 +165,18 @@ impl AdmittedRelations {
         runtime: &QueryRuntime,
         lease: Option<Arc<File>>,
     ) -> Result<SessionContext> {
+        self.research_session_with(runtime, lease, &Tables::new())
+            .await
+    }
+
+    pub(crate) async fn research_session_with(
+        &self,
+        runtime: &QueryRuntime,
+        lease: Option<Arc<File>>,
+        materialized: &Tables,
+    ) -> Result<SessionContext> {
         let bases = evidence_catalog(
+            runtime,
             &self.providers,
             lease.as_ref(),
             crate::native_catalog::BindingKind::AdmittedEvidence,
@@ -245,6 +187,7 @@ impl AdmittedRelations {
                 crate::views::build(
                     runtime,
                     evidence_catalog(
+                        runtime,
                         &self.providers,
                         None,
                         crate::native_catalog::BindingKind::AdmittedEvidence,
@@ -256,6 +199,7 @@ impl AdmittedRelations {
         let mut bound = Tables::new();
         let staging = runtime.session();
         for (name, view) in views {
+            let view = materialized.get(name).unwrap_or(view);
             let provider = match &lease {
                 Some(lease) => crate::leases::leased_view(view, &staging, lease)?,
                 None => Arc::clone(view),
@@ -271,22 +215,27 @@ impl AdmittedRelations {
 }
 
 fn evidence_catalog(
-    providers: &BTreeMap<Relation, Arc<ExactParquet>>,
+    runtime: &QueryRuntime,
+    providers: &BTreeMap<Relation, Arc<dyn TableProvider>>,
     lease: Option<&Arc<File>>,
     kind: crate::native_catalog::BindingKind,
 ) -> Result<BoundCatalog> {
     let mut tables = Tables::new();
     for (relation, provider) in providers {
-        provider.unchanged()?;
         let mut entries = vec![(
             relation.name(),
             Arc::clone(provider) as Arc<dyn TableProvider>,
         )];
         if *relation == Relation::ApiObservations {
-            entries.push((
-                "inspection_observations",
-                Arc::new(provider.inspection_projection()?),
-            ));
+            let schema = crate::projection::inspection_schema(&provider.schema())?;
+            let projected = runtime.session().read_table(Arc::clone(provider))?.select(
+                schema
+                    .fields()
+                    .iter()
+                    .map(|field| col(field.name()))
+                    .collect::<Vec<_>>(),
+            )?;
+            entries.push(("inspection_observations", projected.into_view()));
         }
         for (name, input) in entries {
             let input = match lease {
@@ -302,22 +251,10 @@ fn evidence_catalog(
     Ok(BoundCatalog::default().with_schema(kind, tables))
 }
 
-struct CacheEntry {
-    binding: Arc<AdmittedRelations>,
-    touched: u64,
-}
-#[derive(Default)]
-struct Cache {
-    entries: BTreeMap<String, CacheEntry>,
-    clock: u64,
-}
-
-/// Reuses validated immutable bindings without decoding whole snapshots on every request.
-pub struct AdmissionCache {
+/// Enforces declared native contracts before exposing optimizer constraints.
+pub struct NativeAdmission {
     runtime: QueryRuntime,
     limits: AdmissionLimits,
-    cache: Mutex<Cache>,
-    cold_permit: tokio::sync::Semaphore,
 }
 
 pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
@@ -348,122 +285,58 @@ pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     },
 ];
 
-impl AdmissionCache {
-    /// One admission coordinator per daemon. Cold admission is bounded separately from queries.
-    ///
+impl NativeAdmission {
     /// # Errors
-    /// Zero or negative resource bounds are configuration errors.
+    /// Zero resource bounds are configuration errors.
     pub fn new(runtime: QueryRuntime, limits: AdmissionLimits) -> Result<Self> {
-        if limits.record_bytes == 0
-            || limits.file_bytes == 0
-            || limits.row_group_bytes <= 0
-            || limits.batch_rows == 0
-            || limits.batch_bytes == 0
-            || limits.cached_snapshots == 0
-            || limits.table_rows == 0
-            || limits.deadline.is_zero()
-        {
+        if limits.record_bytes == 0 || limits.table_rows == 0 || limits.deadline.is_zero() {
             return Err(invalid("admission limits must be positive"));
         }
-        Ok(Self {
-            runtime,
-            limits,
-            cache: Mutex::new(Cache::default()),
-            cold_permit: tokio::sync::Semaphore::new(1),
-        })
+        Ok(Self { runtime, limits })
     }
 
-    fn cached(&self, key: &str) -> Result<Option<Arc<AdmittedRelations>>> {
-        let mut cache = self
-            .cache
-            .lock()
-            .map_err(|_| invalid("admission cache lock poisoned"))?;
-        cache.clock = cache.clock.saturating_add(1);
-        let touched = cache.clock;
-        if let Some(entry) = cache.entries.get_mut(key) {
-            for provider in entry.binding.providers.values() {
-                provider.unchanged()?;
-            }
-            entry.touched = touched;
-            return Ok(Some(Arc::clone(&entry.binding)));
-        }
-        Ok(None)
-    }
-
-    /// Admit exact manifest-listed files, then validate relational keys and references with
-    /// DataFusion before publishing optimizer constraints. Metadata timestamps are witnesses,
-    /// never a substitute for the digest check on cold admission.
-    ///
-    /// # Errors
-    /// Corruption, domain violations, dangling references and budget exhaustion fail closed.
-    pub async fn admit(
+    /// Admit the exact native inventory before declaring uniqueness and references.
+    pub async fn admit_native(
         &self,
-        manifest_digest: &str,
         scope: &EvidenceScope,
-        files: &[EvidenceFile],
+        providers: BTreeMap<Relation, Arc<dyn TableProvider>>,
     ) -> Result<Arc<AdmittedRelations>> {
         tokio::time::timeout(
             self.limits.deadline,
-            self.admit_inner(manifest_digest, scope, files),
+            self.validate_native(scope, &providers),
         )
         .await
         .map_err(|_| {
-            DataFusionError::ResourcesExhausted("snapshot admission deadline exceeded".into())
-        })?
+            DataFusionError::ResourcesExhausted("native admission deadline exceeded".into())
+        })??;
+        Ok(Arc::new(AdmittedRelations {
+            providers: with_constraints(providers)?,
+            views: tokio::sync::OnceCell::new(),
+        }))
     }
 
-    async fn admit_inner(
+    async fn validate_native(
         &self,
-        manifest_digest: &str,
         scope: &EvidenceScope,
-        files: &[EvidenceFile],
-    ) -> Result<Arc<AdmittedRelations>> {
-        let key = canonical::digest_hex(&serde_json::json!([
-            "admission/3",
-            projection::VERSION,
-            manifest_digest,
-            scope,
-            files
-        ]));
-        if let Some(binding) = self.cached(&key)? {
-            return Ok(binding);
-        }
-        let _permit = self
-            .cold_permit
-            .acquire()
-            .await
-            .map_err(|e| invalid(e.to_string()))?;
-        if let Some(binding) = self.cached(&key)? {
-            return Ok(binding);
-        }
-        let mut providers = BTreeMap::new();
-        for file in files {
-            if providers.contains_key(&file.relation) {
-                return Err(invalid("duplicate relation in manifest"));
-            }
-            let limits = self.limits.clone();
-            let input = file.clone();
-            // This finite read/hash/decode work is not run on a Tokio reactor thread.
-            let (schema, witness) = crate::parquet_admission::run_blocking(move |cancel| {
-                validate_file(&input, &limits, &cancel)
-            })
-            .await?;
-            let provider = ExactParquet::new(
-                file.path.clone(),
-                witness,
-                schema,
-                Constraints::new_unverified(vec![]),
-            )
-            .await?;
-            providers.insert(file.relation, Arc::new(provider));
+        providers: &BTreeMap<Relation, Arc<dyn TableProvider>>,
+    ) -> Result<()> {
+        if providers.len() != Relation::ALL.len() {
+            return Err(invalid("native evidence inventory is incomplete"));
         }
         for relation in Relation::ALL {
-            if !providers.contains_key(&relation) {
-                return Err(invalid(format!("missing {} relation", relation.name())));
+            let provider = providers
+                .get(&relation)
+                .ok_or_else(|| invalid("missing native relation"))?;
+            if provider.schema() != relation.schema()? {
+                return Err(invalid(format!(
+                    "native semantic contract differs: {}",
+                    relation.name()
+                )));
             }
         }
         let candidate = evidence_catalog(
-            &providers,
+            &self.runtime,
+            providers,
             None,
             crate::native_catalog::BindingKind::CandidateEvidence,
         )?;
@@ -472,6 +345,45 @@ impl AdmissionCache {
             Arc::new(candidate) as Arc<dyn datafusion::catalog::CatalogProvider>,
         )]))?;
         for relation in providers.keys() {
+            let reference = TableReference::full("candidate", "evidence", relation.name());
+            let input = session.table(reference.clone()).await?;
+            let count = input
+                .clone()
+                .limit(0, Some(self.limits.table_rows.saturating_add(1)))?
+                .aggregate(
+                    vec![],
+                    vec![datafusion::functions_aggregate::expr_fn::count(lit(1)).alias("rows")],
+                )?
+                .filter(col("rows").gt(lit(self.limits.table_rows as u64)))?
+                .select(vec![lit(relation.name()).alias("witness_id")])?;
+            self.runtime
+                .require_empty(count, "native relation row budget", relation.name())
+                .await?;
+            let schema = relation.schema()?;
+            let bytes = enrichment_core::native_identity::canonical_bytes(
+                "admission-row/1",
+                schema.fields().clone(),
+            )
+            .call(schema.fields().iter().map(|f| col(f.name())).collect());
+            let oversized = input
+                .filter(
+                    enrichment_core::native_identity::byte_length(bytes)
+                        .gt(lit(self.limits.record_bytes as u64)),
+                )?
+                .select(vec![col(relation.key())])?
+                .limit(0, Some(1))?;
+            self.runtime
+                .require_empty(oversized, "native record byte budget", relation.name())
+                .await?;
+            for (rule, violations) in enrichment_core::evidence::arrow_model::checks::violations(
+                session.table(reference.clone()).await?,
+                relation.schema()?.as_ref(),
+                relation.key(),
+            )? {
+                self.runtime
+                    .require_empty(violations, &rule, relation.name())
+                    .await?;
+            }
             let duplicates = relation
                 .duplicate_keys(
                     &session,
@@ -501,17 +413,7 @@ impl AdmissionCache {
                     .await?;
             }
         }
-        let joined = session.sql("SELECT s.*, d.kind AS definition_kind, d.definition_path, d.defined_in_package AS definition_package, d.qualifier AS definition_qualifier FROM candidate.evidence.symbols s JOIN candidate.evidence.definitions d ON s.definition_id = d.definition_id").await?;
-        self.runtime
-            .visit(joined, self.limits.table_rows, |batch| {
-                projection::decode::validate_binding_definitions(
-                    batch,
-                    &scope.symbol_package,
-                    scope.ecosystem,
-                )?;
-                Ok(())
-            })
-            .await?;
+        self.validate_identities(&session, scope).await?;
         for relation in [Relation::ApiObservations, Relation::ExecutionObservations] {
             let outside_environment = session
                 .table(TableReference::full(
@@ -652,52 +554,144 @@ impl AdmissionCache {
                 )
                 .await?;
         }
-        let providers = providers
-            .into_iter()
-            .map(|(relation, provider)| {
-                let proven = relation.validated_constraints()?;
-                let rows = files
-                    .iter()
-                    .find(|file| file.relation == relation)
-                    .ok_or_else(|| invalid("admitted file facts missing"))?
-                    .rows;
-                Ok((
-                    relation,
-                    Arc::new(
-                        provider
-                            .with_validated_constraints(proven)
-                            .with_verified_rows(rows)?,
-                    ),
+        Ok(())
+    }
+
+    async fn validate_identities(
+        &self,
+        session: &SessionContext,
+        scope: &EvidenceScope,
+    ) -> Result<()> {
+        use datafusion::logical_expr::{BinaryExpr, Expr, Operator};
+        use enrichment_core::native_key::Key;
+        let differs = |left: Expr, right: Expr| {
+            Expr::BinaryExpr(BinaryExpr::new(
+                Box::new(left),
+                Operator::IsDistinctFrom,
+                Box::new(right),
+            ))
+        };
+        for (relation, key) in [
+            (Relation::ApiObservations, Key::ApiObservation),
+            (Relation::ExecutionObservations, Key::ExecutionObservation),
+            (Relation::ReleaseMetadata, Key::ReleaseMetadata),
+            (Relation::Fragments, Key::TextFragment),
+            (Relation::Relationships, Key::Relationship),
+            (Relation::InputArtifacts, Key::InputArtifact),
+            (Relation::Coverage, Key::Coverage),
+        ] {
+            let violations = session
+                .table(TableReference::full(
+                    "candidate",
+                    "evidence",
+                    relation.name(),
                 ))
-            })
-            .collect::<Result<BTreeMap<_, _>>>()?;
-        let binding = Arc::new(AdmittedRelations {
-            providers,
-            views: tokio::sync::OnceCell::new(),
-        });
-        let mut cache = self
-            .cache
-            .lock()
-            .map_err(|_| invalid("admission cache lock poisoned"))?;
-        while cache.entries.len() >= self.limits.cached_snapshots {
-            let oldest = cache
-                .entries
-                .iter()
-                .min_by_key(|(_, entry)| entry.touched)
-                .map(|(key, _)| key.clone())
-                .ok_or_else(|| invalid("empty admission cache"))?;
-            cache.entries.remove(&oldest);
+                .await?
+                .filter(differs(col(relation.key()), key.expression()))?
+                .select(vec![col(relation.key())])?;
+            self.runtime
+                .require_empty(violations, "native evidence identity", relation.name())
+                .await?;
         }
-        cache.clock = cache.clock.saturating_add(1);
-        let touched = cache.clock;
-        cache.entries.insert(
-            key,
-            CacheEntry {
-                binding: Arc::clone(&binding),
-                touched,
-            },
-        );
-        Ok(binding)
+        let producers = session
+            .table("candidate.evidence.producer_runs")
+            .await?
+            .filter(differs(
+                col("producer_binding_id"),
+                Key::ProducerBinding.expression(),
+            ))?
+            .select(vec![col("attempt_id")])?;
+        self.runtime
+            .require_empty(producers, "native producer identity", "producer_runs")
+            .await?;
+        let definition_key = Key::Definition.bind(vec![
+            col("defined_in_package"),
+            col("definition_path"),
+            col("kind"),
+            col("qualifier"),
+        ])?;
+        let definitions = session
+            .table("candidate.evidence.definitions")
+            .await?
+            .filter(
+                differs(col("definition_id"), definition_key)
+                    .or(col("defined_in_package").eq(lit("")))
+                    .or(col("definition_path").eq(lit(""))),
+            )?
+            .select(vec![col("definition_id")])?;
+        self.runtime
+            .require_empty(definitions, "native definition identity", "definitions")
+            .await?;
+        let ecosystem = match scope.ecosystem {
+            Ecosystem::Rust => "rust",
+            Ecosystem::Python => "python",
+        };
+        let separator = match scope.ecosystem {
+            Ecosystem::Rust => "::",
+            Ecosystem::Python => ".",
+        };
+        let joined = session.sql(&format!("SELECT s.*, d.kind AS definition_kind, d.qualifier AS definition_qualifier, \
+            array_to_string(s.components, '{separator}') AS expected_path, array_element(s.components, -1) AS expected_name, \
+            array_length(s.components) AS component_count, array_slice(s.components, 1, CAST(array_length(s.components) AS BIGINT) - 1) AS parent_components \
+            FROM candidate.evidence.symbols s JOIN candidate.evidence.definitions d ON s.definition_id = d.definition_id")).await?;
+        let symbol = Key::PublicBinding.bind(vec![
+            lit(&scope.symbol_package),
+            col("ecosystem"),
+            col("components"),
+            col("definition_kind"),
+            col("qualifier"),
+        ])?;
+        let path = Key::PublicPath.bind(vec![col("ecosystem"), col("components")])?;
+        let parent = datafusion::logical_expr::expr_fn::when(
+            col("component_count").gt(lit(1i64)),
+            Key::PublicPath.bind(vec![col("ecosystem"), col("parent_components")])?,
+        )
+        .otherwise(lit(datafusion::common::ScalarValue::Utf8(None)))?;
+        let violations = joined
+            .filter(
+                differs(col("symbol_id"), symbol)
+                    .or(differs(col("path_id"), path))
+                    .or(differs(col("parent_path_id"), parent))
+                    .or(differs(col("qualifier"), col("definition_qualifier")))
+                    .or(differs(col("name"), col("expected_name")))
+                    .or(differs(col("path"), col("expected_path")))
+                    .or(differs(col("ecosystem"), lit(ecosystem)))
+                    .or(col("component_count").lt(lit(1i64)))
+                    .or(col("component_count").gt(lit(
+                        enrichment_core::evidence::path::PublicPath::MAX_DEPTH as u64,
+                    ))),
+            )?
+            .select(vec![col("symbol_id")])?;
+        self.runtime
+            .require_empty(violations, "native public binding identity", "symbols")
+            .await?;
+        // UNNEST exposes component-level value checks without reconstructing paths in Rust.
+        let components = session
+            .sql(
+                "SELECT symbol_id, unnest(components) AS component FROM candidate.evidence.symbols",
+            )
+            .await?;
+        let bad_components = components
+            .filter(
+                col("component")
+                    .is_null()
+                    .or(col("component").eq(lit("")))
+                    .or(datafusion::functions::regex::expr_fn::regexp_like(
+                        col("component"),
+                        lit(r"[\p{Cc}]"),
+                        None,
+                    )),
+            )?
+            .select(vec![col("symbol_id")])?;
+        self.runtime
+            .require_empty(bad_components, "native path component", "symbols")
+            .await?;
+        let bytes = session.sql("WITH components AS (SELECT symbol_id, unnest(components) AS component FROM candidate.evidence.symbols) \
+            SELECT symbol_id FROM components GROUP BY symbol_id HAVING sum(octet_length(component)) > 4096").await?;
+        self.runtime
+            .require_empty(bytes, "native path byte bound", "symbols")
+            .await?;
+        Ok(())
     }
 
     async fn require_empty(
@@ -712,46 +706,21 @@ impl AdmissionCache {
     }
 }
 
-fn validate_file(
-    file: &EvidenceFile,
-    limits: &AdmissionLimits,
-    cancelled: &std::sync::atomic::AtomicBool,
-) -> Result<(SchemaRef, FileWitness)> {
-    if file.bytes > limits.file_bytes {
-        return Err(invalid("evidence file exceeds admission byte bound"));
-    }
-    if file.rows > limits.table_rows as u64 {
-        return Err(invalid("evidence relation exceeds admission row bound"));
-    }
-    let witness = FileWitness::read(&file.path)?;
-    let (digest, bytes) = canonical::sha256_reader(File::open(&file.path)?, limits.file_bytes)?;
-    if bytes != file.bytes || digest != file.sha256 {
-        return Err(crate::preparation::InvariantFailure::error(
-            "evidence file digest or size disagrees with manifest",
-            "relation_admission",
-            vec![file.sha256.clone()],
-        ));
-    }
-    crate::parquet_admission::validate_cancellable(
-        crate::parquet_admission::Request {
-            relation: crate::parquet_admission::Domain::Evidence(file.relation),
-            path: file.path.clone(),
-            digest: file.sha256.clone(),
-            bytes: file.bytes,
-            rows: file.rows,
-            limits: limits.clone(),
-        },
-        cancelled,
-    )?;
-    if FileWitness::read(&file.path)? != witness {
-        return Err(crate::preparation::InvariantFailure::error(
-            "file changed during admission",
-            "relation_admission",
-            vec![file.sha256.clone()],
-        ));
-    }
-    let schema = file.relation.schema()?;
-    Ok((schema, witness))
+fn with_constraints(
+    providers: BTreeMap<Relation, Arc<dyn TableProvider>>,
+) -> Result<BTreeMap<Relation, Arc<dyn TableProvider>>> {
+    providers
+        .into_iter()
+        .map(|(relation, provider)| {
+            Ok((
+                relation,
+                Arc::new(crate::admitted_provider::AdmittedProvider::new(
+                    provider,
+                    relation.validated_constraints()?,
+                )) as Arc<dyn TableProvider>,
+            ))
+        })
+        .collect()
 }
 
 fn invalid(message: impl Into<String>) -> DataFusionError {

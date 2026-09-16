@@ -1,0 +1,173 @@
+{
+  "module": "buoyant_kernel::log_replay",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.log_replay.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::log_replay::ActionsBatch",
+      "name": "ActionsBatch",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ActionsBatch",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::log_replay::ActionsBatch"
+      ],
+      "fields": [
+        "actions",
+        "is_log_batch"
+      ],
+      "methods": [
+        {
+          "name": "actions",
+          "signature": "fn actions(&self) -> &dyn EngineData",
+          "summary": "HACK: a duplication of the pub(crate) field `actions` to allow us to export as 'internal-api' and let inspect-table example use it."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_replay::FileActionKey",
+      "name": "FileActionKey",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct FileActionKey",
+      "summary": "The subset of file action fields that uniquely identifies it in the log, used for deduplication of adds and removes during log replay.",
+      "doc": "api/buoyant_kernel.log_replay.md#fileactionkey",
+      "aliases": [
+        "delta_kernel::log_replay::FileActionKey"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "dv_unique_id",
+          "signature": "fn dv_unique_id(&self) -> Option<&str>",
+          "summary": "Deletion-vector unique id, or `None` if the action carries no deletion vector. Same `path` with different `dv_unique_id` (e.g. an `add(P, dv=new) + remove(P, dv=old)` DV-replacement pair) refers to distinct logical file identities."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(path: impl Into<String>, dv_unique_id: Option<String>) -> Self",
+          "summary": "Build a key from a path and optional deletion-vector unique id."
+        },
+        {
+          "name": "path",
+          "signature": "fn path(&self) -> &str",
+          "summary": "The data file path, as stored on the action."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_replay::HasSelectionVector",
+      "name": "HasSelectionVector",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait HasSelectionVector",
+      "summary": "This trait is used to determine if a processor's output contains any selected rows. This is used to filter out batches with no selected rows from the log replay results.",
+      "doc": "api/buoyant_kernel.log_replay.md#hasselectionvector",
+      "aliases": [
+        "delta_kernel::log_replay::HasSelectionVector"
+      ],
+      "implementors": [
+        "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationBatch",
+        "buoyant_kernel::engine_data::FilteredEngineData",
+        "buoyant_kernel::scan::ScanMetadata"
+      ],
+      "required_methods": [
+        "has_selected_rows"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "has_selected_rows",
+          "signature": "fn has_selected_rows(&self) -> bool",
+          "summary": "Check if the selection vector contains at least one selected row"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_replay::LogReplayProcessor",
+      "name": "LogReplayProcessor",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait LogReplayProcessor: Sized",
+      "summary": "A trait for processing batches of actions from Delta transaction logs during log replay.",
+      "doc": "api/buoyant_kernel.log_replay.md#logreplayprocessor",
+      "aliases": [
+        "delta_kernel::log_replay::LogReplayProcessor"
+      ],
+      "implementors": [
+        "buoyant_kernel::action_reconciliation::log_replay::ActionReconciliationProcessor",
+        "buoyant_kernel::scan::log_replay::ScanLogReplayProcessor"
+      ],
+      "required_methods": [
+        "data_skipping_filter",
+        "process_actions_batch"
+      ],
+      "provided_methods": [
+        "build_selection_vector",
+        "process_actions_iter"
+      ],
+      "methods": [
+        {
+          "name": "build_selection_vector",
+          "signature": "fn build_selection_vector(&self, batch: &dyn EngineData) -> DeltaResult<Vec<bool>>",
+          "summary": "Builds the initial selection vector for the action batch, used to filter out rows that are not relevant to the current processor's purpose (e.g., checkpointing, scanning). This method performs a first pass of filtering using an optional [`…"
+        },
+        {
+          "name": "data_skipping_filter",
+          "signature": "fn data_skipping_filter(&self) -> Option<&DataSkippingFilter>",
+          "summary": "Returns an optional reference to the [`DataSkippingFilter`] used to filter rows when building the initial selection vector in `build_selection_vector`. If `None` is returned, no filter is applied, and all rows are selected."
+        },
+        {
+          "name": "process_actions_batch",
+          "signature": "fn process_actions_batch(&mut self, actions_batch: ActionsBatch) -> DeltaResult<Self::Output>",
+          "summary": "Processes a batch of actions and returns the filtered results. # Parameters - `actions_batch` - An [`ActionsBatch`] which includes a boxed [`EngineData`] instance   representing a batch of actions and a boolean flag indicating whether the…"
+        },
+        {
+          "name": "process_actions_iter",
+          "signature": "fn process_actions_iter(self, action_iter: impl Iterator<Item = DeltaResult<ActionsBatch>>) -> impl Iterator<Item = DeltaResult<Self::Output>>",
+          "summary": "Applies the processor to an actions iterator and filters out empty results."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::log_replay::ParallelLogReplayProcessor",
+      "name": "ParallelLogReplayProcessor",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait ParallelLogReplayProcessor",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::log_replay::ParallelLogReplayProcessor"
+      ],
+      "implementors": [
+        "alloc::sync::Arc",
+        "buoyant_kernel::scan::log_replay::ScanLogReplayProcessor"
+      ],
+      "required_methods": [
+        "process_actions_batch"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "process_actions_batch",
+          "signature": "fn process_actions_batch(&self, actions_batch: ActionsBatch) -> DeltaResult<Self::Output>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,474 @@
+{
+ "api": "api/mcp.shared.jsonrpc_dispatcher.md",
+ "dist": "mcp",
+ "items": [
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#peercancelmode",
+   "inferred": "```xml <special-form 'Literal[\"interrupt\", \"signal\"]'> ``` --- How `notifications/cancelled` is applied: `\"interrupt\"` (default) cancels the handler's scope; `\"signal\"` only sets `ctx.cancel_requested` and lets the handler run to completion. Either way the cancelled request is never answered - the handler's eventual result or error is dropped, not written.",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "PeerCancelMode",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.PeerCancelMode",
+   "preferred": "mcp.shared.jsonrpc_dispatcher.PeerCancelMode",
+   "signature": "PeerCancelMode = Literal['interrupt', 'signal']",
+   "summary": "How `notifications/cancelled` is applied: `\"interrupt\"` (default) cancels the handler's scope; `\"signal\"` only sets `ctx.cancel_requested` and lets the handler run to completion. Either way the cancelled request is never answered - the han\u2026"
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#transportt",
+   "inferred": "TypeVar",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "TransportT",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.TransportT",
+   "preferred": "mcp.shared.jsonrpc_dispatcher.TransportT",
+   "signature": "TransportT = TypeVar('TransportT', bound=TransportContext, default=TransportContext)",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_abandon_write_timeout",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_ABANDON_WRITE_TIMEOUT",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._ABANDON_WRITE_TIMEOUT",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._ABANDON_WRITE_TIMEOUT",
+   "signature": "_ABANDON_WRITE_TIMEOUT: float = 5",
+   "summary": "Bound for courtesy-cancel writes on the abandon paths; the caller-cancel arm shields its write, so a wedged transport would otherwise hang it uncancellably."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_shutdown_write_timeout",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "_SHUTDOWN_WRITE_TIMEOUT",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._SHUTDOWN_WRITE_TIMEOUT",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._SHUTDOWN_WRITE_TIMEOUT",
+   "signature": "_SHUTDOWN_WRITE_TIMEOUT: float = 1",
+   "summary": "Tighter bound for the shutdown-arm error write so a wedged transport can't hold session close."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#__all__",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "__all__",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher.__all__",
+   "preferred": "mcp.shared.jsonrpc_dispatcher.__all__",
+   "signature": "__all__ = ['JSONRPCDispatcher', 'cancelled_request_id_from_params', 'handler_exception_to_error_data', 'progress_token_from_params']",
+   "summary": ""
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#logger",
+   "inferred": "Logger",
+   "inferred_by": "ty",
+   "kind": "attribute",
+   "labels": [
+    "module-attribute"
+   ],
+   "name": "logger",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.logger",
+   "preferred": "mcp.shared.jsonrpc_dispatcher.logger",
+   "signature": "logger = logging.getLogger(__name__)",
+   "summary": ""
+  },
+  {
+   "aliases": [
+    "mcp.client.client.JSONRPCDispatcher",
+    "mcp.client.session.JSONRPCDispatcher",
+    "mcp.server.runner.JSONRPCDispatcher",
+    "mcp.server.streamable_http_manager.JSONRPCDispatcher"
+   ],
+   "bases": [
+    "Dispatcher[TransportT]"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#jsonrpcdispatcher",
+   "kind": "class",
+   "members": [
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "notify",
+     "signature": "async def notify(self, method: str, params: Mapping[str, Any] | None, opts: CallOptions | None = None, _related_request_id: RequestId | None = None) -> None",
+     "summary": "Send a fire-and-forget notification."
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "on_stream_exception",
+     "signature": "on_stream_exception = on_stream_exception",
+     "summary": "Observer for ``Exception`` items on the read stream. Mutable so a session can bind it after the dispatcher is built (e.g. ``ClientSession`` routing into ``message_handler``); only consulted inside ``run()`` so pre-enter assignment is safe."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "run",
+     "signature": "async def run(self, on_request: OnRequest, on_notify: OnNotify, on_notify_intercept: OnNotifyIntercept | None = None, task_status: anyio.abc.TaskStatus[None] = anyio.TASK_STATUS_IGNORED) -> None",
+     "summary": "Drive the receive loop until the read stream closes."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "send_raw_request",
+     "signature": "async def send_raw_request(self, method: str, params: Mapping[str, Any] | None, opts: CallOptions | None = None, _related_request_id: RequestId | None = None) -> dict[str, Any]",
+     "summary": "Send a JSON-RPC request and await its response."
+    }
+   ],
+   "name": "JSONRPCDispatcher",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.JSONRPCDispatcher",
+   "preferred": "mcp.client.client.JSONRPCDispatcher",
+   "signature": "class JSONRPCDispatcher(Dispatcher[TransportT])",
+   "summary": "`Dispatcher` over the `SessionMessage` stream contract."
+  },
+  {
+   "bases": [
+    "Generic[TransportT]"
+   ],
+   "decorators": [
+    "dataclass(slots=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_inflight",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "dctx",
+     "signature": "dctx: _JSONRPCDispatchContext[TransportT]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "scope",
+     "signature": "scope: anyio.CancelScope"
+    }
+   ],
+   "name": "_InFlight",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._InFlight",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._InFlight",
+   "signature": "class _InFlight(Generic[TransportT])",
+   "summary": "An inbound request currently being handled."
+  },
+  {
+   "bases": [
+    "Generic[TransportT]"
+   ],
+   "decorators": [
+    "dataclass"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_jsonrpcdispatchcontext",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "can_send_request",
+     "signature": "can_send_request: bool"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "cancel_requested",
+     "signature": "cancel_requested: anyio.Event = field(default_factory=anyio.Event)"
+    },
+    {
+     "kind": "function",
+     "name": "close",
+     "signature": "def close(self) -> None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "message_metadata",
+     "signature": "message_metadata: MessageMetadata = None",
+     "summary": "Transport-attached `SessionMessage.metadata` that the server lifts onto its request context."
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "notify",
+     "signature": "async def notify(self, method: str, params: Mapping[str, Any] | None, opts: CallOptions | None = None) -> None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "progress",
+     "signature": "async def progress(self, progress: float, total: float | None = None, message: str | None = None) -> None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "property"
+     ],
+     "name": "request_id",
+     "signature": "request_id: RequestId | None"
+    },
+    {
+     "kind": "function",
+     "labels": [
+      "async"
+     ],
+     "name": "send_raw_request",
+     "signature": "async def send_raw_request(self, method: str, params: Mapping[str, Any] | None, opts: CallOptions | None = None) -> dict[str, Any]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "transport",
+     "signature": "transport: TransportT"
+    }
+   ],
+   "name": "_JSONRPCDispatchContext",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._JSONRPCDispatchContext",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._JSONRPCDispatchContext",
+   "signature": "class _JSONRPCDispatchContext(Generic[TransportT])",
+   "summary": "Concrete `DispatchContext` produced for each inbound JSON-RPC message."
+  },
+  {
+   "decorators": [
+    "dataclass(slots=True, frozen=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_outboundplan",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "cancel_on_abandon",
+     "signature": "cancel_on_abandon: bool"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "metadata",
+     "signature": "metadata: MessageMetadata"
+    }
+   ],
+   "name": "_OutboundPlan",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._OutboundPlan",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._OutboundPlan",
+   "signature": "class _OutboundPlan",
+   "summary": "Outbound metadata plus whether abandoning the request sends a courtesy `notifications/cancelled`."
+  },
+  {
+   "decorators": [
+    "dataclass(slots=True)"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_pending",
+   "kind": "class",
+   "labels": [
+    "dataclass"
+   ],
+   "members": [
+    {
+     "kind": "attribute",
+     "labels": [
+      "class-attribute",
+      "instance-attribute"
+     ],
+     "name": "on_progress",
+     "signature": "on_progress: ProgressFnT | None = None"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "receive",
+     "signature": "receive: MemoryObjectReceiveStream[dict[str, Any] | ErrorData]"
+    },
+    {
+     "kind": "attribute",
+     "labels": [
+      "instance-attribute"
+     ],
+     "name": "send",
+     "signature": "send: MemoryObjectSendStream[dict[str, Any] | ErrorData]"
+    }
+   ],
+   "name": "_Pending",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._Pending",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._Pending",
+   "signature": "class _Pending",
+   "summary": "An outbound request awaiting its response."
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_contained_notify",
+   "kind": "function",
+   "name": "_contained_notify",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._contained_notify",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._contained_notify",
+   "signature": "def _contained_notify(fn: OnNotify) -> OnNotify",
+   "summary": "Wrap a notification handler so it can't crash the dispatcher (same boundary as `_shielded_progress`).",
+   "types_used": [
+    "mcp.shared.dispatcher.OnNotify"
+   ]
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_default_transport_builder",
+   "kind": "function",
+   "name": "_default_transport_builder",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._default_transport_builder",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._default_transport_builder",
+   "signature": "def _default_transport_builder(metadata: MessageMetadata) -> TransportContext",
+   "summary": "The `TransportContext` for a message, honoring the transport's own verdict when it stamps one.",
+   "types_used": [
+    "mcp.shared.transport_context.TransportContext"
+   ]
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_plan_outbound",
+   "kind": "function",
+   "name": "_plan_outbound",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._plan_outbound",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._plan_outbound",
+   "signature": "def _plan_outbound(related_request_id: RequestId | None, opts: CallOptions | None) -> _OutboundPlan",
+   "summary": "Choose the outbound `SessionMessage.metadata` and the abandon-cancellation policy.",
+   "types_used": [
+    "mcp.shared.jsonrpc_dispatcher._OutboundPlan"
+   ]
+  },
+  {
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#_shielded_progress",
+   "kind": "function",
+   "name": "_shielded_progress",
+   "nameable": false,
+   "path": "mcp.shared.jsonrpc_dispatcher._shielded_progress",
+   "preferred": "mcp.shared.jsonrpc_dispatcher._shielded_progress",
+   "signature": "def _shielded_progress(fn: ProgressFnT) -> ProgressFnT",
+   "summary": "Wrap a user progress callback so an exception can't cancel the dispatcher's task group.",
+   "types_used": [
+    "mcp.shared.dispatcher.ProgressFnT"
+   ]
+  },
+  {
+   "aliases": [
+    "mcp.client.session.cancelled_request_id_from_params",
+    "mcp.client.streamable_http.cancelled_request_id_from_params"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#cancelled_request_id_from_params",
+   "kind": "function",
+   "name": "cancelled_request_id_from_params",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.cancelled_request_id_from_params",
+   "preferred": "mcp.client.session.cancelled_request_id_from_params",
+   "signature": "def cancelled_request_id_from_params(params: Mapping[str, Any] | None) -> RequestId | None",
+   "summary": "Read `params.requestId` from a `notifications/cancelled` (`as_request_id` shape rules).",
+   "types_used": [
+    "mcp_types.jsonrpc.RequestId"
+   ]
+  },
+  {
+   "aliases": [
+    "mcp.server.runner.handler_exception_to_error_data"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#handler_exception_to_error_data",
+   "kind": "function",
+   "name": "handler_exception_to_error_data",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.handler_exception_to_error_data",
+   "preferred": "mcp.server.runner.handler_exception_to_error_data",
+   "signature": "def handler_exception_to_error_data(exc: BaseException) -> ErrorData | None",
+   "summary": "Map a handler-raised exception to its wire `ErrorData`.",
+   "types_used": [
+    "mcp_types.jsonrpc.ErrorData"
+   ]
+  },
+  {
+   "aliases": [
+    "mcp.server._streamable_http_modern.progress_token_from_params"
+   ],
+   "dist": "mcp",
+   "doc": "api/mcp.shared.jsonrpc_dispatcher.md#progress_token_from_params",
+   "kind": "function",
+   "name": "progress_token_from_params",
+   "nameable": true,
+   "path": "mcp.shared.jsonrpc_dispatcher.progress_token_from_params",
+   "preferred": "mcp.shared.jsonrpc_dispatcher.progress_token_from_params",
+   "signature": "def progress_token_from_params(params: Mapping[str, Any] | None) -> ProgressToken | None",
+   "summary": "Read `params._meta.progressToken`; reject bool (bool subclasses int, so True would alias 1).",
+   "types_used": [
+    "mcp_types._types.ProgressToken"
+   ]
+  }
+ ],
+ "module": "mcp.shared.jsonrpc_dispatcher"
+}

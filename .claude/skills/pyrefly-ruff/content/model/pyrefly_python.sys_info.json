@@ -1,0 +1,198 @@
+{
+  "module": "pyrefly_python::sys_info",
+  "crate": "pyrefly_python",
+  "api": "api/pyrefly_python.sys_info.md",
+  "items": [
+    {
+      "path": "pyrefly_python::sys_info::PythonPlatform",
+      "name": "PythonPlatform",
+      "kind": "enum",
+      "crate": "pyrefly_python",
+      "signature": "enum PythonPlatform",
+      "summary": "The platform on which Python is running, e.g. \"linux\", \"darwin\", \"win32\". See <https://docs.python.org/3/library/sys.html#sys.platform> for examples.",
+      "doc": "api/pyrefly_python.sys_info.md#pythonplatform",
+      "variants": [
+        "All",
+        "Platforms"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::str::traits::FromStr",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "linux",
+          "signature": "fn linux() -> Self"
+        },
+        {
+          "name": "mac",
+          "signature": "fn mac() -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(platform: &str) -> Self"
+        },
+        {
+          "name": "new_many",
+          "signature": "fn new_many(platforms: Vec<String>) -> Self"
+        },
+        {
+          "name": "new_platforms",
+          "signature": "fn new_platforms(platforms: impl IntoIterator<Item = Self>) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "windows",
+          "signature": "fn windows() -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_python::sys_info::PythonVersion",
+      "name": "PythonVersion",
+      "kind": "struct",
+      "crate": "pyrefly_python",
+      "signature": "struct PythonVersion",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "major",
+        "minor",
+        "micro"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "core::fmt::Display",
+        "core::str::traits::FromStr",
+        "dupe::Dupe",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "at_least",
+          "signature": "fn at_least(self, major: u32, minor: u32) -> bool"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> anyhow::Result<Self>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(major: u32, minor: u32, micro: u32) -> Self"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(value: String) -> anyhow::Result<Self>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_python::sys_info::SysInfo",
+      "name": "SysInfo",
+      "kind": "struct",
+      "crate": "pyrefly_python",
+      "signature": "struct SysInfo",
+      "summary": "Information available from the Python library `sys`, namely `version` and `platform`. Interned so that cloning is a trivial pointer copy (no atomic refcount). There are very few distinct SysInfo values (typically 1 per run), so the leaked…",
+      "doc": "api/pyrefly_python.sys_info.md#sysinfo",
+      "implements": [
+        "dupe::Dupe",
+        "serde_core::de::Deserialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "evaluate_bool",
+          "signature": "fn evaluate_bool(&self, x: &Expr) -> Option<bool>",
+          "summary": "Return true/false if we can statically evaluate it, and None if we can't."
+        },
+        {
+          "name": "evaluate_bool_with_sys_info",
+          "signature": "fn evaluate_bool_with_sys_info(&self, x: &Expr) -> Option<bool>",
+          "summary": "Return true/false only when evaluation depends on the configured Python environment."
+        },
+        {
+          "name": "is_not_type_checking_guard",
+          "signature": "fn is_not_type_checking_guard(x: &Expr) -> bool",
+          "summary": "Returns whether the expression is a runtime-only guard like `not TYPE_CHECKING`, `TYPE_CHECKING is False`, or `TYPE_CHECKING == False`."
+        },
+        {
+          "name": "is_type_checking_constant_name",
+          "signature": "fn is_type_checking_constant_name(x: &str) -> bool"
+        },
+        {
+          "name": "is_type_checking_guard",
+          "signature": "fn is_type_checking_guard(x: &Expr) -> bool",
+          "summary": "Returns whether the expression is syntactically guarded by `TYPE_CHECKING`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(version: PythonVersion, platform: PythonPlatform) -> Self"
+        },
+        {
+          "name": "new_without_type_checking",
+          "signature": "fn new_without_type_checking(version: PythonVersion, platform: PythonPlatform) -> Self"
+        },
+        {
+          "name": "platform",
+          "signature": "fn platform(&self) -> &PythonPlatform"
+        },
+        {
+          "name": "pruned_if_branches",
+          "signature": "fn pruned_if_branches<'a, 'b: 'a>(&'a self, x: &'b StmtIf) -> impl Iterator<Item = (Option<&'b Expr>, &'b [Stmt])> + 'a",
+          "summary": "Like `Ast::if_branches`, but skips branch that statically evaluate to `false`, and stops if any branch evaluates to `true`."
+        },
+        {
+          "name": "type_checking",
+          "signature": "fn type_checking(&self) -> bool"
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> PythonVersion"
+        }
+      ]
+    }
+  ]
+}

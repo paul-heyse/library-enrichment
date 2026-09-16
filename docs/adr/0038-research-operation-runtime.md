@@ -1,7 +1,7 @@
 ---
 id: ADR-0038
 title: Bind native query validity and resources to research operations
-status: accepted
+status: superseded
 date: 2026-09-15
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§7.3, §8.1, §14.3]
 review: docs/design_review/reviews/design_review_research-v2-contract_2026-09-15.md
 evidence: Implemented
 supersedes: []
-superseded-by: null
+superseded-by: ADR-0041
 revisit: A recurring cross-family semantic rewrite cannot be implemented by the shared preparation boundary.
 verification: independent_family_requirement_fails_before_execution_with_its_own_trace; preparation_failure_retains_its_own_query_identity; operation_shares_materialization_budget_and_does_not_reacquire_its_permit
 ---
@@ -93,6 +93,8 @@ include analysis failure. Admission corruption and result-contract defects have 
 causes. Full family inventory and workload measurement remain W2/W11 work, not established claims.
 
 ## Status history
+
+- 2026-09-15 — superseded by ADR-0041.
 
 - 2026-09-15 — proposed for the authorized hard pivot; implementation and scoped review pending.
 

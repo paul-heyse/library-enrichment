@@ -1,0 +1,103 @@
+{
+  "module": "ruff_db::system::command",
+  "crate": "ruff_db",
+  "api": "api/ruff_db.system.command.md",
+  "items": [
+    {
+      "path": "ruff_db::system::command::Command",
+      "name": "Command",
+      "kind": "struct",
+      "crate": "ruff_db",
+      "signature": "struct Command",
+      "summary": "An owned description of a command to execute with a [`CommandExecutor`].",
+      "doc": "api/ruff_db.system.command.md#command",
+      "aliases": [
+        "ruff_db::system::Command"
+      ],
+      "methods": [
+        {
+          "name": "arg",
+          "signature": "fn arg(&mut self, argument: impl Into<String>) -> &mut Self",
+          "summary": "Adds an argument to the command."
+        },
+        {
+          "name": "args",
+          "signature": "fn args<I, S>(&mut self, arguments: I) -> &mut Self where I: IntoIterator<Item = S>, S: Into<String>",
+          "summary": "Adds multiple arguments to the command."
+        },
+        {
+          "name": "current_dir",
+          "signature": "fn current_dir(&mut self, directory: impl AsRef<SystemPath>) -> &mut Self",
+          "summary": "Sets the working directory for the command."
+        },
+        {
+          "name": "env",
+          "signature": "fn env(&mut self, name: impl Into<String>, value: impl Into<String>) -> &mut Self",
+          "summary": "Sets an environment variable for the command."
+        },
+        {
+          "name": "env_clear",
+          "signature": "fn env_clear(&mut self) -> &mut Self",
+          "summary": "Clears the inherited environment and any variables previously set on this command."
+        },
+        {
+          "name": "env_remove",
+          "signature": "fn env_remove(&mut self, name: impl Into<String>) -> &mut Self",
+          "summary": "Removes an environment variable from the command."
+        },
+        {
+          "name": "get_args",
+          "signature": "fn get_args(&self) -> &[String]",
+          "summary": "Returns the arguments passed to the executable."
+        },
+        {
+          "name": "get_current_dir",
+          "signature": "fn get_current_dir(&self) -> Option<&SystemPath>",
+          "summary": "Returns the command's working directory, if explicitly configured."
+        },
+        {
+          "name": "get_executable",
+          "signature": "fn get_executable(&self) -> &str",
+          "summary": "Returns the executable to invoke."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(executable: impl Into<String>) -> Self",
+          "summary": "Creates a command for the given executable."
+        }
+      ]
+    },
+    {
+      "path": "ruff_db::system::command::CommandExecutor",
+      "name": "CommandExecutor",
+      "kind": "trait",
+      "crate": "ruff_db",
+      "signature": "trait CommandExecutor: Send + Sync",
+      "summary": "Executes [`Command`]s.",
+      "doc": "api/ruff_db.system.command.md#commandexecutor",
+      "aliases": [
+        "ruff_db::system::CommandExecutor"
+      ],
+      "implementors": [
+        "ruff_db::system::test::TestSystem"
+      ],
+      "required_methods": [
+        "dyn_clone",
+        "execute"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "dyn_clone",
+          "signature": "fn dyn_clone(&self) -> Box<dyn CommandExecutor>",
+          "summary": "Creates an owned executor that can be moved to another thread."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, command: Command) -> Result<Output>",
+          "summary": "Runs a command and captures its standard output and standard error."
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,16 @@ pub async fn wait_for_answer(service: &Service, response: Value) -> Value {
         .as_str()
         .expect("pending job identity")
         .to_owned();
-    tokio::time::timeout(std::time::Duration::from_secs(30), async {
+    // The public pending contract owns the configured job and cleanup deadlines. Its
+    // completion waiter must cover that contract; individual RPC/read budgets stay bounded.
+    let seconds = service
+        .config
+        .network
+        .acquisition_timeout_seconds
+        .max(service.config.execution.deadline_seconds)
+        .saturating_add(service.config.execution.cleanup_deadline_seconds)
+        .saturating_add(service.config.arrow.query_deadline_seconds);
+    tokio::time::timeout(std::time::Duration::from_secs(seconds), async {
         loop {
             let frame = serde_json::json!({"jsonrpc":"2.0","id":3,"method":"job.control",
                 "params":{"job_id":id,"action":"wait","wait_seconds":1}})
@@ -113,7 +122,7 @@ pub async fn complete_answer_measured(
     .await
     .expect("bounded artifact delivery");
     let document: Value = serde_json::from_str(&content).expect("complete indexed answer JSON");
-    assert_eq!(document["index"]["format"], "research-result/2");
+    assert_eq!(document["index"]["format"], "research-result/3");
     let mut decoded = document["result"].clone();
     assert_eq!(decoded["context_id"], response["context_id"]);
     assert_eq!(decoded["snapshot_id"], response["snapshot_id"]);

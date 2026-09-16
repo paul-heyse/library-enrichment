@@ -1,0 +1,53 @@
+Start an LSP server
+
+Usage: pyrefly lsp [OPTIONS]
+
+Options:
+      --indexing-mode <INDEXING_MODE>
+          Find the struct that contains this field and add the indexing mode used by the language
+          server
+
+          Possible values:
+          - none:                         Do not index anything. Features that depend on indexing
+            (e.g. find-refs) will be disabled
+          - lazy-non-blocking-background: Start indexing when opening a file that belongs to a
+            config in the background. Indexing will happen in another thread, so that normal IDE
+            services are not blocked
+          - lazy-blocking:                Start indexing when opening a file that belongs to a
+            config in the background. Indexing will happen in the main thread, so that IDE services
+            will be blocked. However, this is useful for deterministic testing
+          
+          [default: lazy-non-blocking-background]
+
+  -j, --threads <THREADS>
+          Number of threads to use for parallelization. Setting the value to 1 implies sequential
+          execution without any parallelism. Setting the value to 0 means to pick the number of
+          threads automatically using default heuristics
+          
+          [env: PYREFLY_THREADS=]
+          [default: 0]
+
+      --color <COLOR>
+          Control whether colored output is used
+          
+          [env: PYREFLY_COLOR=]
+          [default: auto]
+          [possible values: auto, always, never]
+
+      --workspace-indexing-limit <WORKSPACE_INDEXING_LIMIT>
+          Sets the maximum number of user files for Pyrefly to index in the workspace. Note that
+          indexing files is a performance-intensive task
+          
+          [default: 2000]
+
+      --build-system-blocking
+          Block for build system operations, only using fallback heuristics after checking an
+          up-to-date source DB. Only useful for benchmarking
+
+  -v, --verbose
+          Enable verbose logging
+          
+          [env: PYREFLY_VERBOSE=]
+
+  -h, --help
+          Print help (see a summary with '-h')

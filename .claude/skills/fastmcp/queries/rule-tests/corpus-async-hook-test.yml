@@ -1,0 +1,14 @@
+id: corpus-async-hook
+valid:
+  - |
+    class Sync(Middleware):
+        def on_call_tool(self, context, call_next):
+            return call_next(context)
+  - |
+    async def on_call_tool(context, call_next):
+        return await call_next(context)
+invalid:
+  - |
+    class Good(Middleware):
+        async def on_call_tool(self, context, call_next):
+            return await call_next(context)

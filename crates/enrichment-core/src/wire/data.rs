@@ -365,7 +365,19 @@ pub struct ManifestData {
     pub is_current: bool,
     /// Operational attribution from the catalog generation pinned by this request.
     pub producer_runs: Vec<crate::producer::ProducerRun>,
-    pub catalog_generation: u64,
+    pub control_version: u64,
+    pub previous_snapshot_id: Option<String>,
+    pub publication_changes: Vec<RelationChanges>,
+}
+
+/// Semantic row changes between publication cohorts, derived from bounded native CDF inputs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct RelationChanges {
+    pub relation: String,
+    pub inserted: u64,
+    pub removed: u64,
+    pub updated: u64,
 }
 
 /// Identity of one side of an immutable comparison.

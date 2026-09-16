@@ -28,9 +28,9 @@ use enrichment_core::identity::{
 };
 use enrichment_core::policy::ExecutionProfile;
 use enrichment_core::producer::docsrs::{self, DocsRsMetadata, HostedJson, ManifestFacts};
-use enrichment_core::producer::normalize;
+use enrichment_core::producer::rustdoc::facts;
 use enrichment_core::producer::{ProducerRun, RunOutcome, cratesio, rustdoc, source};
-use enrichment_core::registry::{self, IndexEntry, SelectionError, UpstreamCheck};
+use enrichment_core::registry::{self, SelectionError, UpstreamCheck};
 use enrichment_core::request::{FreshnessMode, ResolveRequest};
 use enrichment_core::wire::data::{
     HostedJsonReport, HostedJsonState, ResolveData, SnapshotSummary,
@@ -56,60 +56,39 @@ pub async fn resolve(service: &Service, mut request: ResolveRequest) -> Envelope
             false,
         );
     }
-    if request.ecosystem == Ecosystem::Python {
-        request.name = enrichment_core::producer::python::normalize_name(&request.name);
-    }
-    let retained_version =
-        if request.effective_mode() == enrichment_core::identity::ResearchMode::Revision {
-            request.revision.as_deref()
-        } else {
-            request.version.as_deref()
-        };
-    if request.freshness != FreshnessMode::Revalidate
-        && let Some(version) = retained_version
-        && let Some(replay) = replay_recorded(service, &request, version).await
-    {
-        return replay;
-    }
-    if request.freshness == FreshnessMode::Offline {
-        return envelope::error(
+    let version = if request.effective_mode() == enrichment_core::identity::ResearchMode::Revision {
+        request.revision.as_deref()
+    } else {
+        request.version.as_deref()
+    };
+    let policy = match resolution_policy(service, &request, version).await {
+        Ok(policy) => policy,
+        Err(error) => return common::query_error(&error),
+    };
+    use enrichment_store::resolution_policy::Route;
+    match policy.route().await {
+        Ok(Route::Retained {
+            context_id,
+            snapshot_id,
+        }) => retained_envelope(service, policy.catalog, &context_id, &snapshot_id).await,
+        Ok(Route::Acquire { normalized_name }) => {
+            request.name = normalized_name;
+            super::resolve_job::submit(service, request).await
+        }
+        Ok(Route::Offline) => envelope::error(
             ErrorCode::ArtifactUnavailable,
             "No retained exact resolution matches this request; offline forbids acquisition.",
             "Resolve this exact release with freshness=cache_ok once, then retain its context and snapshot.",
             false,
-        );
-    }
-    if !ExecutionProfile::Static.is_enabled(&service.config) {
-        return envelope::error(
+        ),
+        Ok(Route::Disabled) => envelope::error(
             ErrorCode::PolicyDenied,
             "Static acquisition is disabled",
             "Enable the static profile in service configuration.",
             false,
-        );
+        ),
+        Err(error) => common::operation_error(&error, "resolution_routing"),
     }
-    super::resolve_job::submit(service, request).await
-}
-
-/// What makes two acquisitions the same work (§8.2).
-///
-/// The ecosystem and release being acquired, the environment the resulting context binds, the
-/// freshness policy in force, and whether a local build was asked for. A caller differing in any
-/// of those is not asking for this run's output, and must not be handed it.
-pub(super) fn acquisition_key(service: &Service, request: &ResolveRequest) -> String {
-    enrichment_core::canonical::digest_hex(&serde_json::json!({
-        "producer": ["resolve-job/1", cratesio::VERSION, rustdoc::NORMALIZER_VERSION, enrichment_core::producer::python::VERSION],
-        "registry": [&service.config.producers.rust.crates_io_index_url, &service.config.producers.rust.crates_io_api_url, &service.config.producers.rust.docs_rs_url, &service.config.producers.python.pypi_url, &service.config.producers.python.simple_url, &service.config.producers.github_api_url],
-        "request": request,
-        "execution": format!("{:?}", service.config.execution),
-        "ecosystem": request.ecosystem,
-        "name": request.name,
-        "version": request.version,
-        "mode": request.effective_mode(),
-        "environment": environment_for(request).environment_id,
-        "freshness": request.freshness,
-        "allow_local_build": request.allow_local_build,
-        "profiles": service.config.policy.enabled_profiles,
-    }))
 }
 
 /// The sentence a caller reads when it attached to someone else's run.
@@ -123,17 +102,31 @@ pub(super) async fn replay_recorded(
     request: &ResolveRequest,
     version: &str,
 ) -> Option<Envelope> {
-    match replay_checked(service, request, version).await {
-        Ok(replay) => replay,
-        Err(error) => Some(super::common::query_error(&error)),
+    let policy = match resolution_policy(service, request, Some(version)).await {
+        Ok(policy) => policy,
+        Err(error) => return Some(common::query_error(&error)),
+    };
+    match policy.retained().await {
+        Ok(Some(retained)) => Some(
+            retained_envelope(
+                service,
+                policy.catalog,
+                &retained.context_id,
+                &retained.snapshot_id,
+            )
+            .await,
+        ),
+        Ok(None) => None,
+        Err(error) => Some(common::operation_error(&error, "retained_resolution")),
     }
 }
 
-async fn replay_checked(
+async fn resolution_policy(
     service: &Service,
     request: &ResolveRequest,
-    version: &str,
-) -> Result<Option<Envelope>, enrichment_store::QueryError> {
+    version: Option<&str>,
+) -> Result<enrichment_store::resolution_policy::ResolutionPolicy, enrichment_store::QueryError> {
+    // Revision URL decoding is a source-format boundary. Native joins select catalog facts.
     let registry = if request.effective_mode() == enrichment_core::identity::ResearchMode::Revision
     {
         enrichment_core::producer::revision::Revision::from_request(request)
@@ -144,44 +137,48 @@ async fn replay_checked(
     } else {
         registry::CRATES_IO.into()
     };
-    let catalog = service.repository.catalog.pin().await?;
-    let runtime = &service.repository.runtime;
-    let Some(release) = catalog
-        .find_release(
-            runtime,
-            request.ecosystem,
-            Some(&registry),
-            &request.name,
-            version,
-        )
-        .await?
-    else {
-        return Ok(None);
-    };
     let environment = environment_for(request);
-    let context = Context::new(
-        release.release_id.clone(),
-        environment.environment_id.clone(),
-        request.effective_mode(),
-    );
-    let Some(snapshot_id) = catalog.current(runtime, &context.context_id).await? else {
-        return Ok(None);
-    };
-    let reader =
-        enrichment_store::SnapshotReader::open(&service.repository, catalog, &snapshot_id).await?;
-    let manifest = reader.manifest();
-    let producer_runs = reader.producer_runs().await?;
-    if request.allow_local_build
-        && manifest.missing.contains(&EvidenceKind::PublicApi)
-        && !producer_runs
-            .iter()
-            .any(|r| r.producer == rustdoc::LOCAL_PRODUCER)
+    let catalog = service.repository.catalog.pin().await?;
+    Ok(enrichment_store::resolution_policy::ResolutionPolicy::new(
+        &service.repository.runtime,
+        catalog,
+        enrichment_store::resolution_policy::Scope {
+            ecosystem: request.ecosystem,
+            name: &request.name,
+            registry: &registry,
+            version,
+            environment_id: environment.environment_id.as_str(),
+            mode: request.effective_mode(),
+            allow_local_build: request.allow_local_build,
+            freshness: request.freshness,
+            profiles: &service.config.policy.enabled_profiles,
+        },
+    )
+    .await?)
+}
+
+async fn retained_envelope(
+    service: &Service,
+    catalog: std::sync::Arc<enrichment_store::control::ControlSnapshot>,
+    context_id: &str,
+    snapshot_id: &str,
+) -> Envelope {
+    let opened =
+        match common::open_context_at(service, catalog, context_id, Some(snapshot_id)).await {
+            Ok(opened) => opened,
+            Err(error) => return *error,
+        };
+    match render_retained(
+        &opened.reader,
+        &opened.release,
+        &opened.environment,
+        &opened.context,
+    )
+    .await
     {
-        return Ok(None);
+        Ok(envelope) => envelope,
+        Err(error) => common::query_error(&error),
     }
-    render_retained(&reader, &release, &environment, &context)
-        .await
-        .map(Some)
 }
 
 pub(super) async fn render_retained(
@@ -400,7 +397,10 @@ pub(super) async fn replay_selected(
             service,
             acquisition,
             metadata,
-            enrichment_core::evidence::ingest::ProducerBatch::default(),
+            (
+                enrichment_core::evidence::ingest::DocumentBatch::default(),
+                None,
+            ),
             [("registry-selection".into(), "1".into())].into(),
             vec![EvidenceKind::RegistryMetadata],
             Vec::new(),
@@ -743,42 +743,20 @@ async fn local_rustdoc(
                 .to_owned(),
         }),
     };
-    if !ExecutionProfile::Build.is_enabled(&service.config) {
+    let readiness =
+        crate::execution::readiness::assess(service, Ecosystem::Rust, ExecutionProfile::Build)
+            .await
+            .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?;
+    if !readiness.available {
         return Err(gap(
             GapReason::PolicyDenied,
-            "a local rustdoc build was requested, but the `build` profile is not enabled in this \
-             service's configuration. A caller selects from enabled profiles and never grants \
-             itself one"
-                .to_owned(),
+            crate::execution::readiness::detail(&readiness),
         ));
     }
-    let qualification = crate::execution::admission::qualification(
-        &service.config.execution,
-        &service.paths.cache_root,
-    );
-    if !qualification.is_qualified() {
-        return Err(gap(
-            GapReason::PolicyDenied,
-            format!(
-                "a local rustdoc build was requested, but execution is not qualified: {}",
-                qualification.detail()
-            ),
-        ));
-    }
-    let Some(image) = service
-        .config
-        .execution
-        .rust_image
+    let image = readiness
+        .image_id
         .as_deref()
-        .filter(|id| Runner::valid_image(id))
-    else {
-        return Err(gap(
-            GapReason::PolicyDenied,
-            "a local rustdoc build was requested, but no admitted Rust producer image is \
-             configured"
-                .to_owned(),
-        ));
-    };
+        .expect("qualified native route has an image");
     let Some(extracted) = extracted else {
         return Err(gap(
             GapReason::UpstreamUnavailable,
@@ -792,11 +770,6 @@ async fn local_rustdoc(
         .read(&extracted.tarball.sha256)
         .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?;
 
-    if let crate::execution::cleanup::Admission::Quarantined { detail, .. } =
-        service.execution.admission()
-    {
-        return Err(gap(GapReason::PolicyDenied, detail));
-    }
     let work = acq.work.ok_or_else(|| {
         gap(
             GapReason::NotAttempted,
@@ -866,7 +839,7 @@ pub(super) async fn acquire(
 
     // 1. Registry index: the spellings crates.io treats as one namespace, in order.
     let started = clock::now_rfc3339();
-    let mut index: Option<(String, Fetched, Vec<IndexEntry>)> = None;
+    let mut index: Option<(String, Fetched, Vec<arrow::record_batch::RecordBatch>)> = None;
     let variants = registry::name_variants(&request.name);
     for candidate in &variants {
         let url = match cratesio::index_url(&rust.crates_io_index_url, candidate) {
@@ -895,7 +868,7 @@ pub(super) async fn acquire(
         match fetched.status {
             200 => {
                 let text = String::from_utf8_lossy(&fetched.bytes).into_owned();
-                match registry::parse_index(&text) {
+                match registry::facts::decode(&text, 1024) {
                     Ok(entries) => {
                         index = Some((url.to_string(), fetched, entries));
                         break;
@@ -937,16 +910,26 @@ pub(super) async fn acquire(
     let registry_checked_at = index_fetched.retrieved_at.clone();
 
     // 2. Select the exact version -- never an upgrade -- and note the newest separately.
-    let selected = match registry::select_version(
-        &entries,
-        request.version.as_deref(),
-        request.allow_prerelease,
-        request.allow_yanked,
-    ) {
-        Ok(entry) => entry.clone(),
-        Err(err) => return selection_error(err),
+    let native_index =
+        match enrichment_store::registry::RustIndex::new(&service.repository.runtime, entries) {
+            Ok(index) => index,
+            Err(err) => return common::operation_error(&err, "registry_facts"),
+        };
+    let choice = match native_index
+        .select(
+            request.version.as_deref(),
+            request.allow_prerelease,
+            request.allow_yanked,
+        )
+        .await
+    {
+        Ok(Ok(choice)) => choice,
+        Ok(Err(err)) => return selection_error(err),
+        Err(err) => return common::operation_error(&err, "registry_selection"),
     };
-    let upstream = registry::upstream_check(&entries, &selected.vers);
+    let selected = choice.entry;
+    let upstream = choice.upstream;
+    let line_no = choice.source_line;
     let index_artifact = match acq.store(
         &index_fetched,
         ArtifactKind::RegistryIndexEntry,
@@ -956,10 +939,6 @@ pub(super) async fn acquire(
         Ok(a) => a,
         Err(err) => return common::operation_error(&err, "acquisition_storage"),
     };
-    let line_no = entries
-        .iter()
-        .position(|e| e.vers == selected.vers)
-        .map_or(0, |i| i + 1);
     let excerpt = serde_json::to_string(&selected).expect("registry selection serializes");
     acq.evidence(
         &format!("{}@{}", selected.name, selected.vers),
@@ -1448,6 +1427,7 @@ pub(super) async fn acquire(
 
     let partial = !acq.gaps.is_empty() || hosted_state.0 != HostedJsonState::Available;
     let mut limitations = vec![
+        "Public API facts describe declarations in the selected rustdoc build. External trait definitions and their inherited method details are not expanded.".into(),
         "Hosted documentation reflects the maintainer's docs.rs build configuration \
          (observed_configuration), not the calling project's features or target."
             .to_owned(),
@@ -1500,9 +1480,8 @@ pub(super) async fn acquire(
             envelope::artifact_uri(&format!("artifacts/{}", a.artifact_id))
                 .ok()
                 .map(|uri| ArtifactHandle {
-                    artifact_id: a.artifact_id.clone(),
+                    receipt: a.clone(),
                     uri,
-                    media_type: a.media_type.clone(),
                     description: format!(
                         "{:?} for {} {}",
                         a.kind, release.key.package, release.key.version
@@ -1661,6 +1640,9 @@ async fn normalize_and_publish(
         planned_fallback: None,
     };
     let normalization_started = clock::now_rfc3339();
+    enrichment_store::native_effect::authorize()
+        .await
+        .map_err(|e| gap(GapReason::PolicyDenied, e.to_string()))?;
     let normalized = if let Some(json_sha) = request.json_sha {
         let artifact = acq
             .artifacts
@@ -1673,24 +1655,48 @@ async fn normalize_and_publish(
                     "rustdoc acquisition descriptor missing".into(),
                 )
             })?;
-        enrichment_store::native_rustdoc::from_artifact(
-            service.blobs.clone(),
-            artifact,
-            service.config.limits.excerpt_characters,
+        Some(
+            enrichment_store::native_rustdoc::from_artifact(
+                &service.repository.runtime,
+                service.blobs.clone(),
+                artifact,
+                service.config.limits.excerpt_characters,
+            )
+            .await
+            .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?,
         )
-        .await
-        .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?
     } else {
-        enrichment_store::native_rustdoc::Prepared::source_only(
-            request
-                .extracted
-                .and_then(|e| e.facts.lib_name.clone())
-                .unwrap_or_else(|| request.release.key.package.replace('-', "_")),
-            request
-                .extracted
-                .and_then(|e| e.facts.package_version.clone()),
-        )
+        None
     };
+    let source_header = enrichment_store::rust_normalize::Header {
+        crate_name: request
+            .extracted
+            .and_then(|e| e.facts.lib_name.clone())
+            .unwrap_or_else(|| request.release.key.package.replace('-', "_")),
+        crate_version: request
+            .extracted
+            .and_then(|e| e.facts.package_version.clone()),
+        target: String::new(),
+        producer_items: 0,
+    };
+    let header = normalized.as_ref().map_or(&source_header, |f| &f.header);
+    if let Some(facts) = &normalized {
+        for diagnostic in facts
+            .gaps()
+            .await
+            .map_err(|e| gap(GapReason::ExtractionFailed, e.to_string()))?
+        {
+            acq.gaps.push(gap(
+                GapReason::ExtractionFailed,
+                format!(
+                    "Native Rust normalization {}: {} affected producer items; witnesses: {}",
+                    diagnostic.reason,
+                    diagnostic.count,
+                    diagnostic.witnesses.join(", ")
+                ),
+            ));
+        }
+    }
 
     let mut documents = super::source_documents::SourceDocuments::new(service.blobs.clone());
     let mut indexed = vec![EvidenceKind::RegistryMetadata];
@@ -1712,6 +1718,14 @@ async fn normalize_and_publish(
         inputs.insert(artifact.artifact_id.clone(), artifact.sha256.clone());
     }
     let mut producers = BTreeMap::new();
+    if let Some(facts) = &normalized {
+        producers.insert(
+            "rust-closure-depth".into(),
+            facts.normalization_depth.to_string(),
+        );
+        producers.insert("rustdoc-arrow-facts".into(), facts::VERSION.into());
+        producers.insert("rust-fact-decoder".into(), facts.producer_revision.clone());
+    }
     if request.json_sha.is_some() {
         producers.insert(
             rustdoc::PRODUCER.to_owned(),
@@ -1719,7 +1733,7 @@ async fn normalize_and_publish(
         );
         producers.insert(
             "public-api".to_owned(),
-            normalize::public_api_version().to_owned(),
+            facts::PUBLIC_API_VERSION.to_owned(),
         );
         match request.local_build {
             Some(built) => {
@@ -1744,7 +1758,7 @@ async fn normalize_and_publish(
         features: Vec::new(),
         all_features: false,
         no_default_features: false,
-        target: normalized.target.clone(),
+        target: header.target.clone(),
         format_version: request.format_version,
         source: match request.local_build {
             Some(_) => format!(
@@ -1872,14 +1886,17 @@ async fn normalize_and_publish(
             context: request.context.clone(),
             release: request.release.clone(),
             environment: request.environment.clone(),
-            symbol_package: normalized.crate_name.clone(),
-            crate_name: normalized.crate_name.clone(),
-            crate_version: normalized.crate_version.clone(),
+            symbol_package: header.crate_name.clone(),
+            crate_name: header.crate_name.clone(),
+            crate_version: header.crate_version.clone(),
             normalizer_version: rustdoc::NORMALIZER_VERSION.into(),
             observed_configuration: request.json_sha.map(|_| observed),
-            producer_items: normalized.producer_items,
+            producer_items: header.producer_items,
         },
-        (normalized, documents),
+        (
+            documents,
+            normalized.map(super::publication::NativeFacts::Rust),
+        ),
         producers,
         indexed,
         missing,

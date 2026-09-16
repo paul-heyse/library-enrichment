@@ -1,0 +1,272 @@
+{
+  "module": "pyrefly::binding::narrow",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.binding.narrow.md",
+  "items": [
+    {
+      "path": "pyrefly::binding::narrow::AtomicNarrowOp",
+      "name": "AtomicNarrowOp",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum AtomicNarrowOp",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Is",
+        "IsNot",
+        "Eq",
+        "NotEq",
+        "IsInstance",
+        "IsNotInstance",
+        "IsSubclass",
+        "IsNotSubclass",
+        "HasAttr",
+        "NotHasAttr",
+        "GetAttr",
+        "NotGetAttr",
+        "TypeGuard",
+        "NotTypeGuard",
+        "TypeIs",
+        "NotTypeIs",
+        "TypeEq",
+        "TypeNotEq",
+        "In",
+        "NotIn",
+        "HasKey",
+        "NotHasKey",
+        "LenEq",
+        "LenNotEq",
+        "LenGt",
+        "LenGte",
+        "LenLt",
+        "LenLte",
+        "IsSequence",
+        "IsNotSequence",
+        "IsMapping",
+        "IsNotMapping",
+        "Call",
+        "NotCall",
+        "IsTruthy",
+        "IsFalsy",
+        "PolarsColumnMutation",
+        "Placeholder",
+        "ClassCoverageGate",
+        "ClassCoverageGateNeg"
+      ],
+      "implements": [
+        "pyrefly_util::display::DisplayWith"
+      ],
+      "methods": [
+        {
+          "name": "as_python_snippet",
+          "signature": "fn as_python_snippet(&self, subject: &str, snippet: &impl Fn(TextRange) -> Option<String>) -> Option<String>",
+          "summary": "Produce a Python-like snippet for hover display."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>, ctx: &pyrefly_python::module::Module) -> fmt::Result",
+          "via_trait": "pyrefly_util::display::DisplayWith"
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&self) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::narrow::FacetOrigin",
+      "name": "FacetOrigin",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum FacetOrigin",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Direct",
+        "GetMethod",
+        "MatchSubject"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::narrow::NarrowOp",
+      "name": "NarrowOp",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum NarrowOp",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Atomic",
+        "And",
+        "Or"
+      ],
+      "implements": [
+        "pyrefly_util::display::DisplayWith"
+      ],
+      "methods": [
+        {
+          "name": "as_python_snippet",
+          "signature": "fn as_python_snippet(&self, base_name: &Name, snippet: &impl Fn(TextRange) -> Option<String>) -> Option<String>",
+          "summary": "Produce a Python-like snippet for hover display."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>, ctx: &pyrefly_python::module::Module) -> fmt::Result",
+          "via_trait": "pyrefly_util::display::DisplayWith"
+        },
+        {
+          "name": "for_subject",
+          "signature": "fn for_subject(&self, subject: &NarrowingSubject) -> Self",
+          "summary": "Transforms this narrowing operation to apply to a different subject."
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&self) -> Self"
+        },
+        {
+          "name": "rebase_onto_subject",
+          "signature": "fn rebase_onto_subject(&self, subject: &NarrowingSubject) -> Option<Self>",
+          "summary": "Rebase a narrowing operation onto an expression that is already the subject."
+        },
+        {
+          "name": "set_allow_never_collapse",
+          "signature": "fn set_allow_never_collapse(&mut self)",
+          "summary": "Mark every facet subject in this op tree as allowed to collapse a non-union base to `Never`. Used on the negation of a match arm so that subtracting a fully-matched member soundly reduces the subject (see `FacetSubject`)."
+        },
+        {
+          "name": "strip_placeholders",
+          "signature": "fn strip_placeholders(&mut self)",
+          "summary": "Removes all `Placeholder` operations from this narrow op tree. Used when all sub-patterns of a class pattern are irrefutable, meaning the Placeholders (added by `and_all` for unmerged names) are spurious and would incorrectly block negativ…"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::narrow::NarrowSource",
+      "name": "NarrowSource",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum NarrowSource",
+      "summary": "Indicates where an isinstance-style narrow operation originated from. This determines whether validation needs to happen during narrowing.",
+      "doc": "api/pyrefly.binding.narrow.md#narrowsource",
+      "variants": [
+        "Call",
+        "Pattern"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::narrow::NarrowingSubject",
+      "name": "NarrowingSubject",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum NarrowingSubject",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Name",
+        "Facets"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &Name"
+        },
+        {
+          "name": "with_facet",
+          "signature": "fn with_facet(&self, prop: UnresolvedFacetKind) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::binding::narrow::expr_to_subjects",
+      "name": "expr_to_subjects",
+      "kind": "function",
+      "crate": "pyrefly",
+      "signature": "fn expr_to_subjects(expr: &ruff_python_ast::Expr) -> Vec<NarrowingSubject>",
+      "summary": "",
+      "doc": null
+    },
+    {
+      "path": "pyrefly::binding::narrow::identifier_and_chain_for_expr",
+      "name": "identifier_and_chain_for_expr",
+      "kind": "function",
+      "crate": "pyrefly",
+      "signature": "fn identifier_and_chain_for_expr(expr: &ruff_python_ast::Expr) -> Option<(ruff_python_ast::Identifier, types::facet::UnresolvedFacetChain)>",
+      "summary": "Given an expression, determine whether it is a chain of properties (attribute/concrete index) rooted at a name, and if so, return the name and the chain of properties. For example: x.y.[0].z",
+      "doc": "api/pyrefly.binding.narrow.md#identifier_and_chain_for_expr"
+    },
+    {
+      "path": "pyrefly::binding::narrow::identifier_and_chain_prefix_for_expr",
+      "name": "identifier_and_chain_prefix_for_expr",
+      "kind": "function",
+      "crate": "pyrefly",
+      "signature": "fn identifier_and_chain_prefix_for_expr(expr: &ruff_python_ast::Expr) -> Option<(ruff_python_ast::Identifier, Vec<types::facet::UnresolvedFacetKind>)>",
+      "summary": "Similar to identifier_and_chain_for_expr, except if we encounter a non-concrete subscript in the chain we only return the prefix before that location. For example: w.x[y].z -> w.x",
+      "doc": "api/pyrefly.binding.narrow.md#identifier_and_chain_prefix_for_expr"
+    },
+    {
+      "path": "pyrefly::binding::narrow::FacetSubject",
+      "name": "FacetSubject",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct FacetSubject",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "chain",
+        "origin",
+        "allow_never_collapse"
+      ],
+      "methods": []
+    },
+    {
+      "path": "pyrefly::binding::narrow::NarrowOps",
+      "name": "NarrowOps",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct NarrowOps",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "and_all",
+          "signature": "fn and_all(&mut self, other: Self)"
+        },
+        {
+          "name": "and_for_subject",
+          "signature": "fn and_for_subject(&mut self, subject: &NarrowingSubject, op: NarrowOp, range: TextRange)",
+          "summary": "Adds or merges a narrowing operation for the given subject."
+        },
+        {
+          "name": "from_expr",
+          "signature": "fn from_expr(builder: &BindingsBuilder<'_>, test: Option<&Expr>) -> Self"
+        },
+        {
+          "name": "from_single_narrow_op",
+          "signature": "fn from_single_narrow_op(left: &Expr, op: AtomicNarrowOp, range: TextRange) -> Self"
+        },
+        {
+          "name": "from_single_narrow_op_for_subject",
+          "signature": "fn from_single_narrow_op_for_subject(subject: NarrowingSubject, op: AtomicNarrowOp, range: TextRange) -> Self"
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&self) -> Self"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self"
+        },
+        {
+          "name": "or_all",
+          "signature": "fn or_all(&mut self, other: Self)"
+        },
+        {
+          "name": "set_allow_never_collapse",
+          "signature": "fn set_allow_never_collapse(&mut self)"
+        }
+      ]
+    }
+  ]
+}

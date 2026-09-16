@@ -1,18 +1,5 @@
 #!/usr/bin/env python3
-"""Assert generated wire schemas match the frozen Phase-0 contract.
-
-Behavioral validation of the research-v2 contract permits differences in $id, $defs
-ordering and serde-derived naming will legitimately differ. The frozen artifact defines what
-must validate and what must be rejected. Three checks:
-
-  1. Reproducible generation -- schemas/generated/ is unchanged after regeneration.
-  2. Corpus (the real oracle) -- the four fixtures validate and the three negative cases from
-     VALIDATION_REPORT.md are rejected, under the generated schema exactly as under the frozen
-     one. This is also acceptance gate C19.
-  3. Structural -- contracts/research-v2/enums.json must equal the generated equivalents.
-
-Absent generated output is `not_run`, not a pass and not a hard failure (phase 0).
-"""
+"""Validate the native wire epoch from Rust-generated schemas and independent outcome fixtures."""
 
 from __future__ import annotations
 
@@ -23,10 +10,10 @@ from pathlib import Path
 from cli import say, warn
 
 ROOT = Path(__file__).resolve().parent.parent
-FROZEN = ROOT / "contracts/research-v2/research-envelope.schema.json"
-ENUMS = ROOT / "contracts/research-v2/enums.json"
+PACKAGED = ROOT / "python/enrichment_mcp/_schemas/research-envelope.schema.json"
+ENUMS = ROOT / "tests/fixtures/wire/vocabulary.json"
 GENERATED = ROOT / "schemas/generated/research-envelope.schema.json"
-EXAMPLES = ROOT / "contracts/research-v2/examples"
+EXAMPLES = ROOT / "tests/fixtures/wire"
 
 failures: list[str] = []
 notes: list[str] = []
@@ -42,11 +29,24 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
 
     unknown_field = copy.deepcopy(ok)
     unknown_field["unexpected_root_field"] = True
+    obsolete_epoch = copy.deepcopy(ok)
+    obsolete_epoch["schema_version"] = "2.0"
+    bare_handle = copy.deepcopy(ok)
+    bare_handle["artifacts"] = [
+        {
+            "artifact_id": "art_" + "0" * 64,
+            "media_type": "text/plain",
+            "uri": "library-evidence://artifacts/example",
+            "description": "receipt required",
+        }
+    ]
 
     return [
         ("pending without a job handle", pending_no_job),
         ("error without an error object", error_no_error),
         ("unknown root field", unknown_field),
+        ("obsolete wire epoch", obsolete_epoch),
+        ("artifact handle without receipt", bare_handle),
     ]
 
 
@@ -58,10 +58,8 @@ def main() -> int:
         warn("  Add it to [dependency-groups] dev and run `just sync`.")
         return 2
 
-    frozen = json.loads(FROZEN.read_text())
-    fv = Draft202012Validator(frozen)
-
-    schemas = [("frozen", fv)]
+    packaged = json.loads(PACKAGED.read_text())
+    schemas = [("packaged", Draft202012Validator(packaged))]
     if GENERATED.exists():
         schemas.append(("generated", Draft202012Validator(json.loads(GENERATED.read_text()))))
     else:
@@ -100,8 +98,8 @@ def main() -> int:
         def check(label: str, expected: object, actual: object) -> None:
             if expected != actual:
                 failures.append(
-                    f"structural: {label} differs from the frozen contract.\n"
-                    f"    frozen:    {expected}\n    generated: {actual}"
+                    f"structural: {label} differs from the native vocabulary.\n"
+                    f"    expected:    {expected}\n    generated: {actual}"
                 )
 
         check("root required fields", enums["root_required"], sorted(gen.get("required", [])))
@@ -145,8 +143,8 @@ def main() -> int:
         for f in failures:
             warn(f"  - {f}")
         return 1
-    scope = "frozen + generated" if GENERATED.exists() else "frozen only"
-    say(f"schema-conformance: OK -- 4 fixtures validate, 3 negative cases rejected ({scope})")
+    scope = "packaged + generated" if GENERATED.exists() else "packaged only"
+    say(f"schema-conformance: OK -- 4 fixtures validate, 5 negative cases rejected ({scope})")
     return 0
 
 

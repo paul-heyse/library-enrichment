@@ -1,0 +1,148 @@
+{
+  "_comment": [
+    "Navigation probes. Each is a question an agent will actually ask, the file the skill's own",
+    "documentation says to look in, and a regex the answer must match. They assert that the",
+    "documented route works -- not that a fact exists somewhere.",
+    "",
+    "Several are deliberately brittle against content drift. A probe that keeps passing while",
+    "the thing it describes changes underneath is worse than no probe: it certifies a route",
+    "that no longer leads anywhere. If one of these fails, read the diff before editing it."
+  ],
+  "probes": [
+    {
+      "question": "Does the primary table type exist, and is it reachable under the facade?",
+      "file": "index/aliases.tsv",
+      "expect": "^deltalake::DeltaTable\\tdeltalake_core::table::DeltaTable\\tstruct$"
+    },
+    {
+      "question": "Are the operations inherent methods on DeltaTable at this pin?",
+      "file": "index/methods.tsv",
+      "expect": "^deltalake_core::table::DeltaTable\\tvacuum\\t-\\tfn vacuum\\(self\\) -> VacuumBuilder"
+    },
+    {
+      "question": "Is the removed DeltaOps entry point absent, so nobody can be told it exists?",
+      "file": "index/symbols.tsv",
+      "reject": "::DeltaOps\\t"
+    },
+    {
+      "question": "Does the kernel schema type resolve under the path delta-rs's own source writes?",
+      "file": "index/aliases.tsv",
+      "expect": "^delta_kernel::schema::StructType\\tbuoyant_kernel::schema::StructType\\tstruct$"
+    },
+    {
+      "question": "And under the path upstream's examples import it by?",
+      "file": "index/aliases.tsv",
+      "expect": "^deltalake::kernel::StructType\\tbuoyant_kernel::schema::StructType\\tstruct$"
+    },
+    {
+      "question": "Did the kernel actually get indexed, rather than dangling as a re-export?",
+      "file": "index/symbols.tsv",
+      "expect": "^buoyant_kernel::schema::StructType\\tstruct\\tbuoyant_kernel\\t"
+    },
+    {
+      "question": "Are the log actions reachable, given they live in a private module?",
+      "file": "index/aliases.tsv",
+      "expect": "^deltalake::kernel::Add\\tdeltalake_core::kernel::models::actions::Add\\tstruct$"
+    },
+    {
+      "question": "Is the storage extension point documented with its method split?",
+      "file": "traits/LogStore.md",
+      "expect": "^`deltalake_core::logstore::LogStore`$"
+    },
+    {
+      "question": "Does the operations catalog enumerate the whole builder surface?",
+      "file": "catalogs/operations.md",
+      "expect": "^24 operation builders\\."
+    },
+    {
+      "question": "Does it name the current entry point rather than the removed one?",
+      "file": "catalogs/operations.md",
+      "expect": "^\\| `VacuumBuilder` \\| `DeltaTable::vacuum` \\|"
+    },
+    {
+      "question": "Is the builder rustdoc hides -- private module, impls dropped -- still catalogued?",
+      "file": "catalogs/operations.md",
+      "expect": "^\\| `LoadBuilder` \\| `DeltaTable::scan_table` \\|"
+    },
+    {
+      "question": "Is the feature envelope recorded, so absence is not read as non-existence?",
+      "file": "index/coverage.tsv",
+      "expect": "^deltalake-core\\tnative-tls\\toff\\t.*mutually exclusive with rustls"
+    },
+    {
+      "question": "And does the excluded feature genuinely contribute no symbols?",
+      "file": "index/symbols.tsv",
+      "reject": "native_tls"
+    },
+    {
+      "question": "Are unresolvable re-exports written down rather than only counted?",
+      "file": "index/unresolved.tsv",
+      "expect": "^deltalake_core::ObjectStore\\tobject_store::ObjectStore$"
+    },
+    {
+      "question": "Are types that exist but cannot be named recorded as such?",
+      "file": "index/unnameable.tsv",
+      "expect": "^deltalake_core::operations::load::LoadBuilder\\tstruct\\tdeltalake-core\\t"
+    },
+    {
+      "question": "Does the crate map say which crates were documented under a partial envelope?",
+      "file": "catalogs/crate-map.md",
+      "expect": "^\\| `deltalake-core` \\| \\d+ \\| \\d+ \\| \\d+ on / \\d+ off \\|"
+    },
+    {
+      "question": "Is the error vocabulary enumerated?",
+      "file": "catalogs/errors.md",
+      "expect": "\\| `DeltaTableError` \\| \\d+ \\| `deltalake-core` \\|"
+    },
+    {
+      "question": "Is the DataFusion seam enumerated rather than summarised?",
+      "file": "catalogs/foreign-impls.md",
+      "expect": "^\\| `datafusion[a-z_:]*::[A-Za-z:_]*TableProvider` \\| \\d+ \\| \\d+ \\|"
+    },
+    {
+      "question": "Do the table properties resolve to the kernel extension trait that reads them?",
+      "file": "catalogs/table-properties.md",
+      "expect": "`TablePropertiesExt`"
+    },
+    {
+      "question": "Are protocol features catalogued from the model?",
+      "file": "catalogs/table-features.md",
+      "expect": "^## `buoyant_kernel::table_features::TableFeature`$"
+    },
+    {
+      "question": "Does the topic map cover the kernel boundary?",
+      "file": "topics/00-map.md",
+      "expect": "\\[The kernel boundary\\]\\(kernel\\.md\\)"
+    },
+    {
+      "question": "Does the writing topic resolve its builder and its options?",
+      "file": "topics/writing.md",
+      "expect": "`deltalake_core::operations::write::WriteBuilder`"
+    },
+    {
+      "question": "Is the normative protocol specification in the corpus?",
+      "file": "corpus/protocol/PROTOCOL.md",
+      "expect": "Delta Transaction Log Protocol"
+    },
+    {
+      "question": "Is the integration-test corpus present, given only eight examples ship?",
+      "file": "corpus/tests/it_datafusion/command_merge.rs",
+      "expect": "merge"
+    },
+    {
+      "question": "Are trait impls on types that cannot be named still reported?",
+      "file": "catalogs/foreign-impls.md",
+      "expect": "^\\| `datafusion_expr::udf::ScalarUDFImpl` \\| 0 \\| 3 \\| -- \\|"
+    },
+    {
+      "question": "Is the complete foreign-impl table findable from the catalog?",
+      "file": "catalogs/foreign-impls.md",
+      "expect": "index/foreign-impls\\.tsv"
+    },
+    {
+      "question": "Can a private implementor hidden behind a `+n` truncation still be found?",
+      "file": "index/foreign-impls.tsv",
+      "expect": "^datafusion_physical_plan::execution_plan::ExecutionPlan\\tdeltalake_core::\\S*MergeValidationExec\\tno\\t"
+    }
+  ]
+}

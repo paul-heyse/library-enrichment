@@ -1,0 +1,96 @@
+{
+  "module": "buoyant_kernel::engine::arrow_data",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.engine.arrow_data.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::engine::arrow_data::ArrowEngineData",
+      "name": "ArrowEngineData",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ArrowEngineData",
+      "summary": "ArrowEngineData holds an Arrow `RecordBatch`, implements `EngineData` so the kernel can extract from it.",
+      "doc": "api/buoyant_kernel.engine.arrow_data.md#arrowenginedata",
+      "aliases": [
+        "delta_kernel::engine::arrow_data::ArrowEngineData"
+      ],
+      "implements": [
+        "buoyant_kernel::engine_data::EngineData",
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "append_columns",
+          "signature": "fn append_columns(&self, schema: SchemaRef, columns: Vec<ArrayData>) -> DeltaResult<Box<dyn EngineData>>",
+          "via_trait": "buoyant_kernel::engine_data::EngineData"
+        },
+        {
+          "name": "apply_selection_vector",
+          "signature": "fn apply_selection_vector(Box<self>, selection_vector: Vec<bool>) -> DeltaResult<Box<dyn EngineData>>",
+          "via_trait": "buoyant_kernel::engine_data::EngineData"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: StructArray) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "has_field",
+          "signature": "fn has_field(&self, name: &ColumnName) -> bool",
+          "via_trait": "buoyant_kernel::engine_data::EngineData"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "via_trait": "buoyant_kernel::engine_data::EngineData"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: RecordBatch) -> Self",
+          "summary": "Create a new `ArrowEngineData` from a `RecordBatch`"
+        },
+        {
+          "name": "record_batch",
+          "signature": "fn record_batch(&self) -> &RecordBatch",
+          "summary": "Get a reference to the `RecordBatch` this `ArrowEngineData` is wrapping"
+        },
+        {
+          "name": "try_from_engine_data",
+          "signature": "fn try_from_engine_data(engine_data: Box<dyn EngineData>) -> DeltaResult<Box<Self>>",
+          "summary": "Utility constructor to get a `Box<ArrowEngineData>` out of a `Box<dyn EngineData>`"
+        },
+        {
+          "name": "visit_rows",
+          "signature": "fn visit_rows(&self, leaf_columns: &[ColumnName], visitor: &mut dyn RowVisitor) -> DeltaResult<()>",
+          "via_trait": "buoyant_kernel::engine_data::EngineData"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_data::EngineDataArrowExt",
+      "name": "EngineDataArrowExt",
+      "kind": "trait",
+      "crate": "buoyant_kernel",
+      "signature": "trait EngineDataArrowExt",
+      "summary": "A trait to allow easy conversion from [`EngineData`] to an arrow [``RecordBatch`]. Returns an error if called on an `EngineData` that is not an `ArrowEngineData`.",
+      "doc": "api/buoyant_kernel.engine.arrow_data.md#enginedataarrowext",
+      "aliases": [
+        "delta_kernel::engine::arrow_data::EngineDataArrowExt"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "buoyant_kernel::error::DeltaResult"
+      ],
+      "required_methods": [
+        "try_into_record_batch"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "try_into_record_batch",
+          "signature": "fn try_into_record_batch(self) -> DeltaResult<RecordBatch>"
+        }
+      ]
+    }
+  ]
+}

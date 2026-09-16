@@ -1,0 +1,144 @@
+{
+  "module": "pyrefly_types::type_var::flag",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.type_var.flag.md",
+  "items": [
+    {
+      "path": "pyrefly_types::type_var::flag::FlagMember",
+      "name": "FlagMember",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum FlagMember",
+      "summary": "A member of the builtin universe a `Flag` type parameter can range over. The variant order is the canonical order in which a domain materializes, names, and displays its members, so every consumer sees the same sequence for the same domain.",
+      "doc": "api/pyrefly_types.type_var.flag.md#flagmember",
+      "aliases": [
+        "pyrefly_types::type_var::FlagMember"
+      ],
+      "variants": [
+        "Int",
+        "Bool",
+        "Str",
+        "IntTuple",
+        "NoneType"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "class_name",
+          "signature": "fn class_name(self) -> &'static str",
+          "summary": "The fully qualified class name reported for this member. `NoneType` always uses its canonical `types` spelling, even on versions where typeshed declares it elsewhere, so that report keys do not shift with the target Python version."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::type_var::flag::FlagDomain",
+      "name": "FlagDomain",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct FlagDomain",
+      "summary": "The set of builtin types a `Flag` type parameter ranges over.",
+      "doc": "api/pyrefly_types.type_var.flag.md#flagdomain",
+      "aliases": [
+        "pyrefly_types::type_var::FlagDomain"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "accepts",
+          "signature": "fn accepts(self, ty: &Type) -> bool",
+          "summary": "Accepts the declared domain exactly, rather than applying Python subtyping."
+        },
+        {
+          "name": "accepts_literal",
+          "signature": "fn accepts_literal(self, ty: &Type) -> bool",
+          "summary": "Accepts a literal scalar, `None`, or a tuple of integer literals."
+        },
+        {
+          "name": "accepts_with_str_subclasses",
+          "signature": "fn accepts_with_str_subclasses(self, ty: &Type, is_str_subclass: impl FnMut(&Type) -> bool) -> bool",
+          "summary": "Accepts the declared domain, treating subclasses of `str` like `str` values."
+        },
+        {
+          "name": "as_type",
+          "signature": "fn as_type(self, stdlib: &Stdlib, heap: &TypeHeap) -> Type",
+          "summary": "The single type covering the whole domain: the member itself when there is only one, otherwise their union."
+        },
+        {
+          "name": "class_names",
+          "signature": "fn class_names(self) -> Vec<&'static str>",
+          "summary": "The fully qualified class names of the domain's members, in canonical order."
+        },
+        {
+          "name": "contains",
+          "signature": "fn contains(self, member: FlagMember) -> bool"
+        },
+        {
+          "name": "fixed_tuple",
+          "signature": "fn fixed_tuple(arity: usize) -> Self",
+          "summary": "A domain admitting exactly integer tuples of `arity` elements."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_type",
+          "signature": "fn from_type(ty: &Type) -> Option<Self>",
+          "summary": "Parses a nonempty union of supported `Flag` domain members. Distinct fixed tuple arities require an explicit `tuple[int, ...]` member rather than implicit widening."
+        },
+        {
+          "name": "intersection",
+          "signature": "fn intersection(self, other: Self) -> Option<Self>",
+          "summary": "Greatest lower bound, or `None` when the domains are disjoint."
+        },
+        {
+          "name": "is_subset_of",
+          "signature": "fn is_subset_of(self, other: Self) -> bool",
+          "summary": "Whether everything this domain admits is also admitted by `other`."
+        },
+        {
+          "name": "join",
+          "signature": "fn join(self, other: Self) -> Self",
+          "summary": "Least upper bound: the domain admitting everything either side admits."
+        },
+        {
+          "name": "of",
+          "signature": "fn of(member: FlagMember) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, _: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, _: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "types",
+          "signature": "fn types(self, stdlib: &Stdlib) -> Vec<Type>",
+          "summary": "The domain's members as types, in canonical order. Never empty."
+        }
+      ]
+    }
+  ]
+}

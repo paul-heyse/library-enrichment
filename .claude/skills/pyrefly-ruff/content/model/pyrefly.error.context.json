@@ -1,0 +1,135 @@
+{
+  "module": "pyrefly::error::context",
+  "crate": "pyrefly",
+  "api": "api/pyrefly.error.context.md",
+  "items": [
+    {
+      "path": "pyrefly::error::context::ErrorContext",
+      "name": "ErrorContext",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum ErrorContext",
+      "summary": "General context for an error. For many errors, the root cause is some steps removed from what the user sees. For example:   class C:     def __lt__(self, other: C) -> bool:   C() < 0  # ERROR: expected C, got 0 The root cause is `C.__lt__`…",
+      "doc": "api/pyrefly.error.context.md#errorcontext",
+      "variants": [
+        "BadContextManager",
+        "UnaryOp",
+        "BinaryOp",
+        "InplaceBinaryOp",
+        "Iteration",
+        "AsyncIteration",
+        "Await",
+        "Index",
+        "SetItem",
+        "DelItem",
+        "MatchPositional",
+        "ImportNotFound",
+        "ImportNotTyped"
+      ],
+      "methods": [
+        {
+          "name": "annotations",
+          "signature": "fn annotations(&self) -> Vec<(TextRange, String)>",
+          "summary": "Return secondary annotations that label relevant spans with type information."
+        },
+        {
+          "name": "as_error_kind",
+          "signature": "fn as_error_kind(&self) -> ErrorKind"
+        },
+        {
+          "name": "format",
+          "signature": "fn format(&self) -> String"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::error::context::TypeCheckKind",
+      "name": "TypeCheckKind",
+      "kind": "enum",
+      "crate": "pyrefly",
+      "signature": "enum TypeCheckKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "MagicMethodReturn",
+        "AugmentedAssignment",
+        "ImplicitFunctionReturn",
+        "ExplicitFunctionReturn",
+        "TypeGuardReturn",
+        "CallArgument",
+        "CallVarArgs",
+        "CallKwArgs",
+        "CallUnpackKwArg",
+        "FunctionParameterDefault",
+        "DictKey",
+        "DictValue",
+        "TypedDictKey",
+        "TypedDictUnpacking",
+        "TypedDictOpenUnpacking",
+        "Attribute",
+        "AnnotatedName",
+        "IterationVariableMismatch",
+        "AnnAssign",
+        "UnpackedAssign",
+        "ExceptionClass",
+        "YieldValue",
+        "YieldFrom",
+        "UnexpectedBareYield",
+        "PostInit",
+        "OverloadReturn",
+        "OverloadInput",
+        "OverloadDefault",
+        "TypeVarSpecialization",
+        "Container"
+      ],
+      "methods": [
+        {
+          "name": "as_error_kind",
+          "signature": "fn as_error_kind(&self) -> ErrorKind"
+        },
+        {
+          "name": "format_error",
+          "signature": "fn format_error(&self, got: &Type, want: &Type, current_module: ModuleName) -> String",
+          "summary": "Note: `got` and `want` should be processed through `AnswersSolver::for_display` before calling this function otherwise printed type representations may be non-deterministic due to unsolved vars"
+        },
+        {
+          "name": "from_annotation_target",
+          "signature": "fn from_annotation_target(target: &AnnotationTarget) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly::error::context::TypeCheckContext",
+      "name": "TypeCheckContext",
+      "kind": "struct",
+      "crate": "pyrefly",
+      "signature": "struct TypeCheckContext",
+      "summary": "The context in which a got <: want type check occurs. This differs from ErrorContext in that TypeCheckContext applies specifically to type mismatches. For example:   class C:     def __lt__(self, other: C) -> bool:   C() < 0  # ERROR: expe…",
+      "doc": "api/pyrefly.error.context.md#typecheckcontext",
+      "fields": [
+        "kind",
+        "context",
+        "annotations"
+      ],
+      "methods": [
+        {
+          "name": "of_kind",
+          "signature": "fn of_kind(kind: TypeCheckKind) -> Self"
+        },
+        {
+          "name": "with_annotation",
+          "signature": "fn with_annotation(self, range: Option<TextRange>, label: String) -> Self",
+          "summary": "Add a single annotation at the given range, if present."
+        },
+        {
+          "name": "with_annotations",
+          "signature": "fn with_annotations(self, annotations: Vec<(TextRange, String)>) -> Self"
+        },
+        {
+          "name": "with_context",
+          "signature": "fn with_context(self, context: Option<ErrorContext>) -> Self"
+        }
+      ]
+    }
+  ]
+}

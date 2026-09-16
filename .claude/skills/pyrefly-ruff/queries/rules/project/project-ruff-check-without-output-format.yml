@@ -1,0 +1,31 @@
+# A ruff invocation whose output will have to be parsed as text.
+id: project-ruff-check-without-output-format
+language: python
+severity: hint
+message: This `ruff check` invocation asks for no machine-readable output format.
+note: |
+  ruff's human output is explicitly unstable and changes between patch releases, so anything
+  that reads it with a regex breaks silently on upgrade. `check` supports twelve formats --
+  json, json-lines, sarif, rdjson, github, gitlab, junit, pylint, azure, concise, full, grouped.
+  See content/catalogs/structured-outputs.md.
+
+  A hint, not a defect: an invocation whose output a human reads is fine as it stands.
+rule:
+  kind: list
+  all:
+    - has:
+        kind: string
+        has:
+          kind: string_content
+          regex: '^ruff$'
+    - has:
+        kind: string
+        has:
+          kind: string_content
+          regex: '^check$'
+    - not:
+        has:
+          kind: string
+          has:
+            kind: string_content
+            regex: '^(--output-format|--statistics|--diff|--show-files|--show-settings)$'

@@ -23,6 +23,15 @@ pub enum JobState {
     Cancelled,
 }
 
+impl JobState {
+    pub const TERMINAL: [Self; 4] = [
+        Self::Succeeded,
+        Self::Partial,
+        Self::Failed,
+        Self::Cancelled,
+    ];
+}
+
 /// A receipt for submitted work. Never evidence that the work finished.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

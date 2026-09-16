@@ -1,18 +1,16 @@
-//! Execution policy (blueprint §10), enforced here in the core.
+//! Shared execution and network configuration facts (blueprint §10).
 //!
 //! Isolation exists to keep working environments intact and research reproducible. The rules
-//! in this module are the ones with a cheap oracle at the point of use: which profile a request
-//! may run under, which URLs the fetcher may open and how much it may pull, and what an archive
-//! may contain before a byte of it lands outside scratch. A caller selects from what
-//! configuration enabled; it never grants itself permission.
+//! Native store plans enforce URL/address/redirect admission from these facts. Byte and archive
+//! mechanisms consume explicit limits. A caller cannot change the configured enabled profiles
+//! or trusted endpoint inventory.
 
 use std::collections::BTreeSet;
 use std::fmt;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
-use url::{Host, Url};
+use url::Url;
 
 use crate::config::Config;
 
@@ -90,6 +88,9 @@ pub struct FetchPolicy {
 /// Why a URL was refused.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum PolicyViolation {
+    /// Every redirect hop must fit the captured native policy.
+    #[error("refusing `{url}`: redirect limit {limit} exceeded")]
+    RedirectLimit { url: String, limit: u32 },
     /// Only `https` is allowed to an untrusted host.
     #[error("refusing `{url}`: scheme `{scheme}` is only allowed for configured endpoints")]
     SchemeNotAllowed {
@@ -147,53 +148,6 @@ impl FetchPolicy {
             user_agent: config.producers.rust.user_agent.clone(),
         }
     }
-
-    /// Whether this host (with non-default port) is a configured endpoint.
-    #[must_use]
-    pub fn is_trusted(&self, url: &Url) -> bool {
-        host_key(url).is_some_and(|key| self.trusted_hosts.contains(&key))
-    }
-
-    /// Check a URL before opening it, and again after every redirect.
-    ///
-    /// # Errors
-    ///
-    /// Refuses non-`https` schemes to untrusted hosts, hostless URLs, and private, loopback,
-    /// link-local, unspecified, multicast or broadcast addresses that are not configured
-    /// endpoints. Names are not resolved here, so a public name that resolves to a private
-    /// address is not caught by this check; that limitation is recorded rather than hidden.
-    pub fn check_url(&self, url: &Url) -> Result<(), PolicyViolation> {
-        let trusted = self.is_trusted(url);
-        if url.scheme() != "https" && !(url.scheme() == "http" && trusted) {
-            return Err(PolicyViolation::SchemeNotAllowed {
-                url: url.to_string(),
-                scheme: url.scheme().to_owned(),
-            });
-        }
-        let Some(host) = url.host() else {
-            return Err(PolicyViolation::HostMissing {
-                url: url.to_string(),
-            });
-        };
-        if trusted {
-            return Ok(());
-        }
-        let non_public = match host {
-            Host::Ipv4(ip) => !is_public_v4(ip),
-            Host::Ipv6(ip) => !is_public_v6(ip),
-            Host::Domain(name) => {
-                let lower = name.to_ascii_lowercase();
-                lower == "localhost" || lower.ends_with(".localhost")
-            }
-        };
-        if non_public {
-            return Err(PolicyViolation::PrivateAddress {
-                url: url.to_string(),
-                host: host.to_string(),
-            });
-        }
-        Ok(())
-    }
 }
 
 fn host_key(url: &Url) -> Option<String> {
@@ -202,39 +156,6 @@ fn host_key(url: &Url) -> Option<String> {
         Some(port) => format!("{host}:{port}"),
         None => host,
     })
-}
-
-fn is_public_v4(ip: Ipv4Addr) -> bool {
-    !(ip.is_private()
-        || ip.is_loopback()
-        || ip.is_link_local()
-        || ip.is_unspecified()
-        || ip.is_broadcast()
-        || ip.is_multicast()
-        || ip.is_documentation()
-        // 100.64.0.0/10, carrier-grade NAT: reachable only inside a provider network.
-        || (ip.octets()[0] == 100 && (64..=127).contains(&ip.octets()[1])))
-}
-
-fn is_public_v6(ip: Ipv6Addr) -> bool {
-    if let Some(mapped) = ip.to_ipv4_mapped() {
-        return is_public_v4(mapped);
-    }
-    !(ip.is_loopback()
-        || ip.is_unspecified()
-        || ip.is_multicast()
-        || ip.is_unique_local()
-        || ip.is_unicast_link_local())
-}
-
-/// Classify a bare address the same way [`FetchPolicy::check_url`] does. Exposed for tests and
-/// for the fetcher's post-connect check.
-#[must_use]
-pub fn is_public_address(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(v4) => is_public_v4(v4),
-        IpAddr::V6(v6) => is_public_v6(v6),
-    }
 }
 
 /// What an archive may contain before extraction writes anything (§10, gate C11).
@@ -262,84 +183,6 @@ impl Default for ArchivePolicy {
 mod tests {
     use super::*;
 
-    fn policy_with(trusted: &[&str]) -> FetchPolicy {
-        FetchPolicy {
-            max_download_bytes: 1,
-            max_decompressed_bytes: 1,
-            max_redirects: 1,
-            request_timeout_seconds: 1,
-            trusted_hosts: trusted.iter().map(|s| (*s).to_owned()).collect(),
-            user_agent: "test".to_owned(),
-        }
-    }
-
-    fn check(policy: &FetchPolicy, url: &str) -> Result<(), PolicyViolation> {
-        policy.check_url(&Url::parse(url).expect("test url parses"))
-    }
-
-    #[test]
-    fn public_https_hosts_are_allowed() {
-        let policy = policy_with(&[]);
-        assert_eq!(
-            check(&policy, "https://docs.rs/crate/serde/1.0.0/json"),
-            Ok(())
-        );
-        assert_eq!(
-            check(&policy, "https://static.crates.io/crates/x/x-1.0.0.crate"),
-            Ok(())
-        );
-    }
-
-    #[test]
-    fn plain_http_is_refused_unless_the_host_is_configured() {
-        let policy = policy_with(&[]);
-        assert!(matches!(
-            check(&policy, "http://docs.rs/x"),
-            Err(PolicyViolation::SchemeNotAllowed { .. })
-        ));
-        let trusting = policy_with(&["127.0.0.1:8123"]);
-        assert_eq!(
-            check(&trusting, "http://127.0.0.1:8123/index/se/rd/serde"),
-            Ok(())
-        );
-    }
-
-    #[test]
-    fn loopback_private_and_link_local_targets_are_refused() {
-        let policy = policy_with(&[]);
-        for url in [
-            "https://127.0.0.1/x",
-            "https://10.0.0.1/x",
-            "https://172.16.5.5/x",
-            "https://192.168.1.1/x",
-            "https://169.254.169.254/latest/meta-data",
-            "https://100.100.1.1/x",
-            "https://0.0.0.0/x",
-            "https://[::1]/x",
-            "https://[fe80::1]/x",
-            "https://[fd00::1]/x",
-            "https://[::ffff:127.0.0.1]/x",
-            "https://localhost/x",
-            "https://api.localhost/x",
-        ] {
-            assert!(
-                matches!(
-                    check(&policy, url),
-                    Err(PolicyViolation::PrivateAddress { .. })
-                ),
-                "{url} should be refused"
-            );
-        }
-    }
-
-    #[test]
-    fn a_configured_loopback_endpoint_is_allowed_only_on_its_own_port() {
-        let policy = policy_with(&["127.0.0.1:8123"]);
-        assert_eq!(check(&policy, "http://127.0.0.1:8123/x"), Ok(()));
-        assert!(check(&policy, "http://127.0.0.1:8124/x").is_err());
-        assert!(check(&policy, "https://127.0.0.1/x").is_err());
-    }
-
     #[test]
     fn the_policy_derives_its_trusted_hosts_from_configuration() {
         let mut config = Config::default();
@@ -348,10 +191,6 @@ mod tests {
         assert!(policy.trusted_hosts.contains("127.0.0.1:9000"));
         assert!(policy.trusted_hosts.contains("index.crates.io"));
         assert!(policy.trusted_hosts.contains("crates.io"));
-        assert_eq!(
-            check(&policy, "http://127.0.0.1:9000/crate/x/1/json"),
-            Ok(())
-        );
     }
 
     #[test]

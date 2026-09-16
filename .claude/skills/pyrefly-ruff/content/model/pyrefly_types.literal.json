@@ -1,0 +1,225 @@
+{
+  "module": "pyrefly_types::literal",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.literal.md",
+  "items": [
+    {
+      "path": "pyrefly_types::literal::Lit",
+      "name": "Lit",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Lit",
+      "summary": "A literal value.",
+      "doc": "api/pyrefly_types.literal.md#lit",
+      "variants": [
+        "Str",
+        "Int",
+        "Bool",
+        "Bytes",
+        "Enum"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_index_i64",
+          "signature": "fn as_index_i64(&self) -> Option<i64>"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_boolean_literal",
+          "signature": "fn from_boolean_literal(x: &ExprBooleanLiteral) -> Self"
+        },
+        {
+          "name": "from_bytes_literal",
+          "signature": "fn from_bytes_literal(x: &ExprBytesLiteral) -> Option<Self>",
+          "summary": "Returns `None` for oversized literals, which are widened to `bytes` (mirrors `from_string_literal`), to keep huge literals out of the type representation."
+        },
+        {
+          "name": "from_fstring",
+          "signature": "fn from_fstring(x: &ExprFString) -> Option<Self>"
+        },
+        {
+          "name": "from_int",
+          "signature": "fn from_int(x: &Int) -> Self"
+        },
+        {
+          "name": "from_string_literal",
+          "signature": "fn from_string_literal(x: &ExprStringLiteral) -> Option<Self>"
+        },
+        {
+          "name": "general_class_type",
+          "signature": "fn general_class_type<'a>(&'a self, stdlib: &'a Stdlib) -> &'a ClassType",
+          "summary": "Convert a literal to a `ClassType` that is the general class_type of the literal. For example, `1` is converted to `int`, and `\"foo\"` is converted to `str`."
+        },
+        {
+          "name": "invert",
+          "signature": "fn invert(&self) -> Option<Type>",
+          "summary": "Returns the inverted type, or None if literal can't be inverted."
+        },
+        {
+          "name": "is_string",
+          "signature": "fn is_string(&self) -> bool"
+        },
+        {
+          "name": "negate",
+          "signature": "fn negate(&self) -> Option<Type>",
+          "summary": "Returns the negated type, or None if literal can't be negated."
+        },
+        {
+          "name": "positive",
+          "signature": "fn positive(&self) -> Option<Type>",
+          "summary": "Returns `+self` if the `+` operation is allowed, None otherwise."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "to_explicit_type",
+          "signature": "fn to_explicit_type(self) -> Type",
+          "summary": "Convert a literal to an explicit (i.e., type-annotated) `Type::Literal`."
+        },
+        {
+          "name": "to_implicit_type",
+          "signature": "fn to_implicit_type(self) -> Type",
+          "summary": "Convert a literal to an implicit (i.e., inferred) `Type::Literal`."
+        },
+        {
+          "name": "to_string_escaped",
+          "signature": "fn to_string_escaped(&self, use_single_quotes_for_string: bool) -> String"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "write_escaped",
+          "signature": "fn write_escaped(&self, f: &mut impl fmt::Write, use_single_quotes_for_string: bool) -> fmt::Result",
+          "summary": "Writes the escaped string representation directly to a formatter. This avoids allocating intermediate strings for each character."
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::literal::LitStyle",
+      "name": "LitStyle",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum LitStyle",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Implicit",
+        "Explicit"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::literal::LitEnum",
+      "name": "LitEnum",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct LitEnum",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "class",
+        "member",
+        "ty"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::literal::Literal",
+      "name": "Literal",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Literal",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "value",
+        "style"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    }
+  ]
+}

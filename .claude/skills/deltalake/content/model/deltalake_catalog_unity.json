@@ -1,0 +1,340 @@
+{
+  "module": "deltalake_catalog_unity",
+  "crate": "deltalake-catalog-unity",
+  "api": "api/deltalake_catalog_unity.md",
+  "items": [
+    {
+      "path": "deltalake_catalog_unity::UnityCatalogConfigKey",
+      "name": "UnityCatalogConfigKey",
+      "kind": "enum",
+      "crate": "deltalake-catalog-unity",
+      "signature": "enum UnityCatalogConfigKey",
+      "summary": "Configuration options for unity catalog client",
+      "doc": "api/deltalake_catalog_unity.md#unitycatalogconfigkey",
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalogConfigKey",
+        "deltalake_catalog_unity::prelude::UnityCatalogConfigKey"
+      ],
+      "variants": [
+        "WorkspaceUrl",
+        "Host",
+        "AccessToken",
+        "Token",
+        "ClientId",
+        "ClientSecret",
+        "AuthorityId",
+        "AuthorityHost",
+        "MsiEndpoint",
+        "ObjectId",
+        "MsiResourceId",
+        "FederatedTokenFile",
+        "UseAzureCli",
+        "AllowHttpUrl"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::UnityCatalogError",
+      "name": "UnityCatalogError",
+      "kind": "enum",
+      "crate": "deltalake-catalog-unity",
+      "signature": "enum UnityCatalogError",
+      "summary": "Possible errors from the unity-catalog/tables API call",
+      "doc": "api/deltalake_catalog_unity.md#unitycatalogerror",
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalogError",
+        "deltalake_catalog_unity::prelude::UnityCatalogError"
+      ],
+      "variants": [
+        "RequestError",
+        "RequestMiddlewareError",
+        "InvalidTable",
+        "InvalidHeader",
+        "InvalidTableURI",
+        "MissingConfiguration",
+        "MissingCredential",
+        "TemporaryCredentialsFetchFailure",
+        "AzureCli",
+        "FederatedTokenFile",
+        "DatafusionError",
+        "InitializationError",
+        "Generic",
+        "InvalidCredentials",
+        "NotATable"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, __formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: DataCatalogError) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> ::core::option::Option<&dyn ::thiserror::__private20::Error + 'static>",
+          "via_trait": "core::error::Error"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::register_handlers",
+      "name": "register_handlers",
+      "kind": "function",
+      "crate": "deltalake-catalog-unity",
+      "signature": "fn register_handlers(_additional_prefixes: Option<reqwest::Url>)",
+      "summary": "Register an [ObjectStoreFactory] for common UnityCatalogFactory [Url] schemes",
+      "doc": "api/deltalake_catalog_unity.md#register_handlers",
+      "aliases": [
+        "deltalake::unity_catalog::register_handlers"
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::UnityCatalog",
+      "name": "UnityCatalog",
+      "kind": "struct",
+      "crate": "deltalake-catalog-unity",
+      "signature": "struct UnityCatalog",
+      "summary": "Databricks Unity Catalog",
+      "doc": "api/deltalake_catalog_unity.md#unitycatalog",
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalog",
+        "deltalake_catalog_unity::prelude::UnityCatalog"
+      ],
+      "implements": [
+        "deltalake_core::data_catalog::DataCatalog"
+      ],
+      "methods": [
+        {
+          "name": "get_schema",
+          "signature": "async fn get_schema<S>(&self, catalog_name: S, schema_name: S) -> Result<GetSchemaResponse, UnityCatalogError> where S: Into<String> + Debug",
+          "summary": "Gets the specified schema within the metastore.#"
+        },
+        {
+          "name": "get_table",
+          "signature": "async fn get_table<S>(&self, catalog_id: S, database_name: S, table_name: S) -> Result<GetTableResponse, UnityCatalogError> where S: Into<String> + Debug",
+          "summary": "Gets a table from the metastore for a specific catalog and schema."
+        },
+        {
+          "name": "get_table_storage_location",
+          "signature": "async fn get_table_storage_location(&self, catalog_id: Option<String>, database_name: &str, table_name: &str) -> Result<String, UnityCatalogError>",
+          "via_trait": "deltalake_core::data_catalog::DataCatalog",
+          "summary": "Get the table storage location from the UnityCatalog"
+        },
+        {
+          "name": "get_temp_table_credentials",
+          "signature": "async fn get_temp_table_credentials<S>(&self, catalog_id: S, database_name: S, table_name: S) -> Result<TableTempCredentialsResponse, UnityCatalogError> where S: Into<String> + Debug"
+        },
+        {
+          "name": "get_temp_table_credentials_with_permission",
+          "signature": "async fn get_temp_table_credentials_with_permission<S>(&self, catalog_id: S, database_name: S, table_name: S, operation: &str) -> Result<TableTempCredentialsResponse, UnityCatalogError> where S: Into<String> + Debug"
+        },
+        {
+          "name": "list_catalogs",
+          "signature": "async fn list_catalogs(&self) -> Result<ListCatalogsResponse, UnityCatalogError>",
+          "summary": "Gets an array of catalogs in the metastore. If the caller is the metastore admin, all catalogs will be retrieved. Otherwise, only catalogs owned by the caller (or for which the caller has the USE_CATALOG privilege) will be retrieved. There…"
+        },
+        {
+          "name": "list_schemas",
+          "signature": "async fn list_schemas<S>(&self, catalog_name: S) -> Result<ListSchemasResponse, UnityCatalogError> where S: Into<String> + Debug",
+          "summary": "List all schemas for a catalog in the metastore."
+        },
+        {
+          "name": "list_table_summaries",
+          "signature": "async fn list_table_summaries<S>(&self, catalog_name: S, schema_name_pattern: S) -> Result<ListTableSummariesResponse, UnityCatalogError> where S: Into<String> + Debug",
+          "summary": "Gets an array of summaries for tables for a schema and catalog within the metastore."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::UnityCatalogBuilder",
+      "name": "UnityCatalogBuilder",
+      "kind": "struct",
+      "crate": "deltalake-catalog-unity",
+      "signature": "struct UnityCatalogBuilder",
+      "summary": "Builder for creating a UnityCatalogClient",
+      "doc": "api/deltalake_catalog_unity.md#unitycatalogbuilder",
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalogBuilder",
+        "deltalake_catalog_unity::prelude::UnityCatalogBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DataCatalogResult<UnityCatalog>",
+          "summary": "Build an instance of [`UnityCatalog`]"
+        },
+        {
+          "name": "builder",
+          "signature": "fn builder() -> UnityCatalogBuilderBuilder<((), (), (), (), (), (), (), (), (), (), (), (), (), (), ())>",
+          "summary": "Create a builder for building `UnityCatalogBuilder`. On the builder, call `.workspace_url(...)`(optional), `.bearer_token(...)`(optional), `.client_id(...)`(optional), `.client_secret(...)`(optional), `.authority_id(...)`(optional), `.auth…"
+        },
+        {
+          "name": "from_env",
+          "signature": "fn from_env() -> Self",
+          "summary": "Parse configuration from the environment."
+        },
+        {
+          "name": "get_uc_location_and_token",
+          "signature": "async fn get_uc_location_and_token(table_uri: &str, storage_options: Option<&HashMap<String, String>>) -> Result<(String, HashMap<String, String>), UnityCatalogError>",
+          "summary": "Returns the storage location and temporary token for the Unity Catalog table."
+        },
+        {
+          "name": "try_with_option",
+          "signature": "fn try_with_option(self, key: impl AsRef<str>, value: impl Into<String>) -> DataCatalogResult<Self>",
+          "summary": "Set an option on the builder via a key - value pair."
+        },
+        {
+          "name": "try_with_options",
+          "signature": "fn try_with_options<I: IntoIterator<Item = (impl AsRef<str>, impl Into<String>)>>(self, options: I) -> DataCatalogResult<Self>",
+          "summary": "Hydrate builder from key value pairs."
+        }
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::UnityCatalogBuilderBuilder",
+      "name": "UnityCatalogBuilderBuilder",
+      "kind": "struct",
+      "crate": "deltalake-catalog-unity",
+      "signature": "struct UnityCatalogBuilderBuilder<TypedBuilderFields = ((), (), (), (), (), (), (), (), (), (), (), (), (), (), ())>",
+      "summary": "Builder for [`UnityCatalogBuilder`] instances.",
+      "doc": "api/deltalake_catalog_unity.md#unitycatalogbuilderbuilder",
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalogBuilderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "allow_http_url",
+          "signature": "fn allow_http_url(self, allow_http_url: bool) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, (bool,), __retry_config, __client_options, __token_credential)>",
+          "summary": "When set to true, http will be allowed in the catalog url"
+        },
+        {
+          "name": "authority_host",
+          "signature": "fn authority_host(self, authority_host: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, (Option<String>,), __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Authority host"
+        },
+        {
+          "name": "authority_id",
+          "signature": "fn authority_id(self, authority_id: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, (Option<String>,), __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Tenant id"
+        },
+        {
+          "name": "bearer_token",
+          "signature": "fn bearer_token(self, bearer_token: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, (Option<String>,), __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Bearer token"
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> UnityCatalogBuilder",
+          "summary": "Finalise the builder and create its [`UnityCatalogBuilder`] instance"
+        },
+        {
+          "name": "client_id",
+          "signature": "fn client_id(self, client_id: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, (Option<String>,), __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Client id"
+        },
+        {
+          "name": "client_options",
+          "signature": "fn client_options(self, client_options: client::ClientOptions) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, (client::ClientOptions,), __token_credential)>",
+          "summary": "Options for the underlying http client"
+        },
+        {
+          "name": "client_secret",
+          "signature": "fn client_secret(self, client_secret: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, (Option<String>,), __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Client secret"
+        },
+        {
+          "name": "federated_token_file",
+          "signature": "fn federated_token_file(self, federated_token_file: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, (Option<String>,), __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "File containing token for Azure AD workload identity federation"
+        },
+        {
+          "name": "msi_endpoint",
+          "signature": "fn msi_endpoint(self, msi_endpoint: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, (Option<String>,), __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Msi endpoint for acquiring managed identity token"
+        },
+        {
+          "name": "msi_resource_id",
+          "signature": "fn msi_resource_id(self, msi_resource_id: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, (Option<String>,), __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Msi resource id for use with managed identity authentication"
+        },
+        {
+          "name": "object_id",
+          "signature": "fn object_id(self, object_id: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, (Option<String>,), __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Object id for use with managed identity authentication"
+        },
+        {
+          "name": "retry_config",
+          "signature": "fn retry_config(self, retry_config: RetryConfig) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, (RetryConfig,), __client_options, __token_credential)>",
+          "summary": "Retry config"
+        },
+        {
+          "name": "token_credential",
+          "signature": "fn token_credential(self, token_credential: Option<Box<dyn TokenCredential>>) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, (Option<Box<dyn TokenCredential>>,))>",
+          "summary": "When set, this token credential will be used for acquiring access tokens"
+        },
+        {
+          "name": "use_azure_cli",
+          "signature": "fn use_azure_cli(self, use_azure_cli: bool) -> UnityCatalogBuilderBuilder<(__workspace_url, __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, (bool,), __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "When set to true, azure cli has to be used for acquiring access token"
+        },
+        {
+          "name": "workspace_url",
+          "signature": "fn workspace_url(self, workspace_url: impl ::core::convert::Into<String>) -> UnityCatalogBuilderBuilder<((Option<String>,), __bearer_token, __client_id, __client_secret, __authority_id, __authority_host, __msi_endpoint, __object_id, __msi_resource_id, __federated_token_file, __use_azure_cli, __allow_http_url, __retry_config, __client_options, __token_credential)>",
+          "summary": "Url of a Databricks workspace"
+        }
+      ]
+    },
+    {
+      "path": "deltalake_catalog_unity::UnityCatalogFactory",
+      "name": "UnityCatalogFactory",
+      "kind": "struct",
+      "crate": "deltalake-catalog-unity",
+      "signature": "struct UnityCatalogFactory",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "deltalake::unity_catalog::UnityCatalogFactory"
+      ],
+      "implements": [
+        "deltalake_core::logstore::factories::LogStoreFactory",
+        "deltalake_core::logstore::factories::ObjectStoreFactory"
+      ],
+      "methods": [
+        {
+          "name": "parse_url_opts",
+          "signature": "fn parse_url_opts(&self, table_uri: &Url, config: &StorageConfig) -> DeltaResult<(ObjectStoreRef, Path)>",
+          "via_trait": "deltalake_core::logstore::factories::ObjectStoreFactory"
+        },
+        {
+          "name": "with_options",
+          "signature": "fn with_options(&self, prefixed_store: ObjectStoreRef, root_store: ObjectStoreRef, location: &Url, options: &StorageConfig) -> DeltaResult<Arc<dyn LogStore>>",
+          "via_trait": "deltalake_core::logstore::factories::LogStoreFactory"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+id: model-ext-traits
+language: json
+severity: hint
+message: An extension trait whose methods are invisible until the trait is imported.
+note: |
+  delta-rs adds capability to kernel and foreign types through `*Ext` traits rather than by
+  wrapping them. `TableProperties` gains its accessors from `TablePropertiesExt`, `StructType`
+  gains its from `StructTypeExt`. None of those methods appear on the type in an editor, in a
+  doc page, or to anyone reading the type's own definition, until the trait is in scope -- which
+  makes these the easiest capability in this library to conclude does not exist.
+  Run against content/model.
+metadata:
+  record: extension-trait
+  reads: content/model
+rule:
+  all:
+    - matches: json-record
+    - has:
+        matches:
+          json-string-field:
+            key-pattern: { regex: '^"kind"$' }
+            value-pattern: { regex: '^"trait"$' }
+    - has:
+        matches:
+          json-string-field:
+            key-pattern: { regex: '^"name"$' }
+            value-pattern: { regex: 'Ext"$' }

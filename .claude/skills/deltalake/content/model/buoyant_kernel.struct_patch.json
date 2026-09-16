@@ -1,0 +1,280 @@
+{
+  "module": "buoyant_kernel::struct_patch",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.struct_patch.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::struct_patch::ExpressionFieldPatch",
+      "name": "ExpressionFieldPatch",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ExpressionFieldPatch",
+      "summary": "A patch affecting a single input field.",
+      "doc": "api/buoyant_kernel.struct_patch.md#expressionfieldpatch",
+      "aliases": [
+        "buoyant_kernel::expressions::ExpressionFieldPatch",
+        "delta_kernel::struct_patch::ExpressionFieldPatch"
+      ],
+      "fields": [
+        "keep_input",
+        "insertions",
+        "optional"
+      ],
+      "implements": [
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::struct_patch::ExpressionStructPatch",
+      "name": "ExpressionStructPatch",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ExpressionStructPatch",
+      "summary": "A sparse expression patch over the fields of one input struct.",
+      "doc": "api/buoyant_kernel.struct_patch.md#expressionstructpatch",
+      "aliases": [
+        "buoyant_kernel::expressions::ExpressionStructPatch",
+        "delta_kernel::struct_patch::ExpressionStructPatch"
+      ],
+      "fields": [
+        "input_path",
+        "field_patches",
+        "prepended_fields",
+        "appended_fields"
+      ],
+      "implements": [
+        "core::convert::TryFrom",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<__D>(__deserializer: __D) -> _serde::__private229::Result<Self, __D::Error> where __D: _serde::Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "input_path",
+          "signature": "fn input_path(&self) -> Option<&ColumnName>",
+          "summary": "None if this is a top-level patch. Otherwise, the path of this nested patch."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "True if this patch makes no changes to the selected input struct."
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "try_from",
+          "signature": "fn try_from(builder: StructPatchBuilder<ExpressionRef>) -> DeltaResult<Self>",
+          "via_trait": "core::convert::TryFrom"
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::struct_patch::ProjectionStructPatchBuilder",
+      "name": "ProjectionStructPatchBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ProjectionStructPatchBuilder<'a>",
+      "summary": "Builds schema and expression patches together over an input schema.",
+      "doc": "api/buoyant_kernel.struct_patch.md#projectionstructpatchbuilder",
+      "aliases": [
+        "delta_kernel::struct_patch::ProjectionStructPatchBuilder"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(self, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, after all input fields and field-specific insertions."
+        },
+        {
+          "name": "append_at",
+          "signature": "fn append_at(self, struct_path: impl CollectInto<ColumnName>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, after all fields of a nested struct."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<(SchemaRef, ExpressionRef)>",
+          "summary": "Builds a full output schema together with a matching sparse struct-patch expression. Untouched input fields pass through implicitly and only inserted, replaced, dropped, or nested fields are recorded."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(self, field_name: impl Into<String>) -> Self",
+          "summary": "Records a field drop. The dropped field is omitted from both the output schema and the emitted expressions."
+        },
+        {
+          "name": "drop_at",
+          "signature": "fn drop_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>) -> Self",
+          "summary": "Records a field drop in a nested struct."
+        },
+        {
+          "name": "drop_if_exists",
+          "signature": "fn drop_if_exists(self, field_name: impl Into<String>) -> Self",
+          "summary": "Records an optional field drop, tolerated when the input field is absent."
+        },
+        {
+          "name": "drop_if_exists_at",
+          "signature": "fn drop_if_exists_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>) -> Self",
+          "summary": "Records an optional field drop in a nested struct."
+        },
+        {
+          "name": "insert_after",
+          "signature": "fn insert_after(self, field_name: impl Into<String>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, immediately after the named input field."
+        },
+        {
+          "name": "insert_after_at",
+          "signature": "fn insert_after_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, after the named input field of a nested struct."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(input_schema: &'a StructType) -> Self",
+          "summary": "Creates a new top-level projection patch builder over `input_schema`."
+        },
+        {
+          "name": "new_nested",
+          "signature": "fn new_nested(input_schema: &'a StructType, path: impl CollectInto<ColumnName>) -> Self",
+          "summary": "Creates a projection patch builder over `input_schema` that operates on the nested struct identified by `path`."
+        },
+        {
+          "name": "prepend",
+          "signature": "fn prepend(self, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, before all input fields."
+        },
+        {
+          "name": "prepend_at",
+          "signature": "fn prepend_at(self, struct_path: impl CollectInto<ColumnName>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Emits `field`, produced by `expr`, before all fields of a nested struct."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace(self, field_name: impl Into<String>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Replaces the named field with `field`, produced by `expr`."
+        },
+        {
+          "name": "replace_at",
+          "signature": "fn replace_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>, field: StructField, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Replaces the named field in a nested struct with `field`, produced by `expr`."
+        },
+        {
+          "name": "replace_expr",
+          "signature": "fn replace_expr(self, field_name: impl Into<String>, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Replaces the named field's expression while preserving its input [`StructField`]."
+        },
+        {
+          "name": "replace_expr_at",
+          "signature": "fn replace_expr_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>, expr: impl Into<ExpressionRef>) -> Self",
+          "summary": "Replaces a nested field's expression while preserving its input [`StructField`]."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::struct_patch::StructPatchBuilder",
+      "name": "StructPatchBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct StructPatchBuilder<Item>",
+      "summary": "Builds a sparse struct patch from a sequence of requested patch operations.",
+      "doc": "api/buoyant_kernel.struct_patch.md#structpatchbuilder",
+      "aliases": [
+        "delta_kernel::struct_patch::StructPatchBuilder"
+      ],
+      "methods": [
+        {
+          "name": "append",
+          "signature": "fn append(self, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to append after all input fields and field-specific insertions."
+        },
+        {
+          "name": "append_at",
+          "signature": "fn append_at(self, struct_path: impl CollectInto<ColumnName>, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to append after all fields of a nested struct."
+        },
+        {
+          "name": "build",
+          "signature": "fn build(self, input_schema: &StructType) -> DeltaResult<StructType>",
+          "summary": "Builds the output struct schema for this patch over `input_schema`."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(self, field_name: impl Into<String>) -> Self",
+          "summary": "Records a field drop."
+        },
+        {
+          "name": "drop_at",
+          "signature": "fn drop_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>) -> Self",
+          "summary": "Records a field drop in a nested struct."
+        },
+        {
+          "name": "drop_if_exists",
+          "signature": "fn drop_if_exists(self, field_name: impl Into<String>) -> Self",
+          "summary": "Records an optional field drop."
+        },
+        {
+          "name": "drop_if_exists_at",
+          "signature": "fn drop_if_exists_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>) -> Self",
+          "summary": "Records an optional field drop in a nested struct."
+        },
+        {
+          "name": "insert_after",
+          "signature": "fn insert_after(self, field_name: impl Into<String>, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to insert after the named field."
+        },
+        {
+          "name": "insert_after_at",
+          "signature": "fn insert_after_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to insert after the named field in a nested struct."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates a new top-level patch builder."
+        },
+        {
+          "name": "new_nested",
+          "signature": "fn new_nested(path: impl CollectInto<ColumnName>) -> Self",
+          "summary": "Creates a new builder that operates on fields of a nested struct identified by `path`."
+        },
+        {
+          "name": "prepend",
+          "signature": "fn prepend(self, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to emit before processing the first input field."
+        },
+        {
+          "name": "prepend_at",
+          "signature": "fn prepend_at(self, struct_path: impl CollectInto<ColumnName>, item: impl Into<Item>) -> Self",
+          "summary": "Records an item to emit before processing the first input field of a nested struct."
+        },
+        {
+          "name": "replace",
+          "signature": "fn replace(self, field_name: impl Into<String>, item: impl Into<Item>) -> Self",
+          "summary": "Records a field replacement."
+        },
+        {
+          "name": "replace_at",
+          "signature": "fn replace_at(self, struct_path: impl CollectInto<ColumnName>, field_name: impl Into<String>, item: impl Into<Item>) -> Self",
+          "summary": "Records a field replacement in a nested struct."
+        }
+      ]
+    }
+  ]
+}

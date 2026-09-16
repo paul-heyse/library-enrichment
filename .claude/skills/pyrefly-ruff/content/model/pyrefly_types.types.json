@@ -1,0 +1,1297 @@
+{
+  "module": "pyrefly_types::types",
+  "crate": "pyrefly_types",
+  "api": "api/pyrefly_types.types.md",
+  "items": [
+    {
+      "path": "pyrefly_types::types::AnyStyle",
+      "name": "AnyStyle",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum AnyStyle",
+      "summary": "The types of Any. Prefer later ones where we have multiple.",
+      "doc": "api/pyrefly_types.types.md#anystyle",
+      "variants": [
+        "Explicit",
+        "Implicit",
+        "Error"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "propagate",
+          "signature": "fn propagate(self) -> Type"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::BoundMethodType",
+      "name": "BoundMethodType",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum BoundMethodType",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Function",
+        "Forall",
+        "Overload"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_type",
+          "signature": "fn as_type(self) -> Type"
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &FuncMetadata"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "strip_receiver",
+          "signature": "fn strip_receiver(&self) -> Option<Self>",
+          "summary": "The signature callers see, with the receiver parameter that binding already consumed removed. Returns `None` when no parameter can be stripped, which happens for signatures like `(...) -> T` that have no leading positional param."
+        },
+        {
+          "name": "subst_self_type_mut",
+          "signature": "fn subst_self_type_mut(&mut self, replacement: &Type)"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::CalleeKind",
+      "name": "CalleeKind",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum CalleeKind",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Callable",
+        "Function",
+        "Class"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Forallable",
+      "name": "Forallable",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Forallable",
+      "summary": "These are things that can have Forall around them, so often you see `Forall<Forallable>`",
+      "doc": "api/pyrefly_types.types.md#forallable",
+      "variants": [
+        "TypeAlias",
+        "Function",
+        "Callable"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_type",
+          "signature": "fn as_type(self) -> Type"
+        },
+        {
+          "name": "forall",
+          "signature": "fn forall(self, tparams: Arc<TParams>) -> Type"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> Cow<'_, Name>"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::NeverStyle",
+      "name": "NeverStyle",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum NeverStyle",
+      "summary": "The types of Never. Prefer later ones where we have multiple.",
+      "doc": "api/pyrefly_types.types.md#neverstyle",
+      "variants": [
+        "NoReturn",
+        "Never"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::OverloadType",
+      "name": "OverloadType",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum OverloadType",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Function",
+        "Forall"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_type",
+          "signature": "fn as_type(&self) -> Type"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::SuperObj",
+      "name": "SuperObj",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum SuperObj",
+      "summary": "The second argument (implicit or explicit) to a super() call. Either an instance of a class (inside an instance method) or a class object (inside a classmethod or staticmethod)",
+      "doc": "api/pyrefly_types.types.md#superobj",
+      "variants": [
+        "Instance",
+        "Class"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::TParamsSource",
+      "name": "TParamsSource",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum TParamsSource",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Class",
+        "TypeAlias",
+        "Function"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Type",
+      "name": "Type",
+      "kind": "enum",
+      "crate": "pyrefly_types",
+      "signature": "enum Type",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "Literal",
+        "LiteralString",
+        "Callable",
+        "CallableResidual",
+        "TypeLevelDslCall",
+        "Function",
+        "BoundMethod",
+        "Overload",
+        "Union",
+        "Intersect",
+        "ClassDef",
+        "ClassType",
+        "TypedDict",
+        "PartialTypedDict",
+        "ShapedArray",
+        "IntTuple",
+        "NNModule",
+        "DataFrame",
+        "Series",
+        "Int",
+        "Tuple",
+        "Module",
+        "Forall",
+        "Var",
+        "Quantified",
+        "QuantifiedValue",
+        "ElementOfTypeVarTuple",
+        "TypeGuard",
+        "TypeIs",
+        "Annotated",
+        "Unpack",
+        "TypeVar",
+        "ParamSpec",
+        "TypeVarTuple",
+        "SpecialForm",
+        "Concatenate",
+        "ParamSpecValue",
+        "Args",
+        "Kwargs",
+        "ArgsValue",
+        "KwargsValue",
+        "Type",
+        "TypeForm",
+        "Ellipsis",
+        "Any",
+        "Never",
+        "TypeAlias",
+        "UntypedAlias",
+        "Sentinel",
+        "SuperInstance",
+        "SelfType",
+        "KwCall",
+        "Materialization",
+        "None"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "any",
+          "signature": "fn any(&self, predicate: impl FnMut(&Type) -> bool) -> bool"
+        },
+        {
+          "name": "any_error",
+          "signature": "fn any_error() -> Self"
+        },
+        {
+          "name": "any_explicit",
+          "signature": "fn any_explicit() -> Self"
+        },
+        {
+          "name": "any_implicit",
+          "signature": "fn any_implicit() -> Self"
+        },
+        {
+          "name": "any_tuple",
+          "signature": "fn any_tuple() -> Self"
+        },
+        {
+          "name": "arc_clone",
+          "signature": "fn arc_clone(Arc<self>) -> Self"
+        },
+        {
+          "name": "as_bool",
+          "signature": "fn as_bool(&self) -> Option<bool>"
+        },
+        {
+          "name": "as_lsp_string",
+          "signature": "fn as_lsp_string(&self, mode: LspDisplayMode) -> String"
+        },
+        {
+          "name": "as_lsp_string_with_options",
+          "signature": "fn as_lsp_string_with_options(&self, fallback_name: Option<&str>, mode: LspDisplayMode, expand_unions: bool, qualify_outside: Option<ModuleName>) -> String",
+          "summary": "Render the type for LSP display."
+        },
+        {
+          "name": "as_module",
+          "signature": "fn as_module(&self) -> Option<&ModuleType>"
+        },
+        {
+          "name": "as_quantified",
+          "signature": "fn as_quantified(&self) -> Option<(&Quantified, Option<&Type>)>",
+          "summary": "If this type represents a (possibly narrowed) quantified (i.e., `Q`  or `Q & T`), returns the quantified `Q` plus the type `T` it is narrowed to."
+        },
+        {
+          "name": "as_shape_literal",
+          "signature": "fn as_shape_literal(&self) -> Option<i64>",
+          "summary": "Extract the literal value from a `Int::Literal`, if this is one."
+        },
+        {
+          "name": "callable",
+          "signature": "fn callable(params: Vec<Param>, ret: Type) -> Self"
+        },
+        {
+          "name": "callable_concatenate",
+          "signature": "fn callable_concatenate(args: Box<[PrefixParam]>, param_spec: Type, ret: Type) -> Self"
+        },
+        {
+          "name": "callable_ellipsis",
+          "signature": "fn callable_ellipsis(ret: Type) -> Self"
+        },
+        {
+          "name": "callable_first_param",
+          "signature": "fn callable_first_param(&self, heap: &TypeHeap) -> Option<Type>"
+        },
+        {
+          "name": "callable_param_spec",
+          "signature": "fn callable_param_spec(p: Type, ret: Type) -> Self"
+        },
+        {
+          "name": "callable_residual_generic",
+          "signature": "fn callable_residual_generic(quantified: Quantified) -> Type"
+        },
+        {
+          "name": "callable_residual_overload",
+          "signature": "fn callable_residual_overload(identity: OverloadResidualIdentity, branches: Vec<OverloadBranchProjection>) -> Type"
+        },
+        {
+          "name": "callable_return_type",
+          "signature": "fn callable_return_type(&self, heap: &TypeHeap) -> Option<Type>"
+        },
+        {
+          "name": "callee_kind",
+          "signature": "fn callee_kind(&self) -> Option<CalleeKind>"
+        },
+        {
+          "name": "canonicalize",
+          "signature": "fn canonicalize(self) -> Self",
+          "summary": "Canonicalize a dimension expression to a unique normal form."
+        },
+        {
+          "name": "clean_var",
+          "signature": "fn clean_var(self) -> Type"
+        },
+        {
+          "name": "collect_all_vars",
+          "signature": "fn collect_all_vars(&self) -> Vec<Var>",
+          "summary": "Collects all `Var`s that appear in the type. IMPORTANT: This function can be expensive. Consider using `collect_maybe_placeholder_vars` instead."
+        },
+        {
+          "name": "collect_maybe_placeholder_vars",
+          "signature": "fn collect_maybe_placeholder_vars(&self) -> Vec<Var>",
+          "summary": "Collect \"placeholder\" vars - vars that are placeholders for a not-yet-solved type, like Variable::Quantified. Contrast this with Variable::Recursive, which serves as a marker that we've encountered recursion. Note that this function is use…"
+        },
+        {
+          "name": "collect_quantifieds",
+          "signature": "fn collect_quantifieds<'a>(&'a self, acc: &mut SmallSet<&'a Quantified>)"
+        },
+        {
+          "name": "collect_raw_legacy_type_variables",
+          "signature": "fn collect_raw_legacy_type_variables(&self, acc: &mut Vec<Name>)",
+          "summary": "Collect unreplaced references to legacy type variables. Note that references to in-scope legacy type variables in functions and classes are replaced with Quantified, so unreplaced references only appear in cases like a TypeVar definition o…"
+        },
+        {
+          "name": "concrete_tuple",
+          "signature": "fn concrete_tuple(elts: Vec<Type>) -> Self"
+        },
+        {
+          "name": "contains_overload_callable_residual",
+          "signature": "fn contains_overload_callable_residual(&self) -> bool",
+          "summary": "Check if the type contains an overload callable residual marker anywhere."
+        },
+        {
+          "name": "contains_type_variable",
+          "signature": "fn contains_type_variable(&self) -> bool",
+          "summary": "Checks if the type contains any reference to a type variable. This may be a reference that has been resolved to a function- or class-scoped type parameter (i.e., a Quantified) or an unresolved reference to a legacy type variable."
+        },
+        {
+          "name": "deterministic_printing",
+          "signature": "fn deterministic_printing(self) -> Self",
+          "summary": "Used prior to display to ensure unique variables don't leak out non-deterministically."
+        },
+        {
+          "name": "explicit_any",
+          "signature": "fn explicit_any(self) -> Self"
+        },
+        {
+          "name": "finalize_callable_residuals_at_boundary",
+          "signature": "fn finalize_callable_residuals_at_boundary(self, heap: &TypeHeap, preserve_class_targs: bool) -> Type",
+          "summary": "Finalize callable residuals at a substitution boundary (a return type or class field)."
+        },
+        {
+          "name": "finalize_type_level_dsl_at_boundary",
+          "signature": "fn finalize_type_level_dsl_at_boundary(&mut self) -> Vec<dimension::ShapeError>"
+        },
+        {
+          "name": "flatten_overload_residual_markers",
+          "signature": "fn flatten_overload_residual_markers(&mut self, heap: &TypeHeap)",
+          "summary": "Finishing invariant: overload residual branch types must not contain overload residual markers. This keeps boundary finalization to one overload pass followed by one generic pass."
+        },
+        {
+          "name": "flatten_residuals",
+          "signature": "fn flatten_residuals(self, heap: &TypeHeap) -> Type",
+          "summary": "Replace all callable residual markers with their fallback types."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "for_each_free_quantified",
+          "signature": "fn for_each_free_quantified<'a>(&'a self, f: &mut impl FnMut(&'a Quantified))",
+          "summary": "Visits quantified variables that are not bound by a containing callable or type-level map."
+        },
+        {
+          "name": "for_each_quantified",
+          "signature": "fn for_each_quantified<'a>(&'a self, f: &mut impl FnMut(&'a Quantified))"
+        },
+        {
+          "name": "function_deprecation",
+          "signature": "fn function_deprecation(&self) -> Option<&Deprecation>"
+        },
+        {
+          "name": "get_annotation_parts",
+          "signature": "fn get_annotation_parts(&self, stdlib: Option<&Stdlib>) -> Vec<AnnotationPart>",
+          "summary": "Render an annotation while preserving semantic module references."
+        },
+        {
+          "name": "get_types_with_locations",
+          "signature": "fn get_types_with_locations(&self, stdlib: Option<&Stdlib>) -> Vec<(String, Option<TextRangeWithModule>)>"
+        },
+        {
+          "name": "has_final_decoration",
+          "signature": "fn has_final_decoration(&self) -> bool"
+        },
+        {
+          "name": "has_toplevel_func_metadata",
+          "signature": "fn has_toplevel_func_metadata(&self) -> bool"
+        },
+        {
+          "name": "into_unions",
+          "signature": "fn into_unions(self) -> Vec<Type>"
+        },
+        {
+          "name": "is_abstract_method",
+          "signature": "fn is_abstract_method(&self) -> bool"
+        },
+        {
+          "name": "is_any",
+          "signature": "fn is_any(&self) -> bool"
+        },
+        {
+          "name": "is_ellipsis_value",
+          "signature": "fn is_ellipsis_value(&self) -> bool",
+          "summary": "Returns true if this is the type of a `...` value, e.g., `x: int = ...`. Note the difference with `Type::Ellipsis`, which represents `...` in a type annotation, e.g., `x: Callable[Concatenate[int, ...], int]`."
+        },
+        {
+          "name": "is_error",
+          "signature": "fn is_error(&self) -> bool"
+        },
+        {
+          "name": "is_explicit_type_variable",
+          "signature": "fn is_explicit_type_variable(&self) -> bool",
+          "summary": "Returns `true` if this type is an explicit type variable — i.e., a `Quantified` or legacy `TypeVar` that a user wrote in an annotation."
+        },
+        {
+          "name": "is_implicit_literal",
+          "signature": "fn is_implicit_literal(&self) -> bool"
+        },
+        {
+          "name": "is_kind_param_spec",
+          "signature": "fn is_kind_param_spec(&self) -> bool"
+        },
+        {
+          "name": "is_kind_type_var_tuple",
+          "signature": "fn is_kind_type_var_tuple(&self) -> bool"
+        },
+        {
+          "name": "is_literal_string",
+          "signature": "fn is_literal_string(&self) -> bool"
+        },
+        {
+          "name": "is_never",
+          "signature": "fn is_never(&self) -> bool"
+        },
+        {
+          "name": "is_none",
+          "signature": "fn is_none(&self) -> bool"
+        },
+        {
+          "name": "is_overload",
+          "signature": "fn is_overload(&self) -> bool"
+        },
+        {
+          "name": "is_override",
+          "signature": "fn is_override(&self) -> bool"
+        },
+        {
+          "name": "is_property_getter",
+          "signature": "fn is_property_getter(&self) -> bool"
+        },
+        {
+          "name": "is_property_setter_with_getter",
+          "signature": "fn is_property_setter_with_getter(&self) -> Option<Type>"
+        },
+        {
+          "name": "is_raw_legacy_type_variable",
+          "signature": "fn is_raw_legacy_type_variable(&self) -> bool",
+          "summary": "Is this type an unreplaced reference to a legacy type variable? Note that references to in-scope legacy type variables in functions and classes are replaced with Quantified, so this type only appears in cases like a TypeVar definition or a…"
+        },
+        {
+          "name": "is_scalar",
+          "signature": "fn is_scalar(&self) -> bool",
+          "summary": "A scalar type cannot decompose into a container element type."
+        },
+        {
+          "name": "is_toplevel_callable",
+          "signature": "fn is_toplevel_callable(&self) -> bool"
+        },
+        {
+          "name": "is_typed_dict",
+          "signature": "fn is_typed_dict(&self) -> bool"
+        },
+        {
+          "name": "is_typeguard",
+          "signature": "fn is_typeguard(&self) -> bool"
+        },
+        {
+          "name": "is_typeis",
+          "signature": "fn is_typeis(&self) -> bool"
+        },
+        {
+          "name": "is_union",
+          "signature": "fn is_union(&self) -> bool"
+        },
+        {
+          "name": "is_unpack",
+          "signature": "fn is_unpack(&self) -> bool"
+        },
+        {
+          "name": "lit_string_style",
+          "signature": "fn lit_string_style(&self) -> Option<&LitStyle>",
+          "summary": "If this type is a literal string (either `LiteralString` or a `Literal` string value), return its `LitStyle`."
+        },
+        {
+          "name": "materialize",
+          "signature": "fn materialize(&self) -> Self"
+        },
+        {
+          "name": "may_contain_placeholder_var",
+          "signature": "fn may_contain_placeholder_var(&self) -> bool",
+          "summary": "Check if the type contains a placeholder var. See `collect_maybe_placeholder_vars`."
+        },
+        {
+          "name": "never",
+          "signature": "fn never() -> Self"
+        },
+        {
+          "name": "optional",
+          "signature": "fn optional(x: Self) -> Self",
+          "summary": "Create an optional type (union with None)."
+        },
+        {
+          "name": "promote_implicit_literals",
+          "signature": "fn promote_implicit_literals(self, stdlib: &Stdlib) -> Type"
+        },
+        {
+          "name": "promote_shallow_implicit_literals",
+          "signature": "fn promote_shallow_implicit_literals(self, stdlib: &Stdlib) -> Type",
+          "summary": "Like `promote_implicit_literals` but only recurses into unions."
+        },
+        {
+          "name": "property_metadata",
+          "signature": "fn property_metadata(&self) -> Option<&PropertyMetadata>"
+        },
+        {
+          "name": "qname",
+          "signature": "fn qname(&self) -> Option<&QName>",
+          "summary": "Does this type have a QName associated with it"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Self))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Self))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "set_property_metadata",
+          "signature": "fn set_property_metadata(&mut self, metadata: PropertyMetadata) -> bool",
+          "summary": "Returns `true` if the metadata was successfully set (i.e., the type is function-like)."
+        },
+        {
+          "name": "strip_library_schemas",
+          "signature": "fn strip_library_schemas(self) -> Type",
+          "summary": "Replace every DataFrame and Series schema with its plain underlying class. The schema forms (`DataFrame[a: Int64, ...]`, `Series[Int64]`) are not valid annotation syntax, so a surface that emits a type as source must strip them first."
+        },
+        {
+          "name": "subst",
+          "signature": "fn subst(self, mp: &SmallMap<&Quantified, &Type>) -> Self"
+        },
+        {
+          "name": "subst_mut",
+          "signature": "fn subst_mut(&mut self, mp: &SmallMap<&Quantified, &Type>)"
+        },
+        {
+          "name": "subst_mut_fn",
+          "signature": "fn subst_mut_fn(&mut self, mp: &mut dyn FnMut(&Quantified) -> Option<Type>)",
+          "summary": "Substitutes free quantified values while respecting `Forall` and `MapIntTuples` binders."
+        },
+        {
+          "name": "subst_self_special_form_mut",
+          "signature": "fn subst_self_special_form_mut(&mut self, self_type: &Type)"
+        },
+        {
+          "name": "subst_self_type_mut",
+          "signature": "fn subst_self_type_mut(&mut self, replacement: &Type)"
+        },
+        {
+          "name": "to_callable",
+          "signature": "fn to_callable(self) -> Option<Callable>"
+        },
+        {
+          "name": "to_func_kind",
+          "signature": "fn to_func_kind(&self) -> Option<&FunctionKind>",
+          "summary": "Return the FunctionKind if this type corresponds to a function or method."
+        },
+        {
+          "name": "toplevel_callable_signatures",
+          "signature": "fn toplevel_callable_signatures(&self) -> impl Iterator<Item = (&Callable, Option<&Arc<TParams>>)>",
+          "summary": "Get this type's signatures with type parameters if it is a callable. Note that we do *not* recurse into the type to find nested callable types. Keep in sync with `Type::transform_toplevel_callable_signatures`."
+        },
+        {
+          "name": "toplevel_func_metadata",
+          "signature": "fn toplevel_func_metadata(&self) -> Option<&FuncMetadata>",
+          "summary": "Gets this type's function metadata if it is a function. Note that we do *not* recurse into the type to find nested function types. Keep in sync with `Type::toplevel_func_metadata_mut`."
+        },
+        {
+          "name": "toplevel_func_metadata_mut",
+          "signature": "fn toplevel_func_metadata_mut(&mut self) -> Option<&mut FuncMetadata>",
+          "summary": "Keep in sync with `Type::toplevel_func_metadata`."
+        },
+        {
+          "name": "transform",
+          "signature": "fn transform(self, f: &mut dyn FnMut(&mut Type)) -> Self"
+        },
+        {
+          "name": "transform_mut",
+          "signature": "fn transform_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "summary": "Visit every type, with the guarantee you will have seen included types before the parent."
+        },
+        {
+          "name": "transform_toplevel_callable_signatures",
+          "signature": "fn transform_toplevel_callable_signatures(&mut self, f: impl FnMut(&mut Callable, &mut Option<Arc<TParams>>))",
+          "summary": "Transform this type if it is a callable. Note that we do *not* recurse into the type to find nested callable types. Keep in sync with `Type::toplevel_callable_signatures`."
+        },
+        {
+          "name": "transform_types_in_type_variable_positions",
+          "signature": "fn transform_types_in_type_variable_positions(&mut self, f: &mut dyn FnMut(&mut Type))"
+        },
+        {
+          "name": "truncate_class_nesting",
+          "signature": "fn truncate_class_nesting(self, max_depth: usize, max_inner_union_width: usize, any: &Type) -> Type",
+          "summary": "Truncate container nesting depth and inner Union width, replacing over-budget nodes with `any`."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "type_of",
+          "signature": "fn type_of(inner: Type) -> Self"
+        },
+        {
+          "name": "unbounded_tuple",
+          "signature": "fn unbounded_tuple(elt: Type) -> Self"
+        },
+        {
+          "name": "union",
+          "signature": "fn union(members: Vec<Type>) -> Self",
+          "summary": "Creates a union from the provided types without simplifying"
+        },
+        {
+          "name": "union_width",
+          "signature": "fn union_width(&self) -> usize",
+          "summary": "Returns the number of top-level alternatives in a union, or 1 for non-union types."
+        },
+        {
+          "name": "universe",
+          "signature": "fn universe<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "summary": "Visit every type, with the guarantee you will have seen included types before the parent."
+        },
+        {
+          "name": "unpacked_tuple",
+          "signature": "fn unpacked_tuple(prefix: Vec<Type>, middle: Type, suffix: Vec<Type>) -> Self"
+        },
+        {
+          "name": "unpacked_typed_dict",
+          "signature": "fn unpacked_typed_dict(&self) -> Option<&TypedDict>",
+          "summary": "The `TypedDict` of an `Unpack[TypedDict]`, the annotation form a `**kwargs` parameter uses to accept each field as a keyword argument. `None` for any other type, including `Unpack` of a non-`TypedDict` such as a `TypeVarTuple`."
+        },
+        {
+          "name": "with_literal_style",
+          "signature": "fn with_literal_style(self, style: LitStyle) -> Self"
+        },
+        {
+          "name": "without_property_metadata",
+          "signature": "fn without_property_metadata(&self) -> Type"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::BoundMethod",
+      "name": "BoundMethod",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct BoundMethod",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "obj",
+        "func"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_type",
+          "signature": "fn as_type(self) -> Type"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        },
+        {
+          "name": "with_bound_object",
+          "signature": "fn with_bound_object(&self, obj: Type) -> Self"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Forall",
+      "name": "Forall",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Forall<T>",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "tparams",
+        "body"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "apply_targs",
+          "signature": "fn apply_targs(self, targs: TArgs) -> Type"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::NNModuleType",
+      "name": "NNModuleType",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct NNModuleType",
+      "summary": "An nn.Module instance with captured constructor arguments.",
+      "doc": "api/pyrefly_types.types.md#nnmoduletype",
+      "fields": [
+        "class",
+        "fields"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(class: ClassType, fields: SmallMap<Name, Type>) -> Self",
+          "summary": "Create a new NNModuleType with the given class and captured fields."
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Overload",
+      "name": "Overload",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Overload",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "signatures",
+        "metadata"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Substitution",
+      "name": "Substitution",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Substitution<'a>",
+      "summary": "",
+      "doc": null,
+      "methods": [
+        {
+          "name": "for_prefix",
+          "signature": "fn for_prefix(tparams: &'a TParams, args: &'a [Type]) -> Self",
+          "summary": "Builds a substitution for a prefix of `tparams` by pairing `args` with the first `args.len()` parameters."
+        },
+        {
+          "name": "substitute_into",
+          "signature": "fn substitute_into(&self, ty: Type) -> Type"
+        },
+        {
+          "name": "substitute_into_mut",
+          "signature": "fn substitute_into_mut(&self, ty: &mut Type)"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::TArgs",
+      "name": "TArgs",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TArgs",
+      "summary": "",
+      "doc": null,
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_mut",
+          "signature": "fn as_mut(&mut self) -> &mut [Type]"
+        },
+        {
+          "name": "as_slice",
+          "signature": "fn as_slice(&self) -> &[Type]"
+        },
+        {
+          "name": "display_count",
+          "signature": "fn display_count(&self) -> usize",
+          "summary": "Returns the number of type arguments to display, stripping trailing args that match their parameter defaults (WYSIWYG display per issue #2461)."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "iter_paired",
+          "signature": "fn iter_paired(&self) -> impl ExactSizeIterator<Item = (&Quantified, &Type)>"
+        },
+        {
+          "name": "iter_paired_mut",
+          "signature": "fn iter_paired_mut(&mut self) -> impl ExactSizeIterator<Item = (&Quantified, &mut Type)>"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(tparams: Arc<TParams>, targs: Vec<Type>) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a Type))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut Type))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "split_mut",
+          "signature": "fn split_mut(&mut self) -> (&TParams, &mut [Type])"
+        },
+        {
+          "name": "substitute_into",
+          "signature": "fn substitute_into(&self, ty: Type) -> Type"
+        },
+        {
+          "name": "substitute_into_mut",
+          "signature": "fn substitute_into_mut(&self, ty: &mut Type)"
+        },
+        {
+          "name": "substitute_with",
+          "signature": "fn substitute_with(&self, substitution: &Substitution<'_>) -> Self",
+          "summary": "Apply a substitution to type arguments."
+        },
+        {
+          "name": "substitution",
+          "signature": "fn substitution<'a>(&'a self) -> Substitution<'a>"
+        },
+        {
+          "name": "substitution_map",
+          "signature": "fn substitution_map(&self) -> SmallMap<&Quantified, &Type>"
+        },
+        {
+          "name": "tparams",
+          "signature": "fn tparams(&self) -> &TParams"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::TParams",
+      "name": "TParams",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct TParams",
+      "summary": "Wraps a vector of type parameters.",
+      "doc": "api/pyrefly_types.types.md#tparams",
+      "implements": [
+        "core::fmt::Display",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "as_vec",
+          "signature": "fn as_vec(&self) -> &[Quantified]"
+        },
+        {
+          "name": "empty",
+          "signature": "fn empty() -> TParams"
+        },
+        {
+          "name": "empty_ref",
+          "signature": "fn empty_ref() -> &'static Self"
+        },
+        {
+          "name": "extend",
+          "signature": "fn extend(&mut self, other: &TParams)"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool"
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl ExactSizeIterator<Item = &Quantified>"
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(tparams: Vec<Quantified>) -> TParams"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "truncate_recursive_targs",
+          "signature": "fn truncate_recursive_targs(self) -> Self",
+          "summary": "Truncate recursive TArgs nesting in Quantified restrictions."
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Union",
+      "name": "Union",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Union",
+      "summary": "",
+      "doc": null,
+      "fields": [
+        "members",
+        "display_name"
+      ],
+      "implements": [
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    },
+    {
+      "path": "pyrefly_types::types::Var",
+      "name": "Var",
+      "kind": "struct",
+      "crate": "pyrefly_types",
+      "signature": "struct Var",
+      "summary": "An introduced synthetic variable to range over as yet unknown types.",
+      "doc": "api/pyrefly_types.types.md#var",
+      "implements": [
+        "core::fmt::Display",
+        "dupe::Dupe",
+        "pyrefly_types::equality::TypeEq",
+        "pyrefly_util::visit::Visit",
+        "pyrefly_util::visit::VisitMut"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(uniques: &UniqueFactory) -> Self"
+        },
+        {
+          "name": "recurse",
+          "signature": "fn recurse<'a>(&'a self, f: &mut dyn FnMut(&'a To))",
+          "via_trait": "pyrefly_util::visit::Visit"
+        },
+        {
+          "name": "recurse_mut",
+          "signature": "fn recurse_mut(&mut self, f: &mut dyn FnMut(&mut To))",
+          "via_trait": "pyrefly_util::visit::VisitMut"
+        },
+        {
+          "name": "to_type",
+          "signature": "fn to_type(self, heap: &TypeHeap) -> Type"
+        },
+        {
+          "name": "type_eq",
+          "signature": "fn type_eq(&self, other: &Self, ctx: &mut equality::TypeEqCtx) -> bool",
+          "via_trait": "pyrefly_types::equality::TypeEq"
+        }
+      ]
+    }
+  ]
+}

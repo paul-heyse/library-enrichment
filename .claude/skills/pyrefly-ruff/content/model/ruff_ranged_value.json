@@ -1,0 +1,145 @@
+{
+  "module": "ruff_ranged_value",
+  "crate": "ruff_ranged_value",
+  "api": "api/ruff_ranged_value.md",
+  "items": [
+    {
+      "path": "ruff_ranged_value::ValueSource",
+      "name": "ValueSource",
+      "kind": "enum",
+      "crate": "ruff_ranged_value",
+      "signature": "enum ValueSource",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "File",
+        "ScriptMetadata",
+        "Cli",
+        "Editor",
+        "UvMetadata"
+      ],
+      "methods": [
+        {
+          "name": "file",
+          "signature": "fn file(&self, db: &dyn Db) -> Option<File>",
+          "summary": "Resolves the file containing this setting, if its source is file-backed."
+        }
+      ]
+    },
+    {
+      "path": "ruff_ranged_value::RangedValue",
+      "name": "RangedValue",
+      "kind": "struct",
+      "crate": "ruff_ranged_value",
+      "signature": "struct RangedValue<T>",
+      "summary": "A value that \"remembers\" where it comes from (source) and its range in source.",
+      "doc": "api/ruff_ranged_value.md#rangedvalue",
+      "implements": [
+        "core::convert::AsRef",
+        "core::fmt::Display",
+        "core::iter::traits::collect::IntoIterator",
+        "core::ops::deref::Deref",
+        "core::ops::deref::DerefMut",
+        "serde_core::de::Deserialize",
+        "serde_core::ser::Serialize"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &U",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "cli",
+          "signature": "fn cli(value: T) -> Self"
+        },
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Self::Target",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "deref_mut",
+          "signature": "fn deref_mut(&mut self) -> &mut T",
+          "via_trait": "core::ops::deref::DerefMut"
+        },
+        {
+          "name": "deserialize",
+          "signature": "fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>",
+          "via_trait": "serde_core::de::Deserialize"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> T"
+        },
+        {
+          "name": "into_iter",
+          "signature": "fn into_iter(self) -> Self::IntoIter",
+          "via_trait": "core::iter::traits::collect::IntoIterator"
+        },
+        {
+          "name": "map_value",
+          "signature": "fn map_value<R>(self, f: impl FnOnce(T) -> R) -> RangedValue<R>"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(value: T, source: ValueSource) -> Self"
+        },
+        {
+          "name": "python_extension",
+          "signature": "fn python_extension(value: T) -> Self"
+        },
+        {
+          "name": "range",
+          "signature": "fn range(&self) -> Option<TextRange>"
+        },
+        {
+          "name": "serialize",
+          "signature": "fn serialize<__S>(&self, __serializer: __S) -> _serde::__private229::Result<__S::Ok, __S::Error> where __S: _serde::Serializer",
+          "via_trait": "serde_core::ser::Serialize"
+        },
+        {
+          "name": "source",
+          "signature": "fn source(&self) -> &ValueSource"
+        }
+      ]
+    },
+    {
+      "path": "ruff_ranged_value::ValueSourceGuard",
+      "name": "ValueSourceGuard",
+      "kind": "struct",
+      "crate": "ruff_ranged_value",
+      "signature": "struct ValueSourceGuard",
+      "summary": "Guard to safely change the [`ValueSource`] for the current thread.",
+      "doc": "api/ruff_ranged_value.md#valuesourceguard",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(source: ValueSource, is_toml: bool) -> Self"
+        },
+        {
+          "name": "with_source_map",
+          "signature": "fn with_source_map(source: ValueSource, source_map: ScriptSourceMap) -> Self",
+          "summary": "Sets the source and maps deserialized TOML ranges into that source."
+        },
+        {
+          "name": "without_spans",
+          "signature": "fn without_spans() -> Self"
+        }
+      ]
+    }
+  ]
+}

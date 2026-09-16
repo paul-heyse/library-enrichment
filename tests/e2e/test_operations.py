@@ -479,11 +479,9 @@ async def test_durable_acquisition_interests_cancel_only_the_detached_caller(tmp
 @pytest.mark.parametrize(
     "point",
     [
-        "snapshot_files_durable",
-        "snapshot_renamed",
-        "catalog_files_durable",
-        "catalog_root_durable",
-        "journal_terminal_durable",
+        "evidence_cohorts_durable",
+        "control_candidate_validated",
+        "control_commit_acknowledged",
     ],
 )
 async def test_sigkill_at_each_publication_boundary_recovers_without_repeating_producers(
@@ -539,7 +537,7 @@ async def test_sigkill_at_each_publication_boundary_recovers_without_repeating_p
         journal = json.loads((state / "data/jobs/active" / f"{job_id}.json").read_text())
         assert journal["resolution"]["context_id"]
         requests = list(upstream.request_log)
-        committed = point in {"catalog_root_durable", "journal_terminal_durable"}
+        committed = point == "control_commit_acknowledged"
         assert (state / "data/catalog/current.json").exists() == committed
         with daemon.running(env):
             async with Client(daemon.transport(env)) as client:

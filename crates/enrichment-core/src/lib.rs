@@ -9,10 +9,8 @@
 
 /// The wire schema version carried by every tool response.
 ///
-/// Pinned to the frozen contract in `contracts/research-v2/research-envelope.schema.json`, which is the
-/// Phase-0 acceptance target. `just schema-conformance` asserts that generated schemas accept
-/// and reject exactly the documents the frozen schema does.
-pub const SCHEMA_VERSION: &str = "2.0";
+/// The native runtime epoch exposes complete artifact receipts and one current contract.
+pub const SCHEMA_VERSION: &str = "3.0";
 
 /// Canonical snapshot storage, independent of the frozen response envelope.
 pub const SNAPSHOT_SCHEMA_VERSION: &str = evidence::snapshot::FORMAT;
@@ -24,6 +22,7 @@ pub mod compare;
 pub mod config;
 pub mod evidence;
 pub mod execution;
+pub mod http;
 pub mod identity;
 pub mod policy;
 pub mod producer;
@@ -36,19 +35,24 @@ pub mod wire;
 mod tests {
     use super::*;
 
-    /// The frozen contract pins `schema_version` to the literal "2.0". If this constant and the
-    /// frozen schema disagree, every emitted envelope fails validation.
     #[test]
-    fn schema_version_matches_the_frozen_contract() {
-        let frozen = include_str!("../../../contracts/research-v2/research-envelope.schema.json");
-        let v: serde_json::Value = serde_json::from_str(frozen).expect("frozen schema parses");
-        let pinned = v["properties"]["schema_version"]["enum"][0]
-            .as_str()
-            .expect("frozen schema pins schema_version to a const");
+    fn schema_version_matches_the_wire_type() {
         assert_eq!(
-            pinned, SCHEMA_VERSION,
-            "SCHEMA_VERSION disagrees with the frozen contract"
+            serde_json::to_value(wire::SchemaVersion::default()).unwrap(),
+            SCHEMA_VERSION
         );
     }
 }
 pub mod capsule_protocol;
+
+/// Shared Arrow kernels consumed by native DataFusion identity plans.
+pub mod native_identity;
+pub mod native_key;
+
+pub mod native_url;
+/// Library-format kernels for optimizer-visible native version operations.
+pub mod native_version;
+
+pub mod operation;
+
+pub mod telemetry;

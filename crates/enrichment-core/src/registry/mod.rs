@@ -16,7 +16,7 @@
 
 use std::collections::BTreeMap;
 
-use semver::Version;
+pub mod facts;
 use serde::{Deserialize, Serialize};
 
 /// The registry name recorded on every crates.io release.
@@ -140,17 +140,14 @@ impl IndexEntry {
         }
         merged
     }
-
-    /// Whether this version parses as a prerelease.
-    #[must_use]
-    pub fn is_prerelease(&self) -> bool {
-        Version::parse(&self.vers).is_ok_and(|v| !v.pre.is_empty())
-    }
 }
 
 /// Why an index document could not be read.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum RegistryError {
+    /// Upstream facts could not satisfy their declared Arrow contract.
+    #[error("registry Arrow facts: {0}")]
+    ArrowFacts(String),
     /// A line was not a JSON index entry.
     #[error("index line {line} is not a registry entry: {message}")]
     MalformedIndexLine {
@@ -162,31 +159,6 @@ pub enum RegistryError {
     /// The API document was not a version record.
     #[error("registry version document is malformed: {0}")]
     MalformedVersionDocument(String),
-}
-
-/// Parse a sparse-index document (newline-delimited JSON, one entry per version).
-///
-/// Entries whose schema version is newer than this build understands are still returned:
-/// Cargo's own rule is to ignore fields it does not know, and every field used here exists
-/// from schema version 1.
-///
-/// # Errors
-///
-/// Fails on the first line that is not a JSON index entry.
-pub fn parse_index(text: &str) -> Result<Vec<IndexEntry>, RegistryError> {
-    let mut entries = Vec::new();
-    for (i, line) in text.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let entry: IndexEntry =
-            serde_json::from_str(line).map_err(|err| RegistryError::MalformedIndexLine {
-                line: i + 1,
-                message: err.to_string(),
-            })?;
-        entries.push(entry);
-    }
-    Ok(entries)
 }
 
 /// The crates.io API document for one version (`GET /api/v1/crates/{name}/{version}`).
@@ -299,116 +271,9 @@ pub struct UpstreamCheck {
     pub published_versions: usize,
 }
 
-/// Select the exact requested version, or the newest eligible one when none was requested.
-///
-/// # Errors
-///
-/// See [`SelectionError`]. A missing exact version reports the nearest published neighbours so
-/// the caller's next action is concrete rather than "try again".
-pub fn select_version<'a>(
-    entries: &'a [IndexEntry],
-    requested: Option<&str>,
-    allow_prerelease: bool,
-    allow_yanked: bool,
-) -> Result<&'a IndexEntry, SelectionError> {
-    if entries.is_empty() {
-        return Err(SelectionError::NoVersions);
-    }
-    match requested {
-        Some(requested) => {
-            let wanted = Version::parse(requested).map_err(|_| SelectionError::InvalidVersion {
-                requested: requested.to_owned(),
-            })?;
-            let found = entries
-                .iter()
-                .find(|e| Version::parse(&e.vers).is_ok_and(|v| v == wanted));
-            match found {
-                Some(entry) if entry.yanked && !allow_yanked => Err(SelectionError::Yanked {
-                    requested: requested.to_owned(),
-                }),
-                Some(entry) => Ok(entry),
-                None => Err(SelectionError::VersionNotFound {
-                    requested: requested.to_owned(),
-                    nearest: nearest_versions(entries, &wanted, 5),
-                }),
-            }
-        }
-        None => newest_eligible(entries, allow_prerelease, allow_yanked)
-            .ok_or(SelectionError::NoEligibleVersion),
-    }
-}
-
-/// The newest non-yanked release, excluding prereleases unless asked.
-#[must_use]
-pub fn newest_eligible(
-    entries: &[IndexEntry],
-    allow_prerelease: bool,
-    allow_yanked: bool,
-) -> Option<&IndexEntry> {
-    entries
-        .iter()
-        .filter(|e| allow_yanked || !e.yanked)
-        .filter_map(|e| Version::parse(&e.vers).ok().map(|v| (v, e)))
-        .filter(|(v, _)| allow_prerelease || v.pre.is_empty())
-        .max_by(|(a, _), (b, _)| a.cmp_precedence(b))
-        .map(|(_, e)| e)
-}
-
-/// Describe the upstream state relative to a resolved version.
-#[must_use]
-pub fn upstream_check(entries: &[IndexEntry], resolved: &str) -> UpstreamCheck {
-    let newest_stable = newest_eligible(entries, false, false).map(|e| e.vers.clone());
-    let newest_any = newest_eligible(entries, true, false).map(|e| e.vers.clone());
-    let resolved_is_newest_stable = newest_stable.as_deref() == Some(resolved);
-    UpstreamCheck {
-        newest_stable,
-        newest_any,
-        resolved_is_newest_stable,
-        published_versions: entries.len(),
-    }
-}
-
-fn nearest_versions(entries: &[IndexEntry], wanted: &Version, limit: usize) -> Vec<String> {
-    let mut parsed: Vec<(Version, &IndexEntry)> = entries
-        .iter()
-        .filter_map(|e| Version::parse(&e.vers).ok().map(|v| (v, e)))
-        .collect();
-    parsed.sort_by(|(a, _), (b, _)| a.cmp_precedence(b));
-    // Neighbours on either side of where the wanted version would sit.
-    let split = parsed.partition_point(|(v, _)| v.cmp_precedence(wanted).is_lt());
-    let below = parsed[..split].iter().rev().take(limit / 2 + 1);
-    let above = parsed[split..].iter().take(limit / 2 + 1);
-    let mut out: Vec<String> = below.chain(above).map(|(_, e)| e.vers.clone()).collect();
-    out.sort_by(|a, b| {
-        let (a, b) = (Version::parse(a), Version::parse(b));
-        match (a, b) {
-            (Ok(a), Ok(b)) => a.cmp_precedence(&b),
-            _ => std::cmp::Ordering::Equal,
-        }
-    });
-    out.truncate(limit);
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn entry(vers: &str, yanked: bool) -> IndexEntry {
-        IndexEntry {
-            name: "enr-fixture".to_owned(),
-            vers: vers.to_owned(),
-            deps: Vec::new(),
-            cksum: "00".repeat(32),
-            features: BTreeMap::from([("default".to_owned(), vec!["std".to_owned()])]),
-            features2: BTreeMap::new(),
-            yanked,
-            links: None,
-            v: 2,
-            rust_version: Some("1.70".to_owned()),
-            pubtime: None,
-        }
-    }
 
     #[test]
     fn index_paths_follow_the_registry_reference() {
@@ -432,9 +297,18 @@ mod tests {
     fn a_real_index_line_parses() {
         // Captured from https://index.crates.io/se/rd/serde on 2026-09-13 (last line).
         let line = r#"{"name":"serde","vers":"1.0.229","deps":[{"name":"serde_core","req":"=1.0.229","features":["result"],"optional":false,"default_features":false,"target":null,"kind":"normal"},{"name":"serde_derive","req":"^1","features":[],"optional":true,"default_features":true,"target":null,"kind":"normal"}],"cksum":"4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba","features":{"alloc":["serde_core/alloc"],"default":["std"],"derive":["serde_derive"],"rc":["serde_core/rc"],"std":["serde_core/std"],"unstable":["serde_core/unstable"]},"yanked":false,"rust_version":"1.56","pubtime":"2026-07-18T23:05:13Z"}"#;
-        let entries = parse_index(&format!("\n{line}\n")).expect("parses");
-        assert_eq!(entries.len(), 1);
-        let e = &entries[0];
+        let batches = facts::decode(&format!("\n{line}\n"), 128).expect("Arrow facts");
+        assert_eq!(batches[0].num_rows(), 1);
+        assert_eq!(
+            batches[0]
+                .column(0)
+                .as_any()
+                .downcast_ref::<arrow::array::UInt64Array>()
+                .unwrap()
+                .value(0),
+            2
+        );
+        let e: IndexEntry = serde_json::from_str(line).unwrap();
         assert_eq!(e.vers, "1.0.229");
         assert_eq!(e.v, 1, "absent `v` means schema version 1");
         assert_eq!(e.deps[1].name, "serde_derive");
@@ -445,84 +319,15 @@ mod tests {
 
     #[test]
     fn a_malformed_index_line_names_its_line_number() {
-        let err = parse_index("{\"name\":\"x\",\"vers\":\"1.0.0\",\"cksum\":\"\"}\nnot json\n")
-            .expect_err("second line is malformed");
+        let err = facts::decode(
+            "{\"name\":\"x\",\"vers\":\"1.0.0\",\"cksum\":\"\"}\nnot json\n",
+            128,
+        )
+        .expect_err("second line is malformed");
         assert!(
             matches!(err, RegistryError::MalformedIndexLine { line: 2, .. }),
             "{err}"
         );
-    }
-
-    #[test]
-    fn an_exact_version_is_matched_exactly_while_a_newer_one_exists() {
-        // Gate R01: the requested version is retained; the newer release is reported apart.
-        let entries = vec![entry("0.1.0", false), entry("0.2.0", false)];
-        let selected = select_version(&entries, Some("0.1.0"), false, false).expect("found");
-        assert_eq!(selected.vers, "0.1.0");
-        let upstream = upstream_check(&entries, &selected.vers);
-        assert_eq!(upstream.newest_stable.as_deref(), Some("0.2.0"));
-        assert!(!upstream.resolved_is_newest_stable);
-        assert_eq!(upstream.published_versions, 2);
-    }
-
-    #[test]
-    fn a_missing_version_reports_its_neighbours() {
-        let entries = vec![
-            entry("0.1.0", false),
-            entry("0.2.0", false),
-            entry("0.3.0", false),
-            entry("1.0.0", false),
-        ];
-        let err = select_version(&entries, Some("0.2.5"), false, false).expect_err("absent");
-        match err {
-            SelectionError::VersionNotFound { requested, nearest } => {
-                assert_eq!(requested, "0.2.5");
-                assert!(nearest.contains(&"0.2.0".to_owned()));
-                assert!(nearest.contains(&"0.3.0".to_owned()));
-            }
-            other => panic!("unexpected {other:?}"),
-        }
-    }
-
-    #[test]
-    fn newest_excludes_yanked_and_prerelease_unless_asked() {
-        let entries = vec![
-            entry("0.1.0", false),
-            entry("0.2.0", true),
-            entry("0.3.0-beta.1", false),
-        ];
-        assert_eq!(
-            newest_eligible(&entries, false, false).map(|e| e.vers.as_str()),
-            Some("0.1.0")
-        );
-        assert_eq!(
-            newest_eligible(&entries, true, false).map(|e| e.vers.as_str()),
-            Some("0.3.0-beta.1")
-        );
-        assert_eq!(
-            newest_eligible(&entries, false, true).map(|e| e.vers.as_str()),
-            Some("0.2.0")
-        );
-        let picked = select_version(&entries, None, false, false).expect("newest stable");
-        assert_eq!(picked.vers, "0.1.0");
-    }
-
-    #[test]
-    fn a_yanked_exact_version_is_refused_unless_asked() {
-        let entries = vec![entry("0.1.0", true)];
-        assert!(matches!(
-            select_version(&entries, Some("0.1.0"), false, false),
-            Err(SelectionError::Yanked { .. })
-        ));
-        assert!(select_version(&entries, Some("0.1.0"), false, true).is_ok());
-        assert!(matches!(
-            select_version(&entries, Some("nope"), false, false),
-            Err(SelectionError::InvalidVersion { .. })
-        ));
-        assert!(matches!(
-            select_version(&[], Some("0.1.0"), false, false),
-            Err(SelectionError::NoVersions)
-        ));
     }
 
     #[test]

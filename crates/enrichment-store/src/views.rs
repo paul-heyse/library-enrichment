@@ -215,7 +215,7 @@ fn binding_sql(base: &str) -> String {
 }
 fn surface_sql(bound: &str, full: bool) -> String {
     let aliases = if full {
-        ", a.payload.signature AS signature, a.payload.doc_summary AS doc_summary, a.payload.docs AS docs, a.payload.deprecated IS NOT NULL AS is_deprecated, a.payload.declared_kind AS declared_kind"
+        ", a.payload.signature AS signature, a.payload.doc_summary AS doc_summary, a.docs AS docs, a.payload.deprecated IS NOT NULL AS is_deprecated, a.payload.declared_kind AS declared_kind"
     } else {
         ""
     };

@@ -1,0 +1,242 @@
+{
+  "module": "buoyant_kernel::snapshot",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.snapshot.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::snapshot::CheckpointWriteResult",
+      "name": "CheckpointWriteResult",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum CheckpointWriteResult",
+      "summary": "Result of attempting to write a checkpoint file.",
+      "doc": "api/buoyant_kernel.snapshot.md#checkpointwriteresult",
+      "aliases": [
+        "delta_kernel::snapshot::CheckpointWriteResult"
+      ],
+      "variants": [
+        "AlreadyExists",
+        "Written"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::snapshot::ChecksumWriteResult",
+      "name": "ChecksumWriteResult",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum ChecksumWriteResult",
+      "summary": "Result of attempting to write a version checksum (CRC) file.",
+      "doc": "api/buoyant_kernel.snapshot.md#checksumwriteresult",
+      "aliases": [
+        "delta_kernel::snapshot::ChecksumWriteResult"
+      ],
+      "variants": [
+        "AlreadyExists",
+        "Written"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::snapshot::Snapshot",
+      "name": "Snapshot",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct Snapshot",
+      "summary": "In-memory representation of a specific snapshot of a Delta table. While a `DeltaTable` exists throughout time, `Snapshot`s represent a view of a table at a specific point in time; they have a defined schema (which may change over time for…",
+      "doc": "api/buoyant_kernel.snapshot.md#snapshot",
+      "aliases": [
+        "buoyant_kernel::Snapshot",
+        "delta_kernel::snapshot::Snapshot"
+      ],
+      "implements": [
+        "core::ops::drop::Drop",
+        "deltalake_core::kernel::arrow::engine_ext::SnapshotExt"
+      ],
+      "methods": [
+        {
+          "name": "alter_table",
+          "signature": "fn alter_table(Arc<self>) -> AlterTableTransactionBuilder",
+          "summary": "Creates a builder for altering this table's metadata. Currently supports schema change operations."
+        },
+        {
+          "name": "builder_for",
+          "signature": "fn builder_for(table_root: impl AsRef<str>) -> SnapshotBuilder",
+          "summary": "Create a new [`SnapshotBuilder`] to build a new [`Snapshot`] for a given table root. If you instead have an existing [`Snapshot`] you would like to do minimal work to update, consider using [`Snapshot::builder_from`] instead."
+        },
+        {
+          "name": "builder_from",
+          "signature": "fn builder_from(existing_snapshot: SnapshotRef) -> SnapshotBuilder",
+          "summary": "Create a new [`SnapshotBuilder`] to incrementally update an existing [`Snapshot`] to a more recent version."
+        },
+        {
+          "name": "checkpoint",
+          "signature": "fn checkpoint(&SnapshotRef, engine: &dyn Engine, spec: Option<&CheckpointSpec>) -> DeltaResult<(CheckpointWriteResult, SnapshotRef)>",
+          "summary": "Performs a complete checkpoint of this snapshot using the provided engine."
+        },
+        {
+          "name": "crc",
+          "signature": "fn crc(&self) -> Option<&Arc<Crc>>",
+          "summary": "Returns the CRC for this snapshot, if one is resolved."
+        },
+        {
+          "name": "create_checkpoint_writer",
+          "signature": "fn create_checkpoint_writer(Arc<self>, engine: &dyn Engine) -> DeltaResult<CheckpointWriter>",
+          "summary": "Creates a [`CheckpointWriter`] for generating a checkpoint from this snapshot."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "estimated_owned_heap_size_bytes",
+          "signature": "fn estimated_owned_heap_size_bytes(&self) -> usize",
+          "summary": "Estimated owned heap size in bytes for this snapshot. Best-effort estimate for capacity tracking, not authoritative."
+        },
+        {
+          "name": "get_all_domain_metadata",
+          "signature": "fn get_all_domain_metadata(&self, engine: &dyn Engine) -> DeltaResult<Vec<DomainMetadata>>",
+          "summary": "Fetch all non-internal domain metadata for this snapshot as a `Vec`."
+        },
+        {
+          "name": "get_app_id_version",
+          "signature": "fn get_app_id_version(&self, application_id: &str, engine: &dyn Engine) -> DeltaResult<Option<i64>>",
+          "summary": "Fetch the latest version of the provided `application_id` for this snapshot. Filters the txn based on the delta.setTransactionRetentionDuration property and lastUpdated."
+        },
+        {
+          "name": "get_domain_metadata",
+          "signature": "fn get_domain_metadata(&self, domain: &str, engine: &dyn Engine) -> DeltaResult<Option<String>>",
+          "summary": "Fetch the domainMetadata for a specific domain in this snapshot. This returns the latest configuration for the domain, or None if the domain does not exist."
+        },
+        {
+          "name": "get_domain_metadata_internal",
+          "signature": "fn get_domain_metadata_internal(&self, domain: &str, engine: &dyn Engine) -> DeltaResult<Option<String>>",
+          "summary": "Fetch both user-controlled and system-controlled domain metadata for a specific domain in this snapshot."
+        },
+        {
+          "name": "get_domain_metadatas_internal",
+          "signature": "fn get_domain_metadatas_internal(&self, engine: &dyn Engine, domains: Option<&HashSet<&str>>) -> DeltaResult<std::collections::HashMap<String, actions::DomainMetadata>>",
+          "summary": "Load domain metadata: if Complete in the CRC, answer from the cache; else if every requested domain is in a Partial cache, also answer from the cache; else full log replay. `domains == None` means load all."
+        },
+        {
+          "name": "get_file_stats_if_present",
+          "signature": "fn get_file_stats_if_present(&self) -> Option<FileStats>",
+          "summary": "Returns file-level statistics, or `None` if this snapshot has no CRC, or its CRC does not have `Complete` file stats. Performs no I/O (the CRC is resolved at construction)."
+        },
+        {
+          "name": "get_in_commit_timestamp",
+          "signature": "fn get_in_commit_timestamp(&self, engine: &dyn Engine) -> DeltaResult<Option<i64>>",
+          "summary": "Get the In-Commit Timestamp (ICT) for this snapshot."
+        },
+        {
+          "name": "get_logical_clustering_columns",
+          "signature": "fn get_logical_clustering_columns(&self, engine: &dyn Engine) -> DeltaResult<Option<Vec<ColumnName>>>",
+          "summary": "Get the logical clustering columns for this snapshot, if clustering is enabled."
+        },
+        {
+          "name": "get_physical_clustering_columns",
+          "signature": "fn get_physical_clustering_columns(&self, engine: &dyn Engine) -> DeltaResult<Option<Vec<ColumnName>>>",
+          "summary": "Get the clustering columns for this snapshot, if the table has clustering enabled."
+        },
+        {
+          "name": "get_protocol_derived_properties",
+          "signature": "fn get_protocol_derived_properties(&self) -> HashMap<String, String>",
+          "summary": "Returns the protocol-derived table properties as a map of key-value pairs."
+        },
+        {
+          "name": "get_timestamp",
+          "signature": "fn get_timestamp(&self, engine: &dyn Engine) -> DeltaResult<i64>",
+          "summary": "Get the timestamp for this snapshot's version, in milliseconds since the Unix epoch."
+        },
+        {
+          "name": "incremental_scan_builder",
+          "signature": "fn incremental_scan_builder(Arc<self>, base_version: Version) -> IncrementalScanBuilder",
+          "summary": "Create an [`IncrementalScanBuilder`] for the range `(base_version, self.version()]`."
+        },
+        {
+          "name": "log_compaction_writer",
+          "signature": "fn log_compaction_writer(Arc<self>, start_version: Version, end_version: Version) -> DeltaResult<LogCompactionWriter>",
+          "summary": "Creates a [`LogCompactionWriter`] for generating a log compaction file."
+        },
+        {
+          "name": "log_segment",
+          "signature": "fn log_segment(&self) -> &LogSegment",
+          "summary": "Log segment this snapshot uses"
+        },
+        {
+          "name": "metadata_configuration",
+          "signature": "fn metadata_configuration(&self) -> &HashMap<String, String>",
+          "summary": "Get the raw metadata configuration for this table."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(log_segment: LogSegment, table_configuration: TableConfiguration) -> Self",
+          "summary": "Create a new [`Snapshot`] from a [`LogSegment`] and [`TableConfiguration`]."
+        },
+        {
+          "name": "publish",
+          "signature": "fn publish(&SnapshotRef, engine: &dyn Engine, committer: &dyn Committer) -> DeltaResult<SnapshotRef>",
+          "summary": "Publishes all catalog commits at this table version. Applicable only to catalog-managed tables. This method is a no-op for filesystem-managed tables or if there are no catalog commits to publish."
+        },
+        {
+          "name": "scan_builder",
+          "signature": "fn scan_builder(Arc<self>) -> ScanBuilder",
+          "summary": "Create a [`ScanBuilder`] for an `SnapshotRef`."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "summary": "Table [`Schema`] at this `Snapshot`s version."
+        },
+        {
+          "name": "table_configuration",
+          "signature": "fn table_configuration(&self) -> &TableConfiguration",
+          "summary": "Get the [`TableConfiguration`] for this [`Snapshot`]."
+        },
+        {
+          "name": "table_properties",
+          "signature": "fn table_properties(&self) -> &TableProperties",
+          "summary": "Get the [`TableProperties`] for this [`Snapshot`]."
+        },
+        {
+          "name": "table_root",
+          "signature": "fn table_root(&self) -> &Url"
+        },
+        {
+          "name": "transaction",
+          "signature": "fn transaction(Arc<self>, committer: Box<dyn Committer>, engine: &dyn Engine) -> DeltaResult<Transaction>",
+          "summary": "Create a [`Transaction`] for this `SnapshotRef`. With the specified [`Committer`]."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(log_segment: LogSegment, table_configuration: TableConfiguration) -> DeltaResult<Self>",
+          "summary": "Create a new [`Snapshot`] from a [`LogSegment`] and [`TableConfiguration`]."
+        },
+        {
+          "name": "version",
+          "signature": "fn version(&self) -> Version",
+          "summary": "Version of this `Snapshot` in the table."
+        },
+        {
+          "name": "write_checksum",
+          "signature": "fn write_checksum(&SnapshotRef, engine: &dyn Engine) -> DeltaResult<(ChecksumWriteResult, SnapshotRef)>",
+          "summary": "Writes a version checksum (CRC) file for this snapshot. Writers should call this after every commit because checksums enable faster snapshot loading and table state validation."
+        }
+      ]
+    },
+    {
+      "path": "buoyant_kernel::snapshot::SnapshotRef",
+      "name": "SnapshotRef",
+      "kind": "type_alias",
+      "crate": "buoyant_kernel",
+      "signature": "type SnapshotRef = std::sync::Arc<Snapshot>",
+      "summary": "A shared, thread-safe reference to a [`Snapshot`].",
+      "doc": "api/buoyant_kernel.snapshot.md#snapshotref",
+      "aliases": [
+        "buoyant_kernel::SnapshotRef",
+        "delta_kernel::snapshot::SnapshotRef"
+      ]
+    }
+  ]
+}

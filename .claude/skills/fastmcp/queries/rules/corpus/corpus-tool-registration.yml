@@ -1,0 +1,24 @@
+id: corpus-tool-registration
+language: python
+severity: hint
+message: An upstream registration site — how a tool, resource or prompt is actually declared.
+note: |
+  The catalog in `content/catalogs/registration.md` tells you what the decorators return. This
+  tells you what calling them looks like in code upstream ships and tests, which is the part a
+  signature cannot carry: which options are passed together, what the function body is allowed
+  to return, and where `Context` is taken as a parameter.
+
+  1,496 tool sites, 397 resource sites and 186 prompt sites in the corpus. Narrow with a path:
+      ast-grep scan -c queries/sgconfig.yml --filter '^corpus-tool-registration$' \
+        content/corpus/examples
+
+  Reading one of these is the fastest correction to the single most common error here, which is
+  writing the 3.x spelling from memory.
+metadata:
+  record: usage
+  reads: content/corpus
+rule:
+  kind: decorated_definition
+  has:
+    kind: decorator
+    regex: '^@[A-Za-z_][A-Za-z0-9_]*\.(tool|resource|prompt)\b'

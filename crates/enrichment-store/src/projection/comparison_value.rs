@@ -166,8 +166,7 @@ pub(crate) fn deliver(
             artifact.artifact_id
         ))
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
-        artifact_id: artifact.artifact_id,
-        media_type: artifact.media_type,
+        receipt: artifact.clone(),
         description: "Complete observed comparison value".into(),
     };
     Ok(Some(AlternativeValue::Artifact {
@@ -229,7 +228,7 @@ mod tests {
             deliver(&values, 1, &blobs, 1024).unwrap().is_none(),
             "a value beyond this page's remaining capacity is deferred before writing"
         );
-        let stored = blobs.find(&artifact.artifact_id).unwrap().unwrap();
+        let stored = artifact.receipt.clone();
         assert_eq!(*sha256, stored.sha256);
         assert_eq!(*size_bytes, stored.size_bytes);
         let recovered: serde_json::Value =

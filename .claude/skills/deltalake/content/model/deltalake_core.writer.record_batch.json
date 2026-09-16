@@ -1,0 +1,127 @@
+{
+  "module": "deltalake_core::writer::record_batch",
+  "crate": "deltalake-core",
+  "api": "api/deltalake_core.writer.record_batch.md",
+  "items": [
+    {
+      "path": "deltalake_core::writer::record_batch::PartitionResult",
+      "name": "PartitionResult",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct PartitionResult",
+      "summary": "Helper container for partitioned record batches",
+      "doc": "api/deltalake_core.writer.record_batch.md#partitionresult",
+      "aliases": [
+        "deltalake::writer::record_batch::PartitionResult"
+      ],
+      "fields": [
+        "partition_values",
+        "record_batch"
+      ],
+      "methods": []
+    },
+    {
+      "path": "deltalake_core::writer::record_batch::RecordBatchWriter",
+      "name": "RecordBatchWriter",
+      "kind": "struct",
+      "crate": "deltalake-core",
+      "signature": "struct RecordBatchWriter",
+      "summary": "Writes messages to a delta lake table.",
+      "doc": "api/deltalake_core.writer.record_batch.md#recordbatchwriter",
+      "aliases": [
+        "deltalake::writer::RecordBatchWriter",
+        "deltalake::writer::record_batch::RecordBatchWriter",
+        "deltalake_core::writer::RecordBatchWriter"
+      ],
+      "implements": [
+        "deltalake_core::writer::DeltaWriter"
+      ],
+      "methods": [
+        {
+          "name": "arrow_schema",
+          "signature": "fn arrow_schema(&self) -> ArrowSchemaRef",
+          "summary": "Returns the writer's current arrow schema."
+        },
+        {
+          "name": "buffer_len",
+          "signature": "fn buffer_len(&self) -> usize",
+          "summary": "Approximate encoded (parquet) size written since the last flush, including files already finalized by a size roll or `MergeSchema` rotation. Monotonic within a flush window, so usable as a threshold for calling [`flush`](Self::flush)."
+        },
+        {
+          "name": "buffered_record_batch_count",
+          "signature": "fn buffered_record_batch_count(&self) -> usize",
+          "summary": "Returns the number of record batches streamed since the last flush."
+        },
+        {
+          "name": "flush",
+          "signature": "async fn flush(&mut self) -> Result<Vec<Add>, DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Finalize all files written since the last flush and return their [`Add`] actions, resetting internal state to handle another flush window."
+        },
+        {
+          "name": "flush_and_commit",
+          "signature": "async fn flush_and_commit(&mut self, table: &mut DeltaTable) -> Result<Version, DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Flush buffered files and commit them to the Delta log, creating a new version."
+        },
+        {
+          "name": "for_blind_appends",
+          "signature": "fn for_blind_appends(table: &table::BlindDeltaTable) -> Result<Self, DeltaTableError>",
+          "summary": "Creates a [`RecordBatchWriter`] to write data to an [`BlindDeltaTable`]."
+        },
+        {
+          "name": "for_table",
+          "signature": "fn for_table(table: &DeltaTable) -> Result<Self, DeltaTableError>",
+          "summary": "Creates a [`RecordBatchWriter`] to write data to provided Delta Table"
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self)",
+          "summary": "Resets internal state, discarding any data written since the last flush."
+        },
+        {
+          "name": "try_new",
+          "signature": "fn try_new(table_uri: impl AsRef<str>, schema: ArrowSchemaRef, partition_columns: Option<Vec<String>>, storage_options: Option<HashMap<String, String>>) -> Result<Self, DeltaTableError>",
+          "summary": "Create a new [`RecordBatchWriter`] instance"
+        },
+        {
+          "name": "try_new_checked",
+          "signature": "async fn try_new_checked(table_uri: impl AsRef<str>, schema: ArrowSchemaRef, partition_columns: Option<Vec<String>>, storage_options: Option<HashMap<String, String>>) -> Result<Self, DeltaTableError>",
+          "summary": "Create a new [`RecordBatchWriter`] for an existing table after validating table metadata."
+        },
+        {
+          "name": "with_commit_properties",
+          "signature": "fn with_commit_properties(self, properties: CommitProperties) -> Self",
+          "summary": "Add the [CommitProperties] to the [RecordBatchWriter] to be used when the writer flushes the write into storage."
+        },
+        {
+          "name": "with_target_file_size",
+          "signature": "fn with_target_file_size(self, target_file_size: u64) -> Self",
+          "summary": "Sets a target file size; once an in-progress file reaches it the writer finalizes it and rolls a new one. Without this — or with `0`, meaning no limit — the writer emits a single file per partition per flush."
+        },
+        {
+          "name": "with_writer_properties",
+          "signature": "fn with_writer_properties(self, writer_properties: WriterProperties) -> Self",
+          "summary": "Sets the writer properties for the underlying arrow writer."
+        },
+        {
+          "name": "write",
+          "signature": "async fn write(&mut self, values: RecordBatch) -> Result<(), DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Write a chunk of values into the internal write buffers with the default write mode"
+        },
+        {
+          "name": "write_partition",
+          "signature": "async fn write_partition(&mut self, record_batch: RecordBatch, partition_values: &IndexMap<String, Scalar>, mode: WriteMode) -> Result<ArrowSchemaRef, DeltaTableError>",
+          "summary": "Write a record batch that belongs entirely to the partition identified by `partition_values`, streaming it into the partition's open file."
+        },
+        {
+          "name": "write_with_mode",
+          "signature": "async fn write_with_mode(&mut self, values: RecordBatch, mode: WriteMode) -> Result<(), DeltaTableError>",
+          "via_trait": "deltalake_core::writer::DeltaWriter",
+          "summary": "Stream a record batch (partition columns included) into the dataset writer, resolving schema evolution. Partitioning and parquet encoding happen incrementally; files are finalized at flush (or when a target file size is reached, or when a…"
+        }
+      ]
+    }
+  ]
+}

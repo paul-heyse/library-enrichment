@@ -1,0 +1,211 @@
+{
+  "module": "buoyant_kernel::engine::arrow_utils",
+  "crate": "buoyant_kernel",
+  "api": "api/buoyant_kernel.engine.arrow_utils.md",
+  "items": [
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::ReorderIndexTransform",
+      "name": "ReorderIndexTransform",
+      "kind": "enum",
+      "crate": "buoyant_kernel",
+      "signature": "enum ReorderIndexTransform",
+      "summary": "",
+      "doc": null,
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::ReorderIndexTransform"
+      ],
+      "variants": [
+        "Cast",
+        "Nested",
+        "Identity",
+        "Missing",
+        "RowIndex",
+        "FilePath"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::build_json_reorder_indices",
+      "name": "build_json_reorder_indices",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn build_json_reorder_indices(schema: &schema::StructType) -> DeltaResult<Vec<ReorderIndex>>",
+      "summary": "Builds the [`ReorderIndex`] vec for post-processing JSON read batches.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#build_json_reorder_indices",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::build_json_reorder_indices"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::fix_nested_null_masks",
+      "name": "fix_nested_null_masks",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn fix_nested_null_masks(batch: arrow::array::StructArray) -> arrow::array::StructArray",
+      "summary": "Use this function to recursively compute properly unioned null masks for all nested columns of a record batch, making it safe to project out and consume nested columns.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#fix_nested_null_masks",
+      "aliases": [
+        "buoyant_kernel::engine::arrow_data::fix_nested_null_masks",
+        "delta_kernel::engine::arrow_utils::fix_nested_null_masks"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::fixup_json_read",
+      "name": "fixup_json_read",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn fixup_json_read(batch: arrow::array::RecordBatch, reorder_indices: &[ReorderIndex], file_location: &str) -> DeltaResult<engine::arrow_data::ArrowEngineData>",
+      "summary": "Applies post-processing to data read from a JSON file. Inserts synthesized metadata columns (e.g. [`MetadataColumnSpec::FilePath`]) at the positions specified by `reorder_indices`.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#fixup_json_read",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::fixup_json_read"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::fixup_parquet_read",
+      "name": "fixup_parquet_read",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn fixup_parquet_read(batch: arrow::array::RecordBatch, requested_ordering: &[ReorderIndex], row_indexes: Option<&mut std::iter::Flatten<std::vec::IntoIter<std::ops::Range<i64>>>>, file_location: Option<&str>, target_schema: Option<&schema::SchemaRef>) -> DeltaResult<engine::arrow_data::ArrowEngineData>",
+      "summary": "Applies post-processing to data read from parquet files. This includes `reorder_struct_array` to ensure schema compatibility, as well as `fix_nested_null_masks` to ensure that leaf columns have accurate null masks that row visitors rely on…",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#fixup_parquet_read",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::fixup_parquet_read"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::generate_mask",
+      "name": "generate_mask",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn generate_mask(_requested_schema: &schema::SchemaRef, _parquet_schema: &arrow::datatypes::SchemaRef, parquet_physical_schema: &parquet::schema::types::SchemaDescriptor, indices: &[usize]) -> Option<parquet::arrow::ProjectionMask>",
+      "summary": "Create a mask that will only select the specified indices from the parquet. `indices` can be computed from a [`Schema`] using [`get_requested_indices`]",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#generate_mask",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::generate_mask"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::get_requested_indices",
+      "name": "get_requested_indices",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn get_requested_indices(requested_schema: &schema::SchemaRef, parquet_schema: &arrow::datatypes::SchemaRef) -> DeltaResult<(Vec<usize>, Vec<ReorderIndex>)>",
+      "summary": "Get the indices in `parquet_schema` of the specified columns in `requested_schema`. This returns a tuple of (mask_indices: Vec<parquet_schema_index>, reorder_indices: Vec<requested_index>). `mask_indices` is used for generating the mask fo…",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#get_requested_indices",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::get_requested_indices"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::json_arrow_schema",
+      "name": "json_arrow_schema",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn json_arrow_schema(schema: &schema::StructType) -> DeltaResult<arrow::datatypes::Schema>",
+      "summary": "Builds an Arrow [`ArrowSchema`] from `schema` containing only the \"real\" JSON columns, omitting any fields annotated with [`MetadataColumnSpec`].",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#json_arrow_schema",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::json_arrow_schema"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::make_arrow_error",
+      "name": "make_arrow_error",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn make_arrow_error(s: impl Into<String>) -> Error",
+      "summary": "Create an [`Error::Arrow`] with a backtrace from the given message.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#make_arrow_error",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::make_arrow_error"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::ordering_needs_row_indexes",
+      "name": "ordering_needs_row_indexes",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn ordering_needs_row_indexes(requested_ordering: &[ReorderIndex]) -> bool",
+      "summary": "Check if an ordering requires row index computation.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#ordering_needs_row_indexes",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::ordering_needs_row_indexes"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::parse_json",
+      "name": "parse_json",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn parse_json(json_strings: Box<dyn EngineData>, schema: schema::SchemaRef) -> DeltaResult<Box<dyn EngineData>>",
+      "summary": "Parse a column of JSON strings into a typed `RecordBatch` matching `schema`. N input rows produce N output rows.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#parse_json",
+      "aliases": [
+        "buoyant_kernel::engine::parse_json",
+        "delta_kernel::engine::arrow_utils::parse_json",
+        "deltalake::kernel::engine::parse_json",
+        "deltalake_core::kernel::engine::parse_json"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::to_json_bytes",
+      "name": "to_json_bytes",
+      "kind": "function",
+      "crate": "buoyant_kernel",
+      "signature": "fn to_json_bytes(data: impl Iterator<Item = DeltaResult<engine_data::FilteredEngineData>> + Send) -> DeltaResult<Vec<u8>>",
+      "summary": "serialize an arrow RecordBatch to a JSON string by appending to a buffer.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#to_json_bytes",
+      "aliases": [
+        "buoyant_kernel::engine::to_json_bytes",
+        "delta_kernel::engine::arrow_utils::to_json_bytes",
+        "deltalake::kernel::engine::to_json_bytes",
+        "deltalake_core::kernel::engine::to_json_bytes"
+      ]
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::ReorderIndex",
+      "name": "ReorderIndex",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct ReorderIndex",
+      "summary": "Reordering is specified as a tree. Each level is a vec of `ReorderIndex`s. Each element's position represents a column that will be in the read parquet data at that level and position. The `index` of the element is the position that the co…",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#reorderindex",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::ReorderIndex"
+      ],
+      "fields": [
+        "index"
+      ],
+      "methods": []
+    },
+    {
+      "path": "buoyant_kernel::engine::arrow_utils::RowIndexBuilder",
+      "name": "RowIndexBuilder",
+      "kind": "struct",
+      "crate": "buoyant_kernel",
+      "signature": "struct RowIndexBuilder",
+      "summary": "Prepares to enumerate row indexes of rows in a parquet file, accounting for row group skipping.",
+      "doc": "api/buoyant_kernel.engine.arrow_utils.md#rowindexbuilder",
+      "aliases": [
+        "delta_kernel::engine::arrow_utils::RowIndexBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> DeltaResult<std::iter::Flatten<std::vec::IntoIter<std::ops::Range<i64>>>>",
+          "summary": "Build an iterator of row indexes, filtering out row groups that were skipped."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(row_groups: &[RowGroupMetaData]) -> Self"
+        },
+        {
+          "name": "select_row_groups",
+          "signature": "fn select_row_groups(&mut self, ordinals: &[usize])",
+          "summary": "Only produce row indexes for the row groups specified by the ordinals that survived row group skipping. The ordinals must be in 0..num_row_groups."
+        }
+      ]
+    }
+  ]
+}

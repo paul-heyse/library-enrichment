@@ -1,0 +1,26 @@
+id: model-operation-builders
+language: json
+severity: hint
+message: An operation builder -- configure it with with_* calls, then await it.
+note: |
+  Every delta-rs operation is a struct implementing `IntoFuture`: nothing executes until the
+  await. Finding them by that impl rather than by a name pattern is what keeps
+  content/catalogs/operations.md complete when upstream adds one, and what caught `LoadBuilder`,
+  whose impls rustdoc omits because it lives in a private module.
+  Run against content/model.
+metadata:
+  record: operation-builder
+  reads: content/model
+rule:
+  all:
+    - matches: json-record
+    - has:
+        kind: pair
+        all:
+          - has:
+              field: key
+              regex: '^"implements"$'
+          - has:
+              kind: string_content
+              regex: 'IntoFuture$'
+              stopBy: end

@@ -1,7 +1,7 @@
 ---
 id: ADR-0022
 title: Replace development evidence with one typed Arrow schema
-status: accepted
+status: superseded
 date: 2026-09-14
 deciders: [paul-heyse]
 level: decision
@@ -10,7 +10,7 @@ design: [§3.1, §3.3, §6.1, §6.3]
 review: docs/design_review/reviews/design_review_arrow-target-contract_2026-09-14.md
 evidence: Proposed
 supersedes: [ADR-0020]
-superseded-by: null
+superseded-by: ADR-0043
 revisit: A new evidence distinction cannot be represented or a deployed consumer requires storage compatibility.
 verification: typed_model; arrow_projection; snapshot_admission; evidence_retention; development_reset
 ---
@@ -106,3 +106,4 @@ or automatic project editing is added.
 
 - 2026-09-14 — proposed for target-contract review; implementation authorized.
 - 2026-09-14 — accepted at Proposed contract scope by the target-contract review; implementation and executable acceptance remain open.
+- 2026-09-15 — superseded by ADR-0043.
