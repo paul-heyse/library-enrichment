@@ -19,6 +19,7 @@ use datafusion::execution::{
 use datafusion::prelude::{SessionConfig, SessionContext};
 use futures::TryStreamExt;
 use tokio::sync::Semaphore;
+use tracing::instrument::WithSubscriber;
 
 /// Complete build-derived local source/contract and dependency closure. Input snapshots and
 /// effective runtime settings are separately bound by each native operation descriptor.
@@ -28,6 +29,22 @@ pub const SOURCE_RECEIPT: &str =
     include_str!(concat!(env!("OUT_DIR"), "/native-source-receipt.json"));
 
 tokio::task_local! { static OPERATION: Arc<Operation>; }
+tokio::task_local! { static QUERY_ADMISSION: Option<Arc<tokio::sync::OwnedSemaphorePermit>>; }
+
+/// A physical child retains the already admitted query slot, without acquiring it again.
+#[derive(Clone)]
+pub(crate) struct QueryAdmission(Option<Arc<tokio::sync::OwnedSemaphorePermit>>);
+pub(crate) fn capture_query_admission() -> QueryAdmission {
+    QueryAdmission(QUERY_ADMISSION.try_with(Clone::clone).ok().flatten())
+}
+impl QueryAdmission {
+    pub(crate) async fn scope<T>(self, work: impl Future<Output = T>) -> T {
+        QUERY_ADMISSION.scope(self.0, work).await
+    }
+    pub(crate) fn run<T>(self, work: impl FnOnce() -> T) -> T {
+        QUERY_ADMISSION.sync_scope(self.0, work)
+    }
+}
 
 struct Operation {
     id: String,
@@ -39,6 +56,7 @@ struct Operation {
     artifact_charge: AtomicUsize,
     byte_limit: usize,
     history: crate::telemetry_history::History,
+    cancellation: tokio_util::sync::CancellationToken,
 }
 
 /// Bounded completion observations, attributed to the owning operation even with concurrent
@@ -66,6 +84,7 @@ impl Drop for Operation {
 struct OperationInput {
     snapshot: SnapshotBinding,
     _lease: Arc<std::fs::File>,
+    _protection: Option<Arc<crate::retention::LeaseGuard>>,
 }
 
 /// Keep the same admitted snapshot and its retention ownership through final result work,
@@ -75,13 +94,14 @@ pub(crate) fn bind_snapshot(
     manifest_digest: &str,
     generation: u64,
     lease: Arc<std::fs::File>,
+    protection: Option<Arc<crate::retention::LeaseGuard>>,
 ) -> Result<()> {
     OPERATION
         .try_with(|operation| {
             let snapshot = SnapshotBinding {
-                snapshot_id: manifest.snapshot_id.to_string(),
-                context_id: manifest.context_id.to_string(),
-                environment_id: manifest.environment_id.to_string(),
+                snapshot_id: manifest.snapshot_id.clone(),
+                context_id: manifest.context_id.clone(),
+                environment_id: manifest.environment_id.clone(),
                 control: generation,
                 manifest_digest: manifest_digest.into(),
                 projection_version: manifest.schema_version.clone(),
@@ -98,7 +118,7 @@ pub(crate) fn bind_snapshot(
                     return Err(crate::preparation::InvariantFailure::error(
                         "immutable operation input",
                         "snapshot_binding",
-                        vec![snapshot.snapshot_id],
+                        vec![snapshot.snapshot_id.to_string()],
                     ));
                 }
             } else {
@@ -108,6 +128,7 @@ pub(crate) fn bind_snapshot(
                 inputs.push(OperationInput {
                     snapshot,
                     _lease: lease,
+                    _protection: protection,
                 });
             }
             Ok(())
@@ -158,6 +179,30 @@ pub fn capture_operation() -> OperationContext {
 }
 
 impl OperationContext {
+    /// Identity is the admitted owner itself, never a caller-supplied correlation string.
+    pub(crate) fn require_current(&self) -> Result<()> {
+        let matches = self.0.as_ref().is_some_and(|owner| {
+            !owner.cancellation.is_cancelled()
+                && OPERATION
+                    .try_with(|current| Arc::ptr_eq(owner, current))
+                    .unwrap_or(false)
+        });
+        if !matches {
+            return datafusion::common::plan_err!(
+                "materialization requires its live operation owner"
+            );
+        }
+        Ok(())
+    }
+
+    pub(crate) fn cancellation(&self) -> Result<tokio_util::sync::CancellationToken> {
+        self.0
+            .as_ref()
+            .map(|owner| owner.cancellation.clone())
+            .ok_or_else(|| {
+                DataFusionError::Plan("materialization requires an admitted operation".into())
+            })
+    }
     pub(crate) fn id(&self) -> Option<&str> {
         self.0.as_ref().map(|operation| operation.id.as_str())
     }
@@ -250,6 +295,7 @@ pub struct QueryLimits {
     pub native: enrichment_core::config::NativeQueryConfig,
     pub memory_bytes: usize,
     pub spill_bytes: u64,
+    pub descriptor_cache_bytes: usize,
     pub metadata_cache_bytes: usize,
     pub batch_rows: usize,
     pub partitions: usize,
@@ -261,17 +307,24 @@ pub struct QueryLimits {
 
 impl Default for QueryLimits {
     fn default() -> Self {
+        Self::from(&enrichment_core::config::ArrowConfig::default())
+    }
+}
+
+impl From<&enrichment_core::config::ArrowConfig> for QueryLimits {
+    fn from(config: &enrichment_core::config::ArrowConfig) -> Self {
         Self {
-            native: enrichment_core::config::NativeQueryConfig::default(),
-            memory_bytes: 128 * 1024 * 1024,
-            spill_bytes: 512 * 1024 * 1024,
-            metadata_cache_bytes: 16 * 1024 * 1024,
-            batch_rows: 1024,
-            partitions: 2,
-            concurrency: 4,
-            result_rows: 10_000,
-            result_bytes: 16 * 1024 * 1024,
-            deadline: Duration::from_secs(30),
+            native: config.native.clone(),
+            memory_bytes: config.memory_bytes,
+            spill_bytes: config.spill_bytes,
+            descriptor_cache_bytes: config.descriptor_cache_bytes,
+            metadata_cache_bytes: config.metadata_cache_bytes,
+            batch_rows: config.batch_rows,
+            partitions: config.partitions,
+            concurrency: config.concurrency,
+            result_rows: config.result_rows,
+            result_bytes: config.result_bytes,
+            deadline: Duration::from_secs(config.query_deadline_seconds),
         }
     }
 }
@@ -281,18 +334,94 @@ impl Default for QueryLimits {
 pub struct QueryRuntime {
     executor: Arc<NativeExecutor>,
     template: SessionState,
+    declarations: crate::native_catalog::Tables,
+    pub(crate) descriptors: Arc<crate::provider_cache::ProviderCache>,
+    retention_admission: Arc<tokio::sync::OnceCell<()>>,
     permits: Arc<Semaphore>,
     operations: Arc<Semaphore>,
     limits: Arc<QueryLimits>,
     diagnostics: crate::telemetry_history::History,
+    kernel_metrics: tracing::Dispatch,
+    releases: Arc<crate::retention_tasks::Releases>,
 }
 
-/// One executor per shared query runtime, independent of a transport/test caller's stack.
-/// Every owned task and blocking callback retains this owner until it actually exits.
-struct NativeExecutor(Option<tokio::runtime::Runtime>);
+/// Owned execution lanes for one DataFusion resource/policy runtime. Synchronous kernel
+/// callers must not occupy the blocking threads needed by the filesystem futures they await.
+/// Every owned task and blocking callback retains both lanes until it actually exits.
+pub(crate) struct NativeExecutor {
+    compute: Option<tokio::runtime::Runtime>,
+    kernel_io: Option<tokio::runtime::Runtime>,
+    physical_tasks: tokio_util::task::TaskTracker,
+}
+impl NativeExecutor {
+    pub(crate) fn physical_context(&self) -> crate::task_context::PhysicalContext {
+        crate::task_context::PhysicalContext::owned(self.physical_tasks.clone())
+    }
+
+    pub(crate) fn track<F: Future>(&self, work: F) -> impl Future<Output = F::Output> + use<F> {
+        self.physical_tasks.track_future(work)
+    }
+
+    async fn drain(&self) {
+        // A close enables wait; it does not reject child tasks from still-running parents.
+        // Callers first stop root admission. Tracked parents retain ownership while spawning
+        // children, so their descendants cannot create an unobserved empty interval.
+        self.physical_tasks.close();
+        self.physical_tasks.wait().await;
+    }
+
+    pub(crate) fn compute_handle(&self) -> tokio::runtime::Handle {
+        self.compute
+            .as_ref()
+            .expect("live native executor")
+            .handle()
+            .clone()
+    }
+
+    pub(crate) fn io_handle(&self) -> tokio::runtime::Handle {
+        self.kernel_io
+            .as_ref()
+            .expect("live kernel I/O executor")
+            .handle()
+            .clone()
+    }
+
+    pub(crate) fn spawn_on<T: Send + 'static>(
+        self: &Arc<Self>,
+        handle: tokio::runtime::Handle,
+        work: impl Future<Output = T> + Send + 'static,
+    ) -> datafusion::common::runtime::SpawnedTask<T> {
+        let work = Box::pin(work);
+        let _enter = handle.enter();
+        let executor = self.clone();
+        let effects = crate::native_effect::capture();
+        capture_operation().spawn(async move {
+            let _executor = executor;
+            effects.scope(work).await
+        })
+    }
+
+    pub(crate) fn spawn_blocking<T: Send + 'static>(
+        self: &Arc<Self>,
+        work: impl FnOnce() -> T + Send + 'static,
+    ) -> datafusion::common::runtime::SpawnedTask<T> {
+        let handle = self.compute_handle();
+        let _enter = handle.enter();
+        let executor = self.clone();
+        let operation = capture_operation();
+        let effects = crate::native_effect::capture();
+        datafusion::common::runtime::SpawnedTask::spawn_blocking(move || {
+            let _executor = executor;
+            operation.run(|| effects.run(work))
+        })
+    }
+}
 impl Drop for NativeExecutor {
     fn drop(&mut self) {
-        if let Some(runtime) = self.0.take() {
+        for runtime in [self.compute.take(), self.kernel_io.take()]
+            .into_iter()
+            .flatten()
+        {
             // The last owner can exit on a native worker. Tokio cannot synchronously join
             // that worker from itself. This requests shutdown without an async-context panic;
             // running blocking callbacks retain their owner and permits until their exit.
@@ -319,45 +448,66 @@ pub struct QueryOutput {
 
 impl QueryRuntime {
     pub(crate) fn executor_handle(&self) -> tokio::runtime::Handle {
-        self.executor
-            .0
-            .as_ref()
-            .expect("live native executor")
-            .handle()
-            .clone()
+        self.executor.compute_handle()
     }
 
-    /// Run owned native work on the configured service executor with abort-on-drop semantics.
+    pub(crate) fn executor_owner(&self) -> Arc<NativeExecutor> {
+        self.executor.clone()
+    }
+
+    pub(crate) fn kernel_io_shape(&self) -> (usize, usize) {
+        (self.limits.batch_rows, self.limits.partitions)
+    }
+
+    pub(crate) fn release_retention(
+        &self,
+        work: impl Future<Output = Result<()>> + Send + 'static,
+    ) -> Result<()> {
+        self.releases.submit(
+            &self.executor_handle(),
+            self.executor.physical_context().scope(work),
+        )
+    }
+
+    /// Run owned native work with abort-on-drop semantics and physical-exit tracking.
+    /// A task admitted here must not close its own runtime; the supervisor owns shutdown.
     /// Starting a task does not grant operation/effect admission; those retain their own guards.
     pub fn spawn<T: Send + 'static>(
         &self,
         work: impl Future<Output = T> + Send + 'static,
     ) -> datafusion::common::runtime::SpawnedTask<T> {
+        self.spawn_root(self.executor.track(work))
+    }
+
+    /// Finite startup/export supervisors may own the final close. Only these explicit roots
+    /// bypass task counting; native work they start uses the ordinary tracked entry points.
+    pub(crate) fn spawn_root<T: Send + 'static>(
+        &self,
+        work: impl Future<Output = T> + Send + 'static,
+    ) -> datafusion::common::runtime::SpawnedTask<T> {
         // Native startup/planning futures can be large. Move them to the heap before
         // composing task-local and tracing wrappers on the transport caller's stack.
-        let work = Box::pin(work);
-        let handle = self.executor_handle();
-        let _enter = handle.enter();
-        let executor = Arc::clone(&self.executor);
-        let effects = crate::native_effect::capture();
-        capture_operation().spawn(async move {
-            let _executor = executor;
-            effects.scope(work).await
+        let physical = self.executor.physical_context();
+        // Explicit root drivers may own shutdown themselves. Their child tasks are tracked;
+        // counting the root here would make shutdown wait for its own future to be dropped.
+        crate::task_context::PhysicalContext::detached().run(|| {
+            self.executor.spawn_on(
+                self.executor_handle(),
+                physical
+                    .scope(Box::pin(work))
+                    .with_subscriber(self.kernel_metrics.clone()),
+            )
         })
     }
 
-    fn spawn_blocking<T: Send + 'static>(
+    pub(crate) fn spawn_blocking<T: Send + 'static>(
         &self,
         work: impl FnOnce() -> T + Send + 'static,
     ) -> datafusion::common::runtime::SpawnedTask<T> {
-        let handle = self.executor_handle();
-        let _enter = handle.enter();
-        let executor = Arc::clone(&self.executor);
-        let operation = capture_operation();
-        let effects = crate::native_effect::capture();
-        datafusion::common::runtime::SpawnedTask::spawn_blocking(move || {
-            let _executor = executor;
-            operation.run(|| effects.run(work))
+        let dispatch = self.kernel_metrics.clone();
+        self.executor.physical_context().run(|| {
+            self.executor
+                .spawn_blocking(move || tracing::dispatcher::with_default(&dispatch, work))
         })
     }
 
@@ -374,13 +524,18 @@ impl QueryRuntime {
                 "cannot synchronously bootstrap from a native worker".into(),
             ));
         }
-        futures::executor::block_on(self.spawn(Box::pin(work)))
+        futures::executor::block_on(self.spawn_root(Box::pin(work)))
             .map_err(|error| DataFusionError::Execution(format!("native startup task: {error}")))
     }
     pub async fn operation_diagnostics(&self) -> Result<Vec<OperationDiagnostics>> {
         self.diagnostics.operations().await
     }
-    pub(crate) fn index_history(&self) -> crate::telemetry_history::History {
+    pub async fn kernel_diagnostics(
+        &self,
+    ) -> Result<Vec<enrichment_core::telemetry::kernel::Diagnostic>> {
+        self.diagnostics.kernel_diagnostics().await
+    }
+    pub(crate) fn native_history(&self) -> crate::telemetry_history::History {
         self.diagnostics.clone()
     }
     /// Bound finite blocking I/O with the same shared work admission. The worker owns its
@@ -470,8 +625,13 @@ impl QueryRuntime {
             artifact_charge: AtomicUsize::new(0),
             byte_limit: self.limits.result_bytes,
             history: self.diagnostics.clone(),
+            cancellation: tokio_util::sync::CancellationToken::new(),
         });
-        OPERATION.scope(operation, work).await
+        let _cancel_on_exit = operation.cancellation.clone().drop_guard();
+        self.executor
+            .physical_context()
+            .scope(OPERATION.scope(operation, work.with_subscriber(self.kernel_metrics.clone())))
+            .await
     }
     /// A terminal control commit must remain possible after its producer deadline expires.
     /// Only the finite JobStore settlement methods use this scope; it cannot launch effects or
@@ -515,9 +675,12 @@ impl QueryRuntime {
             artifact_charge: AtomicUsize::new(0),
             byte_limit: self.limits.result_bytes,
             history: self.diagnostics.clone(),
+            cancellation: tokio_util::sync::CancellationToken::new(),
         });
-        OPERATION
-            .scope(operation, async {
+        let _cancel_on_exit = operation.cancellation.clone().drop_guard();
+        self.executor
+            .physical_context()
+            .scope(OPERATION.scope(operation, async {
                 tokio::time::timeout(self.limits.deadline, async {
                     // A separate admission pool avoids reacquiring an operation's own permit in
                     // each child query. Both pools release permits on cancellation and failure.
@@ -532,12 +695,12 @@ impl QueryRuntime {
                 .map_err(|_| {
                     deadline_budget("operation deadline including queue and result work")
                 })?
-            })
+            }))
             .await
             .map_err(|error| self.failed(error))
     }
 
-    fn remaining(&self) -> Result<Duration> {
+    pub(crate) fn remaining(&self) -> Result<Duration> {
         let remaining = OPERATION
             .try_with(|operation| {
                 operation
@@ -598,15 +761,20 @@ impl QueryRuntime {
             ));
         }
         std::fs::create_dir_all(spill_root)?;
-        let executor = Arc::new(NativeExecutor(Some(
+        let lane = |name| {
             tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(limits.concurrency)
                 .max_blocking_threads(limits.native.blocking_threads)
                 .thread_stack_size(limits.native.worker_stack_bytes)
-                .thread_name("enrichment-native")
+                .thread_name(name)
                 .enable_all()
-                .build()?,
-        )));
+                .build()
+        };
+        let executor = Arc::new(NativeExecutor {
+            compute: Some(lane("enrichment-native")?),
+            kernel_io: Some(lane("enrichment-kernel-io")?),
+            physical_tasks: tokio_util::task::TaskTracker::new(),
+        });
         let runtime = RuntimeEnvBuilder::new()
             .with_memory_pool(Arc::new(PeakRecordingPool::new(Arc::new(
                 FairSpillPool::new(limits.memory_bytes),
@@ -634,15 +802,14 @@ impl QueryRuntime {
             .set_bool("datafusion.execution.parquet.skip_metadata", false);
         config.options_mut().execution.parquet = policy.table_options().global;
         let template = SessionContext::new_with_config_rt(config, Arc::clone(&runtime)).state();
-        let planner = Arc::new(crate::leases::RetentionPlanner {
-            inner: Arc::new(crate::arrow_contract::NativePlanner),
-        });
+        let planner = Arc::new(crate::arrow_contract::NativePlanner);
         let config = template.config().clone();
         let mut analyzer_rules = template.analyzer().rules.clone();
         analyzer_rules.insert(
             0,
             Arc::new(enrichment_core::native_analysis::SemanticAnalyzer),
         );
+        analyzer_rules.insert(0, Arc::new(crate::leases::RetentionAnalyzer));
         let functions = enrichment_core::native_types::ClockMeaning::VALUES
             .iter()
             .map(|value| {
@@ -676,15 +843,33 @@ impl QueryRuntime {
             .with_scalar_functions(functions)
             .with_extension_type_registry(enrichment_core::native_types::registry()?)
             .with_query_planner(planner)
+            .with_cache_factory(Some(Arc::new(
+                crate::operation_index::OperationCacheFactory,
+            )))
             .build();
         let mut shared = Self {
             executor,
             template,
+            declarations: crate::native_catalog::declarations(&limits.native.retention)?,
+            descriptors: Arc::new(crate::provider_cache::ProviderCache::new(
+                limits.descriptor_cache_bytes,
+            )),
+            retention_admission: Arc::default(),
             permits: Arc::new(Semaphore::new(limits.concurrency)),
             operations: Arc::new(Semaphore::new(limits.concurrency)),
             limits,
             diagnostics: crate::telemetry_history::History::default(),
+            kernel_metrics: tracing::Dispatch::none(),
+            releases: Arc::default(),
         };
+        let config = shared
+            .template
+            .config()
+            .clone()
+            .with_extension(Arc::new(crate::kernel_runtime::session_engine(&shared)?));
+        shared.template = SessionStateBuilder::new_from_existing(shared.template)
+            .with_config(config)
+            .build();
         let pool = Arc::clone(&shared.template.runtime_env().memory_pool);
         let mut telemetry = shared.clone();
         // Reserved, single diagnostic admission shares the same executor, memory and spill.
@@ -698,6 +883,7 @@ impl QueryRuntime {
         });
         shared.diagnostics =
             crate::telemetry_history::History::start(telemetry, diagnostics_root, pool)?;
+        shared.kernel_metrics = crate::kernel_metrics::dispatch(shared.diagnostics.clone());
         Ok(shared)
     }
 
@@ -745,6 +931,22 @@ impl QueryRuntime {
             .expect("empty native inventory has a valid fixed schema")
     }
 
+    pub(crate) fn retention_policy(
+        &self,
+    ) -> &enrichment_core::operation::retention::RetentionPolicy {
+        &self.limits.native.retention
+    }
+
+    /// Native rules admit the immutable effective policy once before any durable consumer.
+    pub async fn admit_retention_policy(&self) -> Result<()> {
+        self.retention_admission
+            .get_or_try_init(|| async {
+                crate::retention::validate_policy(self, self.retention_policy()).await
+            })
+            .await
+            .map(|_| ())
+    }
+
     pub(crate) fn bound_session(
         &self,
         mut bindings: std::collections::BTreeMap<
@@ -761,6 +963,10 @@ impl QueryRuntime {
             Arc::new(
                 crate::native_catalog::BoundCatalog::default()
                     .with_work()
+                    .with_schema(
+                        crate::native_catalog::BindingKind::Declarations,
+                        self.declarations.clone(),
+                    )
                     .with_metadata(metadata, summary),
             ),
         );
@@ -831,6 +1037,34 @@ impl QueryRuntime {
         let summary = self.diagnostic_summary().await?;
         use datafusion::common::config::ExtensionOptions;
         let pool = &self.template.runtime_env().memory_pool;
+        use enrichment_core::wire::status::{NativeCacheCounters, NativeCacheFamily};
+        let manager = &self.template.runtime_env().cache_manager;
+        let metadata = manager.get_file_metadata_cache();
+        let mut caches = vec![
+            self.descriptors.counters(),
+            NativeCacheCounters {
+                family: NativeCacheFamily::FileMetadata,
+                entries: metadata.len(),
+                limit_bytes: metadata.cache_limit(),
+                occupied_bytes: None,
+            },
+        ];
+        if let Some(cache) = manager.get_file_statistic_cache() {
+            caches.push(NativeCacheCounters {
+                family: NativeCacheFamily::FileStatistics,
+                entries: cache.len(),
+                limit_bytes: cache.cache_limit(),
+                occupied_bytes: None,
+            });
+        }
+        if let Some(cache) = manager.get_list_files_cache() {
+            caches.push(NativeCacheCounters {
+                family: NativeCacheFamily::FileListings,
+                entries: cache.len(),
+                limit_bytes: cache.cache_limit(),
+                occupied_bytes: None,
+            });
+        }
         let settings = self
             .template
             .config_options()
@@ -861,6 +1095,7 @@ impl QueryRuntime {
             managed_memory_limit_bytes: self.limits.memory_bytes,
             spill_limit_bytes: self.limits.spill_bytes,
             metadata_cache_limit_bytes: self.limits.metadata_cache_bytes,
+            caches,
         })
     }
     pub async fn diagnostic_failures(&self) -> Result<Vec<RecordBatch>> {
@@ -869,8 +1104,15 @@ impl QueryRuntime {
     pub async fn flush_diagnostics(&self) -> Result<()> {
         self.diagnostics.flush().await
     }
+    /// After stopping/joining root drivers, await native physical work, release retention,
+    /// flush/close history, then await any final kernel work started by those writes.
     pub async fn close_diagnostics(&self) -> Result<()> {
-        self.diagnostics.close().await
+        self.executor.drain().await;
+        let releases = self.releases.close().await;
+        let diagnostics = self.diagnostics.close().await;
+        self.executor.drain().await;
+        self.descriptors.clear();
+        releases.and(diagnostics)
     }
 
     /// Plan and consume one owned finite command. Release query admission before polling
@@ -924,8 +1166,9 @@ impl QueryRuntime {
     )> {
         let runtime = self.clone();
         self.spawn(async move {
-            let _permit = permit;
-            runtime.plan_inner(frame, start, family).await
+            QueryAdmission(Some(permit))
+                .scope(runtime.plan_inner(frame, start, family))
+                .await
         })
         .await
         .map_err(|error| DataFusionError::Execution(format!("native planning task: {error}")))?

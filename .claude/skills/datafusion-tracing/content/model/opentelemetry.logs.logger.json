@@ -1,0 +1,79 @@
+{
+  "module": "opentelemetry::logs::logger",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.logs.logger.md",
+  "items": [
+    {
+      "path": "opentelemetry::logs::logger::Logger",
+      "name": "Logger",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait Logger",
+      "summary": "The interface for emitting [`LogRecord`]s.",
+      "doc": "api/opentelemetry.logs.logger.md#logger",
+      "aliases": [
+        "opentelemetry::logs::Logger"
+      ],
+      "implementors": [
+        "opentelemetry_sdk::logs::logger::SdkLogger"
+      ],
+      "required_methods": [
+        "create_log_record",
+        "emit",
+        "event_enabled"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "create_log_record",
+          "signature": "fn create_log_record(&self) -> Self::LogRecord",
+          "summary": "Creates a new log record builder."
+        },
+        {
+          "name": "emit",
+          "signature": "fn emit(&self, record: Self::LogRecord)",
+          "summary": "Emit a [`LogRecord`]. If there is active current thread's [`Context`],  the logger will set the record's `TraceContext` to the active trace context,"
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, level: Severity, target: &str, name: Option<&str>) -> bool",
+          "summary": "Check if the given log level is enabled."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::logs::logger::LoggerProvider",
+      "name": "LoggerProvider",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait LoggerProvider",
+      "summary": "Interfaces that can create [`Logger`] instances.",
+      "doc": "api/opentelemetry.logs.logger.md#loggerprovider",
+      "aliases": [
+        "opentelemetry::logs::LoggerProvider"
+      ],
+      "implementors": [
+        "opentelemetry::logs::noop::NoopLoggerProvider",
+        "opentelemetry_sdk::logs::logger_provider::SdkLoggerProvider"
+      ],
+      "required_methods": [
+        "logger_with_scope"
+      ],
+      "provided_methods": [
+        "logger"
+      ],
+      "methods": [
+        {
+          "name": "logger",
+          "signature": "fn logger(&self, name: impl Into<Cow<'static, str>>) -> Self::Logger",
+          "summary": "Returns a new logger with the given name."
+        },
+        {
+          "name": "logger_with_scope",
+          "signature": "fn logger_with_scope(&self, scope: InstrumentationScope) -> Self::Logger",
+          "summary": "Returns a new logger with the given instrumentation scope."
+        }
+      ]
+    }
+  ]
+}

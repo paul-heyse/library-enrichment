@@ -326,6 +326,56 @@ impl LogicalFileView {
         self.deletion_vector().map(|dv| dv.descriptor())
     }
 
+    /// Validate the native descriptor before a destructive maintenance decision.
+    /// Unlike the adapter getter, malformed fields or storage tags return an error.
+    pub fn checked_deletion_vector_descriptor(
+        &self,
+    ) -> DeltaResult<Option<delta_kernel::actions::deletion_vector::DeletionVectorDescriptor>> {
+        let malformed = || DeltaTableError::Generic("invalid deletion vector descriptor".into());
+        let column = self
+            .files
+            .column_by_name(FIELD_NAME_DELETION_VECTOR)
+            .ok_or_else(malformed)?;
+        let values = column.as_struct_opt().ok_or_else(malformed)?;
+        if values.is_null(self.index) {
+            return Ok(None);
+        }
+        let text = |name: &str| -> DeltaResult<&str> {
+            let values = values.column_by_name(name).ok_or_else(malformed)?;
+            if values.is_null(self.index) {
+                return Err(malformed());
+            }
+            get_string_value(values, self.index).ok_or_else(malformed)
+        };
+        let integer = |name: &str, nullable: bool| -> DeltaResult<Option<i32>> {
+            let values = values
+                .column_by_name(name)
+                .and_then(|values| values.as_primitive_opt::<Int32Type>())
+                .ok_or_else(malformed)?;
+            if values.is_null(self.index) {
+                if nullable { Ok(None) } else { Err(malformed()) }
+            } else {
+                Ok(Some(values.value(self.index)))
+            }
+        };
+        let cardinality = values
+            .column_by_name(DV_FIELD_CARDINALITY)
+            .and_then(|values| values.as_primitive_opt::<Int64Type>())
+            .ok_or_else(malformed)?;
+        if cardinality.is_null(self.index) {
+            return Err(malformed());
+        }
+        Ok(Some(
+            delta_kernel::actions::deletion_vector::DeletionVectorDescriptor::try_new(
+                text(DV_FIELD_STORAGE_TYPE)?.parse()?,
+                text(DV_FIELD_PATH_OR_INLINE_DV)?.to_owned(),
+                integer(DV_FIELD_OFFSET, true)?,
+                integer(DV_FIELD_SIZE_IN_BYTES, false)?.ok_or_else(malformed)?,
+                cardinality.value(self.index),
+            )?,
+        ))
+    }
+
     /// Returns a view into the deletion vector for this file, if present.
     fn deletion_vector(&self) -> Option<DeletionVectorView<'_>> {
         let dv_col = self

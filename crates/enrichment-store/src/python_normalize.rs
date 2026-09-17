@@ -12,7 +12,6 @@ use datafusion::{
     prelude::SessionContext,
 };
 use enrichment_core::producer::python::{WorkerFile, worker};
-use serde::Deserialize;
 use std::{
     fs::File,
     io::{BufReader, Read, Seek, SeekFrom},
@@ -25,28 +24,32 @@ pub struct PythonFacts {
     runtime: QueryRuntime,
     depth: u32,
 }
-#[derive(Debug, Deserialize)]
+enrichment_core::native_struct! {
 pub struct WorkerIdentity {
-    pub griffe_version: String,
-    pub worker_python: String,
-    pub encoder_version: String,
-    pub normalization_depth: u32,
+    griffe_version: String => enrichment_core::native_union::Rule::Text,
+    worker_python: String => enrichment_core::native_union::Rule::Text,
+    encoder_version: String => enrichment_core::native_union::Rule::Text,
+    normalization_depth: u32 => enrichment_core::native_union::Rule::Text,
 }
-#[derive(Debug, Deserialize)]
+}
+enrichment_core::native_struct! {
 pub struct Summary {
-    pub observations: u64,
-    pub unresolved: u64,
-    pub dynamic: bool,
+    observations: u64 => enrichment_core::native_union::Rule::Text,
+    unresolved: u64 => enrichment_core::native_union::Rule::Text,
+    dynamic: bool => enrichment_core::native_union::Rule::Text,
 }
-#[derive(Debug, Deserialize)]
+}
+enrichment_core::native_struct! {
 pub struct AliasFailure {
-    pub reason: String,
-    pub count: u64,
+    reason: String => enrichment_core::native_union::Rule::Text,
+    count: u64 => enrichment_core::native_union::Rule::Text,
 }
-#[derive(Debug, Deserialize)]
+}
+enrichment_core::native_struct! {
 pub struct FileGap {
-    pub file: String,
-    pub detail: String,
+    file: String => enrichment_core::native_union::Rule::Text,
+    detail: String => enrichment_core::native_union::Rule::Text,
+}
 }
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Execution(message.into())
@@ -297,13 +300,13 @@ impl PythonFacts {
         crate::registry::rows(&self.runtime, self.session.sql(&format!("SELECT griffe_version,worker_python,encoder_version,CAST({} AS INT UNSIGNED) AS normalization_depth FROM worker_facts WHERE fact='producer'",self.depth)).await?, 1).await?.pop().ok_or_else(|| invalid("worker identity missing"))
     }
     pub async fn summary(&self) -> Result<Summary> {
-        crate::registry::rows(&self.runtime, self.session.sql(r#"WITH totals AS (SELECT count(*) AS observations,
+        crate::registry::rows(&self.runtime, self.session.sql(r#"WITH totals AS (SELECT CAST(count(*) AS BIGINT UNSIGNED) AS observations,
           count(*) FILTER (WHERE ends_with(path,'.__getattr__'))>0 AS dynamic FROM observations),
-          unresolved AS (SELECT count(*) AS unresolved FROM alias_failures)
+          unresolved AS (SELECT CAST(count(*) AS BIGINT UNSIGNED) AS unresolved FROM alias_failures)
           SELECT totals.observations, unresolved.unresolved, totals.dynamic FROM totals CROSS JOIN unresolved"#).await?, 1).await?.pop().ok_or_else(|| invalid("worker summary missing"))
     }
     pub async fn alias_failures(&self) -> Result<Vec<AliasFailure>> {
-        crate::registry::rows(&self.runtime,self.session.sql("SELECT reason,count(*) AS count FROM alias_failures GROUP BY reason ORDER BY reason").await?,4).await
+        crate::registry::rows(&self.runtime,self.session.sql("SELECT reason,CAST(count(*) AS BIGINT UNSIGNED) AS count FROM alias_failures GROUP BY reason ORDER BY reason").await?,4).await
     }
     pub async fn gaps(&self) -> Result<Vec<FileGap>> {
         crate::registry::rows(
@@ -559,7 +562,9 @@ impl PythonFacts {
                 ),
                 (
                     "cfg_hints",
-                    datafusion::functions_nested::expr_fn::make_array(vec![]),
+                    enrichment_core::evidence::arrow_model::expressions::literal(
+                        &Vec::<String>::new(),
+                    )?,
                 ),
                 ("python", python),
             ],
@@ -820,8 +825,8 @@ mod tests {
         let context = IngestContext {
             ecosystem: Ecosystem::Python,
             symbol_package: "python:fixture".into(),
-            release_id: "rel_fixture".into(),
-            environment_id: "env_fixture".into(),
+            release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
+            environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
             producing_attempt: "attempt".into(),
             producer_runs: vec![],

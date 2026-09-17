@@ -1,0 +1,419 @@
+{
+  "module": "tracing_core::field",
+  "crate": "tracing-core",
+  "api": "api/tracing_core.field.md",
+  "items": [
+    {
+      "path": "tracing_core::field::debug",
+      "name": "debug",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn debug<T>(t: T) -> DebugValue<T> where T: fmt::Debug",
+      "summary": "Wraps a type implementing `fmt::Debug` as a `Value` that can be recorded using its `Debug` implementation.",
+      "doc": "api/tracing_core.field.md#debug",
+      "aliases": [
+        "tracing::field::debug"
+      ]
+    },
+    {
+      "path": "tracing_core::field::display",
+      "name": "display",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn display<T>(t: T) -> DisplayValue<T> where T: fmt::Display",
+      "summary": "Wraps a type implementing `fmt::Display` as a `Value` that can be recorded using its `Display` implementation.",
+      "doc": "api/tracing_core.field.md#display",
+      "aliases": [
+        "tracing::field::display"
+      ]
+    },
+    {
+      "path": "tracing_core::field::valuable",
+      "name": "valuable",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn valuable<T>(t: &T) -> valuable::Value<'_> where T: valuable::Valuable",
+      "summary": "Wraps a type implementing [`Valuable`] as a `Value` that can be recorded using its `Valuable` implementation.",
+      "doc": "api/tracing_core.field.md#valuable",
+      "aliases": [
+        "tracing::field::valuable"
+      ]
+    },
+    {
+      "path": "tracing_core::field::DebugValue",
+      "name": "DebugValue",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct DebugValue<T: fmt::Debug>",
+      "summary": "A `Value` which serializes as a string using `fmt::Debug`.",
+      "doc": "api/tracing_core.field.md#debugvalue",
+      "aliases": [
+        "tracing::field::DebugValue"
+      ],
+      "implements": [
+        "tracing_core::field::Value"
+      ],
+      "methods": [
+        {
+          "name": "record",
+          "signature": "fn record(&self, key: &Field, visitor: &mut dyn Visit)",
+          "via_trait": "tracing_core::field::Value"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::DisplayValue",
+      "name": "DisplayValue",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct DisplayValue<T: fmt::Display>",
+      "summary": "A `Value` which serializes using `fmt::Display`.",
+      "doc": "api/tracing_core.field.md#displayvalue",
+      "aliases": [
+        "tracing::field::DisplayValue"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "tracing_core::field::Value"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self, key: &Field, visitor: &mut dyn Visit)",
+          "via_trait": "tracing_core::field::Value"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::Empty",
+      "name": "Empty",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Empty",
+      "summary": "An empty field.",
+      "doc": "api/tracing_core.field.md#empty",
+      "aliases": [
+        "tracing::field::Empty"
+      ],
+      "implements": [
+        "tracing_core::field::Value"
+      ],
+      "methods": [
+        {
+          "name": "record",
+          "signature": "fn record(&self, _: &Field, _: &mut dyn Visit)",
+          "via_trait": "tracing_core::field::Value"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::Field",
+      "name": "Field",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Field",
+      "summary": "An opaque key allowing _O_(1) access to a field in a `Span`'s key-value data.",
+      "doc": "api/tracing_core.field.md#field",
+      "aliases": [
+        "tracing::field::Field",
+        "tracing_core::Field"
+      ],
+      "implements": [
+        "core::convert::AsRef",
+        "core::fmt::Display",
+        "tracing::field::AsField"
+      ],
+      "methods": [
+        {
+          "name": "as_ref",
+          "signature": "fn as_ref(&self) -> &str",
+          "via_trait": "core::convert::AsRef"
+        },
+        {
+          "name": "callsite",
+          "signature": "fn callsite(&self) -> callsite::Identifier",
+          "summary": "Returns an [`Identifier`] that uniquely identifies the [`Callsite`] which defines this field."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "index",
+          "signature": "fn index(&self) -> usize",
+          "summary": "Returns the index of this field in its [`FieldSet`]."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "summary": "Returns a string representing the name of the field."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::FieldSet",
+      "name": "FieldSet",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct FieldSet",
+      "summary": "Describes the fields present on a span.",
+      "doc": "api/tracing_core.field.md#fieldset",
+      "aliases": [
+        "tracing::field::FieldSet"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "contains",
+          "signature": "fn contains(&self, field: &Field) -> bool",
+          "summary": "Returns `true` if `self` contains the given `field`."
+        },
+        {
+          "name": "field",
+          "signature": "fn field<Q: Borrow<str> + ?Sized>(&self, name: &Q) -> Option<Field>",
+          "summary": "Returns the [`Field`] named `name`, or `None` if no such field exists."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns whether or not this `FieldSet` has fields."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> Iter",
+          "summary": "Returns an iterator over the `Field`s in this `FieldSet`."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of fields in this `FieldSet`."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(names: &'static [&'static str], callsite: callsite::Identifier) -> Self",
+          "summary": "Constructs a new `FieldSet` with the given array of field names and callsite."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::Iter",
+      "name": "Iter",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Iter",
+      "summary": "An iterator over a set of fields.",
+      "doc": "api/tracing_core.field.md#iter",
+      "aliases": [
+        "tracing::field::Iter"
+      ],
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Field>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::ValueSet",
+      "name": "ValueSet",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct ValueSet<'a>",
+      "summary": "A set of fields and values for a span.",
+      "doc": "api/tracing_core.field.md#valueset",
+      "aliases": [
+        "tracing::field::ValueSet"
+      ],
+      "implements": [
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "callsite",
+          "signature": "fn callsite(&self) -> callsite::Identifier",
+          "summary": "Returns an [`Identifier`] that uniquely identifies the [`Callsite`] defining the fields this `ValueSet` refers to."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns true if this `ValueSet` contains _no_ values."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of fields in this `ValueSet` that would be visited by a given [visitor] to the [`ValueSet::record()`] method."
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self, visitor: &mut dyn Visit)",
+          "summary": "Visits all the fields in this `ValueSet` with the provided [visitor]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::Value",
+      "name": "Value",
+      "kind": "trait",
+      "crate": "tracing-core",
+      "signature": "trait Value: sealed::Sealed",
+      "summary": "A field value of an erased type.",
+      "doc": "api/tracing_core.field.md#value",
+      "aliases": [
+        "tracing::Value",
+        "tracing::field::Value"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::string::String",
+        "core::fmt::Arguments",
+        "core::num::nonzero::NonZeroI128",
+        "core::num::nonzero::NonZeroI16",
+        "core::num::nonzero::NonZeroI32",
+        "core::num::nonzero::NonZeroI64",
+        "core::num::nonzero::NonZeroI8",
+        "core::num::nonzero::NonZeroIsize",
+        "core::num::nonzero::NonZeroU128",
+        "core::num::nonzero::NonZeroU16",
+        "core::num::nonzero::NonZeroU32",
+        "core::num::nonzero::NonZeroU64",
+        "core::num::nonzero::NonZeroU8",
+        "core::num::nonzero::NonZeroUsize",
+        "core::num::wrapping::Wrapping",
+        "core::option::Option",
+        "tracing_core::field::DebugValue",
+        "tracing_core::field::DisplayValue",
+        "tracing_core::field::Empty",
+        "valuable::value::Value"
+      ],
+      "required_methods": [
+        "record"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "record",
+          "signature": "fn record(&self, key: &Field, visitor: &mut dyn Visit)",
+          "summary": "Visits this value with the given `Visitor`."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::field::Visit",
+      "name": "Visit",
+      "kind": "trait",
+      "crate": "tracing-core",
+      "signature": "trait Visit",
+      "summary": "Visits typed values.",
+      "doc": "api/tracing_core.field.md#visit",
+      "aliases": [
+        "tracing::field::Visit",
+        "tracing_subscriber::field::Visit"
+      ],
+      "implementors": [
+        "core::fmt::builders::DebugMap",
+        "core::fmt::builders::DebugStruct",
+        "tracing_subscriber::field::debug::Alt",
+        "tracing_subscriber::field::delimited::VisitDelimited",
+        "tracing_subscriber::field::display::Messages",
+        "tracing_subscriber::fmt::format::DefaultVisitor",
+        "tracing_subscriber::fmt::format::FieldFnVisitor",
+        "tracing_subscriber::fmt::format::json::JsonVisitor",
+        "tracing_subscriber::fmt::format::pretty::PrettyVisitor"
+      ],
+      "required_methods": [
+        "record_debug"
+      ],
+      "provided_methods": [
+        "record_bool",
+        "record_bytes",
+        "record_error",
+        "record_f64",
+        "record_i128",
+        "record_i64",
+        "record_str",
+        "record_u128",
+        "record_u64",
+        "record_value"
+      ],
+      "methods": [
+        {
+          "name": "record_bool",
+          "signature": "fn record_bool(&mut self, field: &Field, value: bool)",
+          "summary": "Visit a boolean value."
+        },
+        {
+          "name": "record_bytes",
+          "signature": "fn record_bytes(&mut self, field: &Field, value: &[u8])",
+          "summary": "Visit a byte slice."
+        },
+        {
+          "name": "record_debug",
+          "signature": "fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug)",
+          "summary": "Visit a value implementing `fmt::Debug`."
+        },
+        {
+          "name": "record_error",
+          "signature": "fn record_error(&mut self, field: &Field, value: &dyn std::error::Error + 'static)",
+          "summary": "Records a type implementing `Error`."
+        },
+        {
+          "name": "record_f64",
+          "signature": "fn record_f64(&mut self, field: &Field, value: f64)",
+          "summary": "Visit a double-precision floating point value."
+        },
+        {
+          "name": "record_i128",
+          "signature": "fn record_i128(&mut self, field: &Field, value: i128)",
+          "summary": "Visit a signed 128-bit integer value."
+        },
+        {
+          "name": "record_i64",
+          "signature": "fn record_i64(&mut self, field: &Field, value: i64)",
+          "summary": "Visit a signed 64-bit integer value."
+        },
+        {
+          "name": "record_str",
+          "signature": "fn record_str(&mut self, field: &Field, value: &str)",
+          "summary": "Visit a string value."
+        },
+        {
+          "name": "record_u128",
+          "signature": "fn record_u128(&mut self, field: &Field, value: u128)",
+          "summary": "Visit an unsigned 128-bit integer value."
+        },
+        {
+          "name": "record_u64",
+          "signature": "fn record_u64(&mut self, field: &Field, value: u64)",
+          "summary": "Visit an unsigned 64-bit integer value."
+        },
+        {
+          "name": "record_value",
+          "signature": "fn record_value(&mut self, field: &Field, value: valuable::Value<'_>)",
+          "summary": "Visits an arbitrary type implementing the [`valuable`] crate's `Valuable` trait."
+        }
+      ]
+    }
+  ]
+}

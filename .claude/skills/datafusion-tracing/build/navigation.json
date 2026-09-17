@@ -1,0 +1,118 @@
+{
+  "_comment": [
+    "Navigation probes: does the route this repository documents still lead to the answer?",
+    "These are not content tests and not behaviour probes -- they prove FINDABILITY, which is",
+    "the whole reason a prebuilt index is worth shipping.",
+    "",
+    "`reject` matters as much as `expect`. Several of the things this repository must get right",
+    "are absences: that the hosted document does not carry a builder method, that a type nobody",
+    "can name is not filed beside one they can. A positive-only probe cannot check any of them.",
+    "",
+    "NOTE the name. In the earliest repositories in this family `probes.json` meant THIS, and in",
+    "the later ones it means executed behaviour probes. Both exist here, so they are named apart."
+  ],
+  "probes": [
+    {
+      "question": "Does the index carry the builder methods no published artifact documents?",
+      "file": "index/methods.tsv",
+      "expect": "InstrumentationOptionsBuilder\\tadd_custom_field\\t-\\treachable-undocumented"
+    },
+    {
+      "question": "Does every undocumented method say how to reach it?",
+      "file": "catalogs/options.md",
+      "expect": "InstrumentationOptions::builder\\(\\)"
+    },
+    {
+      "question": "Is the doc(hidden) pair kept distinct from the undocumented-but-supported pair?",
+      "file": "index/symbols.tsv",
+      "expect": "new_instrument_rule\\tfunction\\tdatafusion-tracing\\tdatafusion-tracing\\tdoc-hidden"
+    },
+    {
+      "question": "Is InstrumentedExec filed as internal rather than as something to recommend?",
+      "file": "index/symbols.tsv",
+      "expect": "instrumented_exec::InstrumentedExec\\tstruct\\tdatafusion-tracing\\tdatafusion-tracing\\tinternal",
+      "reject": "InstrumentedExec\\tstruct\\tdatafusion-tracing\\tdatafusion-tracing\\treachable-undocumented"
+    },
+    {
+      "question": "Is the name that appears in neither rustdoc document recorded rather than dropped?",
+      "file": "index/unreachable.tsv",
+      "expect": "^instrument_session_state\\t"
+    },
+    {
+      "question": "Does the macro table carry the invocation grammar?",
+      "file": "index/macros.tsv",
+      "expect": "^instrument_with_info_spans\\t0\\ttarget: \\$target:expr, options: \\$options:expr"
+    },
+    {
+      "question": "Does the rules family require state:?",
+      "file": "index/macros.tsv",
+      "expect": "^instrument_rules_with_info_spans\\t3\\toptions: \\$options:expr, state: \\$state:expr\\t"
+    },
+    {
+      "question": "Does the span table say which fields the node span carries?",
+      "file": "index/spans.tsv",
+      "expect": "^InstrumentedExec\\t"
+    },
+    {
+      "question": "Is datafusion.preview attributed to the option that produces it?",
+      "file": "index/span-fields.tsv",
+      "expect": "datafusion\\.preview\\t.*\\toption\\twith_row_limit"
+    },
+    {
+      "question": "Are node-dependent metric fields kept out of the option column?",
+      "file": "index/span-fields.tsv",
+      "expect": "\\tnode-dependent\\twith_metrics_collection\\t",
+      "reject": "datafusion\\.metrics\\.bytes_scanned\\t.*\\toption\\twith_object_store_collection"
+    },
+    {
+      "question": "Does the compatibility table carry the opentelemetry pairs?",
+      "file": "index/compatibility.tsv",
+      "expect": "^55\\.0\\.0\\t.*\\t0\\.31\\t0\\.31\\t0\\.31\\t0\\.32\\t"
+    },
+    {
+      "question": "Does the compatibility catalog state the off-by-one rule?",
+      "file": "catalogs/compatibility.md",
+      "expect": "ahead of the `opentelemetry` family"
+    },
+    {
+      "question": "Does the span catalog warn that the target is the caller's crate?",
+      "file": "catalogs/spans.md",
+      "expect": "`module_path!\\(\\)` expands at the \\*\\*call site\\*\\*"
+    },
+    {
+      "question": "Does the span catalog refuse to claim the metric vocabulary is complete?",
+      "file": "catalogs/spans.md",
+      "expect": "\\*\\*unobserved, not unavailable\\*\\*"
+    },
+    {
+      "question": "Is the malformed upstream snapshot disclosed rather than silently repaired?",
+      "file": "catalogs/spans.md",
+      "expect": "not valid JSON"
+    },
+    {
+      "question": "Does every seam page carry its refusal section?",
+      "file": "seams/exec-instrumentation.md",
+      "expect": "## What this seam cannot tell you"
+    },
+    {
+      "question": "Does the boundary seam say DataFusion is out of scope?",
+      "file": "seams/datafusion-boundary.md",
+      "expect": "boundary, not a gap"
+    },
+    {
+      "question": "Does the router name the source a reader was about to trust?",
+      "file": "index/questions.tsv",
+      "expect": "docs.rs: InstrumentationOptionsBuilder answers 404"
+    },
+    {
+      "question": "Does the negative-space catalog give an alternative for InstrumentedExec?",
+      "file": "catalogs/not-reachable.md",
+      "expect": "InstrumentedExec.*introspect through"
+    },
+    {
+      "question": "Does the crate map record the five rustdoc format versions docs.rs served?",
+      "file": "catalogs/crate-map.md",
+      "expect": "five different rustdoc format versions"
+    }
+  ]
+}

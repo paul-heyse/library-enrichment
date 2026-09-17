@@ -5,13 +5,12 @@ use arrow::{
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
 };
-use datafusion::{common::ScalarValue, datasource::MemTable, error::Result};
+use datafusion::{common::ScalarValue, dataframe::DataFrame, error::Result};
 use enrichment_core::{
     producer::python::{DistributionFile, facts},
     request::ResolveRequest,
 };
-use serde::Deserialize;
-use std::{collections::BTreeMap, sync::Arc};
+use std::sync::Arc;
 
 /// Compile all marker decisions into one native plan over explicit environment/extra facts.
 /// Keep the selected ordinals relational so callers join the requirement facts natively.
@@ -26,7 +25,9 @@ pub async fn active_requirement_plan(
         logical_expr::expr_fn::when,
         prelude::{col, lit},
     };
-    use enrichment_core::producer::python::requirements::MarkerEnvironment;
+    use enrichment_core::{
+        native_union::NativeStruct, producer::python::requirements::MarkerEnvironment,
+    };
     if requirements.len() > 4096 {
         return Err(datafusion::error::DataFusionError::ResourcesExhausted(
             "requirement command bound".into(),
@@ -40,10 +41,7 @@ pub async fn active_requirement_plan(
     }
     session.register_batch(
         "marker_environment",
-        crate::control_jobs::encode(
-            MarkerEnvironment::schema(),
-            std::slice::from_ref(environment),
-        )?,
+        MarkerEnvironment::batch(std::slice::from_ref(environment))?,
     )?;
     let extra_values = if extras.is_empty() {
         vec![String::new()]
@@ -78,7 +76,7 @@ pub async fn active_requirement_plan(
 /// Only the finite acquisition command list crosses back to the network mechanism.
 pub async fn ordered_versions(
     runtime: &QueryRuntime,
-    versions: &[String],
+    versions: DataFrame,
     allow_prerelease: bool,
     limit: usize,
 ) -> Result<Vec<String>> {
@@ -88,13 +86,12 @@ pub async fn ordered_versions(
         DataType::Utf8,
         false,
     )]));
-    session.register_batch(
-        "versions",
-        RecordBatch::try_new(schema, vec![Arc::new(StringArray::from(versions.to_vec()))])?,
-    )?;
-    #[derive(Deserialize)]
+    enrichment_core::native_schema::check_input(versions.schema().as_arrow(), &schema)?;
+    crate::native_catalog::work(&session, "versions", versions.into_view())?;
+    enrichment_core::native_struct! {
     struct Version {
-        version: String,
+        version: String => enrichment_core::native_union::Rule::Text,
+    }
     }
     let frame = session
         .sql(
@@ -109,29 +106,25 @@ pub async fn ordered_versions(
     Ok(selected.into_iter().map(|row| row.version).collect())
 }
 
+enrichment_core::native_struct! {
 /// One selected immutable artifact; the native query decides both version and file.
-#[derive(Debug, Deserialize)]
 pub struct Selected {
-    pub version: String,
-    pub file: DistributionFile,
+    version: String => enrichment_core::native_union::Rule::Text,
+    file: DistributionFile => enrichment_core::native_union::Rule::Text,
+}
 }
 
 /// Optional constraints and wheel-only policy share the exact same registry relation/plan.
 pub async fn select(
     runtime: &QueryRuntime,
-    releases: &BTreeMap<String, Vec<DistributionFile>>,
+    releases: DataFrame,
     request: &ResolveRequest,
     constraint: Option<&str>,
     wheels_only: bool,
 ) -> Result<Option<Selected>> {
     let session = runtime.session();
-    session.register_table(
-        "python_files",
-        Arc::new(MemTable::try_new(
-            facts::schema(),
-            vec![facts::decode(releases, 1024)?],
-        )?),
-    )?;
+    enrichment_core::native_schema::check_input(releases.schema().as_arrow(), &facts::schema())?;
+    crate::native_catalog::work(&session, "python_files", releases.into_view())?;
     let frame = session.sql(r#"
         WITH parsed AS (
             SELECT *, pep440_value_v1(version) AS parsed FROM python_files

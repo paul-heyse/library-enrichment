@@ -7,7 +7,7 @@ use crate::{
 use datafusion::{
     dataframe::DataFrame,
     error::{DataFusionError, Result},
-    prelude::{col, lit},
+    prelude::col,
 };
 use enrichment_core::{
     evidence::{
@@ -68,7 +68,7 @@ impl AttemptPlan {
             .await?
             .table("state.records.attempts")
             .await?
-            .filter(col("snapshot_id").eq(lit(snapshot.as_str())))?;
+            .filter(col("snapshot_id").eq(snapshot.literal()))?;
         let mut fields = provenance::producer_runs(&[])?
             .schema()
             .fields()
@@ -127,7 +127,7 @@ impl AttemptPlan {
         let frame = self
             .0
             .clone()
-            .with_column("snapshot_id", lit(snapshot.as_str()))?
+            .with_column("snapshot_id", snapshot.literal())?
             .with_column("association_id", Key::SnapshotAttempt.expression())?;
         frame.select(
             Table::Attempts

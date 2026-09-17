@@ -1,0 +1,87 @@
+{
+  "module": "opentelemetry_sdk::trace::export",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.trace.export.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::trace::export::SpanData",
+      "name": "SpanData",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct SpanData",
+      "summary": "`SpanData` contains all the information collected by a `Span` and can be used by exporters as a standard input.",
+      "doc": "api/opentelemetry_sdk.trace.export.md#spandata",
+      "aliases": [
+        "opentelemetry_sdk::trace::SpanData"
+      ],
+      "fields": [
+        "span_context",
+        "parent_span_id",
+        "parent_span_is_remote",
+        "span_kind",
+        "name",
+        "start_time",
+        "end_time",
+        "attributes",
+        "dropped_attributes_count",
+        "events",
+        "links",
+        "status",
+        "instrumentation_scope"
+      ],
+      "methods": []
+    },
+    {
+      "path": "opentelemetry_sdk::trace::export::SpanExporter",
+      "name": "SpanExporter",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait SpanExporter: Send + Sync + Debug",
+      "summary": "`SpanExporter` defines the interface that protocol-specific exporters must implement so that they can be plugged into OpenTelemetry SDK and support sending of telemetry data.",
+      "doc": "api/opentelemetry_sdk.trace.export.md#spanexporter",
+      "aliases": [
+        "opentelemetry_sdk::trace::SpanExporter"
+      ],
+      "implementors": [
+        "opentelemetry_otlp::span::SpanExporter",
+        "opentelemetry_sdk::trace::in_memory_exporter::InMemorySpanExporter"
+      ],
+      "required_methods": [
+        "export"
+      ],
+      "provided_methods": [
+        "force_flush",
+        "set_resource",
+        "shutdown",
+        "shutdown_with_timeout"
+      ],
+      "methods": [
+        {
+          "name": "export",
+          "signature": "fn export(&self, batch: Vec<SpanData>) -> impl std::future::Future<Output = OTelSdkResult> + Send",
+          "summary": "Exports a batch of readable spans. Protocol exporters that will implement this function are typically expected to serialize and transmit the data to the destination."
+        },
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&mut self) -> OTelSdkResult",
+          "summary": "This is a hint to ensure that the export of any Spans the exporter has received prior to the call to this function SHOULD be completed as soon as possible, preferably before returning from this method."
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, _resource: &Resource)",
+          "summary": "Set the resource for the exporter."
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&mut self) -> OTelSdkResult",
+          "summary": "Shuts down the exporter with default timeout."
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&mut self, _timeout: Duration) -> OTelSdkResult",
+          "summary": "Shuts down the exporter. Called when SDK is shut down. This is an opportunity for exporter to do any cleanup required."
+        }
+      ]
+    }
+  ]
+}

@@ -10,9 +10,7 @@ use enrichment_core::request::OverviewRequest;
 use enrichment_core::search::row_page::RowCursor;
 use enrichment_core::wire::data::{OverviewData, SnapshotSummary};
 use enrichment_core::wire::research::DiscoverySelection;
-use enrichment_core::wire::{
-    Envelope, ErrorCode, Freshness, Page, RecoveryAction, SourceVersionMatch,
-};
+use enrichment_core::wire::{Envelope, ErrorCode, Freshness, Page, RecoveryAction};
 
 use super::common::{self, evidence_from_fragment};
 use crate::envelope::Research;
@@ -20,26 +18,26 @@ use crate::service::Service;
 
 /// Build the overview.
 pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
-    let selections = request
-        .discovery
-        .clone()
-        .unwrap_or_else(DiscoverySelection::defaults);
-    if let Err(error) = DiscoverySelection::validate(&selections) {
-        return crate::envelope::error(
-            ErrorCode::UnsupportedFormat,
-            error,
-            "Use bounded, unique discovery selections.",
-            false,
-        );
-    }
+    let selections = match enrichment_store::research_selection::discovery(
+        &service.repository.runtime,
+        &request.discovery,
+    )
+    .await
+    {
+        Ok(selections) => selections,
+        Err(error) => return common::operation_error(&error, "research_selection"),
+    };
 
-    let opened =
-        match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
-            .await
-        {
-            Ok(opened) => opened,
-            Err(envelope) => return *envelope,
-        };
+    let opened = match common::open_context(
+        service,
+        &request.context_id,
+        request.snapshot_id.as_ref(),
+    )
+    .await
+    {
+        Ok(opened) => opened,
+        Err(envelope) => return *envelope,
+    };
     let per_namespace = request
         .max_items
         .map_or(service.config.limits.namespace_entries, |m| {
@@ -77,14 +75,17 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         );
     }
 
-    let source_version_match =
-        if manifest.crate_version.as_deref() == Some(opened.release.key.version.as_str()) {
-            SourceVersionMatch::Exact
-        } else if manifest.crate_version.is_none() {
-            SourceVersionMatch::Unknown
-        } else {
-            SourceVersionMatch::Mismatched
-        };
+    let source_version_match = match enrichment_store::research_outcomes::source_version(
+        &service.repository.runtime,
+        opened.context.mode,
+        manifest.crate_version.as_deref(),
+        &opened.release.key.version,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "source_version_scope"),
+    };
 
     // Cite only the selected discovery fragments; namespace counts come from the admitted
     // snapshot. An ancillary module-doc query must not override independent facet outcomes.
@@ -105,7 +106,7 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         crate_name: manifest.crate_name.clone(),
         crate_version: manifest.crate_version.clone(),
         snapshot: SnapshotSummary {
-            snapshot_id: manifest.snapshot_id.to_string(),
+            snapshot_id: manifest.snapshot_id.clone(),
             normalizer_version: manifest.normalizer_version.clone(),
             counts: manifest.counts.clone(),
             published_at: manifest.published_at,
@@ -137,13 +138,7 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
     }
     let mut kinds = vec![EvidenceKind::PublicApi];
     for facet in &data.discovery {
-        use enrichment_core::wire::research::DiscoveryKind;
-        kinds.push(match facet.kind {
-            DiscoveryKind::Features => EvidenceKind::RegistryMetadata,
-            DiscoveryKind::Documentation => EvidenceKind::Documentation,
-            DiscoveryKind::ReleaseNotes => EvidenceKind::ReleaseNotes,
-            DiscoveryKind::Examples => EvidenceKind::Examples,
-        });
+        kinds.push(facet.kind.evidence_kind());
     }
     let mut coverage = match opened
         .reader
@@ -160,37 +155,18 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
         Ok(value) => value,
         Err(e) => return common::query_error(&e),
     };
-    for facet in &mut data.discovery {
-        if facet.state == enrichment_core::wire::AspectState::Absent {
-            let kind = match facet.kind {
-                enrichment_core::wire::research::DiscoveryKind::Features => {
-                    EvidenceKind::RegistryMetadata
-                }
-                enrichment_core::wire::research::DiscoveryKind::Documentation => {
-                    EvidenceKind::Documentation
-                }
-                enrichment_core::wire::research::DiscoveryKind::ReleaseNotes => {
-                    EvidenceKind::ReleaseNotes
-                }
-                enrichment_core::wire::research::DiscoveryKind::Examples => EvidenceKind::Examples,
-            };
-            if coverage.assessments.iter().any(|assessment| {
-                assessment.kind == kind
-                    && assessment.state != enrichment_core::wire::ScopeState::Indexed
-            }) {
-                facet.state = enrichment_core::wire::AspectState::Unavailable;
-                facet.reason =
-                    Some("No retained match; this facet lacks complete qualified coverage.".into());
-            } else {
-                facet.reason = Some("No retained match in this qualified discovery scope.".into());
-            }
-        }
-    }
-    let partial = !coverage.complete()
-        || data
-            .discovery
-            .iter()
-            .any(|facet| facet.state == enrichment_core::wire::AspectState::Failed);
+    let disposition = match enrichment_store::research_outcomes::discovery(
+        &service.repository.runtime,
+        data.discovery,
+        &coverage,
+    )
+    .await
+    {
+        Ok(disposition) => disposition,
+        Err(error) => return common::operation_error(&error, "discovery_outcomes"),
+    };
+    data.discovery = disposition.facets;
+    let partial = disposition.partial;
     coverage.limitations.extend(limitations);
     let research = Research {
         summary: format!(
@@ -211,8 +187,8 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
             source_version_match,
             latest_verified: false,
         },
-        context_id: Some(opened.context.context_id.to_string()),
-        snapshot_id: Some(opened.snapshot_id.to_string()),
+        context_id: Some(opened.context.context_id.clone()),
+        snapshot_id: Some(opened.snapshot_id.clone()),
         evidence,
         artifacts: Vec::new(),
     };
@@ -224,13 +200,13 @@ pub async fn overview(service: &Service, request: OverviewRequest) -> Envelope {
 }
 
 fn discovery_digest(selection: &DiscoverySelection, budget: usize) -> String {
-    enrichment_core::canonical::digest_hex(&serde_json::json!([
-        "library-discovery/2",
-        selection.kind,
-        selection.max_items,
-        selection.max_characters,
-        budget,
-    ]))
+    enrichment_core::operation::selections::DiscoverySelection {
+        kind: selection.kind,
+        max_items: selection.max_items,
+        max_characters: selection.max_characters,
+        max_bytes: budget,
+    }
+    .identity()
 }
 
 async fn discovery_facet(
@@ -244,7 +220,7 @@ async fn discovery_facet(
     let after = match selection
         .cursor
         .as_deref()
-        .map(|cursor| RowCursor::decode(cursor, manifest.snapshot_id.as_str(), &digest))
+        .map(|cursor| RowCursor::decode(cursor, &manifest.snapshot_id, &digest))
         .transpose()
     {
         Ok(value) => value.map(|cursor| cursor.after),
@@ -273,7 +249,7 @@ async fn discovery_facet(
     let next_cursor = match page
         .next_key
         .as_ref()
-        .map(|key| RowCursor::encode(manifest.snapshot_id.as_str(), &digest, key.clone()))
+        .map(|key| RowCursor::encode(&manifest.snapshot_id, &digest, key.clone()))
         .transpose()
     {
         Ok(cursor) => cursor,
@@ -294,14 +270,14 @@ async fn discovery_facet(
             full.max_characters = None;
             let full_digest = discovery_digest(&full, budget);
             full.cursor = after.as_ref().map(|key| {
-                RowCursor::encode(manifest.snapshot_id.as_str(), &full_digest, key.clone())
+                RowCursor::encode(&manifest.snapshot_id, &full_digest, key.clone())
                     .expect("bounded retained identity serializes")
             });
             Some(RecoveryAction::CallTool {
                 request: Box::new(enrichment_core::request::ResearchRequest::Overview(
                     OverviewRequest {
                         context_id: request.context_id.clone(),
-                        snapshot_id: Some(manifest.snapshot_id.to_string()),
+                        snapshot_id: Some(manifest.snapshot_id.clone()),
                         area: request.area.clone(),
                         max_items: request.max_items,
                         max_bytes: request.max_bytes,

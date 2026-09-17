@@ -67,8 +67,8 @@ pub struct IngestContext {
     pub ecosystem: Ecosystem,
     /// Rust crate identity or `python:<distribution>`, as used by the producer.
     pub symbol_package: String,
-    pub release_id: String,
-    pub environment_id: String,
+    pub release_id: crate::identity::ReleaseId,
+    pub environment_id: crate::identity::EnvironmentId,
     pub source_version_match: SourceVersionMatch,
     pub producing_attempt: String,
     pub producer_runs: Vec<ProducerRun>,

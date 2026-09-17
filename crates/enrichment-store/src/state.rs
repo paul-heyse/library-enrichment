@@ -7,7 +7,7 @@ use crate::StatePaths;
 
 pub const MARKER: &str = ".library-enrichment-state.json";
 /// The native Delta epoch requires fresh service-owned roots; earlier formats are rejected.
-pub const GENERATION: u32 = 8;
+pub const GENERATION: u32 = 11;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

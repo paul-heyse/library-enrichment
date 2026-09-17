@@ -141,13 +141,13 @@ impl SnapshotEntry {
     }
 }
 
-/// Current selection is an ordered catalog fact, not part of snapshot semantic identity.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
+/// Current selection is an ordered catalog fact, separate from snapshot identity.
 pub struct SnapshotSelection {
-    pub context_id: ContextId,
-    pub snapshot_id: SnapshotId,
-    pub generation: u64,
+    context_id: ContextId => Rule::Text,
+    snapshot_id: SnapshotId => Rule::Text,
+    generation: u64 => Rule::Text,
+}
 }
 
 /// A real acquisition attempt can be associated with already retained semantic evidence.
@@ -161,14 +161,21 @@ pub struct SnapshotAttempt {
     pub artifacts: Vec<super::Artifact>,
 }
 
+crate::native_struct! {
+pub(crate) struct SnapshotAttemptIdentity {
+    snapshot_id: SnapshotId => Rule::Text,
+    attempt_id: String => Rule::NonEmpty,
+}
+}
+
 impl SnapshotAttempt {
     #[must_use]
     pub fn association_id(&self) -> String {
         crate::native_key::Key::SnapshotAttempt
-            .value(&serde_json::json!({
-                "snapshot_id": self.snapshot_id,
-                "attempt_id": self.run.attempt_id,
-            }))
+            .record(&SnapshotAttemptIdentity {
+                snapshot_id: self.snapshot_id.clone(),
+                attempt_id: self.run.attempt_id.clone(),
+            })
             .expect("typed snapshot attempt identity")
     }
 }

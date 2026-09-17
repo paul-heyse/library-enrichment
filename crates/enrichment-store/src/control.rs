@@ -3,7 +3,7 @@
 //! Native views expose the finite record families. Delta owns file membership, conflict
 //! checking and log durability; there is no application generation manifest or current pointer.
 use crate::{
-    native_delta::{DeltaStore, StorageContract, missing_table, transaction_conflict},
+    native_delta::{DeltaStore, StorageContract, transaction_conflict},
     projection::catalog as projection,
     runtime::QueryRuntime,
 };
@@ -31,7 +31,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-const MAX_DELTA_ROWS: usize = 1024;
+pub(crate) const MAX_DELTA_ROWS: usize = 1024;
 
 pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     crate::native_catalog::SqlRule {
@@ -87,7 +87,7 @@ pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     crate::native_catalog::SqlRule {
         id: "comparison_package_scope",
         relation: "comparison_publications",
-        sql: "SELECT j.job_id FROM state.records.comparison_publications j JOIN state.records.contexts b ON b.context_id = j.before_context_id JOIN state.records.contexts a ON a.context_id = j.after_context_id JOIN state.records.releases br ON br.release_id = b.release_id JOIN state.records.releases ar ON ar.release_id = a.release_id WHERE br.ecosystem != ar.ecosystem OR br.registry != ar.registry OR br.package != ar.package LIMIT 1",
+        sql: "SELECT j.job_id FROM state.records.comparison_publications j JOIN state.records.contexts b ON b.context_id = j.before_context_id JOIN state.records.contexts a ON a.context_id = j.after_context_id JOIN state.records.releases br ON br.release_id = b.release_id JOIN state.records.releases ar ON ar.release_id = a.release_id WHERE br.key.ecosystem != ar.key.ecosystem OR br.key.registry != ar.key.registry OR br.key.package != ar.key.package LIMIT 1",
     },
     crate::native_catalog::SqlRule {
         id: "job_snapshot_context",
@@ -106,159 +106,52 @@ pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
     },
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Table {
-    Releases,
-    Environments,
-    Contexts,
-    Snapshots,
-    Selections,
-    Attempts,
-    JobPublications,
-    ComparisonPublications,
-    Commands,
-    JobTransitions,
-    Claims,
-    Interests,
-    SearchProjections,
-    ArtifactReceipts,
-    RetainedResults,
-    ExecutionRoots,
-    PhysicalOwners,
-    StorageReservations,
+// One finite relation declaration owns membership, name, key, layout, decoder and
+// current-row ordering. Providers, admission and Delta storage consume this registry.
+macro_rules! control_relations {
+    ($($variant:ident = $name:literal => ($key:literal, $schema:expr, $decode:expr, $order:expr);)*) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+        pub enum Table { $(#[serde(rename = $name)] $variant),* }
+        impl Table {
+            pub(crate) const ALL: [Self; [$($name),*].len()] = [$(Self::$variant),*];
+            pub(crate) fn name(self) -> &'static str { match self { $(Self::$variant => $name),* } }
+            pub(crate) fn key(self) -> &'static str { match self { $(Self::$variant => $key),* } }
+            pub(crate) fn order(self) -> Option<&'static str> { match self { $(Self::$variant => $order),* } }
+            pub(crate) fn schema(self) -> Result<SchemaRef> { Ok(match self { $(Self::$variant => $schema),* }) }
+            pub(crate) fn validate(self, batch: &RecordBatch) -> Result<()> {
+                match self { $(Self::$variant => { ($decode)(batch)?; }),* }
+                Ok(())
+            }
+            pub(crate) fn reference(self) -> datafusion::common::TableReference {
+                datafusion::common::TableReference::full("state", "records", self.name())
+            }
+        }
+    };
 }
-
-impl Table {
-    pub(crate) const ALL: [Self; 18] = [
-        Self::Releases,
-        Self::Environments,
-        Self::Contexts,
-        Self::Snapshots,
-        Self::Selections,
-        Self::Attempts,
-        Self::JobPublications,
-        Self::ComparisonPublications,
-        Self::Commands,
-        Self::JobTransitions,
-        Self::Claims,
-        Self::Interests,
-        Self::SearchProjections,
-        Self::ArtifactReceipts,
-        Self::RetainedResults,
-        Self::ExecutionRoots,
-        Self::PhysicalOwners,
-        Self::StorageReservations,
-    ];
-    pub(crate) fn name(self) -> &'static str {
-        match self {
-            Self::Releases => "releases",
-            Self::Environments => "environments",
-            Self::Contexts => "contexts",
-            Self::Snapshots => "snapshots",
-            Self::Selections => "selections",
-            Self::Attempts => "attempts",
-            Self::JobPublications => "job_publications",
-            Self::ComparisonPublications => "comparison_publications",
-            Self::Commands => "commands",
-            Self::JobTransitions => "job_transitions",
-            Self::Claims => "claims",
-            Self::Interests => "interests",
-            Self::SearchProjections => "search_projections",
-            Self::ArtifactReceipts => "artifact_receipts",
-            Self::RetainedResults => "retained_results",
-            Self::ExecutionRoots => "execution_roots",
-            Self::PhysicalOwners => "physical_owners",
-            Self::StorageReservations => "storage_reservations",
-        }
-    }
-    pub(crate) fn reference(self) -> datafusion::common::TableReference {
-        datafusion::common::TableReference::full("state", "records", self.name())
-    }
-    pub(crate) fn key(self) -> &'static str {
-        match self {
-            Self::Releases => "release_id",
-            Self::Environments => "environment_id",
-            Self::Contexts | Self::Selections => "context_id",
-            Self::Snapshots => "snapshot_id",
-            Self::Attempts => "association_id",
-            Self::JobPublications
-            | Self::ComparisonPublications
-            | Self::Commands
-            | Self::JobTransitions
-            | Self::Claims => "job_id",
-            Self::Interests => "interest_id",
-            Self::SearchProjections => "projection_id",
-            Self::ArtifactReceipts => "receipt_id",
-            Self::RetainedResults => "result_artifact_id",
-            Self::ExecutionRoots => "root",
-            Self::PhysicalOwners => "name",
-            Self::StorageReservations => "reservation_id",
-        }
-    }
-    pub(crate) fn schema(self) -> Result<SchemaRef> {
-        Ok(match self {
-            Self::Releases => projection::releases(&[])?,
-            Self::Environments => projection::environments(&[])?,
-            Self::Contexts => projection::contexts(&[])?,
-            Self::Snapshots => projection::snapshots(&[])?,
-            Self::Selections => projection::selections(&[])?,
-            Self::Attempts => projection::attempts(&[])?,
-            Self::JobPublications => projection::job_publications(&[])?,
-            Self::ComparisonPublications => projection::comparison_publications(&[])?,
-            Self::Commands => return Ok(crate::control_jobs::commands()),
-            Self::JobTransitions => return Ok(crate::control_jobs::transitions()),
-            Self::Claims => return Ok(crate::control_jobs::claims()),
-            Self::Interests => return Ok(crate::control_jobs::interests()),
-            Self::SearchProjections => return Ok(crate::search_projection::schema()),
-            Self::ArtifactReceipts => return Ok(crate::artifact_catalog::schema()),
-            Self::RetainedResults => return Ok(crate::result_catalog::schema()),
-            Self::ExecutionRoots | Self::PhysicalOwners | Self::StorageReservations => {
-                return Ok(crate::physical_ownership::schema(self));
-            }
-        }
-        .schema())
-    }
-    pub(crate) fn validate(self, batch: &RecordBatch) -> Result<()> {
-        match self {
-            Self::Commands | Self::JobTransitions | Self::Claims | Self::Interests => {}
-            Self::ArtifactReceipts => {
-                crate::artifact_catalog::decode(batch)?;
-            }
-            Self::RetainedResults
-            | Self::ExecutionRoots
-            | Self::PhysicalOwners
-            | Self::StorageReservations => {}
-            Self::SearchProjections => {
-                crate::search_projection::decode(batch)?;
-            }
-            Self::Releases => {
-                projection::releases_from_batch(batch)?;
-            }
-            Self::Environments => {
-                projection::environments_from_batch(batch)?;
-            }
-            Self::Contexts => {
-                projection::contexts_from_batch(batch)?;
-            }
-            Self::Snapshots => {
-                projection::snapshots_from_batch(batch)?;
-            }
-            Self::Selections => {
-                projection::selections_from_batch(batch)?;
-            }
-            Self::Attempts => {
-                projection::attempts_from_batch(batch)?;
-            }
-            Self::JobPublications => {
-                projection::job_publications_from_batch(batch)?;
-            }
-            Self::ComparisonPublications => {
-                projection::comparison_publications_from_batch(batch)?;
-            }
-        }
-        Ok(())
-    }
+control_relations! {
+    Releases = "releases" => ("release_id", projection::releases(&[])?.schema(), projection::releases_from_batch, None);
+    Environments = "environments" => ("environment_id", projection::environments(&[])?.schema(), projection::environments_from_batch, None);
+    Contexts = "contexts" => ("context_id", projection::contexts(&[])?.schema(), projection::contexts_from_batch, None);
+    Snapshots = "snapshots" => ("snapshot_id", projection::snapshots(&[])?.schema(), projection::snapshots_from_batch, None);
+    Selections = "selections" => ("context_id", projection::selections(&[])?.schema(), projection::selections_from_batch, Some("generation"));
+    Attempts = "attempts" => ("association_id", projection::attempts(&[])?.schema(), projection::attempts_from_batch, None);
+    JobPublications = "job_publications" => ("job_id", projection::job_publications(&[])?.schema(), projection::job_publications_from_batch, None);
+    ComparisonPublications = "comparison_publications" => ("job_id", projection::comparison_publications(&[])?.schema(), projection::comparison_publications_from_batch, None);
+    Commands = "commands" => ("job_id", crate::control_jobs::commands(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), None);
+    JobTransitions = "job_transitions" => ("job_id", crate::control_jobs::transitions(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    Claims = "claims" => ("job_id", crate::control_jobs::claims(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    Interests = "interests" => ("interest_id", crate::control_jobs::interests(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    SearchProjections = "search_projections" => ("projection_id", crate::search_projection::schema(), crate::search_projection::decode, Some("sequence"));
+    ArtifactReceipts = "artifact_receipts" => ("receipt_id", crate::artifact_catalog::schema(), crate::artifact_catalog::decode, None);
+    RetainedResults = "retained_results" => ("result_artifact_id", crate::result_catalog::schema(), |_: &RecordBatch| Ok::<(), DataFusionError>(()), None);
+    ExecutionRoots = "execution_roots" => ("root", crate::physical_ownership::schema(Self::ExecutionRoots), |_: &RecordBatch| Ok::<(), DataFusionError>(()), None);
+    PhysicalOwners = "physical_owners" => ("name", crate::physical_ownership::schema(Self::PhysicalOwners), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    StorageReservations = "storage_reservations" => ("reservation_id", crate::physical_ownership::schema(Self::StorageReservations), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    RetainedCapsules = "retained_capsules" => ("key", crate::physical_ownership::schema(Self::RetainedCapsules), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    RetentionRoots = "retention_roots" => ("root_id", crate::retention::schema(Self::RetentionRoots), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    RetentionLeases = "retention_leases" => ("lease_id", crate::retention::schema(Self::RetentionLeases), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    MaintenanceRuns = "maintenance_runs" => ("run_id", crate::retention::schema(Self::MaintenanceRuns), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
+    CleanupObligations = "cleanup_obligations" => ("obligation_id", crate::retention::schema(Self::CleanupObligations), |_: &RecordBatch| Ok::<(), DataFusionError>(()), Some("sequence"));
 }
 
 /// Additions from one producer job. A selection must be paired with its expected base.
@@ -308,12 +201,43 @@ pub struct ControlSnapshot {
     pub(crate) delta: DeltaStore,
     version: u64,
     identity: String,
+    table_id: String,
+    contract_id: String,
     control: Arc<dyn TableProvider>,
     files: usize,
     lease: Option<Arc<File>>,
+    retention: Option<crate::retention::RetentionStore>,
     views: Arc<tokio::sync::OnceCell<crate::native_catalog::Tables>>,
 }
 impl ControlSnapshot {
+    /// Enroll dependencies before their provider/byte capture. Candidate admission
+    /// snapshots cannot open external inputs without physical protection.
+    pub(crate) async fn protect(
+        &self,
+        owner: String,
+        kind: crate::retention::ProtectionKind,
+        dependencies: Vec<crate::retention::Dependency>,
+    ) -> Result<crate::leases::ReadProtection> {
+        if let Some(retention) = &self.retention {
+            return Ok(crate::leases::ReadProtection::Durable(
+                retention.enroll(owner, kind, dependencies).await?,
+            ));
+        }
+        self.lease
+            .clone()
+            .map(crate::leases::ReadProtection::Root)
+            .ok_or_else(|| invalid("dependent read requires captured protection"))
+    }
+    pub(crate) fn retained_table(&self) -> crate::retention::TableVersion {
+        crate::retention::TableVersion {
+            table_uri: "control".into(),
+            table_id: self.table_id.clone(),
+            version: self.version,
+            contract_id: self.contract_id.clone(),
+            cohort_id: None,
+        }
+    }
+
     pub async fn search_projection(
         &self,
         runtime: &QueryRuntime,
@@ -340,7 +264,7 @@ impl ControlSnapshot {
             .await?
             .table("state.records.search_projections")
             .await?
-            .filter(col("snapshot_id").eq(lit(snapshot.as_str())))?;
+            .filter(col("snapshot_id").eq(snapshot.literal()))?;
         if current {
             frame = frame.filter(col("revision").eq(lit(crate::search_projection::revision())))?;
         }
@@ -390,7 +314,13 @@ impl ControlSnapshot {
             .await?;
         runtime.require_empty(session.sql("SELECT parent_context_id FROM export_contexts c LEFT ANTI JOIN export_contexts p ON c.parent_context_id=p.context_id WHERE c.parent_context_id IS NOT NULL LIMIT 1").await?, "export_context_parent", "export").await?;
         runtime.require_empty(session.sql("SELECT 'export_contexts' AS witness FROM export_contexts HAVING count(DISTINCT context_id)>256").await?, "export_context_count", "export").await?;
-        let results = session.sql("WITH RECURSIVE roots AS (SELECT delivery.artifact_id AS id FROM state.records.job_publications WHERE snapshot_id IN (SELECT snapshot_id FROM export_snapshots) UNION SELECT delivery.artifact_id AS id FROM state.records.comparison_publications WHERE after_snapshot_id IN (SELECT snapshot_id FROM export_snapshots)), edges AS (SELECT result_artifact_id,unnest(references) AS child FROM state.records.retained_results), walk AS (SELECT id,make_array(id) AS path,0 AS depth FROM roots UNION ALL SELECT e.child.artifact_id,array_append(w.path,e.child.artifact_id),w.depth+1 FROM walk w JOIN edges e ON w.id=e.result_artifact_id WHERE w.depth<64 AND NOT array_has(w.path,e.child.artifact_id)) SELECT DISTINCT id,depth FROM walk").await?;
+        let roots = session.sql("SELECT delivery.artifact_id AS id FROM state.records.job_publications WHERE snapshot_id IN (SELECT snapshot_id FROM export_snapshots) UNION SELECT delivery.artifact_id AS id FROM state.records.comparison_publications WHERE after_snapshot_id IN (SELECT snapshot_id FROM export_snapshots)").await?;
+        crate::native_catalog::work(
+            &session,
+            "export_result_roots",
+            artifact_references(roots)?.into_view(),
+        )?;
+        let results = session.sql("WITH RECURSIVE edges AS (SELECT result_artifact_id,unnest(references) AS child FROM state.records.retained_results), walk AS (SELECT id,make_array(id) AS path,0 AS depth FROM export_result_roots UNION ALL SELECT e.child.artifact_id,array_append(w.path,e.child.artifact_id),w.depth+1 FROM walk w JOIN edges e ON w.id=e.result_artifact_id WHERE w.depth<64 AND NOT array_has(w.path,e.child.artifact_id)) SELECT DISTINCT id,depth FROM walk").await?;
         crate::native_catalog::work(&session, "export_results", results.into_view())?;
         runtime
             .require_empty(
@@ -401,7 +331,9 @@ impl ControlSnapshot {
                 "export",
             )
             .await?;
-        let artifacts = session.sql("WITH receipts AS (SELECT unnest(acquisitions) AS artifact FROM state.records.attempts WHERE snapshot_id IN (SELECT snapshot_id FROM export_snapshots)) SELECT artifact.artifact_id AS id FROM receipts UNION SELECT id FROM export_results").await?;
+        let receipts = session.sql("WITH receipts AS (SELECT unnest(acquisitions) AS artifact FROM state.records.attempts WHERE snapshot_id IN (SELECT snapshot_id FROM export_snapshots)) SELECT artifact.artifact_id AS id FROM receipts").await?;
+        let artifacts = artifact_references(receipts)?
+            .union_distinct(session.sql("SELECT id FROM export_results").await?)?;
         crate::native_catalog::work(&session, "export_artifacts", artifacts.into_view())?;
         // Select within each captured typed relation before encoding the tagged union. This
         // keeps predicates over semantic fields and avoids extracting nested payloads from a
@@ -440,12 +372,12 @@ impl ControlSnapshot {
                 "SELECT * FROM state.records.artifact_receipts WHERE artifact.artifact_id IN (SELECT id FROM export_artifacts)",
             ),
         ];
-        let rebound = crate::native_catalog::batch(
+        let rebound_plan = crate::native_catalog::batch(
             &session,
             "export_rebound",
             pack_rows(Table::Snapshots, projection::snapshots(rebound)?)?,
         )?;
-        let projections = crate::native_catalog::batch(
+        let projections_plan = crate::native_catalog::batch(
             &session,
             "export_projections",
             pack_rows(
@@ -453,12 +385,13 @@ impl ControlSnapshot {
                 crate::search_projection::encode(projections)?,
             )?,
         )?;
-        let mut input = control_projection(rebound)?.union(control_projection(projections)?)?;
+        let mut input =
+            control_projection(rebound_plan)?.union(control_projection(projections_plan)?)?;
         for (table, sql) in queries {
             input = input.union(pack_plan(table, session.sql(sql).await?)?)?;
         }
         let target = ControlStore::open(data_root, runtime.clone())?;
-        let destination = target.pin().await?;
+        let destination = target.capture().await?;
         // Creating a table and installing its CHECK feature can use separate Delta versions.
         // Emptiness is a native row property, never a guess from the log's version number.
         runtime
@@ -466,6 +399,14 @@ impl ControlSnapshot {
                 runtime
                     .session()
                     .read_table(Arc::clone(&destination.control))?
+                    .filter(col("record_kind").in_list(
+                        vec![
+                            lit("retention_leases"),
+                            lit("maintenance_runs"),
+                            lit("cleanup_obligations"),
+                        ],
+                        true,
+                    ))?
                     .select(vec![lit("nonempty_export_destination").alias("witness")])?
                     .limit(0, Some(1))?,
                 "empty_export_destination",
@@ -482,6 +423,11 @@ impl ControlSnapshot {
                 crate::result_relations::retain(&target.delta, &result.result_artifact_id, &record)
                     .await?;
         }
+        let mut roots = publication_roots(rebound, projections, destination.generation() + 1);
+        roots.extend(retained.iter().map(|record| {
+            crate::result_catalog::retained_root(record, destination.generation() + 1)
+        }));
+        input = input.union(pack_plan(Table::RetentionRoots, session.read_batch(<crate::retention::RetentionRoot as enrichment_core::native_union::NativeStruct>::batch(&roots)?)?)?)?;
         let retained = session.read_batch(<enrichment_core::operation::results::RetainedResult as enrichment_core::native_union::NativeStruct>::batch(&retained)?)?;
         input = input.union(pack_plan(Table::RetainedResults, retained)?)?;
         // Materialize the selected native DAG once. Admission over the provider then reuses
@@ -590,22 +536,8 @@ impl ControlSnapshot {
                     let raw =
                         datafusion::common::TableReference::full("state", "history", table.name());
                     let mut frame = staging.table(raw).await?;
-                    if matches!(
-                        table,
-                        Table::Selections
-                            | Table::JobTransitions
-                            | Table::Claims
-                            | Table::Interests
-                            | Table::SearchProjections
-                            | Table::PhysicalOwners
-                            | Table::StorageReservations
-                    ) {
+                    if let Some(order) = table.order() {
                         use datafusion::logical_expr::ExprFunctionExt;
-                        let order = if table == Table::Selections {
-                            "generation"
-                        } else {
-                            "sequence"
-                        };
                         let rank = datafusion::functions_window::expr_fn::row_number()
                             .partition_by(vec![col(table.key())])
                             .order_by(vec![col(order).sort(false, false)])
@@ -623,34 +555,10 @@ impl ControlSnapshot {
                                     .collect::<Vec<_>>(),
                             )?;
                     } else {
-                        // Hash the declared native values once. DISTINCT over every nested
-                        // column allocates one wide row encoder per admission branch, even for
-                        // mostly NULL control variants. The digest preserves semantic equality;
-                        // key uniqueness below still refuses two different values for one key.
-                        use datafusion::logical_expr::ExprFunctionExt;
-                        let fields = table.schema()?.fields().clone();
-                        let digest = datafusion::functions::crypto::expr_fn::sha256(
-                            enrichment_core::native_identity::canonical_bytes(
-                                format!("control-record/1/{}", table.name()),
-                                fields.clone(),
-                            )
-                            .call(fields.iter().map(|field| col(field.name())).collect()),
-                        );
-                        let rank = datafusion::functions_window::expr_fn::row_number()
-                            .partition_by(vec![col("native_record_digest")])
-                            .order_by(vec![col(table.key()).sort(true, false)])
-                            .build()?
-                            .alias("native_record_position");
-                        frame = frame
-                            .with_column("native_record_digest", digest)?
-                            .window(vec![rank])?
-                            .filter(col("native_record_position").eq(lit(1u64)))?
-                            .select(
-                                fields
-                                    .iter()
-                                    .map(|field| col(field.name()))
-                                    .collect::<Vec<_>>(),
-                            )?;
+                        frame = crate::native_rows::distinct(
+                            frame,
+                            &format!("control-record/1/{}", table.name()),
+                        )?;
                     }
                     if table == Table::JobTransitions {
                         use datafusion::{
@@ -798,7 +706,7 @@ impl ControlSnapshot {
         let root = session
             .table("state.records.snapshots")
             .await?
-            .filter(col("snapshot_id").eq(lit(snapshot.as_str())))?
+            .filter(col("snapshot_id").eq(snapshot.literal()))?
             .select(vec![
                 col("snapshot_id").alias_with_metadata(
                     "snapshot_id",
@@ -857,7 +765,7 @@ impl ControlSnapshot {
         let heads = session.table("state.history.selections").await?;
         let target = heads
             .clone()
-            .filter(col("snapshot_id").eq(lit(id.as_str())))?
+            .filter(col("snapshot_id").eq(id.literal()))?
             .sort(vec![col("generation").sort(false, false)])?
             .limit(0, Some(1))?;
         crate::native_catalog::work(&session, "selected_publication", target.into_view())?;
@@ -895,7 +803,7 @@ impl ControlSnapshot {
             session
                 .table("state.records.snapshots")
                 .await?
-                .filter(col("snapshot_id").eq(lit(id.as_str())))?,
+                .filter(col("snapshot_id").eq(id.literal()))?,
             Table::Snapshots,
             projection::snapshots_from_batch,
         )
@@ -911,7 +819,7 @@ impl ControlSnapshot {
             session
                 .table("state.records.releases")
                 .await?
-                .filter(col("release_id").eq(lit(id.as_str())))?,
+                .filter(col("release_id").eq(id.literal()))?,
             Table::Releases,
             projection::releases_from_batch,
         )
@@ -934,15 +842,30 @@ impl ControlSnapshot {
             Ecosystem::Rust => "rust",
             Ecosystem::Python => "python",
         };
-        let mut predicate = col("ecosystem")
-            .eq(lit(ecosystem))
-            .and(
-                datafusion::functions::string::expr_fn::lower(col("package"))
+        let mut predicate =
+            datafusion::functions::core::expr_ext::FieldAccessor::field(col("key"), "ecosystem")
+                .eq(lit(ecosystem))
+                .and(
+                    datafusion::functions::string::expr_fn::lower(
+                        datafusion::functions::core::expr_ext::FieldAccessor::field(
+                            col("key"),
+                            "package",
+                        ),
+                    )
                     .eq(lit(name.to_lowercase())),
-            )
-            .and(col("version").eq(lit(version)));
+                )
+                .and(
+                    datafusion::functions::core::expr_ext::FieldAccessor::field(
+                        col("key"),
+                        "version",
+                    )
+                    .eq(lit(version)),
+                );
         if let Some(registry) = registry {
-            predicate = predicate.and(col("registry").eq(lit(registry)));
+            predicate = predicate.and(
+                datafusion::functions::core::expr_ext::FieldAccessor::field(col("key"), "registry")
+                    .eq(lit(registry)),
+            );
         }
         one(
             runtime,
@@ -969,7 +892,7 @@ impl ControlSnapshot {
             session
                 .table("state.records.contexts")
                 .await?
-                .filter(col("context_id").eq(lit(id.as_str())))?,
+                .filter(col("context_id").eq(id.literal()))?,
             Table::Contexts,
             projection::contexts_from_batch,
         )
@@ -982,7 +905,7 @@ impl ControlSnapshot {
             session
                 .table("state.records.environments")
                 .await?
-                .filter(col("environment_id").eq(lit(context.environment_id.as_str())))?,
+                .filter(col("environment_id").eq(context.environment_id.literal()))?,
             Table::Environments,
             projection::environments_from_batch,
         )
@@ -1002,8 +925,8 @@ impl ControlSnapshot {
                     .await?
                     .filter(
                         col("parent_context_id")
-                            .eq(lit(parent.context_id.as_str()))
-                            .and(col("release_id").eq(lit(parent.release_id.as_str()))),
+                            .eq(parent.context_id.literal())
+                            .and(col("release_id").eq(parent.release_id.literal())),
                     )?
                     .sort(vec![col("context_id").sort(true, false)])?
                     .limit(0, Some(65))?,
@@ -1074,36 +997,45 @@ impl ControlStore {
     }
     async fn load(&self) -> Result<DeltaTable> {
         let _initialization = self.initialization.lock().await;
-        match self.delta.load("control", None).await {
-            Ok(table) => Ok(table),
-            Err(error) if !self.read_only && missing_table(&error) => {
-                match self
-                    .delta
-                    .create_with_rules(
-                        "control",
-                        &self.contract,
-                        false,
-                        &[
-                            ("record_payload", tag_rule()),
-                            ("cleanup_observation", "claims IS NULL OR claims.cleanup_state <> 'settled' OR (claims.cleanup_observer IS NOT NULL AND claims.cleanup_confirmed_at IS NOT NULL)".into()),
-                        ],
-                    )
-                    .await
-                {
-                    Ok(table) => Ok(table),
-                    Err(error) if concurrent_creation(&error) => {
-                        self.delta.load("control", None).await
-                    }
-                    Err(error) => Err(error),
-                }
-            }
-            Err(error) => Err(error),
+        if self.read_only {
+            let table = self.delta.load("control", None).await?;
+            crate::native_delta::verify_contract(
+                &table,
+                &self.contract,
+                &self.runtime.session().state(),
+            )?;
+            return Ok(table);
         }
+        self.delta.open_or_create("control", &self.contract, false, &[
+            ("record_payload", tag_rule()),
+            ("cleanup_observation", "claims IS NULL OR claims.cleanup_state <> 'settled' OR (claims.cleanup_observer IS NOT NULL AND claims.cleanup_confirmed_at IS NOT NULL)".into()),
+        ]).await
     }
+
     /// Capture the exact current Delta snapshot, protected for the request lifetime.
     /// # Errors
     /// Missing history, corrupt schemas and native I/O fail explicitly.
     pub async fn pin(&self) -> Result<Arc<ControlSnapshot>> {
+        if self.read_only {
+            return self.capture().await;
+        }
+        let lease = crate::leases::shared(&self.root)?;
+        let retention = crate::retention::RetentionStore::new(self.clone(), self.runtime.clone());
+        let (version, protection) = retention.enroll_control().await?;
+        let table = self.delta.load("control", Some(version)).await?;
+        let captured = self.pin_table(&table, Some(lease)).await?;
+        let mut captured = captured.as_ref().clone();
+        captured.control = crate::leases::protected_provider(
+            captured.control,
+            protection,
+            &self.runtime.session(),
+        )?;
+        Ok(Arc::new(captured))
+    }
+
+    // Bootstrap only for the atomic protection transaction itself. Its shared root
+    // lock covers metadata capture; no recursive enrollment or user query is started.
+    pub(crate) async fn capture(&self) -> Result<Arc<ControlSnapshot>> {
         let lease = crate::leases::shared(&self.root)?;
         let table = self.load().await?;
         self.pin_table(&table, Some(lease)).await
@@ -1121,9 +1053,13 @@ impl ControlStore {
             delta: self.delta.clone(),
             version,
             identity: format!("{}:{version}", snapshot.metadata().id()),
+            table_id: snapshot.metadata().id().into(),
+            contract_id: self.contract.identity().into(),
             control: self.delta.provider(table, &self.contract).await?,
             files: table.get_file_uris().map_err(external)?.count(),
             lease,
+            retention: (!self.read_only)
+                .then(|| crate::retention::RetentionStore::new(self.clone(), self.runtime.clone())),
             views: Arc::new(tokio::sync::OnceCell::new()),
         }))
     }
@@ -1137,9 +1073,12 @@ impl ControlStore {
             delta: self.delta.clone(),
             version,
             identity: format!("candidate:{version}"),
+            table_id: "candidate".into(),
+            contract_id: self.contract.identity().into(),
             control: frame.into_view(),
             files: 0,
             lease,
+            retention: None,
             views: Arc::new(tokio::sync::OnceCell::new()),
         }
     }
@@ -1368,25 +1307,83 @@ impl ControlStore {
             return Err(invalid("control table is read-only"));
         }
         let lease = crate::leases::shared(&self.root)?;
-        let table = self.load().await?;
-        let state = Arc::new(self.runtime.session().state());
+        let retention = crate::retention::RetentionStore::new(self.clone(), self.runtime.clone());
+        let run = retention
+            .claim_maintenance(
+                "control".into(),
+                format!("compact/{}", uuid::Uuid::new_v4()),
+            )
+            .await?;
+        let preparation = async {
+            let table = self.load().await?;
+            let snapshot = table.snapshot().map_err(external)?;
+            let binding = crate::retention::TableVersion {
+                table_uri: "control".into(),
+                table_id: snapshot.metadata().id().into(),
+                version: snapshot.version(),
+                contract_id: self.contract.identity().into(),
+                cohort_id: None,
+            };
+            let decision = retention.maintenance_decision(&run, &binding).await?;
+            let state = Arc::new(self.runtime.session().state());
+            let properties = crate::native_policy::delta_writer_properties(
+                state.as_ref(),
+                Some(&self.contract.semantic_schema()),
+            )?;
+            Ok::<_, DataFusionError>((table, decision, state, properties))
+        }
+        .await;
+        let (table, decision, state, properties) = match preparation {
+            Ok(prepared) => prepared,
+            Err(error) => {
+                retention.finish_maintenance(&run, false).await?;
+                return Err(error);
+            }
+        };
+        let commit = deltalake::kernel::transaction::CommitProperties::default()
+            .with_max_retries(0)
+            .with_cleanup_expired_logs(Some(false));
         let optimize = table
             .optimize()
-            .with_writer_properties(crate::native_policy::delta_writer_properties(
-                state.as_ref(),
-                None,
-            )?)
-            .with_session_state(state);
-        let (table, _) = self
+            .with_writer_properties(properties)
+            .with_session_state(state)
+            .with_session_fallback_policy(
+                deltalake::delta_datafusion::SessionFallbackPolicy::RequireSessionState,
+            )
+            .with_commit_properties(commit);
+        // Preserve the distinction between a finished native operation returning an
+        // error and an interrupted task with an unknown physical/commit outcome.
+        let completed = self
             .runtime
             .native_write(async move {
                 let _lease = lease;
-                optimize.await.map_err(external)
+                Ok(async {
+                    let (table, _) = optimize.await.map_err(external)?;
+                    deltalake::protocol::checkpoints::create_checkpoint(&table, None)
+                        .await
+                        .map_err(external)?;
+                    let version = table
+                        .version()
+                        .ok_or_else(|| invalid("unloaded control compaction result"))?;
+                    if decision.log_floor < version {
+                        deltalake::protocol::log_compaction::compact_logs(
+                            &table,
+                            decision.log_floor,
+                            version,
+                            None,
+                        )
+                        .await
+                        .map_err(external)?;
+                    }
+                    Ok::<_, DataFusionError>(version)
+                }
+                .await)
             })
             .await?;
-        table
-            .version()
-            .ok_or_else(|| invalid("unloaded control compaction result"))
+        retention
+            .finish_maintenance(&run, completed.is_ok())
+            .await?;
+        completed
     }
     async fn validate(&self, pin: &ControlSnapshot) -> Result<()> {
         let session = pin.bind(&self.runtime, true).await?;
@@ -1427,6 +1424,48 @@ impl ControlStore {
             "association_id",
         )
         .await?;
+        for (table, key, column, nested) in [
+            (
+                "releases",
+                enrichment_core::native_key::Key::Release,
+                "release_id",
+                true,
+            ),
+            (
+                "environments",
+                enrichment_core::native_key::Key::Environment,
+                "environment_id",
+                false,
+            ),
+            (
+                "contexts",
+                enrichment_core::native_key::Key::Context,
+                "context_id",
+                false,
+            ),
+        ] {
+            let inputs = key
+                .schema()
+                .fields()
+                .iter()
+                .map(|field| {
+                    if nested {
+                        col("key").field(field.name())
+                    } else {
+                        col(field.name())
+                    }
+                })
+                .collect();
+            invariants.push(
+                session
+                    .table(format!("state.records.{table}"))
+                    .await?
+                    .filter(col(column).not_eq(key.identity_expression(inputs)?))?
+                    .select(vec![col(column)])?,
+                "native_catalog_identity",
+                "catalog_admission",
+            )?;
+        }
         let attempts = session.table("state.records.attempts").await?;
         invariants.push(
             attempts
@@ -1439,6 +1478,8 @@ impl ControlStore {
             "catalog_admission",
         )?;
         crate::search_projection::admission_rules(&mut invariants, &session).await?;
+        crate::retention::admission_rules(&mut invariants, &session).await?;
+        crate::physical_ownership::capsule_admission(&mut invariants, &session).await?;
         for rule in CONDITIONAL_RULES {
             invariants.push(
                 rule.violations(&session).await?,
@@ -1449,6 +1490,23 @@ impl ControlStore {
         self.runtime.admit(invariants).await
     }
 }
+/// Closure members are references, even when their root was selected from a complete
+/// artifact receipt. Preserve the declared artifact domain while expressing that role
+/// explicitly, so native recursive UNION inputs have the same field contract.
+fn artifact_references(frame: DataFrame) -> Result<DataFrame> {
+    let schema = Table::RetainedResults.schema()?;
+    let field = schema.field_with_name("result_artifact_id")?;
+    enrichment_core::native_analysis::compatible(
+        frame.schema().field(0),
+        field,
+        "artifact closure",
+    )?;
+    frame.select(vec![col("id").alias_with_metadata(
+        "id",
+        Some(datafusion::common::metadata::FieldMetadata::from(field)),
+    )])
+}
+
 async fn current(
     session: &SessionContext,
     runtime: &QueryRuntime,
@@ -1459,7 +1517,7 @@ async fn current(
             session
                 .table("state.records.selections")
                 .await?
-                .filter(col("context_id").eq(lit(id.as_str())))?
+                .filter(col("context_id").eq(id.literal()))?
                 .limit(0, Some(2))?,
             Some(crate::preparation::QueryFamily::Catalog(Table::Selections)),
         )
@@ -1568,6 +1626,40 @@ fn pack_plan(table: Table, frame: DataFrame) -> Result<DataFrame> {
     control_projection(frame.select(expressions)?)
 }
 
+fn publication_roots(
+    snapshots: &[SnapshotEntry],
+    projections: &[crate::search_projection::Checkpoint],
+    version: u64,
+) -> Vec<crate::retention::RetentionRoot> {
+    snapshots
+        .iter()
+        .map(|snapshot| crate::retention::RetentionRoot {
+            root_id: snapshot.snapshot_id.to_string(),
+            dependencies: snapshot
+                .publication
+                .tables
+                .iter()
+                .map(crate::retention::dependency)
+                .collect(),
+            removed: false,
+            sequence: version,
+        })
+        .chain(projections.iter().map(|projection| {
+            crate::retention::RetentionRoot {
+                root_id: projection.projection_id.clone(),
+                dependencies: projection
+                    .inputs
+                    .iter()
+                    .chain(&projection.outputs)
+                    .map(crate::retention::dependency)
+                    .collect(),
+                removed: false,
+                sequence: version,
+            }
+        }))
+        .collect()
+}
+
 fn control_projection(frame: DataFrame) -> Result<DataFrame> {
     let (state, plan) = frame.into_parts();
     let schema = Arc::new(control_schema()?.as_ref().clone().try_into()?);
@@ -1622,6 +1714,7 @@ fn control_input(
     mut delta: ControlBatch,
     version: u64,
 ) -> Result<DataFrame> {
+    use enrichment_core::native_union::NativeStruct;
     if [
         delta.releases.len(),
         delta.environments.len(),
@@ -1660,7 +1753,14 @@ fn control_input(
     for checkpoint in &mut delta.search_projections {
         checkpoint.sequence = version;
     }
+    // Roots are selected in the same Delta commit as their publications. Candidate
+    // files are never mistaken for publication merely because they exist on disk.
+    let roots = publication_roots(&delta.snapshots, &delta.search_projections, version);
     let frames = [
+        (
+            Table::RetentionRoots,
+            crate::retention::RetentionRoot::batch(&roots)?,
+        ),
         (Table::Releases, projection::releases(&delta.releases)?),
         (
             Table::Environments,
@@ -1697,9 +1797,6 @@ fn control_input(
     }
 }
 
-fn concurrent_creation(error: &DataFusionError) -> bool {
-    matches!(error.find_root(), DataFusionError::External(inner) if matches!(inner.downcast_ref::<deltalake::DeltaTableError>(), Some(deltalake::DeltaTableError::VersionAlreadyExists(_))))
-}
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Plan(message.into())
 }

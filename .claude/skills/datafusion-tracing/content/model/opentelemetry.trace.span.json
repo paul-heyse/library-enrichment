@@ -1,0 +1,146 @@
+{
+  "module": "opentelemetry::trace::span",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.trace.span.md",
+  "items": [
+    {
+      "path": "opentelemetry::trace::span::SpanKind",
+      "name": "SpanKind",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum SpanKind",
+      "summary": "`SpanKind` describes the relationship between the [`Span`], its parents, and its children in a trace.",
+      "doc": "api/opentelemetry.trace.span.md#spankind",
+      "aliases": [
+        "opentelemetry::trace::SpanKind"
+      ],
+      "variants": [
+        "Client",
+        "Server",
+        "Producer",
+        "Consumer",
+        "Internal"
+      ],
+      "methods": []
+    },
+    {
+      "path": "opentelemetry::trace::span::Status",
+      "name": "Status",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum Status",
+      "summary": "The status of a [`Span`].",
+      "doc": "api/opentelemetry.trace.span.md#status",
+      "aliases": [
+        "opentelemetry::trace::Status"
+      ],
+      "variants": [
+        "Unset",
+        "Error",
+        "Ok"
+      ],
+      "methods": [
+        {
+          "name": "error",
+          "signature": "fn error(description: impl Into<Cow<'static, str>>) -> Self",
+          "summary": "Create a new error status with a given description."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::span::Span",
+      "name": "Span",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait Span",
+      "summary": "The interface for a single operation within a trace.",
+      "doc": "api/opentelemetry.trace.span.md#span",
+      "aliases": [
+        "opentelemetry::trace::Span"
+      ],
+      "implementors": [
+        "opentelemetry::global::trace::BoxedSpan",
+        "opentelemetry::trace::noop::NoopSpan",
+        "opentelemetry_sdk::trace::span::Span"
+      ],
+      "required_methods": [
+        "add_event_with_timestamp",
+        "add_link",
+        "end_with_timestamp",
+        "is_recording",
+        "set_attribute",
+        "set_status",
+        "span_context",
+        "update_name"
+      ],
+      "provided_methods": [
+        "add_event",
+        "end",
+        "record_error",
+        "set_attributes"
+      ],
+      "methods": [
+        {
+          "name": "add_event",
+          "signature": "fn add_event<T>(&mut self, name: T, attributes: Vec<KeyValue>) where T: Into<Cow<'static, str>>",
+          "summary": "Record an event in the context this span."
+        },
+        {
+          "name": "add_event_with_timestamp",
+          "signature": "fn add_event_with_timestamp<T>(&mut self, name: T, timestamp: SystemTime, attributes: Vec<KeyValue>) where T: Into<Cow<'static, str>>",
+          "summary": "Record an event with a timestamp in the context this span."
+        },
+        {
+          "name": "add_link",
+          "signature": "fn add_link(&mut self, span_context: SpanContext, attributes: Vec<KeyValue>)",
+          "summary": "Adds [`Link`] to another [`SpanContext`]."
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&mut self)",
+          "summary": "Signals that the operation described by this span has now ended."
+        },
+        {
+          "name": "end_with_timestamp",
+          "signature": "fn end_with_timestamp(&mut self, timestamp: SystemTime)",
+          "summary": "Signals that the operation described by this span ended at the given time."
+        },
+        {
+          "name": "is_recording",
+          "signature": "fn is_recording(&self) -> bool",
+          "summary": "Returns `true` if this span is recording information."
+        },
+        {
+          "name": "record_error",
+          "signature": "fn record_error(&mut self, err: &dyn Error)",
+          "summary": "Record an error as an event for this span."
+        },
+        {
+          "name": "set_attribute",
+          "signature": "fn set_attribute(&mut self, attribute: KeyValue)",
+          "summary": "Set an attribute of this span."
+        },
+        {
+          "name": "set_attributes",
+          "signature": "fn set_attributes(&mut self, attributes: impl IntoIterator<Item = KeyValue>)",
+          "summary": "Set multiple attributes of this span."
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status(&mut self, status: Status)",
+          "summary": "Sets the status of this `Span`."
+        },
+        {
+          "name": "span_context",
+          "signature": "fn span_context(&self) -> &SpanContext",
+          "summary": "A reference to the [`SpanContext`] for this span."
+        },
+        {
+          "name": "update_name",
+          "signature": "fn update_name<T>(&mut self, new_name: T) where T: Into<Cow<'static, str>>",
+          "summary": "Updates the span's name."
+        }
+      ]
+    }
+  ]
+}

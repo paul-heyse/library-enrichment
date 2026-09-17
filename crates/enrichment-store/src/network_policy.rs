@@ -1,5 +1,5 @@
 //! Native endpoint, address and redirect admission, shared by every HTTP consumer.
-use crate::{control_jobs::encode, registry::rows, runtime::QueryRuntime};
+use crate::{registry::rows, runtime::QueryRuntime};
 use arrow::{
     array::StringArray,
     datatypes::{DataType, Field, Schema},
@@ -10,8 +10,8 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{SessionContext, col},
 };
+use enrichment_core::native_union::{NativeStruct, Rule};
 use enrichment_core::policy::{FetchPolicy, PolicyViolation};
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -81,14 +81,11 @@ impl NetworkPolicy {
         let input = crate::native_catalog::batch(
             &self.runtime.session(),
             "network_request",
-            encode(
-                input_schema(),
-                &[Input {
-                    url: url.as_str(),
-                    hop,
-                    resolved_url: None,
-                }],
-            )?,
+            Input::batch(&[Input {
+                url: url.to_string(),
+                hop,
+                resolved_url: None,
+            }])?,
         )?;
         let decision: Decision = rows(&self.runtime, self.decisions(input).await?, 1)
             .await?
@@ -112,7 +109,7 @@ impl NetworkPolicy {
         let inputs = addresses
             .iter()
             .map(|address| Input {
-                url: url.as_str(),
+                url: url.to_string(),
                 hop,
                 resolved_url: Some(format!("https://{address}/")),
             })
@@ -120,7 +117,7 @@ impl NetworkPolicy {
         let input = crate::native_catalog::batch(
             &self.runtime.session(),
             "captured_addresses",
-            encode(input_schema(), &inputs)?,
+            Input::batch(&inputs)?,
         )?;
         let refused = self
             .decisions(input)
@@ -160,21 +157,16 @@ impl NetworkPolicy {
     }
 }
 
-#[derive(Serialize)]
-struct Input<'a> {
-    url: &'a str,
-    hop: u64,
-    resolved_url: Option<String>,
+enrichment_core::native_struct! {
+    struct Input {
+        url: String => Rule::Text,
+        hop: u64 => Rule::Text,
+        resolved_url: Option<String> => Rule::Text,
+    }
 }
-#[derive(Deserialize)]
+enrichment_core::native_struct! {
 struct Decision {
-    refusal: Option<String>,
-    selected_host: Option<String>,
+    refusal: Option<String> => enrichment_core::native_union::Rule::Text,
+    selected_host: Option<String> => enrichment_core::native_union::Rule::Text,
 }
-fn input_schema() -> Arc<Schema> {
-    Arc::new(Schema::new(vec![
-        Field::new("url", DataType::Utf8, false),
-        Field::new("hop", DataType::UInt64, false),
-        Field::new("resolved_url", DataType::Utf8, true),
-    ]))
 }

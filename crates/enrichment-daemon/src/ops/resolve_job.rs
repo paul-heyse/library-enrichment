@@ -24,7 +24,7 @@ use std::{
 };
 
 pub(super) struct Work {
-    pub committed: std::sync::OnceLock<(JobState, String, Envelope)>,
+    pub committed: std::sync::OnceLock<(JobState, enrichment_core::identity::SnapshotId, Envelope)>,
     pub id: String,
     pub request: ResolveRequest,
     pub cancel: Arc<AtomicBool>,
@@ -80,7 +80,7 @@ pub(super) async fn subscribe(
                 .runtime
                 .job_operation(
                     id.clone(),
-                    service.operation_descriptor("library.resolve", &request),
+                    service.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(
                         service.config.network.acquisition_timeout_seconds,
                     ),
@@ -291,9 +291,9 @@ pub(super) fn prepare(
     input_artifact_ids.sort();
     input_artifact_ids.dedup();
     let stage = Resolution {
-        release_id: metadata.release.release_id.to_string(),
-        environment_id: metadata.environment.environment_id.to_string(),
-        context_id: metadata.context.context_id.to_string(),
+        release_id: metadata.release.release_id.clone(),
+        environment_id: metadata.environment.environment_id.clone(),
+        context_id: metadata.context.context_id.clone(),
         attempt_id: run.attempt_id.clone(),
         input_artifact_ids,
         result_artifact_id: result.artifact_id.clone(),
@@ -397,7 +397,7 @@ pub(super) async fn recover(
         .ok_or_else(|| io::Error::other("committed resolution lacks pinned exact inputs"))?;
     if publication.kind != PublishedJobKind::Resolve
         || publication.attempt_id != stage.attempt_id
-        || publication.context_id.as_str() != stage.context_id
+        || publication.context_id.clone() != stage.context_id
         || publication.result_artifact_ids != [stage.result_artifact_id.clone()]
     {
         return Err(io::Error::other(
@@ -408,8 +408,8 @@ pub(super) async fn recover(
         .await
         .map_err(error)?;
     let manifest = reader.manifest();
-    if manifest.metadata.release_id.as_str() != stage.release_id
-        || manifest.metadata.environment_id.as_str() != stage.environment_id
+    if manifest.metadata.release_id.clone() != stage.release_id
+        || manifest.metadata.environment_id.clone() != stage.environment_id
     {
         return Err(io::Error::other(
             "resolution identity disagrees with catalog",

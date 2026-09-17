@@ -12,7 +12,7 @@
 /// The native runtime epoch exposes complete artifact receipts and one current contract.
 extern crate self as enrichment_core;
 
-pub const SCHEMA_VERSION: &str = "3.0";
+pub const SCHEMA_VERSION: &str = "5.0";
 
 /// Canonical snapshot storage, independent of the frozen response envelope.
 pub const SNAPSHOT_SCHEMA_VERSION: &str = evidence::snapshot::FORMAT;
@@ -25,6 +25,7 @@ pub mod evidence;
 pub mod execution;
 pub mod http;
 pub mod identity;
+pub mod mcp_delivery;
 pub mod policy;
 pub mod producer;
 pub mod registry;
@@ -48,6 +49,8 @@ pub mod capsule_protocol;
 
 pub mod native_analysis;
 pub mod native_collections;
+pub mod native_contract;
+pub mod native_id;
 /// Shared Arrow kernels consumed by native DataFusion identity plans.
 pub mod native_identity;
 pub mod native_json;
@@ -58,8 +61,10 @@ pub mod native_record;
 pub mod native_schema;
 pub mod native_text;
 pub mod native_time;
+pub mod native_transport;
 pub mod native_types;
 pub mod native_union;
+pub mod native_wire;
 
 pub mod native_url;
 /// Library-format kernels for optimizer-visible native version operations.

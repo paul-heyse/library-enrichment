@@ -1,0 +1,182 @@
+{
+  "module": "opentelemetry::metrics::instruments",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.metrics.instruments.md",
+  "items": [
+    {
+      "path": "opentelemetry::metrics::instruments::AsyncInstrumentBuilder",
+      "name": "AsyncInstrumentBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct AsyncInstrumentBuilder<'a, I, M>",
+      "summary": "Configuration for building an async instrument.",
+      "doc": "api/opentelemetry.metrics.instruments.md#asyncinstrumentbuilder",
+      "aliases": [
+        "opentelemetry::metrics::AsyncInstrumentBuilder"
+      ],
+      "fields": [
+        "instrument_provider",
+        "name",
+        "description",
+        "unit",
+        "callbacks"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> ObservableGauge<u64>",
+          "summary": "Validates the instrument configuration and creates a new `ObservableGauge<u64>`. In case of invalid configuration, a no-op instrument is returned and an error is logged using internal logging."
+        },
+        {
+          "name": "with_callback",
+          "signature": "fn with_callback<F>(self, callback: F) -> Self where F: Fn(&dyn AsyncInstrument<M>) + Send + Sync + 'static",
+          "summary": "Set the callback to be called for this instrument."
+        },
+        {
+          "name": "with_description",
+          "signature": "fn with_description<S: Into<Cow<'static, str>>>(self, description: S) -> Self",
+          "summary": "Set the description for this instrument"
+        },
+        {
+          "name": "with_unit",
+          "signature": "fn with_unit<S: Into<Cow<'static, str>>>(self, unit: S) -> Self",
+          "summary": "Set the unit for this instrument."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::metrics::instruments::HistogramBuilder",
+      "name": "HistogramBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct HistogramBuilder<'a, T>",
+      "summary": "Configuration for building a Histogram.",
+      "doc": "api/opentelemetry.metrics.instruments.md#histogrambuilder",
+      "aliases": [
+        "opentelemetry::metrics::HistogramBuilder"
+      ],
+      "fields": [
+        "instrument_provider",
+        "name",
+        "description",
+        "unit",
+        "boundaries"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Histogram<u64>",
+          "summary": "Creates a new instrument."
+        },
+        {
+          "name": "with_boundaries",
+          "signature": "fn with_boundaries(self, boundaries: Vec<f64>) -> Self",
+          "summary": "Set the boundaries for this histogram."
+        },
+        {
+          "name": "with_description",
+          "signature": "fn with_description<S: Into<Cow<'static, str>>>(self, description: S) -> Self",
+          "summary": "Set the description for this instrument"
+        },
+        {
+          "name": "with_unit",
+          "signature": "fn with_unit<S: Into<Cow<'static, str>>>(self, unit: S) -> Self",
+          "summary": "Set the unit for this instrument."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::metrics::instruments::InstrumentBuilder",
+      "name": "InstrumentBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct InstrumentBuilder<'a, T>",
+      "summary": "Configuration for building a sync instrument.",
+      "doc": "api/opentelemetry.metrics.instruments.md#instrumentbuilder",
+      "aliases": [
+        "opentelemetry::metrics::InstrumentBuilder"
+      ],
+      "fields": [
+        "instrument_provider",
+        "name",
+        "description",
+        "unit"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Gauge<f64>",
+          "summary": "Validates the instrument configuration and creates a new `Gauge<f64>`. In case of invalid configuration, a no-op instrument is returned and an error is logged using internal logging."
+        },
+        {
+          "name": "with_description",
+          "signature": "fn with_description<S: Into<Cow<'static, str>>>(self, description: S) -> Self",
+          "summary": "Set the description for this instrument"
+        },
+        {
+          "name": "with_unit",
+          "signature": "fn with_unit<S: Into<Cow<'static, str>>>(self, unit: S) -> Self",
+          "summary": "Set the unit for this instrument."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::metrics::instruments::AsyncInstrument",
+      "name": "AsyncInstrument",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait AsyncInstrument<T>: Send + Sync",
+      "summary": "An SDK implemented instrument that records measurements via callback.",
+      "doc": "api/opentelemetry.metrics.instruments.md#asyncinstrument",
+      "aliases": [
+        "opentelemetry::metrics::AsyncInstrument"
+      ],
+      "required_methods": [
+        "observe"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "observe",
+          "signature": "fn observe(&self, measurement: T, attributes: &[KeyValue])",
+          "summary": "Observes the state of the instrument."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::metrics::instruments::SyncInstrument",
+      "name": "SyncInstrument",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait SyncInstrument<T>: Send + Sync",
+      "summary": "An SDK implemented instrument that records measurements synchronously.",
+      "doc": "api/opentelemetry.metrics.instruments.md#syncinstrument",
+      "aliases": [
+        "opentelemetry::metrics::SyncInstrument"
+      ],
+      "required_methods": [
+        "measure"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "measure",
+          "signature": "fn measure(&self, measurement: T, attributes: &[KeyValue])",
+          "summary": "Records a measurement synchronously."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::metrics::instruments::Callback",
+      "name": "Callback",
+      "kind": "type_alias",
+      "crate": "opentelemetry",
+      "signature": "type Callback<T> = Box<dyn Fn(&dyn AsyncInstrument<T>) + Send + Sync>",
+      "summary": "A function registered with a [Meter] that makes observations for the instruments it is registered with.",
+      "doc": "api/opentelemetry.metrics.instruments.md#callback",
+      "aliases": [
+        "opentelemetry::metrics::Callback"
+      ]
+    }
+  ]
+}

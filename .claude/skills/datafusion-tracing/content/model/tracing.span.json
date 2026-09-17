@@ -1,0 +1,199 @@
+{
+  "module": "tracing::span",
+  "crate": "tracing",
+  "api": "api/tracing.span.md",
+  "items": [
+    {
+      "path": "tracing::span::Entered",
+      "name": "Entered",
+      "kind": "struct",
+      "crate": "tracing",
+      "signature": "struct Entered<'a>",
+      "summary": "A guard representing a span which has been entered and is currently executing.",
+      "doc": "api/tracing.span.md#entered",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        }
+      ]
+    },
+    {
+      "path": "tracing::span::EnteredSpan",
+      "name": "EnteredSpan",
+      "kind": "struct",
+      "crate": "tracing",
+      "signature": "struct EnteredSpan",
+      "summary": "An owned version of [`Entered`], a guard representing a span which has been entered and is currently executing.",
+      "doc": "api/tracing.span.md#enteredspan",
+      "implements": [
+        "core::ops::deref::Deref",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "deref",
+          "signature": "fn deref(&self) -> &Span",
+          "via_trait": "core::ops::deref::Deref"
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "exit",
+          "signature": "fn exit(self) -> Span",
+          "summary": "Exits this span, returning the underlying [`Span`]."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> Option<Id>",
+          "summary": "Returns this span's `Id`, if it is enabled."
+        }
+      ]
+    },
+    {
+      "path": "tracing::span::Span",
+      "name": "Span",
+      "kind": "struct",
+      "crate": "tracing",
+      "signature": "struct Span",
+      "summary": "A handle representing a span, with the capability to enter the span if it exists.",
+      "doc": "api/tracing.span.md#span",
+      "aliases": [
+        "tracing::Span"
+      ],
+      "implements": [
+        "core::ops::drop::Drop",
+        "tracing_opentelemetry::span_ext::OpenTelemetrySpanExt"
+      ],
+      "methods": [
+        {
+          "name": "child_of",
+          "signature": "fn child_of(parent: impl Into<Option<Id>>, meta: &'static Metadata<'static>, values: &field::ValueSet<'_>) -> Span",
+          "summary": "Constructs a new `Span` as child of the given parent span, with the given [metadata] and set of [field values]."
+        },
+        {
+          "name": "current",
+          "signature": "fn current() -> Span",
+          "summary": "Returns a handle to the span [considered by the `Subscriber`] to be the current span."
+        },
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self) -> Entered<'_>",
+          "summary": "Enters this span, returning a guard that will exit the span when dropped."
+        },
+        {
+          "name": "entered",
+          "signature": "fn entered(self) -> EnteredSpan",
+          "summary": "Enters this span, consuming it and returning a [guard][`EnteredSpan`] that will exit the span when dropped."
+        },
+        {
+          "name": "field",
+          "signature": "fn field<Q: field::AsField + ?Sized>(&self, field: &Q) -> Option<field::Field>",
+          "summary": "Returns a [`Field`][super::field::Field] for the field with the given `name`, if one exists,"
+        },
+        {
+          "name": "follows_from",
+          "signature": "fn follows_from(&self, from: impl Into<Option<Id>>) -> &Self",
+          "summary": "Indicates that the span with the given ID has an indirect causal relationship with this span."
+        },
+        {
+          "name": "has_field",
+          "signature": "fn has_field<Q: field::AsField + ?Sized>(&self, field: &Q) -> bool",
+          "summary": "Returns true if this `Span` has a field for the given [`Field`][super::field::Field] or field name."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> Option<Id>",
+          "summary": "Returns this span's `Id`, if it is enabled."
+        },
+        {
+          "name": "in_scope",
+          "signature": "fn in_scope<F: FnOnce() -> T, T>(&self, f: F) -> T",
+          "summary": "Executes the given function in the context of this span."
+        },
+        {
+          "name": "is_disabled",
+          "signature": "fn is_disabled(&self) -> bool",
+          "summary": "Returns `true` if this span was disabled by the subscriber and does not exist."
+        },
+        {
+          "name": "is_none",
+          "signature": "fn is_none(&self) -> bool",
+          "summary": "Returns `true` if this span was constructed by [`Span::none`] and is empty."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> Option<&'static Metadata<'static>>",
+          "summary": "Returns this span's `Metadata`, if it is enabled."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(meta: &'static Metadata<'static>, values: &field::ValueSet<'_>) -> Span",
+          "summary": "Constructs a new `Span` with the given [metadata] and set of [field values]."
+        },
+        {
+          "name": "new_disabled",
+          "signature": "fn new_disabled(meta: &'static Metadata<'static>) -> Span",
+          "summary": "Constructs a new disabled span with the given `Metadata`."
+        },
+        {
+          "name": "new_root",
+          "signature": "fn new_root(meta: &'static Metadata<'static>, values: &field::ValueSet<'_>) -> Span",
+          "summary": "Constructs a new `Span` as the root of its own trace tree, with the given [metadata] and set of [field values]."
+        },
+        {
+          "name": "none",
+          "signature": "const fn none() -> Span",
+          "summary": "Constructs a new span that is *completely disabled*."
+        },
+        {
+          "name": "or_current",
+          "signature": "fn or_current(self) -> Self",
+          "summary": "Returns this span, if it was [enabled] by the current [`Subscriber`], or the [current span] (whose lexical distance may be further than expected),  if this span [is disabled]."
+        },
+        {
+          "name": "record",
+          "signature": "fn record<Q: field::AsField + ?Sized, V: field::Value>(&self, field: &Q, value: V) -> &Self",
+          "summary": "Records that the field described by `field` has the value `value`."
+        },
+        {
+          "name": "with_subscriber",
+          "signature": "fn with_subscriber<T>(&self, f: impl FnOnce((&Id, &Dispatch)) -> T) -> Option<T>",
+          "summary": "Invokes a function with a reference to this span's ID and subscriber."
+        }
+      ]
+    },
+    {
+      "path": "tracing::span::AsId",
+      "name": "AsId",
+      "kind": "trait",
+      "crate": "tracing",
+      "signature": "trait AsId: sealed::Sealed",
+      "summary": "Trait implemented by types which have a span `Id`.",
+      "doc": "api/tracing.span.md#asid",
+      "required_methods": [
+        "as_id"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "as_id",
+          "signature": "fn as_id(&self) -> Option<&Id>",
+          "summary": "Returns the `Id` of the span that `self` corresponds to, or `None` if this corresponds to a disabled span."
+        }
+      ]
+    }
+  ]
+}

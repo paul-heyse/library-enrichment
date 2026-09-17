@@ -1,5 +1,5 @@
 //! One native qualification and execution-route policy over captured physical facts.
-use crate::{control_jobs::encode, registry::rows, runtime::QueryRuntime};
+use crate::{registry::rows, runtime::QueryRuntime};
 use arrow::{
     datatypes::{DataType, Field, Schema},
     record_batch::RecordBatch,
@@ -9,6 +9,7 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{SessionContext, col, lit},
 };
+use enrichment_core::native_union::{NativeStruct, Rule};
 use enrichment_core::{
     config::{Config, ExecutionResources},
     execution::{
@@ -19,7 +20,6 @@ use enrichment_core::{
     policy::ExecutionProfile,
     wire::status::ExecutionReadiness,
 };
-use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::Arc};
 
 /// Captured mechanism outputs, including failures as facts rather than readiness decisions.
@@ -38,10 +38,11 @@ pub struct Policy {
     policy_id: String,
 }
 
-#[derive(Debug, Deserialize)]
+enrichment_core::native_struct! {
 pub struct Qualification {
-    pub qualified: bool,
-    pub detail: String,
+    qualified: bool => enrichment_core::native_union::Rule::Text,
+    detail: String => enrichment_core::native_union::Rule::Text,
+}
 }
 
 fn text(name: &str, nullable: bool) -> Field {
@@ -75,117 +76,83 @@ FROM captured
 fn resource_input<'a>(
     entries: impl IntoIterator<Item = (&'a str, Option<&'a ProcessObservation>)>,
 ) -> Result<RecordBatch> {
-    #[derive(Serialize)]
-    struct Raw<'a> {
-        ecosystem: &'a str,
-        stdout: Option<&'a str>,
-        image_id: Option<&'a str>,
-        command: Option<&'a [String]>,
-        end: Option<&'a enrichment_core::execution::ProcessEnd>,
-        exit_code: Option<i32>,
-        cleanup_confirmed: Option<bool>,
-        operation_id: Option<&'a str>,
-        qualification_id: Option<&'a str>,
+    enrichment_core::native_struct! {
+        struct Raw {
+            ecosystem: String => Rule::Text,
+            stdout: Option<String> => Rule::Text,
+            image_id: Option<String> => Rule::Text,
+            command: Option<Vec<String>> => Rule::Sequence,
+            end: Option<enrichment_core::execution::ProcessEnd> => Rule::Text,
+            exit_code: Option<i32> => Rule::Text,
+            cleanup_confirmed: Option<bool> => Rule::Text,
+            operation_id: Option<String> => Rule::Text,
+            qualification_id: Option<String> => Rule::Text,
+        }
     }
     let input: Vec<_> = entries
         .into_iter()
         .map(|(ecosystem, process)| Raw {
-            ecosystem,
-            stdout: process.map(|p| p.stdout.as_str()),
-            image_id: process.map(|p| p.image_id.as_str()),
-            command: process.map(|p| p.command.as_slice()),
-            end: process.map(|p| &p.end),
+            ecosystem: ecosystem.into(),
+            stdout: process.map(|p| p.stdout.clone()),
+            image_id: process.map(|p| p.image_id.clone()),
+            command: process.map(|p| p.command.clone()),
+            end: process.map(|p| p.end),
             exit_code: process.and_then(|p| p.exit_code),
             cleanup_confirmed: process.map(|p| p.cleanup_confirmed),
-            operation_id: process.map(|p| p.operation_id.as_str()),
+            operation_id: process.map(|p| p.operation_id.clone()),
             qualification_id: process.and_then(|p| match &p.authority {
                 enrichment_core::execution::ProcessAuthority::Qualification { definition_id } => {
-                    Some(definition_id.as_str())
+                    Some(definition_id.clone())
                 }
                 enrichment_core::execution::ProcessAuthority::Command { .. } => None,
             }),
         })
         .collect();
-    encode(
-        Arc::new(Schema::new(vec![
-            text("ecosystem", false),
-            text("stdout", true),
-            text("image_id", true),
-            text("operation_id", true),
-            text("qualification_id", true),
-            Field::new(
-                "command",
-                DataType::List(Arc::new(text("item", false))),
-                true,
-            ),
-            text("end", true),
-            Field::new("exit_code", DataType::Int32, true),
-            Field::new("cleanup_confirmed", DataType::Boolean, true),
-        ])),
-        &input,
-    )
+    Ok(Raw::batch(&input)?)
 }
 
 impl Policy {
     pub async fn bind(runtime: &QueryRuntime, config: &Config, captured: Capture) -> Result<Self> {
         let session = runtime.session();
         let requested = config.execution.resources()?;
-        #[derive(Serialize)]
-        struct State<'a> {
-            execution_root: &'a str,
-            containment_identity: Option<&'a str>,
-            containment_error: Option<&'a str>,
-            receipt_root: Option<&'a str>,
-            receipt_identity: Option<&'a str>,
-            qualified_at: Option<&'a str>,
-            receipt_error: Option<&'a str>,
-            cleanup_error: Option<&'a str>,
-            requested: &'a ExecutionResources,
+        enrichment_core::native_struct! {
+            struct State {
+                execution_root: String => Rule::Text,
+                containment_identity: Option<String> => Rule::Text,
+                containment_error: Option<String> => Rule::Text,
+                receipt_root: Option<String> => Rule::Text,
+                receipt_identity: Option<String> => Rule::Text,
+                qualified_at: Option<String> => Rule::Text,
+                receipt_error: Option<String> => Rule::Text,
+                cleanup_error: Option<String> => Rule::Text,
+                requested: ExecutionResources => Rule::Text,
+            }
         }
         let receipt = captured.receipt.as_ref();
-        let mut fields = [
-            "execution_root",
-            "containment_identity",
-            "containment_error",
-            "receipt_root",
-            "receipt_identity",
-            "qualified_at",
-            "receipt_error",
-            "cleanup_error",
-        ]
-        .map(|name| text(name, name != "execution_root"))
-        .to_vec();
-        fields.push(Field::new(
-            "requested",
-            DataType::Struct(resource_fields()),
-            false,
-        ));
         register(
             &session,
             "policy_state",
-            encode(
-                Arc::new(Schema::new(fields)),
-                &[State {
-                    execution_root: &captured.execution_root,
-                    containment_identity: captured.containment_identity.as_deref(),
-                    containment_error: captured.containment_error.as_deref(),
-                    receipt_root: receipt.map(|r| r.execution_root.as_str()),
-                    receipt_identity: receipt.map(|r| r.containment_identity.as_str()),
-                    qualified_at: receipt.map(|r| r.qualified_at.as_str()),
-                    receipt_error: captured.receipt_error.as_deref(),
-                    cleanup_error: captured.cleanup_error.as_deref(),
-                    requested: &requested,
-                }],
-            )?,
+            State::batch(&[State {
+                execution_root: captured.execution_root.clone(),
+                containment_identity: captured.containment_identity.clone(),
+                containment_error: captured.containment_error.clone(),
+                receipt_root: receipt.map(|r| r.execution_root.clone()),
+                receipt_identity: receipt.map(|r| r.containment_identity.clone()),
+                qualified_at: receipt.map(|r| r.qualified_at.clone()),
+                receipt_error: captured.receipt_error.clone(),
+                cleanup_error: captured.cleanup_error.clone(),
+                requested: requested.clone(),
+            }])?,
         )?;
-        #[derive(Serialize)]
-        struct Image<'a> {
-            ecosystem: &'a str,
-            configured_image: Option<&'a str>,
-            receipt_image: Option<&'a str>,
-            requested: Option<&'a ExecutionResources>,
-            observed: Option<&'a ExecutionResources>,
-            filesystem: Option<&'a str>,
+        enrichment_core::native_struct! {
+            struct Image {
+                ecosystem: String => Rule::Text,
+                configured_image: Option<String> => Rule::Text,
+                receipt_image: Option<String> => Rule::Text,
+                requested: Option<ExecutionResources> => Rule::Text,
+                observed: Option<ExecutionResources> => Rule::Text,
+                filesystem: Option<String> => Rule::Text,
+            }
         }
         let images = [
             ("rust", config.execution.rust_image.as_deref()),
@@ -196,32 +163,16 @@ impl Policy {
             .map(|(ecosystem, image)| {
                 let resource = receipt.and_then(|r| r.resources.get(*ecosystem));
                 Image {
-                    ecosystem,
-                    configured_image: *image,
-                    receipt_image: receipt
-                        .and_then(|r| r.images.get(*ecosystem))
-                        .map(String::as_str),
-                    requested: resource.map(|r| &r.requested),
-                    observed: resource.map(|r| &r.observed),
-                    filesystem: resource.map(|r| r.scratch_filesystem.as_str()),
+                    ecosystem: (*ecosystem).into(),
+                    configured_image: image.map(str::to_owned),
+                    receipt_image: receipt.and_then(|r| r.images.get(*ecosystem)).cloned(),
+                    requested: resource.map(|r| r.requested.clone()),
+                    observed: resource.map(|r| r.observed.clone()),
+                    filesystem: resource.map(|r| r.scratch_filesystem.clone()),
                 }
             })
             .collect();
-        register(
-            &session,
-            "image_input",
-            encode(
-                Arc::new(Schema::new(vec![
-                    text("ecosystem", false),
-                    text("configured_image", true),
-                    text("receipt_image", true),
-                    Field::new("requested", DataType::Struct(resource_fields()), true),
-                    Field::new("observed", DataType::Struct(resource_fields()), true),
-                    text("filesystem", true),
-                ])),
-                &inputs,
-            )?,
-        )?;
+        register(&session, "image_input", Image::batch(&inputs)?)?;
         register(
             &session,
             "resource_input",
@@ -348,10 +299,11 @@ impl Policy {
     }
 
     pub async fn admitted_images(&self) -> Result<BTreeMap<String, String>> {
-        #[derive(Deserialize)]
+        enrichment_core::native_struct! {
         struct Row {
-            ecosystem: String,
-            image_id: String,
+            ecosystem: String => enrichment_core::native_union::Rule::Text,
+            image_id: String => enrichment_core::native_union::Rule::Text,
+        }
         }
         let rows: Vec<Row> = rows(&self.runtime, self.session.sql("SELECT ecosystem, image_id FROM qualified_images WHERE reason IS NULL ORDER BY ecosystem").await?, 2).await?;
         Ok(rows
@@ -377,10 +329,7 @@ pub async fn resource_probe(
     register(
         &session,
         "requested",
-        encode(
-            Arc::new(Schema::new(resource_fields())),
-            std::slice::from_ref(&requested),
-        )?,
+        ExecutionResources::batch(std::slice::from_ref(&requested))?,
     )?;
     let same = resource_fields()
         .iter()

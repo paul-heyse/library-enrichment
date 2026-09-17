@@ -8,8 +8,6 @@
 
 use std::collections::BTreeMap;
 
-use schemars::JsonSchema;
-
 use crate::evidence::{
     Artifact, Availability, FragmentKind, Gap, ObservedConfiguration, SnapshotCounts, SymbolHeader,
     SymbolKind, TextFragment,
@@ -58,7 +56,7 @@ crate::native_struct! {
 /// What the published snapshot holds, summarized.
 pub struct SnapshotSummary {
     /// The snapshot identity.
-    snapshot_id: String => crate::native_union::Rule::Text,
+    snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
     /// Normalizer version that produced it.
     normalizer_version: String => crate::native_union::Rule::Text,
     /// Counts.
@@ -253,7 +251,7 @@ pub struct ApiObservationProjection {
     observation_id: String => crate::native_union::Rule::Text,
     subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
     origin: crate::evidence::relational::ApiOrigin => crate::native_union::Rule::Text,
-    environment_id: String => crate::native_union::Rule::Text,
+    environment_id: crate::identity::EnvironmentId => crate::native_union::Rule::Text,
     payload: crate::evidence::relational::ApiPayload => crate::native_union::Rule::Text,
     source: crate::evidence::relational::FactSource => crate::native_union::Rule::Text,
     /// False means docs were omitted by projection; it does not assert absent documentation.
@@ -364,7 +362,7 @@ pub struct ManifestData {
     /// Operational attribution from the catalog generation pinned by this request.
     producer_runs: Vec<crate::producer::ProducerRun> => crate::native_union::Rule::Sequence,
     control_version: u64 => crate::native_union::Rule::Text,
-    previous_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    previous_snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     publication_changes: Vec<RelationChanges> => crate::native_union::Rule::Sequence,
 }
 }
@@ -383,8 +381,8 @@ crate::native_struct! {
 /// Identity of one side of an immutable comparison.
 pub struct ComparisonSide {
     coverage: super::Coverage => crate::native_union::Rule::Text,
-    context_id: String => crate::native_union::Rule::Text,
-    snapshot_id: String => crate::native_union::Rule::Text,
+    context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
+    snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
     release: Release => crate::native_union::Rule::Text,
     environment: Environment => crate::native_union::Rule::Text,
 }
@@ -402,12 +400,8 @@ pub enum ConfigurationDifference {
         after: Option<String> => crate::native_union::Rule::Text,
     },
     Features = "features" {
-        before: Vec<String> => crate::native_union::Rule::Set,
-        after: Vec<String> => crate::native_union::Rule::Set,
-    },
-    FeaturesKnown = "features_known" {
-        before: bool => crate::native_union::Rule::Text,
-        after: bool => crate::native_union::Rule::Text,
+        before: Option<Vec<String>> => crate::native_union::Rule::Set,
+        after: Option<Vec<String>> => crate::native_union::Rule::Set,
     },
     DefaultFeatures = "default_features" {
         before: Option<bool> => crate::native_union::Rule::Text,
@@ -472,25 +466,7 @@ pub struct LocalStatus {
 }
 }
 
-crate::native_payload! { @untagged "tool";
-/// Finite native tool payloads. The transport emits the selected record without its native tag.
-#[derive(JsonSchema)]
-#[schemars(rename = "LibraryEnrichmentToolData")]
-pub enum ToolData {
-    Empty(EmptyData) = "empty",
-    AdapterStatus(Box<LocalStatus>) = "adapter_status",
-    VerifyUsage(Box<crate::execution::VerificationData>) = "verify_usage",
-    JobControl(Box<crate::execution::JobData>) = "job_control",
-    CompareReleases(Box<CompareData>) = "compare_releases",
-    ResolveLibrary(Box<ResolveData>) = "resolve_library",
-    LibraryOverview(Box<OverviewData>) = "library_overview",
-    SearchEvidence(Box<SearchData>) = "search_evidence",
-    InspectSymbol(Box<InspectData>) = "inspect_symbol",
-    ReadArtifact(Box<ArtifactSliceData>) = "read_artifact",
-    SnapshotManifest(Box<ManifestData>) = "snapshot_manifest",
-    ServiceStatus(Box<super::status::StatusData>) = "service_status",
-}
-}
+pub use crate::request::ToolData;
 impl Default for ToolData {
     fn default() -> Self {
         Self::Empty(EmptyData {})
@@ -501,30 +477,10 @@ impl ToolData {
         matches!(self, Self::Empty(_))
     }
     pub fn set_page(&mut self, page: super::Page) {
-        match self {
-            Self::CompareReleases(data) => data.page = page,
-            Self::SearchEvidence(data) => data.page = page,
-            Self::ReadArtifact(data) => data.page = page,
-            _ => panic!("pagination requires a declared paged payload"),
-        }
+        *self
+            .page_mut()
+            .expect("pagination requires a declared paged payload") = page;
     }
-}
-macro_rules! payload_from {
-    ($($ty:ty => $variant:ident),* $(,)?) => { $(
-        impl From<$ty> for ToolData { fn from(value: $ty) -> Self { Self::$variant(Box::new(value)) } }
-    )* };
-}
-payload_from! {
-    crate::execution::VerificationData => VerifyUsage,
-    crate::execution::JobData => JobControl,
-    CompareData => CompareReleases,
-    ResolveData => ResolveLibrary,
-    OverviewData => LibraryOverview,
-    SearchData => SearchEvidence,
-    InspectData => InspectSymbol,
-    ArtifactSliceData => ReadArtifact,
-    ManifestData => SnapshotManifest,
-    super::status::StatusData => ServiceStatus,
 }
 
 /// The tool payload schema, canonicalized like the envelope schema.
@@ -534,15 +490,7 @@ pub fn tool_data_schema() -> serde_json::Value {
     let mut generator = settings.into_generator();
     // Tagged-union emission may inline closed payloads to accommodate its own tool tag.
     // Explicitly retain the untagged domain DTO definitions for adapter composition.
-    let _ = generator.subschema_for::<ResolveData>();
-    let _ = generator.subschema_for::<OverviewData>();
-    let _ = generator.subschema_for::<SearchData>();
-    let _ = generator.subschema_for::<InspectData>();
-    let _ = generator.subschema_for::<CompareData>();
-    let _ = generator.subschema_for::<ArtifactSliceData>();
-    let _ = generator.subschema_for::<ManifestData>();
-    let _ = generator.subschema_for::<crate::execution::JobData>();
-    let _ = generator.subschema_for::<crate::execution::VerificationData>();
+    crate::request::register_output_schemas(&mut generator);
     let schema = generator.into_root_schema_for::<ToolData>();
     let mut value = serde_json::to_value(schema).unwrap_or_default();
     if let Some(object) = value.as_object_mut() {
@@ -553,7 +501,7 @@ pub fn tool_data_schema() -> serde_json::Value {
             ),
         );
     }
-    crate::canonical::canonicalize(value)
+    crate::canonical::canonicalize(crate::native_wire::schema(value))
 }
 
 /// The tool payload schema as the exact bytes `emit-schemas` writes.

@@ -92,13 +92,7 @@ pub async fn authorize() -> Result<crate::control_jobs::Grant> {
     Ok(grant)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum CommandKind {
-    Resolve,
-    Compare,
-    Inspect,
-    Verify,
-}
+pub use enrichment_core::operation::CommandKind;
 
 struct Invocation {
     job_id: String,

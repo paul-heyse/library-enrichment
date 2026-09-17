@@ -85,3 +85,11 @@ writing the ADR its trigger called for, or moving `next-check` forward with a re
 | R-46 | Replace the narrow public-api format-61 patch with a qualified upstream release. | ADR-0048 | A published public-api release uses the exact qualified rustdoc-types model without the local patch. | manual: check exact dependency metadata and execute the stability/default and rendering fixtures | paul-heyse | 2026-09-16 | 2026-12-16 | watch |
 
 | R-47 | Retire bounded catalog and Delta composition patches when upstream supplies the qualified seams. | ADR-0049 | An exact upstream release provides bounded atomic discovery, collision refusal and owned exact Delta opening with a complete scan contract. | manual: execute native_provider_discovery and nested CHECK mutation oracles against the proposed replacement | paul-heyse | 2026-09-16 | 2026-12-16 | watch |
+
+| R-48 | Retire native Delta maintenance corrections after an exact upstream replacement is qualified. | ADR-0050 | Upstream protects retained deletion vectors, bounds complete log inventory and preserves supplied maintenance commit properties. | manual: execute native maintenance history, DV protection and stale predecessor oracles against the replacement | paul-heyse | 2026-09-16 | 2026-12-16 | watch |
+
+| R-49 | Retire the narrow kernel handler and task-context patches when upstream has equivalent owned execution seams. | ADR-0051 | An exact upstream release admits an owned kernel executor through both LogStore and DataFusionEngine and preserves application task context. | manual: run minimum-worker checkpoint/DV, task-context and real kernel telemetry oracles against the replacement | paul-heyse | 2026-09-16 | 2026-12-16 | watch |
+
+| R-50 | Retire the restricted Delta codec rebinding seam when upstream supplies the complete contract. | ADR-0053 | Upstream exposes validated immutable rebinding and bounded provider encoding, or a consumer requires persisted descriptors. | manual: run native provider-cache identity, contract, ownership and codec refusal fixtures | paul-heyse | 2026-09-17 | 2026-12-17 | watch |
+
+| R-51 | Requalify native MCP framing when SDK pins or transport scope change. | ADR-0054 | FastMCP/MCP serializer pin changes or a non-stdio transport is proposed. | manual: native delivery vectors and pinned SDK parity probes | paul-heyse | 2026-09-17 | 2026-12-17 | watch |

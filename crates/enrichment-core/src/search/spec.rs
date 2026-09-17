@@ -1,10 +1,10 @@
 //! Bounded search command identity; lexical transformations belong to native DataFusion.
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+crate::native_struct! {
+#[derive(Hash)]
 pub struct SearchSpec {
-    pub version: String,
-    pub query: String,
+    version: String => crate::native_union::Rule::NonEmpty,
+    query: String => crate::native_union::Rule::NonEmpty,
+}
 }
 impl SearchSpec {
     pub const VERSION: &'static str = "lexical/3";

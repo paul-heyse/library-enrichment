@@ -1,15 +1,12 @@
 //! Native registry selection. Rust decodes source facts and the one selected effect descriptor.
 use crate::runtime::QueryRuntime;
-use arrow::record_batch::RecordBatch;
 use datafusion::{
     common::ScalarValue,
-    datasource::MemTable,
+    dataframe::DataFrame,
     error::{DataFusionError, Result},
     prelude::SessionContext,
 };
 use enrichment_core::registry::{IndexEntry, SelectionError, UpstreamCheck};
-use serde::Deserialize;
-use std::sync::Arc;
 
 pub struct RustIndex {
     session: SessionContext,
@@ -33,15 +30,13 @@ WITH typed AS (
 "#;
 
 impl RustIndex {
-    pub fn new(runtime: &QueryRuntime, batches: Vec<RecordBatch>) -> Result<Self> {
-        let session = runtime.session();
-        session.register_table(
-            "registry_facts",
-            Arc::new(MemTable::try_new(
-                enrichment_core::registry::facts::schema(),
-                vec![batches],
-            )?),
+    pub fn new(runtime: &QueryRuntime, facts: DataFrame) -> Result<Self> {
+        enrichment_core::native_schema::check_input(
+            facts.schema().as_arrow(),
+            &enrichment_core::registry::facts::schema(),
         )?;
+        let session = runtime.session();
+        crate::native_catalog::work(&session, "registry_facts", facts.into_view())?;
         Ok(Self {
             session,
             runtime: runtime.clone(),
@@ -55,15 +50,16 @@ impl RustIndex {
         allow_prerelease: bool,
         allow_yanked: bool,
     ) -> Result<std::result::Result<Selected, SelectionError>> {
-        #[derive(Deserialize)]
+        enrichment_core::native_struct! {
         struct Decision {
-            status: String,
-            entry: Option<IndexEntry>,
-            source_line: Option<u64>,
-            newest_stable: Option<String>,
-            newest_any: Option<String>,
-            resolved_is_newest_stable: bool,
-            published_versions: usize,
+            status: String => enrichment_core::native_union::Rule::Text,
+            entry: Option<IndexEntry> => enrichment_core::native_union::Rule::Text,
+            source_line: Option<u64> => enrichment_core::native_union::Rule::Text,
+            newest_stable: Option<String> => enrichment_core::native_union::Rule::Text,
+            newest_any: Option<String> => enrichment_core::native_union::Rule::Text,
+            resolved_is_newest_stable: bool => enrichment_core::native_union::Rule::Text,
+            published_versions: usize => enrichment_core::native_union::Rule::Text,
+        }
         }
         let sql = format!(
             r#"{FACTS}, picked AS (
@@ -79,7 +75,7 @@ impl RustIndex {
         ), newest AS (
             SELECT release['vers'] AS vers FROM valid WHERE NOT release['yanked']
             ORDER BY precedence DESC, source_line DESC LIMIT 1
-        ), totals AS (SELECT count(*) AS published_versions FROM registry_facts)
+        ), totals AS (SELECT CAST(count(*) AS BIGINT UNSIGNED) AS published_versions FROM registry_facts)
         SELECT CASE WHEN totals.published_versions = 0 THEN 'no_versions'
           WHEN CAST($1 AS VARCHAR) IS NOT NULL AND semver_precedence_key_v1($1) IS NULL THEN 'invalid'
           WHEN picked.source_line IS NULL AND CAST($1 AS VARCHAR) IS NOT NULL THEN 'not_found'
@@ -134,9 +130,10 @@ impl RustIndex {
     }
 
     async fn neighbours(&self, requested: &str) -> Result<Vec<String>> {
-        #[derive(Deserialize)]
+        enrichment_core::native_struct! {
         struct Neighbour {
-            vers: String,
+            vers: String => enrichment_core::native_union::Rule::Text,
+        }
         }
         let sql = format!(
             r#"{FACTS}, below AS (
@@ -162,20 +159,17 @@ impl RustIndex {
     }
 }
 
-pub(crate) async fn rows<T: serde::de::DeserializeOwned>(
+pub(crate) async fn rows<T: enrichment_core::native_union::NativeStruct>(
     runtime: &QueryRuntime,
     frame: datafusion::dataframe::DataFrame,
     bound: usize,
 ) -> Result<Vec<T>> {
-    let output = runtime.execute(frame.limit(0, Some(bound + 1))?).await?;
-    if output.rows > bound {
-        return Err(DataFusionError::ResourcesExhausted(
-            "registry decision bound".into(),
-        ));
-    }
-    // Only the final bounded effect descriptor crosses JSON; no semantic JSON is stored.
-    let mut writer = arrow::json::ArrayWriter::new(Vec::new());
-    writer.write_batches(&output.batches.iter().collect::<Vec<_>>())?;
-    writer.finish()?;
-    serde_json::from_slice(&writer.into_inner()).map_err(|e| DataFusionError::External(Box::new(e)))
+    // Project the declared descriptor from a richer native decision relation.
+    let selected = frame.select(
+        T::fields()
+            .iter()
+            .map(|field| datafusion::prelude::col(field.name()))
+            .collect::<Vec<_>>(),
+    )?;
+    runtime.records(selected, bound).await
 }

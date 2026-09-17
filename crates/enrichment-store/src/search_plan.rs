@@ -270,15 +270,15 @@ pub async fn page(
         .into_iter()
         .map(col),
     )?;
-    let completed = crate::operation_index::materialize(
+    let folded = crate::operation_index::cache(
         runtime,
         index,
-        crate::preparation::QueryFamily::SearchIndex,
+        crate::preparation::QueryFamily::Intermediate(
+            enrichment_core::telemetry::MaterializationFamily::SearchIndex,
+        ),
     )
     .await?;
-    let total = completed.rows;
-    completed.register(session, "search_candidates")?;
-    let folded = session.table("search_candidates").await?;
+    let total = crate::operation_index::count(runtime, folded.clone()).await?;
     let filtered = if let Some(key) = &options.after {
         folded.filter(after(key))?
     } else {

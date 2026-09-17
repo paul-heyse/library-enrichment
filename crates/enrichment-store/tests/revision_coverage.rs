@@ -1,5 +1,6 @@
 use enrichment_core::{
     archive::{ArchiveOmission, OmittedEntryKind},
+    native_union::NativeStruct,
     producer::revision::{RevisionInputs, SourceClosure},
 };
 use enrichment_store::runtime::{QueryLimits, QueryRuntime};
@@ -50,9 +51,15 @@ async fn revision_required_link_is_incomplete() {
                 })
                 .collect(),
         };
-        let result = enrichment_store::coverage::assess_revision_inputs(&runtime, inputs)
-            .await
-            .unwrap();
+        let result = enrichment_store::coverage::assess_revision_inputs(
+            &runtime,
+            runtime
+                .session()
+                .read_batch(RevisionInputs::batch(&[inputs]).unwrap())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
         assert_eq!(result.affected_omissions, expected);
         assert_eq!(
             result.source_closure,
@@ -64,4 +71,28 @@ async fn revision_required_link_is_incomplete() {
             }
         );
     }
+    let root_inputs = RevisionInputs {
+        archive_sha256: "b".repeat(64),
+        policy: enrichment_core::archive::REVISION_EXTRACTION_POLICY.into(),
+        selected_package: String::new(),
+        source_roots: vec![String::new()],
+        declared_inputs: vec![],
+        missing_inputs: vec![],
+        omissions: vec![ArchiveOmission {
+            path: "src/link.rs".into(),
+            entry_kind: OmittedEntryKind::Symlink,
+            target: "../untrusted".into(),
+            reason: "link omitted".into(),
+        }],
+    };
+    let root = runtime
+        .session()
+        .read_batch(RevisionInputs::batch(&[root_inputs]).unwrap())
+        .unwrap();
+    let result = enrichment_store::coverage::assess_revision_inputs(&runtime, root)
+        .await
+        .unwrap();
+    assert_eq!(result.affected_omissions, ["src/link.rs"]);
+    assert_eq!(result.source_closure, SourceClosure::Incomplete);
+    runtime.close_diagnostics().await.unwrap();
 }

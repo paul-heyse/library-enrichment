@@ -20,21 +20,22 @@ use enrichment_core::{
     native_key::Key,
     producer::rustdoc::facts::Fact,
 };
-use serde::Deserialize;
 use std::sync::Arc;
 
-#[derive(Debug, Deserialize)]
+enrichment_core::native_struct! {
 pub struct Header {
-    pub crate_name: String,
-    pub crate_version: Option<String>,
-    pub target: String,
-    pub producer_items: u64,
+    crate_name: String => enrichment_core::native_union::Rule::Text,
+    crate_version: Option<String> => enrichment_core::native_union::Rule::Text,
+    target: String => enrichment_core::native_union::Rule::Text,
+    producer_items: u64 => enrichment_core::native_union::Rule::Text,
 }
-#[derive(Debug, Deserialize)]
+}
+enrichment_core::native_struct! {
 pub struct Gap {
-    pub reason: String,
-    pub count: u64,
-    pub witnesses: Vec<String>,
+    reason: String => enrichment_core::native_union::Rule::Text,
+    count: u64 => enrichment_core::native_union::Rule::Text,
+    witnesses: Vec<String> => enrichment_core::native_union::Rule::Sequence,
+}
 }
 pub struct RustFacts {
     pub header: Header,
@@ -326,7 +327,7 @@ impl RustFacts {
             SELECT DISTINCT reason,witness FROM rust_normalization_gaps
         ), ranked AS (
             SELECT reason,witness,row_number() OVER (PARTITION BY reason ORDER BY witness) AS position FROM unique_gaps
-        ) SELECT reason,count(*) AS count,array_agg(witness ORDER BY witness) FILTER (WHERE position<=8) AS witnesses
+        ) SELECT reason,CAST(count(*) AS BIGINT UNSIGNED) AS count,array_agg(witness ORDER BY witness) FILTER (WHERE position<=8) AS witnesses
           FROM ranked GROUP BY reason ORDER BY reason").await?,8).await
     }
 }
@@ -465,31 +466,33 @@ impl RustFacts {
             col("docs"),
             source_expr(source)?.alias("source"),
         ])?;
-        let rendered = self
-            .session
-            .table("rust_render_observed")
-            .await?
-            .filter(col("definitions").eq(lit(1_u64)))?
-            .select(vec![
-                rendered_subject.clone().alias("subject"),
-                lit("rustdoc").alias("origin"),
-                lit(&context.environment_id).alias("environment_id"),
-                record(
-                    &payload_type,
-                    &[
-                        ("declared_kind", col("kind")),
-                        ("signature", col("text")),
-                        ("rust", col("rust")),
-                        (
-                            "cfg_hints",
-                            datafusion::functions_nested::expr_fn::make_array(vec![]),
-                        ),
-                    ],
-                )?
-                .alias("payload"),
-                null(&DataType::Utf8)?.alias("docs"),
-                source_expr(source)?.alias("source"),
-            ])?;
+        let rendered =
+            self.session
+                .table("rust_render_observed")
+                .await?
+                .filter(col("definitions").eq(lit(1_u64)))?
+                .select(vec![
+                    rendered_subject.clone().alias("subject"),
+                    lit("rustdoc").alias("origin"),
+                    lit(&context.environment_id).alias("environment_id"),
+                    record(
+                        &payload_type,
+                        &[
+                            ("declared_kind", col("kind")),
+                            ("signature", col("text")),
+                            ("rust", col("rust")),
+                            (
+                                "cfg_hints",
+                                enrichment_core::evidence::arrow_model::expressions::literal(
+                                    &Vec::<String>::new(),
+                                )?,
+                            ),
+                        ],
+                    )?
+                    .alias("payload"),
+                    null(&DataType::Utf8)?.alias("docs"),
+                    source_expr(source)?.alias("source"),
+                ])?;
         let raw = crate::native_delta::project(raw, Key::ApiObservation.schema().as_ref())?;
         let rendered =
             crate::native_delta::project(rendered, Key::ApiObservation.schema().as_ref())?;
@@ -653,8 +656,8 @@ mod tests {
         let context = IngestContext {
             ecosystem: Ecosystem::Rust,
             symbol_package: "enr_fixture".into(),
-            release_id: "rel_fixture".into(),
-            environment_id: "env_fixture".into(),
+            release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
+            environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
             producing_attempt: "attempt".into(),
             producer_runs: vec![],

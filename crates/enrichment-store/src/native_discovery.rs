@@ -38,8 +38,12 @@ fn scan(
     table: &DeltaTable,
     contract: &StorageContract,
 ) -> Result<DeltaScanConfig> {
-    verify_contract(table, contract)?;
+    verify_contract(table, contract, session)?;
     table.update_datafusion_session(session).map_err(external)?;
+    Ok(scan_config(session, contract))
+}
+
+pub(crate) fn scan_config(session: &dyn Session, contract: &StorageContract) -> DeltaScanConfig {
     let mut scan =
         DeltaScanConfig::new_from_session(session).with_schema(contract.semantic_schema());
     if contract
@@ -50,7 +54,7 @@ fn scan(
     {
         scan.schema_force_view_types = false;
     }
-    Ok(scan)
+    scan
 }
 
 #[async_trait]

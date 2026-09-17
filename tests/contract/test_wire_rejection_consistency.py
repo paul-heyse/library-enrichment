@@ -235,8 +235,8 @@ def test_the_adapter_validates_every_response_it_emits() -> None:
     # the nine tools is wired to a daemon method now, so there is no unimplemented-tool path left
     # to exercise -- a stub kept alive only for this assertion would be testing nothing.
     for emitted in (
-        server._tool_result({"schema_version": "1.0"}),
-        server._tool_result({"schema_version": "1.0"}, tool="job_control"),
+        server._boundary_result({"schema_version": "1.0"}),
+        server._boundary_result({"schema_version": "1.0"}, tool="job_control"),
     ):
         structured = emitted.structured_content
         valid, reason = validate_document(json.dumps(structured))

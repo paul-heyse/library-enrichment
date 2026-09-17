@@ -1,0 +1,177 @@
+{
+  "module": "tracing_subscriber::filter::layer_filters",
+  "crate": "tracing-subscriber",
+  "api": "api/tracing_subscriber.filter.layer_filters.md",
+  "items": [
+    {
+      "path": "tracing_subscriber::filter::layer_filters::FilterId",
+      "name": "FilterId",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct FilterId",
+      "summary": "Uniquely identifies an individual [`Filter`] instance in the context of a [`Subscriber`].",
+      "doc": "api/tracing_subscriber.filter.layer_filters.md#filterid",
+      "aliases": [
+        "tracing_subscriber::filter::FilterId"
+      ],
+      "implements": [
+        "core::fmt::Binary"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Binary"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::filter::layer_filters::Filtered",
+      "name": "Filtered",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Filtered<L, F, S>",
+      "summary": "A [`Layer`] that wraps an inner [`Layer`] and adds a [`Filter`] which controls what spans and events are enabled for that layer.",
+      "doc": "api/tracing_subscriber.filter.layer_filters.md#filtered",
+      "aliases": [
+        "tracing_subscriber::filter::Filtered"
+      ],
+      "implements": [
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>, cx: Context<'_, S>) -> bool",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, event: &Event<'_>, cx: Context<'_, S>) -> bool",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "filter",
+          "signature": "fn filter(&self) -> &F",
+          "summary": "Borrows the [`Filter`](crate::layer::Filter) used by this layer."
+        },
+        {
+          "name": "filter_mut",
+          "signature": "fn filter_mut(&mut self) -> &mut F",
+          "summary": "Mutably borrows the [`Filter`](crate::layer::Filter) used by this layer."
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &L",
+          "summary": "Borrows the inner [`Layer`] wrapped by this `Filtered` layer."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut L",
+          "summary": "Mutably borrows the inner [`Layer`] wrapped by this `Filtered` layer."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(layer: L, filter: F) -> Self",
+          "summary": "Wraps the provided [`Layer`] so that it is filtered by the given [`Filter`]."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_event",
+          "signature": "fn on_event(&self, event: &Event<'_>, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, id: &span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_follows_from",
+          "signature": "fn on_follows_from(&self, span: &span::Id, follows: &span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_id_change",
+          "signature": "fn on_id_change(&self, old: &span::Id, new: &span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_layer",
+          "signature": "fn on_layer(&mut self, subscriber: &mut S)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, span: &span::Id, values: &span::Record<'_>, cx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_register_dispatch",
+          "signature": "fn on_register_dispatch(&self, subscriber: &Dispatch)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::filter::layer_filters::FilterExt",
+      "name": "FilterExt",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait FilterExt<S>: layer::Filter<S>",
+      "summary": "Extension trait adding [combinators] for combining [`Filter`].",
+      "doc": "api/tracing_subscriber.filter.layer_filters.md#filterext",
+      "aliases": [
+        "tracing_subscriber::filter::FilterExt"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "and",
+        "boxed",
+        "not",
+        "or"
+      ],
+      "methods": [
+        {
+          "name": "and",
+          "signature": "fn and<B>(self, other: B) -> combinator::And<Self, B, S> where Self: Sized, B: layer::Filter<S>",
+          "summary": "Combines this [`Filter`] with another [`Filter`] s so that spans and events are enabled if and only if *both* filters return `true`."
+        },
+        {
+          "name": "boxed",
+          "signature": "fn boxed(self) -> Box<dyn layer::Filter<S> + Send + Sync + 'static> where Self: Sized + Send + Sync + 'static",
+          "summary": "[Boxes] `self`, erasing its concrete type."
+        },
+        {
+          "name": "not",
+          "signature": "fn not(self) -> combinator::Not<Self, S> where Self: Sized",
+          "summary": "Inverts `self`, returning a filter that enables spans and events only if `self` would *not* enable them."
+        },
+        {
+          "name": "or",
+          "signature": "fn or<B>(self, other: B) -> combinator::Or<Self, B, S> where Self: Sized, B: layer::Filter<S>",
+          "summary": "Combines two [`Filter`]s so that spans and events are enabled if *either* filter returns `true`."
+        }
+      ]
+    }
+  ]
+}

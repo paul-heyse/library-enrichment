@@ -1,5 +1,5 @@
 //! One native contract for immutable cohorts in purpose-specific Delta tables.
-use crate::native_delta::{DeltaStore, StorageContract, missing_table, transaction_conflict};
+use crate::native_delta::{DeltaStore, StorageContract, transaction_conflict};
 use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use datafusion::{
     dataframe::DataFrame,
@@ -40,17 +40,7 @@ impl DeltaStore {
             .collect::<Vec<_>>();
         let input = input.select(columns)?;
         for _ in 0..16 {
-            let table = match self.load(name, None).await {
-                Ok(table) => table,
-                Err(error) if missing_table(&error) => {
-                    match self.create(name, contract, true).await {
-                        Ok(table) => table,
-                        Err(error) if transaction_conflict(&error) => continue,
-                        Err(error) => return Err(error),
-                    }
-                }
-                Err(error) => return Err(error),
-            };
+            let table = self.open_or_create(name, contract, true, &[]).await?;
             match self.append(table, contract, input.clone(), vec![]).await {
                 Ok(table) => {
                     return Ok(DeltaBinding {

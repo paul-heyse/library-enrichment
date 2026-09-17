@@ -2,19 +2,21 @@
 use schemars::{JsonSchema, generate::SchemaSettings};
 use serde_json::{Value, json};
 
-pub enum Effect {
-    Read,
-    Acquire,
-    Execute,
+crate::native_vocabulary! {
+    pub enum Effect { Read = "read", Acquire = "acquire", Execute = "execute" }
 }
 
-pub fn binding<I: JsonSchema, O: JsonSchema>(
-    name: &str,
-    rpc: &str,
-    description: &str,
-    effect: Effect,
-    published: bool,
-) -> Value {
+pub fn binding<I: JsonSchema, O: JsonSchema>(definition: crate::operation::Definition) -> Value {
+    let crate::operation::Definition {
+        name,
+        rpc,
+        description,
+        effect,
+        published,
+        durability,
+        operation,
+        response,
+    } = definition;
     let input = SchemaSettings::draft2020_12()
         .into_generator()
         .into_root_schema_for::<I>()
@@ -23,17 +25,17 @@ pub fn binding<I: JsonSchema, O: JsonSchema>(
     let empty = json!({"$ref":"#/$defs/EmptyData"});
     let job = json!({"$ref":"#/$defs/JobData"});
     let mut success = vec![json!({"$ref":format!("#/$defs/{}",O::schema_name())})];
-    if name == "service_status" {
+    if response == crate::operation::ResponsePolicy::Status {
         success.push(json!({"$ref":"#/$defs/LocalStatus"}));
     }
     let mut alternatives = success.clone();
-    if name != "job_control" {
+    if response != crate::operation::ResponsePolicy::Job {
         alternatives.push(job.clone());
     }
     alternatives.push(empty.clone());
     output["properties"]["data"] = json!({"anyOf":alternatives});
     let mut failure = vec![empty.clone()];
-    if name == "verify_usage" {
+    if response == crate::operation::ResponsePolicy::Verification {
         failure.extend(success.clone());
     }
     output["allOf"].as_array_mut().expect("native outcome conditions").extend([
@@ -44,7 +46,8 @@ pub fn binding<I: JsonSchema, O: JsonSchema>(
     ]);
     json!({
         "name":name,"rpc":rpc,"description":description,"published":published,
-        "input_schema":input,"output_schema":output,
+        "operation":operation,"durability":durability,
+        "input_schema":crate::native_wire::schema(input),"output_schema":output,
         "annotations":{"readOnlyHint":matches!(effect,Effect::Read),"destructiveHint":false,"idempotentHint":!matches!(effect,Effect::Execute),"openWorldHint":!matches!(effect,Effect::Read)},
         "timeout_seconds":if matches!(effect,Effect::Acquire) { 180 } else { 30 },
     })

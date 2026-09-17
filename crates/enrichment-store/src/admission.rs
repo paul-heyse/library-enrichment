@@ -136,6 +136,30 @@ pub struct AdmittedRelations {
 }
 
 impl AdmittedRelations {
+    pub(crate) fn protected(
+        &self,
+        runtime: &QueryRuntime,
+        guard: Arc<crate::retention::LeaseGuard>,
+    ) -> Result<Self> {
+        let session = runtime.session();
+        Ok(Self {
+            providers: self
+                .providers
+                .iter()
+                .map(|(relation, provider)| {
+                    Ok((
+                        *relation,
+                        crate::leases::protected_provider(
+                            Arc::clone(provider),
+                            Arc::clone(&guard),
+                            &session,
+                        )?,
+                    ))
+                })
+                .collect::<Result<_>>()?,
+            views: tokio::sync::OnceCell::new(),
+        })
+    }
     /// Bind admitted sources atomically through the immutable catalog.
     /// # Errors
     /// Contract construction errors remain explicit; base providers never acquire request leases.
@@ -257,6 +281,26 @@ pub struct NativeAdmission {
 }
 
 pub(crate) const CONDITIONAL_RULES: &[crate::native_catalog::SqlRule] = &[
+    crate::native_catalog::SqlRule {
+        id: "API observation subject domain",
+        relation: "api_observations",
+        sql: "SELECT observation_id FROM candidate.evidence.api_observations WHERE subject.kind NOT IN ('symbol','definition') LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "relationship subject domain",
+        relation: "relationships",
+        sql: "SELECT relationship_id FROM candidate.evidence.relationships WHERE subject.kind NOT IN ('symbol','definition') LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "coverage outcome and gaps",
+        relation: "coverage",
+        sql: "SELECT coverage_id FROM candidate.evidence.coverage WHERE (outcome='indexed')<>(cardinality(gaps)=0) LIMIT 1",
+    },
+    crate::native_catalog::SqlRule {
+        id: "coverage gap kind",
+        relation: "coverage",
+        sql: "SELECT coverage_id FROM (SELECT coverage_id,kind,unnest(gaps) AS gap FROM candidate.evidence.coverage) WHERE gap.kind<>kind LIMIT 1",
+    },
     crate::native_catalog::SqlRule {
         id: "metadata worker artifact outside producer input closure",
         relation: "release_metadata",
@@ -660,4 +704,97 @@ fn with_constraints(
 
 fn invalid(message: impl Into<String>) -> DataFusionError {
     DataFusionError::Execution(message.into())
+}
+
+#[cfg(test)]
+mod declared_relation_units {
+    use super::*;
+    use enrichment_core::{
+        evidence::{
+            EvidenceKind, Gap, GapReason,
+            relational::{CoverageFact, CoverageOutcome, SubjectRef},
+        },
+        native_union::NativeStruct,
+    };
+
+    #[tokio::test]
+    async fn coverage_rules_do_not_depend_on_presentation_schema_metadata() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(directory.path(), Default::default())?;
+        let subject = SubjectRef::Symbol {
+            symbol_id: "symbol_fixture".into(),
+        };
+        let gap = Gap {
+            kind: EvidenceKind::PublicApi,
+            reason: GapReason::NotAttempted,
+            detail: "unit".into(),
+            planned_fallback: None,
+        };
+        let rows = [
+            CoverageFact {
+                coverage_id: "valid".into(),
+                producer_binding_id: "producer".into(),
+                subject: subject.clone(),
+                kind: EvidenceKind::PublicApi,
+                outcome: CoverageOutcome::Indexed,
+                gaps: vec![],
+            },
+            CoverageFact {
+                coverage_id: "contradiction".into(),
+                producer_binding_id: "producer".into(),
+                subject: subject.clone(),
+                kind: EvidenceKind::PublicApi,
+                outcome: CoverageOutcome::Indexed,
+                gaps: vec![gap.clone()],
+            },
+            CoverageFact {
+                coverage_id: "wrong_scope".into(),
+                producer_binding_id: "producer".into(),
+                subject,
+                kind: EvidenceKind::Examples,
+                outcome: CoverageOutcome::Missing,
+                gaps: vec![gap],
+            },
+        ];
+        let batch = CoverageFact::batch(&rows)?;
+        assert!(batch.schema().metadata().is_empty());
+        let provider = Arc::new(datafusion::datasource::MemTable::try_new(
+            batch.schema(),
+            vec![vec![batch]],
+        )?) as Arc<dyn TableProvider>;
+        let catalog = BoundCatalog::default().with_schema(
+            crate::native_catalog::BindingKind::CandidateEvidence,
+            [("coverage".into(), provider)].into(),
+        );
+        let session = runtime.bound_session(
+            [(
+                "candidate".into(),
+                Arc::new(catalog) as Arc<dyn datafusion::catalog::CatalogProvider>,
+            )]
+            .into(),
+        )?;
+        enrichment_core::native_struct! { struct Witness { coverage_id: String => enrichment_core::native_union::Rule::Text } }
+        let mut witnesses = std::collections::BTreeSet::new();
+        for rule in CONDITIONAL_RULES
+            .iter()
+            .filter(|rule| rule.relation == "coverage")
+        {
+            for witness in runtime
+                .records::<Witness>(rule.violations(&session).await?, 1)
+                .await?
+            {
+                witnesses.insert((rule.id, witness.coverage_id));
+            }
+        }
+        assert_eq!(
+            witnesses,
+            [
+                ("coverage outcome and gaps", "contradiction".into()),
+                ("coverage gap kind", "wrong_scope".into()),
+            ]
+            .into()
+        );
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
 }

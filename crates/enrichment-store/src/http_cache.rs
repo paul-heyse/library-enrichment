@@ -2,7 +2,7 @@
 use crate::{
     blob::BlobStore,
     control::ControlStore,
-    native_delta::{DeltaStore, StorageContract, missing_table, transaction_conflict},
+    native_delta::{DeltaStore, StorageContract, transaction_conflict},
     runtime::QueryRuntime,
 };
 use datafusion::{
@@ -51,39 +51,23 @@ impl HttpCache {
     }
     async fn table(&self) -> Result<deltalake::DeltaTable> {
         let _initialization = self.initialization.lock().await;
-        self.delta.prepare_root("http_responses")?;
-        match self.delta.load("http_responses", None).await {
-            Ok(table) => Ok(table),
-            Err(error) if missing_table(&error) => {
-                match self
-                    .delta
-                    .create_with_rules(
-                        "http_responses",
-                        &self.contract,
-                        true,
-                        &[
-                            (
-                                "http_status",
-                                "response.status=200 OR response.status=404 OR response.status=410"
-                                    .into(),
-                            ),
-                            (
-                                "http_digest",
-                                "regexp_like(body_digest,'^[0-9a-f]{64}$')".into(),
-                            ),
-                        ],
-                    )
-                    .await
-                {
-                    Ok(table) => Ok(table),
-                    Err(error) if transaction_conflict(&error) => {
-                        self.delta.load("http_responses", None).await
-                    }
-                    Err(error) => Err(error),
-                }
-            }
-            Err(error) => Err(error),
-        }
+        self.delta
+            .open_or_create(
+                "http_responses",
+                &self.contract,
+                true,
+                &[
+                    (
+                        "http_status",
+                        "response.status=200 OR response.status=404 OR response.status=410".into(),
+                    ),
+                    (
+                        "http_digest",
+                        "regexp_like(body_digest,'^[0-9a-f]{64}$')".into(),
+                    ),
+                ],
+            )
+            .await
     }
     pub async fn select(
         &self,

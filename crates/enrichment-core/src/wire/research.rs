@@ -2,22 +2,11 @@
 
 use super::ErrorCode;
 
-crate::native_vocabulary! {
-/// Closed independently selectable inspection aspects.
-#[derive(PartialOrd,Ord)]
-pub enum InspectionAspect {
-    Signature = "signature",
-    Availability = "availability",
-    Relationships = "relationships",
-    Documentation = "documentation",
-    Examples = "examples",
-    Source = "source",
-    Semantics = "semantics",
-    Runtime = "runtime",
-    Children = "children",
-    Members = "members",
-}
-}
+#[path = "research_catalog.rs"]
+mod catalog;
+pub use catalog::{
+    AspectDefinition, DiscoveryDefinition, DiscoveryKind, InspectionAspect, RequiredObservation,
+};
 
 crate::native_struct! {
 /// One aspect's page request. Cursors are bound to this selection and snapshot.
@@ -26,37 +15,15 @@ pub struct AspectSelection {
     #[serde(default)]
     cursor: Option<String> => crate::native_union::Rule::Text,
     #[serde(default = "default_page_size")]
-    max_items: usize => crate::native_union::Rule::Text,
+    max_items: usize => crate::native_union::Rule::UnsignedRange { min: 1, max: 1024 },
     /// Requested text projection for documentation/examples. None requests complete text.
     #[serde(default)]
-    max_characters: Option<usize> => crate::native_union::Rule::Text,
+    max_characters: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1, max: 65536 },
 }
 }
 
 const fn default_page_size() -> usize {
     32
-}
-
-crate::native_vocabulary! {
-#[derive(PartialOrd, Ord)]
-pub enum DiscoveryKind {
-    Features = "features",
-    Documentation = "documentation",
-    ReleaseNotes = "release_notes",
-    Examples = "examples",
-}
-}
-
-impl DiscoveryKind {
-    pub const fn fragment_kind(self) -> crate::evidence::FragmentKind {
-        use crate::evidence::FragmentKind;
-        match self {
-            Self::Features => FragmentKind::FeatureDefinition,
-            Self::Documentation => FragmentKind::ReadmeSection,
-            Self::ReleaseNotes => FragmentKind::ChangelogSection,
-            Self::Examples => FragmentKind::Example,
-        }
-    }
 }
 
 crate::native_struct! {
@@ -65,49 +32,11 @@ pub struct DiscoverySelection {
     #[serde(default)]
     cursor: Option<String> => crate::native_union::Rule::Text,
     #[serde(default = "default_page_size")]
-    max_items: usize => crate::native_union::Rule::Text,
+    max_items: usize => crate::native_union::Rule::UnsignedRange { min: 1, max: 1024 },
     /// None requests the complete retained text; callers may request a bounded preview.
     #[serde(default)]
-    max_characters: Option<usize> => crate::native_union::Rule::Text,
+    max_characters: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1, max: 65536 },
 }
-}
-
-impl DiscoverySelection {
-    pub fn defaults() -> Vec<Self> {
-        [
-            DiscoveryKind::Features,
-            DiscoveryKind::Documentation,
-            DiscoveryKind::ReleaseNotes,
-            DiscoveryKind::Examples,
-        ]
-        .into_iter()
-        .map(|kind| Self {
-            kind,
-            cursor: None,
-            max_items: 8,
-            max_characters: Some(256),
-        })
-        .collect()
-    }
-
-    pub fn validate(selections: &[Self]) -> Result<(), String> {
-        let mut kinds = std::collections::BTreeSet::new();
-        if selections.len() > 4 {
-            return Err("select at most four discovery kinds".into());
-        }
-        for selected in selections {
-            if !kinds.insert(selected.kind)
-                || !(1..=1024).contains(&selected.max_items)
-                || selected
-                    .max_characters
-                    .is_some_and(|n| !(1..=65536).contains(&n))
-                || selected.cursor.as_ref().is_some_and(|c| c.len() > 32768)
-            {
-                return Err("discovery kinds must be unique with 1..1024 items, 1..65536 preview characters and bounded cursors".into());
-            }
-        }
-        Ok(())
-    }
 }
 
 crate::native_union! { @tag "mode";
@@ -116,73 +45,7 @@ crate::native_union! { @tag "mode";
     pub enum ResearchSelection {
         #[default]
         Default = "default",
-        Explicit = "explicit" { aspects: Vec<AspectSelection> => crate::native_union::Rule::Sequence },
-    }
-}
-
-impl ResearchSelection {
-    /// The bounded default has no implicit complete relationship selection.
-    #[must_use]
-    pub fn aspects(&self) -> Vec<AspectSelection> {
-        match self {
-            Self::Default => [
-                InspectionAspect::Signature,
-                InspectionAspect::Availability,
-                InspectionAspect::Documentation,
-            ]
-            .into_iter()
-            .map(|aspect| AspectSelection {
-                aspect,
-                cursor: None,
-                max_items: if aspect == InspectionAspect::Documentation {
-                    3
-                } else {
-                    default_page_size()
-                },
-                max_characters: (aspect == InspectionAspect::Documentation).then_some(1200),
-            })
-            .collect(),
-            Self::Explicit { aspects } => aspects.clone(),
-        }
-    }
-
-    /// Reject ambiguous duplicate scopes and unbounded/empty page requests.
-    /// # Errors
-    /// Returns the violated selection rule.
-    pub fn validate(&self) -> Result<(), String> {
-        let aspects = self.aspects();
-        if aspects.is_empty() || aspects.len() > 10 {
-            return Err("select between one and ten inspection aspects".into());
-        }
-        let mut seen = std::collections::BTreeSet::new();
-        for selected in aspects {
-            if selected
-                .max_characters
-                .is_some_and(|n| !(1..=65536).contains(&n))
-                || selected.max_characters.is_some()
-                    && !matches!(
-                        selected.aspect,
-                        InspectionAspect::Documentation | InspectionAspect::Examples
-                    )
-            {
-                return Err(
-                    "max_characters requires documentation/examples and a bound in 1..65536".into(),
-                );
-            }
-            if !seen.insert(selected.aspect) {
-                return Err(format!(
-                    "duplicate inspection aspect {}",
-                    selected.aspect.as_str()
-                ));
-            }
-            if !(1..=1024).contains(&selected.max_items) {
-                return Err("aspect max_items must be between 1 and 1024".into());
-            }
-            if selected.cursor.as_ref().is_some_and(|c| c.len() > 32768) {
-                return Err("aspect cursor exceeds its encoded bound".into());
-            }
-        }
-        Ok(())
+        Explicit = "explicit" { aspects: Vec<AspectSelection> => crate::native_union::Rule::SequenceBounds { min: 1, max: InspectionAspect::VALUES.len() as u64 } },
     }
 }
 
@@ -311,7 +174,8 @@ impl Diagnostic {
 }
 
 crate::native_struct! {
-/// Actual envelope budget, distinct from MCP framing overhead.
+/// Complete response budget at the admitted delivery boundary. MCP stdio includes its
+/// measured JSON-RPC frame; internal/resource reads measure the native envelope.
 #[derive(Default)]
 pub struct DeliveryLimits {
     requested_max_bytes: Option<usize> => crate::native_union::Rule::Text,

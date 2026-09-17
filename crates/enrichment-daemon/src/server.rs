@@ -16,10 +16,7 @@ use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::Notify;
 
 use enrichment_core::producer::rustdoc;
-use enrichment_core::request::{
-    CompareRequest, InspectRequest, OverviewRequest, ReadArtifactRequest, ResolveRequest,
-    SearchRequest,
-};
+use enrichment_core::request::ResearchRequest;
 
 use crate::ops;
 use crate::paths::DaemonPaths;
@@ -71,11 +68,12 @@ pub async fn serve(
     });
     let result = accept_loop(&listener, service.clone(), shutdown, Arc::clone(&stop)).await;
     sweeper.abort();
-    service.shutdown().await?;
+    let _ = sweeper.await;
+    let stopped = service.shutdown().await;
 
     // Leaving a live socket behind would make the next `start` look like a running daemon.
     let _ = std::fs::remove_file(&paths.socket);
-    result
+    result.and(stopped)
 }
 
 async fn accept_loop(
@@ -85,24 +83,38 @@ async fn accept_loop(
     stop: Arc<Notify>,
 ) -> std::io::Result<()> {
     tokio::pin!(shutdown);
-    loop {
+    let mut connections = tokio::task::JoinSet::new();
+    let result = loop {
         tokio::select! {
-            () = &mut shutdown => return Ok(()),
-            () = stop.notified() => return Ok(()),
+            () = &mut shutdown => break Ok(()),
+            () = stop.notified() => break Ok(()),
+            completed = connections.join_next(), if !connections.is_empty() => {
+                if let Some(Err(error)) = completed {
+                    eprintln!("library-enrichmentd: connection task ended: {error}");
+                }
+            }
             accepted = listener.accept() => {
-                let (stream, _) = accepted?;
+                let (stream, _) = match accepted {
+                    Ok(accepted) => accepted,
+                    Err(error) => break Err(error),
+                };
                 // One task per connection: a slow adapter must not block the others, because
                 // this daemon is shared across every agent on the machine.
                 let stop = Arc::clone(&stop);
                 let service = Arc::clone(&service);
-                tokio::spawn(async move {
+                connections.spawn(async move {
                     if let Err(err) = handle_connection(stream, service, stop).await {
                         eprintln!("library-enrichmentd: connection ended: {err}");
                     }
                 });
             }
         }
-    }
+    };
+    // Stop every transport root before service shutdown drains jobs/native descendants.
+    // Connection cancellation does not certify physical exit of its blocking child work.
+    connections.abort_all();
+    while connections.join_next().await.is_some() {}
+    result
 }
 
 /// A socket file left by a dead process is reclaimed; one a live daemon is listening on is not.
@@ -228,11 +240,33 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
     }
 
     let id = request.id.clone();
-    let requested = request
-        .params
-        .get("max_bytes")
-        .and_then(serde_json::Value::as_u64)
-        .and_then(|n| usize::try_from(n).ok());
+    if let Err(error) = request.delivery.validate() {
+        return Dispatched::reply(Response::err(
+            id,
+            RpcError::new(
+                codes::INVALID_PARAMS,
+                error.to_string(),
+                "UNSUPPORTED_FORMAT",
+                "Supply an admitted delivery framing profile.",
+            ),
+        ));
+    }
+    let delivery = request.delivery.clone();
+    let parsed =
+        ResearchRequest::from_rpc(&request.method, request.params.clone()).and_then(Result::ok);
+    let requested = parsed.as_ref().and_then(ResearchRequest::requested_budget);
+    let descriptor = parsed
+        .as_ref()
+        .map(|request| service.operation_descriptor(request))
+        .unwrap_or_else(|| enrichment_core::telemetry::OperationDescriptor {
+            method: request.method.clone(),
+            // Administrative or invalid protocol input is exact transport provenance, never a
+            // semantic research key. Preserve the bytes that actually arrived at the boundary.
+            request_digest: enrichment_core::canonical::sha256_hex(frame.as_bytes()),
+            policy_digest: enrichment_core::native_key::Key::OperationPolicy
+                .record(&service.config)
+                .expect("effective native configuration"),
+        });
     let correlation = crate::envelope::new_request_id().to_string();
     let owned = service.clone();
     let runtime = service.repository.runtime.clone();
@@ -243,7 +277,7 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
             .runtime
             .operation(
                 operation,
-                owned.operation_descriptor(&request.method, &request.params),
+                descriptor,
                 Box::pin(dispatch_request(&owned, request, began)),
             )
             .await
@@ -259,7 +293,7 @@ pub async fn dispatch(service: &Service, frame: &str) -> Dispatched {
                 let mut result = ops::common::query_error(&error.into());
                 result.request_id = enrichment_core::wire::RequestId::try_from(correlation)
                     .expect("admitted identity");
-                Some(research_response(service, Some(id), result, requested).await)
+                Some(research_response(service, Some(id), result, requested, delivery).await)
             } else {
                 None
             };
@@ -279,205 +313,12 @@ async fn dispatch_request(
     // A notification is a request with no id; it is still dispatched, but answered with nothing.
     let is_notification = request.id.is_none();
     let mut shutdown = false;
-    let requested_budget = request
-        .params
-        .get("max_bytes")
-        .and_then(serde_json::Value::as_u64)
-        .and_then(|n| usize::try_from(n).ok());
     let response = match request.method.as_str() {
         "daemon.shutdown" => {
             shutdown = true;
             Response::ok(request.id, serde_json::json!({ "stopping": true }))
         }
-        // Returns a COMPLETE wire envelope, built here. Identity, coverage and freshness are
-        // evidence-model assertions and belong to the core (§1.1); the adapter forwards this
-        // rather than composing its own, so there is one author of those fields.
-        "service.status" => {
-            match serde_json::from_value::<enrichment_core::request::StatusRequest>(request.params)
-            {
-                Ok(status_request) => {
-                    research_response(
-                        service,
-                        request.id,
-                        status::status_envelope(service, status_request.component.as_deref()).await,
-                        requested_budget,
-                    )
-                    .await
-                }
-                Err(error) => invalid_params(
-                    request.id,
-                    "service.status",
-                    &error,
-                    "an optional string component",
-                ),
-            }
-        }
         "daemon.ping" => Response::ok(request.id, serde_json::json!({ "pong": true })),
-        // Phase 1: establish exact identity and environment before research (§7,
-        // `resolve_library`). Parameters are the typed core request; the answer is a complete
-        // envelope whose `partial`/`error` states are decided by the core, not here.
-        "library.resolve" => match serde_json::from_value::<ResolveRequest>(request.params) {
-            Ok(resolve) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::resolve::resolve(service, resolve).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => Response::err(
-                request.id,
-                RpcError::new(
-                    codes::INVALID_PARAMS,
-                    format!("library.resolve parameters are invalid: {err}"),
-                    "UNSUPPORTED_FORMAT",
-                    "Pass at least {\"name\": \"<crate>\"}; add \"version\" for an exact \
-                     release, and \"freshness\": \"offline\" to avoid the network.",
-                ),
-            ),
-        },
-        // The retrieval methods read a published snapshot; each answers with a complete
-        // envelope and refuses malformed parameters with a typed RPC error.
-        "usage.verify" => {
-            match serde_json::from_value::<enrichment_core::execution::VerifyRequest>(
-                request.params,
-            ) {
-                Ok(req) => {
-                    research_response(
-                        service,
-                        request.id,
-                        ops::verify::verify(service, req).await,
-                        requested_budget,
-                    )
-                    .await
-                }
-                Err(err) => invalid_params(
-                    request.id,
-                    "usage.verify",
-                    &err,
-                    "context, snippet, mode and enabled profile",
-                ),
-            }
-        }
-        "job.control" => {
-            match serde_json::from_value::<enrichment_core::execution::JobRequest>(request.params) {
-                Ok(req) => {
-                    research_response(
-                        service,
-                        request.id,
-                        ops::verify::control(service, req).await,
-                        requested_budget,
-                    )
-                    .await
-                }
-                Err(err) => invalid_params(request.id, "job.control", &err, "job_id and action"),
-            }
-        }
-        "library.compare" => match serde_json::from_value::<CompareRequest>(request.params) {
-            Ok(req) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::compare::compare(service, req).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => invalid_params(
-                request.id,
-                "library.compare",
-                &err,
-                "a before/after context pair",
-            ),
-        },
-        "library.overview" => match serde_json::from_value::<OverviewRequest>(request.params) {
-            Ok(req) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::overview::overview(service, req).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => invalid_params(
-                request.id,
-                "library.overview",
-                &err,
-                "{\"context_id\": \"<ctx_…>\"}",
-            ),
-        },
-        "evidence.search" => match serde_json::from_value::<SearchRequest>(request.params) {
-            Ok(req) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::search::search(service, req).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => invalid_params(
-                request.id,
-                "evidence.search",
-                &err,
-                "{\"context_id\": \"<ctx_…>\", \"query\": \"<text>\"}",
-            ),
-        },
-        "symbol.inspect" => match serde_json::from_value::<InspectRequest>(request.params) {
-            Ok(req) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::inspect::inspect(service, req).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => invalid_params(
-                request.id,
-                "symbol.inspect",
-                &err,
-                "{\"context_id\": \"<ctx_…>\", \"symbol_path\": \"<path>\"}",
-            ),
-        },
-        "artifact.read" => match serde_json::from_value::<ReadArtifactRequest>(request.params) {
-            Ok(req) => {
-                research_response(
-                    service,
-                    request.id,
-                    ops::artifact::read(service, req).await,
-                    requested_budget,
-                )
-                .await
-            }
-            Err(err) => invalid_params(
-                request.id,
-                "artifact.read",
-                &err,
-                "{\"artifact_id\": \"art_…\"}",
-            ),
-        },
-        "snapshot.manifest" => {
-            match serde_json::from_value::<ops::manifest::ManifestRequest>(request.params) {
-                Ok(req) => {
-                    research_response(
-                        service,
-                        request.id,
-                        ops::manifest::manifest(service, req).await,
-                        requested_budget,
-                    )
-                    .await
-                }
-                Err(err) => invalid_params(
-                    request.id,
-                    "snapshot.manifest",
-                    &err,
-                    "{\"snapshot_id\": \"snap_…\"}",
-                ),
-            }
-        }
         // Gate R04, and the fourth clause of the blueprint's Phase-0 gate: an unsupported
         // producer format returns a TYPED error, never a best-effort parse.
         "producer.probe_format" => match request.params.get("artifact").and_then(|a| a.as_str()) {
@@ -524,29 +365,42 @@ async fn dispatch_request(
                 ),
             ),
         },
-        unknown => Response::err(
-            request.id,
-            RpcError::new(
-                codes::METHOD_NOT_FOUND,
-                format!("unknown method `{unknown}`"),
-                "UNSUPPORTED_CAPABILITY",
-                "Call service.status to see which components this build implements.",
+        unknown => match ResearchRequest::from_rpc(unknown, request.params) {
+            Some(Ok(input)) => {
+                let budget = input.requested_budget();
+                let envelope = dispatch_research(service, input).await;
+                research_response(
+                    service,
+                    request.id,
+                    envelope,
+                    budget,
+                    request.delivery.clone(),
+                )
+                .await
+            }
+            Some(Err(error)) => invalid_params(
+                request.id,
+                unknown,
+                &error,
+                "the generated operation input contract",
             ),
-        ),
+            None => Response::err(
+                request.id,
+                RpcError::new(
+                    codes::METHOD_NOT_FOUND,
+                    format!("unknown method `{unknown}`"),
+                    "UNSUPPORTED_CAPABILITY",
+                    "Call service.status to see which components this build implements.",
+                ),
+            ),
+        },
     };
 
-    // These are observations of the already encoded response, never deserialization of a
-    // result into a second semantic model. Research replies were bounded while still typed.
-    let status = response.result.as_ref().and_then(|value| {
-        value["status"]
-            .as_str()
-            .and_then(enrichment_core::wire::Status::parse)
-    });
-    let has_gap = response.result.as_ref().is_some_and(|value| {
-        value["coverage"]["missing"]
-            .as_array()
-            .is_some_and(|missing| !missing.is_empty())
-    });
+    let status = response.observation.as_ref().map(|facts| facts.status);
+    let has_gap = response
+        .observation
+        .as_ref()
+        .is_some_and(|facts| facts.has_gap);
 
     // Measured even for a notification: the work happened, and a counter that quietly skipped
     // it would understate what this process did.
@@ -565,6 +419,39 @@ async fn dispatch_request(
     }
 }
 
+/// Routing is exhaustive over the generated operation declaration. Native admission runs
+/// before every research tool/resource; the match only invokes its I/O-facing handler.
+async fn dispatch_research(
+    service: &Service,
+    input: ResearchRequest,
+) -> enrichment_core::wire::Envelope {
+    if let Err(error) = enrichment_store::request_admission::research(
+        &service.repository.runtime,
+        &input,
+        service.config.limits.verification_input_bytes,
+    )
+    .await
+    {
+        return ops::common::operation_error(&error, "research_request_admission");
+    }
+    match input {
+        ResearchRequest::Resolve(request) => ops::resolve::resolve(service, request).await,
+        ResearchRequest::Overview(request) => ops::overview::overview(service, request).await,
+        ResearchRequest::Search(request) => ops::search::search(service, request).await,
+        ResearchRequest::Inspect(request) => ops::inspect::inspect(service, request).await,
+        ResearchRequest::Compare(request) => ops::compare::compare(service, request).await,
+        ResearchRequest::Verify(request) => ops::verify::verify(service, request).await,
+        ResearchRequest::ReadArtifact(request) => ops::artifact::read(service, request).await,
+        ResearchRequest::Job(request) => ops::verify::control(service, request).await,
+        ResearchRequest::ServiceStatus(request) => {
+            status::status_envelope(service, request.component.as_deref()).await
+        }
+        ResearchRequest::SnapshotManifest(request) => {
+            ops::manifest::manifest(service, request).await
+        }
+    }
+}
+
 /// The only native research-to-RPC projection. Keep the domain result typed through delivery
 /// and diagnostics; serialize once when constructing the transport response.
 async fn research_response(
@@ -572,6 +459,7 @@ async fn research_response(
     id: Option<serde_json::Value>,
     mut result: enrichment_core::wire::Envelope,
     requested: Option<usize>,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
 ) -> Response {
     if enrichment_store::runtime::operation_id().is_some() {
         result.request_id = crate::envelope::new_request_id();
@@ -587,11 +475,34 @@ async fn research_response(
                 .record_failure(error.diagnostic.clone());
         }
     }
-    let bounded = ops::common::enforce_budget(service, result, requested).await;
-    Response::ok(
-        id,
-        serde_json::to_value(bounded).expect("bounded native research envelope"),
-    )
+    let bounded =
+        ops::common::enforce_delivery_budget(service, result, requested, profile.clone()).await;
+    let projected = match &profile {
+        enrichment_core::mcp_delivery::DeliveryProfile::Envelope => serde_json::to_value(&bounded),
+        enrichment_core::mcp_delivery::DeliveryProfile::McpStdio { era, .. } => {
+            enrichment_core::mcp_delivery::project(&bounded, era)
+                .map_err(serde_json::Error::io)
+                .and_then(serde_json::to_value)
+        }
+        enrichment_core::mcp_delivery::DeliveryProfile::McpResourceStdio { era, uri, .. } => {
+            enrichment_core::mcp_delivery::project_resource(&bounded, era, uri)
+                .map_err(serde_json::Error::io)
+                .and_then(serde_json::to_value)
+        }
+    };
+    let mut response = Response::ok(id, projected.expect("bounded native research projection"));
+    response.observation = Some(rpc::ResponseObservation {
+        status: bounded.status(),
+        has_gap: !bounded.coverage.missing.is_empty(),
+    });
+    if !matches!(
+        profile,
+        enrichment_core::mcp_delivery::DeliveryProfile::Envelope
+    ) {
+        response.delivery_bytes =
+            Some(profile.measure(&bounded).expect("bounded measurement") as u64);
+    }
+    response
 }
 
 fn invalid_params(

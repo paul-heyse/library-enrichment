@@ -57,20 +57,18 @@ class WorkerRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    files: list[WorkerFile] = Field(
-        ..., description="Exhaustive expected file list; worker must account for each."
-    )
-    max_cpu_seconds: int = Field(
-        ..., description="Rust-owned CPU deadline installed before parsing studied source.", ge=0
-    )
-    max_memory_bytes: int = Field(
+    files: list[WorkerFile] = Field(..., max_length=65536, min_length=0)
+    max_cpu_seconds: str = Field(
         ...,
-        description="Rust-owned address-space ceiling installed before parsing studied source.",
-        ge=0,
+        pattern="^(?:1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
     )
-    max_observations: int = Field(..., description="Maximum observations returned.", ge=0)
-    root: str = Field(..., description="Absolute service-owned input root.")
-    schema_version: str = Field(..., description="Protocol version.")
+    max_memory_bytes: str = Field(
+        ...,
+        pattern="^(?:1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    max_observations: str = Field(..., pattern="^(?:100000|[1-9][0-9]{0,4})$")
+    root: str
+    schema_version: str
 
 
 class PythonParameter(BaseModel):

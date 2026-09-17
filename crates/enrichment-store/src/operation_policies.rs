@@ -1,14 +1,14 @@
 //! Exact-version effective configuration over the shared immutable native definition contract.
 use crate::immutable_definitions::Binding;
-use crate::{immutable_definitions::Definitions, native_delta::DeltaStore, runtime::QueryRuntime};
+use crate::{control::ControlStore, immutable_definitions::Definitions, runtime::QueryRuntime};
 use datafusion::{dataframe::DataFrame, error::Result};
 use enrichment_core::{config::Config, native_key::Key};
 #[derive(Clone)]
 pub(crate) struct Policies(Definitions);
 impl Policies {
-    pub(crate) fn new(delta: DeltaStore, runtime: QueryRuntime) -> Self {
+    pub(crate) fn new(control: ControlStore, runtime: QueryRuntime) -> Self {
         Self(Definitions::new(
-            delta,
+            control,
             runtime,
             "operation_policies",
             Key::OperationPolicy,
@@ -31,7 +31,7 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let runtime = QueryRuntime::new(&root.path().join("spill"), Default::default()).unwrap();
         let policies = Policies::new(
-            DeltaStore::new(&root.path().join("delta"), runtime.clone()).unwrap(),
+            ControlStore::open(root.path(), runtime.clone()).unwrap(),
             runtime.clone(),
         );
         let first = Config::default();
@@ -43,7 +43,7 @@ mod tests {
         let after = policies.retain(&changed).await.unwrap();
         assert!(after.version > before.version);
         let reopened = Policies::new(
-            DeltaStore::new(&root.path().join("delta"), runtime.clone()).unwrap(),
+            ControlStore::open(root.path(), runtime.clone()).unwrap(),
             runtime.clone(),
         );
         let old = reopened.read(&first_id, &before).await.unwrap();
@@ -71,11 +71,42 @@ mod tests {
             2,
             "the captured policy retains build even after configuration changes"
         );
+        let retention = crate::retention::RetentionStore::new(
+            ControlStore::open(root.path(), runtime.clone()).unwrap(),
+            runtime.clone(),
+        );
+        let maintenance = retention
+            .claim_maintenance(
+                "operation_policies".into(),
+                "definition-retention-oracle".into(),
+            )
+            .await
+            .unwrap();
+        let protected = retention
+            .maintenance_decision(
+                &maintenance,
+                &crate::retention::TableVersion {
+                    table_uri: "operation_policies".into(),
+                    table_id: after.table_id.clone(),
+                    version: after.version,
+                    contract_id: after.contract_id.clone(),
+                    cohort_id: None,
+                },
+            )
+            .await
+            .unwrap();
+        assert!(protected.keep_versions.contains(&before.version));
+        assert!(protected.keep_versions.contains(&after.version));
+        retention
+            .finish_maintenance(&maintenance, true)
+            .await
+            .unwrap();
         let mut wrong = before.clone();
         wrong.table_id = "another-table".into();
         assert!(reopened.read(&first_id, &wrong).await.is_err());
         wrong = before;
         wrong.contract_id = "another-schema".into();
         assert!(reopened.read(&first_id, &wrong).await.is_err());
+        runtime.close_diagnostics().await.unwrap();
     }
 }

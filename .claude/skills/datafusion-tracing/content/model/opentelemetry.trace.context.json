@@ -1,0 +1,155 @@
+{
+  "module": "opentelemetry::trace::context",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.trace.context.md",
+  "items": [
+    {
+      "path": "opentelemetry::trace::context::get_active_span",
+      "name": "get_active_span",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn get_active_span<F, T>(f: F) -> T where F: FnOnce(SpanRef<'_>) -> T",
+      "summary": "Executes a closure with a reference to this thread's current span.",
+      "doc": "api/opentelemetry.trace.context.md#get_active_span",
+      "aliases": [
+        "opentelemetry::trace::get_active_span"
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::context::mark_span_as_active",
+      "name": "mark_span_as_active",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn mark_span_as_active<T: trace::Span + Send + Sync + 'static>(span: T) -> ContextGuard",
+      "summary": "Mark a given `Span` as active.",
+      "doc": "api/opentelemetry.trace.context.md#mark_span_as_active",
+      "aliases": [
+        "opentelemetry::trace::mark_span_as_active"
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::context::SpanRef",
+      "name": "SpanRef",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct SpanRef<'a>",
+      "summary": "A reference to the currently active span in this context.",
+      "doc": "api/opentelemetry.trace.context.md#spanref",
+      "aliases": [
+        "opentelemetry::trace::SpanRef"
+      ],
+      "methods": [
+        {
+          "name": "add_event",
+          "signature": "fn add_event<T>(&self, name: T, attributes: Vec<KeyValue>) where T: Into<Cow<'static, str>>",
+          "summary": "Record an event in the context this span."
+        },
+        {
+          "name": "add_event_with_timestamp",
+          "signature": "fn add_event_with_timestamp<T>(&self, name: T, timestamp: std::time::SystemTime, attributes: Vec<KeyValue>) where T: Into<Cow<'static, str>>",
+          "summary": "Record an event with a timestamp in the context this span."
+        },
+        {
+          "name": "add_link",
+          "signature": "fn add_link(&self, span_context: SpanContext, attributes: Vec<KeyValue>)",
+          "summary": "Adds a [`Link`] to another [`SpanContext`]."
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&self)",
+          "summary": "Signals that the operation described by this span has now ended."
+        },
+        {
+          "name": "end_with_timestamp",
+          "signature": "fn end_with_timestamp(&self, timestamp: std::time::SystemTime)",
+          "summary": "Signals that the operation described by this span ended at the given time."
+        },
+        {
+          "name": "is_recording",
+          "signature": "fn is_recording(&self) -> bool",
+          "summary": "Returns `true` if this span is recording information."
+        },
+        {
+          "name": "record_error",
+          "signature": "fn record_error(&self, err: &dyn Error)",
+          "summary": "Record an error as an event for this span."
+        },
+        {
+          "name": "set_attribute",
+          "signature": "fn set_attribute(&self, attribute: KeyValue)",
+          "summary": "Set an attribute of this span."
+        },
+        {
+          "name": "set_attributes",
+          "signature": "fn set_attributes(&self, attributes: impl IntoIterator<Item = KeyValue>)",
+          "summary": "Set multiple attributes of this span."
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status(&self, status: Status)",
+          "summary": "Sets the status of this `Span`."
+        },
+        {
+          "name": "span_context",
+          "signature": "fn span_context(&self) -> &SpanContext",
+          "summary": "A reference to the [`SpanContext`] for this span."
+        },
+        {
+          "name": "update_name",
+          "signature": "fn update_name<T>(&self, new_name: T) where T: Into<Cow<'static, str>>",
+          "summary": "Updates the span's name."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::context::TraceContextExt",
+      "name": "TraceContextExt",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait TraceContextExt",
+      "summary": "Methods for storing and retrieving trace data in a [`Context`].",
+      "doc": "api/opentelemetry.trace.context.md#tracecontextext",
+      "aliases": [
+        "opentelemetry::trace::TraceContextExt"
+      ],
+      "implementors": [
+        "opentelemetry::context::Context"
+      ],
+      "required_methods": [
+        "current_with_span",
+        "has_active_span",
+        "span",
+        "with_remote_span_context",
+        "with_span"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "current_with_span",
+          "signature": "fn current_with_span<T: trace::Span + Send + Sync + 'static>(span: T) -> Self",
+          "summary": "Returns a clone of the current context with the included [`Span`]."
+        },
+        {
+          "name": "has_active_span",
+          "signature": "fn has_active_span(&self) -> bool",
+          "summary": "Returns whether or not an active span has been set."
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> SpanRef<'_>",
+          "summary": "Returns a reference to this context's span, or the default no-op span if none has been set."
+        },
+        {
+          "name": "with_remote_span_context",
+          "signature": "fn with_remote_span_context(&self, span_context: trace::SpanContext) -> Self",
+          "summary": "Returns a copy of this context with the span context included."
+        },
+        {
+          "name": "with_span",
+          "signature": "fn with_span<T: trace::Span + Send + Sync + 'static>(&self, span: T) -> Self",
+          "summary": "Returns a clone of this context with the included span."
+        }
+      ]
+    }
+  ]
+}

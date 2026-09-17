@@ -1,0 +1,87 @@
+{
+  "module": "opentelemetry::context::future_ext",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.context.future_ext.md",
+  "items": [
+    {
+      "path": "opentelemetry::context::future_ext::WithContext",
+      "name": "WithContext",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct WithContext<T>",
+      "summary": "A future, stream, or sink that has an associated context.",
+      "doc": "api/opentelemetry.context.future_ext.md#withcontext",
+      "aliases": [
+        "opentelemetry::context::WithContext",
+        "opentelemetry::trace::WithContext"
+      ],
+      "implements": [
+        "core::future::future::Future",
+        "futures_core::stream::Stream",
+        "futures_sink::Sink"
+      ],
+      "methods": [
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, task_cx: &mut TaskContext<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        },
+        {
+          "name": "poll_close",
+          "signature": "fn poll_close(Pin<&mut self>, task_cx: &mut TaskContext<'_>) -> Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "poll_flush",
+          "signature": "fn poll_flush(Pin<&mut self>, task_cx: &mut TaskContext<'_>) -> Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, task_cx: &mut TaskContext<'_>) -> Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "poll_ready",
+          "signature": "fn poll_ready(Pin<&mut self>, task_cx: &mut TaskContext<'_>) -> Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "start_send",
+          "signature": "fn start_send(Pin<&mut self>, item: I) -> Result<(), Self::Error>",
+          "via_trait": "futures_sink::Sink"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::context::future_ext::FutureExt",
+      "name": "FutureExt",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait FutureExt: Sized",
+      "summary": "Extension trait allowing futures, streams, and sinks to be traced with a span.",
+      "doc": "api/opentelemetry.context.future_ext.md#futureext",
+      "aliases": [
+        "opentelemetry::context::FutureExt",
+        "opentelemetry::trace::FutureExt"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "with_context",
+        "with_current_context"
+      ],
+      "methods": [
+        {
+          "name": "with_context",
+          "signature": "fn with_context(self, otel_cx: Context) -> WithContext<Self>",
+          "summary": "Attaches the provided [`Context`] to this type, returning a `WithContext` wrapper."
+        },
+        {
+          "name": "with_current_context",
+          "signature": "fn with_current_context(self) -> WithContext<Self>",
+          "summary": "Attaches the current [`Context`] to this type, returning a `WithContext` wrapper."
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 use crate::{native_catalog, runtime::QueryRuntime};
 use datafusion::{common::Result, functions::core::expr_ext::FieldAccessor, prelude::*};
 use enrichment_core::{
-    evidence::arrow_model::expressions::{derive_record, record},
+    evidence::arrow_model::expressions::record,
     native_union::{Cell, NativeStruct, Rule},
     wire::{Coverage, Outcome, status::StatusData},
 };
@@ -35,7 +35,16 @@ pub async fn select(
             }])?)?
             .into_view(),
     )?;
-    let mut frame = session.table("status_input").await?;
+    // Flatten once before selecting components. Repeated nested extraction through
+    // successive projections can give the optimizer two identically named leaves.
+    // These declared aliases also make the status reconstruction independent of
+    // optimizer-generated names, with every original field carried exactly once.
+    let mut columns = StatusData::fields()
+        .iter()
+        .map(|field| col("status").field(field.name()).alias(field.name()))
+        .collect::<Vec<_>>();
+    columns.push(col("component"));
+    let mut frame = session.table("status_input").await?.select(columns)?;
     for field in ["producers", "features"] {
         let member = Expr::LambdaVariable(datafusion::logical_expr::expr::LambdaVariable::new(
             "component_status".into(),
@@ -51,20 +60,19 @@ pub async fn select(
         frame = frame.with_column(
             field,
             datafusion::functions_nested::expr_fn::array_filter(
-                col("status").field(field),
+                col(field),
                 datafusion::logical_expr::expr_fn::lambda(vec!["component_status"], predicate),
             ),
         )?;
     }
     native_catalog::work(&session, "status_selected", frame.into_view())?;
     let frame = session.sql("WITH matched AS (SELECT *, component IS NULL OR cardinality(producers)+cardinality(features)>0 AS found FROM status_selected) SELECT *, CASE WHEN component IS NULL THEN 'Service status as reported by the daemon.' WHEN found THEN concat('Status for `',component,'`.') ELSE concat('No component named `',component,'` is known to this build.') END AS summary, CASE WHEN component IS NULL THEN 'installed components and their availability' ELSE concat('components matching `',component,'`') END AS scope, CASE WHEN component IS NULL THEN make_array('daemon','producers','features','sandbox') WHEN found THEN make_array('daemon','producers','features') ELSE make_array('daemon') END AS indexed, CASE WHEN found THEN CAST(make_array() AS VARCHAR[]) ELSE make_array(concat('producers matching `',component,'`'),concat('features matching `',component,'`')) END AS missing, CASE WHEN found THEN make_array('Reports what is installed, not whether library evidence has been indexed.') ELSE make_array(concat('`',component,'` did not match any component this build reports. That is not evidence that no such component exists; call service.status with no filter to see the full list.')) END AS limitations FROM matched").await?;
-    let status = derive_record(
-        col("status"),
+    let status = record(
         &StatusData::data_type(),
-        &[
-            ("producers", col("producers")),
-            ("features", col("features")),
-        ],
+        &StatusData::fields()
+            .iter()
+            .map(|field| (field.name().as_str(), col(field.name())))
+            .collect::<Vec<_>>(),
     )?;
     let coverage = record(
         &Coverage::data_type(),

@@ -14,14 +14,14 @@ crate::native_vocabulary! {
 }
 crate::native_struct! {
     pub struct ProjectionIdentity {
-        snapshot_id: String => Rule::NonEmpty,
+        snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
         revision: String => Rule::NonEmpty,
     }
 }
 crate::native_struct! {
     pub struct Checkpoint {
         projection_id: String => Rule::NonEmpty,
-        snapshot_id: String => Rule::NonEmpty,
+        snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
         revision: String => Rule::NonEmpty,
         sequence: u64 => Rule::Text,
         mode: ProjectionMode => Rule::Text,

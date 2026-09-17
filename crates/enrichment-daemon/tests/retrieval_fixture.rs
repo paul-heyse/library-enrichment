@@ -1086,7 +1086,9 @@ async fn measure_research_operations_one_and_eight_clients() {
                         matches!(answer["status"].as_str(), Some("ok" | "partial")),
                         "{answer}"
                     );
-                    let digest = enrichment_core::canonical::digest_hex(&answer["data"]);
+                    let digest = enrichment_core::canonical::sha256_hex(
+                        enrichment_core::canonical::to_canonical_string(&answer["data"]).as_bytes(),
+                    );
                     assert_eq!(
                         expected.entry(task).or_insert_with(|| digest.clone()),
                         &digest,

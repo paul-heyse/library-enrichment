@@ -99,65 +99,6 @@ async fn compose_changes(
 
 const ALTERNATIVES: usize = 32;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn changed_key_identity_is_native_and_independent_of_detail_delivery() -> Result<()> {
-        let root = tempfile::tempdir()?;
-        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
-        let mut input = ChangeInput {
-            before_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
-                "snap_{}",
-                "a".repeat(64)
-            ))
-            .unwrap(),
-            after_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
-                "snap_{}",
-                "b".repeat(64)
-            ))
-            .unwrap(),
-            key: ComparisonKey {
-                plan: 0,
-                subject: "crate::f".into(),
-                key: "path_f".into(),
-            },
-            scope: Scope::Api,
-            before: None,
-            after: Some(vec![]),
-            before_page: Default::default(),
-            after_page: Default::default(),
-            detail: None,
-        };
-        let original = compose_changes(&runtime, &[input.clone()])
-            .await?
-            .remove(0)
-            .1;
-        assert_eq!(original.kind, compare::ChangeKind::Added);
-        assert!(original.interpretation.contains("confirm coverage"));
-        input.detail = Some(false);
-        input.after = Some(vec![compare::Alternative {
-            value: compare::AlternativeValue::Inline {
-                value: serde_json::json!({"parameter":"value"}),
-            },
-            source: None,
-        }]);
-        let detail = compose_changes(&runtime, &[input.clone()])
-            .await?
-            .remove(0)
-            .1;
-        assert_eq!(original.change_id, detail.change_id);
-        assert!(detail.interpretation.contains("after alternative page"));
-        input.after_snapshot =
-            enrichment_core::identity::SnapshotId::try_from(format!("snap_{}", "c".repeat(64)))
-                .unwrap();
-        let different = compose_changes(&runtime, &[input]).await?.remove(0).1;
-        assert_ne!(original.change_id, different.change_id);
-        Ok(())
-    }
-}
-
 pub struct ComparisonPage {
     pub total: u64,
     pub changes: Vec<(ComparisonKey, Change)>,
@@ -384,15 +325,15 @@ async fn page_inner(
     let union = union.ok_or_else(|| DataFusionError::Plan("no comparison scope".into()))?;
     // Reconciliation is the expensive part. Count and page scan the same operation-owned
     // changed-key index; alternative values stay in their admitted source relations.
-    let completed = crate::operation_index::materialize(
+    let union = crate::operation_index::cache(
         runtime,
         union,
-        crate::preparation::QueryFamily::ComparisonKeys,
+        crate::preparation::QueryFamily::Intermediate(
+            enrichment_core::telemetry::MaterializationFamily::ComparisonKeys,
+        ),
     )
     .await?;
-    let total = completed.rows;
-    completed.register(&session, "delta_index")?;
-    let union = session.table("delta_index").await?;
+    let total = crate::operation_index::count(runtime, union.clone()).await?;
     if total == 0 {
         return Ok(ComparisonPage {
             total,
@@ -429,7 +370,9 @@ async fn page_inner(
                     col("key").sort(true, false),
                 ])?
                 .limit(0, Some(limit + 1))?,
-            Some(crate::preparation::QueryFamily::ComparisonKeys),
+            Some(crate::preparation::QueryFamily::Intermediate(
+                enrichment_core::telemetry::MaterializationFamily::ComparisonKeys,
+            )),
         )
         .await?;
     let mut keys = projection::comparison::keys(&output.batches)?;
@@ -440,11 +383,10 @@ async fn page_inner(
             "alternative cursor does not select a changed key".into(),
         ));
     }
-    let snapshots = format!(
-        "{}:{}",
-        before.manifest().snapshot_id,
-        after.manifest().snapshot_id
-    );
+    let snapshots = enrichment_core::compare::page::SnapshotPair {
+        before: before.manifest().snapshot_id.clone(),
+        after: after.manifest().snapshot_id.clone(),
+    };
     // Reserve a bounded terminal header/index envelope independently of value artifacts.
     let mut artifact_bytes = crate::runtime::remaining_artifact_bytes().saturating_sub(1024 * 1024);
     let mut hydrated = Vec::new();
@@ -571,4 +513,63 @@ async fn page_inner(
         changes,
         has_more,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn changed_key_identity_is_native_and_independent_of_detail_delivery() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
+        let mut input = ChangeInput {
+            before_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
+                "snap_{}",
+                "a".repeat(64)
+            ))
+            .unwrap(),
+            after_snapshot: enrichment_core::identity::SnapshotId::try_from(format!(
+                "snap_{}",
+                "b".repeat(64)
+            ))
+            .unwrap(),
+            key: ComparisonKey {
+                plan: 0,
+                subject: "crate::f".into(),
+                key: "path_f".into(),
+            },
+            scope: Scope::Api,
+            before: None,
+            after: Some(vec![]),
+            before_page: Default::default(),
+            after_page: Default::default(),
+            detail: None,
+        };
+        let original = compose_changes(&runtime, &[input.clone()])
+            .await?
+            .remove(0)
+            .1;
+        assert_eq!(original.kind, compare::ChangeKind::Added);
+        assert!(original.interpretation.contains("confirm coverage"));
+        input.detail = Some(false);
+        input.after = Some(vec![compare::Alternative {
+            value: compare::AlternativeValue::Inline {
+                value: serde_json::json!({"parameter":"value"}),
+            },
+            source: None,
+        }]);
+        let detail = compose_changes(&runtime, &[input.clone()])
+            .await?
+            .remove(0)
+            .1;
+        assert_eq!(original.change_id, detail.change_id);
+        assert!(detail.interpretation.contains("after alternative page"));
+        input.after_snapshot =
+            enrichment_core::identity::SnapshotId::try_from(format!("snap_{}", "c".repeat(64)))
+                .unwrap();
+        let different = compose_changes(&runtime, &[input]).await?.remove(0).1;
+        assert_ne!(original.change_id, different.change_id);
+        Ok(())
+    }
 }

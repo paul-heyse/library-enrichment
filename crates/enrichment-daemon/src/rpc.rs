@@ -41,6 +41,9 @@ pub struct Request {
     /// Correlation id. `None` makes this a notification, which gets no response.
     #[serde(default)]
     pub id: Option<serde_json::Value>,
+    /// Exact external delivery boundary; administrative and resource calls use envelopes.
+    #[serde(default)]
+    pub delivery: enrichment_core::mcp_delivery::DeliveryProfile,
 }
 
 fn empty_params() -> serde_json::Value {
@@ -60,6 +63,18 @@ pub struct Response {
     /// Present on failure.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<RpcError>,
+    /// Exact external frame measurement, present for admitted MCP tool deliveries.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub delivery_bytes: Option<u64>,
+    /// Native facts for local diagnostics; never reconstructed from transport JSON.
+    #[serde(skip)]
+    pub observation: Option<ResponseObservation>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResponseObservation {
+    pub status: enrichment_core::wire::Status,
+    pub has_gap: bool,
 }
 
 impl Response {
@@ -71,6 +86,8 @@ impl Response {
             id,
             result: Some(result),
             error: None,
+            delivery_bytes: None,
+            observation: None,
         }
     }
 
@@ -82,6 +99,8 @@ impl Response {
             id,
             result: None,
             error: Some(error),
+            delivery_bytes: None,
+            observation: None,
         }
     }
 }

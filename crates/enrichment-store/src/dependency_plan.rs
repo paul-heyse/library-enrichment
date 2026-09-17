@@ -1,8 +1,8 @@
 //! A bounded Arrow dependency frontier. DataFusion selects every expansion/acquisition step.
 //! Rust retains immutable fact batches and performs only the selected physical acquisition.
-use crate::{control_jobs::encode, registry::rows, runtime::QueryRuntime};
+use crate::{registry::rows, runtime::QueryRuntime};
 use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use datafusion::{
@@ -10,19 +10,20 @@ use datafusion::{
     error::{DataFusionError, Result},
     prelude::{SessionContext, col},
 };
-use serde::{Deserialize, Serialize};
+use enrichment_core::native_union::{NativeStruct, Rule};
 use std::sync::Arc;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+enrichment_core::native_struct! {
 pub struct Package {
-    pub name: String,
-    pub version: String,
-    pub filename: String,
-    pub url: String,
-    pub sha256: String,
-    pub requirements: Vec<String>,
-    pub extras: Vec<String>,
-    pub downloaded_bytes: u64,
+    name: String => enrichment_core::native_union::Rule::Text,
+    version: String => enrichment_core::native_union::Rule::Text,
+    filename: String => enrichment_core::native_union::Rule::Text,
+    url: String => enrichment_core::native_union::Rule::Text,
+    sha256: String => enrichment_core::native_union::Rule::Text,
+    requirements: Vec<String> => enrichment_core::native_union::Rule::Sequence,
+    extras: Vec<String> => enrichment_core::native_union::Rule::Sequence,
+    downloaded_bytes: u64 => enrichment_core::native_union::Rule::Text,
+}
 }
 
 pub enum Work {
@@ -44,50 +45,26 @@ pub struct Frontier {
     expansions: Vec<RecordBatch>,
 }
 
-fn text(name: &str) -> Field {
-    Field::new(name, DataType::Utf8, true)
+enrichment_core::native_struct! {
+    struct Demand {
+        name: String => Rule::Text,
+        specifiers: String => Rule::Text,
+        extras: Vec<String> => Rule::Set,
+    }
 }
-fn strings(name: &str) -> Field {
-    Field::new(name, DataType::List(Arc::new(text("item"))), true)
-}
-fn schema(fields: Vec<Field>) -> SchemaRef {
-    Arc::new(Schema::new(
-        fields
-            .into_iter()
-            .map(|f| f.with_nullable(true))
-            .collect::<Vec<_>>(),
-    ))
+enrichment_core::native_struct! {
+    struct Expansion {
+        name: String => Rule::Text,
+        sequence: u64 => Rule::Text,
+        extras: Vec<String> => Rule::Set,
+        demands: Vec<Demand> => Rule::Sequence,
+    }
 }
 fn package_schema() -> SchemaRef {
-    schema(vec![
-        text("name"),
-        text("version"),
-        text("filename"),
-        text("url"),
-        text("sha256"),
-        strings("requirements"),
-        strings("extras"),
-        Field::new("downloaded_bytes", DataType::UInt64, false),
-    ])
-}
-pub(crate) fn demand_schema() -> SchemaRef {
-    schema(vec![text("name"), text("specifiers"), strings("extras")])
+    Arc::new(Schema::new(Package::fields()))
 }
 fn expansion_schema() -> SchemaRef {
-    schema(vec![
-        text("name"),
-        Field::new("sequence", DataType::UInt64, false),
-        strings("extras"),
-        Field::new(
-            "demands",
-            DataType::List(Arc::new(Field::new(
-                "item",
-                DataType::Struct(demand_schema().fields().clone()),
-                true,
-            ))),
-            false,
-        ),
-    ])
+    Arc::new(Schema::new(Expansion::fields()))
 }
 fn register(
     session: &SessionContext,
@@ -129,7 +106,8 @@ impl Frontier {
     }
     pub fn acquired(&mut self, package: Package) -> Result<()> {
         enrichment_core::canonical::serialized_size(&package, 1024 * 1024)?;
-        self.packages.push(encode(package_schema(), &[package])?);
+        self.packages
+            .push(<Package as enrichment_core::native_union::NativeStruct>::batch(&[package])?);
         self.input_budget()
     }
     fn input_budget(&self) -> Result<()> {
@@ -170,13 +148,14 @@ impl Frontier {
             .await?;
         self.runtime.require_empty(session.sql("SELECT 'dependency_packages' AS witness FROM package_facts HAVING count(*)>256 OR sum(downloaded_bytes)>536870912 UNION ALL SELECT 'dependency_expansions' FROM expansion_facts HAVING count(*)>1024").await?, "dependency_resource_limits", "dependency_frontier").await?;
         self.runtime.require_empty(session.sql(&format!("{VIEWS} SELECT p.name FROM packages p JOIN demands d ON p.name=d.demand.name WHERE NOT pep440_matches_v1(d.demand.specifiers,p.version) LIMIT 1")).await?, "dependency_selected_version_conflict", "dependency_frontier").await?;
-        #[derive(Deserialize)]
+        enrichment_core::native_struct! {
         struct Action {
-            action: String,
-            name: String,
-            requirements: Option<Vec<String>>,
-            extras: Vec<String>,
-            specifiers: Option<String>,
+            action: String => enrichment_core::native_union::Rule::Text,
+            name: String => enrichment_core::native_union::Rule::Text,
+            requirements: Option<Vec<String>> => enrichment_core::native_union::Rule::Text,
+            extras: Vec<String> => enrichment_core::native_union::Rule::Sequence,
+            specifiers: Option<String> => enrichment_core::native_union::Rule::Text,
+        }
         }
         let frame = session.sql(&format!(r#"{VIEWS}, work AS (
            SELECT 0 AS priority,'expand' AS action,p.name,p.requirements,p.extras,CAST(NULL AS VARCHAR) AS specifiers
@@ -218,15 +197,16 @@ impl Frontier {
     ) -> Result<()> {
         let session = self.session()?;
         crate::native_catalog::work(&session, "active_demands", demands.into_view())?;
-        #[derive(Serialize)]
-        struct ExpansionInput<'a> {
-            name: &'a str,
-            extras: &'a [String],
+        enrichment_core::native_struct! {
+            struct ExpansionInput {
+                name: String => Rule::Text,
+                extras: Vec<String> => Rule::Set,
+            }
         }
-        let input = encode(
-            schema(vec![text("name"), strings("extras")]),
-            &[ExpansionInput { name, extras }],
-        )?;
+        let input = ExpansionInput::batch(&[ExpansionInput {
+            name: name.into(),
+            extras: extras.to_vec(),
+        }])?;
         register(&session, "expansion_input", input.schema(), &[input])?;
         let frame = session.sql("WITH demand_set AS (SELECT coalesce(array_agg(named_struct('name',name,'specifiers',specifiers,'extras',extras) ORDER BY name,specifiers),[]) AS demands FROM active_demands), sequence AS (SELECT coalesce(max(sequence),CAST(0 AS BIGINT UNSIGNED))+CAST(1 AS BIGINT UNSIGNED) AS sequence FROM expansion_facts) SELECT i.name,s.sequence,i.extras,d.demands FROM expansion_input i CROSS JOIN sequence s CROSS JOIN demand_set d").await?;
         let frame = crate::native_delta::project(frame, &expansion_schema())?;
@@ -247,9 +227,10 @@ impl Frontier {
             256,
         )
         .await?;
-        #[derive(Deserialize)]
+        enrichment_core::native_struct! {
         struct Requirements {
-            requirements: String,
+            requirements: String => enrichment_core::native_union::Rule::Text,
+        }
         }
         let requirements: Requirements = rows(&self.runtime, session.sql("SELECT coalesce(string_agg(concat(name,'==',version,' --hash=sha256:',sha256,chr(10)),'' ORDER BY name),'') AS requirements FROM package_facts").await?, 1).await?.pop().ok_or_else(|| invalid("missing requirements encoding"))?;
         // Final bounded protocol encoding; selection, ordering and requirement composition ran natively.
@@ -265,32 +246,26 @@ fn invalid(message: &str) -> DataFusionError {
 pub(crate) fn requirement_facts(
     requirements: &[enrichment_core::producer::python::requirements::Requirement],
 ) -> Result<RecordBatch> {
-    #[derive(Serialize)]
-    struct Fact<'a> {
-        index: u64,
-        name: &'a str,
-        specifiers: String,
-        extras: &'a [String],
+    enrichment_core::native_struct! {
+        struct Fact {
+            index: u64 => Rule::Coordinate(enrichment_core::native_union::Unit::Ordinal),
+            name: String => Rule::Text,
+            specifiers: String => Rule::Text,
+            extras: Vec<String> => Rule::Set,
+        }
     }
-    let mut fields = demand_schema()
-        .fields()
-        .iter()
-        .map(|f| f.as_ref().clone())
-        .collect::<Vec<_>>();
-    fields.push(Field::new("index", DataType::UInt64, false));
-    encode(
-        schema(fields),
+    Ok(Fact::batch(
         &requirements
             .iter()
             .enumerate()
             .map(|(index, r)| Fact {
                 index: index as u64,
-                name: &r.name,
+                name: r.name.clone(),
                 specifiers: r.versions.to_string(),
-                extras: &r.extras,
+                extras: r.extras.clone(),
             })
             .collect::<Vec<_>>(),
-    )
+    )?)
 }
 
 pub async fn active_demands(

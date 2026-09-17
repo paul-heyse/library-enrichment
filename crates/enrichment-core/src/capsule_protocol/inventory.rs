@@ -14,6 +14,15 @@ crate::native_union! {
 
 pub type Inventory = BTreeMap<String, Entry>;
 
+/// The executor and daemon bind the same typed inventory, including file modes and sizes.
+pub fn digest(entries: &Inventory) -> io::Result<String> {
+    crate::native_key::Key::ProcessInventory
+        .hex_digest(&crate::operation::identities::ProcessInventory {
+            entries: entries.clone(),
+        })
+        .map_err(io::Error::other)
+}
+
 impl Entry {
     pub fn metadata_bytes(&self, path: &str) -> io::Result<usize> {
         Ok(serde_json::to_vec(&(path, self))?.len())

@@ -2,11 +2,17 @@
 title: Schema-governed unified DataFusion and Delta runtime hard pivot
 status: in-progress
 date: 2026-09-16
-adrs: [ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045, ADR-0047, ADR-0048, ADR-0049]
+adrs: [ADR-0041, ADR-0042, ADR-0043, ADR-0044, ADR-0045, ADR-0047, ADR-0048, ADR-0049, ADR-0050, ADR-0051]
 phase: 6
 ---
 
 # Schema-governed unified DataFusion and Delta runtime hard pivot
+
+> **Remaining execution sequence integrated into Plan 18 — 2026-09-17.**
+> [Plan 18](18-schema-governed-runtime-and-cache-completion.md) combines all remaining scope here
+> with the CacheFactory review, including implementation, deletion, qualification and activation.
+> Use Plan 18 when implementation resumes. This document retains the complete FP/L/Q/SC
+> requirements and historical implementation/evidence ledger; no completion status is promoted.
 
 ## 1. Purpose and authority
 
@@ -16,7 +22,7 @@ and alternatives in the [schema engineering review](../design_review/reviews/des
 its [evidence](../design_review/reviews/evidence/schema-engineering-typed-values-2026-09-16/),
 and additional schema opportunities found in the current Rust/Python implementation.
 
-**Use this plan for subsequent execution.** It replaces Plan 16's work sequence and carries forward
+**This plan supplied the execution sequence now consolidated in Plan 18.** It replaced Plan 16's work sequence and carries forward
 Plan 15's complete destination: WP00–WP12, F01–F14, DFU-01–DFU-08, L01–L15 and Q01–Q13. The
 [unified runtime review](../design_review/reviews/design_review_unified-datafusion-delta-runtime_2026-09-15.md)
 and [Delta integration follow-up](../design_review/reviews/design_review_delta-integration-followup_2026-09-15.md)
@@ -27,14 +33,14 @@ The finite schema machinery, typed producer/evidence contracts, provider composi
 views, complete retained results, generated nine-tool bindings and durable physical ownership are
 implemented in source, with focused receipts listed in §2. No FP package meets its complete exit
 criteria yet. Significant architectural work remains, especially typed ID deployment, remaining
-handler/effect policy, exact retention and maintenance, replay, and structured kernel telemetry.
+handler/effect policy, exact retention and maintenance, replay, and complete telemetry/resource qualification.
 Q01–Q13 and the complete SC01–SC10 matrices remain `not_run` as final-target acceptance.
 
 **Read §2 for current completion status and §8 for the remaining execution order.** They supersede
 the previous chronological checkpoints. Numbered actions in §4 preserve the entire target scope;
-they are requirements, not a claim that every listed action is still unimplemented. This update is
-a source-and-receipt audit only: no implementation, product test reruns, installation or deletion
-was performed. Earlier planning probes remain [library evidence](../design_review/reviews/evidence/combined-schema-runtime-plan-2026-09-16/README.md),
+they are requirements, not a claim that every listed action is still unimplemented. The earlier status audit was documentation-only. The resumed implementation and its focused
+receipts are recorded below; installation and retirement of old runtime state have not run.
+Earlier planning probes remain [library evidence](../design_review/reviews/evidence/combined-schema-runtime-plan-2026-09-16/README.md),
 not product acceptance.
 
 ### 1.1 Non-negotiable destination
@@ -60,8 +66,9 @@ not product acceptance.
 
 ### 1.2 Evidence and working-tree boundary
 
-Current audited HEAD is `70539211e72a819b043f50793ba77c6689e85874`; substantial tracked and
-untracked implementation edits are not represented by that commit. The Plan 17 implementation
+Implementation resumed from clean HEAD `ccf5739` after the user authorized execution of the
+completion plan. `.dev-state/plan17/execution/resumed-baseline.json` records that boundary. The
+previous status audit inspected `70539211e72a819b043f50793ba77c6689e85874` plus its working edits. The Plan 17 implementation
 baseline is `.dev-state/plan17/execution/baseline.json`. The status audit captured 695 product,
 configuration, vendor, script and test files in `.dev-state/plan17/status-audit/source-receipt.json`
 at `2026-09-16T23:31:30Z`, with aggregate content digest
@@ -97,33 +104,90 @@ both columns means its implementation is partial or its required oracle has not 
 
 | Package | Implemented scope and source authority | Remaining scope to action |
 |---|---|---|
-| **FP00 — authority** | ADR-0047 establishes generated native schema authority; ADR-0048 adopts format 61; ADR-0049 records controlled provider composition. Current configuration declarations reject unknown fields. Native operation declarations and generated transport bindings exist. | Actions 1–5/7: complete the route-to-dataflow and field-owner inventories, consolidate all operation/policy consumers, join capability claims to route evidence, reconcile living guidance and prepare/install the current protected enforcement patch. Action 6's decisions exist; reconcile all supersession/disposition records and additional patch provenance before closure. |
-| **FP01 — declarations** | [Native unions](../../crates/enrichment-core/src/native_union.rs), records, payloads, vocabularies and split documentation declarations generate Arrow/Serde/Schemars/codecs. SubjectRef/TargetRef/Locator/ExecutionTarget, evidence, callable facts, commands, jobs, results, telemetry and physical ownership use them. Finite field/collection/reference descriptors replace substantial literal allowlists and provenance SQL. | Actions 3–5/7: finish the field/domain inventory, all scoped control/result/retention references and collection bounds, full manifest/limit propagation, and FP06/FP12's missing retention declarations. Prove the real one-variant/one-reference/one-aspect extension through every consumer (SC01/SC06/SC07). Existing generators are the implementation substrate; do not rebuild them. |
-| **FP02 — typed values/identity** | [Native schemas](../../crates/enrichment-core/src/native_schema.rs), canonical field framing and declared collection ordering; UTC-microsecond event/acquisition/producer/job clocks; UInt64-to-Decimal storage; fixed-binary extension support; parent-aware CHECK constraints and exact name-based read projection. Native definitions, citations, artifact receipts, projection checkpoints and comparison changed-key identities replace several JSON hashes. | Actions 1–8/11: deploy fixed-binary IDs/digests in actual semantic families (the content-identity macro still encodes Utf8), remove remaining semantic JSON hashes/cursor bindings, finish all dependency witnesses and the native contract-change/invalidation relation. Qualify actual kernel schema-edit delegation, every deployed value/layout and all mutation routes for actions 9/10. SC02–SC05/SC08 remain open. |
-| **FP03 — planning/admission** | [Semantic analyzer](../../crates/enrichment-core/src/native_analysis.rs) runs before coercion in the shared session; full-field UDFs, metadata-preserving record/map/array selection, generated intrinsic/collection predicates and scoped evidence anti-joins are implemented. Native invariant branches return structured rule/stage/witness failures. | Actions 2–8: finish declared domains/references across all families and the actual JOIN/UNION/CASE/IN/cast/aggregate/physical-output matrix; admit trusted key/statistics metadata only after the relevant checks. Resolve the status optimizer failure without bypassing semantic checks. Prove null/element/cardinality and wrong-scope violation sets independently (SC03/SC04/SC06). |
-| **FP04 — interchange/encoding** | [Bounded native JSON sink](../../crates/enrichment-core/src/native_json.rs) streams escaped values, exact integers/decimal strings, binary/domain values, clocks, maps/lists and tagged records. Typed citations preserve subject/source/locator; EvidenceFragment/legacy Symbol filling are removed. Generated worker/wire/Python schemas and full native result IPC exist; focused codec and generated-binding checks passed. | Actions 1–7: finish propagation to every resource/export/recovery consumer, complete native field inventory and numeric/null/union matrices through actual worker→Delta→MCP, prove full frame bounds and codec witness invalidation, and remove remaining semantic decode bridges. The encoder itself is implemented; full SC07 fidelity is not qualified. |
-| **FP05 — providers/mutations** | [Discovery](../../crates/enrichment-store/src/native_discovery.rs) uses bounded atomic DataFusion ListingSchemaProvider plus the patched DeltaTableFactory controlled opener. Exact table/version/schema/store/session capture is wired into preparation/startup. Actual native CHECK installation, nested IN persistence and fixed-binary read configuration have focused receipts. | Actions 1–3/5–7: enumerate and qualify every allowed/refused mutation and metadata route, protocol/feature enforcement, global keys/duplicate merge semantics, custom extension properties and complete provider metadata. Close interrupted CREATE→ADD CONSTRAINT recovery and backend concurrency/durability. Audit all four vendor manifests and route effects; do not list factory/discovery as absent. |
-| **FP06 — control/ownership** | [Control](../../crates/enrichment-store/src/control.rs) has **18 families**, including roots, owners and reservations. Core Arguments/Resolution and generated JobSnapshot replace daemon JobSpec/ResolutionStage; native plans own interests, shutdown selection and request/resolution admission. [OwnershipStore](../../crates/enrichment-store/src/physical_ownership.rs) owns durable creator/absence observations and capacity decisions; Runner, startup, qualification and cleanup are wired to it. Publication admits complete retained native results and native terminal state. | Actions 1/2/4–8: remaining caller-side request policy; exact query/result/replay/CDF protection, maintenance generations, orphan/stage cleanup obligations and complete scoped references. Bind claim expiry/reuse to reconciled physical ownership at every crash boundary. Qualify independent-process head/claim/interest/reservation races, lost acknowledgements and fresh duplicates. Physical owners are implemented; retention enrollment is not. |
-| **FP07 — acquisition/producers** | Generated acquisition/HTTP/producer/manifest contracts and native input Maps; native Rust/Python normalization, release/marker/dependency/network selection. [Rustdoc facts](../../crates/enrichment-core/src/producer/rustdoc/facts.rs) now use **rustdoc-types 0.61.0** and patched public-api 0.52.2, preserving stability/default-body and structured callable facts. Python facts carry ordered overload/base/parameter records and default origin. Historical format fixtures were removed. | Actions 1–3/6–9: durable typed registry/revision/source facts (registry selection still consumes temporary facts), remaining source/freshness/environment and runtime/LSP policies, independent complete callable/producer oracles, depth/cycle/large-input limits and owned cleanup. Actions 4/5's parser/renderer replacement is implemented; real acquisition, normalization and downstream fidelity still need current-worker qualification. |
+| **FP00 — authority** | ADR-0047 establishes generated native schema authority; ADR-0048 adopts format 61; ADR-0049 records controlled provider composition. Current configuration declarations reject unknown fields. One operation declaration generates request/result variants, RPC decoding, durable command kinds, pagination support, native definitions and transport bindings. [Operation/dataflow inventory](../architecture/native-operation-dataflows.md) maps nine tools, five resources and internal/recovery/maintenance routes (action 1). | Actions 2–5/7: complete the field-owner inventory, consolidate all operation/policy consumers, join capability claims to route evidence, reconcile living guidance and prepare/install the current protected enforcement patch. Action 6's decisions exist; reconcile all supersession/disposition records and additional patch provenance before closure. |
+| **FP01 — declarations** | [Native unions](../../crates/enrichment-core/src/native_union.rs), records, payloads, vocabularies and split documentation declarations generate Arrow/Serde/Schemars/codecs. SubjectRef/TargetRef/Locator/ExecutionTarget, evidence, callable facts, commands, jobs, results, telemetry and physical ownership use them. Finite field/collection/reference descriptors replace substantial literal allowlists and provenance SQL. Native range/collection bounds now project into JSON Schema; inspection/discovery vocabularies, defaults and eligibility share finite declarations. The control relation registry owns membership, names, keys, schemas, decoders and current-row ordering. Shared immutable declaration providers now supply operation/aspect/discovery/execution policies; generated codecs replace handwritten definition/relationship/execution fields. | Actions 3–5/7: finish the field/domain inventory, all scoped control/result/retention references and collection bounds, full manifest/limit propagation, and the complete consumers of FP06/FP12's new retention declarations. Prove the real one-variant/one-reference/one-aspect extension through every consumer (SC01/SC06/SC07). Existing generators are the implementation substrate; do not rebuild them. |
+| **FP02 — typed values/identity** | [Native schemas](../../crates/enrichment-core/src/native_schema.rs), canonical field framing and declared collection ordering; UTC-microsecond event/acquisition/producer/job clocks; UInt64-to-Decimal storage; fixed-binary extension support; parent-aware CHECK constraints and exact name-based read projection. Native definitions, citations, artifact receipts, projection checkpoints and comparison changed-key identities replace several JSON hashes. | Actions 1–8/11: deploy fixed-binary IDs/digests in actual semantic families (ReleaseId/EnvironmentId/ContextId/SnapshotId now use FixedSizeBinary(32); other semantic ID/digest families still need deployment), Producer/execution/maintenance semantic JSON hashes are removed; research and all cursor families use native declared preimages. A generated native contract manifest/change relation now drives stored-contract admission, and cursor identities bind operation contracts including declaration values, defaults and evidence mappings. Finish the remaining dependency witnesses and cache/replay/CDF consumers of contract changes. Qualify actual kernel schema-edit delegation, every deployed value/layout and all mutation routes for actions 9/10. SC02–SC05/SC08 remain open. |
+| **FP03 — planning/admission** | [Semantic analyzer](../../crates/enrichment-core/src/native_analysis.rs) runs before coercion in the shared session; full-field UDFs, metadata-preserving record/map/array selection, generated intrinsic/collection predicates and scoped evidence anti-joins are implemented. Subject/coverage relation rules now live in the explicit admission registry rather than schema presentation labels. Native invariant branches return structured rule/stage/witness failures. | Actions 2–8: finish declared domains/references across all families and the actual JOIN/UNION/CASE/IN/cast/aggregate/physical-output matrix; admit trusted key/statistics metadata only after the relevant checks. The focused status optimizer failure is resolved by native projection; qualify the complete status route. Prove null/element/cardinality and wrong-scope violation sets independently (SC03/SC04/SC06). |
+| **FP04 — interchange/encoding** | [Bounded native JSON sink](../../crates/enrichment-core/src/native_json.rs) streams escaped values, exact integers/decimal strings, binary/domain values, clocks, maps/lists and tagged records. Typed citations preserve subject/source/locator; EvidenceFragment/legacy Symbol filling are removed. Generated worker/wire/Python schemas and full native result IPC exist; focused codec and generated-binding checks passed. | Actions 1–7: finish propagation to every resource/export/recovery consumer, complete native field inventory and numeric/null/union matrices through actual worker→Delta→MCP, prove full frame bounds and codec witness invalidation, and remove remaining semantic decode bridges. The encoder itself is implemented; full SC07 fidelity is not qualified. Direct generated records now replace the shared Arrow JSON row decoder and handwritten registry, input-artifact and coverage codecs; exact signed Int64 encoding and generated WorkerRequest resource bounds are implemented. |
+| **FP05 — providers/mutations** | [Discovery](../../crates/enrichment-store/src/native_discovery.rs) uses bounded atomic DataFusion ListingSchemaProvider plus the patched DeltaTableFactory controlled opener. Exact table/version/schema/store/session capture is wired into preparation/startup. Actual native CHECK installation, nested IN persistence and fixed-binary read configuration have focused receipts. | Actions 1–3/5–7: enumerate and qualify every allowed/refused mutation and metadata route, protocol/feature enforcement, global keys/duplicate merge semantics, custom extension properties and complete provider metadata. Expand the passing interrupted CREATE→ADD CONSTRAINT recovery oracle to concurrent installers, populated invalid tables and backend concurrency/durability. Audit all four vendor manifests and route effects; do not list factory/discovery as absent. |
+| **FP06 — control/ownership** | [Control](../../crates/enrichment-store/src/control.rs) has **23 families**, including physical owners/reservations and retention roots, leases, maintenance runs and cleanup obligations. Retained capsule inputs, derived environment, lock and inventory now use the atomic catalog; the JSON sidecar authority was deleted. Core Arguments/Resolution and generated JobSnapshot replace daemon JobSpec/ResolutionStage; native plans own interests, shutdown selection and request/resolution admission. [OwnershipStore](../../crates/enrichment-store/src/physical_ownership.rs) owns durable creator/absence observations and capacity decisions; Runner, startup, qualification and cleanup are wired to it. Publication admits complete retained native results and native terminal state. | Actions 1/2/4–8: remaining caller-side request policy; exact query/result/replay/CDF protection, maintenance generations, orphan/stage cleanup obligations and complete scoped references. Bind claim expiry/reuse to reconciled physical ownership at every crash boundary. Qualify independent-process head/claim/interest/reservation races, lost acknowledgements and fresh duplicates. Exact control/evidence/CDF enrollment, evidence/search/result candidate obligations and native-process recovery are now implemented; full consumer coverage and external-owner recovery remain open. |
+| **FP07 — acquisition/producers** | Generated acquisition/HTTP/producer/manifest contracts and native input Maps; native Rust/Python normalization, release/marker/dependency/network selection. [Rustdoc facts](../../crates/enrichment-core/src/producer/rustdoc/facts.rs) now use **rustdoc-types 0.61.0** and patched public-api 0.52.2, preserving stability/default-body and structured callable facts. Python facts carry ordered overload/base/parameter records and default origin. Historical format fixtures were removed. Rust index/Python file/version captures and revision inputs now use exact-version immutable Delta definitions with source-artifact retention. Selection and revision coverage read those protected captures; revision JSON receipt assembly is replaced by generated native encoding. | Actions 1–3/6–9: complete remaining source-fact families and capture/restart/export qualification, remaining source/freshness/environment and runtime/LSP policies, independent complete callable/producer oracles, depth/cycle/large-input limits and owned cleanup. Actions 4/5's parser/renderer replacement is implemented; real acquisition, normalization and downstream fidelity still need current-worker qualification. |
 | **FP08 — effects** | Native commands/grants and immutable operation/effect readback remain the authority substrate. Typed inventories, clocks and generated codecs now feed them. Durable root/owner/reservation handling surrounds Runner creation and recovery; DataFusion child tasks propagate operation/effect context via JoinSetTracer. | Actions 1–6: prove the command authorizes exact argv/input/environment/output/network/budgets, finish derived environments and policy consistency, durable warm-LSP reuse and physical exit/revocation semantics. Rewrite stale live fixtures that still inspect/write `owned/*.json`. Run real contained producers/cancellation/restart/C20 for all enabled profiles; constructor compilation is not this evidence. |
-| **FP09 — research** | Native availability and full ancillary consensus replace bounded first-winner metadata; typed text/citations and split documentation projection are present. [Configuration comparison](../../crates/enrichment-store/src/comparison_context.rs) preserves unknown/empty/set meaning; native changed-key identity binds exact before/after snapshots. Native status selection is written but currently fails its focused test. | Actions 1–7: overview/inspection selection and ambiguity, duplicate kind/scope normalization, cursor/request identities, native page/evidence/window selection, full callable field-difference semantics and residual parallel query outputs. `ops/inspect.rs`, `search.rs`, `compare.rs` still contain semantic sort/dedup/hash decisions. Repair status and qualify independent whole-tool outcomes. |
-| **FP10 — results/MCP** | [ResultRecord](../../crates/enrichment-core/src/operation/results.rs) retains complete typed payload/header/evidence/artifacts/delivery. [Per-tool Delta relations](../../crates/enrichment-store/src/result_relations.rs), IPC+JSON indexing, native publication scope/outcome/cancellation admission and ranked byte-measured delivery are implemented. JobDeliveryFactory/DeliverySlot and DTO-clearing overflow are removed. `research_operations!` plus [wire bindings](../../crates/enrichment-core/src/wire/bindings.rs) generate all nine FastMCP Tool registrations. | Actions 1–10 residual consumers: consolidate core dispatch and handler composition/page policies, exact cursor/section/reference witnesses and authorization, export/readback and crash/orphan closure, all typed resource paths and packaged guidance. Publication/cancellation and escaped retained recovery have focused passes; complete real MCP journeys, retained export, missing-artifact and per-section boundaries remain unqualified. |
+| **FP09 — research** | Native availability and full ancillary consensus replace bounded first-winner metadata; typed text/citations and split documentation projection are present. [Configuration comparison](../../crates/enrichment-store/src/comparison_context.rs) preserves unknown/empty/set meaning; native changed-key identity binds exact before/after snapshots. Native status selection has a passing focused projection oracle; full status/MCP qualification remains open. | Actions 1–7: overview/inspection selection and ambiguity, duplicate kind/scope normalization, cursor/request identities, native page/evidence/window selection, full callable field-difference semantics and residual parallel query outputs. Inspection binding precedence/ambiguity/order, aspect/discovery defaults and eligibility, comparison prerequisites, duplicate kind/scope normalization, and all research/cursor identities now use native contracts. Native source-version decisions and coverage-qualified inspection/discovery outcomes share immutable declaration providers. Artifact format/section/initial byte-window and cursor-bound decisions now use native plans over declared facts; heading scanning and byte encoding remain mechanical. Remaining handlers still own evidence-window/result composition and encoded artifact-page fit selection. Qualify status and independent whole-tool outcomes. |
+| **FP10 — results/MCP** | [ResultRecord](../../crates/enrichment-core/src/operation/results.rs) retains complete typed payload/header/evidence/artifacts/delivery. [Per-tool Delta relations](../../crates/enrichment-store/src/result_relations.rs), IPC+JSON indexing, native publication scope/outcome/cancellation admission and ranked byte-measured delivery are implemented. JobDeliveryFactory/DeliverySlot and DTO-clearing overflow are removed. `research_operations!` plus [wire bindings](../../crates/enrichment-core/src/wire/bindings.rs) generate all nine FastMCP Tool registrations. | Actions 1–10 residual consumers: finish handler composition/page policies and operation-policy consumers; core RPC dispatch, result payloads and transport definitions now share the operation declaration, exact cursor/section/reference witnesses and authorization, export/readback and crash/orphan closure, all typed resource paths and packaged guidance. Publication/cancellation and escaped retained recovery have focused passes; complete real MCP journeys, retained export, missing-artifact and per-section boundaries remain unqualified. |
 | **FP11 — CDF/replay** | [SearchProjection](../../crates/enrichment-store/src/search_projection.rs) uses generated checkpoint/command fields and native full-join mode selection for initial/incremental/revision/source/history/export. Exact output/input selection and the manifest CDF consumer are present; old JSON checkpoint decoding and procedural mode selection were replaced. | Actions 2–8: complete incremental/full mutation and fault equivalence, missing-history/schema/contract rebuilds, orphan output handling, fresh-process typed-command replay, real immutable DeltaLogicalCodec cache consumer with revalidation/rebinding, and dependency-by-dependency invalidation. These are substantial implementation and qualification gaps, not only test wiring. |
-| **FP12 — retention/maintenance** | Global file leases still protect providers/plans/streams, including optimized-away logical scans. Operator maintenance now consults native physical ownership, and retired payload/reservation names were removed. State generation **8** binds cache/data roots with peer markers; export now checks destination rows and captured generation rather than assuming version zero. | **Actions 1–8 remain at full architectural scope:** native retention policy/horizons, protected versions, enrollment and maintenance fencing, owned checkpoint/log compaction/OPTIMIZE/VACUUM, actual safe reclamation, orphan cleanup and storage power-loss qualification. Existing locks and operator deletion are not the target retention protocol. Latest maintenance/export/peer-marker changes have no behavioral receipt. |
-| **FP13 — telemetry/resources** | Generated native event records, bounded reserved ingress, Delta history, explicit writer close and typed service HTTP/RPC/verification observations are present. [Daemon counters](../../crates/enrichment-daemon/src/metrics.rs) delegate to native aggregation; separate atomic semantic counters are gone. Native child-task context and reservation release have focused receipts. | Actions 1–6: integrate structured kernel MetricEvent via MetricsReporter/ReportGeneratorLayer and all builder metrics; complete component/recovery policy and lineage, capture-time external allocation bounds, event saturation/fault/drop/restart behavior and non-recursive telemetry. Prove ownership persists until physical work ends. No project kernel reporter is wired. |
+| **FP12 — retention/maintenance** | New `core/operation/retention.rs` and `store/retention.rs` declare and select exact dependencies, roots, leases, maintenance runs and cleanup obligations through the atomic Delta control catalog. Control pins enroll the version produced by their own enrollment commit. Evidence/CDF readers enroll before provider opening; publication selects roots; evidence/search/result candidates declare ownership before Delta writes. Native process identities bind retention rows; startup reconciles only observed exited processes. Operation scope retains snapshot protection through final result work. A pre-optimization native retention node carries ownership through scan elimination and streams. Bounded owned release tasks drain before diagnostic shutdown. Control compaction uses a durable maintenance owner, native OPTIMIZE, checkpoint and log compaction. ADR-0050 patches native DV protection, bounded fail-closed log inventory and maintenance commit-property propagation. State generation is **10**. Typed configurable data/log/transaction horizons, native bounds/order validation, Delta creation properties and maintenance policy identity capture replace inert constants and a fixed revision string. | Actions 1–8 remain partial: finish definition/replay/export/read-only and remaining result/artifact enrollment and full dependency closure; extend native-process recovery to all physical/remote-task boundaries; implement explicit root removal and native orphan/cohort cleanup; connect protected-version selection to full native VACUUM/log cleanup and actual service reclamation. Finish horizon/budget policy consumers, control-history compaction, DV/fault/concurrency matrices and power-loss qualification. Focused native deletion/readback is evidence for the helper, not a completed service garbage collector. |
+| **FP13 — telemetry/resources** | Generated native event records, bounded reserved ingress, Delta history, explicit writer close and typed service HTTP/RPC/verification observations are present. [Daemon counters](../../crates/enrichment-daemon/src/metrics.rs) delegate to native aggregation; separate atomic semantic counters are gone. Native child-task context and reservation release have focused receipts. Final retention-release writes have a bounded JoinSet owner and an explicit drain. All twenty pinned kernel MetricEvent variants now enter typed native history through MetricsReporter/ReportGeneratorLayer; exact binary IDs, counters and durations survive storage. Owned compute/I/O lanes cover both LogStore and DataFusionEngine paths. Real kernel correlation and non-recursive history have a focused pass. Native DataFusion/kernel tasks now retain physical-exit tokens; transport roots are joined before service drain, release handles survive cancelled close, and the diagnostic actor is joined with persistent error reporting. | Actions 1–6 residual: all Delta builder metrics and attempt/grant/job/publication/maintenance lineage; remaining component/recovery policy, external allocation bounds, queue/fault/drop/restart/concurrent-close matrices and telemetry retention. Complete external-process/uninstrumented-task, pressure, shutdown and crash qualification. Focused cancelled-blocking, kernel-descendant, release-close cancellation and diagnostic lost-ack oracles pass; they do not close the whole physical lifecycle matrix. |
 | **FP14 — physical choices** | Native Delta scans, metadata-preserving projection and independently projected heavy documentation are implemented; earlier narrow projection measurements and planning stats probes exist. | **Actions 1–8:** complete-journey cold/warm/offline/export/execution measurements, binary-ID/clock effects, native/external memory and I/O, strict/DV/COUNT equivalence, stats/pruning layers and chosen file/layout/cache/compaction settings with negative results. No final workload matrix or performance acceptance exists. |
-| **FP15 — deletion/design** | Many old normalizers, journals, flat union/DTO codecs, clocks, result callbacks, ownership files and handwritten Python wrappers were deleted. Current generated artifacts and ADR-0047–0049 are present. | **Actions 1–5:** close every L01–L24 behavior/import/test/package/rule/config path; finish positive enforcement and actual extension/policy-change oracles; reconcile patch provenance, DESIGN, STATUS, product skill/setup and protected installation. `STATUS.md` still describes Plan 15; this audit updates this plan only. |
+| **FP15 — deletion/design** | Many old normalizers, journals, flat union/DTO codecs, clocks, result callbacks, ownership files and handwritten Python wrappers were deleted. Current generated artifacts and ADR-0047–0049 are present. | **Actions 1–5:** close every L01–L24 behavior/import/test/package/rule/config path; finish positive enforcement and actual extension/policy-change oracles; reconcile patch provenance, DESIGN, STATUS, product skill/setup and protected installation. `STATUS.md` now reflects the current Plan 17 boundary; final reconciliation remains open. |
 | **FP16 — qualification/activation** | No final-source candidate, installed-client qualification, fresh activation or retired-install removal is evidenced for Plan 17. Source uses the new epoch; that does not qualify a deployment. | **Actions 1–6 in full:** implement/register Q recipes, build one matching locked daemon/worker/executor/Python candidate, final quality and nine-tool/resource/offline/export/real-client/Linux acceptance, verified deletion manifest, activation and deployed smoke. `just --list` still lacks the thirteen proposed Q recipes. Reverify actual prerequisites when running them; do not invent `blocked` results. |
 
 ### 2.2 Recorded focused evidence
 
-All receipts below were **read, not rerun**, during this status audit. Paths are relative to
+The original receipts below were **read, not rerun**, during the status audit. Rows prefixed
+`resumed-` are new executions from the authorized implementation resumption. Paths are relative to
 `.dev-state/plan17/execution/`. Counts describe individual receipts, not an acceptance-gate tally.
 Older logs remain historical development evidence. None identifies the complete final source and
 deployment required by Q13.
 
+The **2026-09-17 policy/declaration checkpoint** is retained in
+`.dev-state/plan17/execution/policy-declarations-2026-09-17/`. `receipts.json` records commands,
+log digests and individual limits; `source-after.json` is a checkpoint, not retroactive source
+proof for earlier executions. The compiled source receipt accompanies the final library check.
+
+| Checkpoint receipt | Recorded result | Scope |
+|---|---|---|
+| `plan17-native-value-units-current.log` | `passed`: 16 tests, 0.12 s | Generated values/codecs, identity corruption, order invariance and declaration-value invalidation; predates the later admission registry edit |
+| `plan17-policy-selection-units.log` | `failed` overall; selection 5 and research 4 tests passed | Initial invalid-effective-policy fixture expected successful diagnostic persistence under a refused policy. The corrected fixture validates proposed policy independently; retained failure is superseded by the next receipt |
+| `plan17-retention-policy-units.log` | `passed`: 3 tests, 9.10 s | Native bounds/horizon order, effective provider capture and exact wire values; no reclamation journey |
+| `plan17-relation-admission-units.log` | `passed`: 1 test, 1.53 s | Coverage outcome/scope rules still execute with no presentation metadata |
+| `plan17-native-policies-final-clippy.log` | `passed`: affected core/store/daemon libraries, 9.53 s | No product warnings; seven pinned vendor warnings remain; all-target/final quality not claimed |
+| `plan17-schemas-generate-current.log` | `passed` | Reproducible schemas and Python models; 4 positive and 5 negative contract fixtures |
+| `plan17-python-ruff.log`; `plan17-python-ty.log` | `passed` | Authored-source lint under existing generated-file scope; adapter/worker typing |
+| `plan17-policy-datafusion-scan.log`; `plan17-policy-delta-scan.log` | `passed` | Reviewed production paths have no reported capability-gap matches; advisories occur in existing `cfg(test)` fixtures |
+
+No full integration tests ran for this checkpoint. Delta retention property mutation/readback,
+retention-policy changes across restarts and final deletion/qualification remain `not_run`.
+
 | Receipt | Recorded result | Evidence scope / limit |
 |---|---|---|
+| `resumed-status.log` | `passed`: 1 test, 1.30 s | Explicit status input projection removes optimizer ambiguity; full MCP journey remains open |
+| `resumed-create-recovery.log` | `passed`: 1 test, 0.14 s | Actual interrupted native constraint installation, repeat-open identity and invalid-row refusal; predates later wider-control normalization |
+| `resumed-control-retention-oracle.log` | `passed`: 1 test, 106.91 s | Exact control enrollment, maintenance fencing, physical ownership after scan elimination, reopen and release drain |
+| `resumed-maintenance-selection.log` | `passed`: 1 test, 1.60 s | Native protected-version/log-floor selection, CDF/writer protection and wrong identity refusal |
+| `resumed-log-maintenance-oracle.log` | `passed`: 1 test, 0.73 s | Actual native checkpoints, inventory-budget refusal before deletion, real reclamation and exact retained/current readback |
+| `resumed-vacuum-dv-oracle.log` | `passed`: 1 test, 0.74 s | Native vacuum preserves current/historical DVs and actual rows; encoded paths, foreign-root refusal and malformed storage-tag refusal before deleting any orphan. Fixture bytes have pinned upstream provenance |
+| `resumed-bounded-admission.log` | Historical `passed`: 2 tests, 0.70 s | The serial admission extension was subsequently removed. The current implementation uses DataFusion's native UNION/LIMIT and workstation memory budget; this receipt does not qualify that replacement |
+| `resumed-native-row-dedup.log` | `passed`: 1 test, 0.65 s | Canonical-record/window dedup agrees with native DISTINCT for the tested nested records, nulls and ordered lists; it remains the existing immutable-control equality mechanism. Evidence and attempt plans use native DISTINCT |
+| `resumed-definition-retention.log` | `passed`: 1 test, 153.94 s | Exact policy versions remain protected after configuration changes; wrong identity/contract is refused, definition root and writer settlement are atomic, and release/diagnostic drain completes. Predates workstation-default and kernel-adapter changes |
+| `kernel-session-engine-oracle.log` | `passed`: 2 tests, 0.70 s | Real one-worker/one-blocking-thread create/append/checkpoint-only reopen/scan and DataFusionEngine storage progress; operation context preserved. Predates structured telemetry additions |
+| `kernel-session-dv-oracle.log` | `passed`: 1 test, 1.18 s | Actual current/historical external-DV readback and native reclamation at minimum compute concurrency; predates telemetry additions |
+| `kernel-complete-context-oracle.log` | `passed`: 1 test, 2.47 s | Actual snapshot/scan kernel events retain operation identity through native tasks and Delta history; diagnostic reads do not create new events |
+| `kernel-correlation-final.log` | `passed`: 2 tests, 2.61 s | Real correlation/non-recursive reads and captured absence: an unowned span does not borrow its closing operation |
+| `release-drain-cancellation-final.log` | `passed`: 1 test, 0.03 s | Cancelling close preserves the actual release task and its failure for subsequent closes |
+| `owned-physical-kernel-final.log` | `passed`: 6 tests, 2.55 s | Real checkpoint/session-engine I/O, native context/metrics, cancelled blocking callbacks and kernel descendants during shutdown; concurrent diagnostic close |
+| `diagnostic-writer-joined-close.log` | `passed`: 1 test, 1.63 s | Real Delta history write, lost close acknowledgement, concurrent callers and joined actor exit |
+| `owned-runtime-closure-clippy.log` | `passed`: core/store/daemon all-target strict Clippy, 3.23 s | Physical tracking, root shutdown, persistent release/diagnostic completion and corrected fixture lifetime; final whole-product quality remains open |
+| `owned-runtime-closure-publication.log` | `passed`: 1 test, 841.09 s | Integrated native publication/CDF/export and final physical/release/diagnostic drain with matching worker. Predates the subsequent storage-release coordinator capture, diagnostic snapshot reuse and operator-cleanup corrections. At least 64 diagnostic ingress-capacity drops were logged; no lossless/latency or final-source acceptance claim |
+| `storage-release-queued-drain.log` | `passed`: 1 test, 412.89 s | Native creator fencing/capacity plus queued storage release, final drain and durable reopen. Predates diagnostic snapshot reuse; no latency acceptance claim |
+| `native-history-snapshot-reuse.log` | `passed`: 2 tests, 2.81 s | Actual kernel metrics/correlation and non-recursive reads with actor-owned native Delta snapshot reuse |
+| `native-history-two-writer-reload.log` | `passed`: 1 test, 3.76 s | Two actual history writers advance the same table; the stale actor snapshot reloads without duplicated/lost committed observations |
+| `native-history-final-clippy.log` | `passed`: core/store/daemon all-target strict Clippy, 3.44 s | Current physical/release/diagnostic source, including native snapshot reuse and conflict oracle |
+| `operator-stable-inventory.log` | `passed`: 1 test, 264.90 s | Preview/cache/evidence removal, final release drain and stable locked inventory. At least 128 diagnostic-capacity drops; predates the subsequent diagnostic close-barrier correction and contract reuse |
+| `accepted-event-drain-oracle.log` | `passed`: 3 tests, 3.44 s | Deterministic reserved admission across close, actual Delta persistence, lost close acknowledgement and conflicting writers. Predates the immutable actor-contract reuse change |
+| `owned-resource-final-clippy.log` | `passed`: core/store/daemon all-target strict Clippy, 3.18 s | Operator recovery/drain, complete accepted-event drain, immutable actor contract reuse and both-lane stack-capacity reporting |
+| `owned-resource-history-final.log` | `passed`: 3 tests, 3.31 s | Current actor contract/snapshot reuse, real conflicting writers, lost close acknowledgement and deterministic accepted-message drain |
+| `workstation-kernel-final-clippy.log` | `passed`: core/store/daemon all-target strict Clippy, 26.96 s | Workstation defaults, two owned execution lanes, session kernel handlers, structured metrics, context propagation and artifact-reference projection compile cleanly |
+| `kernel-task-context.log` | `passed`: 1 test, 0.45 s | Actual kernel TaskExecutor adapter preserves operation/runtime identity for nested synchronous, async and blocking work at concurrency one. Predates the Delta blocking-helper propagation correction; complete cancellation/kernel metrics remain open |
+| `batched-telemetry.log` | `passed`: 1 test, 0.88 s | Actor-encoded native events preserve fetch/response/probe aggregates, explicit close and fresh runtime scope; no final saturation or shutdown-fault claim |
+| `native-boundaries-clippy.log` | `passed`: store/daemon all-target strict Clippy, 14.84 s | Workstation defaults, shared kernel executor/LogStore forwarding, Delta task-context bridge, actor encoding, bounded recovery chunks and owned export/verification compile cleanly |
+| `resumed-final-clippy.log` | `passed`: affected store/daemon all-target strict Clippy, 17.33 s | Includes bounded native admission and exact result-read ownership; precedes the checked vendor DV getter |
+| `resumed-definition-clippy.log` | `passed`: affected store/daemon all-target strict Clippy, 6.66 s | Definition writer/read enrollment and claim predecessor ordering; precedes atomic root settlement and shared record deduplication |
+| `resumed-candidate-cdf-compaction.log` | `passed`: 1 test, 99.25 s | Native candidate settlement, protected CDF enrollment, control OPTIMIZE/checkpoint/log compaction and durable completion |
+| `resumed-process-recovery-oracle.log` | `passed`: 1 test, 24.55 s | Real child process: live/foreign ownership remains; physical exit releases its lease, fails interrupted maintenance and leaves candidate cleanup outstanding |
+| `resumed-process-retention-check.log` | `passed`: daemon all-target compilation, 13.82 s | Native process identity and startup reconciliation compile |
+| `resumed-owner-consumers-clippy.log` | `passed`: affected store/daemon all-target strict Clippy, 8.15 s | Before later typed-empty-list and publication-executor changes |
+| `resumed-protection-consumers-check.log` | `passed`: daemon all-target compilation, 20.57 s | Before subsequent release-owner and final oracle edits; not behavioral qualification |
 | `generated-policy-core.log` | `passed`: 124 tests | Generated core policy/command contracts at that checkpoint; later source changed |
 | `generated-delta-contracts.log` | `passed`: 9 tests | Actual Delta typed/null/identity/metadata boundaries; not all mutation routes |
 | `generated-native-boundaries.log` | `passed`: 6 tests | Shared-session semantic/clock/artifact boundaries, not SC04's full operator matrix |
@@ -156,12 +220,12 @@ reproduce each at its actual boundary after rebuilding any worker whose identity
 
 | Boundary / receipt | Recorded failure | Required next evidence / owner |
 |---|---|---|
-| Status component selection — `native-status-selection.log` | `failed`: `push_down_leaf_projections` reports ambiguous `status_input.__datafusion_extracted_11`; 0 passed / 1 failed | Repair `store/status_plan.rs` and prove known/unknown/unfiltered status through the real session. No subsequent fix or passing receipt is recorded. FP03/FP09/FP10 |
-| Publication/CDF/export — `typed-citation-publication.log` | `failed`: `array_slice` receives a Decimal128 endpoint instead of a supported index; 0 / 1 | Rerun complete `publication_selects_native_delta_vector_and_exports_cohorts` after integration and current worker build. Earlier `generated-publication-journey.log` and `unified-admission-publication.log` also failed. Native result-admission passes do not cover this journey. FP02/FP05/FP10–FP12 |
+| Status component selection — `native-status-selection.log` | `failed`: `push_down_leaf_projections` reports ambiguous `status_input.__datafusion_extracted_11`; 0 passed / 1 failed | Closed at this focused boundary by explicit input-column projection: `resumed-status.log`, 1 passed in 1.30 s. Full status/MCP qualification remains open. FP03/FP09/FP10 |
+| Publication/CDF/export — `publication-128mib-dedup-failure.log`; `workstation-caller-stack-failure.log` | `failed`: 128 MiB run exhausts memory at projection `api_surface` (302.01 s); subsequent 32 GiB run terminates with caller-thread stack overflow | User explicitly prioritized workstation performance. Defaults now use 32 GiB and native parallel admission; the serial extension and speculative evidence/attempt dedup replacement are removed. Export/verification and the integration driver now use the owned native entry point. `owned-publication-export.log` subsequently reached export and failed artifact identity/reference field metadata admission (557.33 s). The recursive roots and artifact closure now use the declared reference contract; `workstation-kernel-publication-export.log` completed the journey assertions but failed final shutdown after the test dropped its state TempDir (713.39 s): diagnostic append version 500 and two unresolved releases. The fixture now retains state through close; physical-task/actor/release drain is implemented. `owned-runtime-closure-publication.log` then passed (1 test, 841.09 s), resolving this focused publication/CDF/export/shutdown journey. It predates later coordinator-capture, diagnostic snapshot-reuse and operator-cleanup corrections; at least 64 diagnostic drops were observed. Full final-source and installed qualification remain open. FP02/FP05/FP10–FP13 |
 | Navigation/text — `typed-citation-navigation.log` | `failed`: actual List child metadata differs from the declared schema; 0 / 1 | Qualify the current metadata-preserving list aggregation patch on `native_navigation_and_text_projection_preserve_retained_identities`. The patch exists; no later passing journey receipt was found. FP03/FP07/FP09 |
 | Execution observation/export — `integrated-publication.log` | `failed`: actual artifact Struct differs from its semantic field contract; 0 / 1 | Latest generated acquisition/result changes need the complete `typed_execution_roundtrip_reuse_native_queries_and_complete_export` rerun with valid target fixtures. FP04/FP07/FP08/FP10 |
 | Broader store selection — `native-research-focused.log` | `failed`: 28 passed / 7 failed | Failures cover stale Rust worker identity, repeated-child/map diagnostic expectations, native-policy and two operation-index Decimal decoding cases, document Struct nullability, and result-dependency clock/window admission. Fixture teardown also logs diagnostic-writer failures/`Already shut down`. Inspect and close each actual test; no later passing receipt for this full selection exists. FP02/FP03/FP07/FP10/FP13 |
-| Strict Clippy — `native-architecture-clippy.log` | `failed`: intermediate missing BTreeMap import and Fields iteration compilation errors | Later compilation passes supersede those compile errors, but do not establish strict Clippy on final source. Current strict Clippy and whole-product quality are `not_run`. FP15/FP16 |
+| Strict Clippy — `native-architecture-clippy.log` | `failed`: intermediate missing BTreeMap import and Fields iteration compilation errors | Superseded for the affected crates by `resumed-final-clippy.log` (17.33 s), including producer/publication, native admission and result-read changes. The subsequent vendor DV correction has its focused behavioral pass. Whole-product quality remains `not_run`. FP15/FP16 |
 
 The older unscoped `typed-citation-python.log` failed in concurrently installed skill corpora;
 the scoped MCP checks subsequently passed. This does not grant a final whole-tree typecheck pass.
@@ -173,7 +237,7 @@ merely to make these receipts green.
 - The latest ownership wiring in startup/operator qualification, failed-spawn recovery and
   maintenance has not run through the complete real-producer/cleanup suite. Two live cleanup
   fixtures still access `owned/*.json`; rewrite them around native owner records.
-- The generation-8 cache/data peer-marker refusal test and latest maintenance preview/apply
+- The generation-9 cache/data peer-marker refusal test and latest maintenance preview/apply
   changes have no executed behavioral receipt. Marker JSON is mechanical bootstrap identity,
   not a retained semantic policy journal.
 - Export's row-based empty-destination check, generation conflict and per-tool result rebinding
@@ -185,6 +249,134 @@ merely to make these receipts green.
   power-loss evidence, protected enforcement installation, fresh activation and retired-runtime
   deletion remain outstanding. No new product tests or library probes were needed to establish
   this audit; pinned skills/source and existing receipts answered the capability questions.
+
+### 2.5 Resumed implementation boundary
+
+The current changes are architectural implementation from the clean `ccf5739` baseline, not another
+planning audit. They do not close any FP package or final Q/SC matrix.
+
+- Shared writable Delta opening now declares the complete CHECK set in CREATE and repairs only
+  missing rules through native validated ADD CONSTRAINT. Read-only opening refuses partial tables.
+  Native parse/coercion/simplification/SQL formatting handles persisted predicate equivalence.
+- Exact control enrollment is self-referential within one atomic commit: the lease protects the
+  resulting control version, so callers receive a valid CAS predecessor and a protected provider.
+  Coordinator bootstrap reads use the permanent root lease without recursively enrolling.
+- Evidence candidates record whole-table obligations before writes, replace them with exact
+  outputs after physical completion, and settle through native joins only when roots select all
+  outputs. Failed, interrupted and deduplicated unselected candidates remain cleanup obligations.
+  Their automatic reconciliation and deletion are still required.
+- CDF dependencies are selected from the two typed vectors in DataFusion and enrolled before
+  either provider vector opens. Native selection defers vacuum for an enrolled CDF window.
+  Export/read-only paths still depend on the global file lease and need the full durable protocol.
+- The old post-optimization query-planner retention wrapper is removed. The analyzer captures
+  original resources before logical optimization; its native extension preserves them even when
+  statistics remove scans. Release tasks are bounded and shutdown drains admitted releases.
+- Control compaction now runs under a durable maintenance claim and uses the actual native
+  OPTIMIZE/checkpoint/log-compaction APIs. Unknown native-task outcomes keep the claim unresolved.
+  The service-wide destructive maintenance driver remains open. Native boot/process/start identity
+  and startup reconciliation are now implemented for in-process readers, maintenance and candidates;
+  the real-process oracle passed. Full external-owner integration remains open.
+- Search candidates now protect prior output versions and record output obligations. Result retention
+  records its writer obligation before Delta publication. Export creates destination-side projection
+  obligations and rebased snapshot/projection/result retention roots; emptiness checks distinguish
+  coordination records from published content. Full export qualification remains open.
+- Exact result reads enroll the declared table version before opening it. The provider, analyzer
+  extension, physical plan and stream retain the same protection. Read-only consumers carry the
+  existing shared root guard; this is still broader than the target durable read-only enrollment.
+- Admission uses DataFusion's native UNION/LIMIT and parallel scheduling. The temporary serial
+  extension is removed following the operator's performance-first resource instruction (§2.6).
+  Success requires every branch to be empty; a bounded structured violation or native scan error
+  refuses admission. No rule is skipped based on unchanged-state assumptions.
+- Destructive native vacuum now reads a checked kernel deletion-vector descriptor directly from
+  its Arrow view. Malformed fields/tags return an error before deletion; the upstream adapter getter
+  remains outside this maintenance route. Native kernel construction and path resolution are reused.
+- Policy, process-operation and process-effect definitions now create a writer obligation before
+  files, then atomically publish an exact immutable root and settle ownership after the native
+  writer returns. Reads enroll before opening providers and retain protection through execution.
+  Claim admission captures its predecessor after definition enrollment. Complete definition/result/
+  replay dependency closure, explicit removal and service maintenance remain open.
+- Immutable control records use the factored existing native canonical-record/window equality
+  mechanism. Evidence and producer-attempt plans use built-in DISTINCT/UNION DISTINCT. The
+  speculative replacement did not resolve the 128 MiB failure and was removed.
+- Delta creation/opening now binds `LogStore::engine` to the pinned kernel's `TaskExecutor` on the
+  owned service runtime. Native callbacks retain runtime/operation/effect context. Delta's blocking
+  helper now uses DataFusion's traced SpawnedTask in the enabled DataFusion feature envelope.
+  Kernel batch/buffer shape comes from the same execution policy. Separate compute/I/O lanes
+  remove the synchronous-caller/filesystem blocking cycle. ADR-0051 binds the same handlers through
+  the native provider DataFusionEngine TaskContext seam; latest-version discovery retains the wrapper
+  engine. Full physical-exit/cancellation qualification remains open.
+- All twenty pinned kernel metric variants now use generated records, exact counters, binary IDs
+  and exact durations. Span-creation ownership survives late close callbacks. Delta snapshot streams
+  and file-selection tasks use DataFusion context hooks as well as the existing blocking helper.
+- Telemetry callbacks enqueue typed owned events with reservations. The existing writer actor
+  encodes a group once, then persists through native Delta; callbacks no longer construct the
+  entire nested Arrow event schema. Ingress holds 512 events; the writer coalesces up to 128 over
+  at most 10 ms, and read/close barriers flush immediately. Kernel capture reserves 64 KiB before
+  bounded field copying, with a separate actor encoding reservation. The real native callback oracle
+  proves operation correlation and no recursive history. Process recovery chunks transitions within the shared
+  1,024-row control command bound, including when one dead process owns more than one chunk.
+- The diagnostic actor retains the native DeltaTable returned by successful append and reloads
+  through the controlled opener on conflict. This removes repeated complete opens for ordinary
+  batches while leaving Delta's native conflict/transaction mechanism authoritative. A final
+  workload-level performance comparison has not been run.
+- Shared cell decoding accepts checked scale-zero Decimal values and exact-width fixed binary.
+  Suffix path selection now casts native array length to the signed index domain before arithmetic;
+  the full publication/navigation journey still needs its current-worker rerun.
+- Native DataFusion children and kernel tasks retain TaskTracker tokens through physical exit,
+  including started blocking callbacks after caller cancellation. Only explicit bootstrap/export
+  supervisors bypass counting so they can own shutdown. Connections and the idle sweeper are
+  joined before service shutdown; its existing deadline bounds physical drain. Final storage and
+  retention releases share a persistent queue that survives cancelled close. Diagnostic close
+  retains/joins its actor and preserves failures and successful lost acknowledgements.
+- Operator cleanup now completes native recovery and release/diagnostic drain before capturing
+  its deletion inventory. An exclusive evidence lock covers inventory, revalidation and deletion;
+  any recovery/drain failure prevents removal. Control-selected inventories and full operator
+  failure/reset qualification remain open. Its focused preview/cache/evidence journey passed.
+- The diagnostic actor closes admission and drains all accepted messages/permits before successful
+  close; a deterministic cross-barrier oracle passes. The actor also reuses its immutable native
+  storage contract for reads/writes instead of regenerating it for every batch. Full pressure,
+  throughput, retention and fault qualification remain open.
+- [Operation/dataflow inventory](../architecture/native-operation-dataflows.md) records the current
+  schema/plan/dependency/effect/encoding owners for every public and internal route. This is FP00
+  action 1's source inventory, not completion of the remaining field/declaration/policy consumers.
+- Both skills' project-gap scans were inspected. Native effect/lease nodes already implement
+  `statistics_from_inputs`; operation-index writes are Arrow IPC, not Delta writes. Remaining
+  unbounded-session/collect/default-vacuum matches occur in focused native fixtures. These are
+  syntax leads with recorded dispositions, not unresolved production capability findings.
+
+Next implementation priority is to finish protection/cleanup consumers and physical reconciliation,
+then resume §8's typed identity/wire, effect/producer/handler, replay and remaining telemetry work.
+A matching development native worker was rebuilt for the focused publication/export journey; no
+complete daemon/executor/Python deployment candidate was installed. That journey exposed untyped
+empty producer lists and a caller-thread publication stack overflow. Typed literals and publication
+preparation on the owned native executor address those observed causes. GDB also located SQL planning
+before staging on the caller thread; complete publication coordination now uses the native executor.
+The subsequent 128 MiB runs failed during second-publication projection work. The 32 GiB run instead
+terminated on the caller stack; standalone bundle operations and the test's complete native journey
+now enter the configured executor. That rerun reached export and exposed artifact identity/reference
+metadata mismatch; explicit reference projection corrects it. The next run completed the journey
+assertions but failed shutdown after its temporary state had been deleted (713.39 s). State now
+survives final close, and physical/kernel/release/diagnostic tasks have explicit drain ownership.
+The corrected matching-worker journey passed (1 test, 841.09 s). It predates subsequent coordinator
+capture and diagnostic snapshot reuse, which have separate focused receipts; at least 64 diagnostic
+ingress-capacity drops remain visible in the log. Final-source journey qualification remains open. The registered
+acceptance report was regenerated: **0 passed / 0 failed / 0 blocked / 48 not_run**; source-bound
+final product acceptance remains open. Preserve the unresolved integration receipts in §2.3.
+
+### 2.6 Operator resource direction — 2026-09-16
+
+Prioritize architectural progress and performance on the **16-core / 32-thread, 192 GiB**
+workstation. The shared default query pool is **32 GiB**, with **64 GiB** spill, **2 GiB** metadata
+cache, **16** native partitions and **16** workers plus **16** blocking threads **per owned compute/I/O lane**. These are ceilings, not eager
+allocations. `ArrowConfig` owns the defaults; `QueryLimits::from(&ArrowConfig)` supplies both daemon
+and standalone development runtimes, removing the independent 128 MiB defaults. The existing
+workstation configuration agrees with these values. Result/transport bounds remain separate.
+
+Do not add bespoke serial operators or optimize for a tiny memory pool during this pivot.
+DataFusion's native scheduling, aggregates, spill and configured resource policy remain the
+execution mechanisms. Explicit pressure-test configurations remain useful as focused oracles;
+they are not the default development workload. FP14 still measures complete journeys before
+claiming a performance improvement or selecting final physical layouts.
 
 ## 3. Pinned capability basis
 
@@ -299,19 +491,20 @@ qualified restoration. Column mapping and BatchAdapterFactory require an actual 
 evolution consumer; a fresh epoch does not need them. These dispositions do not exclude the native
 mapping/validation operators already used by Delta internally.
 
-### 3.5 Capability clarification during the execution audit
+### 3.5 Capability clarification and resumed implementation
 
-Verified against the pinned skill pages, lockfiles and actual local source on **2026-09-16**.
-No dependency was repinned and no new functional probe was run for this status update.
+Verified against pinned skill pages, lockfiles and actual local source on **2026-09-16**.
+The original audit read existing evidence; subsequent implementation has the new focused receipts
+in §2.2. No DataFusion/Arrow/Delta pin changed.
 
 | Capability | What the current evidence establishes | Effect on remaining scope |
 |---|---|---|
 | `datafusion_common::types::extension::DFExtensionType` — [API](../../.claude/skills/datafusion/content/api/datafusion_common.types.extension.md) | Its pinned surface supplies storage type, metadata serialization and optional array formatting. It does not by itself implement application domain equality or scoped references | Existing semantic analyzer/admission remains necessary; registering IdentityType is not deployment of binary IDs throughout the service |
 | Native listing + Delta factory — [consumer](../../crates/enrichment-store/src/native_discovery.rs), [ADR-0049](../adr/0049-bounded-native-provider-composition.md) | The actual listing type is `datafusion_catalog::listing_schema::ListingSchemaProvider`. The controlled Delta opener and complete scan contract are narrow local patches; three route tests passed | Mark composition implemented and keep full route/feature/resource qualification open. Do not claim these injection APIs exist in the unpatched pin |
-| `deltalake_core::table::DeltaTable::add_constraint` — [consumer](../../crates/enrichment-store/src/native_delta.rs) | Source creates the table and then invokes native ADD CONSTRAINT. This activates enforcement, but spans separate commits | Test/refuse interrupted installation before trusted registration; table version zero is not a reliable empty-target test. The export predicate fix is in source, unqualified |
-| `deltalake_core::operations::vacuum::VacuumBuilder` — [API](../../.claude/skills/deltalake/content/api/deltalake_core.operations.vacuum.md) | `with_keep_versions`, retention duration and scan concurrency are available. Project production code has no corresponding retention/maintenance consumer | Implement FP06/FP12 enrollment, protected versions and fencing; the builder cannot infer service reader/result/CDF/replay obligations or prove log reconstruction |
+| `deltalake_core::table::DeltaTable::add_constraint` — [consumer](../../crates/enrichment-store/src/native_delta.rs) | CREATE declares the full native CHECK set; writable reopening validates and installs only missing constraints, rejecting mismatches. A focused interrupted-installation oracle passes | Complete concurrent installers, invalid populated tables and all mutation routes. Table version zero is not an empty-target predicate; the native export row check remains subject to the integrated journey |
+| `deltalake_core::operations::vacuum::VacuumBuilder` — [API](../../.claude/skills/deltalake/content/api/deltalake_core.operations.vacuum.md) | `with_keep_versions`, retention duration and scan concurrency are available. Typed enrollment/protected-version selection and fenced control OPTIMIZE/checkpoint/log compaction are implemented; native helper deletion/readback has focused evidence | Finish complete consumer protection, explicit root removal and the service reclamation driver. Native builders cannot infer service reader/result/CDF/replay obligations or prove every required log reconstruction |
 | `deltalake_core::delta_datafusion::DeltaLogicalCodec` — [actual source](../../vendor/delta-rs/crates/core/src/delta_datafusion/mod.rs) | Provider encode/decode exists; logical extension hooks still contain TODOs and provider decode ignores the expected schema. DeltaPhysicalCodec remains deprecated | FP11 needs the real restricted cache consumer with explicit identity/schema/version/cohort revalidation and live-handle rebinding; generic deserialization is insufficient |
-| `buoyant_kernel::metrics::reporter::{MetricsReporter, ReportGeneratorLayer}` — [API](../../.claude/skills/deltalake/content/api/buoyant_kernel.metrics.reporter.md) | Structured events and a cheap any-thread reporter contract exist at kernel `8ba063f8f84fec222000f66d40d70911d7c79675`. No project reporter implementation/registration is present | FP13 integration remains implementation work. Qualify bounded capture, task-context propagation and diagnostic-writer recursion prevention; current service counters are not kernel metrics |
+| `buoyant_kernel::metrics::reporter::{MetricsReporter, ReportGeneratorLayer}` — [API](../../.claude/skills/deltalake/content/api/buoyant_kernel.metrics.reporter.md) | All twenty pinned events now map exhaustively into generated native history through the registered per-runtime reporter/layer. Exact binary IDs/counters/durations, operation correlation and non-recursive reads have focused receipts | Finish Delta builder metrics/full lineage, complete drop/fault/restart/retention/pressure matrices and external allocation accounting. Preserve the implemented reporter rather than rebuilding it |
 | FastMCP 4.0.3 `fastmcp.tools.Tool` / `ToolResult` — [API](../../.claude/skills/fastmcp/content/api/fastmcp.tools.base.md), [adapter](../../python/enrichment_mcp/server.py) | Public Tool supports explicit input/output schemas and async `run`; ToolResult carries structured content. The adapter now consumes generated definitions through these APIs | Credit generated nine-tool registration. Keep actual all-tool/resource frame/schema/client acceptance open; an in-process catalog test is not an installed service journey |
 
 ## 4. Dependency order and work packages
@@ -609,7 +802,7 @@ the local synchronizing store exist. Service-wide DML/metadata/maintenance cover
    unsupported DML before writing; do not build unused arbitrary DML merely to expose an API.
 2. Bind the same concrete session/runtime/store, row constraints, writer properties, transaction
    keys, metrics and ownership to every admitted operation. Preserve aggregate Delta planner
-   composition under `RetentionPlanner`; inherit validation/mapping/merge/metric delegates.
+   composition under the pre-optimization retention analyzer and native extension planner; inherit validation/mapping/merge/metric delegates.
 3. Complete schema/protocol/feature admission before registration. Validate metadata updates with
    upstream validators; derive feature inventory from native features plus actual supported routes.
    Keys/references still require aggregate/anti-join admission before trusted optimizer metadata.
@@ -1110,7 +1303,7 @@ fixtures. Frozen specification/review provenance is explicitly retained by §1.1
 | L21 | Rust/Python callable/overload/base and multiple qualifier/control/query records use generated List<Struct> contracts | Remaining coverage/query coupled arrays, ordering/cardinality and NULL/empty/unknown inventory; FP06/FP07/FP09 |
 | L22 | EvidenceFragment/legacy Symbol filling and JsonObject locator substitutions removed; typed citations, ToolData and ResultRecord generate codecs/wire shapes | Remaining semantic decode/re-encode and handler result owners, all resource/export paths and real MCP fidelity; FP04/FP10 |
 | L23 | Structured producer callable observations and declaration-derived comparison axes implemented | Independent before/after parameter/overload/default/return semantics, unavailable coverage and real inspect/compare qualification; FP07/FP09 |
-| L24 | Old rustdoc fixtures/readers and several generated aliases removed; state epoch 8 requires fresh paired roots | Whole-tree old-epoch fixture/recipe/rule/install audit and target package/activation proof. No compatibility adapter or historical runtime backup; FP15/FP16 |
+| L24 | Old rustdoc fixtures/readers and several generated aliases removed; state epoch 9 requires fresh paired roots | Whole-tree old-epoch fixture/recipe/rule/install audit and target package/activation proof. No compatibility adapter or historical runtime backup; FP15/FP16 |
 
 ## 6. Acceptance implementation and run discipline
 
@@ -1291,66 +1484,79 @@ of S findings; none claims that proposed implementation has already landed.
 
 ## 8. Remaining execution order and completion record
 
-The user requested this status audit **instead of continued implementation**. Resume product work
-only when instructed. Preserve the source checkpoint in §1.2 and the complete target requirements;
-no compatibility reader, old-state import or alternate runtime is authorized by this audit.
+The user subsequently authorized **implementation of the complete remaining execution plan**.
+The chosen default retains published evidence and completed results until explicit removal;
+unreferenced candidates and physically released temporary data are reclaimable. Preserve the source checkpoint in §1.2 and the complete target requirements;
+no compatibility reader, old-state import or alternate runtime is authorized.
 
-### 8.1 Dependency-ordered implementation backlog
+### 8.1 Authorized execution order (2026-09-17)
 
-1. **Stabilize the native boundaries that subsequent work consumes (FP02–FP05/FP09/FP10).**
-   Repair status selection, account for every unresolved receipt in §2.3, and qualify the current
-   metadata/nullable/Decimal adapters on their actual consumers. Rebuild the matching worker before
-   worker-dependent execution. Do not recreate the already implemented declaration/codec/provider/
-   job/result foundations or spend cycles rerunning unrelated broad suites.
-2. **Finish the common semantic contract, then apply it to remaining owners (FP00–FP04).**
-   Complete the operation/field inventory; deploy domain IDs and digests as fixed-binary native
-   values; finish scoped references, collection limits and contract-change/dependency witnesses.
-   Replace remaining cursor/request/configuration JSON hashes and semantic decode bridges. Use
-   one real new field/aspect and one policy change as the cross-consumer oracle; retain explicit
-   physical mechanisms and exact external bytes at their declared boundaries.
-3. **Close effect, acquisition and public research semantics (FP06–FP10).**
-   Finish command-to-argv/input/environment/output/budget authorization, claim/physical-owner
-   reconciliation, durable warm-resource scope, source/registry facts, producer/callable fidelity
-   and handler selection/paging. Rewrite stale execution fixtures around native authority. Complete
-   native result/resource/export closure and all nine public routes; preserve the implemented
-   generated FastMCP registrations and per-tool result relations.
-4. **Implement exact retention and owned maintenance together (FP06/FP12).**
-   Add protection/enrollment/maintenance/cleanup families, one retention contract and generation
-   fencing before loading protected versions. Include results, definitions, replay, CDF and exports.
-   Drive native checkpoint/log compaction/OPTIMIZE/VACUUM with selected protected versions and prove
-   actual safe reclamation. The global lease and updated operator cleanup remain mechanisms within
-   this design, not a substitute. Qualify interrupted constraint installation and storage durability.
-5. **Finish replay and incremental semantics on that protection protocol (FP11).**
-   Implement typed fresh-process command replay and the real immutable DeltaLogicalCodec cache
-   consumer with allowlisting, exact revalidation and live-handle rebinding. Close CDF/full rebuild
-   equivalence and output/offset/orphan faults, marker expiry and semantic invalidation matrices.
-6. **Complete telemetry and resource ownership alongside those changes (FP13).**
-   Wire cheap bounded structured kernel metrics into existing native history; prove context across
-   kernel/native task boundaries and prevent the writer observing itself. Finish external allocation
-   budgets, component/recovery policies, saturation/fault/drop/shutdown and physical-exit accounting.
-7. **Choose physical settings from complete journeys (FP14).**
-   Measure native and external memory, latency, spill and I/O on complete cold/warm/offline/export/
-   execution flows. Record actual log/DF/kernel/Parquet stats and strict/DV equivalence. Qualify adopted
-   settings and retain explicit negative/unconfigured dispositions, without a second native engine.
-8. **Close deletion/design before final qualification (FP15).**
-   Resolve every L01–L24 row, inspect production/recovery/test/package consumers, finish architecture
-   rules and patch provenance, update living documentation and prepare protected installation.
-   Keep the frozen blueprint/review provenance. `STATUS.md` and other living checkpoints must be
-   reconciled here; this audit has intentionally not rewritten them.
-9. **Qualify and activate once the architecture is complete (FP16).**
-   Register actual Q commands and source-bound receipts; build the matching non-editable candidate.
-   Run final quality, Q/SC matrices, all tools/resources/export/offline/real-client/Linux profiles
-   and C20/state-leak checks. Capture actual missing prerequisites as `blocked`, not assumed blockers.
-   Qualify before applying the verified retired-install deletion manifest and fresh activation;
-   finish deployed smoke and regenerate/check the acceptance report from final receipts.
+The user explicitly requires **no full integration tests until the architectural pivot and all
+legacy deletions are complete**, including verified retired installs/state/client registrations.
+Downtime and intermediate functional discontinuity are accepted. This supersedes the earlier
+candidate-before-retirement ordering in FP16, §6 and L15. Preserve all FP/L/Q/SC obligations.
 
-Run decisive checks at the changed boundary, then continue architecture. Reserve broad quality,
-installed-client and final acceptance execution for the integrated target. A green subset closes
-only its named boundary, never an FP package by inference.
+1. Complete common declarations, finite operation policy, binary IDs/digests, native canonical
+   identities, scoped references, manifest/dependency witnesses and exact generated wire encoding.
+2. Complete provider/admission/mutation contracts and remove alternate semantic owners.
+3. Complete durable acquisition facts, exact effect authorization, physical job/resource ownership.
+4. Move remaining research selection, composition, cursors, resource/export and delivery policy to
+   native plans. Preserve the existing declaration/provider/control/result foundations.
+5. Finish all retention enrollments, explicit root removal, native maintenance and actual reclamation.
+6. Complete fresh-process replay, restricted logical codec cache, CDF/full equivalence and invalidation.
+7. Finish builder/kernel telemetry, external budgets and lifecycle accounting; close L01–L24 source,
+   package, fixture, dependency and enforcement obligations. Prepare the protected operator patch.
+8. Build a matching locked non-editable candidate; stop/drain old processes and apply only a verified
+   service-owned retired-install/state/registration deletion manifest. No legacy backup is retained.
+9. Only then run final Q/SC integrations, real producers/clients/profiles and storage durability,
+   including filesystem crash recovery. Measure full journeys and select native physical settings.
+   Repair target code directly, qualify the final source, activate fresh state and run deployed smoke.
+
+During steps 1–8 use affected compile/Clippy/static checks, generated-contract checks and targeted
+unit fixtures. A service journey remains an integration test even if placed in a library test
+module. Write final integration coverage without running it. Do not rerun old publication/CDF/
+export/storage journeys during the pivot. Keep workstation performance budgets; no 128 MiB pool.
+
+The resumed implementation begins with fresh state generation 10, generated native identity inputs,
+binary core IDs, deletion of handwritten catalog codecs and exact numeric transport. These are
+implementation changes, not final Q/SC acceptance. No complete FP/L/Q/SC obligation is closed by
+this execution-order update.
 
 ### 8.2 Completion record
 
-**As audited 2026-09-16: in progress; not qualified or installed.** §2.1 credits implemented source
+The 2026-09-17 implementation adds binary core identities and metadata-aware parameters,
+NULL/empty/present environment features without `features_known`, native request/cursor/configuration
+preimages, shared native admission for read/resolve/compare/inspect/verify routes, native research
+selection, and typed Delta capsule publication/reuse. RPC/result/pagination/MCP registration and
+control-family metadata now have single declarations. Exact UInt64/usize and signed Int64 strings use one wire codec (`native-json/3`);
+TOML integers are projected only at the operator configuration boundary. State/snapshot epoch **10**
+and wire **4.0** refuse historical representations rather than migrating them.
+
+The same execution also removes the remaining semantic JSON hash function/callers, adds native
+schema manifest/change relations consumed by storage admission and operation cursor contracts,
+replaces the shared Arrow JSON row decoder and handwritten registry/provenance codecs, and captures
+Rust/Python registry and revision facts as protected exact-version Delta definitions. Revision
+coverage and artifact section/window/cursor-bound policies now consume native facts. Inspection/discovery outcomes and execution-kind scope separation use the immutable declaration namespace; resolve/search/overview/inspection use one native source-version policy. The generated
+revision receipt is a bounded portable projection; it is not the source authority.
+
+Generated definition/relationship/execution codecs remove additional handwritten Arrow schemas and
+decoders. Relation-specific subject and coverage checks are explicit native admission entries,
+independent of presentation labels. Operation contract identities now include declaration values,
+not only field layouts. Typed retention policy fields replace unused fixed horizons: native bounds
+and cross-horizon admission feed Delta creation properties and exact maintenance policy witnesses.
+Root removal, service-wide reclamation and remaining maintenance policy consumers are still open.
+
+These are source changes and focused-unit evidence, not package closure. Remaining work still
+includes all other ID/digest families, full reference/witness/physical-field matrices, remaining
+source-fact families and registry/revision crash/replay/export qualification, exact effect authorization
+and warm-LSP ownership, native result/
+evidence/window composition, retention/removal/reclamation, fresh-process replay/logical caching,
+telemetry/resource/physical choices and L01–L24 deletion/activation obligations. Retained capsule
+publication is implemented but crash/restart, generation reclamation and complete live-owner reuse
+remain unqualified. Full integration tests are deferred until §8.1 steps 1–8 are complete; focused
+unit tests, schema checks and compile/static checks remain authorized throughout implementation.
+
+**Source updated 2026-09-17: in progress; not qualified or installed.** §2.1 credits implemented source
 and identifies the remaining actions for every FP00–FP16 package. §2.2 records focused evidence;
 §2.3 keeps failed/unresolved executions visible; §5 keeps all deletion obligations; §6 preserves
 all Q/SC criteria. No complete FP/Q/SC/L obligation is claimed closed by this documentation update.

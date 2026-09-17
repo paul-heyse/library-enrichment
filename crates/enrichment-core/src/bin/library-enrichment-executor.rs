@@ -175,7 +175,7 @@ fn execute() -> io::Result<()> {
         &mut sink,
         &Frame::Complete {
             operation_id: operation.id(),
-            inventory_digest: canonical::digest_hex(&serde_json::json!(entries)),
+            inventory_digest: inventory::digest(&entries)?,
             exit_code,
             end,
             stdout,

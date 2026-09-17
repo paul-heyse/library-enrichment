@@ -61,6 +61,19 @@ pub struct Overview {
     pub unresolved_reexports: u64,
 }
 
+/// Native lookup policy outputs; the transport only renders the selected branch.
+pub struct InspectionBindings {
+    pub definition_count: u64,
+    pub selected: Option<SymbolHeader>,
+    pub candidates: Vec<enrichment_core::wire::data::InspectionCandidate>,
+}
+
+enrichment_core::native_struct! {
+    struct DefinitionCount {
+        count: u64 => enrichment_core::native_union::Rule::Text,
+    }
+}
+
 /// Filters lower to native predicates before the bounded alternatives page is decoded.
 #[derive(Default)]
 pub struct ExecutionSelection<'a> {
@@ -601,6 +614,21 @@ impl SnapshotReader {
         .await
     }
 
+    /// Native inspection selection over the exact captured snapshot.
+    pub async fn inspection_bindings(
+        &self,
+        path: &str,
+        definition_id: Option<&str>,
+    ) -> Result<InspectionBindings, QueryError> {
+        inspection_bindings(
+            &self.runtime,
+            self.ctx.table("snapshot.domain.symbol_headers").await?,
+            path,
+            definition_id,
+        )
+        .await
+    }
+
     /// # Errors
     /// Unqualified lookup uses literal typed suffix components in the snapshot's ecosystem.
     pub async fn symbols_ending_with(
@@ -618,7 +646,12 @@ impl SnapshotReader {
             .iter()
             .map(|p| ScalarValue::Utf8(Some(p.clone())))
             .collect::<Vec<_>>();
-        let length = array_length(col("components"));
+        // Native list indices are signed; combining UInt64 length with signed
+        // offsets otherwise promotes the endpoint to Decimal128 during coercion.
+        let length = datafusion::logical_expr::expr_fn::cast(
+            array_length(col("components")),
+            arrow::datatypes::DataType::Int64,
+        );
         let mut predicate = array_slice(
             col("components"),
             length.clone() - lit(parts.len() as i64) + lit(1i64),
@@ -852,7 +885,7 @@ impl SnapshotReader {
                 session
                     .table("state.records.attempts")
                     .await?
-                    .filter(col("snapshot_id").eq(lit(self.manifest().snapshot_id.as_str())))?,
+                    .filter(col("snapshot_id").eq(self.manifest().snapshot_id.literal()))?,
                 Some(crate::preparation::QueryFamily::Catalog(
                     crate::control::Table::Attempts,
                 )),
@@ -883,7 +916,7 @@ impl SnapshotReader {
                     .await?
                     .filter(
                         col("snapshot_id")
-                            .eq(lit(self.manifest().snapshot_id.as_str()))
+                            .eq(self.manifest().snapshot_id.literal())
                             .and(col("attempt_id").eq(lit(id))),
                     )?
                     .limit(0, Some(2))?,
@@ -915,7 +948,7 @@ impl SnapshotReader {
         Ok(self
             .catalog_artifacts(
                 "WITH source AS (
-                SELECT r.artifact_digest FROM state.records.snapshots s
+                SELECT r.key.artifact_digest AS artifact_digest FROM state.records.snapshots s
                 JOIN state.records.contexts c ON s.context_id=c.context_id
                 JOIN state.records.releases r ON c.release_id=r.release_id WHERE s.snapshot_id=$1
             ), receipts AS (
@@ -985,9 +1018,13 @@ impl SnapshotReader {
         sql: &str,
     ) -> Result<Vec<enrichment_core::evidence::Artifact>, QueryError> {
         let session = self.opened.catalog.session(&self.runtime).await?;
-        let plan = session.sql(sql).await?.with_param_values(vec![
-            datafusion::common::ScalarValue::from(self.manifest().snapshot_id.as_str()),
-        ])?;
+        let plan =
+            session
+                .sql(sql)
+                .await?
+                .with_param_values(datafusion::common::ParamValues::List(vec![
+                    self.manifest().snapshot_id.parameter(),
+                ]))?;
         let output = self
             .runtime
             .execute_family(plan, Some(crate::preparation::QueryFamily::CatalogArtifact))
@@ -1041,4 +1078,64 @@ impl SnapshotReader {
             .flatten()
             .collect())
     }
+}
+
+/// Select inspection bindings over the captured header relation.
+/// This function can be exercised with an in-memory relation without opening durable state.
+pub async fn inspection_bindings(
+    runtime: &QueryRuntime,
+    headers: DataFrame,
+    path: &str,
+    definition_id: Option<&str>,
+) -> Result<InspectionBindings, QueryError> {
+    let session = runtime.session();
+    crate::native_catalog::work(&session, "inspection_headers", headers.into_view())?;
+    use datafusion::common::ScalarValue;
+    use enrichment_core::native_union::NativeStruct;
+    let matches = session
+        .sql(
+            r#"
+            WITH matching AS (
+                SELECT *, path=$1 AS exact_path FROM inspection_headers
+                WHERE (path=$1 OR (NOT contains($1,'::') AND NOT contains($1,'.')
+                    AND array_element(components,-1)=$1))
+                  AND ($2 IS NULL OR definition_id=$2)
+            )
+            SELECT * FROM matching WHERE exact_path OR NOT EXISTS
+                (SELECT 1 FROM matching WHERE exact_path)
+        "#,
+        )
+        .await?
+        .with_param_values(vec![
+            ScalarValue::Utf8(Some(path.into())),
+            ScalarValue::Utf8(definition_id.map(str::to_owned)),
+        ])?;
+    crate::native_catalog::work(&session, "inspection_matches", matches.into_view())?;
+    let count = session.sql("SELECT arrow_cast(count(DISTINCT definition_id),'UInt64') AS count FROM inspection_matches").await?;
+    crate::native_catalog::work(
+        &session,
+        "inspection_definition_count",
+        count.clone().into_view(),
+    )?;
+    let definition_count = runtime
+        .records::<DefinitionCount>(count, 1)
+        .await?
+        .pop()
+        .ok_or_else(|| DataFusionError::Internal("native inspection count returned no row".into()))?
+        .count;
+    let selected = session.sql("SELECT m.* FROM inspection_matches m CROSS JOIN inspection_definition_count c WHERE c.count=1 ORDER BY is_reexport,path,symbol_id LIMIT 1").await?;
+    let selected = selected.select(
+        SymbolHeader::fields()
+            .iter()
+            .map(|field| col(field.name()))
+            .collect::<Vec<_>>(),
+    )?;
+    let selected = runtime.records::<SymbolHeader>(selected, 1).await?.pop();
+    let candidates = session.sql("SELECT DISTINCT definition_id,path,kind,qualifier FROM inspection_matches CROSS JOIN inspection_definition_count c WHERE c.count>1 ORDER BY definition_id,path,kind,qualifier").await?;
+    let candidates = runtime.records(candidates, 1024).await?;
+    Ok(InspectionBindings {
+        definition_count,
+        selected,
+        candidates,
+    })
 }

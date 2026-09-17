@@ -1,0 +1,67 @@
+{
+  "module": "opentelemetry_sdk::logs::log_processor",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.logs.log_processor.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::logs::log_processor::LogProcessor",
+      "name": "LogProcessor",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait LogProcessor: Send + Sync + Debug",
+      "summary": "The interface for plugging into a [`SdkLogger`].",
+      "doc": "api/opentelemetry_sdk.logs.log_processor.md#logprocessor",
+      "aliases": [
+        "opentelemetry_sdk::logs::LogProcessor"
+      ],
+      "implementors": [
+        "opentelemetry_sdk::logs::batch_log_processor::BatchLogProcessor",
+        "opentelemetry_sdk::logs::concurrent_log_processor::SimpleConcurrentLogProcessor",
+        "opentelemetry_sdk::logs::log_processor_with_async_runtime::BatchLogProcessor",
+        "opentelemetry_sdk::logs::simple_log_processor::SimpleLogProcessor"
+      ],
+      "required_methods": [
+        "emit",
+        "force_flush"
+      ],
+      "provided_methods": [
+        "event_enabled",
+        "set_resource",
+        "shutdown",
+        "shutdown_with_timeout"
+      ],
+      "methods": [
+        {
+          "name": "emit",
+          "signature": "fn emit(&self, data: &mut SdkLogRecord, instrumentation: &InstrumentationScope)",
+          "summary": "Called when a log record is ready to processed and exported."
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, _level: Severity, _target: &str, _name: Option<&str>) -> bool",
+          "summary": "Check if logging is enabled"
+        },
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "summary": "Force the logs lying in the cache to be exported."
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, _resource: &Resource)",
+          "summary": "Set the resource for the log processor."
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&self) -> OTelSdkResult",
+          "summary": "Shuts down the processor with default timeout."
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, _timeout: Duration) -> OTelSdkResult",
+          "summary": "Shuts down the processor. After shutdown returns the log processor should stop processing any logs. It's up to the implementation on when to drop the LogProcessor."
+        }
+      ]
+    }
+  ]
+}

@@ -511,6 +511,56 @@ pub struct DeletionVectorSelection {
 }
 
 impl DeltaScan {
+    /// Exact captured snapshot. Runtime handles and application read authority are not
+    /// serialized and must be supplied again by a descriptor consumer.
+    pub fn snapshot(&self) -> &Snapshot {
+        self.snapshot.snapshot()
+    }
+
+    /// Refuse scan state that the immutable provider codec cannot preserve.
+    pub fn validate_immutable_codec(&self) -> Result<()> {
+        if self.file_skipping_predicate.is_some() || self.read_operation_id.is_some() {
+            return Err(DataFusionError::Plan(
+                "immutable Delta codec cannot retain operation-local scan state".into(),
+            ));
+        }
+        Ok(())
+    }
+
+    /// Rebind a decoded immutable scan without loading or changing its snapshot.
+    /// The current scan contract must equal the encoded contract, including metadata.
+    /// Application callers must independently authorize identity/version and retention.
+    pub fn rebind_immutable(
+        mut self,
+        log_store: LogStoreRef,
+        expected: &DeltaScanConfig,
+    ) -> Result<Self> {
+        self.validate_immutable_codec()?;
+        if canonical_table_root_identity(self.snapshot.table_configuration().table_root())
+            != canonical_table_root_identity(log_store.root_url())
+            || self.config.file_column_name != expected.file_column_name
+            || self.config.wrap_partition_values != expected.wrap_partition_values
+            || self.config.enable_parquet_pushdown != expected.enable_parquet_pushdown
+            || self.config.schema_force_view_types != expected.schema_force_view_types
+            || self.config.schema != expected.schema
+        {
+            return Err(DataFusionError::Plan(
+                "immutable Delta scan contract changed".into(),
+            ));
+        }
+        let mut checked = Self::new(self.snapshot.clone(), expected.clone())?;
+        if let Some(column) = &self.row_index_column {
+            checked = checked.with_row_index_column(column)?;
+        }
+        if self.scan_schema != checked.scan_schema || self.full_schema != checked.full_schema {
+            return Err(DataFusionError::Plan(
+                "immutable Delta scan schema changed".into(),
+            ));
+        }
+        self.log_store = Some(log_store);
+        Ok(self)
+    }
+
     /// Create a new scan over the given `snapshot` using `config`.
     ///
     /// Validates that the snapshot only uses reader features delta-rs supports and resolves

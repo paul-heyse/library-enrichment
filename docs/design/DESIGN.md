@@ -573,6 +573,8 @@ reads, durable pending completion and explicit policy-controlled execution.*
 
 ### 7.2 Common response envelope
 
+> Decision: ADR-0054 — Wire 5.0 native projections measure complete admitted MCP tool/resource stdio responses; application qualification remains open.
+
 > Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
 > Decision: ADR-0037 — Research/2.0 replaces the prior root pagination and nested terminal-result contract.
@@ -584,8 +586,8 @@ within its evaluated domain. Each requested aspect and alternative set has its o
 There is no root pagination field. Errors carry a typed cause, stage, rule, affected identities,
 limits and recovery actions. Nullable root fields remain required even when their value is null.
 
-`contracts/research-v2/research-envelope.schema.json` is the current frozen candidate generated
-from Rust. The original contract remains preserved provenance and is not a compatibility reader.
+The current wire 5.0 contract is generated from Rust into `schemas/generated/`. The older
+`contracts/research-v2/research-envelope.schema.json` is frozen provenance, with no compatibility reader.
 Authored Pydantic presentation models use generated domain types and validate actual inline,
 artifact, pending and error outputs. Individual comparison values are tagged inline/artifact;
 artifact variants retain complete JSON, digest, size and original alternative FactSource.
@@ -597,6 +599,8 @@ catalog admission/export, with descriptors for offline reads of presentation-onl
 qualification remains open.*
 
 ### 7.3 Output budgets
+
+> Decision: ADR-0054 — Wire 5.0 native projections measure complete admitted MCP tool/resource stdio responses; application qualification remains open.
 
 > Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
@@ -611,10 +615,12 @@ qualification remains open.*
 
 > Decision: ADR-0024 — keyset cursors bind semantic query/snapshot/sort versions; complete envelope and execution budgets are separate obligations.
 
-The core enforces `max_bytes` against the complete service envelope. MCP adds one compact text
-summary (at most 160 JSON-encoded UTF-8 bytes) and at most 1024 bytes of standard protocol framing
-allowance, measured on actual stdio responses. The canonical envelope appears once in structured
-content; tools advertise its generated schema. Client SDK coercion is not wire JSON.
+Wire 5.0 enforces `max_bytes` against the complete admitted response, including measured MCP
+stdio framing and resource-text escaping. Native DataFusion plans select inline or retained views
+using the exact format kernel. Required error recovery is native-owned; an impossible cap yields
+a minimum-budget refusal. Python validates the native projection against the pinned SDK encoding
+and forwards it without selection or trimming. The canonical envelope appears once in tool
+structured content. Protocol/availability errors are separate local transport observations.
 
 > Decision: ADR-0014 ([bounded evidence comparison](../adr/0014-bounded-comparison.md)).
 
@@ -630,6 +636,8 @@ and excerpt limits are enforced on the search and inspect paths. The limits are 
 defaults, **not measured performance claims**.*
 
 ### 7.4 FastMCP implementation
+
+> Decision: ADR-0054 — Wire 5.0 native projections measure complete admitted MCP tool/resource stdio responses; application qualification remains open.
 
 > Decision: ADR-0047 — Plan 17 generates semantic, storage/read and wire contracts from one native declaration; see §17.
 
@@ -1063,6 +1071,20 @@ blueprint §16, unchanged.
 
 ## 17. Unified native execution and Delta authority
 
+> Decision: ADR-0053 (proposed; final application conformance pending).
+
+**Implemented, 2026-09-17:** exact evidence reads consume a restricted DeltaLogicalCodec
+provider cache backed by DataFusion DefaultCache. Cache hits validate snapshot and semantic/CHECK
+contracts and rebind the current owned runtime; each read supplies fresh protection before opening
+providers. Native anti-joins verify exact durable table/cohort dependency membership. Codec values
+carry no read authority, and accounted resources outlive eviction while native readers retain them.
+Persisted descriptors, complete external allocation accounting, durable read-only enrollment and
+fresh-process qualification remain open in Plan 18.
+
+> Decision: ADR-0051 — every Delta kernel path uses explicitly owned I/O handlers; separate compute and I/O scheduling prevents synchronous callers from exhausting the pool needed for their awaited filesystem work.
+
+> Decision: ADR-0050 — native maintenance protects retained deletion vectors, admits complete bounded log inventory and preserves supplied commit policies at every stage.
+
 > Decision: ADR-0049 — bounded atomic native listing and controlled Delta factory opening preserve one owned session, store, exact snapshot and semantic scan contract.
 
 > Decision: ADR-0048 qualifies the shared format-61 producer/renderer model.
@@ -1252,6 +1274,11 @@ decided it. See [`README.md`](README.md) for the amendment rule.
 
 | Revision | Date | Change | Decided by |
 |---|---|---|---|
+| 32 | 2026-09-17 | Native wire 5.0 tool/resource projection, exact SDK framing facts and native inline/retained byte-fit selection. | ADR-0054 (proposed) |
+| 31 | 2026-09-17 | Consume restricted immutable Delta descriptors with current read protection and native bounded cache ownership. | ADR-0053 (proposed) |
+| 30 | 2026-09-17 | Bind declared operation reuse through CacheFactory and owned native spill execution; application qualification remains open. | ADR-0052 (proposed) |
+| 29 | 2026-09-16 | Bind kernel handlers through both LogStore and DataFusion TaskContext, preserving one shared resource/policy runtime with owned compute and I/O lanes. | ADR-0051 |
+| 28 | 2026-09-16 | Preserve exact retention and owned commit policy through native Delta maintenance. | ADR-0050 |
 | 27 | 2026-09-16 | Compose native providers through bounded discovery, exact owned opening and corrected nested CHECK formatting. | ADR-0049 |
 | 26 | 2026-09-16 | Qualify one format-61 model for facts and the patched pure renderer. | ADR-0048 |
 | 25 | 2026-09-16 | One native schema/variant/domain authority, generated typed storage and wire, semantic plan checks and preallocation-bounded MCP encoding; Plan 17 hard pivot. | ADR-0047 |
@@ -1471,12 +1498,60 @@ qualification remain open; aborting an async task is not proof that an external 
 
 ### Native executor and terminal references — implementation 2026-09-16
 
-One configured multi-thread Tokio executor runs native startup, request dispatch, planning and
-Delta metadata/write operations. Worker count follows native concurrency; blocking-thread count and
-stack size are explicit validated settings, reported separately from Arrow memory. Tasks and running
-blocking callbacks retain the executor owner and admission until physical exit. Futures are boxed
-before task-local/tracing composition to avoid large moves on caller stacks. Background shutdown is
-a drop fallback, not evidence of graceful effect cleanup.
+> Decision: ADR-0052 (proposed; application conformance pending).
+
+Declared operation intermediates use the QueryRuntime CacheFactory and composed native planner.
+Planning is pure; first execution starts one binding-owned fill, shared by independently planned
+readers. Native SpillManager owns IPC mechanics, with explicit reader/writer reservations and
+operation retention through physical exit. Native aggregate/selection plans consume that shared
+relation. The binding is an operation capability with exact immutable input/schema/function/policy
+witnesses, never a global result key. Cancellation of one waiter cannot cancel another; operation
+termination cancels the fill. No cache state is persisted or used as durable publication authority.
+
+One DataFusion RuntimeEnv owns memory, spill, cache and the qualified store registry. Its owned
+Tokio compute lane runs startup, request dispatch, planning and synchronous Delta callbacks; a
+separate owned I/O lane runs the kernel futures those callbacks await. LogStore::engine and the
+DataFusionEngine TaskContext extension select the same configured kernel handlers. Worker counts
+follow native concurrency and blocking-thread counts apply per lane. Stack size is reported
+separately from Arrow memory. Tasks and running blocking callbacks retain the executor owner until
+physical exit. Futures are boxed before task-local/tracing composition. Background shutdown is a
+drop fallback, not evidence of graceful effect cleanup. The current-thread transport owns neither
+lane. See ADR-0051 for the pinned engine seam and minimum-concurrency oracle.
+
+Native child futures and blocking callbacks carry physical-exit tokens through DataFusion's
+JoinSetTracer and the kernel TaskExecutor. Ordinary runtime spawns are tracked; only explicit
+startup/export supervisors are exempt so they can own final close. Shutdown first stops and
+joins transport roots and reconciles jobs, then drains native work, final ownership releases,
+the diagnostic writer and its final kernel children. Release handles and failures remain owned
+across a cancelled close; diagnostic close joins its retained actor and preserves lost-ack success
+or persistence failure. The service's existing shutdown deadline bounds waiting; timeout does not
+certify physical exit. External process/restart/pressure qualification remains open.
+
+Operator cleanup completes native ownership recovery and joins all release/diagnostic work before
+capturing its deletion inventory. The final exclusive evidence lock covers that stable inventory,
+revalidation and removal. A recovery/drain error prevents deletion and remains in the report.
+Replacing the remaining path-list inventory with native control selection remains Plan 17 FP12.
+
+The workstation defaults are 32 GiB of Arrow memory, 64 GiB of spill, 2 GiB of metadata cache and
+16 workers/partitions, with 16 blocking threads per lane. ArrowConfig is the single default and
+conversion authority. These ceilings follow the operator's performance priority on the 192-GiB
+workstation; final complete-journey measurements remain Plan 17 FP14 work.
+
+Structured MetricsReporter/ReportGeneratorLayer events enter the same typed native diagnostic
+history as query observations. All twenty pinned event variants retain exact counters, binary
+kernel IDs and seconds/nanoseconds durations. Runtime task boundaries carry the tracing dispatcher,
+and span-close callbacks retain their creation-time operation. The actor batches reserved typed
+events into Arrow, uses an unobserved dispatcher and never recursively observes its own writes.
+It keeps the native Delta snapshot returned by append for the next batch; a conflicting writer
+discards that snapshot and re-enters the controlled opener. This is one actor-owned DeltaTable,
+not a separate metadata authority or a claim of measured end-to-end speedup.
+On close, the actor closes channel admission and drains accepted messages, including those queued
+after the close barrier. Successful close is acknowledged only after persistence and physical exit;
+queue-capacity drops remain explicit and distinct from accepted records.
+
+[The operation/dataflow inventory](../architecture/native-operation-dataflows.md) maps current
+public, resource, recovery and maintenance owners to remaining Plan 17 replacements. It is source
+navigation; generated Rust declarations remain the contract authority.
 
 A terminal control transition carries the complete typed Artifact descriptor. Atomic publication
 projects the same descriptor from its delivery column. Job recovery uses that captured record and

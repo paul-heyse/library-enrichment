@@ -23,12 +23,20 @@ const CLASS_SCOPE: &str = r#"
 "#;
 
 /// Bind semantic producer provenance to the native qualification implementation it uses.
-#[must_use]
-pub fn identity() -> String {
-    enrichment_core::canonical::digest_hex(&serde_json::json!([
-        include_str!("semantic_scope.rs"),
-        crate::projection::VERSION,
-    ]))
+pub fn identity() -> datafusion::common::Result<String> {
+    enrichment_core::native_key::Key::ProducerImplementation.hex_digest(
+        &enrichment_core::operation::identities::ProducerImplementation {
+            producer: "semantic-scope".into(),
+            components: [
+                (
+                    "source".into(),
+                    enrichment_core::canonical::sha256_hex(include_bytes!("semantic_scope.rs")),
+                ),
+                ("projection".into(), crate::projection::VERSION.into()),
+            ]
+            .into(),
+        },
+    )
 }
 
 impl SnapshotReader {

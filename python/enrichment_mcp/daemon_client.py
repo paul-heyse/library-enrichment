@@ -108,6 +108,7 @@ class DaemonClient:
         params: dict[str, Any] | None = None,
         *,
         timeout_seconds: float | None = None,
+        delivery: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Send one JSON-RPC request and return the parsed response.
 
@@ -126,6 +127,8 @@ class DaemonClient:
             "method": method,
             "params": params or {},
         }
+        if delivery is not None:
+            request["delivery"] = delivery
         frame = json.dumps(request, separators=(",", ":"))
         if len(frame.encode()) > RPC_MESSAGE_BYTES:
             message = f"request exceeds the {RPC_MESSAGE_BYTES}-byte rpc limit"

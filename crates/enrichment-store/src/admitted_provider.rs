@@ -13,10 +13,33 @@ use std::{borrow::Cow, sync::Arc};
 pub(crate) struct AdmittedProvider {
     inner: Arc<dyn TableProvider>,
     constraints: Constraints,
+    captured_batch: bool,
 }
 impl AdmittedProvider {
     pub(crate) fn new(inner: Arc<dyn TableProvider>, constraints: Constraints) -> Self {
-        Self { inner, constraints }
+        Self {
+            inner,
+            constraints,
+            captured_batch: false,
+        }
+    }
+    /// Own an immutable Arrow ingress without exposing MemTable's mutation handle.
+    /// This grants no uniqueness, foreign-key, or row-semantic assertion.
+    pub(crate) fn from_batch(batch: arrow::record_batch::RecordBatch) -> Result<Self> {
+        Ok(Self {
+            inner: Arc::new(datafusion::datasource::MemTable::try_new(
+                batch.schema(),
+                vec![vec![batch]],
+            )?),
+            constraints: Constraints::new_unverified(vec![]),
+            captured_batch: true,
+        })
+    }
+    pub(crate) fn is_captured_batch(&self) -> bool {
+        self.captured_batch
+    }
+    pub(crate) fn input(&self) -> &Arc<dyn TableProvider> {
+        &self.inner
     }
 }
 #[async_trait]

@@ -1,0 +1,108 @@
+id: project-instrument-rule-not-last
+snapshots:
+  let s = B::new().with_physical_optimizer_rules(vec![instrument_rule, my_late_rule()]).build();:
+    labels:
+    - source: B::new().with_physical_optimizer_rules(vec![instrument_rule, my_late_rule()])
+      style: primary
+      start: 8
+      end: 85
+    - source: with_physical_optimizer_rules
+      style: secondary
+      start: 17
+      end: 46
+    - source: B::new().with_physical_optimizer_rules
+      style: secondary
+      start: 8
+      end: 46
+    - source: '[instrument_rule, my_late_rule()]'
+      style: secondary
+      start: 51
+      end: 84
+  ? |
+    let s = SessionStateBuilder::new()
+        .with_physical_optimizer_rule(instrument_rule)
+        .with_physical_optimizer_rule(my_late_rule())
+        .build();
+  : labels:
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_rule)
+            .with_physical_optimizer_rule(my_late_rule())
+      style: primary
+      start: 8
+      end: 135
+    - source: with_physical_optimizer_rule
+      style: secondary
+      start: 91
+      end: 119
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_rule)
+            .with_physical_optimizer_rule
+      style: secondary
+      start: 8
+      end: 119
+    - source: with_physical_optimizer_rule
+      style: secondary
+      start: 40
+      end: 68
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule
+      style: secondary
+      start: 8
+      end: 68
+    - source: instrument_rule
+      style: secondary
+      start: 69
+      end: 84
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_rule)
+      style: secondary
+      start: 8
+      end: 85
+  ? |
+    let s = SessionStateBuilder::new()
+        .with_physical_optimizer_rule(instrument_with_info_spans!(options: o))
+        .with_physical_optimizer_rule(my_late_rule())
+        .build();
+  : labels:
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_with_info_spans!(options: o))
+            .with_physical_optimizer_rule(my_late_rule())
+      style: primary
+      start: 8
+      end: 159
+    - source: with_physical_optimizer_rule
+      style: secondary
+      start: 115
+      end: 143
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_with_info_spans!(options: o))
+            .with_physical_optimizer_rule
+      style: secondary
+      start: 8
+      end: 143
+    - source: with_physical_optimizer_rule
+      style: secondary
+      start: 40
+      end: 68
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule
+      style: secondary
+      start: 8
+      end: 68
+    - source: 'instrument_with_info_spans!(options: o)'
+      style: secondary
+      start: 69
+      end: 108
+    - source: |-
+        SessionStateBuilder::new()
+            .with_physical_optimizer_rule(instrument_with_info_spans!(options: o))
+      style: secondary
+      start: 8
+      end: 109

@@ -1,8 +1,5 @@
 //! Job handles and pagination (blueprint §7.3, §8.3).
 
-use schemars::JsonSchema;
-use serde::Deserialize;
-
 crate::native_vocabulary! {
 /// The persisted job states (blueprint §8.3).
 ///
@@ -47,7 +44,7 @@ pub struct JobHandle {
 }
 }
 
-crate::native_struct! {
+crate::native_struct! { @checked RawPage;
 /// Bounded-result accounting (blueprint §7.3).
 ///
 /// A first page is not the whole result set. A cursor binds the query digest, snapshot, filters
@@ -97,22 +94,12 @@ impl Page {
     }
 }
 
-#[derive(Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-#[schemars(inline)]
-struct RawPage {
-    returned: u64,
-    count: super::research::MatchCount,
-    has_more: bool,
-    #[serde(deserialize_with = "super::required_option")]
-    next_cursor: Option<String>,
-}
-
 impl TryFrom<RawPage> for Page {
     type Error = &'static str;
     fn try_from(raw: RawPage) -> Result<Self, Self::Error> {
         if raw.has_more != raw.next_cursor.is_some()
             || raw.has_more && raw.returned == 0
+            || matches!(raw.count, super::research::MatchCount::Exact { value } if value < raw.returned)
             || raw.next_cursor.as_ref().is_some_and(|cursor| {
                 cursor.is_empty() || cursor.len() > 32768 || !cursor.is_ascii()
             })
@@ -134,7 +121,7 @@ fn page_conditionals(schema: &mut schemars::Schema) {
     schema.insert("allOf".into(), serde_json::json!([
         {
             "if": {"properties": {"has_more": {"const": true}}},
-            "then": {"properties": {"returned": {"minimum": 1}, "next_cursor": {"type": "string", "minLength": 1, "maxLength": 32768, "pattern": "^[\\x00-\\x7F]+$"}}},
+            "then": {"properties": {"returned": {"pattern": "^[1-9][0-9]*$"}, "next_cursor": {"type": "string", "minLength": 1, "maxLength": 32768, "pattern": "^[\\x00-\\x7F]+$"}}},
             "else": {"properties": {"next_cursor": {"type": "null"}}}
         }
     ]));

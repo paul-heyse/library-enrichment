@@ -20,7 +20,7 @@ notes: list[str] = []
 
 
 def negative_cases(ok: dict) -> list[tuple[str, dict]]:
-    """The three negative cases VALIDATION_REPORT.md records as correctly rejected."""
+    """Independent invalid envelopes, including the exact native page wire contract."""
     pending_no_job = copy.deepcopy(ok)
     pending_no_job.update(status="pending", job=None)
 
@@ -40,6 +40,14 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
             "description": "receipt required",
         }
     ]
+    empty_continuation = copy.deepcopy(ok)
+    empty_continuation["data"]["page"].update(
+        returned="0", has_more=True, next_cursor="next"
+    )
+    numeric_page = copy.deepcopy(ok)
+    numeric_page["data"]["page"]["returned"] = 1
+    missing_page_presence = copy.deepcopy(ok)
+    del missing_page_presence["data"]["page"]["next_cursor"]
 
     return [
         ("pending without a job handle", pending_no_job),
@@ -47,6 +55,9 @@ def negative_cases(ok: dict) -> list[tuple[str, dict]]:
         ("unknown root field", unknown_field),
         ("obsolete wire epoch", obsolete_epoch),
         ("artifact handle without receipt", bare_handle),
+        ("continuing page without progress", empty_continuation),
+        ("retired numeric page count", numeric_page),
+        ("missing page cursor presence", missing_page_presence),
     ]
 
 
@@ -144,7 +155,10 @@ def main() -> int:
             warn(f"  - {f}")
         return 1
     scope = "packaged + generated" if GENERATED.exists() else "packaged only"
-    say(f"schema-conformance: OK -- 4 fixtures validate, 5 negative cases rejected ({scope})")
+    say(
+        f"schema-conformance: OK -- 4 fixtures validate, "
+        f"{len(negative_cases(ok_doc))} negative cases rejected ({scope})"
+    )
     return 0
 
 

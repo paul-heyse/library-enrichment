@@ -20,6 +20,8 @@ enum CellColumn {
     U16(arrow::array::UInt16Array),
     U32(arrow::array::UInt32Array),
     U64(arrow::array::UInt64Array),
+    Decimal(arrow::array::Decimal128Array),
+    FixedBinary(arrow::array::FixedSizeBinaryArray),
     I64(arrow::array::Int64Array),
     Timestamp(arrow::array::TimestampMicrosecondArray),
     I32(arrow::array::Int32Array),
@@ -41,6 +43,16 @@ impl CellColumn {
             Ok(Self::U32(a.clone()))
         } else if let Some(a) = array.as_any().downcast_ref::<UInt64Array>() {
             Ok(Self::U64(a.clone()))
+        } else if let Some(a) = array
+            .as_any()
+            .downcast_ref::<arrow::array::Decimal128Array>()
+        {
+            Ok(Self::Decimal(a.clone()))
+        } else if let Some(a) = array
+            .as_any()
+            .downcast_ref::<arrow::array::FixedSizeBinaryArray>()
+        {
+            Ok(Self::FixedBinary(a.clone()))
         } else if let Some(a) = array
             .as_any()
             .downcast_ref::<arrow::array::TimestampMicrosecondArray>()
@@ -80,6 +92,8 @@ impl CellColumn {
             Self::U16(a) => a.is_null(row),
             Self::U32(a) => a.is_null(row),
             Self::U64(a) => a.is_null(row),
+            Self::Decimal(a) => a.is_null(row),
+            Self::FixedBinary(a) => a.is_null(row),
             Self::I64(a) => a.is_null(row),
             Self::Timestamp(a) => a.is_null(row),
             Self::I32(a) => a.is_null(row),
@@ -179,6 +193,10 @@ impl<'a> Row<'a> {
             CellColumn::U16(c) if !c.is_null(self.index) => Ok(u64::from(c.value(self.index))),
             CellColumn::U32(c) if !c.is_null(self.index) => Ok(u64::from(c.value(self.index))),
             CellColumn::U64(c) if !c.is_null(self.index) => Ok(c.value(self.index)),
+            CellColumn::Decimal(c) if !c.is_null(self.index) && c.scale() == 0 => {
+                u64::try_from(c.value(self.index))
+                    .map_err(|_| invalid(format!("unsigned integer outside UInt64 in {name}")))
+            }
             CellColumn::I64(c) if !c.is_null(self.index) => u64::try_from(c.value(self.index))
                 .map_err(|_| invalid(format!("negative count in {name}"))),
             _ => Err(invalid(format!("null or non-integer column {name}"))),
@@ -190,6 +208,18 @@ impl<'a> Row<'a> {
             Ok(None)
         } else {
             self.number(name).map(Some)
+        }
+    }
+
+    /// Exact native identity/digest bytes; text and variable-width storage must have
+    /// crossed the declared Arrow storage projection before reaching this decoder.
+    pub fn fixed_binary<const N: usize>(self, name: &str) -> Result<[u8; N], ArrowError> {
+        match self.column(name)? {
+            CellColumn::FixedBinary(c) if !c.is_null(self.index) => c
+                .value(self.index)
+                .try_into()
+                .map_err(|_| invalid(format!("fixed binary width mismatch in {name}"))),
+            _ => Err(invalid(format!("null or non-fixed-binary column {name}"))),
         }
     }
 

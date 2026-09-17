@@ -65,5 +65,10 @@ pub async fn providers(
                 .unwrap(),
         );
     }
-    tables.providers(&bindings).await.unwrap()
+    let data_root = root.parent().unwrap();
+    enrichment_store::leases::initialize(data_root).unwrap();
+    let protection = enrichment_store::leases::ReadProtection::Root(
+        enrichment_store::leases::shared(data_root).unwrap(),
+    );
+    tables.providers(&bindings, protection).await.unwrap()
 }

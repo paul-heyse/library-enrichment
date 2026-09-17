@@ -64,50 +64,78 @@ pub async fn retained_page(
 }
 
 /// Producer implementation identity is separate from the immutable container identity.
-pub(super) fn producer_identity(runtime: bool) -> (&'static str, String) {
+pub(super) fn producer_identity(runtime: bool) -> io::Result<(&'static str, String)> {
     let (name, source) = if runtime {
         (
             "runtime-object",
-            concat!(
-                include_str!("runtime_object.rs"),
-                include_str!("../execution/runtime_object.py")
-            ),
+            vec![
+                ("runtime-object", include_str!("runtime_object.rs")),
+                (
+                    "runtime-worker",
+                    include_str!("../execution/runtime_object.py"),
+                ),
+            ],
         )
     } else {
         (
             "semantic-inspection",
-            concat!(
-                include_str!("semantics.rs"),
-                include_str!("../lsp/document.rs"),
-                include_str!("../lsp/client.rs"),
-                include_str!("../lsp/diagnostics.rs"),
-                include_str!("../lsp/notifications.rs"),
-                include_str!("../lsp/framing.rs"),
-                include_str!("../lsp/settings.rs"),
-                include_str!("../lsp/mod.rs")
-            ),
+            vec![
+                ("semantics", include_str!("semantics.rs")),
+                ("lsp-document", include_str!("../lsp/document.rs")),
+                ("lsp-client", include_str!("../lsp/client.rs")),
+                ("lsp-diagnostics", include_str!("../lsp/diagnostics.rs")),
+                ("lsp-notifications", include_str!("../lsp/notifications.rs")),
+                ("lsp-framing", include_str!("../lsp/framing.rs")),
+                ("lsp-settings", include_str!("../lsp/settings.rs")),
+                ("lsp", include_str!("../lsp/mod.rs")),
+            ],
         )
     };
-    (
-        name,
-        format!(
-            "3+{}",
-            canonical::digest_hex(&serde_json::json!([
-                source,
-                include_str!("inspect_execution.rs"),
-                include_str!("source_documents.rs"),
-                include_str!("source_tree.rs"),
-                include_str!("../execution/capsule.rs"),
+    let mut components = source
+        .into_iter()
+        .chain([
+            ("inspection", include_str!("inspect_execution.rs")),
+            ("documents", include_str!("source_documents.rs")),
+            ("source-tree", include_str!("source_tree.rs")),
+            ("capsule", include_str!("../execution/capsule.rs")),
+            (
+                "python-closure",
                 include_str!("../execution/python_closure.rs"),
-                include_str!("../execution/inventory.rs"),
+            ),
+            ("inventory", include_str!("../execution/inventory.rs")),
+            (
+                "execution-contract",
                 include_str!("../../../enrichment-core/src/evidence/execution.rs"),
+            ),
+            (
+                "text-contract",
                 include_str!("../../../enrichment-core/src/evidence/text.rs"),
-                include_str!("../../../enrichment-core/src/canonical.rs"),
-                include_str!("../../../../Cargo.lock"),
-                enrichment_store::semantic_scope::identity(),
-            ]))
-        ),
-    )
+            ),
+            (
+                "key-contract",
+                include_str!("../../../enrichment-core/src/native_key.rs"),
+            ),
+            (
+                "identity-contract",
+                include_str!("../../../enrichment-core/src/native_identity.rs"),
+            ),
+            ("dependencies", include_str!("../../../../Cargo.lock")),
+        ])
+        .map(|(name, source)| (name.into(), canonical::sha256_hex(source.as_bytes())))
+        .collect::<std::collections::BTreeMap<String, String>>();
+    components.insert(
+        "semantic-scope".into(),
+        enrichment_store::semantic_scope::identity().map_err(io::Error::other)?,
+    );
+    let digest = enrichment_core::native_key::Key::ProducerImplementation
+        .hex_digest(
+            &enrichment_core::operation::identities::ProducerImplementation {
+                producer: name.into(),
+                components,
+            },
+        )
+        .map_err(io::Error::other)?;
+    Ok((name, format!("4+{digest}")))
 }
 
 async fn retained_matching(
@@ -204,7 +232,8 @@ async fn retained_child(
             Ok(id) => id,
             Err(_) => return Ok(None),
         };
-    let (producer, version) = producer_identity(options.runtime.is_some());
+    let (producer, version) = producer_identity(options.runtime.is_some())
+        .map_err(|e| Box::new(common::operation_error(&e, "inspection_execution")))?;
     let inputs = opened
         .reader
         .static_inputs()
@@ -215,7 +244,7 @@ async fn retained_child(
         let child = common::open_context_at(
             service,
             std::sync::Arc::clone(&catalog),
-            child.context_id.as_str(),
+            &child.context_id,
             None,
         )
         .await?;
@@ -238,7 +267,7 @@ async fn retained_child(
         };
         if child.reader.manifest().normalizer_version != opened.reader.manifest().normalizer_version
             || !matches_environment
-            || (declared.features_known && declared.features != child.environment.features)
+            || (declared.features.is_some() && declared.features != child.environment.features)
             || declared
                 .default_features
                 .is_some_and(|v| child.environment.default_features != Some(v))
@@ -262,10 +291,7 @@ async fn retained_child(
         .await
         .map_err(|e| Box::new(common::query_error(&e)))?;
         if sufficient(&facts.items, options) {
-            candidates.push((
-                child.context.context_id.to_string(),
-                child.snapshot_id.to_string(),
-            ));
+            candidates.push((child.context.context_id.clone(), child.snapshot_id.clone()));
         }
     }
     if candidates.len() > 1 {
@@ -321,13 +347,16 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     {
         return initial;
     }
-    let opened =
-        match common::open_context(service, &request.context_id, initial.snapshot_id.as_deref())
-            .await
-        {
-            Ok(opened) => opened,
-            Err(e) => return *e,
-        };
+    let opened = match common::open_context(
+        service,
+        &request.context_id,
+        initial.snapshot_id.as_ref(),
+    )
+    .await
+    {
+        Ok(opened) => opened,
+        Err(e) => return *e,
+    };
     if options.runtime.is_some() && opened.release.key.ecosystem != Ecosystem::Python {
         return denied("Runtime object inspection is a Python producer.");
     }
@@ -367,7 +396,7 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
     if !readiness.available {
         return crate::execution::readiness::refusal(&readiness);
     }
-    request.snapshot_id = Some(opened.snapshot_id.to_string());
+    request.snapshot_id = Some(opened.snapshot_id.clone());
     request.symbol_path = symbol.path.clone();
     request.definition_id = Some(symbol.definition_id.clone());
     let (record, token, new) = match service
@@ -391,7 +420,7 @@ pub async fn submit(service: &Service, mut request: InspectRequest) -> Envelope 
                 .runtime
                 .job_operation(
                     id.clone(),
-                    service.operation_descriptor("symbol.inspect", &request),
+                    service.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(service.config.execution.deadline_seconds),
                     run(&service, &id, &opened, &symbol, &request),
                 )
@@ -745,13 +774,16 @@ async fn publish(
         attempt_id: job.into(),
         producer: produced.producer,
         producer_version: produced.version,
-        config_digest: canonical::digest_hex(&serde_json::json!([
-            "inspection/2",
-            opened.release.release_id,
-            produced.environment,
-            produced.image,
-            produced.containment
-        ])),
+        config_digest: enrichment_core::native_key::Key::InspectionConfiguration
+            .hex_digest(
+                &enrichment_core::operation::identities::InspectionConfiguration {
+                    release_id: opened.release.release_id.clone(),
+                    environment: produced.environment.clone(),
+                    image: produced.image.clone(),
+                    containment: produced.containment.clone(),
+                },
+            )
+            .map_err(io::Error::other)?,
         inputs,
         profile: produced.profile,
         started_at: produced.started_at,
@@ -769,7 +801,7 @@ async fn publish(
         .map(|(subject, payload, class, artifact)| {
             ExecutionObservation::new(
                 subject,
-                produced.environment.environment_id.to_string(),
+                produced.environment.environment_id.clone(),
                 produced.image.clone(),
                 produced.containment.clone(),
                 payload,
@@ -1225,8 +1257,8 @@ mod tests {
                     max_characters: None,
                 }],
             },
-            context_id: base_metadata.context.context_id.to_string(),
-            snapshot_id: Some(base.snapshot_id.to_string()),
+            context_id: base_metadata.context.context_id.clone(),
+            snapshot_id: Some(base.snapshot_id.clone()),
             symbol_path: "fixture.f".into(),
             execution: Some(options),
             ..Default::default()
@@ -1276,8 +1308,8 @@ mod tests {
         .unwrap();
         let run = ProducerRun {
             attempt_id: record.job_id.clone(),
-            producer: producer_identity(false).0.into(),
-            producer_version: producer_identity(false).1,
+            producer: producer_identity(false).unwrap().0.into(),
+            producer_version: producer_identity(false).unwrap().1,
             config_digest: "fixture".into(),
             inputs: [
                 ("document".into(), document.sha256.clone()),
@@ -1303,7 +1335,7 @@ mod tests {
                 artifact_id: document.artifact_id.clone(),
                 heading: "consumer semantic query".into(),
             },
-            environment.environment_id.to_string(),
+            environment.environment_id.clone(),
             format!("sha256:{}", "a".repeat(64)),
             containment,
             payload,
@@ -1387,12 +1419,12 @@ mod tests {
         assert_eq!(terminal.result.unwrap().data, expected.1.data);
         let mut read = request;
         if !derive {
-            read.snapshot_id = Some(manifest.snapshot_id.to_string());
+            read.snapshot_id = Some(manifest.snapshot_id.clone());
         }
         let answer = inspect::inspect(&service, read.clone()).await;
         assert_eq!(
-            answer.context_id.as_deref(),
-            Some(context.context_id.as_str()),
+            answer.context_id.as_ref(),
+            Some(context.context_id.clone()),
             "{answer:?}"
         );
         let enrichment_core::wire::data::ToolData::InspectSymbol(data) = answer.data else {

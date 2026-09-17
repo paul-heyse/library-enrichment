@@ -1,0 +1,198 @@
+{
+  "module": "instrumented_object_store::instrumented_object_store",
+  "crate": "instrumented-object-store",
+  "api": "api/instrumented_object_store.instrumented_object_store.md",
+  "items": [
+    {
+      "path": "instrumented_object_store::instrumented_object_store::instrument_object_store",
+      "name": "instrument_object_store",
+      "kind": "function",
+      "crate": "instrumented-object-store",
+      "signature": "fn instrument_object_store(store: std::sync::Arc<dyn ObjectStore>, name: &str) -> std::sync::Arc<dyn ObjectStore>",
+      "summary": "Instruments the provided `ObjectStore` with tracing.",
+      "doc": "api/instrumented_object_store.instrumented_object_store.md#instrument_object_store",
+      "aliases": [
+        "instrumented_object_store::instrument_object_store"
+      ]
+    },
+    {
+      "path": "instrumented_object_store::instrumented_object_store::instrument_result",
+      "name": "instrument_result",
+      "kind": "function",
+      "crate": "instrumented-object-store",
+      "signature": "fn instrument_result<T, E>(result: object_store::Result<T, E>) -> object_store::Result<T, E> where T: Instrumentable, E: std::error::Error",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal"
+    },
+    {
+      "path": "instrumented_object_store::instrumented_object_store::InstrumentedMultiPartUpload",
+      "name": "InstrumentedMultiPartUpload",
+      "kind": "struct",
+      "crate": "instrumented-object-store",
+      "signature": "struct InstrumentedMultiPartUpload",
+      "summary": "A wrapper around an `ObjectStore` that instruments all public methods with tracing.",
+      "doc": "api/instrumented_object_store.instrumented_object_store.md#instrumentedmultipartupload",
+      "visibility": "internal",
+      "implements": [
+        "object_store::upload::MultipartUpload"
+      ],
+      "methods": [
+        {
+          "name": "abort",
+          "signature": "async fn abort(&mut self) -> Result<()>",
+          "visibility": "internal",
+          "via_trait": "object_store::upload::MultipartUpload",
+          "summary": "Abort the multipart upload with tracing."
+        },
+        {
+          "name": "complete",
+          "signature": "async fn complete(&mut self) -> Result<PutResult>",
+          "visibility": "internal",
+          "via_trait": "object_store::upload::MultipartUpload",
+          "summary": "Complete the multipart upload with tracing."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(upload: Box<dyn MultipartUpload>, name: &str) -> Self",
+          "visibility": "internal",
+          "summary": "Creates a new `InstrumentedMultiPartUpload` wrapping the provided `MultipartUpload`."
+        },
+        {
+          "name": "put_part",
+          "signature": "fn put_part(&mut self, data: PutPayload) -> UploadPart",
+          "visibility": "internal",
+          "via_trait": "object_store::upload::MultipartUpload",
+          "summary": "Upload a part without tracing (too many parts to trace)."
+        }
+      ]
+    },
+    {
+      "path": "instrumented_object_store::instrumented_object_store::InstrumentedObjectStore",
+      "name": "InstrumentedObjectStore",
+      "kind": "struct",
+      "crate": "instrumented-object-store",
+      "signature": "struct InstrumentedObjectStore",
+      "summary": "A wrapper around an `ObjectStore` that instruments all public methods with tracing.",
+      "doc": "api/instrumented_object_store.instrumented_object_store.md#instrumentedobjectstore",
+      "visibility": "internal",
+      "implements": [
+        "core::fmt::Display",
+        "object_store::ObjectStore"
+      ],
+      "methods": [
+        {
+          "name": "copy_opts",
+          "signature": "async fn copy_opts(&self, from: &Path, to: &Path, options: CopyOptions) -> Result<()>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Copy an object from one path to another with tracing."
+        },
+        {
+          "name": "delete_stream",
+          "signature": "fn delete_stream(&self, locations: BoxStream<'static, Result<Path>>) -> BoxStream<'static, Result<Path>>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Delete all the objects at the specified locations with tracing."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result",
+          "visibility": "internal",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "get_opts",
+          "signature": "async fn get_opts(&self, location: &Path, options: GetOptions) -> Result<GetResult>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Perform a get request with options and tracing."
+        },
+        {
+          "name": "get_ranges",
+          "signature": "async fn get_ranges(&self, location: &Path, ranges: &[Range<u64>]) -> Result<Vec<Bytes>>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Return the bytes that are stored at the specified location in the given byte ranges with tracing."
+        },
+        {
+          "name": "list",
+          "signature": "fn list(&self, prefix: Option<&Path>) -> BoxStream<'static, Result<ObjectMeta>>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "List all the objects with the given prefix with tracing."
+        },
+        {
+          "name": "list_with_delimiter",
+          "signature": "async fn list_with_delimiter(&self, prefix: Option<&Path>) -> Result<ListResult>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "List objects with the given prefix and delimiter with tracing."
+        },
+        {
+          "name": "list_with_offset",
+          "signature": "fn list_with_offset(&self, prefix: Option<&Path>, offset: &Path) -> BoxStream<'static, Result<ObjectMeta>>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "List all the objects with the given prefix and offset with tracing."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(store: Arc<dyn ObjectStore>, name: &str) -> Self",
+          "visibility": "internal",
+          "summary": "Creates a new `InstrumentedObjectStore` wrapping the provided `ObjectStore`."
+        },
+        {
+          "name": "put_multipart_opts",
+          "signature": "async fn put_multipart_opts(&self, location: &Path, opts: PutMultipartOptions) -> Result<Box<dyn MultipartUpload>>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Perform a multipart upload with options and tracing."
+        },
+        {
+          "name": "put_opts",
+          "signature": "async fn put_opts(&self, location: &Path, payload: PutPayload, opts: PutOptions) -> Result<PutResult>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Save the provided payload to location with the given options and tracing."
+        },
+        {
+          "name": "rename_opts",
+          "signature": "async fn rename_opts(&self, from: &Path, to: &Path, options: RenameOptions) -> Result<()>",
+          "visibility": "internal",
+          "via_trait": "object_store::ObjectStore",
+          "summary": "Move an object from one path to another with tracing."
+        }
+      ]
+    },
+    {
+      "path": "instrumented_object_store::instrumented_object_store::Instrumentable",
+      "name": "Instrumentable",
+      "kind": "trait",
+      "crate": "instrumented-object-store",
+      "signature": "trait Instrumentable",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implementors": [
+        "alloc::vec::Vec",
+        "bytes::bytes::Bytes",
+        "object_store::GetResult",
+        "object_store::ListResult",
+        "object_store::ObjectMeta",
+        "object_store::PutResult"
+      ],
+      "required_methods": [
+        "record_fields"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "record_fields",
+          "signature": "fn record_fields(&self, _: &Span)",
+          "visibility": "internal"
+        }
+      ]
+    }
+  ]
+}

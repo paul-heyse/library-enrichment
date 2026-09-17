@@ -32,24 +32,28 @@ fn refused(service: &Service, envelope: Envelope) -> Envelope {
 }
 
 pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
-    if let Err(message) = request.validate_shape(&service.config) {
+    if let Err(error) = enrichment_store::request_admission::research(
+        &service.repository.runtime,
+        &request.clone().into(),
+        service.config.limits.verification_input_bytes,
+    )
+    .await
+    {
         return refused(
             service,
-            envelope::error(
-                ErrorCode::PolicyDenied,
-                message,
-                "Choose the matching compile/typecheck/runtime mode and build/runtime profile.",
-                false,
-            ),
+            common::operation_error(&error, "verification_request_admission"),
         );
     }
-    let opened =
-        match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
-            .await
-        {
-            Ok(v) => v,
-            Err(e) => return *e,
-        };
+    let opened = match common::open_context(
+        service,
+        &request.context_id,
+        request.snapshot_id.as_ref(),
+    )
+    .await
+    {
+        Ok(v) => v,
+        Err(e) => return *e,
+    };
     let readiness = match crate::execution::readiness::assess(
         service,
         opened.release.key.ecosystem,
@@ -80,7 +84,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
             ),
         );
     }
-    request.snapshot_id = Some(opened.snapshot_id.as_str().into());
+    request.snapshot_id = Some(opened.snapshot_id.clone());
     let (record, token, new) = match service.jobs.submit(request.clone()).await {
         Ok(v) => v,
         Err(e) => return common::operation_error(&e, "verification_job"),
@@ -97,7 +101,7 @@ pub async fn verify(service: &Service, mut request: VerifyRequest) -> Envelope {
                 .runtime
                 .job_operation(
                     id.clone(),
-                    owned.operation_descriptor("usage.verify", &request),
+                    owned.operation_descriptor(&request.clone().into()),
                     Duration::from_secs(owned.config.execution.deadline_seconds),
                     async {
                         let cancel = match owned.jobs.cancellation(&id) {
@@ -507,8 +511,8 @@ async fn execute_inner(
     let data = VerificationData {
         evidence_class,
         producer_runs: Vec::new(),
-        source_context_id: opened.context.context_id.as_str().into(),
-        source_snapshot_id: opened.snapshot_id.as_str().into(),
+        source_context_id: opened.context.context_id.clone(),
+        source_snapshot_id: opened.snapshot_id.clone(),
         derived_context: Some(derived_context),
         derived_snapshot_id: None,
         environment: Some(capsule.environment.clone()),
@@ -561,8 +565,8 @@ async fn execute_inner(
         result.data = payload;
         result
     };
-    result.context_id = Some(opened.context.context_id.as_str().into());
-    result.snapshot_id = Some(opened.snapshot_id.as_str().into());
+    result.context_id = Some(opened.context.context_id.clone());
+    result.snapshot_id = Some(opened.snapshot_id.clone());
     result.artifacts = [&snippet, &lock, &result_artifact]
         .into_iter()
         .filter_map(|artifact| {
@@ -675,10 +679,17 @@ async fn publish_completed(
         attempt_id: job.into(),
         producer: "consumer-probe".into(),
         producer_version: "2".into(),
-        config_digest: canonical::digest_hex(
-            &serde_json::json!({"release":opened.release.release_id,
-            "environment":environment,"mode":request.mode,"image":image,"containment":containment}),
-        ),
+        config_digest: enrichment_core::native_key::Key::VerificationConfiguration
+            .hex_digest(
+                &enrichment_core::operation::identities::VerificationConfiguration {
+                    release_id: opened.release.release_id.clone(),
+                    environment: environment.clone(),
+                    mode: request.mode,
+                    image: image.into(),
+                    containment: containment.into(),
+                },
+            )
+            .map_err(|e| e.to_string())?,
         inputs: [
             ("snippet".into(), snippet.sha256.clone()),
             ("dependency-lock".into(), lock.sha256.clone()),
@@ -707,7 +718,7 @@ async fn publish_completed(
             artifact_id: snippet.artifact_id.clone(),
             heading: "agent consumer snippet".into(),
         },
-        environment.environment_id.to_string(),
+        environment.environment_id.clone(),
         image.into(),
         containment.into(),
         payload,
@@ -917,7 +928,7 @@ pub async fn recover(
     struct Receipt {
         job_id: String,
         request: VerifyRequest,
-        source_snapshot: String,
+        source_snapshot: enrichment_core::identity::SnapshotId,
         environment: enrichment_core::identity::Environment,
         observations: Vec<enrichment_core::execution::ProcessObservation>,
     }

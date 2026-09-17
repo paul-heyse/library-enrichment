@@ -1,0 +1,30 @@
+id: project-options-without-preview
+language: rust
+severity: hint
+message: an InstrumentationOptions chain that records no preview
+note: |
+  `preview_limit` defaults to 0 and `preview_fn` to `None`, so an options chain without both
+  produces spans that say how many rows a node emitted and nothing about what they were. That
+  is the difference between a trace that shows a slow node and a trace that shows why.
+
+  It is a deliberate choice, not an error -- formatting runs on the query path. Make it
+  knowingly: `pretty_format_compact_batch(batch, 64, 3, 10)` is the shipped formatter.
+metadata:
+  record: capability-gap
+  capability: preview
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        has: { field: field, regex: '^build$' }
+    - has:
+        stopBy: end
+        kind: identifier
+        regex: '^InstrumentationOptions$'
+    - not:
+        has:
+          stopBy: end
+          kind: field_identifier
+          regex: '^preview_fn$'

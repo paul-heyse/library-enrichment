@@ -1,0 +1,80 @@
+{
+  "module": "datafusion_tracing::metrics",
+  "crate": "datafusion-tracing",
+  "api": "api/datafusion_tracing.metrics.md",
+  "items": [
+    {
+      "path": "datafusion_tracing::metrics::MetricsRecorder",
+      "name": "MetricsRecorder",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct MetricsRecorder",
+      "summary": "Records execution metrics and automatically logs them via tracing upon completion.",
+      "doc": "api/datafusion_tracing.metrics.md#metricsrecorder",
+      "visibility": "internal",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "visibility": "internal",
+          "via_trait": "core::ops::drop::Drop",
+          "summary": "Aggregates and logs the collected metrics when the recorder goes out of scope, which should only happen once all executed partition streams have completed."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(execution_plan: Arc<dyn ExecutionPlan>, span: Span) -> Self",
+          "visibility": "internal"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::metrics::MetricsRecordingStream",
+      "name": "MetricsRecordingStream",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct MetricsRecordingStream",
+      "summary": "A wrapper around a DataFusion stream that integrates automatic metrics recording.",
+      "doc": "api/datafusion_tracing.metrics.md#metricsrecordingstream",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: SendableRecordBatchStream, metrics_recorder: Arc<MetricsRecorder>) -> Self",
+          "visibility": "internal",
+          "summary": "Wraps a DataFusion stream with metrics recording capability."
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "visibility": "internal",
+          "via_trait": "futures_core::stream::Stream",
+          "summary": "Retrieves the next record batch from the underlying stream."
+        },
+        {
+          "name": "project",
+          "signature": "fn project<'pin>(_pin_project::__private::Pin<&'pin mut self>) -> __MetricsRecordingStreamProjection<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "project_ref",
+          "signature": "fn project_ref<'pin>(_pin_project::__private::Pin<&'pin self>) -> __MetricsRecordingStreamProjectionRef<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "visibility": "internal",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream",
+          "summary": "Returns the schema for the record batches produced by the wrapped stream."
+        }
+      ]
+    }
+  ]
+}

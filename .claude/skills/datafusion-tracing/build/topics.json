@@ -1,0 +1,235 @@
+{
+  "_comment": [
+    "Seeds for the seam pages. Everything below the mental model is resolved against the built",
+    "model, and an unresolved or ambiguous seed FAILS the build -- a page that quietly drops a",
+    "type it can no longer find asserts by omission that the capability does not exist.",
+    "",
+    "Every seam carries a `cannot` list. That section is the point of the page: read it before",
+    "concluding a capability is missing. A seam whose `cannot` list is empty is a seam nobody",
+    "thought hard enough about, so the build requires at least two entries."
+  ],
+  "preamble": "Eight seams. Each says what it is for, what it hands you, and -- the section to read before concluding anything is absent -- what it refuses to answer.",
+  "topics": [
+    {
+      "slug": "exec-instrumentation",
+      "title": "Instrumenting execution plans",
+      "covers": "Wrapping every ExecutionPlan node so each one emits a span while it runs",
+      "mental_model": "You do not wrap nodes yourself. `instrument_with_*_spans!` builds a `PhysicalOptimizerRule`, you register it on a `SessionStateBuilder`, and every node in the final physical plan is wrapped as the rule runs. Register it **last**: the rule captures whatever plan it is handed, so an optimizer rule added after it produces nodes nobody instrumented, and instrumentation stays observational only as long as no other rule has to deal with a wrapped node.",
+      "entry_points": [
+        "InstrumentationOptions",
+        "InstrumentationOptionsBuilder"
+      ],
+      "macros": [
+        "instrument_with_spans",
+        "instrument_with_info_spans",
+        "instrument_with_debug_spans"
+      ],
+      "spans": [
+        "InstrumentedExec"
+      ],
+      "corpus": [
+        "corpus/source/exec_instrument_rule.rs",
+        "corpus/source/instrumented_exec.rs"
+      ],
+      "catalogs": [
+        "catalogs/options.md",
+        "catalogs/macros.md",
+        "catalogs/spans.md"
+      ],
+      "cannot": [
+        "The wrapped node's type, from this index. `InstrumentedExec` is private by design; `datafusion.node` on the span carries the display of the inner plan, and `ExecutionPlan` introspection still works through the wrapper.",
+        "What a macro arm expands to. rustdoc emits no macro bodies; read `corpus/source/exec_instrument_macros.rs`.",
+        "Which DataFusion nodes exist, or what they cost. That is DataFusion's surface, not this one's."
+      ],
+      "checklist": [
+        "Is the instrumentation rule the LAST physical optimizer rule registered?",
+        "Are the custom-field keys declared in the macro as well as set on the options?",
+        "Is `preview_limit` non-zero only where you can afford the formatting cost?"
+      ]
+    },
+    {
+      "slug": "rule-instrumentation",
+      "title": "Instrumenting planning phases",
+      "covers": "Spans around analyzer, logical-optimizer and physical-optimizer passes",
+      "mental_model": "A different macro family and a different shape: `instrument_rules_with_*_spans!` takes `state:` and returns a `SessionState`, rather than returning a rule you register. It emits a `Phase` span per pass and a `Rule` span per rule inside it. On a large plan the `Rule` spans dominate trace volume by an order of magnitude, which is what `phase_only()` and the builder's `*_phase_only()` selectors exist for.",
+      "entry_points": [
+        "RuleInstrumentationOptions",
+        "RuleInstrumentationOptionsBuilder"
+      ],
+      "macros": [
+        "instrument_rules_with_spans",
+        "instrument_rules_with_info_spans"
+      ],
+      "spans": [
+        "Phase",
+        "Rule",
+        "create_physical_plan"
+      ],
+      "corpus": [
+        "corpus/source/rule_instrumentation.rs",
+        "corpus/source/rule_options.rs"
+      ],
+      "catalogs": [
+        "catalogs/options.md",
+        "catalogs/macros.md"
+      ],
+      "cannot": [
+        "A documented way to instrument one phase only. `full()` and `phase_only()` are the whole documented surface; the ten per-phase selectors are on the undocumented builder.",
+        "What an individual optimizer rule does. The `Rule` span carries `otel.name` and nothing else.",
+        "Plan diffs, by default. `with_plan_diff()` is opt-in, and upstream's own integration tests disable it because the output is not deterministic."
+      ],
+      "checklist": [
+        "Do you need per-rule spans, or will `phase_only()` answer the question?",
+        "Is `with_plan_diff()` worth its non-determinism for your use?"
+      ]
+    },
+    {
+      "slug": "preview",
+      "title": "Previewing partial results",
+      "covers": "Putting sample rows of each node's output into its span",
+      "mental_model": "`preview_limit` sets how many rows; `preview_fn` decides how they are rendered into the `datafusion.preview` field. `preview_limit(0)` disables preview entirely, and is the default. `pretty_format_compact_batch(batch, width, min_col, max_col)` is the shipped formatter and draws a `|===|` header rule that `pretty_format_batches` does not.",
+      "entry_points": [
+        "pretty_format_compact_batch"
+      ],
+      "spans": [
+        "InstrumentedExec"
+      ],
+      "corpus": [
+        "corpus/source/preview.rs",
+        "corpus/source/preview_utils.rs"
+      ],
+      "catalogs": [
+        "catalogs/spans.md"
+      ],
+      "cannot": [
+        "What a preview will look like for your data. `index/previews.tsv` holds 35 captured renders; the widths and wrapping are a function of the arguments you pass, not of the library.",
+        "Any promise that a preview is complete. It is at most `preview_limit` rows of one batch.",
+        "The writable name of `preview_fn`'s type. `PreviewFn` is a type alias in a private module and rustdoc expands it away; pass a closure and let inference do it."
+      ],
+      "checklist": [
+        "Is `preview_fn` set at all? Without it `preview_limit` records nothing readable.",
+        "Does the formatting cost belong on the query path in production?"
+      ]
+    },
+    {
+      "slug": "metrics",
+      "title": "DataFusion metrics as span fields",
+      "covers": "Recording each node's own MetricsSet onto its span",
+      "mental_model": "`record_metrics(true)` copies every metric a node reports onto its span as `datafusion.metrics.<name>`. The names are not this library's: they are built as `format!(\"datafusion.metrics.{}\", metric.value().name())` from whatever the node reports, so the field set is open and node-dependent.",
+      "spans": [
+        "InstrumentedExec"
+      ],
+      "corpus": [
+        "corpus/source/metrics.rs"
+      ],
+      "catalogs": [
+        "catalogs/spans.md"
+      ],
+      "cannot": [
+        "A complete list of the metric fields. Six were observed in every metrics-enabled scenario; 35 more appeared only where a particular node ran. A field absent from `index/span-fields.tsv` is unobserved, not unavailable.",
+        "What a metric means. `MetricsSet` is DataFusion's surface.",
+        "Metrics for a node that reports none."
+      ],
+      "checklist": [
+        "Is `record_metrics(true)` set? It is off by default.",
+        "Are you filtering on a metric name you have actually observed?"
+      ]
+    },
+    {
+      "slug": "object-store",
+      "title": "Instrumenting the object store",
+      "covers": "Spans around the GET and RANGE calls underneath a scan",
+      "mental_model": "`instrument_object_store(store, name)` wraps an `ObjectStore` and is the whole API of the second crate. Register the wrapper rather than the store. Unlike the macro family, this crate calls `tracing` directly, so its spans carry its OWN target.",
+      "entry_points": [
+        "instrument_object_store"
+      ],
+      "spans": [
+        "get_opts",
+        "get_ranges"
+      ],
+      "corpus": [
+        "corpus/source/instrumented-object-store/instrumented_object_store.rs"
+      ],
+      "catalogs": [
+        "catalogs/spans.md"
+      ],
+      "cannot": [
+        "Coverage of every `ObjectStore` method. Two span names were observed; the others are unobserved, and the crate is 11 KB of source you can read.",
+        "Anything about `object_store` itself. That crate is not indexed here.",
+        "A way to enable it from `InstrumentationOptions`. It is a separate crate and a separate call."
+      ],
+      "checklist": [
+        "Is the store passed through `instrument_object_store` BEFORE `register_object_store`?",
+        "Does your subscriber filter admit `instrumented_object_store`, which differs from the target the macros use?"
+      ]
+    },
+    {
+      "slug": "subscriber-wiring",
+      "title": "Wiring a subscriber and an exporter",
+      "covers": "tracing-subscriber layers, level filters, and the OTLP exporter",
+      "mental_model": "This library emits spans; it does not collect them. Nothing is recorded until a `Subscriber` is installed, and what reaches a collector is decided by the layer stack: a `tracing-opentelemetry` layer for OTLP, an `fmt` layer for stdout, and a filter on each. The version lock between `tracing-opentelemetry` and the `opentelemetry` family is the single most common way this fails.",
+      "entry_points": [
+        "Registry",
+        "SubscriberInitExt",
+        "OtelData"
+      ],
+      "corpus": [
+        "corpus/examples/otlp.rs",
+        "corpus/tests/integration_tests.rs",
+        "corpus/tests/test_utils/in_memory_writer.rs"
+      ],
+      "catalogs": [
+        "catalogs/compatibility.md"
+      ],
+      "cannot": [
+        "Whether your subscriber filter matches anything. The macros default `target:` to `module_path!()`, which expands at the CALL SITE -- so filtering on `datafusion_tracing` receives nothing.",
+        "Whether an untested opentelemetry pair composes. `catalogs/compatibility.md` records what upstream shipped, and a pair absent from it is untested rather than broken.",
+        "A replacement for the OpenTelemetry SDK's own documentation on sampling, batching or resource attributes."
+      ],
+      "checklist": [
+        "Is the level filter above the level of the macro you chose?",
+        "Do the tracing-opentelemetry and opentelemetry minors differ by exactly one?",
+        "Is the tracer provider shut down so the batch exporter flushes?"
+      ]
+    },
+    {
+      "slug": "span-contract",
+      "title": "The emitted span contract",
+      "covers": "Names, targets, levels, fields and nesting of everything emitted",
+      "mental_model": "Seven span names were observed across nine upstream scenarios. Four come from the instrumentation itself and the rest from upstream's own test harness, which is a useful reminder that a trace is a join of your spans and this library's.",
+      "spans": [
+        "InstrumentedExec",
+        "Phase",
+        "Rule",
+        "get_opts",
+        "get_ranges"
+      ],
+      "catalogs": [
+        "catalogs/spans.md"
+      ],
+      "cannot": [
+        "Completeness. Every row is `recorded` -- upstream's observation under upstream's harness -- unless a probe with a control promoted it to `confirmed`.",
+        "Tell you the target your spans will carry. It is your crate's module path unless you pass `target:`.",
+        "Spans from scenarios upstream does not test. `07_scrabble_all_options` sets `ignore_full_trace()` because its ordering is not deterministic, so it contributes no rows at all."
+      ],
+      "checklist": [
+        "Are you filtering on the target this library will actually emit?",
+        "Is the field you expect conditional on an option you did not set?"
+      ]
+    },
+    {
+      "slug": "datafusion-boundary",
+      "title": "The DataFusion boundary",
+      "covers": "Where this repository stops and the DataFusion reference begins",
+      "mental_model": "This repository indexes the instrumentation, not the thing instrumented. DataFusion, Arrow, Parquet and object_store are deliberately absent, and their access paths land in `index/unresolved.tsv`. That is a boundary, not a gap -- say which you mean when you report silence.",
+      "cannot": [
+        "Anything about `ExecutionPlan`, `SessionStateBuilder`, `PhysicalOptimizerRule`, `MetricsSet` or `ObjectStore` beyond how this library attaches to them.",
+        "Tell you whether a DataFusion version composes with a datafusion-tracing version beyond the rows in `catalogs/compatibility.md`.",
+        "A DataFusion optimizer rule's behaviour, even though `Rule` spans name them."
+      ],
+      "checklist": [
+        "Is the question about the instrumentation, or about the query engine?"
+      ]
+    }
+  ]
+}

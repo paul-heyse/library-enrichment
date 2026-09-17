@@ -1,0 +1,26 @@
+id: project-instrument-rule-not-last
+valid:
+  # The instrumentation rule is the outermost link, so it runs last. This is the shape upstream
+  # asks for, and it must never be flagged.
+  - |
+    let s = SessionStateBuilder::new()
+        .with_physical_optimizer_rule(my_rule())
+        .with_physical_optimizer_rule(instrument_rule)
+        .build();
+  # One rule only: nothing follows it.
+  - 'let s = B::new().with_physical_optimizer_rule(instrument_rule).build();'
+  # A chain that never instruments at all is not this rule's business.
+  - 'let s = B::new().with_physical_optimizer_rule(a()).with_physical_optimizer_rule(b()).build();'
+  - 'let s = B::new().with_physical_optimizer_rules(vec![a(), instrument_rule]).build();'
+invalid:
+  - |
+    let s = SessionStateBuilder::new()
+        .with_physical_optimizer_rule(instrument_rule)
+        .with_physical_optimizer_rule(my_late_rule())
+        .build();
+  - |
+    let s = SessionStateBuilder::new()
+        .with_physical_optimizer_rule(instrument_with_info_spans!(options: o))
+        .with_physical_optimizer_rule(my_late_rule())
+        .build();
+  - 'let s = B::new().with_physical_optimizer_rules(vec![instrument_rule, my_late_rule()]).build();'

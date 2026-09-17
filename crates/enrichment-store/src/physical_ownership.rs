@@ -1,18 +1,22 @@
 //! Native physical ownership and storage accounting in the atomic control catalog.
 //! Filesystem/process code captures observations; these plans select admissible transitions.
+mod capsules;
 use crate::{
     control::{ControlStore, Table},
     native_catalog,
     runtime::QueryRuntime,
 };
 use arrow::datatypes::{Schema, SchemaRef};
+pub(crate) use capsules::capsule_admission;
+pub use capsules::reusable_capsule;
 use datafusion::{
     common::{DataFusionError, Result},
     functions::core::expr_ext::FieldAccessor,
     prelude::*,
 };
 pub use enrichment_core::operation::ownership::{
-    ExecutionRoot, OwnershipObservation, PhysicalOwner, PhysicalState, StorageReservation,
+    ExecutionRoot, OwnershipObservation, PhysicalOwner, PhysicalState, RetainedCapsule,
+    StorageReservation,
 };
 use enrichment_core::{
     evidence::arrow_model::expressions::{derive_record, record},
@@ -25,6 +29,7 @@ pub(crate) fn schema(table: Table) -> SchemaRef {
         Table::ExecutionRoots => ExecutionRoot::fields(),
         Table::PhysicalOwners => PhysicalOwner::fields(),
         Table::StorageReservations => StorageReservation::fields(),
+        Table::RetainedCapsules => RetainedCapsule::fields(),
         _ => unreachable!("physical ownership family"),
     }))
 }
@@ -71,11 +76,12 @@ impl OwnershipStore {
     }
     pub fn release_after_removal(&self, id: String) {
         let store = self.clone();
-        self.runtime.executor_handle().spawn(async move {
-            if let Err(error) = store.release_storage(&id).await {
-                eprintln!("library-enrichmentd: retained native storage reservation: {error}");
-            }
-        });
+        if let Err(error) = self
+            .runtime
+            .release_retention(async move { store.release_storage(&id).await })
+        {
+            eprintln!("library-enrichmentd: retained native storage reservation: {error}");
+        }
     }
     pub fn runtime(&self) -> &QueryRuntime {
         &self.runtime
@@ -390,7 +396,9 @@ impl OwnershipStore {
     /// The driver calls this only after quarantine removal and directory synchronization.
     pub async fn release_storage(&self, id: &str) -> Result<()> {
         for _ in 0..16 {
-            let pin = self.control.pin().await?;
+            // A coordinator-only transition needs the catalog's bootstrap protection,
+            // not a new read lease whose drop would recursively enqueue another release.
+            let pin = self.control.capture().await?;
             let session = pin.session(&self.runtime).await?;
             let selected = session
                 .table(Table::StorageReservations.reference())
@@ -543,8 +551,18 @@ mod tests {
                 .await
                 .is_err()
         );
-        reopened.release_storage(&id).await?;
-        assert!(reopened.reservations().await?.is_empty());
+        reopened.release_after_removal(id);
+        reopened.runtime.close_diagnostics().await?;
+        // Reopen from durable state after the real queued release and writer drain.
+        let checked_runtime =
+            QueryRuntime::new(&directory.path().join("readback-spill"), Default::default())?;
+        let checked = OwnershipStore::new(
+            ControlStore::open(&data, checked_runtime.clone())?,
+            checked_runtime.clone(),
+            &cache,
+        )?;
+        assert!(checked.reservations().await?.is_empty());
+        checked_runtime.close_diagnostics().await?;
         Ok(())
     }
 }

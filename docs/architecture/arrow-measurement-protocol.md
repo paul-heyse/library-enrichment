@@ -1,5 +1,12 @@
 # Arrow/DataFusion measurement protocol
 
+> 2026-09-16 resource update: the shared `ArrowConfig` defaults now use the workstation
+> policy directly: 32 GiB native memory, 64 GiB spill, 2 GiB metadata cache, 16 partitions,
+> 16 workers and 16 blocking threads per owned compute/I/O lane. Standalone, daemon and
+> operator-maintenance runtimes consume this same configuration. The small pools in the
+> historical baseline below do not describe current runtime defaults. These are lazy ceilings;
+> complete-journey performance qualification remains open.
+
 > 2026-09-14 priority update: the operator explicitly deferred tuning and enforcement of
 > these arbitrary timing targets until correctness, failure robustness and target functionality
 > are complete. Preserve the measured baselines and original thresholds for later performance

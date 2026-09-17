@@ -57,7 +57,7 @@ pub async fn overview(
         // The bounded chosen namespace set is itself shared by child selection and summary.
         // Bind it once, before independently prepared consumers can push projections/limits
         // through different copies of the lazy namespace union.
-        crate::operation_index::materialize(
+        crate::operation_index::cache(
             runtime,
             nodes
                 .sort(vec![
@@ -66,10 +66,10 @@ pub async fn overview(
                     col("components").sort(true, false),
                 ])?
                 .limit(0, Some(namespace_limit))?,
-            QueryFamily::OverviewNamespaces,
+            QueryFamily::Intermediate(enrichment_core::telemetry::MaterializationFamily::OverviewNamespaces),
         )
         .await?;
-    namespaces.register(session, "selected_namespaces")?;
+    crate::native_catalog::work(session, "selected_namespaces", namespaces.into_view())?;
     // Prefer documented observations within the chosen public binding. Acquisition-derived
     // observation IDs must not make a source doc disappear behind an undocumented stub.
     let children = session.sql(r"
@@ -85,13 +85,15 @@ pub async fn overview(
     ").await?;
     // Three consumers need the same definition choice: totals, kind counts and samples.
     // Retain that bounded relational boundary once within this operation's spill/lease owner.
-    let children = crate::operation_index::materialize(
+    let children = crate::operation_index::cache(
         runtime,
         children,
-        crate::preparation::QueryFamily::OverviewChildren,
+        crate::preparation::QueryFamily::Intermediate(
+            enrichment_core::telemetry::MaterializationFamily::OverviewChildren,
+        ),
     )
     .await?;
-    children.register(session, "overview_children")?;
+    crate::native_catalog::work(session, "overview_children", children.into_view())?;
     let summary = runtime.execute_family(session.sql(r"
         SELECT n.path, n.components, n.ecosystem, n.depth,
             CAST(count(c.definition_id) AS BIGINT UNSIGNED) AS total,
@@ -108,7 +110,12 @@ pub async fn overview(
         FROM overview_children
     ").await?.filter(col("sample_position").lt_eq(lit(per_namespace as u64)))?;
     let children = runtime
-        .execute_family(children, Some(QueryFamily::OverviewChildren))
+        .execute_family(
+            children,
+            Some(QueryFamily::Intermediate(
+                enrichment_core::telemetry::MaterializationFamily::OverviewChildren,
+            )),
+        )
         .await?;
     let namespaces =
         projection::browse::facets(&summary.batches, &kind_counts.batches, &children.batches)?;

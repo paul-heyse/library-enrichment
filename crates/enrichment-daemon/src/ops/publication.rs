@@ -67,11 +67,14 @@ pub(super) async fn publish(
             .runs
             .last_mut()
             .ok_or("normalization has no producing attempt")?;
-        run.config_digest = enrichment_core::canonical::digest_hex(&serde_json::json!([
-            "normalization-components/1",
-            run.config_digest,
-            components,
-        ]));
+        run.config_digest = enrichment_core::native_key::Key::NormalizationConfiguration
+            .hex_digest(
+                &enrichment_core::operation::identities::NormalizationConfiguration {
+                    configuration_digest: run.config_digest.clone(),
+                    components: components.clone(),
+                },
+            )
+            .map_err(|error| error.to_string())?;
     }
     let completion = super::resolve_job::prepare(acq, &metadata)?;
     let run = acq.runs.last().ok_or("normalization attempt disappeared")?;
@@ -97,8 +100,8 @@ pub(super) async fn publish(
     let context = IngestContext {
         ecosystem: metadata.release.key.ecosystem,
         symbol_package: metadata.symbol_package.clone(),
-        release_id: metadata.release.release_id.to_string(),
-        environment_id: metadata.environment.environment_id.to_string(),
+        release_id: metadata.release.release_id.clone(),
+        environment_id: metadata.environment.environment_id.clone(),
         source_version_match,
         producing_attempt: attempt,
         producer_runs: acq.runs.clone(),
@@ -134,7 +137,7 @@ pub(super) async fn publish(
     } else {
         Default::default()
     };
-    let release_id = metadata.release.release_id.to_string();
+    let release_id = metadata.release.release_id.clone();
     let details = details
         .map(|details| {
             Ok::<_, String>(ReleaseMetadata::new(
@@ -181,7 +184,7 @@ pub(super) async fn publish(
             };
             let _ = work
                 .committed
-                .set((state, manifest.snapshot_id.to_string(), result));
+                .set((state, manifest.snapshot_id.clone(), result));
             Ok(manifest)
         }
         None => service

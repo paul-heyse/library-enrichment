@@ -1,6 +1,6 @@
 //! Authoritative typed identity expressions, shared by native plans and bounded DTO ingress.
 use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{Field, Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use datafusion::{
@@ -16,6 +16,12 @@ use std::sync::Arc;
 /// An ordered contract is data; the native function graph is identical at every consumer.
 #[derive(Debug, Clone, Copy)]
 pub enum Key {
+    SchemaContract,
+    OperationContract,
+    RetentionPolicy,
+    RegistryCapture,
+    RevisionCapture,
+    ContractField,
     Release,
     Environment,
     Context,
@@ -44,30 +50,37 @@ pub enum Key {
     ProcessOperation,
     ProcessEffect,
     ProcessBinding,
-}
-fn text(name: &str, nullable: bool) -> Field {
-    Field::new(name, DataType::Utf8, nullable)
-}
-fn strings(name: &str) -> Field {
-    Field::new(name, DataType::List(Arc::new(text("item", false))), false)
-}
-fn map(name: &str) -> Field {
-    Field::new(
-        name,
-        DataType::Map(
-            Arc::new(Field::new(
-                "entries",
-                DataType::Struct(vec![text("key", false), text("value", true)].into()),
-                false,
-            )),
-            false,
-        ),
-        false,
-    )
+    RowCursor,
+    SearchCursor,
+    SearchSelection,
+    ComparisonCursor,
+    AlternativeCursor,
+    ArtifactCursor,
+    ArtifactSelection,
+    ResearchInvocation,
+    AcquisitionConfiguration,
+    NormalizationConfiguration,
+    InspectionConfiguration,
+    CapsuleIdentity,
+    ProducerImplementation,
+    VerificationConfiguration,
+    ContainmentIdentity,
+    ProcessInventory,
+    PhysicalInventory,
+
+    InspectionSelection,
+    DiscoverySelection,
+    ComparisonSelection,
 }
 impl Key {
     pub fn prefix(self) -> &'static str {
         match self {
+            Self::SchemaContract => "schema_contract",
+            Self::OperationContract => "operation_contract",
+            Self::RetentionPolicy => "retention_policy",
+            Self::RegistryCapture => "registry_capture",
+            Self::RevisionCapture => "revision_capture",
+            Self::ContractField => "contract_field",
             Self::Release => "rel",
             Self::Environment => "env",
             Self::Context => "ctx",
@@ -96,10 +109,64 @@ impl Key {
             Self::ProcessOperation => "process",
             Self::ProcessEffect => "process_effect",
             Self::ProcessBinding => "process_binding",
+            Self::RowCursor => "row_cursor",
+            Self::SearchCursor => "search_cursor",
+            Self::SearchSelection => "search_selection",
+            Self::ComparisonCursor => "comparison_cursor",
+            Self::AlternativeCursor => "alternative_cursor",
+            Self::ArtifactCursor => "artifact_cursor",
+            Self::ArtifactSelection => "artifact_selection",
+            Self::ResearchInvocation => "research_invocation",
+            Self::AcquisitionConfiguration => "acquisition_configuration",
+            Self::NormalizationConfiguration => "normalization_configuration",
+            Self::InspectionConfiguration => "inspection_configuration",
+            Self::CapsuleIdentity => "capsule",
+            Self::ProducerImplementation => "producer_implementation",
+            Self::VerificationConfiguration => "verification_configuration",
+            Self::ContainmentIdentity => "containment_identity",
+            Self::ProcessInventory => "process_inventory",
+            Self::PhysicalInventory => "physical_inventory",
+
+            Self::InspectionSelection => "inspection_selection",
+            Self::DiscoverySelection => "discovery_selection",
+            Self::ComparisonSelection => "comparison_selection",
         }
     }
     pub fn schema(self) -> SchemaRef {
         match self {
+            Self::SchemaContract => return native_fields::<crate::native_contract::Manifest>(),
+            Self::OperationContract => return native_fields::<crate::operation::Contract>(),
+            Self::RetentionPolicy => return native_fields::<crate::operation::retention::RetentionPolicy>(),
+            Self::RegistryCapture => return native_fields::<crate::operation::sources::RegistryCapture>(),
+            Self::RevisionCapture => return native_fields::<crate::operation::sources::RevisionCapture>(),
+            Self::ContractField => return native_fields::<crate::native_contract::ContractField>(),
+            Self::ProducerImplementation => return native_fields::<crate::operation::identities::ProducerImplementation>(),
+            Self::VerificationConfiguration => return native_fields::<crate::operation::identities::VerificationConfiguration>(),
+            Self::ContainmentIdentity => return native_fields::<crate::operation::identities::ContainmentIdentity>(),
+            Self::ProcessInventory => return native_fields::<crate::operation::identities::ProcessInventory>(),
+            Self::PhysicalInventory => return native_fields::<crate::operation::identities::PhysicalInventory>(),
+            Self::ResearchInvocation => return native_fields::<crate::operation::identities::ResearchInvocation>(),
+            Self::AcquisitionConfiguration => return native_fields::<crate::operation::identities::AcquisitionConfiguration>(),
+            Self::NormalizationConfiguration => return native_fields::<crate::operation::identities::NormalizationConfiguration>(),
+            Self::InspectionConfiguration => return native_fields::<crate::operation::identities::InspectionConfiguration>(),
+            Self::CapsuleIdentity => return native_fields::<crate::operation::identities::CapsuleIdentity>(),
+            Self::ComparisonCursor => return without_check::<crate::compare::page::ComparisonCursor>(),
+            Self::AlternativeCursor => return without_check::<crate::compare::page::AlternativeCursor>(),
+            Self::ArtifactCursor => return without_check::<crate::search::Cursor>(),
+            Self::ArtifactSelection => return Arc::new(Schema::new(<crate::operation::selections::ArtifactSelection as crate::native_union::NativeStruct>::fields())),
+            Self::SearchSelection => return Arc::new(Schema::new(<crate::operation::selections::SearchSelection as crate::native_union::NativeStruct>::fields())),
+            Self::InspectionSelection => return Arc::new(Schema::new(<crate::operation::selections::InspectionSelection as crate::native_union::NativeStruct>::fields())),
+            Self::DiscoverySelection => return Arc::new(Schema::new(<crate::operation::selections::DiscoverySelection as crate::native_union::NativeStruct>::fields())),
+            Self::ComparisonSelection => return Arc::new(Schema::new(<crate::operation::selections::ComparisonSelection as crate::native_union::NativeStruct>::fields())),
+            Self::RowCursor => return Arc::new(Schema::new(<crate::search::row_page::RowCursorBinding as crate::native_union::NativeStruct>::fields())),
+            Self::SearchCursor => return Arc::new(Schema::new(<crate::search::page::SearchCursorBinding as crate::native_union::NativeStruct>::fields())),
+            Self::PublicPath => return Arc::new(Schema::new(<crate::evidence::path::PathParts as crate::native_union::NativeStruct>::fields())),
+            Self::PublicBinding => return Arc::new(Schema::new(<crate::evidence::relational::PublicBindingIdentity as crate::native_union::NativeStruct>::fields())),
+            Self::SnapshotAttempt => return Arc::new(Schema::new(<crate::evidence::catalog::SnapshotAttemptIdentity as crate::native_union::NativeStruct>::fields())),
+            Self::Release => return Arc::new(Schema::new(<crate::identity::ReleaseKey as crate::native_union::NativeStruct>::fields())),
+            Self::Environment => return Arc::new(Schema::new(<crate::identity::EnvironmentKey as crate::native_union::NativeStruct>::fields())),
+            Self::Context => return Arc::new(Schema::new(<crate::identity::ContextKey as crate::native_union::NativeStruct>::fields())),
+            Self::Snapshot => return Arc::new(Schema::new(<crate::identity::SnapshotInputs as crate::native_union::NativeStruct>::fields())),
             Self::Definition => return Arc::new(Schema::new(<crate::evidence::model::DefinitionIdentity as crate::native_union::NativeStruct>::fields())),
             Self::Citation => return Arc::new(Schema::new(<crate::wire::evidence::CitationIdentity as crate::native_union::NativeStruct>::fields())),
             Self::Projection => return Arc::new(Schema::new(<crate::operation::projections::ProjectionIdentity as crate::native_union::NativeStruct>::fields())),
@@ -167,49 +234,8 @@ impl Key {
                     .collect::<Vec<_>>(),
             ));
         }
-        let fields = match self {
+        let fields: Vec<Field> = match self {
             Self::ProcessBinding => <crate::operation::jobs::ProcessBinding as crate::native_union::NativeStruct>::fields().iter().map(|field| field.as_ref().clone()).collect(),
-            Self::SnapshotAttempt => vec![text("snapshot_id", false), text("attempt_id", false)],
-            Self::Release => vec![
-                text("ecosystem", false),
-                text("registry", false),
-                text("package", false),
-                text("version", false),
-                text("artifact_digest", true),
-            ],
-            Self::Environment => vec![
-                text("resolution", false),
-                text("toolchain", true),
-                text("target", true),
-                crate::native_union::field::<Vec<String>>(
-                    "features",
-                    crate::native_union::Rule::Set,
-                )
-                .with_nullable(false),
-                Field::new("features_known", DataType::Boolean, false),
-                Field::new("default_features", DataType::Boolean, true),
-                text("lock_digest", true),
-            ],
-            Self::Context => vec![
-                text("release_id", false),
-                text("environment_id", false),
-                text("mode", false),
-            ],
-            Self::Snapshot => vec![
-                text("schema_version", false),
-                text("normalizer_version", false),
-                text("context_id", false),
-                map("input_digests"),
-                map("producers"),
-            ],
-            Self::PublicPath => vec![text("ecosystem", false), strings("components")],
-            Self::PublicBinding => vec![
-                text("package", false),
-                text("ecosystem", false),
-                strings("components"),
-                text("kind", false),
-                text("qualifier", true),
-            ],
 
             _ => unreachable!("native evidence schema returned above"),
         };
@@ -225,6 +251,29 @@ impl Key {
                 .collect(),
         )
     }
+    /// The same defining-field graph used by constructors, with a checked binary domain.
+    pub fn identity_expression(self, inputs: Vec<Expr>) -> Result<Expr> {
+        use crate::native_union::Domain;
+        let domain = match self {
+            Self::Release => Domain::Release,
+            Self::Environment => Domain::Environment,
+            Self::Context => Domain::Context,
+            Self::Snapshot => Domain::Snapshot,
+            _ => {
+                return datafusion::common::plan_err!("key has no deployed binary identity domain");
+            }
+        };
+        let fields = self.schema().fields().clone();
+        if inputs.len() != fields.len() {
+            return datafusion::common::plan_err!("native identity input arity");
+        }
+        let bytes = crate::native_identity::canonical_bytes(
+            format!("enrichment/identity/10/{}", self.prefix()),
+            fields,
+        )
+        .call(inputs);
+        Ok(crate::native_id::from_hash(domain, sha256(bytes)))
+    }
     /// Bind the declared fields to expressions supplied by a native normalization plan.
     pub fn bind(self, inputs: Vec<Expr>) -> Result<Expr> {
         if inputs.len() != self.schema().fields().len() {
@@ -237,7 +286,7 @@ impl Key {
     fn expression_for(self, inputs: Vec<Expr>) -> Expr {
         let fields = self.schema().fields().clone();
         let bytes = crate::native_identity::canonical_bytes(
-            format!("enrichment/identity/8/{}", self.prefix()),
+            format!("enrichment/identity/10/{}", self.prefix()),
             fields,
         )
         .call(inputs);
@@ -252,16 +301,52 @@ impl Key {
     pub fn record<T: crate::native_union::NativeStruct>(self, record: &T) -> Result<String> {
         self.batch_value(&T::batch(std::slice::from_ref(record))?)
     }
-    pub fn value<T: serde::Serialize>(self, record: &T) -> Result<String> {
+    /// Hex is a mechanical boundary representation of the native binary hash.
+    pub fn hex_digest<T: crate::native_union::NativeStruct>(self, record: &T) -> Result<String> {
+        Ok(self
+            .record_digest(record)?
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect())
+    }
+    /// Native hash bytes, with no Serde or JSON ingress.
+    pub fn record_digest<T: crate::native_union::NativeStruct>(
+        self,
+        record: &T,
+    ) -> Result<[u8; 32]> {
+        let batch = T::batch(std::slice::from_ref(record))?;
         let schema = self.schema();
-        let mut decoder = arrow::json::ReaderBuilder::new(schema)
-            .with_batch_size(1)
-            .build_decoder()?;
-        decoder.serialize(std::slice::from_ref(record))?;
-        let batch: RecordBatch = decoder
-            .flush()?
-            .ok_or_else(|| DataFusionError::Internal("identity ingress has no row".into()))?;
-        self.batch_value(&batch)
+        let inputs = schema
+            .fields()
+            .iter()
+            .map(|field| {
+                let actual = batch.schema().field_with_name(field.name())?.clone();
+                crate::native_schema::function_arguments(
+                    &[Arc::new(actual.clone())],
+                    std::slice::from_ref(field),
+                )?;
+                let array = batch.column_by_name(field.name()).ok_or_else(|| {
+                    DataFusionError::Plan(format!("missing identity field {}", field.name()))
+                })?;
+                Ok(Expr::Literal(
+                    ScalarValue::try_from_array(array, 0)?,
+                    Some(datafusion::common::metadata::FieldMetadata::from(&actual)),
+                ))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let bytes = crate::native_identity::canonical_bytes(
+            format!("enrichment/identity/10/{}", self.prefix()),
+            schema.fields().clone(),
+        )
+        .call(inputs);
+        match constant(sha256(bytes))? {
+            Expr::Literal(ScalarValue::Binary(Some(bytes)), _) => bytes.try_into().map_err(|_| {
+                DataFusionError::Internal("SHA256 width differs from its contract".into())
+            }),
+            _ => Err(DataFusionError::Internal(
+                "native digest failed to reduce to one binary scalar".into(),
+            )),
+        }
     }
     /// Derive a bounded boundary key from the authoritative mechanical Arrow fields.
     pub fn batch_value(self, batch: &RecordBatch) -> Result<String> {
@@ -278,7 +363,12 @@ impl Key {
                 let column = batch.column_by_name(field.name()).ok_or_else(|| {
                     DataFusionError::Plan(format!("missing identity field {}", field.name()))
                 })?;
-                ScalarValue::try_from_array(column, 0).map(lit)
+                Ok(Expr::Literal(
+                    ScalarValue::try_from_array(column, 0)?,
+                    Some(datafusion::common::metadata::FieldMetadata::from(
+                        batch.schema().field_with_name(field.name())?,
+                    )),
+                ))
             })
             .collect::<Result<Vec<_>>>()?;
         let value = constant(self.expression_for(inputs))?;
@@ -301,35 +391,50 @@ fn constant(expression: Expr) -> Result<Expr> {
     ExprSimplifier::new(context).simplify(expression)
 }
 
-/// Mechanical one-value protocol boundary around the native ordered-set expression.
-pub fn ordered_strings(values: &[String]) -> Result<Vec<String>> {
+/// Mechanical one-value protocol boundary around native ordered-set expressions.
+/// Element types and enum codecs come from the declaration, never a second vocabulary.
+pub fn ordered_set<T: crate::native_union::Cell + Clone>(values: &[T]) -> Result<Vec<T>> {
+    use crate::{
+        evidence::arrow_model::cells::RowSet,
+        native_union::{Cell, Rule},
+    };
     use datafusion::functions_nested::expr_fn::{array_distinct, array_sort};
-    let values = values
-        .iter()
-        .map(|value| ScalarValue::Utf8(Some(value.clone())))
-        .collect::<Vec<_>>();
-    let input = ScalarValue::List(ScalarValue::new_list(&values, &DataType::Utf8, false));
+    let values = values.to_vec();
+    let array = <Vec<T> as Cell>::encode(&[Some(&values)])?;
+    let input = ScalarValue::try_from_array(&array, 0)?;
     let sorted = constant(array_sort(
         array_distinct(lit(input)),
         lit("ASC"),
         lit("NULLS FIRST"),
     ))?;
-    let Expr::Literal(ScalarValue::List(values), _) = sorted else {
+    let Expr::Literal(value, _) = sorted else {
         return Err(DataFusionError::Internal(
             "native ordered set did not reduce".into(),
         ));
     };
-    let values = values.value(0);
-    let values = values
-        .as_any()
-        .downcast_ref::<arrow::array::StringArray>()
-        .ok_or_else(|| DataFusionError::Internal("native ordered set type".into()))?;
-    values
-        .iter()
-        .map(|value| {
-            value
-                .map(str::to_owned)
-                .ok_or_else(|| DataFusionError::Internal("native ordered set contains null".into()))
-        })
-        .collect()
+    let field = crate::native_union::field::<Vec<T>>("values", Rule::Set);
+    let batch = RecordBatch::try_new(
+        Arc::new(Schema::new(vec![field])),
+        vec![value.to_array_of_size(1)?],
+    )?;
+    let rows = RowSet::batch(&batch)?;
+    Ok(<Vec<T> as Cell>::decode(rows.row(0), "values")?)
+}
+
+pub fn ordered_strings(values: &[String]) -> Result<Vec<String>> {
+    ordered_set(values)
+}
+
+fn without_check<T: crate::native_union::NativeStruct>() -> SchemaRef {
+    Arc::new(Schema::new(
+        T::fields()
+            .iter()
+            .filter(|field| field.name() != "check")
+            .cloned()
+            .collect::<Vec<_>>(),
+    ))
+}
+
+fn native_fields<T: crate::native_union::NativeStruct>() -> SchemaRef {
+    Arc::new(Schema::new(T::fields()))
 }

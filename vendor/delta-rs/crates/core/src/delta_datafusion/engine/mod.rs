@@ -18,9 +18,17 @@ mod storage;
 /// A Datafusion based Kernel Engine
 #[derive(Clone)]
 pub struct DataFusionEngine {
-    storage: Arc<DataFusionStorageHandler>,
-    formats: Arc<DataFusionFileFormatHandler>,
+    storage: Arc<dyn StorageHandler>,
+    json: Arc<dyn JsonHandler>,
+    parquet: Arc<dyn ParquetHandler>,
 }
+
+/// Explicit kernel I/O handlers carried by a DataFusion SessionConfig extension.
+/// The caller owns their executor and storage scope. Expression evaluation remains
+/// the native DataFusion engine's Arrow evaluator. Physical operators inherit this
+/// extension through TaskContext, including checkpoint and deletion-vector reads.
+#[derive(Clone)]
+pub struct KernelIoEngine(pub Arc<dyn Engine>);
 
 impl DataFusionEngine {
     /// Create an engine from a DataFusion [`Session`], reusing its task context and the
@@ -42,9 +50,20 @@ impl DataFusionEngine {
     /// The other constructors delegate here; call this directly when you need to bind the
     /// engine to a specific runtime handle rather than the ambient one.
     pub fn new(ctx: Arc<TaskContext>, handle: Handle) -> Self {
+        if let Some(engine) = ctx.session_config().get_extension::<KernelIoEngine>() {
+            return Self {
+                storage: engine.0.storage_handler(),
+                json: engine.0.json_handler(),
+                parquet: engine.0.parquet_handler(),
+            };
+        }
         let storage = Arc::new(DataFusionStorageHandler::new(ctx.clone(), handle.clone()));
         let formats = Arc::new(DataFusionFileFormatHandler::new(ctx, handle));
-        Self { storage, formats }
+        Self {
+            storage,
+            json: formats.clone(),
+            parquet: formats,
+        }
     }
 }
 
@@ -58,10 +77,10 @@ impl Engine for DataFusionEngine {
     }
 
     fn json_handler(&self) -> Arc<dyn JsonHandler> {
-        self.formats.clone()
+        self.json.clone()
     }
 
     fn parquet_handler(&self) -> Arc<dyn ParquetHandler> {
-        self.formats.clone()
+        self.parquet.clone()
     }
 }

@@ -3,7 +3,6 @@
 //! The captured control transaction owns metadata and the exact Delta table/cohort vector.
 //! Change explanations use its predecessor selection, never CDF commit timestamps.
 
-use enrichment_core::identity::SnapshotId;
 use enrichment_core::wire::data::ManifestData;
 use enrichment_core::wire::{Envelope, ErrorCode, Freshness, SourceVersionMatch};
 
@@ -15,14 +14,7 @@ pub use enrichment_core::request::ManifestRequest;
 
 /// Read a published manifest.
 pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
-    let Ok(id) = SnapshotId::try_from(request.snapshot_id.trim().to_owned()) else {
-        return envelope::error(
-            ErrorCode::ArtifactUnavailable,
-            format!("`{}` is not a snapshot identity", request.snapshot_id),
-            "Pass the `snapshot_id` a `resolve_library` result returned.",
-            false,
-        );
-    };
+    let id = request.snapshot_id;
     let catalog = match service.repository.catalog.pin().await {
         Ok(value) => value,
         Err(e) => return common::operation_error(&e, "manifest_read"),
@@ -74,7 +66,7 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
         Vec::new()
     };
     let data = ManifestData {
-        previous_snapshot_id: previous.map(|id| id.to_string()),
+        previous_snapshot_id: previous,
         publication_changes,
         manifest: manifest.clone(),
         is_current,
@@ -106,8 +98,8 @@ pub async fn manifest(service: &Service, request: ManifestRequest) -> Envelope {
             source_version_match: SourceVersionMatch::Exact,
             latest_verified: false,
         },
-        context_id: Some(manifest.context_id.to_string()),
-        snapshot_id: Some(id.to_string()),
+        context_id: Some(manifest.context_id.clone()),
+        snapshot_id: Some(id),
         evidence: Vec::new(),
         artifacts: Vec::new(),
     };

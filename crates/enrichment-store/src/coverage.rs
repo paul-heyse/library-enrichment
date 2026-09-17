@@ -84,7 +84,7 @@ pub(crate) async fn assess(
     }
     let subject = symbol_id.map_or_else(
         || SubjectRef::Library {
-            release_id: manifest.release_id.to_string(),
+            release_id: manifest.release_id.clone(),
         },
         |id| SubjectRef::Symbol {
             symbol_id: id.into(),
@@ -95,9 +95,9 @@ pub(crate) async fn assess(
         .map(|kind| format!("('{}', $1, CAST(NULL AS VARCHAR))", kind.as_str()))
         .collect::<Vec<_>>()
         .join(",");
-    let mut params = vec![crate::projection::subject_scalar(&subject)?];
+    let mut params = vec![crate::projection::subject_scalar(&subject)?.into()];
     let compatibility = if symbol_id.is_some() {
-        params.push(ScalarValue::from(manifest.release_id.as_str()));
+        params.push(manifest.release_id.parameter());
         "OR (c.subject.kind = 'library' AND c.subject.library.release_id = $2)"
     } else {
         ""
@@ -133,10 +133,10 @@ pub(crate) async fn assess_execution(
         .collect::<Vec<_>>()
         .join(",");
     let requested = format!(
-        "SELECT DISTINCT CASE payload.kind
-        WHEN 'semantic_query' THEN 'semantic_queries' WHEN 'runtime_object' THEN 'runtime_api'
-        WHEN 'usage_probe' THEN 'usage_probes' END AS kind, subject, source.producer_binding_id
-        FROM snapshot.evidence.execution_observations WHERE source.artifact_id IN ({placeholders})"
+        "SELECT DISTINCT d.evidence_kind AS kind, o.subject, o.source.producer_binding_id
+        FROM snapshot.evidence.execution_observations o
+        JOIN operation.declarations.execution_payloads d ON o.payload.kind=d.kind
+        WHERE o.source.artifact_id IN ({placeholders})"
     );
     evaluate(
         session,
@@ -145,7 +145,7 @@ pub(crate) async fn assess_execution(
         requested,
         artifacts
             .iter()
-            .map(|id| ScalarValue::from(id.as_str()))
+            .map(|id| ScalarValue::from(id.as_str()).into())
             .collect(),
         "",
         "exact retained execution results and their producing bindings".into(),
@@ -158,7 +158,7 @@ async fn evaluate(
     runtime: &crate::runtime::QueryRuntime,
     manifest: &enrichment_core::evidence::snapshot::EvidenceManifest,
     requested: String,
-    params: Vec<ScalarValue>,
+    params: Vec<datafusion::common::metadata::ScalarAndMetadata>,
     compatibility: &str,
     scope: String,
 ) -> Result<Coverage, QueryError> {
@@ -180,7 +180,10 @@ async fn evaluate(
              WHEN 1 THEN missing_id ELSE NULL END, '') AS witness_id
          FROM ranked ORDER BY kind, subject, producer_binding_id"
     );
-    let plan = session.sql(&sql).await?.with_param_values(params)?;
+    let plan = session
+        .sql(&sql)
+        .await?
+        .with_param_values(datafusion::common::ParamValues::List(params))?;
     let output = runtime
         .execute_family(plan, Some(crate::preparation::QueryFamily::Coverage))
         .await?;
@@ -222,7 +225,7 @@ async fn evaluate(
             ));
         }
         coverage.assessments.push(ScopeAssessment {
-            snapshot_id: manifest.snapshot_id.to_string(),
+            snapshot_id: manifest.snapshot_id.clone(),
             subject,
             kind,
             state,
@@ -237,141 +240,39 @@ async fn evaluate(
 /// belongs to this native assessment; acquisition merely records declarations and omissions.
 pub async fn assess_revision_inputs(
     runtime: &crate::runtime::QueryRuntime,
-    inputs: enrichment_core::producer::revision::RevisionInputs,
+    inputs: datafusion::dataframe::DataFrame,
 ) -> datafusion::error::Result<enrichment_core::producer::revision::RevisionExtraction> {
-    use arrow::{
-        array::{ArrayRef, BooleanArray, StringArray},
-        record_batch::RecordBatch,
+    use datafusion::{functions::core::expr_fn::coalesce, prelude::col};
+    use enrichment_core::{
+        evidence::arrow_model::expressions::literal, native_union::NativeStruct,
+        producer::revision::RevisionInputs,
     };
-    use datafusion::datasource::MemTable;
-    use enrichment_core::producer::revision::{RevisionExtraction, SourceClosure};
-    use std::sync::Arc;
-
-    let rows = inputs
-        .declared_inputs
-        .iter()
-        .map(|p| ("declared", p.as_str()))
-        .chain(inputs.source_roots.iter().map(|p| ("root", p.as_str())))
-        .chain(
-            inputs
-                .missing_inputs
-                .iter()
-                .map(|p| ("missing", p.as_str())),
-        )
-        .chain(
-            inputs
-                .omissions
-                .iter()
-                .map(|o| ("omitted", o.path.as_str())),
-        )
-        .collect::<Vec<_>>();
-    let batch = RecordBatch::try_from_iter(vec![
-        (
-            "kind",
-            Arc::new(StringArray::from_iter_values(rows.iter().map(|r| r.0))) as ArrayRef,
-        ),
-        (
-            "path",
-            Arc::new(StringArray::from_iter_values(rows.iter().map(|r| r.1))) as ArrayRef,
-        ),
-    ])?;
-    let session = runtime.session();
-    crate::native_catalog::work(
-        &session,
-        "revision_inputs",
-        Arc::new(MemTable::try_new(batch.schema(), vec![vec![batch]])?),
+    enrichment_core::native_schema::check_input(
+        inputs.schema().as_arrow(),
+        &arrow::datatypes::Schema::new(RevisionInputs::fields()),
     )?;
-    // Exact path components, not lexical prefixes: pkg-extra is not inside pkg. Omitting an
-    // ancestor of a declared input affects that input, including ancestor workspace manifests.
-    let plan = session
-        .sql(
-            r"
-        WITH affected AS (
-            SELECT o.path FROM revision_inputs o JOIN revision_inputs r
-                ON o.path = r.path OR starts_with(o.path, concat(r.path, '/'))
-            WHERE o.kind = 'omitted' AND r.kind = 'root'
+    let session = runtime.session();
+    crate::native_catalog::work(&session, "revision_inputs", inputs.into_view())?;
+    // Component-aware joins include the repository root and omitted ancestors of declared
+    // inputs. Missing/omitted files can establish incompleteness; absence never proves closure.
+    let plan = session.sql(r#"
+        WITH omissions AS (SELECT unnest(omissions) AS entry FROM revision_inputs),
+        roots AS (SELECT unnest(source_roots) AS path FROM revision_inputs),
+        declared AS (SELECT unnest(declared_inputs) AS path FROM revision_inputs),
+        affected AS (
+            SELECT o.entry.path AS path FROM omissions o JOIN roots r
+              ON r.path='' OR o.entry.path=r.path OR starts_with(o.entry.path, concat(r.path,'/'))
             UNION
-            SELECT o.path FROM revision_inputs o JOIN revision_inputs d
-                ON d.path = o.path OR starts_with(d.path, concat(o.path, '/'))
-            WHERE o.kind = 'omitted' AND d.kind = 'declared'
-        ), failures AS (
-            SELECT path FROM affected
-            UNION ALL
-            SELECT path FROM revision_inputs WHERE kind = 'missing'
+            SELECT o.entry.path AS path FROM omissions o JOIN declared d
+              ON d.path=o.entry.path OR starts_with(d.path, concat(o.entry.path,'/'))
+        ), summary AS (SELECT array_sort(array_agg(path)) AS affected_omissions, count(*) AS affected_count FROM affected)
+        SELECT i.*, s.affected_omissions,
+          CASE WHEN s.affected_count>0 OR cardinality(i.missing_inputs)>0 THEN 'incomplete' ELSE 'unknown' END AS source_closure
+        FROM revision_inputs i CROSS JOIN summary s
+    "#).await?.with_column("affected_omissions", coalesce(vec![col("affected_omissions"), literal(&Vec::<String>::new())?]))?;
+    runtime.records(plan, 1).await?.pop().ok_or_else(|| {
+        datafusion::common::DataFusionError::Execution(
+            "revision capture requires one source record".into(),
         )
-        SELECT path, false AS summary, false AS incomplete FROM affected
-        UNION ALL
-        SELECT CAST(NULL AS VARCHAR) AS path, true AS summary,
-            count(*) > 0 AS incomplete FROM failures
-    ",
-        )
-        .await?;
-    let output = runtime
-        .execute_family(
-            plan,
-            Some(crate::preparation::QueryFamily::RevisionDisposition),
-        )
-        .await?;
-    let mut affected_omissions = Vec::new();
-    let mut source_closure = None;
-    for batch in &output.batches {
-        let paths = crate::projection::TextColumn::new(batch.column(0).as_ref())?;
-        let summary = batch
-            .column(1)
-            .as_any()
-            .downcast_ref::<BooleanArray>()
-            .ok_or_else(|| {
-                datafusion::error::DataFusionError::Internal(
-                    "revision summary field is not Boolean".into(),
-                )
-            })?;
-        let incomplete = batch
-            .column(2)
-            .as_any()
-            .downcast_ref::<BooleanArray>()
-            .ok_or_else(|| {
-                datafusion::error::DataFusionError::Internal(
-                    "revision disposition field is not Boolean".into(),
-                )
-            })?;
-        for row in 0..batch.num_rows() {
-            if summary.value(row) {
-                if source_closure.is_some() {
-                    return Err(datafusion::error::DataFusionError::Internal(
-                        "duplicate revision disposition".into(),
-                    ));
-                }
-                source_closure = Some(if incomplete.value(row) {
-                    SourceClosure::Incomplete
-                } else {
-                    SourceClosure::Unknown
-                });
-            } else {
-                affected_omissions.push(
-                    paths
-                        .get(row)
-                        .ok_or_else(|| {
-                            datafusion::error::DataFusionError::Internal(
-                                "missing affected revision path".into(),
-                            )
-                        })?
-                        .to_owned(),
-                );
-            }
-        }
-    }
-    affected_omissions.sort();
-    Ok(RevisionExtraction {
-        archive_sha256: inputs.archive_sha256,
-        policy: inputs.policy,
-        omissions: inputs.omissions,
-        selected_package: inputs.selected_package,
-        declared_inputs: inputs.declared_inputs,
-        source_roots: inputs.source_roots,
-        missing_inputs: inputs.missing_inputs,
-        affected_omissions,
-        source_closure: source_closure.ok_or_else(|| {
-            datafusion::error::DataFusionError::Internal("missing revision disposition".into())
-        })?,
     })
 }

@@ -1,0 +1,132 @@
+{
+  "module": "opentelemetry::trace::span_context",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.trace.span_context.md",
+  "items": [
+    {
+      "path": "opentelemetry::trace::span_context::TraceStateError",
+      "name": "TraceStateError",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum TraceStateError",
+      "summary": "Error returned by `TraceState` operations.",
+      "doc": "api/opentelemetry.trace.span_context.md#tracestateerror",
+      "variants": [
+        "Key",
+        "Value",
+        "List"
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::span_context::SpanContext",
+      "name": "SpanContext",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct SpanContext",
+      "summary": "Immutable portion of a [`Span`] which can be serialized and propagated.",
+      "doc": "api/opentelemetry.trace.span_context.md#spancontext",
+      "aliases": [
+        "opentelemetry::trace::SpanContext"
+      ],
+      "methods": [
+        {
+          "name": "empty_context",
+          "signature": "fn empty_context() -> Self",
+          "summary": "Create an invalid empty span context"
+        },
+        {
+          "name": "is_remote",
+          "signature": "fn is_remote(&self) -> bool",
+          "summary": "Returns `true` if the span context was propagated from a remote parent."
+        },
+        {
+          "name": "is_sampled",
+          "signature": "fn is_sampled(&self) -> bool",
+          "summary": "Returns `true` if the `sampled` trace flag is set."
+        },
+        {
+          "name": "is_valid",
+          "signature": "fn is_valid(&self) -> bool",
+          "summary": "Returns `true` if the span context has a valid (non-zero) `trace_id` and a valid (non-zero) `span_id`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(trace_id: TraceId, span_id: SpanId, trace_flags: TraceFlags, is_remote: bool, trace_state: TraceState) -> Self",
+          "summary": "Construct a new `SpanContext`"
+        },
+        {
+          "name": "span_id",
+          "signature": "fn span_id(&self) -> SpanId",
+          "summary": "The [`SpanId`] for this span context."
+        },
+        {
+          "name": "trace_flags",
+          "signature": "fn trace_flags(&self) -> TraceFlags",
+          "summary": "Returns details about the trace."
+        },
+        {
+          "name": "trace_id",
+          "signature": "fn trace_id(&self) -> TraceId",
+          "summary": "The [`TraceId`] for this span context."
+        },
+        {
+          "name": "trace_state",
+          "signature": "fn trace_state(&self) -> &TraceState",
+          "summary": "A reference to the span context's [`TraceState`]."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::span_context::TraceState",
+      "name": "TraceState",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct TraceState",
+      "summary": "TraceState carries system-specific configuration data, represented as a list of key-value pairs. TraceState allows multiple tracing systems to participate in the same trace.",
+      "doc": "api/opentelemetry.trace.span_context.md#tracestate",
+      "aliases": [
+        "opentelemetry::trace::TraceState"
+      ],
+      "implements": [
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "delete",
+          "signature": "fn delete<K: Into<String>>(&self, key: K) -> Result<TraceState, TraceStateError>",
+          "summary": "Removes the given key-value pair from the `TraceState`. If the key is invalid per the [W3 Spec] an `Err` is returned. Else, a new `TraceState` with the removed entry is returned."
+        },
+        {
+          "name": "from_key_value",
+          "signature": "fn from_key_value<T, K, V>(trace_state: T) -> Result<Self, TraceStateError> where T: IntoIterator<Item = (K, V)>, K: ToString, V: ToString",
+          "summary": "Creates a new `TraceState` from the given key-value collection."
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, key: &str) -> Option<&str>",
+          "summary": "Retrieves a value for a given key from the `TraceState` if it exists."
+        },
+        {
+          "name": "header",
+          "signature": "fn header(&self) -> String",
+          "summary": "Creates a new `TraceState` header string, delimiting each key and value with a `=` and each entry with a `,`."
+        },
+        {
+          "name": "header_delimited",
+          "signature": "fn header_delimited(&self, entry_delimiter: &str, list_delimiter: &str) -> String",
+          "summary": "Creates a new `TraceState` header string, with the given key/value delimiter and entry delimiter."
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<K, V>(&self, key: K, value: V) -> Result<TraceState, TraceStateError> where K: Into<String>, V: Into<String>",
+          "summary": "Inserts the given key-value pair into the `TraceState`. If a value already exists for the given key, this updates the value and updates the value's position. If the key or value are invalid per the [W3 Spec] an `Err` is returned, else a ne…"
+        }
+      ]
+    }
+  ]
+}

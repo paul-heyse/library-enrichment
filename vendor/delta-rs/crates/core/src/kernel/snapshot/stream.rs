@@ -1,10 +1,13 @@
 //! the code in this file is hoisted from datafusion with only slight modifications
 //!
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+#[cfg(feature = "datafusion")]
+use datafusion::common::runtime::JoinSet;
 use futures::stream::BoxStream;
 use futures::{Stream, StreamExt};
 use std::pin::Pin;
 use tokio::sync::mpsc::{Receiver, Sender};
+#[cfg(not(feature = "datafusion"))]
 use tokio::task::JoinSet;
 use tracing::Span;
 use tracing::dispatcher;

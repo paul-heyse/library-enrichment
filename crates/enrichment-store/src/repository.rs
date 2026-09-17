@@ -44,6 +44,7 @@ pub struct OpenedSnapshot {
     manifest_digest: String,
     search: crate::search_projection::SearchProjection,
     _lease: Arc<File>,
+    protection: Option<Arc<crate::retention::LeaseGuard>>,
 }
 
 impl OpenedSnapshot {
@@ -58,10 +59,19 @@ impl OpenedSnapshot {
             .await?
             .ok_or_else(|| invalid("publication has no selected search checkpoint"))?;
         let full = self.binding.research_session(runtime, None).await?;
-        let materialized = self
+        let mut materialized = self
             .search
             .providers(&self.manifest, &checkpoint, &full)
             .await?;
+        if let Some(protection) = &self.protection {
+            for provider in materialized.values_mut() {
+                *provider = crate::leases::protected_provider(
+                    Arc::clone(provider),
+                    Arc::clone(protection),
+                    &runtime.session(),
+                )?;
+            }
+        }
         self.binding
             .research_session_with(runtime, Some(Arc::clone(&self._lease)), &materialized)
             .await
@@ -80,6 +90,7 @@ impl OpenedSnapshot {
             &self.manifest_digest,
             self.catalog.generation(),
             Arc::clone(&self._lease),
+            self.protection.clone(),
         )
     }
 }
@@ -226,7 +237,7 @@ impl EvidenceRepository {
             if relation == Relation::ApiObservations {
                 plan = plan.with_column(
                     "environment_id",
-                    lit(metadata.environment.environment_id.as_str()),
+                    metadata.environment.environment_id.literal(),
                 )?;
                 plan = plan.with_column(
                     "observation_id",
@@ -343,6 +354,32 @@ impl EvidenceRepository {
     /// Native admission, unavailable evidence, invalid scope and publication conflicts fail closed.
     pub fn publish_native(
         &self,
+        metadata: SnapshotMetadata,
+        plans: EvidencePlans,
+        attempts: Attempts,
+        expected_base: Option<SnapshotId>,
+        completion: Option<JobCompletion>,
+    ) -> futures::future::BoxFuture<'_, Result<PublishedSnapshot>> {
+        let repository = self.clone();
+        Box::pin(async move {
+            self.runtime
+                .spawn(async move {
+                    Box::pin(repository.publish_native_inner(
+                        metadata,
+                        plans,
+                        attempts,
+                        expected_base,
+                        completion,
+                    ))
+                    .await
+                })
+                .await
+                .map_err(external)?
+        })
+    }
+
+    fn publish_native_inner(
+        &self,
         mut metadata: SnapshotMetadata,
         mut plans: EvidencePlans,
         attempts: Attempts,
@@ -403,13 +440,43 @@ impl EvidenceRepository {
                 };
                 relations.insert(relation, plan);
             }
-            let staged = self.complete_relations(&metadata, relations).await?;
+            let staged = self
+                .complete_relations(&metadata, relations)
+                .await
+                .map_err(|error| error.context("complete publication candidate"))?;
             self.publish_prepared(metadata, staged, attempts, expected_base, completion)
                 .await
         })
     }
 
     async fn publish_prepared(
+        &self,
+        metadata: SnapshotMetadata,
+        staged: Staged,
+        attempts: crate::attempt_plan::AttemptPlan,
+        expected_base: Option<SnapshotId>,
+        completion: Option<JobCompletion>,
+    ) -> Result<PublishedSnapshot> {
+        let repository = self.clone();
+        // Publication includes native Arrow construction and SQL preparation between
+        // query calls. Those phases belong on the configured native executor too.
+        // The outer coordinator holds no query permit while awaiting admitted children.
+        self.runtime
+            .spawn(async move {
+                Box::pin(repository.publish_prepared_inner(
+                    metadata,
+                    staged,
+                    attempts,
+                    expected_base,
+                    completion,
+                ))
+                .await
+            })
+            .await
+            .map_err(external)?
+    }
+
+    async fn publish_prepared_inner(
         &self,
         mut metadata: SnapshotMetadata,
         mut staged: Staged,
@@ -422,17 +489,22 @@ impl EvidenceRepository {
         }
         let _lease = crate::leases::shared(&self.paths.data_root)?;
         for _ in 0..MAX_REBASE_ATTEMPTS {
-            for artifact in attempts.logs(&self.runtime).await? {
+            let obligation = staged.obligation.clone();
+            for artifact in attempts
+                .logs(&self.runtime)
+                .await
+                .map_err(|error| error.context("publication attempt logs"))?
+            {
                 self.validate_blob(&artifact.sha256, artifact.size_bytes)
                     .await?;
             }
             let (manifest, entry) = self.finish_stage(staged).await?;
             let pin = self.catalog.pin().await?;
-            let checkpoint = match pin
+            let (checkpoint, projection_obligation) = match pin
                 .search_projection(&self.runtime, &manifest.snapshot_id)
                 .await?
             {
-                Some(checkpoint) => checkpoint,
+                Some(checkpoint) => (checkpoint, None),
                 None => {
                     let prior = match &expected_base {
                         Some(id) => pin.latest_search_projection(&self.runtime, id).await?,
@@ -441,9 +513,12 @@ impl EvidenceRepository {
                     let bytes = serde_json::to_vec(&manifest).map_err(external)?;
                     let binding = self.admit_manifest(&manifest, &bytes).await?;
                     let full = binding.research_session(&self.runtime, None).await?;
-                    self.search_projections()?
-                        .prepare(&manifest, &full, prior.as_ref(), false)
-                        .await?
+                    let prepared = self
+                        .search_projections()?
+                        .prepare(&manifest, &full, prior.as_ref(), false, &self.retention())
+                        .await
+                        .map_err(|error| error.context("publication search projection"))?;
+                    (prepared.checkpoint, Some(prepared.obligation))
                 }
             };
             let mut prepared_result = None;
@@ -505,9 +580,12 @@ impl EvidenceRepository {
                         result.header,
                         &artifact,
                         &index,
-                        1024 * 1024,
-                        None,
-                        request_id,
+                        crate::result_delivery::DeliveryOptions {
+                            inline: 1024 * 1024,
+                            requested: None,
+                            request_id,
+                            profile: Default::default(),
+                        },
                     )
                     .await?,
                 );
@@ -544,6 +622,10 @@ impl EvidenceRepository {
             };
             match self.catalog.commit(delta).await? {
                 CommitOutcome::Committed { .. } => {
+                    self.retention().settle_selected(&obligation).await?;
+                    if let Some(obligation) = &projection_obligation {
+                        self.retention().settle_selected(obligation).await?;
+                    }
                     return Ok(PublishedSnapshot {
                         manifest,
                         result: prepared_result,
@@ -605,19 +687,14 @@ impl EvidenceRepository {
         }
         let plan = self
             .evidence_tables()?
-            .change_plan(&before.tables, &after.tables)
+            .change_plan(&before.tables, &after.tables, &self.retention())
             .await?;
         let session = self.runtime.session();
         crate::native_catalog::work(&session, "publication_changes", plan.into_view())?;
         let summary = session.sql("SELECT relation, CAST(count(*) FILTER (WHERE inserted>0 AND removed=0) AS BIGINT UNSIGNED) AS inserted, CAST(count(*) FILTER (WHERE removed>0 AND inserted=0) AS BIGINT UNSIGNED) AS removed, CAST(count(*) FILTER (WHERE inserted>0 AND removed>0) AS BIGINT UNSIGNED) AS updated FROM (SELECT relation,key,sum(inserted) AS inserted,sum(removed) AS removed FROM publication_changes GROUP BY relation,key) GROUP BY relation ORDER BY relation").await?;
-        let result = self.runtime.execute(summary.limit(0, Some(11))?).await?;
-        if result.rows > 10 {
-            return Err(invalid("change summary exceeds evidence registry"));
-        }
-        let mut writer = arrow::json::ArrayWriter::new(Vec::new());
-        writer.write_batches(&result.batches.iter().collect::<Vec<_>>())?;
-        writer.finish()?;
-        serde_json::from_slice(&writer.into_inner()).map_err(external)
+        self.runtime
+            .records(summary, crate::admission::Relation::ALL.len())
+            .await
     }
 
     fn search_projections(&self) -> Result<crate::search_projection::SearchProjection> {
@@ -632,6 +709,10 @@ impl EvidenceRepository {
             &self.paths.data_root.join("delta"),
             self.runtime.clone(),
         )
+    }
+
+    pub fn retention(&self) -> crate::retention::RetentionStore {
+        crate::retention::RetentionStore::new(self.catalog.clone(), self.runtime.clone())
     }
 
     async fn complete_relations(
@@ -655,6 +736,18 @@ impl EvidenceRepository {
         }
         let native = self.evidence_tables()?;
         let cohort = uuid::Uuid::new_v4().to_string();
+        let retention = self.retention();
+        let obligation = retention
+            .create_obligation(
+                cohort.clone(),
+                Relation::ALL
+                    .into_iter()
+                    .map(|relation| crate::retention::Dependency::TableScope {
+                        table_uri: format!("evidence_{}", relation.name()),
+                    })
+                    .collect(),
+            )
+            .await?;
         let mut rows = BTreeMap::new();
         let mut tables = Vec::new();
         for (relation, plan) in relations {
@@ -663,11 +756,18 @@ impl EvidenceRepository {
                 &self.runtime,
                 plan.clone().aggregate(
                     vec![],
-                    vec![datafusion::functions_aggregate::expr_fn::count(lit(1)).alias("rows")],
+                    vec![
+                        datafusion::logical_expr::cast(
+                            datafusion::functions_aggregate::expr_fn::count(lit(1)),
+                            arrow::datatypes::DataType::UInt64,
+                        )
+                        .alias("rows"),
+                    ],
                 )?,
                 1,
             )
-            .await?
+            .await
+            .map_err(|error| error.context(format!("candidate {} row count", relation.name())))?
             .pop()
             .ok_or_else(|| invalid("native table count missing"))?
             .rows;
@@ -677,8 +777,21 @@ impl EvidenceRepository {
                 ));
             }
             rows.insert(relation, count);
-            tables.push(native.append(relation, &cohort, plan, count).await?);
+            tables.push(
+                native
+                    .append(relation, &cohort, plan, count)
+                    .await
+                    .map_err(|error| {
+                        error.context(format!("candidate {} Delta append", relation.name()))
+                    })?,
+            );
         }
+        retention
+            .release_obligation(
+                &obligation,
+                tables.iter().map(crate::retention::dependency).collect(),
+            )
+            .await?;
         let root = self.paths.data_root.clone();
         let ownership = Arc::clone(&_lease);
         self.runtime
@@ -698,7 +811,12 @@ impl EvidenceRepository {
         )?;
         let binding = self
             .admission
-            .admit_native(&scope, native.providers(&tables).await?)
+            .admit_native(
+                &scope,
+                native
+                    .providers(&tables, self.protect_tables(&tables).await?)
+                    .await?,
+            )
             .await
             .map_err(|e| e.context("native publication admission"))?;
         self.validate_blobs(&binding).await?;
@@ -739,7 +857,10 @@ impl EvidenceRepository {
         manifest.validate().map_err(invalid)?;
         let bytes = serde_json::to_vec_pretty(&manifest).map_err(external)?;
         self.validate_semantics(&binding, &manifest, &bytes).await?;
-        Ok(Staged { manifest })
+        Ok(Staged {
+            manifest,
+            obligation,
+        })
     }
 
     async fn finish_stage(&self, staged: Staged) -> Result<(EvidenceManifest, SnapshotEntry)> {
@@ -805,7 +926,40 @@ impl EvidenceRepository {
                 .iter()
                 .any(|t| t.relation == "execution_observations" && t.rows != 0),
         )?;
-        let binding = self.admit_manifest(&manifest, &bytes).await?;
+        // Enroll the exact manifest and selected materialization versions before native
+        // providers load them. This guard follows scans even after the OpenedSnapshot drops.
+        let protection = if self.read_only {
+            None
+        } else {
+            let mut dependencies = manifest
+                .tables
+                .iter()
+                .map(crate::retention::dependency)
+                .collect::<Vec<_>>();
+            if let Some(checkpoint) = catalog.search_projection(&self.runtime, id).await? {
+                dependencies.extend(checkpoint.outputs.iter().map(crate::retention::dependency));
+            }
+            Some(
+                crate::retention::RetentionStore::new(self.catalog.clone(), self.runtime.clone())
+                    .enroll(
+                        id.to_string(),
+                        crate::retention::ProtectionKind::Query,
+                        dependencies,
+                    )
+                    .await?,
+            )
+        };
+        let read = match &protection {
+            Some(guard) => crate::leases::ReadProtection::Durable(guard.clone()),
+            None => crate::leases::ReadProtection::Root(lease.clone()),
+        };
+        let binding = self
+            .admit_protected_manifest(&manifest, &bytes, read)
+            .await?;
+        let binding = match &protection {
+            Some(guard) => Arc::new(binding.protected(&self.runtime, Arc::clone(guard))?),
+            None => binding,
+        };
         self.validate_attempts(&binding, &catalog, &manifest, &manifest_digest)
             .await?;
         Ok(OpenedSnapshot {
@@ -815,6 +969,7 @@ impl EvidenceRepository {
             binding,
             catalog,
             _lease: lease,
+            protection,
         })
     }
 
@@ -923,7 +1078,7 @@ impl EvidenceRepository {
         let attempts = session
             .table("state.records.attempts")
             .await?
-            .filter(col("snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?;
+            .filter(col("snapshot_id").eq(manifest.snapshot_id.literal()))?;
         crate::native_catalog::work(&session, "snapshot_attempts", attempts.into_view())?;
         for (sql, message) in [
             (
@@ -967,7 +1122,7 @@ impl EvidenceRepository {
                 session
                     .table("state.records.job_publications")
                     .await?
-                    .filter(col("snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
+                    .filter(col("snapshot_id").eq(manifest.snapshot_id.literal()))?,
                 Some(crate::preparation::QueryFamily::Catalog(
                     crate::control::Table::JobPublications,
                 )),
@@ -1002,7 +1157,7 @@ impl EvidenceRepository {
                 session
                     .table("state.records.comparison_publications")
                     .await?
-                    .filter(col("after_snapshot_id").eq(lit(manifest.snapshot_id.as_str())))?,
+                    .filter(col("after_snapshot_id").eq(manifest.snapshot_id.literal()))?,
                 Some(crate::preparation::QueryFamily::Catalog(
                     crate::control::Table::ComparisonPublications,
                 )),
@@ -1038,8 +1193,43 @@ impl EvidenceRepository {
         manifest: &EvidenceManifest,
         bytes: &[u8],
     ) -> Result<Arc<AdmittedRelations>> {
+        let protection = self.protect_tables(&manifest.tables).await?;
+        self.admit_protected_manifest(manifest, bytes, protection)
+            .await
+    }
+
+    async fn protect_tables(
+        &self,
+        tables: &[enrichment_core::evidence::snapshot::DeltaBinding],
+    ) -> Result<crate::leases::ReadProtection> {
+        if self.read_only {
+            Ok(crate::leases::ReadProtection::Root(crate::leases::shared(
+                &self.paths.data_root,
+            )?))
+        } else {
+            Ok(crate::leases::ReadProtection::Durable(
+                self.retention()
+                    .enroll(
+                        format!("evidence/{}", uuid::Uuid::new_v4()),
+                        crate::retention::ProtectionKind::Query,
+                        tables.iter().map(crate::retention::dependency).collect(),
+                    )
+                    .await?,
+            ))
+        }
+    }
+
+    async fn admit_protected_manifest(
+        &self,
+        manifest: &EvidenceManifest,
+        bytes: &[u8],
+        protection: crate::leases::ReadProtection,
+    ) -> Result<Arc<AdmittedRelations>> {
         manifest.validate().map_err(invalid)?;
-        let providers = self.evidence_tables()?.providers(&manifest.tables).await?;
+        let providers = self
+            .evidence_tables()?
+            .providers(&manifest.tables, protection)
+            .await?;
         let binding = self
             .admission
             .admit_native(&scope(manifest), providers)
@@ -1281,13 +1471,15 @@ fn require_resolved_execution(
     Ok(())
 }
 
-#[derive(serde::Deserialize)]
+enrichment_core::native_struct! {
 struct NativeCount {
-    rows: u64,
+    rows: u64 => enrichment_core::native_union::Rule::Text,
+}
 }
 
 struct Staged {
     manifest: EvidenceManifest,
+    obligation: crate::retention::CleanupObligation,
 }
 
 fn scope(manifest: &EvidenceManifest) -> EvidenceScope {

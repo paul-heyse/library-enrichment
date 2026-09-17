@@ -8,7 +8,7 @@ use enrichment_core::{
 use enrichment_store::BlobStore;
 use std::io;
 
-pub(crate) const MAX_RESULT_BYTES: usize = 32 * 1024 * 1024;
+pub(crate) const MAX_RESULT_BYTES: usize = enrichment_core::operation::results::MAX_BYTES as usize;
 pub(crate) const JOURNAL_BYTES: usize = 1024 * 1024;
 
 pub(crate) use enrichment_store::result_delivery::MinimumBudget;
@@ -22,7 +22,7 @@ pub(crate) fn budget_failure(
 ) -> Envelope {
     let mut result = envelope::error(
         enrichment_core::wire::ErrorCode::BudgetExceeded,
-        "Envelope cap is too small",
+        "Response cap is too small",
         "Increase max_bytes to the required minimum.",
         false,
     );
@@ -31,7 +31,7 @@ pub(crate) fn budget_failure(
     result.delivery.set_limits(requested, effective);
     let diagnostic = &mut result.error_mut().expect("typed error").diagnostic;
     diagnostic.stage = "result_delivery".into();
-    diagnostic.rule = Some("encoded_envelope_bytes".into());
+    diagnostic.rule = Some("encoded_response_bytes".into());
     diagnostic.observed = Some(minimum as u64);
     diagnostic.allowed = Some(effective as u64);
     diagnostic.actions = vec![RecoveryAction::ChangeRequest {
@@ -54,6 +54,7 @@ pub(crate) async fn encode(
     mut result: Envelope,
     inline: usize,
     requested: Option<usize>,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
 ) -> io::Result<Envelope> {
     if !(1024..=MAX_RESULT_BYTES).contains(&inline) {
         return Err(io::Error::new(
@@ -63,7 +64,7 @@ pub(crate) async fn encode(
     }
     result.delivery.set_limits(requested, inline);
     // Reject before to_value/canonicalization. JSON escaping is included in this bound.
-    let bytes = size(&result, MAX_RESULT_BYTES)?;
+    size(&result, MAX_RESULT_BYTES)?;
     catalog
         .retain_artifacts(
             runtime,
@@ -75,7 +76,10 @@ pub(crate) async fn encode(
         )
         .await
         .map_err(io::Error::other)?;
-    if bytes <= inline {
+    if enrichment_store::result_delivery::inline(runtime, &result, inline, profile.clone())
+        .await
+        .map_err(io::Error::other)?
+    {
         return Ok(result);
     }
     let (artifact, index) =
@@ -115,9 +119,12 @@ pub(crate) async fn encode(
         index.record.header.clone(),
         &artifact,
         &index,
-        inline,
-        requested,
-        result.request_id,
+        enrichment_store::result_delivery::DeliveryOptions {
+            inline,
+            requested,
+            request_id: result.request_id,
+            profile,
+        },
     )
     .await
 }
@@ -147,9 +154,12 @@ pub(crate) async fn prepare_comparison(
         index.record.header.clone(),
         &artifact,
         &index,
-        JOURNAL_BYTES,
-        None,
-        request_id,
+        enrichment_store::result_delivery::DeliveryOptions {
+            inline: JOURNAL_BYTES,
+            requested: None,
+            request_id,
+            profile: Default::default(),
+        },
     )
     .await?;
     Ok((artifact, bounded))
@@ -196,9 +206,12 @@ pub(crate) async fn recover_result(
         record.header,
         artifact,
         &index,
-        JOURNAL_BYTES,
-        None,
-        envelope::new_request_id(),
+        enrichment_store::result_delivery::DeliveryOptions {
+            inline: JOURNAL_BYTES,
+            requested: None,
+            request_id: envelope::new_request_id(),
+            profile: Default::default(),
+        },
     )
     .await
 }

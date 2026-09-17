@@ -1,0 +1,269 @@
+{
+  "module": "tracing_subscriber::layer",
+  "crate": "tracing-subscriber",
+  "api": "api/tracing_subscriber.layer.md",
+  "items": [
+    {
+      "path": "tracing_subscriber::layer::Identity",
+      "name": "Identity",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Identity",
+      "summary": "A layer that does nothing.",
+      "doc": "api/tracing_subscriber.layer.md#identity",
+      "implements": [
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Returns a new `Identity` layer."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::layer::Filter",
+      "name": "Filter",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait Filter<S>",
+      "summary": "A per-[`Layer`] filter that determines whether a span or event is enabled for an individual layer.",
+      "doc": "api/tracing_subscriber.layer.md#filter",
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::sync::Arc",
+        "core::option::Option",
+        "tracing_core::metadata::LevelFilter",
+        "tracing_subscriber::filter::env::EnvFilter",
+        "tracing_subscriber::filter::filter_fn::DynFilterFn",
+        "tracing_subscriber::filter::filter_fn::FilterFn",
+        "tracing_subscriber::filter::layer_filters::combinator::And",
+        "tracing_subscriber::filter::layer_filters::combinator::Not",
+        "tracing_subscriber::filter::layer_filters::combinator::Or",
+        "tracing_subscriber::filter::targets::Targets",
+        "tracing_subscriber::reload::Layer"
+      ],
+      "required_methods": [
+        "enabled"
+      ],
+      "provided_methods": [
+        "callsite_enabled",
+        "event_enabled",
+        "max_level_hint",
+        "on_close",
+        "on_enter",
+        "on_exit",
+        "on_new_span",
+        "on_record"
+      ],
+      "methods": [
+        {
+          "name": "callsite_enabled",
+          "signature": "fn callsite_enabled(&self, meta: &'static Metadata<'static>) -> Interest",
+          "summary": "Returns an [`Interest`] indicating whether this layer will [always], [sometimes], or [never] be interested in the given [`Metadata`]."
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, meta: &Metadata<'_>, cx: &Context<'_, S>) -> bool",
+          "summary": "Returns `true` if this layer is interested in a span or event with the given [`Metadata`] in the current [`Context`], similarly to [`Subscriber::enabled`]."
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, event: &Event<'_>, cx: &Context<'_, S>) -> bool",
+          "summary": "Called before the filtered [`Layer]'s [`on_event`], to determine if `on_event` should be called."
+        },
+        {
+          "name": "max_level_hint",
+          "signature": "fn max_level_hint(&self) -> Option<LevelFilter>",
+          "summary": "Returns an optional hint of the highest [verbosity level][level] that this `Filter` will enable."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: span::Id, ctx: Context<'_, S>)",
+          "summary": "Notifies this filter that a span with the given ID has been closed."
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &span::Id, ctx: Context<'_, S>)",
+          "summary": "Notifies this filter that a span with the given ID was entered."
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, id: &span::Id, ctx: Context<'_, S>)",
+          "summary": "Notifies this filter that a span with the given ID was exited."
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: Context<'_, S>)",
+          "summary": "Notifies this filter that a new span was constructed with the given `Attributes` and `Id`."
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, id: &span::Id, values: &span::Record<'_>, ctx: Context<'_, S>)",
+          "summary": "Notifies this filter that a span with the given `Id` recorded the given `values`."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::layer::Layer",
+      "name": "Layer",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait Layer<S> where S: Subscriber, Self: 'static",
+      "summary": "A composable handler for `tracing` events.",
+      "doc": "api/tracing_subscriber.layer.md#layer",
+      "aliases": [
+        "tracing_subscriber::Layer",
+        "tracing_subscriber::prelude::__tracing_subscriber_Layer"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::vec::Vec",
+        "core::option::Option",
+        "tracing_core::metadata::LevelFilter",
+        "tracing_opentelemetry::layer::OpenTelemetryLayer",
+        "tracing_opentelemetry::metrics::MetricsLayer",
+        "tracing_subscriber::filter::env::EnvFilter",
+        "tracing_subscriber::filter::filter_fn::DynFilterFn",
+        "tracing_subscriber::filter::filter_fn::FilterFn",
+        "tracing_subscriber::filter::layer_filters::Filtered",
+        "tracing_subscriber::filter::targets::Targets",
+        "tracing_subscriber::fmt::fmt_layer::Layer",
+        "tracing_subscriber::layer::Identity",
+        "tracing_subscriber::layer::layered::Layered",
+        "tracing_subscriber::reload::Layer"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "and_then",
+        "boxed",
+        "enabled",
+        "event_enabled",
+        "on_close",
+        "on_enter",
+        "on_event",
+        "on_exit",
+        "on_follows_from",
+        "on_id_change",
+        "on_layer",
+        "on_new_span",
+        "on_record",
+        "on_register_dispatch",
+        "register_callsite",
+        "with_filter",
+        "with_subscriber"
+      ],
+      "methods": [
+        {
+          "name": "and_then",
+          "signature": "fn and_then<L>(self, layer: L) -> Layered<L, Self, S> where L: Layer<S>, Self: Sized",
+          "summary": "Composes this layer around the given `Layer`, returning a `Layered` struct implementing `Layer`."
+        },
+        {
+          "name": "boxed",
+          "signature": "fn boxed(self) -> Box<dyn Layer<S> + Send + Sync + 'static> where Self: Sized + Layer<S> + Send + Sync + 'static, S: Subscriber",
+          "summary": "Erases the type of this [`Layer`], returning a [`Box`]ed `dyn Layer` trait object."
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>, ctx: Context<'_, S>) -> bool",
+          "summary": "Returns `true` if this layer is interested in a span or event with the given `metadata` in the current [`Context`], similarly to [`Subscriber::enabled`]."
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, _event: &Event<'_>, _ctx: Context<'_, S>) -> bool",
+          "summary": "Called before [`on_event`], to determine if `on_event` should be called."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, _id: span::Id, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that the span with the given ID has been closed."
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, _id: &span::Id, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that a span with the given ID was entered."
+        },
+        {
+          "name": "on_event",
+          "signature": "fn on_event(&self, _event: &Event<'_>, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that an event has occurred."
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, _id: &span::Id, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that the span with the given ID was exited."
+        },
+        {
+          "name": "on_follows_from",
+          "signature": "fn on_follows_from(&self, _span: &span::Id, _follows: &span::Id, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that a span with the ID `span` recorded that it follows from the span with the ID `follows`."
+        },
+        {
+          "name": "on_id_change",
+          "signature": "fn on_id_change(&self, _old: &span::Id, _new: &span::Id, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that a span ID has been cloned, and that the subscriber returned a different ID."
+        },
+        {
+          "name": "on_layer",
+          "signature": "fn on_layer(&mut self, subscriber: &mut S)",
+          "summary": "Performs late initialization when attaching a `Layer` to a [`Subscriber`]."
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that a new span was constructed with the given `Attributes` and `Id`."
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, _span: &span::Id, _values: &span::Record<'_>, _ctx: Context<'_, S>)",
+          "summary": "Notifies this layer that a span with the given `Id` recorded the given `values`."
+        },
+        {
+          "name": "on_register_dispatch",
+          "signature": "fn on_register_dispatch(&self, subscriber: &Dispatch)",
+          "summary": "Performs late initialization when installing this layer as a [`Subscriber`]."
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest",
+          "summary": "Registers a new callsite with this layer, returning whether or not the layer is interested in being notified about the callsite, similarly to [`Subscriber::register_callsite`]."
+        },
+        {
+          "name": "with_filter",
+          "signature": "fn with_filter<F>(self, filter: F) -> filter::Filtered<Self, F, S> where Self: Sized, F: Filter<S>",
+          "summary": "Combines `self` with a [`Filter`], returning a [`Filtered`] layer."
+        },
+        {
+          "name": "with_subscriber",
+          "signature": "fn with_subscriber(self, inner: S) -> Layered<Self, S> where Self: Sized",
+          "summary": "Composes this `Layer` with the given [`Subscriber`], returning a  `Layered` struct that implements [`Subscriber`]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::layer::SubscriberExt",
+      "name": "SubscriberExt",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait SubscriberExt: Subscriber + sealed::Sealed",
+      "summary": "Extension trait adding a `with(Layer)` combinator to `Subscriber`s.",
+      "doc": "api/tracing_subscriber.layer.md#subscriberext",
+      "aliases": [
+        "tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "with"
+      ],
+      "methods": [
+        {
+          "name": "with",
+          "signature": "fn with<L>(self, layer: L) -> Layered<L, Self> where L: Layer<Self>, Self: Sized",
+          "summary": "Wraps `self` with the provided `layer`."
+        }
+      ]
+    }
+  ]
+}

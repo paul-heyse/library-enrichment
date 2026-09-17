@@ -36,26 +36,17 @@ pub struct Extracted {
 
 pub const REVISION_EXTRACTION_POLICY: &str = "revision-extraction/3";
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
 pub struct ArchiveOmission {
-    pub path: String,
-    pub entry_kind: OmittedEntryKind,
+    path: String => crate::native_union::Rule::NonEmpty,
+    entry_kind: OmittedEntryKind => crate::native_union::Rule::Text,
     /// Bounded untrusted text; never interpreted as a filesystem instruction.
-    pub target: String,
-    pub reason: String,
+    target: String => crate::native_union::Rule::Text,
+    reason: String => crate::native_union::Rule::NonEmpty,
+}
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-pub enum OmittedEntryKind {
-    Symlink,
-    HardLink,
-}
+crate::native_vocabulary! { pub enum OmittedEntryKind { Symlink = "symlink", HardLink = "hard_link" } }
 
 /// Why extraction was refused or failed.
 #[derive(Debug, thiserror::Error)]

@@ -1,0 +1,146 @@
+{
+  "module": "opentelemetry_sdk::resource",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.resource.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::resource::Iter",
+      "name": "Iter",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Iter<'a>",
+      "summary": "An iterator over the entries of a `Resource`.",
+      "doc": "api/opentelemetry_sdk.resource.md#iter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::resource::Resource",
+      "name": "Resource",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Resource",
+      "summary": "An immutable representation of the entity producing telemetry as attributes. Utilizes `Arc` for efficient sharing and cloning.",
+      "doc": "api/opentelemetry_sdk.resource.md#resource",
+      "aliases": [
+        "opentelemetry_sdk::Resource"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> ResourceBuilder",
+          "summary": "Creates a [ResourceBuilder] that allows you to configure multiple aspects of the Resource."
+        },
+        {
+          "name": "builder_empty",
+          "signature": "fn builder_empty() -> ResourceBuilder",
+          "summary": "Creates a [ResourceBuilder] that allows you to configure multiple aspects of the Resource."
+        },
+        {
+          "name": "get",
+          "signature": "fn get(&self, key: &Key) -> Option<Value>",
+          "summary": "Retrieve the value from resource associate with given key."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns `true` if the resource contains no attributes."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> Iter<'_>",
+          "summary": "Gets an iterator over the attributes of this resource."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of attributes for this resource"
+        },
+        {
+          "name": "schema_url",
+          "signature": "fn schema_url(&self) -> Option<&str>",
+          "summary": "Return the [schema url] of the resource. If the resource does not have a schema url, return `None`."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::resource::ResourceBuilder",
+      "name": "ResourceBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ResourceBuilder",
+      "summary": "Builder for [Resource]",
+      "doc": "api/opentelemetry_sdk.resource.md#resourcebuilder",
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> Resource",
+          "summary": "Create a [Resource] with the options provided to the [ResourceBuilder]."
+        },
+        {
+          "name": "with_attribute",
+          "signature": "fn with_attribute(self, kv: KeyValue) -> Self",
+          "summary": "Add a [KeyValue] to the resource."
+        },
+        {
+          "name": "with_attributes",
+          "signature": "fn with_attributes<T: IntoIterator<Item = KeyValue>>(self, kvs: T) -> Self",
+          "summary": "Add multiple [KeyValue]s to the resource."
+        },
+        {
+          "name": "with_detector",
+          "signature": "fn with_detector(self, detector: Box<dyn ResourceDetector>) -> Self",
+          "summary": "Add a single [ResourceDetector] to your resource."
+        },
+        {
+          "name": "with_detectors",
+          "signature": "fn with_detectors(self, detectors: &[Box<dyn ResourceDetector>]) -> Self",
+          "summary": "Add multiple [ResourceDetector]s to your resource."
+        },
+        {
+          "name": "with_schema_url",
+          "signature": "fn with_schema_url<KV, S>(self, attributes: KV, schema_url: S) -> Self where KV: IntoIterator<Item = KeyValue>, S: Into<Cow<'static, str>>",
+          "summary": "This will merge the provided `schema_url` with the current state of the Resource being built. It will use the following rules to determine which `schema_url` should be used."
+        },
+        {
+          "name": "with_service_name",
+          "signature": "fn with_service_name(self, name: impl Into<Value>) -> Self",
+          "summary": "Add `service.name` resource attribute."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::resource::ResourceDetector",
+      "name": "ResourceDetector",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait ResourceDetector",
+      "summary": "ResourceDetector detects OpenTelemetry resource information",
+      "doc": "api/opentelemetry_sdk.resource.md#resourcedetector",
+      "implementors": [
+        "opentelemetry_sdk::resource::env::EnvResourceDetector",
+        "opentelemetry_sdk::resource::env::SdkProvidedResourceDetector",
+        "opentelemetry_sdk::resource::telemetry::TelemetryResourceDetector"
+      ],
+      "required_methods": [
+        "detect"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "detect",
+          "signature": "fn detect(&self) -> Resource",
+          "summary": "detect returns an initialized Resource based on gathered information."
+        }
+      ]
+    }
+  ]
+}

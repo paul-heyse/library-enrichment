@@ -23,6 +23,14 @@ use enrichment_core::{
 use enrichment_core::{native_union::NativeStruct, operation::results::ArtifactReceipt};
 use std::sync::Arc;
 
+/// Opaque ownership guard for a physical artifact read, including read-only root protection.
+pub struct ArtifactProtection(crate::leases::ReadProtection);
+impl Clone for ArtifactProtection {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
 pub(crate) fn schema() -> SchemaRef {
     Arc::new(Schema::new(ArtifactReceipt::fields()))
 }
@@ -64,6 +72,20 @@ pub(crate) fn decode(batch: &RecordBatch) -> Result<Vec<Artifact>> {
 }
 
 impl ControlSnapshot {
+    /// Enroll byte ownership before the physical blob driver opens its input. The caller
+    /// carries this guard through blocking work as well as the async selection lifetime.
+    pub async fn protect_artifact(&self, artifact: &Artifact) -> Result<ArtifactProtection> {
+        self.protect(
+            format!("artifact-read/{}", artifact.artifact_id),
+            crate::retention::ProtectionKind::Query,
+            vec![crate::retention::Dependency::Artifact {
+                artifact_id: artifact.artifact_id.clone(),
+            }],
+        )
+        .await
+        .map(ArtifactProtection)
+    }
+
     /// All addressable receipts in this captured publication/control version. Repeated bytes
     /// retain their acquisition-specific locators; no global first-retrieval sidecar wins.
     pub async fn artifacts(&self, runtime: &QueryRuntime) -> Result<DataFrame> {

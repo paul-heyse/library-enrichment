@@ -1,0 +1,21 @@
+id: corpus-subscriber-layer
+language: rust
+severity: hint
+message: a tracing-subscriber layer upstream composes
+note: |
+  This library emits spans and collects nothing, so the layer stack is where a working setup is
+  actually decided. These matches are the two upstream ships: the OTLP exporter in `otlp.rs`
+  and the in-memory JSON capture the integration tests assert against -- which is also the
+  harness `build/probes.py` mirrors.
+metadata:
+  record: wiring-use
+  reads: content/corpus
+rule:
+  kind: call_expression
+  has:
+    field: function
+    any:
+      - kind: scoped_identifier
+        regex: '(tracing_opentelemetry::layer|fmt::layer|Registry::default)'
+      - kind: field_expression
+        has: { field: field, regex: '^(with_writer|with_span_events|with_filter|with_max_level|event_format)$' }

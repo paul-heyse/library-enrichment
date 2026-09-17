@@ -1,0 +1,289 @@
+{
+  "module": "opentelemetry::global::trace",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.global.trace.md",
+  "items": [
+    {
+      "path": "opentelemetry::global::trace::set_tracer_provider",
+      "name": "set_tracer_provider",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn set_tracer_provider<P, T, S>(new_provider: P) where S: trace::Span + Send + Sync + 'static, T: trace::Tracer<Span = S> + Send + Sync + 'static, P: trace::TracerProvider<Tracer = T> + Send + Sync + 'static",
+      "summary": "Sets the given [`TracerProvider`] instance as the current global provider.",
+      "doc": "api/opentelemetry.global.trace.md#set_tracer_provider",
+      "aliases": [
+        "opentelemetry::global::set_tracer_provider"
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::tracer",
+      "name": "tracer",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn tracer(name: impl Into<std::borrow::Cow<'static, str>>) -> BoxedTracer",
+      "summary": "Creates a named instance of [`Tracer`] via the configured [`GlobalTracerProvider`].",
+      "doc": "api/opentelemetry.global.trace.md#tracer",
+      "aliases": [
+        "opentelemetry::global::tracer"
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::tracer_provider",
+      "name": "tracer_provider",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn tracer_provider() -> GlobalTracerProvider",
+      "summary": "Returns an instance of the currently configured global [`TracerProvider`] through [`GlobalTracerProvider`].",
+      "doc": "api/opentelemetry.global.trace.md#tracer_provider",
+      "aliases": [
+        "opentelemetry::global::tracer_provider"
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::tracer_with_scope",
+      "name": "tracer_with_scope",
+      "kind": "function",
+      "crate": "opentelemetry",
+      "signature": "fn tracer_with_scope(scope: InstrumentationScope) -> BoxedTracer",
+      "summary": "Creates a [`Tracer`] with the given instrumentation scope via the configured [`GlobalTracerProvider`].",
+      "doc": "api/opentelemetry.global.trace.md#tracer_with_scope",
+      "aliases": [
+        "opentelemetry::global::tracer_with_scope"
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::BoxedSpan",
+      "name": "BoxedSpan",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct BoxedSpan",
+      "summary": "Wraps the [`BoxedTracer`]'s [`Span`] so it can be used generically by applications without knowing the underlying type.",
+      "doc": "api/opentelemetry.global.trace.md#boxedspan",
+      "aliases": [
+        "opentelemetry::global::BoxedSpan"
+      ],
+      "implements": [
+        "opentelemetry::trace::span::Span"
+      ],
+      "methods": [
+        {
+          "name": "add_event_with_timestamp",
+          "signature": "fn add_event_with_timestamp<T>(&mut self, name: T, timestamp: SystemTime, attributes: Vec<KeyValue>) where T: Into<Cow<'static, str>>",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Records events at a specific time in the context of a given `Span`."
+        },
+        {
+          "name": "add_link",
+          "signature": "fn add_link(&mut self, span_context: trace::SpanContext, attributes: Vec<KeyValue>)",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Adds a link to this span"
+        },
+        {
+          "name": "end_with_timestamp",
+          "signature": "fn end_with_timestamp(&mut self, timestamp: SystemTime)",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Finishes the span with given timestamp."
+        },
+        {
+          "name": "is_recording",
+          "signature": "fn is_recording(&self) -> bool",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Returns true if this `Span` is recording information like events with the `add_event` operation, attributes using `set_attributes`, status with `set_status`, etc."
+        },
+        {
+          "name": "set_attribute",
+          "signature": "fn set_attribute(&mut self, attribute: KeyValue)",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Sets a single `Attribute` where the attribute properties are passed as arguments."
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status(&mut self, status: trace::Status)",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Sets the status of the `Span`. If used, this will override the default `Span` status, which is `Unset`."
+        },
+        {
+          "name": "span_context",
+          "signature": "fn span_context(&self) -> &trace::SpanContext",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Returns the `SpanContext` for the given `Span`."
+        },
+        {
+          "name": "update_name",
+          "signature": "fn update_name<T>(&mut self, new_name: T) where T: Into<Cow<'static, str>>",
+          "via_trait": "opentelemetry::trace::span::Span",
+          "summary": "Updates the `Span`'s name."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::BoxedTracer",
+      "name": "BoxedTracer",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct BoxedTracer",
+      "summary": "Wraps the [`GlobalTracerProvider`]'s [`Tracer`] so it can be used generically by applications without knowing the underlying type.",
+      "doc": "api/opentelemetry.global.trace.md#boxedtracer",
+      "aliases": [
+        "opentelemetry::global::BoxedTracer"
+      ],
+      "implements": [
+        "opentelemetry::trace::tracer::Tracer"
+      ],
+      "methods": [
+        {
+          "name": "build_with_context",
+          "signature": "fn build_with_context(&self, builder: trace::SpanBuilder, parent_cx: &Context) -> Self::Span",
+          "via_trait": "opentelemetry::trace::tracer::Tracer",
+          "summary": "Create a span from a `SpanBuilder`"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(tracer: Box<dyn ObjectSafeTracer + Send + Sync>) -> Self",
+          "summary": "Create a `BoxedTracer` from an object-safe tracer."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::GlobalTracerProvider",
+      "name": "GlobalTracerProvider",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct GlobalTracerProvider",
+      "summary": "Represents the globally configured [`TracerProvider`] instance for this application. This allows generic tracing through the returned [`BoxedTracer`] instances.",
+      "doc": "api/opentelemetry.global.trace.md#globaltracerprovider",
+      "aliases": [
+        "opentelemetry::global::GlobalTracerProvider"
+      ],
+      "implements": [
+        "opentelemetry::trace::tracer_provider::TracerProvider"
+      ],
+      "methods": [
+        {
+          "name": "tracer_with_scope",
+          "signature": "fn tracer_with_scope(&self, scope: InstrumentationScope) -> Self::Tracer",
+          "via_trait": "opentelemetry::trace::tracer_provider::TracerProvider",
+          "summary": "Create a tracer using the global provider."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::ObjectSafeSpan",
+      "name": "ObjectSafeSpan",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait ObjectSafeSpan",
+      "summary": "Allows a specific [`crate::trace::Span`] to be used generically by [`BoxedSpan`] instances by mirroring the interface and boxing the return types.",
+      "doc": "api/opentelemetry.global.trace.md#objectsafespan",
+      "aliases": [
+        "opentelemetry::global::ObjectSafeSpan"
+      ],
+      "required_methods": [
+        "add_event_with_timestamp",
+        "add_link",
+        "end_with_timestamp",
+        "is_recording",
+        "set_attribute",
+        "set_status",
+        "span_context",
+        "update_name"
+      ],
+      "provided_methods": [
+        "end"
+      ],
+      "methods": [
+        {
+          "name": "add_event_with_timestamp",
+          "signature": "fn add_event_with_timestamp(&mut self, name: Cow<'static, str>, timestamp: SystemTime, attributes: Vec<KeyValue>)",
+          "summary": "An API to record events at a specific time in the context of a given `Span`."
+        },
+        {
+          "name": "add_link",
+          "signature": "fn add_link(&mut self, span_context: SpanContext, attributes: Vec<KeyValue>)",
+          "summary": "Adds a link to this span"
+        },
+        {
+          "name": "end",
+          "signature": "fn end(&mut self)",
+          "summary": "Finishes the `Span`."
+        },
+        {
+          "name": "end_with_timestamp",
+          "signature": "fn end_with_timestamp(&mut self, timestamp: SystemTime)",
+          "summary": "Finishes the `Span` with given timestamp"
+        },
+        {
+          "name": "is_recording",
+          "signature": "fn is_recording(&self) -> bool",
+          "summary": "Returns true if this `Span` is recording information like events with the `add_event` operation, attributes using `set_attributes`, status with `set_status`, etc."
+        },
+        {
+          "name": "set_attribute",
+          "signature": "fn set_attribute(&mut self, attribute: KeyValue)",
+          "summary": "An API to set a single `Attribute` where the attribute properties are passed as arguments. To avoid extra allocations some implementations may offer a separate API for each of the possible value types."
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status(&mut self, status: Status)",
+          "summary": "Sets the status of the `Span`. `message` MUST be ignored when the status is `OK` or `Unset`."
+        },
+        {
+          "name": "span_context",
+          "signature": "fn span_context(&self) -> &SpanContext",
+          "summary": "Returns the `SpanContext` for the given `Span`. The returned value may be used even after the `Span is finished. The returned value MUST be the same for the entire `Span` lifetime."
+        },
+        {
+          "name": "update_name",
+          "signature": "fn update_name(&mut self, new_name: Cow<'static, str>)",
+          "summary": "Updates the `Span`'s name. After this update, any sampling behavior based on the name will depend on the implementation."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::ObjectSafeTracer",
+      "name": "ObjectSafeTracer",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait ObjectSafeTracer",
+      "summary": "Allows a specific [`Tracer`] to be used generically by [`BoxedTracer`] instances by mirroring the interface and boxing the return types.",
+      "doc": "api/opentelemetry.global.trace.md#objectsafetracer",
+      "aliases": [
+        "opentelemetry::global::ObjectSafeTracer"
+      ],
+      "required_methods": [
+        "build_with_context_boxed"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "build_with_context_boxed",
+          "signature": "fn build_with_context_boxed(&self, builder: trace::SpanBuilder, parent_cx: &Context) -> Box<dyn ObjectSafeSpan + Send + Sync>",
+          "summary": "Returns a trait object so the underlying implementation can be swapped out at runtime."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::global::trace::ObjectSafeTracerProvider",
+      "name": "ObjectSafeTracerProvider",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait ObjectSafeTracerProvider",
+      "summary": "Allows a specific [`TracerProvider`] to be used generically by the [`GlobalTracerProvider`] by mirroring the interface and boxing the return types.",
+      "doc": "api/opentelemetry.global.trace.md#objectsafetracerprovider",
+      "aliases": [
+        "opentelemetry::global::ObjectSafeTracerProvider"
+      ],
+      "required_methods": [
+        "boxed_tracer"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "boxed_tracer",
+          "signature": "fn boxed_tracer(&self, scope: InstrumentationScope) -> Box<dyn ObjectSafeTracer + Send + Sync>",
+          "summary": "Creates a versioned named tracer instance that is a trait object through the underlying `TracerProvider`."
+        }
+      ]
+    }
+  ]
+}

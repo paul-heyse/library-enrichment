@@ -36,11 +36,53 @@ enrichment_core::native_struct! {
 enrichment_core::native_struct! {
     struct Minimum { bytes: u64 => Rule::Text }
 }
+enrichment_core::native_struct! {
+    struct InlineFit { fits: bool => Rule::Text }
+}
+enrichment_core::native_struct! {
+    struct DeliveryInput { result: ResultRecord => Rule::Text }
+}
 
 #[derive(Debug, thiserror::Error)]
 #[error("delivery requires at least {minimum} encoded bytes")]
 pub struct MinimumBudget {
     pub minimum: usize,
+}
+
+pub struct DeliveryOptions {
+    pub inline: usize,
+    pub requested: Option<usize>,
+    pub request_id: enrichment_core::wire::RequestId,
+    pub profile: enrichment_core::mcp_delivery::DeliveryProfile,
+}
+
+/// Inline eligibility is the same native encoded-size predicate as retained-view selection.
+/// The transport codec measures; this plan alone decides whether the full answer fits.
+pub async fn inline(
+    runtime: &QueryRuntime,
+    value: &enrichment_core::wire::Envelope,
+    limit: usize,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
+) -> Result<bool> {
+    let input = ResultRecord::from_envelope(value)
+        .map_err(datafusion::common::DataFusionError::Execution)?;
+    // Capture the typed struct directly instead of rebuilding the entire payload expression.
+    let frame = runtime
+        .session()
+        .read_batch(DeliveryInput::batch(&[DeliveryInput { result: input }])?)?;
+    let measured = frame.with_column(
+        "bytes",
+        enrichment_core::native_transport::delivery(
+            runtime.session().runtime_env().memory_pool.clone(),
+            col("result"),
+            &value.request_id,
+            profile,
+        ),
+    )?;
+    let selected = measured
+        .filter(col("bytes").lt_eq(lit(limit as u64)))?
+        .select(vec![lit(true).alias("fits")])?;
+    Ok(!runtime.records::<InlineFit>(selected, 1).await?.is_empty())
 }
 
 /// Project bounded alternatives from the admitted header, then select the richest fitting view.
@@ -50,10 +92,14 @@ pub async fn retained(
     header: enrichment_core::operation::results::ResultHeader,
     artifact: &enrichment_core::evidence::Artifact,
     index: &Index,
-    inline: usize,
-    requested: Option<usize>,
-    request_id: enrichment_core::wire::RequestId,
+    options: DeliveryOptions,
 ) -> std::io::Result<enrichment_core::wire::Envelope> {
+    let DeliveryOptions {
+        inline,
+        requested,
+        request_id,
+        profile,
+    } = options;
     use enrichment_core::evidence::arrow_model::expressions::{derive_record, record};
     let plan = async {
         let sections = index
@@ -165,9 +211,13 @@ pub async fn retained(
                 ("artifacts", handles),
                 (
                     "data",
-                    enrichment_core::evidence::arrow_model::expressions::literal(
-                        &ToolData::default(),
-                    )?,
+                    enrichment_core::evidence::arrow_model::expressions::literal(&match &index
+                        .record
+                        .data
+                    {
+                        ToolData::JobControl(job) => ToolData::JobControl(job.clone()),
+                        _ => ToolData::default(),
+                    })?,
                 ),
                 (
                     "evidence",
@@ -178,25 +228,19 @@ pub async fn retained(
                 ),
             ],
         )?;
-        let frame = frame.select(vec![
-            col("rank"),
-            lit(0u64).alias("bytes"),
-            selected.alias("result"),
-        ])?;
-        let mut candidates = runtime.records::<Measured>(frame, 3).await?;
-        for candidate in &mut candidates {
-            candidate.bytes = enrichment_core::canonical::serialized_size(
-                &candidate.result.clone().into_envelope(request_id.clone()),
-                crate::result::MAX_BYTES as usize,
-            )? as u64;
-        }
-        crate::native_catalog::work(
-            &session,
-            "measured_delivery",
-            session
-                .read_batch(Measured::batch(&candidates)?)?
-                .into_view(),
-        )?;
+        let frame = frame
+            .select(vec![col("rank"), selected.alias("result")])?
+            .with_column(
+                "bytes",
+                enrichment_core::native_transport::delivery(
+                    runtime.session().runtime_env().memory_pool.clone(),
+                    col("result"),
+                    &request_id,
+                    profile,
+                ),
+            )?
+            .select(vec![col("rank"), col("bytes"), col("result")])?;
+        crate::native_catalog::work(&session, "measured_delivery", frame.into_view())?;
         let selected = session
             .sql(&format!(
                 "SELECT * FROM measured_delivery WHERE bytes<={inline} ORDER BY rank LIMIT 1"

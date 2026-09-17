@@ -21,10 +21,11 @@ pub(crate) async fn summarize(runtime: &QueryRuntime, session: &SessionContext) 
         .collect::<Vec<_>>()
         .join(" ");
     let plan = session.sql(&format!("WITH kinds AS (SELECT kind, bool_or(outcome <> 'missing') AS present FROM snapshot.evidence.coverage GROUP BY kind) SELECT array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE present) AS indexed, array_agg(kind ORDER BY CASE kind {order} END) FILTER (WHERE NOT present) AS missing FROM kinds")).await?;
-    #[derive(serde::Deserialize)]
+    enrichment_core::native_struct! {
     struct Row {
-        indexed: Option<Vec<EvidenceKind>>,
-        missing: Option<Vec<EvidenceKind>>,
+        indexed: Option<Vec<EvidenceKind>> => enrichment_core::native_union::Rule::Text,
+        missing: Option<Vec<EvidenceKind>> => enrichment_core::native_union::Rule::Text,
+    }
     }
     let mut rows = crate::registry::rows::<Row>(runtime, plan, 1).await?;
     let row = rows

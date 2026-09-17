@@ -1,0 +1,20 @@
+id: model-builder-methods
+language: json
+severity: hint
+message: a chainable configuration method
+note: |
+  Builder chains are the largest blind spot in any Rust API: a constructor shows you none of
+  them, and nothing forces you to discover one. Here they are also the undocumented half of
+  the surface, so this rule and `model-undocumented-but-reachable` overlap heavily by design.
+metadata:
+  record: builder-method
+  reads: content/model
+rule:
+  kind: object
+  all:
+    - has: { kind: pair, has: { field: key, regex: '^"signature"$' } }
+    - has:
+        matches:
+          json-string-field:
+            key-pattern: { regex: '^"name"$' }
+            value-pattern: { regex: '^"(with_|add_|build$|plan_diff$|all$|analyzer|optimizer|physical_optimizer|record_|preview_|custom_)' }

@@ -80,17 +80,43 @@ pub fn containment_identity(config: &Execution) -> io::Result<String> {
         canonical::sha256_reader(std::fs::File::open(config.executor()?)?, 128 * 1024 * 1024)?;
     let (broker, _) =
         canonical::sha256_reader(std::fs::File::open(config.broker())?, 128 * 1024 * 1024)?;
-    Ok(canonical::digest_hex(&serde_json::json!({
-        "contract": "bounded-execution/3", "protocol": capsule_protocol::VERSION,
-        "helper": helper, "broker": broker,
-        "controller": canonical::sha256_hex(include_bytes!("mod.rs")),
-        "description": canonical::sha256_hex(include_bytes!("description.rs")),
-        "resource_contract": canonical::sha256_hex(include_bytes!("../../../enrichment-core/src/execution/facts.rs")),
-        "execution_policy": canonical::sha256_hex(include_bytes!("../../../enrichment-store/src/execution_policy.rs")),
-        "resources": config.resources()?, "output_bytes": config.output_bytes.clamp(1024,1048576),
-        "deadline_seconds": config.deadline_seconds.clamp(1,600),
-        "cleanup_deadline_seconds": config.cleanup_deadline_seconds.clamp(5,3600),
-    })))
+    enrichment_core::native_key::Key::ContainmentIdentity
+        .hex_digest(
+            &enrichment_core::operation::identities::ContainmentIdentity {
+                contract: "bounded-execution/4".into(),
+                protocol: capsule_protocol::VERSION,
+                components: [
+                    ("helper".into(), helper),
+                    ("broker".into(), broker),
+                    (
+                        "controller".into(),
+                        canonical::sha256_hex(include_bytes!("mod.rs")),
+                    ),
+                    (
+                        "description".into(),
+                        canonical::sha256_hex(include_bytes!("description.rs")),
+                    ),
+                    (
+                        "resource_contract".into(),
+                        canonical::sha256_hex(include_bytes!(
+                            "../../../enrichment-core/src/execution/facts.rs"
+                        )),
+                    ),
+                    (
+                        "execution_policy".into(),
+                        canonical::sha256_hex(include_bytes!(
+                            "../../../enrichment-store/src/execution_policy.rs"
+                        )),
+                    ),
+                ]
+                .into(),
+                resources: config.resources()?,
+                output_bytes: config.output_bytes.clamp(1024, 1_048_576),
+                deadline_seconds: config.deadline_seconds.clamp(1, 600),
+                cleanup_deadline_seconds: config.cleanup_deadline_seconds.clamp(5, 3600),
+            },
+        )
+        .map_err(io::Error::other)
 }
 
 /// Qualification owns dedicated sidecar state next to the explicitly selected engine root.

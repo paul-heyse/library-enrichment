@@ -9,7 +9,7 @@ use enrichment_core::{
     request::SearchRequest,
     search::{self, page::SearchCursor, spec::SearchSpec},
     wire::{
-        Envelope, ErrorCode, Evidence, Freshness, Page, SourceVersionMatch,
+        Envelope, ErrorCode, Evidence, Freshness, Page,
         data::{ScoreFactor, SearchData, SearchHit},
     },
 };
@@ -32,12 +32,14 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         Ok(value) => value,
         Err(error) => return common::operation_error(&error, "search_tokens"),
     };
-    let mut kinds = request
+    let kinds = request
         .kinds
         .clone()
         .unwrap_or_else(|| FAMILIES.iter().map(|k| (*k).into()).collect());
-    kinds.sort();
-    kinds.dedup();
+    let kinds = match enrichment_core::native_key::ordered_set(&kinds) {
+        Ok(values) => values,
+        Err(error) => return common::operation_error(&error, "search_selection"),
+    };
     if kinds.iter().any(|k| k == "source") {
         return envelope::error(
             ErrorCode::UnsupportedCapability,
@@ -54,13 +56,16 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
             false,
         );
     }
-    let opened =
-        match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
-            .await
-        {
-            Ok(value) => value,
-            Err(e) => return *e,
-        };
+    let opened = match common::open_context(
+        service,
+        &request.context_id,
+        request.snapshot_id.as_ref(),
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(e) => return *e,
+    };
     let area = match request
         .area
         .as_deref()
@@ -72,16 +77,20 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         Ok(value) => value,
         Err(e) => return common::query_error(&e),
     };
-    let scope = format!("{}:{}", opened.context.context_id, opened.snapshot_id);
+    let scope = enrichment_core::search::page::SearchScope {
+        context_id: opened.context.context_id.clone(),
+        snapshot_id: opened.snapshot_id.clone(),
+    };
     let budget = common::byte_budget(service, request.max_bytes);
     let spec = SearchSpec::new(&query);
-    let digest = enrichment_core::canonical::digest_hex(&serde_json::json!([
-        spec,
-        kinds,
-        area,
-        request.max_items,
-        budget
-    ]));
+    let digest = enrichment_core::operation::selections::SearchSelection {
+        spec: spec.clone(),
+        kinds: kinds.clone(),
+        area: area.clone(),
+        max_items: request.max_items,
+        max_bytes: budget,
+    }
+    .identity();
     let cursor = match request
         .cursor
         .as_deref()
@@ -212,16 +221,20 @@ pub async fn search(service: &Service, request: SearchRequest) -> Envelope {
         freshness: Freshness {
             registry_checked_at: None,
             latest_verified: false,
-            source_version_match: if manifest.crate_version.as_deref()
-                == Some(opened.release.key.version.as_str())
+            source_version_match: match enrichment_store::research_outcomes::source_version(
+                &service.repository.runtime,
+                opened.context.mode,
+                manifest.crate_version.as_deref(),
+                &opened.release.key.version,
+            )
+            .await
             {
-                SourceVersionMatch::Exact
-            } else {
-                SourceVersionMatch::Unknown
+                Ok(value) => value,
+                Err(error) => return common::operation_error(&error, "source_version_scope"),
             },
         },
-        context_id: Some(opened.context.context_id.to_string()),
-        snapshot_id: Some(opened.snapshot_id.to_string()),
+        context_id: Some(opened.context.context_id.clone()),
+        snapshot_id: Some(opened.snapshot_id.clone()),
         evidence,
         artifacts: vec![],
     };

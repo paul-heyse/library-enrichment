@@ -225,6 +225,26 @@ pub struct VerificationCounters {
 }
 
 crate::native_struct! {
+/// Native cache occupancy is distinct from managed resources held by evicted readers.
+pub struct NativeCacheCounters {
+    family: NativeCacheFamily => crate::native_union::Rule::Text,
+    entries: usize => crate::native_union::Rule::Text,
+    limit_bytes: usize => crate::native_union::Rule::Text,
+    /// Absent when the upstream trait has no allocation-free occupancy query.
+    occupied_bytes: Option<usize> => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_vocabulary! {
+pub enum NativeCacheFamily {
+    ImmutableProviders = "immutable_providers",
+    FileMetadata = "file_metadata",
+    FileStatistics = "file_statistics",
+    FileListings = "file_listings",
+}
+}
+
+crate::native_struct! {
 /// Process-scoped native query diagnostics; neither library coverage nor a peak-RSS claim.
 #[derive(Default)]
 pub struct NativeQueryCounters {
@@ -251,6 +271,7 @@ pub struct NativeQueryCounters {
     managed_memory_limit_bytes: usize => crate::native_union::Rule::Text,
     spill_limit_bytes: u64 => crate::native_union::Rule::Text,
     metadata_cache_limit_bytes: usize => crate::native_union::Rule::Text,
+    caches: Vec<NativeCacheCounters> => crate::native_union::Rule::Text,
 }
 }
 

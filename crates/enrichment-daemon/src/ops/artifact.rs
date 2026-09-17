@@ -7,6 +7,9 @@
 
 use enrichment_core::canonical;
 use enrichment_core::evidence::{Artifact, ArtifactKind, is_artifact_id};
+use enrichment_core::operation::selections::{
+    ArtifactReadAction, ArtifactSlicePlan, ArtifactWindow,
+};
 use enrichment_core::request::ReadArtifactRequest;
 use enrichment_core::search::{Cursor, CursorError};
 use enrichment_core::wire::data::{ArtifactSliceData, SliceEncoding};
@@ -53,149 +56,209 @@ pub async fn read(service: &Service, request: ReadArtifactRequest) -> Envelope {
             .result_section(&service.repository.runtime, id, name.as_str())
             .await
         {
-            Ok(Some(window)) => Some(window),
-            Ok(None) => {
-                return envelope::error(
-                    ErrorCode::ArtifactUnavailable,
-                    "The captured native result has no requested section",
-                    "Choose a section listed in delivery.sections.",
-                    false,
-                );
-            }
+            Ok(window) => match window
+                .map(|window| -> Result<_, std::num::TryFromIntError> {
+                    Ok(ArtifactWindow {
+                        start: usize::try_from(window.start)?,
+                        end: usize::try_from(window.end)?,
+                        section: Some(name.as_str().into()),
+                    })
+                })
+                .transpose()
+            {
+                Ok(window) => window,
+                Err(error) => return common::operation_error(&error, "result_section"),
+            },
             Err(error) => return common::operation_error(&error, "result_section"),
         }
     } else {
         None
     };
-    let service = service.clone();
     let runtime = service.repository.runtime.clone();
-    runtime
-        .blocking(move || {
-            // Keep the captured catalog lease until the byte driver has finished reading.
-            let _pin = pin;
-            read_blocking(&service, request, artifact, selected_window)
-        })
-        .await
-        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
-}
-
-fn read_blocking(
-    service: &Service,
-    request: ReadArtifactRequest,
-    artifact: Artifact,
-    selected_window: Option<enrichment_store::result::Window>,
-) -> Envelope {
-    let id = request.artifact_id.trim();
-    let mut file = match service.blobs.capture(&artifact, 256 * 1024 * 1024) {
-        Ok(b) => b,
-        Err(err) => return common::operation_error(&err, "artifact_read"),
+    let plan = match enrichment_store::artifact_selection::plan(
+        &runtime,
+        &artifact,
+        &request,
+        selected_window,
+    )
+    .await
+    {
+        Ok(plan) => plan,
+        Err(error) => return common::operation_error(&error, "artifact_selection"),
     };
-    let total = artifact.size_bytes;
-    let is_text = selected_window.is_some()
-        || artifact.media_type.starts_with("text/")
-        || artifact.media_type.contains("json")
-        || artifact.media_type.contains("toml")
-        || artifact.media_type.contains("markdown");
-
-    // A section narrows the byte window before paging.
-    let mut window_start = 0usize;
-    let mut window_end = match usize::try_from(total) {
-        Ok(n) => n,
-        Err(e) => return common::operation_error(&e, "artifact_read"),
-    };
-    let mut section_name = None;
-    if let Some(section) = &request.section {
-        match section {
-            ArtifactSection::Result { name } => {
-                let Some(window) = selected_window else {
-                    return common::operation_error(
-                        &std::io::Error::other("native result window absent"),
-                        "result_section",
-                    );
-                };
-                if window.start > window.end || window.end > total {
-                    return common::operation_error(
-                        &std::io::Error::other("native result window exceeds retained bytes"),
-                        "result_section",
-                    );
-                }
-                window_start = window.start as usize;
-                window_end = window.end as usize;
-                section_name = Some(name.as_str().to_owned());
-            }
-            ArtifactSection::Markdown { heading } => {
-                if !is_text || heading.trim().is_empty() || heading.len() > 512 {
-                    return envelope::error(
-                        ErrorCode::UnsupportedFormat,
-                        "Markdown selection requires text and a nonempty heading of at most 512 bytes",
-                        "Use a valid Markdown heading or omit section for byte reading.",
-                        false,
-                    );
-                }
-                match super::artifact_window::section(&mut file, heading.trim()) {
-                    Ok(Some((start, end, heading))) => {
-                        window_start = start;
-                        window_end = end;
-                        section_name = Some(heading);
-                    }
-                    Ok(None) => {
-                        return envelope::error(
-                            ErrorCode::ArtifactUnavailable,
-                            format!("artifact {id} has no heading {heading}"),
-                            "Read the artifact without section to inspect its headings.",
-                            false,
-                        );
-                    }
-                    Err(error) => return common::operation_error(&error, "artifact_read"),
-                }
-            }
+    match plan.action {
+        ArtifactReadAction::Missing => {
+            return envelope::error(
+                ErrorCode::ArtifactUnavailable,
+                "The retained result has no requested section",
+                "Choose a section listed in delivery.sections.",
+                false,
+            );
         }
+        ArtifactReadAction::Unsupported => {
+            return envelope::error(
+                ErrorCode::UnsupportedFormat,
+                "Markdown selection requires text and a nonempty heading of at most 512 bytes",
+                "Use a valid Markdown heading or omit section for byte reading.",
+                false,
+            );
+        }
+        ArtifactReadAction::Corrupt => {
+            return common::operation_error(
+                &std::io::Error::other("native result window exceeds retained bytes"),
+                "result_section",
+            );
+        }
+        ArtifactReadAction::Bytes | ArtifactReadAction::Markdown => {}
     }
-
-    let digest = canonical::short_id(
-        "q",
-        &serde_json::json!({ "section": section_name, "window": [window_start, window_end], "budget": common::byte_budget(service,request.max_bytes) }),
-    );
+    let scan_markdown = plan.action == ArtifactReadAction::Markdown;
+    let protection = match pin.protect_artifact(&artifact).await {
+        Ok(protection) => protection,
+        Err(error) => return common::operation_error(&error, "artifact_retention"),
+    };
+    let capture_scope = (pin.clone(), protection.clone());
+    let blobs = service.blobs.clone();
+    let captured = artifact.clone();
+    let prepared = runtime
+        .blocking(move || -> std::io::Result<_> {
+            // A cancelled waiter cannot release durable ownership while blocking I/O runs.
+            let _scope = capture_scope;
+            let mut file = blobs.capture(&captured, 256 * 1024 * 1024)?;
+            let windows = if scan_markdown {
+                super::artifact_window::sections(&mut file)?
+            } else {
+                Vec::new()
+            };
+            Ok((file, windows))
+        })
+        .await;
+    let (file, windows) = match prepared {
+        Ok(Ok(prepared)) => prepared,
+        Ok(Err(error)) => return common::operation_error(&error, "artifact_read"),
+        Err(error) => return common::operation_error(&error, "artifact_read"),
+    };
+    let window = if scan_markdown {
+        let Some(heading) = plan.heading.as_deref() else {
+            return common::operation_error(
+                &std::io::Error::other("native markdown instruction has no heading"),
+                "artifact_selection",
+            );
+        };
+        match enrichment_store::artifact_selection::markdown(&runtime, windows, heading).await {
+            Ok(Some(window)) => window,
+            Ok(None) => {
+                return envelope::error(
+                    ErrorCode::ArtifactUnavailable,
+                    format!("artifact {id} has no heading {heading}"),
+                    "Read the artifact without section to inspect its headings.",
+                    false,
+                );
+            }
+            Err(error) => return common::operation_error(&error, "artifact_selection"),
+        }
+    } else {
+        plan.window
+    };
+    let budget = common::byte_budget(service, request.max_bytes);
+    let digest = enrichment_core::operation::selections::ArtifactSelection {
+        section: window.section.clone(),
+        start: window.start,
+        end: window.end,
+        max_bytes: budget,
+    }
+    .identity();
     let offset = match &request.cursor {
-        None => 0usize,
+        None => 0,
         Some(cursor) => match Cursor::decode(cursor, id, &digest, SORT) {
-            Ok(c) => match usize::try_from(c.offset)
-                .ok()
-                .filter(|n| *n <= window_end - window_start)
-            {
-                Some(offset) => offset,
-                None => {
+            Ok(cursor) => match usize::try_from(cursor.offset) {
+                Ok(offset) => offset,
+                Err(error) => {
                     return envelope::error(
                         ErrorCode::InvalidCursor,
-                        "Artifact cursor exceeds its byte window",
+                        error.to_string(),
                         "Restart without a cursor.",
                         false,
                     );
                 }
             },
-            Err(err) => {
-                let next = match err {
+            Err(error) => {
+                let next = match error {
                     CursorError::Malformed => "Start again without a cursor.",
                     CursorError::Mismatch { .. } => {
-                        "A cursor is valid only for the same artifact and section. Start again \
-                         without a cursor."
+                        "A cursor is valid only for the same artifact and section. Start again without a cursor."
                     }
                 };
-                return envelope::error(ErrorCode::InvalidCursor, err.to_string(), next, false);
+                return envelope::error(ErrorCode::InvalidCursor, error.to_string(), next, false);
             }
         },
     };
+    let slice = match enrichment_store::artifact_selection::slice(
+        &runtime,
+        &window,
+        offset,
+        budget,
+        plan.is_text,
+    )
+    .await
+    {
+        Ok(slice) => slice,
+        Err(error) => return common::operation_error(&error, "artifact_slice"),
+    };
+    if slice.invalid_offset {
+        return envelope::error(
+            ErrorCode::InvalidCursor,
+            "Artifact cursor exceeds its byte window",
+            "Restart without a cursor.",
+            false,
+        );
+    }
+    runtime
+        .blocking(move || {
+            // The captured provider lease survives selection, scanning, byte copying and encoding.
+            let _pin = (pin, protection);
+            read_blocking(
+                request,
+                ReadBytes {
+                    artifact,
+                    file,
+                    window,
+                    slice,
+                    digest,
+                    is_text: plan.is_text,
+                    budget,
+                },
+            )
+        })
+        .await
+        .unwrap_or_else(|error| common::operation_error(&error, "artifact_read"))
+}
 
-    let budget = common::byte_budget(service, request.max_bytes);
-    // Base64 inflates by 4/3; keep the encoded slice inside the budget.
-    let raw_budget = if is_text { budget } else { budget * 3 / 4 };
-    let start = window_start + offset;
-    let mut end = start.saturating_add(raw_budget).min(window_end);
-    let bytes = match super::artifact_window::range(
-        &mut file,
-        start,
-        (end - start).saturating_add(1).min(window_end - start),
-    ) {
+struct ReadBytes {
+    artifact: Artifact,
+    file: std::fs::File,
+    window: ArtifactWindow,
+    slice: ArtifactSlicePlan,
+    digest: String,
+    is_text: bool,
+    budget: usize,
+}
+
+fn read_blocking(request: ReadArtifactRequest, prepared: ReadBytes) -> Envelope {
+    let ReadBytes {
+        artifact,
+        mut file,
+        window,
+        slice,
+        digest,
+        is_text,
+        budget,
+    } = prepared;
+    let id = request.artifact_id.trim();
+    let total = artifact.size_bytes;
+    let (window_start, window_end, section_name) = (window.start, window.end, window.section);
+    let start = slice.start;
+    let mut end = slice.end;
+    let bytes = match super::artifact_window::range(&mut file, start, slice.read_bytes) {
         Ok(bytes) => bytes,
         Err(error) => return common::operation_error(&error, "artifact_read"),
     };

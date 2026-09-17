@@ -1,0 +1,406 @@
+{
+  "module": "datafusion_tracing::instrumented_exec",
+  "crate": "datafusion-tracing",
+  "api": "api/datafusion_tracing.instrumented_exec.md",
+  "items": [
+    {
+      "path": "datafusion_tracing::instrumented_exec::ExecutionRecorders",
+      "name": "ExecutionRecorders",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct ExecutionRecorders",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "methods": [
+        {
+          "name": "cancel_stream",
+          "signature": "fn cancel_stream(&Arc<self>, partition: usize)",
+          "visibility": "internal"
+        },
+        {
+          "name": "finish_stream",
+          "signature": "fn finish_stream(&Arc<self>)",
+          "visibility": "internal"
+        },
+        {
+          "name": "is_same_execution",
+          "signature": "fn is_same_execution(&self, parent_span_id: Option<&Id>, context: &Arc<TaskContext>) -> bool",
+          "visibility": "internal"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(slot: Weak<Mutex<Vec<Arc<ExecutionRecorders>>>>, parent_span_id: Option<Id>, context: Arc<TaskContext>, partition: usize, node_recorder: NodeRecorder, metrics_recorder: Option<MetricsRecorder>, preview_recorder: Option<PreviewRecorder>) -> Self",
+          "visibility": "internal"
+        },
+        {
+          "name": "release_stream",
+          "signature": "fn release_stream(&Arc<self>, canceled_partition: Option<usize>)",
+          "visibility": "internal"
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> Span",
+          "visibility": "internal"
+        },
+        {
+          "name": "try_reserve_partition",
+          "signature": "fn try_reserve_partition(&self, partition: usize) -> bool",
+          "visibility": "internal"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::instrumented_exec::ExecutionRecordingStream",
+      "name": "ExecutionRecordingStream",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct ExecutionRecordingStream",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implements": [
+        "core::ops::drop::Drop",
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "visibility": "internal",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: SendableRecordBatchStream, recorders: Arc<ExecutionRecorders>) -> Self",
+          "visibility": "internal"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "visibility": "internal",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "project",
+          "signature": "fn project<'pin>(_pin_project::__private::Pin<&'pin mut self>) -> __ExecutionRecordingStreamProjection<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "project_ref",
+          "signature": "fn project_ref<'pin>(_pin_project::__private::Pin<&'pin self>) -> __ExecutionRecordingStreamProjectionRef<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "visibility": "internal",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::instrumented_exec::InstrumentedExec",
+      "name": "InstrumentedExec",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct InstrumentedExec",
+      "summary": "An [`ExecutionPlan`] wrapper that instruments execution with tracing spans and metrics recording.",
+      "doc": "api/datafusion_tracing.instrumented_exec.md#instrumentedexec",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_physical_plan::display::DisplayAs",
+        "datafusion_physical_plan::execution_plan::ExecutionPlan"
+      ],
+      "methods": [
+        {
+          "name": "apply_expressions",
+          "signature": "fn apply_expressions(&self, f: &mut dyn FnMut(&Arc<dyn PhysicalExpr>) -> Result<TreeNodeRecursion>) -> Result<TreeNodeRecursion>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate expression traversal to the wrapped execution plan."
+        },
+        {
+          "name": "benefits_from_input_partitioning",
+          "signature": "fn benefits_from_input_partitioning(&self) -> Vec<bool>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "cardinality_effect",
+          "signature": "fn cardinality_effect(&self) -> CardinalityEffect",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "check_invariants",
+          "signature": "fn check_invariants(&self, check: InvariantLevel) -> Result<()>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "child_stats_requests",
+          "signature": "fn child_stats_requests(&self, partition: Option<usize>) -> Vec<ChildStats>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "children",
+          "signature": "fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "create_populated_span",
+          "signature": "fn create_populated_span(&self) -> Span",
+          "visibility": "internal",
+          "summary": "Creates a tracing span populated with metadata about the execution plan."
+        },
+        {
+          "name": "downcast_delegate",
+          "signature": "fn downcast_delegate(&self) -> Option<&dyn ExecutionPlan>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate public downcasts to the inner plan so instrumentation stays transparent to normal plan inspection."
+        },
+        {
+          "name": "dynamic_expressions_produced",
+          "signature": "fn dynamic_expressions_produced(&self) -> Vec<Arc<dyn PhysicalExpr>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableRecordBatchStream>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Executes the plan for a given partition and context, instrumented with tracing and metrics recording."
+        },
+        {
+          "name": "execution_recording_stream",
+          "signature": "fn execution_recording_stream(&self, inner_stream: SendableRecordBatchStream, recorders: Arc<ExecutionRecorders>) -> SendableRecordBatchStream",
+          "visibility": "internal",
+          "summary": "Wraps the given stream so recorder state for this partition is released after the stream is dropped."
+        },
+        {
+          "name": "fetch",
+          "signature": "fn fetch(&self) -> Option<usize>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "fmt_as",
+          "signature": "fn fmt_as(&self, format: DisplayFormatType, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::display::DisplayAs"
+        },
+        {
+          "name": "gather_filters_for_pushdown",
+          "signature": "fn gather_filters_for_pushdown(&self, phase: FilterPushdownPhase, parent_filters: Vec<Arc<dyn PhysicalExpr>>, config: &ConfigOptions) -> Result<FilterDescription>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "handle_child_pushdown_result",
+          "signature": "fn handle_child_pushdown_result(&self, phase: FilterPushdownPhase, child_pushdown_result: ChildPushdownResult, config: &ConfigOptions) -> Result<FilterPushdownPropagation<Arc<dyn ExecutionPlan>>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for handling child pushdown result and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "input_distribution_requirements",
+          "signature": "fn input_distribution_requirements(&self) -> InputDistributionRequirements",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "is_instrumented",
+          "signature": "fn is_instrumented(plan: &dyn ExecutionPlan) -> bool",
+          "visibility": "internal",
+          "summary": "Returns true if the plan is an `InstrumentedExec` wrapper."
+        },
+        {
+          "name": "maintains_input_order",
+          "signature": "fn maintains_input_order(&self) -> Vec<bool>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> Option<MetricsSet>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "metrics_recording_stream",
+          "signature": "fn metrics_recording_stream(&self, inner_stream: SendableRecordBatchStream, recorder: Arc<MetricsRecorder>) -> SendableRecordBatchStream",
+          "visibility": "internal",
+          "summary": "Wraps the given stream with metrics recording. Metrics are aggregated across all partitions before being reported."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn ExecutionPlan>, span_create_fn: Arc<dyn Fn() -> tracing::Span + Send + Sync>, options: &InstrumentationOptions) -> InstrumentedExec",
+          "visibility": "internal",
+          "summary": "Creates a new `InstrumentedExec` that wraps an execution plan with tracing and metrics."
+        },
+        {
+          "name": "node_recording_stream",
+          "signature": "fn node_recording_stream(&self, inner_stream: SendableRecordBatchStream, recorder: Arc<NodeRecorder>) -> SendableRecordBatchStream",
+          "visibility": "internal",
+          "summary": "Wraps the given stream with a completion recorder so fields that are only fully qualified after execution (such as `datafusion.node`) are recorded once all partitions have finished executing."
+        },
+        {
+          "name": "partition_statistics",
+          "signature": "fn partition_statistics(&self, partition: Option<usize>) -> Result<Arc<Statistics>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "preview_recording_stream",
+          "signature": "fn preview_recording_stream(&self, inner_stream: SendableRecordBatchStream, recorder: Arc<PreviewRecorder>, partition: usize) -> SendableRecordBatchStream",
+          "visibility": "internal",
+          "summary": "Wraps the given stream with batch preview recording. The preview limit is applied globally across all partitions before the preview is reported."
+        },
+        {
+          "name": "properties",
+          "signature": "fn properties(&self) -> &Arc<PlanProperties>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "repartitioned",
+          "signature": "fn repartitioned(&self, target_partitions: usize, config: &ConfigOptions) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for repartitioning and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "replace_children",
+          "signature": "fn replace_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>, options: ReplaceChildrenOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate child replacement to the inner plan and preserve instrumentation."
+        },
+        {
+          "name": "required_input_distribution",
+          "signature": "fn required_input_distribution(&self) -> Vec<Distribution>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "required_input_ordering",
+          "signature": "fn required_input_ordering(&self) -> Vec<Option<OrderingRequirements>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "reserve_recorders",
+          "signature": "fn reserve_recorders(&self, context: Arc<TaskContext>, partition: usize) -> Arc<ExecutionRecorders>",
+          "visibility": "internal",
+          "summary": "Returns and reserves the recorder group for this execution stream."
+        },
+        {
+          "name": "reset_state",
+          "signature": "fn reset_state(Arc<self>) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for resetting state and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "static_name",
+          "signature": "fn static_name() -> &'static str",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "statistics_from_inputs",
+          "signature": "fn statistics_from_inputs(&self, input_stats: &[Arc<Statistics>], args: &StatisticsArgs) -> Result<Arc<Statistics>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "supports_limit_pushdown",
+          "signature": "fn supports_limit_pushdown(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "try_pushdown_sort",
+          "signature": "fn try_pushdown_sort(&self, order: &[PhysicalSortExpr]) -> Result<SortOrderPushdownResult<Arc<dyn ExecutionPlan>>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for sort pushdown and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "try_swapping_with_projection",
+          "signature": "fn try_swapping_with_projection(&self, projection: &ProjectionExec) -> Result<Option<Arc<dyn ExecutionPlan>>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for swapping with a projection and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "with_fetch",
+          "signature": "fn with_fetch(&self, limit: Option<usize>) -> Option<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for fetching and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "with_new_children",
+          "signature": "fn with_new_children(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_children_and_same_properties",
+          "signature": "fn with_new_children_and_same_properties(Arc<self>, children: Vec<Arc<dyn ExecutionPlan>>) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan"
+        },
+        {
+          "name": "with_new_inner",
+          "signature": "fn with_new_inner(&self, inner: Arc<dyn ExecutionPlan>) -> Arc<dyn ExecutionPlan>",
+          "visibility": "internal",
+          "summary": "Creates a new `InstrumentedExec` with the same configuration as this instance but with a different inner execution plan."
+        },
+        {
+          "name": "with_new_state",
+          "signature": "fn with_new_state(&self, state: Arc<dyn Any + Send + Sync>) -> Option<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate to the inner plan for injecting run-time state and rewrap with an InstrumentedExec."
+        },
+        {
+          "name": "with_preserve_order",
+          "signature": "fn with_preserve_order(&self, preserve_order: bool) -> Option<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_physical_plan::execution_plan::ExecutionPlan",
+          "summary": "Delegate order-preservation requirements to the inner plan and rewrap with an InstrumentedExec."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::instrumented_exec::SpanCreateFn",
+      "name": "SpanCreateFn",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type SpanCreateFn = dyn Fn() -> tracing::Span + Send + Sync",
+      "summary": "Type alias for a function that creates a tracing span.",
+      "doc": "api/datafusion_tracing.instrumented_exec.md#spancreatefn",
+      "visibility": "internal"
+    }
+  ]
+}

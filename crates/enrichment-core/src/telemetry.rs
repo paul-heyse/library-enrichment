@@ -1,5 +1,6 @@
 //! Typed Arrow observations for native runtime, operation and failure diagnostics.
 use crate::native_union::{Cell, NativeStruct, Rule};
+pub mod kernel;
 crate::native_struct! {
 #[derive(Default)]
 pub struct InventorySummary {
@@ -19,9 +20,9 @@ pub struct OperationDescriptor {
 
 crate::native_struct! {
 pub struct SnapshotBinding {
-    snapshot_id: String => Rule::Text,
-    context_id: String => Rule::Text,
-    environment_id: String => Rule::Text,
+    snapshot_id: crate::identity::SnapshotId => Rule::Text,
+    context_id: crate::identity::ContextId => Rule::Text,
+    environment_id: crate::identity::EnvironmentId => Rule::Text,
     control: u64 => Rule::Text,
     manifest_digest: String => Rule::Text,
     projection_version: String => Rule::Text,
@@ -104,9 +105,9 @@ pub struct Summary {
     planning_micros: u64 => Rule::Text,
     /// Sum of query elapsed durations; concurrent durations overlap and are not wall time.
     elapsed_micros: u64 => Rule::Text,
-    index_materializations: u64 => Rule::Text,
-    index_spill_bytes: u64 => Rule::Text,
-    index_reads: u64 => Rule::Text,
+    materialization_fills: u64 => Rule::Text,
+    materialization_spill_bytes: u64 => Rule::Text,
+    materialization_reads: u64 => Rule::Text,
     queue_micros: u64 => Rule::Text,
     output_rows: u64 => Rule::Text,
     output_arrow_bytes: u64 => Rule::Text,
@@ -177,6 +178,27 @@ crate::native_vocabulary! {
 crate::native_vocabulary! {
     pub enum ProbeOutcome { Succeeded = "succeeded", Failed = "failed", Unresolved = "unresolved" }
 }
+crate::native_vocabulary! {
+    pub enum MaterializationFamily {
+        SearchIndex = "search_index", ComparisonKeys = "comparison_keys",
+        OverviewChildren = "overview_children", OverviewNamespaces = "overview_namespaces"
+    }
+}
+crate::native_union! {
+    pub enum MaterializationActivity {
+        Fill = "fill", Wait = "wait", Failed = "failed", Cancelled = "cancelled",
+        Ready = "ready" { spill_bytes: u64 => Rule::Text },
+        Read = "read" { reserved_bytes: usize => Rule::Text },
+        ReaderReleased = "reader_released" { reserved_bytes: usize => Rule::Text },
+    }
+}
+crate::native_struct! {
+    pub struct MaterializationObservation {
+        binding: u64 => Rule::Text,
+        family: MaterializationFamily => Rule::Text,
+        activity: MaterializationActivity => Rule::Text,
+    }
+}
 crate::native_union! {
     /// Mechanically captured service outcomes. Native aggregates own their interpretation.
     pub enum ServiceObservation {
@@ -206,9 +228,9 @@ crate::native_union! {
         Query = "query" { value: Box<QueryDiagnostics> => Rule::Text },
         Operation = "operation" { value: OperationEnd => Rule::Text },
         Failure = "failure" { value: Failure => Rule::Text },
-        IndexMaterialization = "index_materialization" { bytes: u64 => Rule::Text },
-        IndexRead = "index_read",
+        Materialization = "materialization" { value: MaterializationObservation => Rule::Text },
         Service = "service" { value: ServiceObservation => Rule::Text },
+        Kernel = "kernel" { value: kernel::Observation => Rule::Text },
     }
 }
 crate::native_struct! {

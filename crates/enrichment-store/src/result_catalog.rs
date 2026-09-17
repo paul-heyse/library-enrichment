@@ -21,6 +21,38 @@ pub(crate) fn schema() -> SchemaRef {
     Arc::new(Schema::new(RetainedResult::fields()))
 }
 
+pub(crate) fn retained_root(
+    record: &RetainedResult,
+    sequence: u64,
+) -> crate::retention::RetentionRoot {
+    use crate::retention::{Dependency, RetentionRoot, TableVersion};
+    let mut dependencies = record
+        .references
+        .iter()
+        .map(|reference| Dependency::Artifact {
+            artifact_id: reference.artifact_id.clone(),
+        })
+        .collect::<Vec<_>>();
+    dependencies.push(Dependency::Artifact {
+        artifact_id: record.result_artifact_id.clone(),
+    });
+    dependencies.push(Dependency::Table {
+        value: TableVersion {
+            table_uri: format!("result_{}", record.version.tool),
+            table_id: record.version.table_id.clone(),
+            version: record.version.version,
+            contract_id: record.version.contract_id.clone(),
+            cohort_id: None,
+        },
+    });
+    RetentionRoot {
+        root_id: record.result_artifact_id.clone(),
+        dependencies,
+        removed: false,
+        sequence,
+    }
+}
+
 impl ControlStore {
     /// Admit the verified physical encoder's section/reference facts before publishing a result.
     pub async fn retain_result(
@@ -63,6 +95,15 @@ impl ControlStore {
                 Ok(())
             })
             .await??;
+        let retention = crate::retention::RetentionStore::new(self.clone(), runtime.clone());
+        let obligation = retention
+            .create_obligation(
+                artifact.artifact_id.clone(),
+                vec![crate::retention::Dependency::TableScope {
+                    table_uri: format!("result_{}", index.record.data.kind()),
+                }],
+            )
+            .await?;
         let record = RetainedResult {
             result_artifact_id: artifact.artifact_id.clone(),
             body_base: base,
@@ -90,6 +131,10 @@ impl ControlStore {
                 })
                 .collect(),
         };
+        let root = retained_root(&record, 0);
+        retention
+            .release_obligation(&obligation, root.dependencies.clone())
+            .await?;
         let batch = RetainedResult::batch(&[record])?;
         for _ in 0..16 {
             let pin = self.pin().await?;
@@ -112,6 +157,7 @@ impl ControlStore {
             runtime.require_empty(session.sql("WITH refs AS (SELECT unnest(references) AS child FROM issued_result) SELECT child.artifact_id FROM refs LEFT ANTI JOIN issued_artifacts a ON child.artifact_id=a.artifact_id AND child.media_type=a.media_type LIMIT 1").await?, "result_artifact_reference", "result_retention").await?;
             let missing = runtime.execute(session.sql("SELECT n.* FROM issued_result n LEFT ANTI JOIN state.records.retained_results r ON n.result_artifact_id=r.result_artifact_id").await?).await?;
             if missing.rows == 0 {
+                retention.settle_selected(&obligation).await?;
                 return Ok(());
             }
             let mut records = missing
@@ -120,6 +166,13 @@ impl ControlStore {
                 .map(|b| (Table::RetainedResults, b))
                 .collect::<Vec<_>>();
             records.push((Table::ArtifactReceipts, receipt_batch.clone()));
+            records.push((
+                Table::RetentionRoots,
+                crate::retention::RetentionRoot::batch(&[crate::retention::RetentionRoot {
+                    sequence: pin.generation() + 1,
+                    ..root.clone()
+                }])?,
+            ));
             if self
                 .commit_native(
                     pin.generation(),
@@ -129,6 +182,7 @@ impl ControlStore {
                 .await?
                 .is_some()
             {
+                retention.settle_selected(&obligation).await?;
                 return Ok(());
             }
         }
@@ -163,8 +217,20 @@ impl ControlSnapshot {
         &self,
         declared: &RetainedResult,
     ) -> Result<enrichment_core::operation::results::ResultRecord> {
-        crate::result_relations::read(&self.delta, &declared.result_artifact_id, &declared.version)
-            .await
+        let protection = self
+            .protect(
+                declared.result_artifact_id.clone(),
+                crate::retention::ProtectionKind::Query,
+                retained_root(declared, 0).dependencies,
+            )
+            .await?;
+        crate::result_relations::read(
+            &self.delta,
+            &declared.result_artifact_id,
+            &declared.version,
+            protection,
+        )
+        .await
     }
     /// Native recursive closure, with explicit cycle/depth/cardinality/byte refusal. Selection
     /// uses this captured catalog; the byte driver only verifies the resulting finite inventory.

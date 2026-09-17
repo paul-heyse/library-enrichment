@@ -87,7 +87,7 @@ pub async fn produce(
         if result.module != selection.module || result.selection != selection.attributes { return Err(io::Error::other("runtime result differs from explicit selection")); }
         ExecutionPayload::RuntimeObject(result.clone()).validate(&SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }).map_err(io::Error::other)?;
         Ok(Produced { environment: prepared.environment.clone(), image: image.clone(), containment,
-            producer: "runtime-object".into(), version: inspect_execution::producer_identity(true).1, profile: ExecutionProfile::Runtime,
+            producer: "runtime-object".into(), version: inspect_execution::producer_identity(true)?.1, profile: ExecutionProfile::Runtime,
             started_at, finished_at: enrichment_core::native_time::ObservationTime::now().map_err(std::io::Error::other)?,
             facts: vec![(SubjectRef::Symbol { symbol_id: symbol.symbol_id.clone() }, ExecutionPayload::RuntimeObject(result), EvidenceClass::RuntimeObserved)],
             inputs, lock: prepared.lock.clone(), transcript: serde_json::json!({"preparation":prepared.observations,"runtime":observation,"report":raw}) })

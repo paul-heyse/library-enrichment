@@ -2,7 +2,6 @@
 use datafusion::{
     dataframe::DataFrame,
     error::{DataFusionError, Result},
-    functions::string::expr_fn::concat,
     logical_expr::Expr,
     prelude::lit,
 };
@@ -27,13 +26,14 @@ impl Invariants {
             qualifier.cloned(),
             field.name(),
         ));
+        let witness = enrichment_core::native_id::diagnostic(field, key)?;
         self.branches.push(
             frame
                 .select(vec![
                     lit(rule).alias("rule"),
                     lit(stage).alias("stage"),
                     // A diagnostic label is deliberately plain text, not an identity domain.
-                    concat(vec![lit(""), key]).alias("witness_id"),
+                    witness.alias("witness_id"),
                 ])?
                 .limit(0, Some(1))?,
         );
@@ -45,6 +45,9 @@ impl Invariants {
         let first = branches.next().ok_or_else(|| {
             DataFusionError::Internal("empty invariant admission definition".into())
         })?;
+        // Let DataFusion schedule the native branches under the shared runtime's
+        // resource policy. Success must exhaust the union; one violation is enough
+        // to refuse admission, with its declared rule and witness intact.
         branches
             .try_fold(first, DataFrame::union)?
             .limit(0, Some(1))
@@ -82,6 +85,39 @@ mod tests {
         assert_eq!(failure.rule, "second");
         assert_eq!(failure.stage, "reference");
         assert_eq!(failure.affected_ids, ["symbol_λ"]);
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn admission_propagates_native_read_errors() -> Result<()> {
+        use arrow::datatypes::{DataType, Field, Schema};
+        use datafusion::prelude::{CsvReadOptions, col};
+
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(root.path(), Default::default())?;
+        let session = runtime.session();
+        let path = root.path().join("invalid.csv");
+        std::fs::write(&path, "id\ninvalid_integer\n")?;
+        let schema = Schema::new(vec![Field::new("id", DataType::Int64, false)]);
+        let invalid = session
+            .read_csv(
+                path.to_str().unwrap(),
+                CsvReadOptions::new().schema(&schema),
+            )
+            .await?
+            .filter(col("id").gt(lit(0i64)))?;
+        // An empty earlier branch cannot hide a failing native scan. Successful
+        // admission must exhaust every branch, including its final stream error.
+        let mut read_failure = Invariants::default();
+        read_failure.push(
+            session.sql("SELECT 'empty' AS id WHERE false").await?,
+            "empty",
+            "test",
+        )?;
+        read_failure.push(invalid, "must_read", "test")?;
+        let error = runtime.admit(read_failure).await.unwrap_err();
+        assert!(error.to_string().contains("invalid_integer"), "{error}");
         runtime.close_diagnostics().await?;
         Ok(())
     }

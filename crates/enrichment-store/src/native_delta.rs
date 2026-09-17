@@ -31,6 +31,7 @@ use deltalake::{
 
 pub(crate) const CONTRACT_TABLE: &str = "semantic_contracts";
 pub(crate) const CONTRACT_PROPERTY: &str = "enrichment.arrowContract";
+const CONSTRAINTS_PROPERTY: &str = "enrichment.constraints";
 
 /// The semantic Arrow schema and its explicit, lossless Delta storage representation.
 #[derive(Debug, Clone)]
@@ -273,6 +274,13 @@ impl DeltaStore {
             ))
     }
 
+    pub(crate) fn log_store(&self, name: &str) -> Result<deltalake::logstore::LogStoreRef> {
+        Ok(crate::kernel_runtime::bind(
+            self.builder(name)?.build_storage().map_err(external)?,
+            self.runtime.clone(),
+        ))
+    }
+
     /// Create a table using native Delta schema and metadata. No raw provider DML is exposed.
     /// # Errors
     /// Existing tables, invalid schemas and storage errors are returned unchanged.
@@ -299,6 +307,123 @@ impl DeltaStore {
         self.create_raw(name, contract, cdf, rules).await
     }
 
+    /// Open a writable table only after its complete declared contract is installed.
+    /// A crash between CREATE and ADD CONSTRAINT is completed through Delta's validating
+    /// constraint operation. Read-only loads never repair or silently accept that state.
+    pub async fn open_or_create(
+        &self,
+        name: &str,
+        contract: &StorageContract,
+        cdf: bool,
+        rules: &[(&str, String)],
+    ) -> Result<DeltaTable> {
+        self.register_contract(contract).await?;
+        self.open_raw(name, contract, cdf, rules).await
+    }
+
+    async fn open_raw(
+        &self,
+        name: &str,
+        contract: &StorageContract,
+        cdf: bool,
+        rules: &[(&str, String)],
+    ) -> Result<DeltaTable> {
+        self.prepare_root(name)?;
+        for _ in 0..16 {
+            let result = match self.load(name, None).await {
+                Ok(table) => self.install_constraints(table, contract, rules).await,
+                Err(error) if missing_table(&error) => {
+                    self.create_raw(name, contract, cdf, rules).await
+                }
+                Err(error) => return Err(error),
+            };
+            match result {
+                Err(error) if transaction_conflict(&error) => continue,
+                other => return other,
+            }
+        }
+        Err(invalid("native table initialization conflict bound"))
+    }
+
+    async fn install_constraints(
+        &self,
+        table: DeltaTable,
+        contract: &StorageContract,
+        rules: &[(&str, String)],
+    ) -> Result<DeltaTable> {
+        verify_storage_contract(&table, contract)?;
+        let session = self.runtime.session();
+        let normalize = |expression: &str| constraint_sql(&session.state(), contract, expression);
+        let required = self.constraint_rules(contract, rules)?;
+        let configured = table
+            .snapshot()
+            .map_err(external)?
+            .metadata()
+            .configuration();
+        if declared_constraints(&table)? != required {
+            return Err(invalid(
+                "Delta constraint declaration differs from its owner",
+            ));
+        }
+        let mut missing = HashMap::new();
+        for (name, expression) in required {
+            match configured.get(&format!("delta.constraints.{name}")) {
+                Some(actual) if actual == &expression => {}
+                Some(actual) if normalize(actual)? == normalize(&expression)? => {}
+                Some(_) => {
+                    return Err(invalid(
+                        "existing Delta constraint differs from declaration",
+                    ));
+                }
+                None => {
+                    missing.insert(name, expression);
+                }
+            }
+        }
+        let table = if missing.is_empty() {
+            table
+        } else {
+            let state = Arc::new(session.state());
+            self.runtime
+                .native_write(async move {
+                    table
+                        .add_constraint()
+                        .with_constraints(missing)
+                        .with_session_state(state)
+                        .with_commit_properties(
+                            CommitProperties::default()
+                                .with_max_retries(0)
+                                .with_cleanup_expired_logs(Some(false)),
+                        )
+                        .await
+                        .map_err(external)
+                })
+                .await?
+        };
+        verify_contract(&table, contract, &session.state())?;
+        Ok(table)
+    }
+
+    fn constraint_rules(
+        &self,
+        contract: &StorageContract,
+        rules: &[(&str, String)],
+    ) -> Result<std::collections::BTreeMap<String, String>> {
+        let session = self.runtime.session();
+        let mut required = contract
+            .required
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        for (name, expression) in rules {
+            let expression = constraint_sql(&session.state(), contract, expression)?;
+            if required.insert((*name).into(), expression).is_some() {
+                return Err(invalid("duplicate native constraint name"));
+            }
+        }
+        Ok(required)
+    }
+
     async fn create_raw(
         &self,
         name: &str,
@@ -307,10 +432,18 @@ impl DeltaStore {
         rules: &[(&str, String)],
     ) -> Result<DeltaTable> {
         // The native kernel requires an existing local table root even before version zero.
+        self.runtime.admit_retention_policy().await?;
         self.location(name)?;
         std::fs::create_dir_all(self.root.join(name))?;
         let schema = StructType::try_from_arrow(contract.storage.as_ref()).map_err(external)?;
-        let configuration = HashMap::from([
+        let mut configuration = HashMap::from([
+            (
+                CONSTRAINTS_PROPERTY.to_owned(),
+                Some(
+                    serde_json::to_string(&self.constraint_rules(contract, rules)?)
+                        .map_err(external)?,
+                ),
+            ),
             (
                 CONTRACT_PROPERTY.to_owned(),
                 Some(contract.identity.clone()),
@@ -320,37 +453,20 @@ impl DeltaStore {
                 Some(cdf.to_string()),
             ),
         ]);
-        let mut constraints = contract.required.clone();
-        for (rule, expression) in rules {
-            if constraints
-                .insert((*rule).into(), expression.clone())
-                .is_some()
-            {
-                return Err(invalid("duplicate native constraint name"));
-            }
-        }
+        configuration.extend(crate::retention::delta_properties(
+            self.runtime.retention_policy(),
+        ));
         let create = CreateBuilder::new()
-            .with_log_store(self.builder(name)?.build_storage().map_err(external)?)
+            .with_log_store(self.log_store(name)?)
             .with_location(self.location(name)?.as_str())
             .with_columns(schema.fields().cloned())
             .with_raise_if_key_not_exists(false)
             .with_configuration(configuration);
-        let state = Arc::new(self.runtime.session().state());
-        self.runtime
-            .native_write(async move {
-                let table = create.await.map_err(external)?;
-                if constraints.is_empty() {
-                    return Ok(table);
-                }
-                table
-                    .add_constraint()
-                    .with_constraints(constraints)
-                    .with_session_state(state)
-                    .with_commit_properties(CommitProperties::default().with_max_retries(0))
-                    .await
-                    .map_err(external)
-            })
-            .await
+        let table = self
+            .runtime
+            .native_write(async move { create.await.map_err(external) })
+            .await?;
+        self.install_constraints(table, contract, rules).await
     }
 
     /// Prepare a private table root before native creation or a concurrent creation retry.
@@ -364,16 +480,17 @@ impl DeltaStore {
     /// # Errors
     /// Missing tables/history and unavailable storage are errors, never empty tables.
     pub async fn load(&self, name: &str, version: Option<u64>) -> Result<DeltaTable> {
-        let mut builder = self.builder(name)?;
-        if let Some(version) = version {
-            builder = builder.with_version(version);
-        }
-        // LogStore::engine selects Handle::current, ignoring IORuntime for custom stores.
-        // Load inside the owned multi-thread executor so the kernel borrows that executor
-        // instead of creating an independent background runtime for a current-thread caller.
+        let mut table = DeltaTable::new(self.log_store(name)?, Default::default());
         let table = self
             .runtime
-            .native_read(async move { builder.load().await.map_err(external) })
+            .native_read(async move {
+                match version {
+                    Some(version) => table.load_version(version).await,
+                    None => table.load().await,
+                }
+                .map_err(external)?;
+                Ok(table)
+            })
             .await?;
         if version.is_some() && table.version() != version {
             return Err(invalid("Delta version mismatch"));
@@ -399,8 +516,8 @@ impl DeltaStore {
         let (table, state, plan, violations) = self
             .runtime
             .native_read(async move {
-                verify_contract(&table, &prepared_contract)?;
                 let (state, plan) = prepared_contract.store(frame.clone())?.into_parts();
+                verify_contract(&table, &prepared_contract, &state)?;
                 let violations = enrichment_core::native_schema::intrinsic_violations(
                     project(frame, &prepared_contract.semantic)?,
                     &prepared_contract.semantic,
@@ -469,23 +586,8 @@ impl DeltaStore {
     }
 
     async fn contract_table(&self) -> Result<DeltaTable> {
-        std::fs::create_dir_all(self.root.join(CONTRACT_TABLE))?;
-        match self.load(CONTRACT_TABLE, None).await {
-            Ok(table) => Ok(table),
-            Err(error) if missing_table(&error) => {
-                match self
-                    .create_raw(CONTRACT_TABLE, &contract_catalog()?, false, &[])
-                    .await
-                {
-                    Ok(table) => Ok(table),
-                    Err(error) if transaction_conflict(&error) => {
-                        self.load(CONTRACT_TABLE, None).await
-                    }
-                    Err(error) => Err(error),
-                }
-            }
-            Err(error) => Err(error),
-        }
+        self.open_raw(CONTRACT_TABLE, &contract_catalog()?, false, &[])
+            .await
     }
     async fn contract_exists(
         &self,
@@ -522,11 +624,23 @@ impl DeltaStore {
             .ok_or_else(|| invalid("contract schema is not Arrow IPC"))?
             .value(0);
         let reader = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(bytes), None)?;
-        if reader.schema() != contract.semantic {
-            return Err(invalid(
-                "persisted semantic contract differs from its identity",
-            ));
-        }
+        let stored = StorageContract::new(reader.schema())?;
+        let changes = enrichment_core::native_contract::changes(
+            &context,
+            &enrichment_core::native_contract::Manifest::new(&stored.semantic, &stored.storage)?,
+            &enrichment_core::native_contract::Manifest::new(
+                &contract.semantic,
+                &contract.storage,
+            )?,
+        )
+        .await?;
+        self.runtime
+            .require_empty(
+                changes,
+                "semantic_contract_manifest",
+                "provider_preparation",
+            )
+            .await?;
         Ok(true)
     }
     async fn register_contract(&self, contract: &StorageContract) -> Result<()> {
@@ -581,7 +695,7 @@ impl DeltaStore {
         }
         unreachable!("bounded registration returns final outcome")
     }
-    async fn require_contract(&self, contract: &StorageContract) -> Result<()> {
+    pub(crate) async fn require_contract(&self, contract: &StorageContract) -> Result<()> {
         let table = self.load(CONTRACT_TABLE, None).await?;
         if !self.contract_exists(&table, contract).await? {
             return Err(invalid("semantic contract is absent from native registry"));
@@ -597,7 +711,7 @@ impl DeltaStore {
         table: &DeltaTable,
         contract: &StorageContract,
     ) -> Result<Arc<dyn TableProvider>> {
-        verify_contract(table, contract)?;
+        verify_contract(table, contract, &self.runtime.session().state())?;
         self.require_contract(contract).await?;
         let context = self.runtime.session();
         let provider =
@@ -627,7 +741,7 @@ impl DeltaStore {
         // CDF exposes commit versions through signed Arrow values at this pin.
         i64::try_from(end).map_err(|_| invalid("CDF version exceeds signed Arrow domain"))?;
         let table = self.load(name, Some(end)).await?;
-        verify_contract(&table, contract)?;
+        verify_contract(&table, contract, &self.runtime.session().state())?;
         self.require_contract(contract).await?;
         if table.snapshot().map_err(external)?.metadata().id() != table_id {
             return Err(invalid("CDF table identity mismatch"));
@@ -685,19 +799,49 @@ pub(crate) fn requires_plain_binary(kind: &DataType) -> bool {
     }
 }
 
-pub(crate) fn verify_contract(table: &DeltaTable, contract: &StorageContract) -> Result<()> {
-    let snapshot = table.snapshot().map_err(external)?;
-    if !contract.required.is_empty() {
-        if !snapshot
+pub(crate) fn verify_contract(
+    table: &DeltaTable,
+    contract: &StorageContract,
+    session: &dyn datafusion::catalog::Session,
+) -> Result<()> {
+    verify_snapshot_contract(
+        table
             .snapshot()
-            .table_configuration()
-            .is_feature_enabled(&"checkConstraints".parse().map_err(external)?)
-        {
+            .map_err(external)?
+            .snapshot()
+            .table_configuration(),
+        contract,
+        session,
+    )
+}
+
+pub(crate) fn verify_snapshot_contract(
+    configuration: &delta_kernel::table_configuration::TableConfiguration,
+    contract: &StorageContract,
+    session: &dyn datafusion::catalog::Session,
+) -> Result<()> {
+    verify_configuration_storage(configuration, contract)?;
+    let constraints = configuration_constraints(configuration)?;
+    for (name, expression) in &contract.required {
+        if constraints.get(name) != Some(expression) {
+            return Err(invalid(
+                "Delta required constraint missing from declaration",
+            ));
+        }
+    }
+    if !constraints.is_empty() {
+        if !configuration.is_feature_enabled(&"checkConstraints".parse().map_err(external)?) {
             return Err(invalid("Delta contract requires active CHECK enforcement"));
         }
-        let configured = snapshot.metadata().configuration();
-        for (name, expression) in &contract.required {
-            if configured.get(&format!("delta.constraints.{name}")) != Some(expression) {
+        let configured = configuration.metadata().configuration();
+        for (name, expression) in &constraints {
+            let actual = configured.get(&format!("delta.constraints.{name}"));
+            if actual != Some(expression)
+                && actual
+                    .map(|actual| constraint_sql(session, contract, actual))
+                    .transpose()?
+                    != Some(constraint_sql(session, contract, expression)?)
+            {
                 return Err(invalid(&format!(
                     "Delta contract requiredness predicate mismatch for {name}: expected {expression:?}, found {:?}",
                     configured.get(&format!("delta.constraints.{name}"))
@@ -705,7 +849,72 @@ pub(crate) fn verify_contract(table: &DeltaTable, contract: &StorageContract) ->
             }
         }
     }
-    if snapshot
+    Ok(())
+}
+
+fn constraint_sql(
+    session: &dyn datafusion::catalog::Session,
+    contract: &StorageContract,
+    expression: &str,
+) -> Result<String> {
+    let schema = Arc::new(datafusion::common::DFSchema::try_from(
+        contract.storage.as_ref().clone(),
+    )?);
+    let expression =
+        deltalake::delta_datafusion::expr::parse_predicate_expression(&schema, expression, session)
+            .map_err(external)?;
+    let context = datafusion::logical_expr::simplify::SimplifyContext::builder()
+        .with_schema(schema)
+        .with_config_options(session.config().options().clone())
+        .with_query_execution_start_time(session.execution_props().query_execution_start_time)
+        .build();
+    let expression = datafusion::optimizer::simplify_expressions::ExprSimplifier::new(context)
+        .simplify(expression)?;
+    deltalake::delta_datafusion::expr::fmt_expr_to_sql(&expression).map_err(external)
+}
+
+fn declared_constraints(table: &DeltaTable) -> Result<std::collections::BTreeMap<String, String>> {
+    configuration_constraints(
+        table
+            .snapshot()
+            .map_err(external)?
+            .snapshot()
+            .table_configuration(),
+    )
+}
+
+fn configuration_constraints(
+    configuration: &delta_kernel::table_configuration::TableConfiguration,
+) -> Result<std::collections::BTreeMap<String, String>> {
+    let encoded = configuration
+        .metadata()
+        .configuration()
+        .get(CONSTRAINTS_PROPERTY)
+        .ok_or_else(|| invalid("Delta constraint declaration absent"))?;
+    if encoded.len() > 1024 * 1024 {
+        return Err(invalid(
+            "Delta constraint declaration exceeds metadata bound",
+        ));
+    }
+    serde_json::from_str(encoded).map_err(external)
+}
+
+fn verify_storage_contract(table: &DeltaTable, contract: &StorageContract) -> Result<()> {
+    verify_configuration_storage(
+        table
+            .snapshot()
+            .map_err(external)?
+            .snapshot()
+            .table_configuration(),
+        contract,
+    )
+}
+
+fn verify_configuration_storage(
+    configuration: &delta_kernel::table_configuration::TableConfiguration,
+    contract: &StorageContract,
+) -> Result<()> {
+    if configuration
         .metadata()
         .configuration()
         .get(CONTRACT_PROPERTY)
@@ -714,8 +923,8 @@ pub(crate) fn verify_contract(table: &DeltaTable, contract: &StorageContract) ->
     {
         return Err(invalid("Delta semantic contract identity mismatch"));
     }
-    let actual: Schema = snapshot
-        .schema()
+    let actual: Schema = configuration
+        .logical_schema()
         .as_ref()
         .try_into_arrow()
         .map_err(external)?;
@@ -769,6 +978,411 @@ mod tests {
         array::{Array, Int64Array, UInt64Array},
         record_batch::RecordBatch,
     };
+
+    #[derive(Debug)]
+    struct MaintenanceClock;
+    impl deltalake::operations::vacuum::Clock for MaintenanceClock {
+        fn current_timestamp_millis(&self) -> i64 {
+            2_000_000_000_000
+        }
+    }
+
+    #[tokio::test]
+    async fn maintenance_vacuum_keeps_current_and_historical_deletion_vectors() -> Result<()> {
+        use deltalake::kernel::{Action, Add, DeletionVectorDescriptor, StorageType};
+        use deltalake::operations::vacuum::VacuumMode;
+        const PARQUET: &[u8] = include_bytes!(
+            "../../../tests/fixtures/delta/deletion-vector/part-00000-fae5310a-a37d-4e51-827b-c3d5516560ca-c000.snappy.parquet"
+        );
+        const DV: &[u8] = include_bytes!(
+            "../../../tests/fixtures/delta/deletion-vector/deletion_vector_61d16c75-6994-46b7-a15b-8b538852e50e.bin"
+        );
+        let root = tempfile::tempdir()?;
+        let runtime = crate::runtime::QueryRuntime::new(
+            &root.path().join("spill"),
+            crate::runtime::QueryLimits {
+                concurrency: 1,
+                native: enrichment_core::config::NativeQueryConfig {
+                    blocking_threads: 1,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        )?;
+        let store = DeltaStore::new(&root.path().join("tables % Ω"), runtime.clone())?;
+        let schema = Arc::new(Schema::new(vec![Field::new(
+            "value",
+            DataType::Int32,
+            true,
+        )]));
+        for (name, absolute, historical, foreign) in [
+            ("relative", false, false, false),
+            ("absolute", true, false, false),
+            ("historical", false, true, false),
+            ("foreign", true, false, true),
+            ("malformed", false, false, false),
+        ] {
+            store.prepare_root(name)?;
+            let path = store.root.join(name);
+            let vector_name = if absolute {
+                "vector % Ω.bin"
+            } else {
+                "deletion_vector_61d16c75-6994-46b7-a15b-8b538852e50e.bin"
+            };
+            std::fs::write(path.join("data.parquet"), PARQUET)?;
+            std::fs::write(path.join(vector_name), DV)?;
+            std::fs::write(path.join("orphan.parquet"), b"unreferenced")?;
+            let vector = if absolute {
+                url::Url::from_file_path(if foreign {
+                    root.path().join("foreign.bin")
+                } else {
+                    path.join(vector_name)
+                })
+                .map_err(|()| invalid("fixture vector URL"))?
+                .to_string()
+            } else {
+                "vBn[lx{q8@P<9BNH/isA".into()
+            };
+            let add = Add {
+                path: "data.parquet".into(), size: PARQUET.len() as i64, modification_time: 1,
+                data_change: true, stats: Some(r#"{"numRecords":10,"minValues":{"value":0},"maxValues":{"value":9},"nullCount":{"value":0},"tightBounds":false}"#.into()),
+                deletion_vector: Some(DeletionVectorDescriptor { storage_type: if absolute { StorageType::AbsolutePath } else { StorageType::UuidRelativePath }, path_or_inline_dv: vector, offset: Some(1), size_in_bytes: 36, cardinality: 2 }),
+                ..Default::default()
+            };
+            let native_schema = StructType::try_from_arrow(schema.as_ref()).map_err(external)?;
+            let create = CreateBuilder::new()
+                .with_log_store(store.log_store(name)?)
+                .with_columns(native_schema.fields().cloned())
+                .with_configuration([
+                    ("delta.enableDeletionVectors", Some("true")),
+                    ("delta.enableExpiredLogCleanup", Some("false")),
+                ])
+                .with_actions([Action::Add(add)]);
+            let mut table = runtime
+                .native_write(async move { create.await.map_err(external) })
+                .await?;
+            let retained = table.version().ok_or_else(|| invalid("fixture version"))?;
+            if name == "malformed" {
+                // Corrupt the actual native action before reopening; maintenance
+                // must return an error before any orphan deletion, never panic.
+                let log = path.join("_delta_log/00000000000000000000.json");
+                let mut actions = std::fs::read_to_string(&log)?
+                    .lines()
+                    .map(serde_json::from_str::<serde_json::Value>)
+                    .collect::<std::result::Result<Vec<_>, _>>()
+                    .map_err(external)?;
+                for action in &mut actions {
+                    if let Some(add) = action.get_mut("add") {
+                        add["deletionVector"]["storageType"] = "invalid".into();
+                    }
+                }
+                let encoded = actions
+                    .iter()
+                    .map(serde_json::to_string)
+                    .collect::<std::result::Result<Vec<_>, _>>()
+                    .map_err(external)?
+                    .join("\n");
+                std::fs::write(log, encoded + "\n")?;
+                let reopened = store.load(name, None).await;
+                let outcome = match reopened {
+                    Ok(table) => runtime
+                        .native_write(async move {
+                            table
+                                .vacuum()
+                                .with_mode(VacuumMode::Full)
+                                .with_clock(Arc::new(MaintenanceClock))
+                                .await
+                                .map_err(external)
+                        })
+                        .await
+                        .map(|_| ()),
+                    Err(error) => Err(error),
+                };
+                assert!(outcome.is_err(), "malformed DV must refuse maintenance");
+                assert!(path.join("orphan.parquet").exists());
+                assert!(path.join(vector_name).exists());
+                continue;
+            }
+            if historical {
+                let input = store.session().read_batch(RecordBatch::try_new(
+                    schema.clone(),
+                    vec![Arc::new(arrow::array::Int32Array::from(vec![100]))],
+                )?)?;
+                let (state, plan) = input.into_parts();
+                let write = table
+                    .write(std::iter::empty::<RecordBatch>())
+                    .with_input_plan(plan)
+                    .with_session_state(Arc::new(state))
+                    .with_session_fallback_policy(SessionFallbackPolicy::RequireSessionState)
+                    .with_save_mode(SaveMode::Overwrite)
+                    .with_commit_properties(
+                        CommitProperties::default()
+                            .with_max_retries(0)
+                            .with_cleanup_expired_logs(Some(false)),
+                    );
+                table = runtime
+                    .native_write(async move { write.await.map_err(external) })
+                    .await?;
+            }
+            let vacuum = table
+                .vacuum()
+                .with_mode(VacuumMode::Full)
+                .with_keep_versions(&[retained])
+                .with_scan_concurrency(1)
+                .with_clock(Arc::new(MaintenanceClock))
+                .with_commit_properties(
+                    CommitProperties::default()
+                        .with_max_retries(0)
+                        .with_cleanup_expired_logs(Some(false)),
+                );
+            let result = runtime
+                .native_write(async move { vacuum.await.map_err(external) })
+                .await;
+            if foreign {
+                assert!(
+                    result.is_err(),
+                    "foreign vector must refuse before deletion"
+                );
+                assert!(path.join("orphan.parquet").exists());
+                continue;
+            }
+            let (table, metrics) = result?;
+            assert!(
+                metrics
+                    .files_deleted
+                    .iter()
+                    .any(|name| name == "orphan.parquet")
+            );
+            assert!(!path.join("orphan.parquet").exists());
+            assert!(path.join(vector_name).exists());
+            let retained_table = store.load(name, Some(retained)).await?;
+            let session = store.session();
+            let provider = retained_table
+                .table_provider()
+                .with_session(Arc::new(session.state()))
+                .await
+                .map_err(external)?;
+            assert_eq!(
+                runtime.execute(session.read_table(provider)?).await?.rows,
+                8
+            );
+            if historical {
+                let provider = table
+                    .table_provider()
+                    .with_session(Arc::new(session.state()))
+                    .await
+                    .map_err(external)?;
+                assert_eq!(
+                    runtime.execute(session.read_table(provider)?).await?.rows,
+                    1
+                );
+            }
+        }
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn maintenance_log_inventory_refuses_before_delete_and_keeps_exact_history() -> Result<()>
+    {
+        use deltalake::protocol::checkpoints::{
+            LogCleanupLimits, cleanup_expired_logs_for_bounded, create_checkpoint,
+        };
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime.clone())?;
+        let contract = StorageContract::new(Arc::new(Schema::new(vec![Field::new(
+            "id",
+            DataType::Int64,
+            false,
+        )])))?;
+        let table = store.create("maintenance", &contract, false).await?;
+        let batch = RecordBatch::try_new(
+            contract.semantic_schema(),
+            vec![Arc::new(Int64Array::from(vec![7]))],
+        )?;
+        let table = store
+            .append(
+                table,
+                &contract,
+                store.session().read_batch(batch.clone())?,
+                vec![],
+            )
+            .await?;
+        let retained = table.version().ok_or_else(|| invalid("missing version"))?;
+        let checkpoint = table.clone();
+        runtime
+            .native_write(
+                async move { create_checkpoint(&checkpoint, None).await.map_err(external) },
+            )
+            .await?;
+        let table = store
+            .append(table, &contract, store.session().read_batch(batch)?, vec![])
+            .await?;
+        let checkpoint = table.clone();
+        runtime
+            .native_write(
+                async move { create_checkpoint(&checkpoint, None).await.map_err(external) },
+            )
+            .await?;
+        let log = table.log_store();
+        let log_root = store.root.join("maintenance/_delta_log");
+        let inventory = || -> Result<Vec<String>> {
+            let mut entries = std::fs::read_dir(&log_root)?
+                .map(|entry| Ok(entry?.file_name().to_string_lossy().into_owned()))
+                .collect::<Result<Vec<_>>>()?;
+            entries.sort();
+            Ok(entries)
+        };
+        let before = inventory()?;
+        let old = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1);
+        for entry in &before {
+            std::fs::File::open(log_root.join(entry))?
+                .set_times(std::fs::FileTimes::new().set_modified(old))?;
+        }
+        for limits in [
+            LogCleanupLimits {
+                entries: 0,
+                metadata_bytes: usize::MAX,
+            },
+            LogCleanupLimits {
+                entries: usize::MAX,
+                metadata_bytes: 1,
+            },
+        ] {
+            assert!(
+                cleanup_expired_logs_for_bounded(retained, log.as_ref(), 2_000, None, limits)
+                    .await
+                    .is_err()
+            );
+            assert_eq!(inventory()?, before, "rejected inventory deleted history");
+        }
+        assert!(
+            cleanup_expired_logs_for_bounded(
+                retained,
+                log.as_ref(),
+                i64::MAX,
+                None,
+                LogCleanupLimits::default()
+            )
+            .await
+            .is_err()
+        );
+        assert_eq!(inventory()?, before);
+        let deleted = cleanup_expired_logs_for_bounded(
+            retained,
+            log.as_ref(),
+            2_000,
+            None,
+            LogCleanupLimits::default(),
+        )
+        .await?;
+        assert!(
+            deleted > 0,
+            "native cleanup must actually reclaim older log entries"
+        );
+        for (version, rows) in [(Some(retained), 1), (table.version(), 2)] {
+            let loaded = store.load("maintenance", version).await?;
+            let output = runtime
+                .execute(
+                    store
+                        .session()
+                        .read_table(store.provider(&loaded, &contract).await?)?,
+                )
+                .await?;
+            assert_eq!(output.rows, rows);
+        }
+        runtime.close_diagnostics().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn interrupted_create_installs_constraints_before_registration() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime =
+            crate::runtime::QueryRuntime::new(&root.path().join("spill"), Default::default())?;
+        let store = DeltaStore::new(&root.path().join("tables"), runtime)?;
+        let contract = StorageContract::new(Arc::new(Schema::new(vec![Field::new(
+            "id",
+            DataType::Int64,
+            false,
+        )])))?;
+        store.register_contract(&contract).await?;
+        store.prepare_root("interrupted")?;
+        let schema = StructType::try_from_arrow(contract.storage.as_ref()).map_err(external)?;
+        let create = CreateBuilder::new()
+            .with_log_store(
+                store
+                    .builder("interrupted")?
+                    .build_storage()
+                    .map_err(external)?,
+            )
+            .with_location(store.location("interrupted")?.as_str())
+            .with_columns(schema.fields().cloned())
+            .with_raise_if_key_not_exists(false)
+            .with_configuration(HashMap::from([
+                (
+                    CONTRACT_PROPERTY.to_owned(),
+                    Some(contract.identity.clone()),
+                ),
+                (
+                    CONSTRAINTS_PROPERTY.to_owned(),
+                    Some(
+                        serde_json::to_string(
+                            &store.constraint_rules(&contract, &[("positive", "id > 0".into())])?,
+                        )
+                        .map_err(external)?,
+                    ),
+                ),
+            ]));
+        let interrupted = store
+            .runtime
+            .native_write(async move { create.await.map_err(external) })
+            .await?;
+        assert!(store.provider(&interrupted, &contract).await.is_err());
+        let repaired = store
+            .open_or_create(
+                "interrupted",
+                &contract,
+                false,
+                &[("positive", "id > 0".into())],
+            )
+            .await?;
+        let version = repaired.version();
+        store.provider(&repaired, &contract).await?;
+        let reopened = store
+            .open_or_create(
+                "interrupted",
+                &contract,
+                false,
+                &[("positive", "id > 0".into())],
+            )
+            .await?;
+        assert_eq!(version, reopened.version(), "recovery is idempotent");
+        let invalid = store.session().read_batch(RecordBatch::try_new(
+            contract.semantic_schema(),
+            vec![Arc::new(Int64Array::from(vec![-1]))],
+        )?)?;
+        assert!(
+            store
+                .append(reopened, &contract, invalid, vec![])
+                .await
+                .is_err()
+        );
+        assert!(
+            store
+                .open_or_create(
+                    "interrupted",
+                    &contract,
+                    false,
+                    &[("positive", "id > 1".into())]
+                )
+                .await
+                .is_err()
+        );
+        Ok(())
+    }
 
     #[tokio::test]
     async fn native_writer_checks_actual_nulls_in_conservatively_typed_plans() -> Result<()> {
@@ -1159,7 +1773,15 @@ mod tests {
             sequence: 1,
             recorded_at: enrichment_core::native_time::EventTime::from_micros(-1)?,
             operation_id: None,
-            payload: EventPayload::IndexRead,
+            payload: EventPayload::Materialization {
+                value: enrichment_core::telemetry::MaterializationObservation {
+                    binding: 1,
+                    family: enrichment_core::telemetry::MaterializationFamily::ComparisonKeys,
+                    activity: enrichment_core::telemetry::MaterializationActivity::Read {
+                        reserved_bytes: 128 * 1024,
+                    },
+                },
+            },
         }])?;
         let contract = StorageContract::new(batch.schema())?;
         let table = store.create("events", &contract, false).await?;

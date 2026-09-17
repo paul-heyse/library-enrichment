@@ -1,5 +1,5 @@
 //! Purpose-specific native result payloads, captured by exact Delta version in control.
-use crate::native_delta::{DeltaStore, StorageContract, missing_table, transaction_conflict};
+use crate::native_delta::{DeltaStore, StorageContract, transaction_conflict};
 use arrow::datatypes::{DataType, Field, Schema};
 use datafusion::{
     common::{DataFusionError, Result},
@@ -81,23 +81,7 @@ pub(crate) async fn retain(
     }
     let input = input.select(columns)?;
     for _ in 0..16 {
-        let table = match delta.load(&name, None).await {
-            Ok(table) => table,
-            Err(error) if missing_table(&error) => {
-                match delta.create(&name, &contract, false).await {
-                    Ok(table) => table,
-                    Err(error) if transaction_conflict(&error) => continue,
-                    Err(error) => {
-                        // Concurrent first creation can report AlreadyExists instead of a log conflict.
-                        if delta.load(&name, None).await.is_ok() {
-                            continue;
-                        }
-                        return Err(error);
-                    }
-                }
-            }
-            Err(error) => return Err(error),
-        };
+        let table = delta.open_or_create(&name, &contract, false, &[]).await?;
         let binding = capture(tool, &table, &contract)?;
         let selected = session
             .read_table(delta.provider(&table, &contract).await?)?
@@ -112,7 +96,11 @@ pub(crate) async fn retain(
             .await?
             .rows;
         if found != 0 {
-            if found != 1 || read(delta, id, &binding).await? != *value {
+            // The caller's durable whole-table writer obligation owns this task
+            // and this already opened version through comparison and publication.
+            if found != 1
+                || read_table(delta, id, &binding, &table, &contract, None).await? != *value
+            {
                 return datafusion::common::exec_err!(
                     "immutable native result identity has conflicting records"
                 );
@@ -145,6 +133,7 @@ pub(crate) async fn read(
     delta: &DeltaStore,
     id: &str,
     binding: &ResultVersion,
+    protection: crate::leases::ReadProtection,
 ) -> Result<ResultRecord> {
     let contract = contract(&binding.tool)?;
     let table = delta
@@ -155,9 +144,25 @@ pub(crate) async fn read(
             "result table identity, version or contract mismatch"
         );
     }
+    read_table(delta, id, binding, &table, &contract, Some(protection)).await
+}
+
+async fn read_table(
+    delta: &DeltaStore,
+    id: &str,
+    binding: &ResultVersion,
+    table: &deltalake::DeltaTable,
+    contract: &StorageContract,
+    protection: Option<crate::leases::ReadProtection>,
+) -> Result<ResultRecord> {
     let session = delta.runtime.session();
+    let provider = delta.provider(table, contract).await?;
+    let provider = match protection {
+        Some(protection) => protection.provider(provider, &session)?,
+        None => provider,
+    };
     let input = session
-        .read_table(delta.provider(&table, &contract).await?)?
+        .read_table(provider)?
         .filter(col("result_artifact_id").eq(lit(id)))?;
     let data = if ToolData::fields().find(&binding.tool).is_some() {
         record(

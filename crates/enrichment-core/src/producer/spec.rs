@@ -12,7 +12,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::canonical;
 use crate::evidence::{EvidenceKind, Gap};
 use crate::identity::Ecosystem;
 use crate::policy::ExecutionProfile;
@@ -184,12 +183,6 @@ impl ProducerRun {
     }
 }
 
-/// Digest a producer's options so identical configurations share one run.
-#[must_use]
-pub fn config_digest(options: &serde_json::Value) -> String {
-    canonical::digest_hex(options)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,7 +214,7 @@ mod tests {
             attempt_id: "attempt-test".into(),
             producer: "p".to_owned(),
             producer_version: "1".to_owned(),
-            config_digest: config_digest(&serde_json::json!({"a": 1})),
+            config_digest: "ab".repeat(32),
             inputs: BTreeMap::from([("x".to_owned(), "ab".repeat(32))]),
             profile: ExecutionProfile::Static,
             started_at: crate::native_time::ObservationTime::from_micros(1).unwrap(),

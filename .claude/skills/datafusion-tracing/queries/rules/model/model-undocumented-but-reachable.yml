@@ -1,0 +1,26 @@
+id: model-undocumented-but-reachable
+language: json
+severity: hint
+message: public, required in practice, and carried by no published artifact
+note: |
+  This is the finding the repository exists for. `lib.rs` declares `mod options;` and
+  `mod rule_options;` private and re-exports only the two `*Options` types, so both builders
+  are `pub` inside private modules. docs.rs answers 404 for them, they are absent from
+  `all.html`, and the hosted rustdoc JSON carries the structs with no impl block at all.
+
+  Sixteen methods appear only in a local `--document-private-items` capture -- including the
+  six the crate's own README quick-start chains. Read `catalogs/options.md`, and quote
+  `reached_via` when you recommend one, because there is no path a caller can `use`.
+metadata:
+  record: reachability
+  reads: content/model
+# Deliberately NOT anchored on `json-record`. An item record carries a "path" and a method
+# record does not, and the sixteen findings that matter here are methods -- anchoring on the
+# item would have reported two structs and hidden every method inside them.
+rule:
+  kind: object
+  has:
+    matches:
+      json-string-field:
+        key-pattern: { regex: '^"visibility"$' }
+        value-pattern: { regex: '^"reachable-undocumented"$' }

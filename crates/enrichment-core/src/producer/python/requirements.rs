@@ -10,37 +10,17 @@ use pep440_rs::VersionSpecifiers;
 use std::ops::Not;
 use std::str::FromStr;
 
-/// Explicit observed/admitted capsule fields; the marker compiler supplies no host defaults.
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct MarkerEnvironment {
-    pub python_full_version: String,
-    pub implementation_version: String,
-    pub implementation_name: String,
-    pub os_name: String,
-    pub platform_machine: String,
-    pub platform_system: String,
-    pub platform_python_implementation: String,
-    pub sys_platform: String,
-}
-
-impl MarkerEnvironment {
-    pub fn schema() -> arrow::datatypes::SchemaRef {
-        use arrow::datatypes::{DataType, Field, Schema};
-        std::sync::Arc::new(Schema::new(
-            [
-                "python_full_version",
-                "implementation_version",
-                "implementation_name",
-                "os_name",
-                "platform_machine",
-                "platform_system",
-                "platform_python_implementation",
-                "sys_platform",
-            ]
-            .into_iter()
-            .map(|name| Field::new(name, DataType::Utf8, false))
-            .collect::<Vec<_>>(),
-        ))
+crate::native_struct! {
+    /// Explicit observed capsule fields; no host defaults are supplied.
+    pub struct MarkerEnvironment {
+        python_full_version: String => crate::native_union::Rule::Text,
+        implementation_version: String => crate::native_union::Rule::Text,
+        implementation_name: String => crate::native_union::Rule::Text,
+        os_name: String => crate::native_union::Rule::Text,
+        platform_machine: String => crate::native_union::Rule::Text,
+        platform_system: String => crate::native_union::Rule::Text,
+        platform_python_implementation: String => crate::native_union::Rule::Text,
+        sys_platform: String => crate::native_union::Rule::Text,
     }
 }
 

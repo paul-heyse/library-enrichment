@@ -65,6 +65,48 @@ fn read_small(path: &Path, limit: u64) -> io::Result<Vec<u8>> {
 /// # Errors
 /// A missing blob, failed query, corrupt input or exhausted budget leaves no published bundle.
 pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Result<Exported> {
+    let scratch = std::sync::Arc::new(tempfile::tempdir()?);
+    let runtime =
+        QueryRuntime::new(&scratch.path().join("spill"), QueryLimits::default()).map_err(error)?;
+    let (paths, context_id, out) = (paths.clone(), context_id.to_owned(), out.to_owned());
+    let owned = runtime.clone();
+    let task_scratch = scratch.clone();
+    let result = runtime
+        .spawn_root(async move {
+            Box::pin(export_owned(
+                &paths,
+                &context_id,
+                &out,
+                &owned,
+                task_scratch.path(),
+            ))
+            .await
+        })
+        .await
+        .map_err(error)
+        .and_then(std::convert::identity);
+    let closed = runtime.close_diagnostics().await.map_err(error);
+    finish(result, closed)
+}
+
+fn finish<T>(result: io::Result<T>, closed: io::Result<()>) -> io::Result<T> {
+    match (result, closed) {
+        (Ok(value), Ok(())) => Ok(value),
+        (Err(primary), Ok(())) => Err(primary),
+        (Ok(_), Err(cleanup)) => Err(cleanup),
+        (Err(primary), Err(cleanup)) => Err(error(format!(
+            "{primary}; native shutdown also failed: {cleanup}"
+        ))),
+    }
+}
+
+async fn export_owned(
+    paths: &StatePaths,
+    context_id: &str,
+    out: &Path,
+    runtime: &QueryRuntime,
+    scratch: &Path,
+) -> io::Result<Exported> {
     let id = ContextId::try_from(context_id.to_owned()).map_err(error)?;
     match fs::symlink_metadata(out) {
         Ok(meta) if !meta.is_dir() || fs::read_dir(out)?.next().is_some() => {
@@ -86,20 +128,17 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         .tempdir_in(parent)?;
     let root = staging.path().join("bundle");
     fs::create_dir(&root)?;
-    let scratch = tempfile::tempdir()?;
-    let runtime =
-        QueryRuntime::new(&scratch.path().join("spill"), QueryLimits::default()).map_err(error)?;
     let repository =
         EvidenceRepository::read_only(paths.clone(), runtime.clone(), AdmissionLimits::default())
             .map_err(error)?;
     let catalog = repository.catalog.pin().await.map_err(error)?;
     let snapshot = catalog
-        .current(&runtime, &id)
+        .current(runtime, &id)
         .await
         .map_err(error)?
         .ok_or_else(|| error("context has no selected snapshot"))?;
     let snapshots = catalog
-        .comparison_closure(&runtime, &snapshot)
+        .comparison_closure(runtime, &snapshot)
         .await
         .map_err(error)?;
     fs::create_dir_all(root.join("data"))?;
@@ -116,6 +155,11 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
     let search =
         crate::search_projection::SearchProjection::new(&root.join("data/delta"), runtime.clone())
             .map_err(error)?;
+    let retention = crate::retention::RetentionStore::new(
+        crate::control::ControlStore::open(&root.join("data"), runtime.clone())?,
+        runtime.clone(),
+    );
+    let mut obligations = Vec::new();
     for input_snapshot in snapshots {
         let reader = SnapshotReader::open(&repository, catalog.clone(), &input_snapshot)
             .await
@@ -154,15 +198,15 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
             .map_err(error)?;
         let full = opened
             .binding
-            .research_session(&runtime, None)
+            .research_session(runtime, None)
             .await
             .map_err(error)?;
-        projections.push(
-            search
-                .prepare(&publication, &full, None, true)
-                .await
-                .map_err(error)?,
-        );
+        let prepared = search
+            .prepare(&publication, &full, None, true, &retention)
+            .await
+            .map_err(error)?;
+        projections.push(prepared.checkpoint);
+        obligations.push(prepared.obligation);
         rebound.push(enrichment_core::evidence::catalog::SnapshotEntry {
             snapshot_id: publication.snapshot_id.clone(),
             context_id: publication.context_id.clone(),
@@ -231,7 +275,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         for delivery in reader.job_deliveries().await.map_err(error)? {
             operational.extend(
                 catalog
-                    .result_dependencies(&runtime, &blobs, &delivery)
+                    .result_dependencies(runtime, &blobs, &delivery)
                     .await
                     .map_err(error)?,
             );
@@ -264,7 +308,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
     }
     catalog
         .export_snapshot(
-            &runtime,
+            runtime,
             &snapshot,
             &root.join("data"),
             &rebound,
@@ -272,6 +316,9 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         )
         .await
         .map_err(error)?;
+    for obligation in &obligations {
+        retention.settle_selected(obligation).await.map_err(error)?;
+    }
     let target_control =
         crate::control::ControlStore::read_only(&root.join("data"), runtime.clone())?
             .pin()
@@ -293,7 +340,7 @@ pub async fn export(paths: &StatePaths, context_id: &str, out: &Path) -> io::Res
         checksums.push_str(&format!("{digest}  {path}\n"));
     }
     fs::write(root.join(MANIFEST), checksums)?;
-    let problems = verify(&root).await?;
+    let problems = verify_owned(&root, runtime, scratch).await?;
     if !problems.is_empty() {
         return Err(error(format!(
             "unpublished bundle failed verification: {}",
@@ -336,6 +383,26 @@ fn copy_exact(source: &Path, target: &Path, digest: &str, bytes: u64) -> io::Res
 /// # Errors
 /// Unsafe paths, excessive bundles and malformed descriptors are explicit errors.
 pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
+    let scratch = std::sync::Arc::new(tempfile::tempdir()?);
+    let runtime =
+        QueryRuntime::new(&scratch.path().join("spill"), QueryLimits::default()).map_err(error)?;
+    let root = root.to_owned();
+    let owned = runtime.clone();
+    let task_scratch = scratch.clone();
+    let result = runtime
+        .spawn_root(async move { Box::pin(verify_owned(&root, &owned, task_scratch.path())).await })
+        .await
+        .map_err(error)
+        .and_then(std::convert::identity);
+    let closed = runtime.close_diagnostics().await.map_err(error);
+    finish(result, closed)
+}
+
+async fn verify_owned(
+    root: &Path,
+    runtime: &QueryRuntime,
+    scratch: &Path,
+) -> io::Result<Vec<String>> {
     let files = inventory(root)?;
     let text =
         String::from_utf8(read_small(&root.join(MANIFEST), 4 * 1024 * 1024)?).map_err(error)?;
@@ -381,13 +448,10 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     if description.bundle_version != "delta-evidence-bundle/1" {
         return Err(error("unsupported bundle contract"));
     }
-    let scratch = tempfile::tempdir()?;
-    let runtime =
-        QueryRuntime::new(&scratch.path().join("spill"), QueryLimits::default()).map_err(error)?;
     let repository = EvidenceRepository::read_only(
         StatePaths {
             data_root: root.join("data"),
-            cache_root: scratch.path().to_path_buf(),
+            cache_root: scratch.to_path_buf(),
         },
         runtime.clone(),
         AdmissionLimits::default(),
@@ -396,7 +460,7 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
     let catalog = repository.catalog.pin().await.map_err(error)?;
     if catalog.identity() != description.control
         || catalog
-            .current(&runtime, &description.context_id)
+            .current(runtime, &description.context_id)
             .await
             .map_err(error)?
             .as_ref()
@@ -405,7 +469,7 @@ pub async fn verify(root: &Path) -> io::Result<Vec<String>> {
         return Err(error("bundle identity and catalog selection disagree"));
     }
     for input in catalog
-        .comparison_closure(&runtime, &description.snapshot_id)
+        .comparison_closure(runtime, &description.snapshot_id)
         .await
         .map_err(error)?
     {

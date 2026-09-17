@@ -60,6 +60,10 @@ async fn acquire_inner(
     let started =
         enrichment_core::native_time::ObservationTime::now().map_err(|error| error.to_string())?;
     let registry = &service.config.producers.python.pypi_url;
+    let captures = enrichment_store::registry_capture::RegistryStore::new(
+        service.repository.catalog.clone(),
+        service.repository.runtime.clone(),
+    );
     let versions = if let Some(v) = &request.version {
         vec![v.clone()]
     } else {
@@ -82,19 +86,28 @@ async fn acquire_inner(
         if response.status != 200 {
             return Err(format!("Python index returned HTTP {}", response.status));
         }
-        acq.store(
-            &response,
-            ArtifactKind::RegistryIndexEntry,
-            "application/json",
-            url.as_str(),
-        )
-        .map_err(|e| e.to_string())?;
+        let artifact = acq
+            .store(
+                &response,
+                ArtifactKind::RegistryIndexEntry,
+                "application/json",
+                url.as_str(),
+            )
+            .map_err(|e| e.to_string())?;
         let value: Value = serde_json::from_slice(&response.bytes).map_err(|e| e.to_string())?;
         let versions: Vec<String> = serde_json::from_value(value["versions"].clone())
             .map_err(|e| format!("index versions unavailable: {e}"))?;
+        let versions = captures
+            .python_versions(
+                &artifact,
+                Some("application/vnd.pypi.simple.v1+json"),
+                &versions,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
         enrichment_store::python_registry::ordered_versions(
             &service.repository.runtime,
-            &versions,
+            versions,
             request.allow_prerelease,
             128,
         )
@@ -134,9 +147,25 @@ async fn acquire_inner(
         let files: Vec<DistributionFile> =
             serde_json::from_value(metadata["urls"].clone()).map_err(|e| e.to_string())?;
         let candidates = BTreeMap::from([(version.clone(), files)]);
+        let artifact = acq
+            .store(
+                &response,
+                ArtifactKind::RegistryVersionMetadata,
+                "application/json",
+                url.as_str(),
+            )
+            .map_err(|e| e.to_string())?;
+        let candidates = captures
+            .python_files(
+                &artifact,
+                Some("application/json"),
+                python::facts::decode(&candidates, 1024).map_err(|e| e.to_string())?,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
         if let Some(choice) = enrichment_store::python_registry::select(
             &service.repository.runtime,
-            &candidates,
+            candidates,
             request,
             None,
             false,
@@ -145,13 +174,6 @@ async fn acquire_inner(
         .map_err(|e| e.to_string())?
         {
             let file = choice.file;
-            acq.store(
-                &response,
-                ArtifactKind::RegistryVersionMetadata,
-                "application/json",
-                url.as_str(),
-            )
-            .map_err(|e| e.to_string())?;
             selected = Some((choice.version, file, metadata));
             break;
         }
@@ -594,7 +616,7 @@ pub(super) async fn produce(
         data: common::payload(&data),
         coverage,
         freshness,
-        context_id: Some(context.context_id.to_string()),
+        context_id: Some(context.context_id.clone()),
         snapshot_id: None,
         evidence: Vec::new(),
         artifacts,
@@ -644,7 +666,7 @@ pub(super) async fn produce(
     .await?;
     acq.work
         .and_then(|work| work.committed.get())
-        .filter(|(_, snapshot, _)| snapshot == manifest.snapshot_id.as_str())
+        .filter(|(_, snapshot, _)| snapshot == &manifest.snapshot_id)
         .map(|(_, _, result)| result.clone())
         .ok_or_else(|| "Python resolution lacks prepared committed delivery".into())
 }

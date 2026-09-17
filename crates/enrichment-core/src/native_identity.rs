@@ -18,70 +18,7 @@ use std::sync::Arc;
 /// # Errors
 /// Unbounded or unsupported declarations refuse before registration or mutation.
 pub fn schema_identity(semantic: &Schema, storage: &Schema) -> Result<String> {
-    use datafusion::{
-        common::{DFSchema, ScalarValue},
-        functions::{crypto::expr_fn::sha256, encoding::expr_fn::encode},
-        logical_expr::{Expr, simplify::SimplifyContext},
-        optimizer::simplify_expressions::ExprSimplifier,
-        prelude::lit,
-    };
-    let mut bytes = Vec::new();
-    framed(
-        &mut bytes,
-        b"enrichment/schema-contract/3/canonical2/intrinsic3/extensions1/delta-mapping2",
-    )?;
-    framed(&mut bytes, crate::native_json::REVISION.as_bytes())?;
-    for schema in [semantic, storage] {
-        crate::native_schema::validate(schema)?;
-        bytes.extend_from_slice(&(schema.fields().len() as u64).to_le_bytes());
-        for field in schema.fields() {
-            schema_field_bytes(field, &mut bytes)?;
-        }
-        let metadata: std::collections::BTreeMap<_, _> = schema.metadata().iter().collect();
-        bytes.extend_from_slice(&(metadata.len() as u64).to_le_bytes());
-        for (key, value) in metadata {
-            framed(&mut bytes, key.as_bytes())?;
-            framed(&mut bytes, value.as_bytes())?;
-        }
-    }
-    let context = SimplifyContext::builder()
-        .with_schema(Arc::new(DFSchema::empty()))
-        .build();
-    let value = ExprSimplifier::new(context).simplify(encode(
-        sha256(lit(ScalarValue::Binary(Some(bytes)))),
-        lit("hex"),
-    ))?;
-    match value {
-        Expr::Literal(ScalarValue::Utf8(Some(value)) | ScalarValue::Utf8View(Some(value)), _) => {
-            Ok(value)
-        }
-        _ => Err(invalid("native schema digest did not reduce to a scalar")),
-    }
-}
-
-fn schema_field_bytes(field: &Field, out: &mut Vec<u8>) -> Result<()> {
-    field_bytes(field, out)?;
-    out.push(u8::from(field.is_nullable()));
-    // Canonical values unify offset/view encodings. The schema witness also distinguishes
-    // the exact selected representation and physical child nullability.
-    out.push(match field.data_type() {
-        DataType::LargeUtf8 | DataType::LargeBinary | DataType::LargeList(_) => 1,
-        DataType::Utf8View | DataType::BinaryView => 2,
-        _ => 0,
-    });
-    match field.data_type() {
-        DataType::Struct(fields) => {
-            for field in fields {
-                schema_field_bytes(field, out)?;
-            }
-        }
-        DataType::List(field)
-        | DataType::LargeList(field)
-        | DataType::Map(field, _)
-        | DataType::FixedSizeList(field, _) => schema_field_bytes(field, out)?,
-        _ => {}
-    }
-    Ok(())
+    crate::native_contract::Manifest::new(semantic, storage)?.identity()
 }
 
 /// Build the one value encoder used by native identity plans. Its declaration supplies types,

@@ -24,11 +24,13 @@ For long jobs, poll the supplied job ID with bounded waits. Cancel only your req
 
 Tools may create service-owned caches or jobs, but none should modify the working repository. `verify_usage` and analysis involving build scripts/imports are execution, even if their purpose is inspection.
 
-## Research contract 3.0
+## Research contract 5.0
 
 Read the installed catalog for exact schemas. Removed depth/aspects arguments and old root
 pagination are rejected. Selection, scope assessment, cursor checks, policy, enforced byte
-limits and durable results belong to the Rust service.
+limits and durable results belong to the Rust service. Full-range UInt64, Int64 and native
+size/count values use decimal JSON strings in wire 5.0, including `max_items`, `max_bytes`,
+`wait_seconds` and pagination counts. Follow the generated field schema for smaller numeric types.
 
 ### Focused selection
 
@@ -38,7 +40,7 @@ examples, source, semantics, runtime, children or members. Children are lexical 
 members come from retained membership relationships. An omitted aspect is not absent evidence.
 
 ```json
-{"tool":"inspect_symbol","arguments":{"context_id":"ctx_example","symbol_path":"datafusion::execution::context::SessionContext","selection":{"mode":"explicit","aspects":[{"aspect":"signature","max_items":8},{"aspect":"members","max_items":8}]}}}
+{"tool":"inspect_symbol","arguments":{"context_id":"ctx_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","symbol_path":"datafusion::execution::context::SessionContext","selection":{"mode":"explicit","aspects":[{"aspect":"signature","max_items":"8"},{"aspect":"members","max_items":"8"}]}}}
 ```
 
 Preserve context/snapshot and the aspect's limits when supplying its cursor. Documentation and
@@ -85,7 +87,7 @@ cannot fit beside the inline scope assessment. Text previews and resource links 
 the structured result always carries the portable tool action.
 
 ```json
-{"tool":"read_artifact","arguments":{"artifact_id":"art_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","section":{"kind":"result","name":"signature"},"max_bytes":4096}}
+{"tool":"read_artifact","arguments":{"artifact_id":"art_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef","section":{"kind":"result","name":"signature"},"max_bytes":"4096"}}
 ```
 
 Result sections are envelope, coverage, signature, changes, aspects or data, when listed in the
@@ -96,7 +98,10 @@ the descriptor's one artifact identity.
 Markdown selection instead uses `{"kind":"markdown","heading":"Heading"}`. Each artifact
 page reports a digest and encoding. Follow `data.page.next_cursor` until `has_more=false`; retain
 the same section and limits, and decode base64 when indicated. `delivery.limits` reports the
-requested and effective native byte caps; MCP framing adds its separately bounded allowance.
+requested and effective complete response caps. For MCP stdio, the native selection includes
+the actual JSON-RPC framing and resource text escaping. There is no additional fixed framing
+allowance. A cap too small for required recovery/identity fields produces a declared refusal
+with the required minimum; increase the cap rather than discarding those fields.
 
 A pending result carries a durable job handle. Preserve its interest token when present.
 Terminal `job_control.data.result.outcome` is a tagged record: `status` is `ok`, `partial`, or

@@ -60,6 +60,8 @@ printf '\n'
 [ $((bad+missing+unmapped)) -eq 0 ]
 }
 
-CURRENT="$ROOT/docs/provenance/bundle-2026-09-15-research-v2"
+CURRENT="$ROOT/docs/provenance/bundle-2026-09-17-native-delivery"
+PREVIOUS="$ROOT/docs/provenance/bundle-2026-09-15-research-v2"
 verify_bundle "$CURRENT/MANIFEST.sha256" "$CURRENT/PATHMAP.tsv"
-verify_bundle "$ROOT/docs/provenance/bundle-2026-09-13/MANIFEST.sha256" "$CURRENT/PREDECESSOR_PATHMAP.tsv"
+verify_bundle "$PREVIOUS/MANIFEST.sha256" "$CURRENT/RESEARCH_V2_PATHMAP.tsv"
+verify_bundle "$ROOT/docs/provenance/bundle-2026-09-13/MANIFEST.sha256" "$PREVIOUS/PREDECESSOR_PATHMAP.tsv"

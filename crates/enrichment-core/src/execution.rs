@@ -11,9 +11,9 @@ crate::native_vocabulary! {
 crate::native_struct! {
 /// Exact consumer input, pinned to a snapshot before scheduling.
 pub struct VerifyRequest {
-    context_id: String => crate::native_union::Rule::Text,
+    context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
     #[serde(default)]
-    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     snippet: String => crate::native_union::Rule::Text,
     #[serde(default = "default_probe_mode")]
     mode: ProbeMode => crate::native_union::Rule::Text,
@@ -31,43 +31,6 @@ fn default_probe_mode() -> ProbeMode {
 }
 fn default_probe_profile() -> ExecutionProfile {
     ExecutionProfile::Build
-}
-
-impl VerifyRequest {
-    /// Validate before admitting work. An operator's permissive sandbox flags never permit host execution.
-    pub fn validate(&self, config: &crate::config::Config) -> Result<(), String> {
-        self.validate_shape(config)?;
-        if !self.profile.is_enabled(config) {
-            return Err(format!("{} execution profile is not enabled", self.profile));
-        }
-        Ok(())
-    }
-
-    /// Validate caller intent independently of live producer readiness.
-    pub fn validate_shape(&self, config: &crate::config::Config) -> Result<(), String> {
-        if self.snippet.trim().is_empty()
-            || self.snippet.len() > config.limits.verification_input_bytes
-        {
-            return Err(
-                "snippet is empty or exceeds the configured verification input budget".into(),
-            );
-        }
-        let required = if self.mode == ProbeMode::Runtime {
-            ExecutionProfile::Runtime
-        } else {
-            ExecutionProfile::Build
-        };
-        if self.profile != required {
-            return Err(format!(
-                "{} requires locally enabled {required} policy",
-                match self.mode {
-                    ProbeMode::Runtime => "runtime",
-                    _ => "compilation/typechecking",
-                }
-            ));
-        }
-        Ok(())
-    }
 }
 
 crate::native_vocabulary! {
@@ -91,8 +54,7 @@ pub struct JobRequest {
     #[serde(default)]
     interest_token: Option<String> => crate::native_union::Rule::Text,
     #[serde(default)]
-    #[schemars(range(max = 10))]
-    wait_seconds: u64 => crate::native_union::Rule::Text,
+    wait_seconds: u64 => crate::native_union::Rule::UnsignedRange { min: 0, max: 10 },
     #[serde(default)]
     #[schemars(range(min = 1024))]
     max_bytes: Option<usize> => crate::native_union::Rule::Text,
@@ -124,8 +86,8 @@ crate::native_struct! {
 pub struct JobResult {
     outcome: TerminalOutcome => crate::native_union::Rule::Text,
     summary: String => crate::native_union::Rule::Text,
-    context_id: Option<String> => crate::native_union::Rule::Text,
-    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    context_id: Option<crate::identity::ContextId> => crate::native_union::Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     coverage: crate::wire::Coverage => crate::native_union::Rule::Text,
     delivery: crate::wire::DeliveryDescriptor => crate::native_union::Rule::Text,
 }
@@ -167,8 +129,8 @@ pub enum ProcessAuthority {
     Command = "command" {
         effect_id: String => crate::native_union::Rule::NonEmpty,
         grant_id: String => crate::native_union::Rule::NonEmpty,
-        environment_id: Option<String> => crate::native_union::Rule::Text,
-        snapshot_id: Option<String> => crate::native_union::Rule::Text,
+        environment_id: Option<crate::identity::EnvironmentId> => crate::native_union::Rule::Text,
+        snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     },
     Qualification = "qualification" { definition_id: String => crate::native_union::Rule::NonEmpty },
 }
@@ -195,10 +157,10 @@ crate::native_struct! {
 pub struct VerificationData {
     evidence_class: crate::wire::EvidenceClass => crate::native_union::Rule::Text,
     producer_runs: Vec<crate::producer::ProducerRun> => crate::native_union::Rule::Sequence,
-    source_context_id: String => crate::native_union::Rule::Text,
-    source_snapshot_id: String => crate::native_union::Rule::Text,
+    source_context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
+    source_snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
     derived_context: Option<crate::identity::Context> => crate::native_union::Rule::Text,
-    derived_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    derived_snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     environment: Option<crate::identity::Environment> => crate::native_union::Rule::Text,
     mode: ProbeMode => crate::native_union::Rule::Text,
     profile: ExecutionProfile => crate::native_union::Rule::Text,

@@ -1,20 +1,57 @@
 //! Finite operation inputs and effective configuration represented as typed Arrow contracts.
+pub mod identities;
 pub mod jobs;
 pub mod ownership;
 pub mod projections;
 pub mod results;
-use crate::{
-    execution::VerifyRequest,
-    request::{CompareRequest, InspectRequest, ResolveRequest},
-};
+pub mod retention;
+pub mod selections;
+pub mod sources;
+use crate::execution::VerifyRequest;
+pub use crate::request::{Arguments, CommandKind};
 use arrow::datatypes::{DataType, Schema, SchemaRef};
 use std::sync::Arc;
-crate::native_union! {
-    pub enum Arguments {
-        Verify = "verify" { request: VerifyRequest => crate::native_union::Rule::Text },
-        Inspect = "inspect" { request: InspectRequest => crate::native_union::Rule::Text },
-        Resolve = "resolve" { request: ResolveRequest => crate::native_union::Rule::Text },
-        Compare = "compare" { request: CompareRequest => crate::native_union::Rule::Text },
+crate::native_vocabulary! {
+    pub enum Durability { Immediate = "immediate", Durable = "durable" }
+}
+crate::native_vocabulary! {
+    pub enum ResponsePolicy { Research = "research", Verification = "verification", Job = "job", Status = "status" }
+}
+crate::native_struct! {
+    /// One executable operation definition also supplies the transport catalog.
+    pub struct Definition {
+        operation: crate::request::Operation => crate::native_union::Rule::Text,
+        name: String => crate::native_union::Rule::NonEmpty,
+        rpc: String => crate::native_union::Rule::NonEmpty,
+        description: String => crate::native_union::Rule::NonEmpty,
+        effect: crate::wire::bindings::Effect => crate::native_union::Rule::Text,
+        published: bool => crate::native_union::Rule::Text,
+        durability: Durability => crate::native_union::Rule::Text,
+        response: ResponsePolicy => crate::native_union::Rule::Text,
+    }
+}
+crate::native_struct! {
+    /// Cache and cursor witnesses bind declaration values as well as field/codec contracts.
+    pub struct Contract {
+        schema: crate::native_contract::Manifest => crate::native_union::Rule::Text,
+        operation: Definition => crate::native_union::Rule::Text,
+        aspects: Vec<crate::wire::research::AspectDefinition> => crate::native_union::Rule::Set,
+        discovery: Vec<crate::wire::research::DiscoveryDefinition> => crate::native_union::Rule::Set,
+        execution: Vec<crate::evidence::execution::ExecutionDefinition> => crate::native_union::Rule::Set,
+    }
+}
+impl Contract {
+    pub fn new(operation: Definition, schema: crate::native_contract::Manifest) -> Self {
+        Self {
+            schema,
+            operation,
+            aspects: crate::wire::research::InspectionAspect::definitions(),
+            discovery: crate::wire::research::DiscoveryKind::definitions(),
+            execution: crate::evidence::execution::ExecutionKind::definitions(),
+        }
+    }
+    pub fn identity(&self) -> datafusion::common::Result<String> {
+        crate::native_key::Key::OperationContract.record(self)
     }
 }
 crate::native_struct! {
@@ -88,7 +125,7 @@ pub fn policy_schema() -> SchemaRef {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{config::Config, native_key::Key};
+    use crate::{config::Config, native_key::Key, request::ResolveRequest};
 
     fn complete(value: &serde_json::Value, kind: &DataType) {
         if let (Some(object), DataType::Struct(fields)) = (value.as_object(), kind) {

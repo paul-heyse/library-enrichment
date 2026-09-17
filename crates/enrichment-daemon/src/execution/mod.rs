@@ -1108,6 +1108,32 @@ async fn read_bounded(
     }
 }
 
+fn boot_id() -> io::Result<String> {
+    Ok(std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?
+        .trim()
+        .to_owned())
+}
+fn path_text(path: &Path) -> io::Result<String> {
+    path.to_str()
+        .map(str::to_owned)
+        .ok_or_else(|| io::Error::other("physical path is not UTF-8"))
+}
+
+#[cfg(test)]
+pub(crate) fn test_ownership(cache: &Path) -> OwnershipStore {
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &cache.join("native-spill"),
+        Default::default(),
+    )
+    .unwrap();
+    let control = enrichment_store::control::ControlStore::open(
+        &cache.join("native-test-control"),
+        runtime.clone(),
+    )
+    .unwrap();
+    OwnershipStore::new(control, runtime, cache).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1213,30 +1239,4 @@ mod tests {
         assert!(!Runner::valid_image("--privileged"));
         assert!(Runner::valid_image(&format!("sha256:{}", "a".repeat(64))));
     }
-}
-
-fn boot_id() -> io::Result<String> {
-    Ok(std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?
-        .trim()
-        .to_owned())
-}
-fn path_text(path: &Path) -> io::Result<String> {
-    path.to_str()
-        .map(str::to_owned)
-        .ok_or_else(|| io::Error::other("physical path is not UTF-8"))
-}
-
-#[cfg(test)]
-pub(crate) fn test_ownership(cache: &Path) -> OwnershipStore {
-    let runtime = enrichment_store::runtime::QueryRuntime::new(
-        &cache.join("native-spill"),
-        Default::default(),
-    )
-    .unwrap();
-    let control = enrichment_store::control::ControlStore::open(
-        &cache.join("native-test-control"),
-        runtime.clone(),
-    )
-    .unwrap();
-    OwnershipStore::new(control, runtime, cache).unwrap()
 }

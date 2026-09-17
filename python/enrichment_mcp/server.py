@@ -38,13 +38,11 @@ from mcp.types import (
     CallToolRequestParams,
     CallToolResult,
     ReadResourceRequestParams,
-    ResourceLink,
     TextContent,
     ToolAnnotations,
 )
 
-from enrichment_mcp import envelope, presentation
-from enrichment_mcp._generated.request_schema import ArtifactSection
+from enrichment_mcp import envelope, framing, presentation
 from enrichment_mcp._generated.research_envelope_schema import Code, Coverage, Diagnostic
 from enrichment_mcp.daemon_client import (
     DaemonClient,
@@ -109,45 +107,20 @@ def _emit(result: dict[str, Any], *, tool: str | None = None) -> dict[str, Any]:
     )
 
 
-MCP_FRAME_ALLOWANCE_BYTES = 1024
+def _boundary_result(result: dict[str, Any], *, tool: str | None = None) -> ToolResult:
+    """Expose a local protocol/availability failure when no native delivery exists.
 
-
-def _tool_result(result: dict[str, Any], *, tool: str | None = None) -> ToolResult:
-    """Keep evidence in structured output, with a short optional human-readable projection."""
+    This projection has no evidence selection, truncation or terminal-job policy. Native
+    deliveries already contain their authoritative content and bypass this constructor.
+    """
     result = _emit(result, tool=tool)
-    summary = str(result.get("summary", "Evidence response"))[:160]
-    while len(json.dumps(summary, ensure_ascii=False).encode()) > 160:
-        summary = summary[:-1]
-    content: list[TextContent | ResourceLink] = [TextContent(type="text", text=summary)]
-    failed = presentation.is_error(result)
-    if failed:
-        content = [TextContent(type="text", text=json.dumps(presentation.error_preview(result)))]
-    delivery = result["delivery"]
-    if delivery["mode"] == "artifact" and not failed:
-        content.append(
-            ResourceLink(
-                type="resource_link",
-                name="Complete result",
-                uri=f"library-evidence://artifacts/{delivery['artifact_id']}",
-                mime_type="application/json",
-            )
+    return ToolResult.from_mcp_result(
+        CallToolResult(
+            content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False))],
+            structured_content=result,
+            is_error=result["status"] == "error",
         )
-    # Measure the complete MCP result; optional blocks never displace the structured handle.
-    structured_bytes = len(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode())
-    measured = CallToolResult(content=content, structured_content=result, is_error=failed)
-    if len(measured.model_dump_json(by_alias=True).encode()) > (
-        structured_bytes + MCP_FRAME_ALLOWANCE_BYTES - 128
-    ):
-        content = (
-            [
-                TextContent(
-                    type="text", text=json.dumps(presentation.error_preview(result, compact=True))
-                )
-            ]
-            if failed
-            else []
-        )
-    return ToolResult(content=content, structured_content=result, is_error=failed)
+    )
 
 
 _StrictArguments = validators.extend(
@@ -202,7 +175,7 @@ class OperationBoundary(Middleware):
             error = errors[0]
             path = ".".join(str(part) for part in error.absolute_path) or "arguments"
             # Do not echo the supplied values (snippets can contain private source).
-            return _tool_result(
+            return _boundary_result(
                 envelope.error(
                     Code.UNSUPPORTED_FORMAT,
                     f"Invalid {name} input at {path}: {error.validator}",
@@ -230,7 +203,7 @@ class OperationBoundary(Middleware):
                         )
             return result
         except ToolValidationError:
-            return _tool_result(
+            return _boundary_result(
                 envelope.error(
                     Code.UNSUPPORTED_FORMAT,
                     f"Invalid {name} argument binding",
@@ -246,7 +219,7 @@ class OperationBoundary(Middleware):
             )
             correlation = failure["request_id"]
             log(f"library-enrichment: request_id={correlation} exception={type(exc).__name__}")
-            return _tool_result(failure, tool=name)
+            return _boundary_result(failure, tool=name)
         finally:
             log(
                 f"library-enrichment: request_id={correlation} tool={name} "
@@ -261,12 +234,34 @@ class NativeTool(Tool):
     rpc_timeout: float
 
     async def run(self, arguments: dict[str, Any]) -> ToolResult:
-        if self.name == "service_status":
-            payload, _ = await _service_status(arguments.get("component"))
-        else:
-            wait = arguments.get("wait_seconds", 0) if self.name == "job_control" else 0
-            payload = await _research(self.rpc_method, arguments, timeout=self.rpc_timeout + wait)
-        return _tool_result(payload, tool=self.name)
+        delivery = framing.current_profile()
+        wait = int(arguments.get("wait_seconds", "0")) if self.name == "job_control" else 0
+        client = DaemonClient.from_env()
+        try:
+            response = await client.call(
+                self.rpc_method,
+                arguments,
+                timeout_seconds=self.rpc_timeout + wait,
+                delivery=delivery.profile,
+            )
+        except DaemonUnavailableError as exc:
+            # Availability is an adapter-local observation, never a native evidence answer.
+            if self.name == "service_status" and exc.cause == "connection":
+                return _boundary_result(_unavailable_status(exc))
+            return _boundary_result(_transport_error(exc))
+        if isinstance(response.get("error"), dict):
+            return _boundary_result(_rpc_error_envelope(response["error"]))
+        payload = response.get("result")
+        if not isinstance(payload, dict):
+            raise ValueError("daemon returned no native MCP result")
+        structured = payload.get("structuredContent")
+        if not isinstance(structured, dict):
+            raise ValueError("native MCP result has no evidence envelope")
+        valid, reason = envelope.validate_document(json.dumps(structured))
+        if not valid:
+            raise ValueError(f"invalid native envelope: {reason}")
+        presentation.validate_output(self.name, structured)
+        return framing.native_result(payload, response.get("delivery_bytes"), delivery)
 
 
 def build_server() -> FastMCP:
@@ -275,7 +270,8 @@ def build_server() -> FastMCP:
     Pure construction: no socket is opened, no package is fetched, no subprocess is started.
     """
     mcp: FastMCP = FastMCP(
-        name="library-enrichment",
+        name=presentation.delivery_contract()["server_name"],
+        version=presentation.delivery_contract()["server_version"],
         strict_input_validation=True,
         mask_error_details=True,
         middleware=[OperationBoundary()],
@@ -322,24 +318,17 @@ def build_server() -> FastMCP:
         description="A stored artifact, paged; the same read as the `read_artifact` tool.",
         mime_type="application/json",
     )
-    async def artifact_resource(artifact_id: str) -> str:
-        return json.dumps(
-            _emit(await _read_artifact(artifact_id, None, None, None), tool="read_artifact")
-        )
+    async def artifact_resource(artifact_id: str) -> ResourceResult:
+        return await _native_resource("artifact.read", {"artifact_id": artifact_id})
 
     @mcp.resource(
         "library-evidence://contexts/{context_id}/overview",
         name="context_overview",
-        description="The faceted overview of a context; the same read as `library_overview`.",
+        description="The faceted overview of a context; the same read as library_overview.",
         mime_type="application/json",
     )
-    async def overview_resource(context_id: str) -> str:
-        payload = await _research(
-            "library.overview",
-            {"context_id": context_id},
-            timeout=RETRIEVAL_TIMEOUT_SECONDS,
-        )
-        return json.dumps(_emit(payload, tool="library_overview"))
+    async def overview_resource(context_id: str) -> ResourceResult:
+        return await _native_resource("library.overview", {"context_id": context_id})
 
     @mcp.resource(
         "library-evidence://snapshots/{snapshot_id}/manifest",
@@ -347,31 +336,16 @@ def build_server() -> FastMCP:
         description="What a snapshot contains: counts, producers and coverage.",
         mime_type="application/json",
     )
-    async def manifest_resource(snapshot_id: str) -> str:
-        payload = await _research(
-            "snapshot.manifest",
-            {"snapshot_id": snapshot_id},
-            timeout=RETRIEVAL_TIMEOUT_SECONDS,
-        )
-        return json.dumps(_emit(payload, tool="snapshot_manifest"))
+    async def manifest_resource(snapshot_id: str) -> ResourceResult:
+        return await _native_resource("snapshot.manifest", {"snapshot_id": snapshot_id})
 
-    # The frozen template in blueprint 7.4 is `.../jobs/{job_id}/result`, and a resource URI is
-    # part of the contract a client binds to -- an adapter that served a different one would be
-    # answering a question nobody asked.
     @mcp.resource(
         "library-evidence://jobs/{job_id}/result",
         name="job_result",
         mime_type="application/json",
     )
-    async def job_resource(job_id: str) -> str:
-        return json.dumps(
-            _emit(
-                await _research(
-                    "job.control", {"job_id": job_id}, timeout=RETRIEVAL_TIMEOUT_SECONDS
-                ),
-                tool="job_control",
-            )
-        )
+    async def job_resource(job_id: str) -> ResourceResult:
+        return await _native_resource("job.control", {"job_id": job_id})
 
     return mcp
 
@@ -453,120 +427,50 @@ def _transport_error(exc: DaemonUnavailableError) -> dict[str, Any]:
     )
 
 
-async def _research(method: str, params: dict[str, Any], *, timeout: float) -> dict[str, Any]:
-    """Call a research method and forward the core's envelope.
-
-    The daemon builds the whole envelope -- identity, coverage, freshness, evidence -- because
-    those are evidence-model assertions and §1.1 gives the evidence model to the core. This
-    function calls, maps a structured error, and forwards. An unreachable daemon is an
-    ``error`` here rather than the ``partial`` `service_status` returns: with no daemon there
-    is no evidence at all, and the next action is the same either way.
-    """
-    tool = next(
-        (name for name, binding in presentation.bindings().items() if binding["rpc"] == method),
-        None,
-    )
-    if tool is not None:
-        valid, reason = envelope.validate_request(tool, params)
-        if not valid:
-            return envelope.error(
-                Code.UNSUPPORTED_FORMAT,
-                f"invalid {tool} request: {reason}",
-                "Use the tool's declared input schema.",
-                retryable=False,
-            )
+async def _native_resource(method: str, params: dict[str, Any]) -> ResourceResult:
+    """Native evidence composition with exact resource text/URI/framing measurement."""
+    delivery = framing.current_profile(resource=True)
     client = DaemonClient.from_env()
-    try:
-        response = await client.call(method, params, timeout_seconds=timeout)
-    except DaemonUnavailableError as exc:
-        return _transport_error(exc)
-
-    detail = response.get("error")
-    if isinstance(detail, dict):
-        return _rpc_error_envelope(detail)
-
-    result = response.get("result")
-    if not isinstance(result, dict):
-        return envelope.error(
-            Code.INTERNAL_ERROR,
-            "the daemon returned no envelope",
-            "Report the malformed response with the daemon log.",
-            retryable=False,
-        )
-    # Forwarded verbatim. `_emit` validates it on the way out.
+    response = await client.call(
+        method,
+        params,
+        timeout_seconds=RETRIEVAL_TIMEOUT_SECONDS,
+        delivery=delivery.profile,
+    )
+    if response.get("error") is not None:
+        raise ToolValidationError("The daemon rejected the resource request.")
+    payload = response.get("result")
+    if not isinstance(payload, dict):
+        raise ValueError("daemon returned no native resource result")
+    result = framing.native_resource(payload, response.get("delivery_bytes"), delivery)
+    document = result.contents[0].content
+    if not isinstance(document, str):
+        raise ValueError("native evidence resource requires JSON text")
+    valid, reason = envelope.validate_document(document)
+    if not valid:
+        raise ValueError(f"invalid native resource envelope: {reason}")
+    tool = next(name for name, entry in presentation.bindings().items() if entry["rpc"] == method)
+    presentation.validate_output(tool, json.loads(document))
     return result
 
 
-async def _read_artifact(
-    artifact_id: str, section: ArtifactSection | None, cursor: str | None, max_bytes: int | None
-) -> dict[str, Any]:
-    """One read, shared by the `read_artifact` tool and the artifact resource template."""
-    return await _research(
-        "artifact.read",
+def _unavailable_status(exc: DaemonUnavailableError) -> dict[str, Any]:
+    """Only local availability facts exist when the daemon cannot answer."""
+    return envelope.partial(
+        "The daemon is not running, so only adapter-local facts are available.",
         {
-            "artifact_id": artifact_id,
-            "section": section.model_dump(mode="json", by_alias=True, warnings="error")
-            if section is not None
-            else None,
-            "cursor": cursor,
-            "max_bytes": max_bytes,
+            "daemon": {"available": False, "detail": str(exc)},
+            "adapter": {"available": True, "tools": list(TOOL_NAMES)},
         },
-        timeout=RETRIEVAL_TIMEOUT_SECONDS,
+        Coverage(
+            details=None,
+            assessments=[],
+            scope="adapter-local status only",
+            indexed=["adapter"],
+            missing=["daemon", "producers", "cache"],
+            limitations=[
+                "The daemon was unreachable, so producer and cache state are unknown "
+                "rather than absent. Start it with `library-enrichmentd start`."
+            ],
+        ),
     )
-
-
-async def _service_status(component: str | None) -> tuple[dict[str, Any], bool]:
-    """Forward the daemon's envelope, or report its absence.
-
-    The daemon builds the whole envelope -- identity, coverage and freshness included -- because
-    those are evidence-model assertions and §1.1 gives the evidence model to the core. This
-    function does what §2.1 says an adapter does: calls, maps a structured error, forwards.
-
-    The one envelope composed here is the daemon-unreachable case, and only because the core is
-    by definition not around to state it. Even then it is `partial` with the gap named, never an
-    empty `ok`: "the daemon is down" and "no producers are installed" are different facts.
-
-    Returns the envelope and whether the core composed it, because only a core-composed one
-    carries a `service_status` payload the generated schema can check.
-    """
-    client = DaemonClient.from_env()
-    params = {"component": component} if component is not None else {}
-    try:
-        response = await client.call("service.status", params)
-    except DaemonUnavailableError as exc:
-        if exc.cause != "connection":
-            return _transport_error(exc), False
-        return envelope.partial(
-            "The daemon is not running, so only adapter-local facts are available.",
-            {
-                "daemon": {"available": False, "detail": str(exc)},
-                "adapter": {"available": True, "tools": list(TOOL_NAMES)},
-            },
-            Coverage(
-                details=None,
-                assessments=[],
-                scope="adapter-local status only",
-                indexed=["adapter"],
-                missing=["daemon", "producers", "cache"],
-                limitations=[
-                    "The daemon was unreachable, so producer and cache state are unknown "
-                    "rather than absent. Start it with `library-enrichmentd start`."
-                ],
-            ),
-        ), False
-
-    if response.get("error") is not None:
-        return _rpc_error_envelope(response["error"]), False
-
-    result = response.get("result")
-    if not isinstance(result, dict):
-        return envelope.error(
-            Code.INTERNAL_ERROR,
-            "the daemon returned no envelope",
-            "Report the malformed response with the daemon log.",
-            retryable=False,
-        ), False
-    # Forwarded verbatim. `_emit` validates both the envelope and, because this one came from
-    # the core, its `service_status` payload -- so a drifted field name in the daemon is caught
-    # here rather than by the calling agent.
-    return result, True

@@ -1,0 +1,28 @@
+id: project-object-store-not-instrumented
+language: rust
+severity: hint
+message: an object store is registered without instrument_object_store
+note: |
+  Everything under a scan -- every GET, every byte range, every retry -- happens inside the
+  object store, and none of it appears in the trace unless the store is wrapped. The wrapper is
+  one call and costs nothing when no subscriber is listening:
+
+      ctx.register_object_store(&url, instrument_object_store(store, "name"))
+
+  This is the largest single blind spot in an otherwise fully instrumented query, because the
+  execution-plan spans show the time and say nothing about where it went.
+metadata:
+  record: capability-gap
+  capability: object-store
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        has: { field: field, regex: '^register_object_store$' }
+    - not:
+        has:
+          stopBy: end
+          kind: identifier
+          regex: '^instrument_object_store$'

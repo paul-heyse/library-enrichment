@@ -100,9 +100,9 @@ pub struct Research {
     /// What was consulted and when.
     pub freshness: Freshness,
     /// The context the result is about.
-    pub context_id: Option<String>,
+    pub context_id: Option<enrichment_core::identity::ContextId>,
     /// The snapshot actually read, when one was.
-    pub snapshot_id: Option<String>,
+    pub snapshot_id: Option<enrichment_core::identity::SnapshotId>,
     /// Supporting facts with locators.
     pub evidence: Vec<enrichment_core::wire::Evidence>,
     /// Readable artifacts.
@@ -195,6 +195,36 @@ pub fn artifact_uri(path: &str) -> Result<ArtifactUri, enrichment_core::wire::Ar
 }
 
 #[cfg(test)]
+pub(crate) fn fixture_payload(text: &str) -> enrichment_core::wire::data::ToolData {
+    use enrichment_core::wire::data::{HitKind, SearchData, SearchHit};
+    SearchData {
+        page: Page::new(1, Some(1), false, None),
+        query: "fixture".into(),
+        tokens: vec!["fixture".into()],
+        kinds: vec!["documentation".into()],
+        area: None,
+        hits: vec![SearchHit {
+            hit: HitKind::Fragment,
+            score: 1,
+            factors: vec![],
+            evidence_id: "ev_fixture".into(),
+            path: None,
+            symbol_kind: None,
+            signature: None,
+            also_at: vec![],
+            deprecated: false,
+            fragment_kind: Some(enrichment_core::evidence::FragmentKind::DocText),
+            subject: None,
+            excerpt: text.into(),
+        }],
+        scoring: vec![],
+        searched: vec!["documentation".into()],
+        offset: 0,
+    }
+    .into()
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use enrichment_core::wire::Status;
@@ -246,34 +276,4 @@ mod tests {
         let uri = artifact_uri("artifacts/x").expect("well formed");
         assert!(uri.as_str().starts_with("library-evidence://"));
     }
-}
-
-#[cfg(test)]
-pub(crate) fn fixture_payload(text: &str) -> enrichment_core::wire::data::ToolData {
-    use enrichment_core::wire::data::{HitKind, SearchData, SearchHit};
-    SearchData {
-        page: Page::new(1, Some(1), false, None),
-        query: "fixture".into(),
-        tokens: vec!["fixture".into()],
-        kinds: vec!["documentation".into()],
-        area: None,
-        hits: vec![SearchHit {
-            hit: HitKind::Fragment,
-            score: 1,
-            factors: vec![],
-            evidence_id: "ev_fixture".into(),
-            path: None,
-            symbol_kind: None,
-            signature: None,
-            also_at: vec![],
-            deprecated: false,
-            fragment_kind: Some(enrichment_core::evidence::FragmentKind::DocText),
-            subject: None,
-            excerpt: text.into(),
-        }],
-        scoring: vec![],
-        searched: vec!["documentation".into()],
-        offset: 0,
-    }
-    .into()
 }

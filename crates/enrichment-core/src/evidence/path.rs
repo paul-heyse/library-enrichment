@@ -12,11 +12,34 @@ pub struct PublicPath {
     components: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-struct PathParts {
-    ecosystem: Ecosystem,
-    components: Vec<String>,
+crate::native_struct! {
+pub(crate) struct PathParts {
+    ecosystem: Ecosystem => crate::native_union::Rule::Text,
+    components: Vec<String> => crate::native_union::Rule::Sequence,
+}
+}
+
+impl crate::native_union::Cell for PublicPath {
+    fn data_type() -> arrow::datatypes::DataType {
+        <PathParts as crate::native_union::Cell>::data_type()
+    }
+    fn encode(rows: &[Option<&Self>]) -> Result<arrow::array::ArrayRef, arrow::error::ArrowError> {
+        let parts = rows
+            .iter()
+            .map(|row| row.map(|value| PathParts::from(value.clone())))
+            .collect::<Vec<_>>();
+        <PathParts as crate::native_union::Cell>::encode(
+            &parts.iter().map(Option::as_ref).collect::<Vec<_>>(),
+        )
+    }
+    fn decode(
+        row: crate::evidence::arrow_model::cells::Row<'_>,
+        name: &str,
+    ) -> Result<Self, arrow::error::ArrowError> {
+        <PathParts as crate::native_union::Cell>::decode(row, name)?
+            .try_into()
+            .map_err(crate::evidence::arrow_model::cells::invalid)
+    }
 }
 
 impl TryFrom<PathParts> for PublicPath {
@@ -97,7 +120,7 @@ impl PublicPath {
     #[must_use]
     pub fn id(&self) -> String {
         crate::native_key::Key::PublicPath
-            .value(self)
+            .record(&PathParts::from(self.clone()))
             .expect("declared native public path contract")
     }
 

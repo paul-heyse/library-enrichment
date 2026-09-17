@@ -2,7 +2,6 @@
 use super::{common, compare, resolve, resolve_job, verify};
 use crate::{envelope, jobs, service::Service};
 use enrichment_core::{
-    canonical,
     request::CompareRequest,
     wire::{Envelope, ErrorCode, JobState, Outcome},
 };
@@ -34,7 +33,7 @@ pub(super) async fn submit(service: &Service, request: CompareRequest) -> Envelo
                 .runtime
                 .job_operation(
                     id.clone(),
-                    owned.operation_descriptor("library.compare", &request),
+                    owned.operation_descriptor(&request.clone().into()),
                     std::time::Duration::from_secs(
                         owned.config.network.acquisition_timeout_seconds,
                     ),
@@ -89,7 +88,13 @@ async fn run(service: &Service, id: &str, request: CompareRequest) -> io::Result
             )
             .await;
     }
-    let digest = canonical::digest_hex(&serde_json::json!(["comparison-request/1", request]));
+    let digest = enrichment_core::native_key::Key::ResearchInvocation
+        .hex_digest(
+            &enrichment_core::operation::identities::ResearchInvocation {
+                request: request.clone().into(),
+            },
+        )
+        .expect("declared comparison request identity");
     let mut result = execute(service, request, &cancel, id, &digest).await;
     // Catalog visibility wins a cancellation racing the commit. Reuse admitted bytes.
     if let Some((state, committed)) = recover(
@@ -121,9 +126,15 @@ async fn execute(
     id: &str,
     digest: &str,
 ) -> Envelope {
-    let prerequisites = match request.resolutions() {
+    let prerequisites = match enrichment_store::research_selection::comparison_prerequisites(
+        &service.repository.runtime,
+        &request,
+        service.config.limits.verification_input_bytes,
+    )
+    .await
+    {
         Ok(value) => value,
-        Err(error) => return failure(error),
+        Err(error) => return failure(error.to_string()),
     };
     let mut contexts = Vec::with_capacity(2);
     for prerequisite in prerequisites {
@@ -193,7 +204,13 @@ pub(super) async fn recover(
     else {
         return Ok(None);
     };
-    let digest = canonical::digest_hex(&serde_json::json!(["comparison-request/1", request]));
+    let digest = enrichment_core::native_key::Key::ResearchInvocation
+        .hex_digest(
+            &enrichment_core::operation::identities::ResearchInvocation {
+                request: request.clone().into(),
+            },
+        )
+        .expect("declared comparison request identity");
     if publication.request_digest != digest {
         return Err(io::Error::other(
             "comparison publication request differs from journal",
@@ -238,7 +255,7 @@ async fn child_context(
     id: &str,
     token: &str,
     cancel: &AtomicBool,
-) -> io::Result<Result<String, Box<Envelope>>> {
+) -> io::Result<Result<enrichment_core::identity::ContextId, Box<Envelope>>> {
     let mut detached = false;
     loop {
         let mut record = service.jobs.get(id).await?;

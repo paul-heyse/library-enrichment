@@ -5,23 +5,22 @@ use crate::identity::{
     Context, ContextId, Ecosystem, Environment, EnvironmentId, Release, ReleaseId, SnapshotId,
     SnapshotInputs,
 };
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-pub const FORMAT: &str = "8.0";
+pub const FORMAT: &str = "10.0";
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct SnapshotMetadata {
-    pub context: Context,
-    pub release: Release,
-    pub environment: Environment,
-    pub symbol_package: String,
-    pub crate_name: String,
-    pub crate_version: Option<String>,
-    pub normalizer_version: String,
-    pub observed_configuration: Option<ObservedConfiguration>,
-    pub producer_items: u64,
+crate::native_struct! {
+    pub struct SnapshotMetadata {
+        context: Context => crate::native_union::Rule::Text,
+        release: Release => crate::native_union::Rule::Text,
+        environment: Environment => crate::native_union::Rule::Text,
+        symbol_package: String => crate::native_union::Rule::NonEmpty,
+        crate_name: String => crate::native_union::Rule::NonEmpty,
+        crate_version: Option<String> => crate::native_union::Rule::Text,
+        normalizer_version: String => crate::native_union::Rule::NonEmpty,
+        observed_configuration: Option<ObservedConfiguration> => crate::native_union::Rule::Text,
+        producer_items: u64 => crate::native_union::Rule::Text,
+    }
 }
 
 impl SnapshotMetadata {

@@ -1,23 +1,9 @@
-use crate::evidence::{
-    RelationKind,
-    relational::{RelationshipObservation, TargetRef, TextFragment},
-};
-use arrow::array::ArrayRef;
+use crate::evidence::relational::{RelationshipObservation, TextFragment};
 use arrow::error::ArrowError;
 use arrow::record_batch::RecordBatch;
 
-use super::{
-    cells::{Row, RowSet, batch, column, invalid, optional, text},
-    decode, encode,
-};
-
-fn target(rows: &[&TargetRef]) -> Result<ArrayRef, ArrowError> {
-    crate::native_union::NativeUnion::encode(rows)
-}
-
-fn target_from_row(r: Row<'_>) -> Result<TargetRef, ArrowError> {
-    crate::native_union::NativeUnion::decode(r)
-}
+use super::cells::{RowSet, invalid};
+use crate::native_union::NativeStruct;
 
 /// Preserve typed target domains and acquisition-specific relationship provenance.
 ///
@@ -33,47 +19,7 @@ pub fn relationships(rows: &[RelationshipObservation]) -> Result<RecordBatch, Ar
 pub(crate) fn relationships_fields(
     rows: &[RelationshipObservation],
 ) -> Result<RecordBatch, ArrowError> {
-    batch(
-        "relationships",
-        vec![
-            column(
-                "relationship_id",
-                text(rows.iter().map(|r| r.relationship_id.as_str())),
-                false,
-                "key:relationship",
-            ),
-            column(
-                "subject",
-                encode::subject(&rows.iter().map(|r| &r.subject).collect::<Vec<_>>())?,
-                false,
-                "typed-subject",
-            ),
-            column(
-                "target",
-                target(&rows.iter().map(|r| &r.target).collect::<Vec<_>>())?,
-                false,
-                "typed-target",
-            ),
-            column(
-                "relation",
-                text(rows.iter().map(|r| r.relation.as_str())),
-                false,
-                "vocabulary:relation-kind/1",
-            ),
-            column(
-                "qualifier",
-                optional(rows.iter().map(|r| r.qualifier.as_deref())),
-                true,
-                "relationship-qualifier",
-            ),
-            column(
-                "source",
-                encode::source(&rows.iter().map(|r| &r.source).collect::<Vec<_>>())?,
-                false,
-                "fact-provenance",
-            ),
-        ],
-    )
+    RelationshipObservation::batch(rows)
 }
 
 /// Decode relationships without treating legitimate external references as local foreign keys.
@@ -87,15 +33,7 @@ pub fn relationships_from_batch(
     (0..batch.num_rows())
         .map(|i| {
             let r = columns.row(i);
-            let relationship = RelationshipObservation {
-                relationship_id: r.text("relationship_id")?.into(),
-                subject: decode::subject(r.structure("subject")?)?,
-                target: target_from_row(r.structure("target")?)?,
-                relation: RelationKind::parse(r.text("relation")?)
-                    .ok_or_else(|| invalid("unknown relationship kind"))?,
-                qualifier: r.owned("qualifier")?,
-                source: decode::source(r.structure("source")?)?,
-            };
+            let relationship = RelationshipObservation::decode(r)?;
             relationship.validate().map_err(invalid)?;
             Ok(relationship)
         })
@@ -114,13 +52,11 @@ pub fn fragments(rows: &[TextFragment]) -> Result<RecordBatch, ArrowError> {
 }
 
 pub(crate) fn fragments_fields(rows: &[TextFragment]) -> Result<RecordBatch, ArrowError> {
-    use crate::native_union::NativeStruct;
     TextFragment::batch(rows)
 }
 
 /// Decode the declared native fragment without a transport intermediary.
 pub fn fragments_from_batch(batch: &RecordBatch) -> Result<Vec<TextFragment>, ArrowError> {
-    use crate::native_union::NativeStruct;
     let columns = RowSet::batch(batch)?;
     (0..batch.num_rows())
         .map(|i| {

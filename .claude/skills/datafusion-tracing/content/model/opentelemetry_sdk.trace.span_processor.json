@@ -1,0 +1,251 @@
+{
+  "module": "opentelemetry_sdk::trace::span_processor",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.trace.span_processor.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::BatchConfig",
+      "name": "BatchConfig",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct BatchConfig",
+      "summary": "Batch span processor configuration. Use [`BatchConfigBuilder`] to configure your own instance of [`BatchConfig`].",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#batchconfig",
+      "aliases": [
+        "opentelemetry_sdk::trace::BatchConfig"
+      ],
+      "methods": []
+    },
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::BatchConfigBuilder",
+      "name": "BatchConfigBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct BatchConfigBuilder",
+      "summary": "A builder for creating [`BatchConfig`] instances.",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#batchconfigbuilder",
+      "aliases": [
+        "opentelemetry_sdk::trace::BatchConfigBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> BatchConfig",
+          "summary": "Builds a `BatchConfig` enforcing the following invariants: * `max_export_batch_size` must be less than or equal to `max_queue_size`."
+        },
+        {
+          "name": "with_max_concurrent_exports",
+          "signature": "fn with_max_concurrent_exports(self, max_concurrent_exports: usize) -> Self",
+          "summary": "Set max_concurrent_exports for [`BatchConfigBuilder`]. It's the maximum number of concurrent exports. Limits the number of spawned tasks for exports and thus memory consumed by an exporter. The default value is 1. If the max_concurrent_exp…"
+        },
+        {
+          "name": "with_max_export_batch_size",
+          "signature": "fn with_max_export_batch_size(self, max_export_batch_size: usize) -> Self",
+          "summary": "Set max_export_batch_size for [`BatchConfigBuilder`]. It's the maximum number of spans to process in a single batch. If there are more than one batch worth of spans then it processes multiple batches of spans one batch after the other with…"
+        },
+        {
+          "name": "with_max_export_timeout",
+          "signature": "fn with_max_export_timeout(self, max_export_timeout: Duration) -> Self",
+          "summary": "Set max_export_timeout for [`BatchConfigBuilder`]. It's the maximum duration to export a batch of data. The The default value is 30000 milliseconds."
+        },
+        {
+          "name": "with_max_queue_size",
+          "signature": "fn with_max_queue_size(self, max_queue_size: usize) -> Self",
+          "summary": "Set max_queue_size for [`BatchConfigBuilder`]. It's the maximum queue size to buffer spans for delayed processing. If the queue gets full it will drops the spans. The default value is 2048."
+        },
+        {
+          "name": "with_scheduled_delay",
+          "signature": "fn with_scheduled_delay(self, scheduled_delay: Duration) -> Self",
+          "summary": "Set scheduled_delay_duration for [`BatchConfigBuilder`]. It's the delay interval in milliseconds between two consecutive processing of batches. The default value is 5000 milliseconds."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::BatchSpanProcessor",
+      "name": "BatchSpanProcessor",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct BatchSpanProcessor",
+      "summary": "The `BatchSpanProcessor` collects finished spans in a buffer and exports them in batches to the configured `SpanExporter`. This processor is ideal for high-throughput environments, as it minimizes the overhead of exporting spans individual…",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#batchspanprocessor",
+      "aliases": [
+        "opentelemetry_sdk::trace::BatchSpanProcessor"
+      ],
+      "implements": [
+        "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder<E>(exporter: E) -> BatchSpanProcessorBuilder<E> where E: SpanExporter + Send + 'static",
+          "summary": "builder"
+        },
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+          "summary": "Flushes all pending spans."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<E>(exporter: E, config: BatchConfig) -> Self where E: SpanExporter + Send + 'static",
+          "summary": "Creates a new instance of `BatchSpanProcessor`."
+        },
+        {
+          "name": "on_end",
+          "signature": "fn on_end(&self, span: SpanData)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+          "summary": "Handles span end."
+        },
+        {
+          "name": "on_start",
+          "signature": "fn on_start(&self, _span: &mut Span, _cx: &Context)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+          "summary": "Handles span start."
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, resource: &Resource)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+          "summary": "Set the resource for the processor."
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, timeout: Duration) -> OTelSdkResult",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+          "summary": "Shuts down the processor."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::BatchSpanProcessorBuilder",
+      "name": "BatchSpanProcessorBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct BatchSpanProcessorBuilder<E> where E: SpanExporter + Send + 'static",
+      "summary": "Builder for `BatchSpanProcessorDedicatedThread`.",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#batchspanprocessorbuilder",
+      "aliases": [
+        "opentelemetry_sdk::trace::BatchSpanProcessorBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> BatchSpanProcessor",
+          "summary": "Build a new instance of `BatchSpanProcessor`."
+        },
+        {
+          "name": "with_batch_config",
+          "signature": "fn with_batch_config(self, config: BatchConfig) -> Self",
+          "summary": "Set the BatchConfig for [BatchSpanProcessorBuilder]"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::SimpleSpanProcessor",
+      "name": "SimpleSpanProcessor",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct SimpleSpanProcessor<T: SpanExporter>",
+      "summary": "A [SpanProcessor] that passes finished spans to the configured `SpanExporter`, as soon as they are finished, without any batching. This is typically useful for debugging and testing. For scenarios requiring higher performance/throughput, c…",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#simplespanprocessor",
+      "aliases": [
+        "opentelemetry_sdk::trace::SimpleSpanProcessor"
+      ],
+      "implements": [
+        "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+      ],
+      "methods": [
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(exporter: T) -> Self",
+          "summary": "Create a new [SimpleSpanProcessor] using the provided exporter."
+        },
+        {
+          "name": "on_end",
+          "signature": "fn on_end(&self, span: SpanData)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+        },
+        {
+          "name": "on_start",
+          "signature": "fn on_start(&self, _span: &mut Span, _cx: &Context)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, resource: &Resource)",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, timeout: Duration) -> OTelSdkResult",
+          "via_trait": "opentelemetry_sdk::trace::span_processor::SpanProcessor"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::span_processor::SpanProcessor",
+      "name": "SpanProcessor",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait SpanProcessor: Send + Sync + std::fmt::Debug",
+      "summary": "`SpanProcessor` is an interface which allows hooks for span start and end method invocations. The span processors are invoked only when is_recording is true.",
+      "doc": "api/opentelemetry_sdk.trace.span_processor.md#spanprocessor",
+      "aliases": [
+        "opentelemetry_sdk::trace::SpanProcessor"
+      ],
+      "implementors": [
+        "opentelemetry_sdk::trace::span_processor::BatchSpanProcessor",
+        "opentelemetry_sdk::trace::span_processor::SimpleSpanProcessor",
+        "opentelemetry_sdk::trace::span_processor_with_async_runtime::BatchSpanProcessor"
+      ],
+      "required_methods": [
+        "force_flush",
+        "on_end",
+        "on_start",
+        "shutdown_with_timeout"
+      ],
+      "provided_methods": [
+        "set_resource",
+        "shutdown"
+      ],
+      "methods": [
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "summary": "Force the spans lying in the cache to be exported."
+        },
+        {
+          "name": "on_end",
+          "signature": "fn on_end(&self, span: SpanData)",
+          "summary": "`on_end` is called after a `Span` is ended (i.e., the end timestamp is already set). This method is called synchronously within the `Span::end` API, therefore it should not block or throw an exception. TODO - This method should take refere…"
+        },
+        {
+          "name": "on_start",
+          "signature": "fn on_start(&self, span: &mut Span, cx: &Context)",
+          "summary": "`on_start` is called when a `Span` is started.  This method is called synchronously on the thread that started the span, therefore it should not block or throw exceptions."
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, _resource: &Resource)",
+          "summary": "Set the resource for the span processor."
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&self) -> OTelSdkResult",
+          "summary": "shutdown the processor with a default timeout."
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, timeout: Duration) -> OTelSdkResult",
+          "summary": "Shuts down the processor. Called when SDK is shut down. This is an opportunity for processors to do any cleanup required."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "module": "opentelemetry_sdk::metrics::reader",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.metrics.reader.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::metrics::reader::MetricReader",
+      "name": "MetricReader",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait MetricReader: fmt::Debug + Send + Sync + 'static",
+      "summary": "The interface used between the SDK and an exporter.",
+      "doc": "api/opentelemetry_sdk.metrics.reader.md#metricreader",
+      "implementors": [
+        "opentelemetry_sdk::metrics::manual_reader::ManualReader",
+        "opentelemetry_sdk::metrics::periodic_reader::PeriodicReader",
+        "opentelemetry_sdk::metrics::periodic_reader_with_async_runtime::PeriodicReader"
+      ],
+      "required_methods": [
+        "collect",
+        "force_flush",
+        "register_pipeline",
+        "shutdown_with_timeout",
+        "temporality"
+      ],
+      "provided_methods": [
+        "shutdown"
+      ],
+      "methods": [
+        {
+          "name": "collect",
+          "signature": "fn collect(&self, rm: &mut ResourceMetrics) -> OTelSdkResult",
+          "summary": "Gathers and returns all metric data related to the [MetricReader] from the SDK and stores it in the provided [ResourceMetrics] reference."
+        },
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "summary": "Flushes all metric measurements held in an export pipeline."
+        },
+        {
+          "name": "register_pipeline",
+          "signature": "fn register_pipeline(&self, pipeline: Weak<Pipeline>)",
+          "summary": "Registers a [MetricReader] with a [Pipeline]."
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&self) -> OTelSdkResult",
+          "summary": "shutdown with default timeout"
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, timeout: Duration) -> OTelSdkResult",
+          "summary": "Flushes all metric measurements held in an export pipeline and releases any held computational resources."
+        },
+        {
+          "name": "temporality",
+          "signature": "fn temporality(&self, kind: InstrumentKind) -> Temporality",
+          "summary": "The output temporality, a function of instrument kind. This SHOULD be obtained from the exporter."
+        }
+      ]
+    }
+  ]
+}

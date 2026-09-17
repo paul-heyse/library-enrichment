@@ -1,0 +1,171 @@
+{
+  "module": "opentelemetry::logs::record",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.logs.record.md",
+  "items": [
+    {
+      "path": "opentelemetry::logs::record::AnyValue",
+      "name": "AnyValue",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum AnyValue",
+      "summary": "Value types for representing arbitrary values in a log record. Note: The `tracing` and `log` crates only support basic types that can be converted to these core variants: `i64`, `f64`, `StringValue`, and `bool`. Any complex and custom type…",
+      "doc": "api/opentelemetry.logs.record.md#anyvalue",
+      "aliases": [
+        "opentelemetry::logs::AnyValue"
+      ],
+      "variants": [
+        "Int",
+        "Double",
+        "String",
+        "Boolean",
+        "Bytes",
+        "ListAny",
+        "Map"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(val: i32) -> AnyValue",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator",
+          "summary": "Creates an [`AnyValue::Map`] value from a sequence of key-value pairs that can be converted into a `Key` and `AnyValue` respectively."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::logs::record::Severity",
+      "name": "Severity",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum Severity",
+      "summary": "A normalized severity value.",
+      "doc": "api/opentelemetry.logs.record.md#severity",
+      "aliases": [
+        "opentelemetry::logs::Severity"
+      ],
+      "variants": [
+        "Trace",
+        "Trace2",
+        "Trace3",
+        "Trace4",
+        "Debug",
+        "Debug2",
+        "Debug3",
+        "Debug4",
+        "Info",
+        "Info2",
+        "Info3",
+        "Info4",
+        "Warn",
+        "Warn2",
+        "Warn3",
+        "Warn4",
+        "Error",
+        "Error2",
+        "Error3",
+        "Error4",
+        "Fatal",
+        "Fatal2",
+        "Fatal3",
+        "Fatal4"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "const fn name(&self) -> &'static str",
+          "summary": "Return the string representing the short name for the `Severity` value as specified by the OpenTelemetry logs data model."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::logs::record::LogRecord",
+      "name": "LogRecord",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait LogRecord",
+      "summary": "SDK implemented trait for managing log records",
+      "doc": "api/opentelemetry.logs.record.md#logrecord",
+      "aliases": [
+        "opentelemetry::logs::LogRecord"
+      ],
+      "implementors": [
+        "opentelemetry_sdk::logs::record::SdkLogRecord"
+      ],
+      "required_methods": [
+        "add_attribute",
+        "add_attributes",
+        "set_body",
+        "set_event_name",
+        "set_observed_timestamp",
+        "set_severity_number",
+        "set_severity_text",
+        "set_target",
+        "set_timestamp"
+      ],
+      "provided_methods": [
+        "set_trace_context"
+      ],
+      "methods": [
+        {
+          "name": "add_attribute",
+          "signature": "fn add_attribute<K, V>(&mut self, key: K, value: V) where K: Into<Key>, V: Into<AnyValue>",
+          "summary": "Adds a single attribute."
+        },
+        {
+          "name": "add_attributes",
+          "signature": "fn add_attributes<I, K, V>(&mut self, attributes: I) where I: IntoIterator<Item = (K, V)>, K: Into<Key>, V: Into<AnyValue>",
+          "summary": "Adds multiple attributes."
+        },
+        {
+          "name": "set_body",
+          "signature": "fn set_body(&mut self, body: AnyValue)",
+          "summary": "Sets the message body of the log."
+        },
+        {
+          "name": "set_event_name",
+          "signature": "fn set_event_name(&mut self, name: &'static str)",
+          "summary": "Sets the `event_name` of a record"
+        },
+        {
+          "name": "set_observed_timestamp",
+          "signature": "fn set_observed_timestamp(&mut self, timestamp: SystemTime)",
+          "summary": "Sets the observed event timestamp."
+        },
+        {
+          "name": "set_severity_number",
+          "signature": "fn set_severity_number(&mut self, number: Severity)",
+          "summary": "Sets severity as a numeric value."
+        },
+        {
+          "name": "set_severity_text",
+          "signature": "fn set_severity_text(&mut self, text: &'static str)",
+          "summary": "Sets severity as text."
+        },
+        {
+          "name": "set_target",
+          "signature": "fn set_target<T>(&mut self, _target: T) where T: Into<Cow<'static, str>>",
+          "summary": "Sets the `target` of a record. Currently, both `opentelemetry-appender-tracing` and `opentelemetry-appender-log` create a single logger with a scope that doesn't accurately reflect the component emitting the logs. Exporters MAY use this fi…"
+        },
+        {
+          "name": "set_timestamp",
+          "signature": "fn set_timestamp(&mut self, timestamp: SystemTime)",
+          "summary": "Sets the time when the event occurred measured by the origin clock, i.e. the time at the source."
+        },
+        {
+          "name": "set_trace_context",
+          "signature": "fn set_trace_context(&mut self, trace_id: TraceId, span_id: SpanId, trace_flags: Option<TraceFlags>)",
+          "summary": "Sets the trace context of the log."
+        }
+      ]
+    }
+  ]
+}

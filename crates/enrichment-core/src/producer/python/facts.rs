@@ -1,39 +1,20 @@
 //! Mechanical PyPI file facts. No artifact ranking or environment policy is evaluated here.
 use super::DistributionFile;
 use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use std::{collections::BTreeMap, sync::Arc};
 
+use crate::native_union::{NativeStruct, Rule};
+crate::native_struct! {
+    pub struct Fact {
+        version: String => Rule::Text,
+        file: DistributionFile => Rule::Text,
+    }
+}
 pub fn schema() -> SchemaRef {
-    let text = |name: &str, nullable| Field::new(name, DataType::Utf8, nullable);
-    let digests = DataType::Map(
-        Arc::new(Field::new(
-            "entries",
-            DataType::Struct(vec![text("keys", false), text("values", false)].into()),
-            false,
-        )),
-        false,
-    );
-    Arc::new(Schema::new(vec![
-        text("version", false),
-        Field::new(
-            "file",
-            DataType::Struct(
-                vec![
-                    text("filename", false),
-                    text("packagetype", false),
-                    text("url", false),
-                    Field::new("digests", digests, false),
-                    text("requires_python", true),
-                    Field::new("yanked", DataType::Boolean, false),
-                ]
-                .into(),
-            ),
-            false,
-        ),
-    ]))
+    Arc::new(Schema::new(Fact::fields()))
 }
 
 pub fn decode(
@@ -45,34 +26,23 @@ pub fn decode(
             "invalid fact batch bound".into(),
         ));
     }
-    #[derive(serde::Serialize)]
-    struct Fact<'a> {
-        version: &'a str,
-        file: &'a DistributionFile,
-    }
     let contract = schema();
-    let mut decoder = arrow::json::ReaderBuilder::new(contract.clone())
-        .with_batch_size(batch_rows)
-        .build_decoder()?;
     let mut batches = Vec::new();
     let mut rows = Vec::with_capacity(batch_rows.min(1024));
     for (version, files) in releases {
         for file in files {
-            rows.push(Fact { version, file });
+            rows.push(Fact {
+                version: version.clone(),
+                file: file.clone(),
+            });
             if rows.len() == batch_rows {
-                decoder.serialize(&rows)?;
-                if let Some(batch) = decoder.flush()? {
-                    batches.push(batch);
-                }
+                batches.push(Fact::batch(&rows)?);
                 rows.clear();
             }
         }
     }
     if !rows.is_empty() {
-        decoder.serialize(&rows)?;
-        if let Some(batch) = decoder.flush()? {
-            batches.push(batch);
-        }
+        batches.push(Fact::batch(&rows)?);
     }
     if batches.is_empty() {
         batches.push(RecordBatch::new_empty(contract));

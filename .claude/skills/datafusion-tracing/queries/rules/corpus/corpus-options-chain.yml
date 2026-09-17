@@ -1,0 +1,22 @@
+id: corpus-options-chain
+language: rust
+severity: hint
+message: an options builder chain upstream writes
+note: |
+  Which builder methods anyone actually reaches for. Worth reading before choosing a subset:
+  the chain upstream writes in its own integration harness is the closest thing this library
+  has to a recommended configuration, and it uses methods no published artifact documents.
+metadata:
+  record: builder-use
+  reads: content/corpus
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        has: { field: field, regex: '^(record_metrics|preview_limit|preview_fn|add_custom_field|custom_fields|plan_diff|all|analyzer|optimizer|physical_optimizer)' }
+    - has:
+        stopBy: end
+        kind: identifier
+        regex: '^(InstrumentationOptions|RuleInstrumentationOptions|options_builder)$'

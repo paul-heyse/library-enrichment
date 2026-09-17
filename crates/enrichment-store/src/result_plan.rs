@@ -52,8 +52,8 @@ mod tests {
         result.data = VerificationData {
             evidence_class: EvidenceClass::CompilerDerived,
             producer_runs: vec![],
-            source_context_id: "context".into(),
-            source_snapshot_id: "snapshot".into(),
+            source_context_id: format!("ctx_{}", "1".repeat(64)).try_into().unwrap(),
+            source_snapshot_id: format!("snap_{}", "1".repeat(64)).try_into().unwrap(),
             derived_context: None,
             derived_snapshot_id: None,
             environment: None,
@@ -195,23 +195,23 @@ mod tests {
             Outcome::Partial { .. }
         ));
         assert_eq!(
-            incomplete.result.header.snapshot_id.as_deref(),
-            Some(manifest.snapshot_id.as_str())
+            incomplete.result.header.snapshot_id.as_ref(),
+            Some(&manifest.snapshot_id)
         );
         let ToolData::ResolveLibrary(payload) = &incomplete.result.data else {
             panic!("resolve payload")
         };
         assert_eq!(
             payload.snapshot.as_ref().unwrap().snapshot_id,
-            manifest.snapshot_id.as_str()
+            manifest.snapshot_id
         );
         let mut coverage = Coverage::unassessed("qualified");
         coverage
             .assessments
             .push(enrichment_core::wire::evidence::ScopeAssessment {
-                snapshot_id: manifest.snapshot_id.to_string(),
+                snapshot_id: manifest.snapshot_id.clone(),
                 subject: enrichment_core::evidence::relational::SubjectRef::Library {
-                    release_id: manifest.release_id.to_string(),
+                    release_id: manifest.release_id.clone(),
                 },
                 kind: enrichment_core::evidence::EvidenceKind::PublicApi,
                 state: enrichment_core::wire::evidence::ScopeState::Indexed,

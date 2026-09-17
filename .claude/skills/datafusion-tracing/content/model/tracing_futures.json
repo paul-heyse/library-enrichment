@@ -1,0 +1,361 @@
+{
+  "module": "tracing_futures",
+  "crate": "tracing-futures",
+  "api": "api/tracing_futures.md",
+  "items": [
+    {
+      "path": "tracing_futures::Instrumented",
+      "name": "Instrumented",
+      "kind": "struct",
+      "crate": "tracing-futures",
+      "signature": "struct Instrumented<T>",
+      "summary": "A future, stream, sink, or executor that has been instrumented with a `tracing` span.",
+      "doc": "api/tracing_futures.md#instrumented",
+      "implements": [
+        "core::future::future::Future",
+        "futures::future::Executor",
+        "futures::future::Future",
+        "futures::sink::Sink",
+        "futures::stream::Stream",
+        "futures_core::stream::Stream",
+        "futures_sink::Sink",
+        "futures_task::spawn::LocalSpawn",
+        "futures_task::spawn::Spawn",
+        "tokio_executor::executor::Executor",
+        "tokio_executor::typed::TypedExecutor"
+      ],
+      "methods": [
+        {
+          "name": "block_on",
+          "signature": "fn block_on<F, R, E>(&mut self, future: F) -> Result<R, E> where F: 'static + Future<Item = R, Error = E>, R: 'static, E: 'static",
+          "summary": "Instruments and runs the provided future, blocking the current thread until the future completes."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, future: F) -> Result<(), ExecuteError<F>>",
+          "via_trait": "futures::future::Executor"
+        },
+        {
+          "name": "executor",
+          "signature": "fn executor(&self) -> Instrumented<TaskExecutor>",
+          "summary": "Return an instrumented handle to the runtime's executor."
+        },
+        {
+          "name": "handle",
+          "signature": "fn handle(&self) -> Instrumented<current_thread::Handle>",
+          "summary": "Get a new instrumented handle to spawn futures on the single-threaded Tokio runtime"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &T",
+          "summary": "Borrows the wrapped type."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut T",
+          "summary": "Mutably borrows the wrapped type."
+        },
+        {
+          "name": "inner_pin_mut",
+          "signature": "fn inner_pin_mut(Pin<&mut self>) -> Pin<&mut T>",
+          "summary": "Get a pinned mutable reference to the wrapped type."
+        },
+        {
+          "name": "inner_pin_ref",
+          "signature": "fn inner_pin_ref(Pin<&self>) -> Pin<&T>",
+          "summary": "Get a pinned reference to the wrapped type."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> T",
+          "summary": "Consumes the `Instrumented`, returning the wrapped type."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> stdlib::task::Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(&mut self) -> futures_01::Poll<Self::Item, Self::Error>",
+          "via_trait": "futures::future::Future"
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(&mut self) -> futures_01::Poll<Option<Self::Item>, Self::Error>",
+          "via_trait": "futures::stream::Stream"
+        },
+        {
+          "name": "poll_close",
+          "signature": "fn poll_close(Pin<&mut self>, cx: &mut Context<'_>) -> futures::task::Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "poll_complete",
+          "signature": "fn poll_complete(&mut self) -> futures_01::Poll<(), Self::SinkError>",
+          "via_trait": "futures::sink::Sink"
+        },
+        {
+          "name": "poll_flush",
+          "signature": "fn poll_flush(Pin<&mut self>, cx: &mut Context<'_>) -> futures::task::Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> futures::task::Poll<Option<Self::Item>>",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "poll_ready",
+          "signature": "fn poll_ready(Pin<&mut self>, cx: &mut Context<'_>) -> futures::task::Poll<Result<(), Self::Error>>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> &Span",
+          "summary": "Borrows the `Span` that this type is instrumented by."
+        },
+        {
+          "name": "span_mut",
+          "signature": "fn span_mut(&mut self) -> &mut Span",
+          "summary": "Mutably borrows the `Span` that this type is instrumented by."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&mut self, future: F) -> &mut Self where F: Future<Item = (), Error = ()> + 'static",
+          "summary": "Spawn an instrumented future onto the single-threaded Tokio runtime."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn(&mut self, future: Box<dyn Future<Error = (), Item = ()> + Send + 'static>) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::executor::Executor"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn(&mut self, future: F) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::typed::TypedExecutor"
+        },
+        {
+          "name": "spawn_local_obj",
+          "signature": "fn spawn_local_obj(&self, future: LocalFutureObj<'static, ()>) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::LocalSpawn",
+          "summary": "Spawns a future that will be run to completion."
+        },
+        {
+          "name": "spawn_obj",
+          "signature": "fn spawn_obj(&self, future: FutureObj<'static, ()>) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::Spawn",
+          "summary": "Spawns a future that will be run to completion."
+        },
+        {
+          "name": "start_send",
+          "signature": "fn start_send(&mut self, item: Self::SinkItem) -> futures_01::StartSend<Self::SinkItem, Self::SinkError>",
+          "via_trait": "futures::sink::Sink"
+        },
+        {
+          "name": "start_send",
+          "signature": "fn start_send(Pin<&mut self>, item: I) -> Result<(), Self::Error>",
+          "via_trait": "futures_sink::Sink"
+        },
+        {
+          "name": "status",
+          "signature": "fn status(&self) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::Spawn",
+          "summary": "Determines whether the executor is able to spawn new tasks."
+        },
+        {
+          "name": "status",
+          "signature": "fn status(&self) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::typed::TypedExecutor"
+        },
+        {
+          "name": "status_local",
+          "signature": "fn status_local(&self) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::LocalSpawn",
+          "summary": "Determines whether the executor is able to spawn new tasks."
+        }
+      ]
+    },
+    {
+      "path": "tracing_futures::WithDispatch",
+      "name": "WithDispatch",
+      "kind": "struct",
+      "crate": "tracing-futures",
+      "signature": "struct WithDispatch<T>",
+      "summary": "A future, stream, sink, or executor that has been instrumented with a `tracing` subscriber.",
+      "doc": "api/tracing_futures.md#withdispatch",
+      "implements": [
+        "core::future::future::Future",
+        "futures::future::Executor",
+        "futures::future::Future",
+        "futures_task::spawn::LocalSpawn",
+        "futures_task::spawn::Spawn",
+        "tokio_executor::executor::Executor",
+        "tokio_executor::typed::TypedExecutor"
+      ],
+      "methods": [
+        {
+          "name": "block_on",
+          "signature": "fn block_on<F, R, E>(&mut self, future: F) -> Result<R, E> where F: Send + 'static + Future<Item = R, Error = E>, R: Send + 'static, E: Send + 'static",
+          "summary": "Run a future to completion on the Tokio runtime, in the context of this `WithDispatch`'s trace dispatcher."
+        },
+        {
+          "name": "dispatch",
+          "signature": "fn dispatch(&self) -> &Dispatch",
+          "summary": "Borrows the `Dispatch` that this type is instrumented by."
+        },
+        {
+          "name": "execute",
+          "signature": "fn execute(&self, future: F) -> Result<(), ExecuteError<F>>",
+          "via_trait": "futures::future::Executor"
+        },
+        {
+          "name": "executor",
+          "signature": "fn executor(&self) -> WithDispatch<TaskExecutor>",
+          "summary": "Return a handle to the runtime's executor, in the context of this `WithDispatch`'s trace dispatcher."
+        },
+        {
+          "name": "handle",
+          "signature": "fn handle(&self) -> WithDispatch<current_thread::Handle>",
+          "summary": "Get a new handle to spawn futures on the single-threaded Tokio runtime, in the context of this `WithDispatch`'s trace dispatcher.\\"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &T",
+          "summary": "Borrows the wrapped type."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut T",
+          "summary": "Mutably borrows the wrapped type."
+        },
+        {
+          "name": "inner_pin_mut",
+          "signature": "fn inner_pin_mut(Pin<&mut self>) -> Pin<&mut T>",
+          "summary": "Get a pinned mutable reference to the wrapped type."
+        },
+        {
+          "name": "inner_pin_ref",
+          "signature": "fn inner_pin_ref(Pin<&self>) -> Pin<&T>",
+          "summary": "Get a pinned reference to the wrapped type."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> T",
+          "summary": "Consumes the `WithDispatch`, returning the wrapped type."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> stdlib::task::Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(&mut self) -> futures_01::Poll<Self::Item, Self::Error>",
+          "via_trait": "futures::future::Future"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn<F>(&mut self, future: F) -> &mut Self where F: Future<Item = (), Error = ()> + Send + 'static",
+          "summary": "Spawn a future onto the Tokio runtime, in the context of this `WithDispatch`'s trace dispatcher."
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn(&mut self, future: Box<dyn Future<Error = (), Item = ()> + Send + 'static>) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::executor::Executor"
+        },
+        {
+          "name": "spawn",
+          "signature": "fn spawn(&mut self, future: F) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::typed::TypedExecutor"
+        },
+        {
+          "name": "spawn_local_obj",
+          "signature": "fn spawn_local_obj(&self, future: LocalFutureObj<'static, ()>) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::LocalSpawn",
+          "summary": "Spawns a future that will be run to completion."
+        },
+        {
+          "name": "spawn_obj",
+          "signature": "fn spawn_obj(&self, future: FutureObj<'static, ()>) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::Spawn",
+          "summary": "Spawns a future that will be run to completion."
+        },
+        {
+          "name": "status",
+          "signature": "fn status(&self) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::Spawn",
+          "summary": "Determines whether the executor is able to spawn new tasks."
+        },
+        {
+          "name": "status",
+          "signature": "fn status(&self) -> Result<(), SpawnError>",
+          "via_trait": "tokio_executor::typed::TypedExecutor"
+        },
+        {
+          "name": "status_local",
+          "signature": "fn status_local(&self) -> Result<(), SpawnError>",
+          "via_trait": "futures_task::spawn::LocalSpawn",
+          "summary": "Determines whether the executor is able to spawn new tasks."
+        },
+        {
+          "name": "with_dispatch",
+          "signature": "fn with_dispatch<U>(&self, inner: U) -> WithDispatch<U>",
+          "summary": "Wrap a future, stream, sink or executor with the same subscriber as this WithDispatch."
+        }
+      ]
+    },
+    {
+      "path": "tracing_futures::Instrument",
+      "name": "Instrument",
+      "kind": "trait",
+      "crate": "tracing-futures",
+      "signature": "trait Instrument: Sized",
+      "summary": "Extension trait allowing futures, streams, sinks, and executors to be instrumented with a `tracing` [span].",
+      "doc": "api/tracing_futures.md#instrument",
+      "required_methods": [],
+      "provided_methods": [
+        "in_current_span",
+        "instrument"
+      ],
+      "methods": [
+        {
+          "name": "in_current_span",
+          "signature": "fn in_current_span(self) -> Instrumented<Self>",
+          "summary": "Instruments this type with the [current] `Span`, returning an `Instrumented` wrapper."
+        },
+        {
+          "name": "instrument",
+          "signature": "fn instrument(self, span: Span) -> Instrumented<Self>",
+          "summary": "Instruments this type with the provided `Span`, returning an `Instrumented` wrapper."
+        }
+      ]
+    },
+    {
+      "path": "tracing_futures::WithSubscriber",
+      "name": "WithSubscriber",
+      "kind": "trait",
+      "crate": "tracing-futures",
+      "signature": "trait WithSubscriber: Sized",
+      "summary": "Extension trait allowing futures, streams, and sinks to be instrumented with a `tracing` [`Subscriber`].",
+      "doc": "api/tracing_futures.md#withsubscriber",
+      "required_methods": [],
+      "provided_methods": [
+        "with_current_subscriber",
+        "with_subscriber"
+      ],
+      "methods": [
+        {
+          "name": "with_current_subscriber",
+          "signature": "fn with_current_subscriber(self) -> WithDispatch<Self>",
+          "summary": "Attaches the current [default] [`Subscriber`] to this type, returning a `WithDispatch` wrapper."
+        },
+        {
+          "name": "with_subscriber",
+          "signature": "fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self> where S: Into<Dispatch>",
+          "summary": "Attaches the provided [`Subscriber`] to this type, returning a `WithDispatch` wrapper."
+        }
+      ]
+    }
+  ]
+}

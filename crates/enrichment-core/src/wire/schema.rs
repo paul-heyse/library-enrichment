@@ -54,7 +54,7 @@ pub fn envelope_schema() -> serde_json::Value {
 /// against schemas/frozen/enums.json. The same canonical form is what content identities are
 /// hashed over, so it lives in [`crate::canonical`].
 fn canonicalize(value: serde_json::Value) -> serde_json::Value {
-    crate::canonical::canonicalize(value)
+    crate::canonical::canonicalize(crate::native_wire::schema(value))
 }
 
 /// The schema as the exact bytes `emit-schemas` writes.

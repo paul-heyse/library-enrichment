@@ -1,0 +1,147 @@
+{
+  "module": "opentelemetry::context",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.context.md",
+  "items": [
+    {
+      "path": "opentelemetry::context::Context",
+      "name": "Context",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct Context",
+      "summary": "An execution-scoped collection of values.",
+      "doc": "api/opentelemetry.context.md#context",
+      "aliases": [
+        "opentelemetry::Context"
+      ],
+      "implements": [
+        "opentelemetry::baggage::BaggageExt",
+        "opentelemetry::trace::context::TraceContextExt"
+      ],
+      "methods": [
+        {
+          "name": "attach",
+          "signature": "fn attach(self) -> ContextGuard",
+          "summary": "Replaces the current context on this thread with this context."
+        },
+        {
+          "name": "baggage",
+          "signature": "fn baggage(&self) -> &Baggage",
+          "via_trait": "opentelemetry::baggage::BaggageExt"
+        },
+        {
+          "name": "current",
+          "signature": "fn current() -> Self",
+          "summary": "Returns an immutable snapshot of the current thread's context."
+        },
+        {
+          "name": "current_with_baggage",
+          "signature": "fn current_with_baggage<T: Into<Baggage>>(baggage: T) -> Self",
+          "via_trait": "opentelemetry::baggage::BaggageExt"
+        },
+        {
+          "name": "current_with_span",
+          "signature": "fn current_with_span<T: trace::Span + Send + Sync + 'static>(span: T) -> Self",
+          "via_trait": "opentelemetry::trace::context::TraceContextExt"
+        },
+        {
+          "name": "current_with_value",
+          "signature": "fn current_with_value<T: 'static + Send + Sync>(value: T) -> Self",
+          "summary": "Returns a clone of the current thread's context with the given value."
+        },
+        {
+          "name": "enter_telemetry_suppressed_scope",
+          "signature": "fn enter_telemetry_suppressed_scope() -> ContextGuard",
+          "summary": "Enters a scope where telemetry is suppressed."
+        },
+        {
+          "name": "get",
+          "signature": "fn get<T: 'static>(&self) -> Option<&T>",
+          "summary": "Returns a reference to the entry for the corresponding value type."
+        },
+        {
+          "name": "has_active_span",
+          "signature": "fn has_active_span(&self) -> bool",
+          "via_trait": "opentelemetry::trace::context::TraceContextExt"
+        },
+        {
+          "name": "is_current_telemetry_suppressed",
+          "signature": "fn is_current_telemetry_suppressed() -> bool",
+          "summary": "Returns whether telemetry is suppressed in the current context."
+        },
+        {
+          "name": "is_telemetry_suppressed",
+          "signature": "fn is_telemetry_suppressed(&self) -> bool",
+          "summary": "Returns whether telemetry is suppressed in this context."
+        },
+        {
+          "name": "map_current",
+          "signature": "fn map_current<T>(f: impl FnOnce(&Context) -> T) -> T",
+          "summary": "Applies a function to the current context returning its value."
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates an empty `Context`."
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> SpanRef<'_>",
+          "via_trait": "opentelemetry::trace::context::TraceContextExt"
+        },
+        {
+          "name": "with_baggage",
+          "signature": "fn with_baggage<T: Into<Baggage>>(&self, baggage: T) -> Self",
+          "via_trait": "opentelemetry::baggage::BaggageExt"
+        },
+        {
+          "name": "with_cleared_baggage",
+          "signature": "fn with_cleared_baggage(&self) -> Self",
+          "via_trait": "opentelemetry::baggage::BaggageExt"
+        },
+        {
+          "name": "with_remote_span_context",
+          "signature": "fn with_remote_span_context(&self, span_context: trace::SpanContext) -> Self",
+          "via_trait": "opentelemetry::trace::context::TraceContextExt"
+        },
+        {
+          "name": "with_span",
+          "signature": "fn with_span<T: trace::Span + Send + Sync + 'static>(&self, span: T) -> Self",
+          "via_trait": "opentelemetry::trace::context::TraceContextExt"
+        },
+        {
+          "name": "with_telemetry_suppressed",
+          "signature": "fn with_telemetry_suppressed(&self) -> Self",
+          "summary": "Returns a new context with telemetry suppression enabled."
+        },
+        {
+          "name": "with_value",
+          "signature": "fn with_value<T: 'static + Send + Sync>(&self, value: T) -> Self",
+          "summary": "Returns a copy of the context with the new value included."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::context::ContextGuard",
+      "name": "ContextGuard",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct ContextGuard",
+      "summary": "A guard that resets the current context to the prior context when dropped.",
+      "doc": "api/opentelemetry.context.md#contextguard",
+      "aliases": [
+        "opentelemetry::ContextGuard"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        }
+      ]
+    }
+  ]
+}

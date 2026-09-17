@@ -1,0 +1,135 @@
+{
+  "module": "tracing_opentelemetry::layer",
+  "crate": "tracing-opentelemetry",
+  "api": "api/tracing_opentelemetry.layer.md",
+  "items": [
+    {
+      "path": "tracing_opentelemetry::layer::layer",
+      "name": "layer",
+      "kind": "function",
+      "crate": "tracing-opentelemetry",
+      "signature": "fn layer<S>() -> OpenTelemetryLayer<S, noop::NoopTracer> where S: Subscriber + for<'span> LookupSpan<'span>",
+      "summary": "Construct a layer to track spans via [OpenTelemetry].",
+      "doc": "api/tracing_opentelemetry.layer.md#layer",
+      "aliases": [
+        "tracing_opentelemetry::layer"
+      ]
+    },
+    {
+      "path": "tracing_opentelemetry::layer::OpenTelemetryLayer",
+      "name": "OpenTelemetryLayer",
+      "kind": "struct",
+      "crate": "tracing-opentelemetry",
+      "signature": "struct OpenTelemetryLayer<S, T>",
+      "summary": "An [OpenTelemetry] propagation layer for use in a project that uses [tracing].",
+      "doc": "api/tracing_opentelemetry.layer.md#opentelemetrylayer",
+      "aliases": [
+        "tracing_opentelemetry::OpenTelemetryLayer"
+      ],
+      "implements": [
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(tracer: T) -> Self",
+          "summary": "Set the [`Tracer`] that this layer will use to produce and track OpenTelemetry [`Span`]s."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: span::Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer",
+          "summary": "Exports an OpenTelemetry [`Span`] on close."
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &span::Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_event",
+          "signature": "fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer",
+          "summary": "Records OpenTelemetry [`Event`] data on event."
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, id: &span::Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_follows_from",
+          "signature": "fn on_follows_from(&self, id: &Id, follows: &Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &Attributes<'_>, id: &span::Id, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer",
+          "summary": "Creates an [OpenTelemetry `Span`] for the corresponding [tracing `Span`]."
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, id: &Id, values: &Record<'_>, ctx: Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer",
+          "summary": "Record OpenTelemetry [`attributes`] for the given values."
+        },
+        {
+          "name": "with_context_activation",
+          "signature": "fn with_context_activation(self, context_activation: bool) -> Self",
+          "summary": "Sets whether or not an OpenTelemetry Context should be activated on span entry."
+        },
+        {
+          "name": "with_error_events_to_exceptions",
+          "signature": "fn with_error_events_to_exceptions(self, error_events_to_exceptions: bool) -> Self",
+          "summary": "Sets whether or not a subset of events following the described schema are mapped to events following the [OpenTelemetry semantic conventions for exceptions][conv]."
+        },
+        {
+          "name": "with_error_events_to_status",
+          "signature": "fn with_error_events_to_status(self, error_events_to_status: bool) -> Self",
+          "summary": "Sets whether or not an event considered for exception mapping (see [`OpenTelemetryLayer::with_error_records_to_exceptions`]) should be propagated to the span status error description."
+        },
+        {
+          "name": "with_error_fields_to_exceptions",
+          "signature": "fn with_error_fields_to_exceptions(self, error_fields_to_exceptions: bool) -> Self",
+          "summary": "Sets whether or not span and event metadata should include OpenTelemetry exception fields such as `exception.message` and `exception.backtrace` when an `Error` value is recorded. If multiple error values are recorded on the same span/event…"
+        },
+        {
+          "name": "with_error_records_to_exceptions",
+          "signature": "fn with_error_records_to_exceptions(self, error_records_to_exceptions: bool) -> Self",
+          "summary": "Sets whether or not reporting an `Error` value on an event will propagate the OpenTelemetry exception fields such as `exception.message` and `exception.backtrace` to the corresponding span. You do not need to enable `with_exception_fields`…"
+        },
+        {
+          "name": "with_level",
+          "signature": "fn with_level(self, level: bool) -> Self",
+          "summary": "Sets whether or not span metadata should include the `tracing` verbosity level information as a `level` field."
+        },
+        {
+          "name": "with_location",
+          "signature": "fn with_location(self, location: bool) -> Self",
+          "summary": "Sets whether or not span and event metadata should include OpenTelemetry attributes with location information, such as the file, module and line number."
+        },
+        {
+          "name": "with_target",
+          "signature": "fn with_target(self, target: bool) -> Self",
+          "summary": "Sets whether or not span metadata should include an attribute with `target` from `tracing` spans."
+        },
+        {
+          "name": "with_threads",
+          "signature": "fn with_threads(self, threads: bool) -> Self",
+          "summary": "Sets whether or not spans record additional attributes for the thread name and thread ID of the thread they were created on, following the [OpenTelemetry semantic conventions for threads][conv]."
+        },
+        {
+          "name": "with_tracer",
+          "signature": "fn with_tracer<Tracer>(self, tracer: Tracer) -> OpenTelemetryLayer<S, Tracer> where Tracer: otel::Tracer + 'static, Tracer::Span: Send + Sync",
+          "summary": "Set the [`Tracer`] that this layer will use to produce and track OpenTelemetry [`Span`]s."
+        },
+        {
+          "name": "with_tracked_inactivity",
+          "signature": "fn with_tracked_inactivity(self, tracked_inactivity: bool) -> Self",
+          "summary": "Sets whether or not spans metadata should include the _busy time_ (total time for which it was entered), and _idle time_ (total time the span existed but was not entered)."
+        }
+      ]
+    }
+  ]
+}

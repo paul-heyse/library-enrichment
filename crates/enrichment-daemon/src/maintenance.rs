@@ -5,7 +5,11 @@ use std::{
     sync::Arc,
 };
 
-use enrichment_core::{canonical, config::Config};
+use enrichment_core::{
+    config::Config,
+    native_key::Key,
+    operation::identities::{PhysicalFile, PhysicalInventory},
+};
 use enrichment_store::{StatePaths, leases, state};
 use serde::Serialize;
 
@@ -122,34 +126,6 @@ pub fn reset_development(config: &Config, root: &Path, apply: bool) -> io::Resul
 
 fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Result<Report> {
     let _guards = guards(paths)?;
-    let runtime = enrichment_store::runtime::QueryRuntime::new(
-        &paths.cache_root.join("maintenance-spill"),
-        Default::default(),
-    )
-    .map_err(io::Error::other)?;
-    let control = if apply {
-        enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?
-    } else {
-        enrichment_store::control::ControlStore::read_only(&paths.data_root, runtime.clone())?
-    };
-    let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
-        control,
-        runtime.clone(),
-        &paths.cache_root,
-    )?;
-    let validate_owner = ownership.clone();
-    let validate_paths = paths.clone();
-    let execution = config.execution.clone();
-    runtime
-        .bootstrap(async move {
-            crate::execution::ownership::validate_for_state(
-                &validate_paths,
-                &execution,
-                &validate_owner,
-            )
-            .await
-        })
-        .map_err(io::Error::other)??;
     let mut targets = Vec::new();
     if matches!(scope, Scope::Cache | Scope::Development) {
         targets.extend(CACHE_PAYLOADS.iter().map(|p| paths.cache_root.join(p)));
@@ -168,6 +144,14 @@ fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Re
         preserved: Vec::new(),
         error: None,
     };
+    // Recovery changes native ownership records and can enqueue final release writes.
+    // Complete it and join the native runtime before observing bytes for deletion. No
+    // runtime/provider may retain a shared evidence lock or write after this boundary.
+    if let Err(error) = prepare(config, paths, apply) {
+        report.error = Some(error.to_string());
+        return Ok(report);
+    }
+    let _retention = leases::exclusive(&paths.data_root)?;
     for root in [&paths.data_root, &paths.cache_root] {
         for entry in fs::read_dir(root)? {
             let path = entry?.path();
@@ -187,29 +171,7 @@ fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Re
     if !apply {
         return Ok(report);
     }
-    // Confirm all containers belonging to this cache are absent BEFORE deleting journals,
-    // reservations or mounted inputs. Images and the engine storage root are never pruned here.
-    let permits = Arc::new(tokio::sync::Semaphore::new(1));
-    let supervisor = crate::execution::cleanup::Supervisor::new(
-        permits,
-        config.execution.cleanup_deadline_seconds,
-        1,
-    );
     let operation = (|| -> io::Result<()> {
-        let runner = crate::execution::Runner::new(
-            &config.execution,
-            &paths.cache_root,
-            supervisor,
-            ownership.clone(),
-        )?;
-        let recovery_owner = ownership.clone();
-        runtime
-            .bootstrap(async move {
-                runner.recover_owned().await?;
-                crate::execution::budget::recover_orphans(&recovery_owner).await
-            })
-            .map_err(io::Error::other)??;
-        let _retention = leases::exclusive(&paths.data_root)?;
         for expected in &report.candidates {
             let actual = candidate(&expected.path)?;
             if actual.inventory_digest != expected.inventory_digest {
@@ -241,6 +203,63 @@ fn run(config: &Config, paths: &StatePaths, scope: Scope, apply: bool) -> io::Re
         report.error = Some(error.to_string());
     }
     Ok(report)
+}
+
+fn prepare(config: &Config, paths: &StatePaths, apply: bool) -> io::Result<()> {
+    let runtime = enrichment_store::runtime::QueryRuntime::new(
+        &paths.cache_root.join("maintenance-spill"),
+        (&config.arrow).into(),
+    )
+    .map_err(io::Error::other)?;
+    let result = (|| -> io::Result<()> {
+        let control = if apply {
+            enrichment_store::control::ControlStore::open(&paths.data_root, runtime.clone())?
+        } else {
+            enrichment_store::control::ControlStore::read_only(&paths.data_root, runtime.clone())?
+        };
+        let ownership = enrichment_store::physical_ownership::OwnershipStore::new(
+            control,
+            runtime.clone(),
+            &paths.cache_root,
+        )?;
+        let paths = paths.clone();
+        let execution = config.execution.clone();
+        runtime
+            .bootstrap(async move {
+                crate::execution::ownership::validate_for_state(&paths, &execution, &ownership)
+                    .await?;
+                if apply {
+                    // Confirm every recorded container is absent before removing its mounts.
+                    // Image storage stays outside this inventory.
+                    let supervisor = crate::execution::cleanup::Supervisor::new(
+                        Arc::new(tokio::sync::Semaphore::new(1)),
+                        execution.cleanup_deadline_seconds,
+                        1,
+                    );
+                    let runner = crate::execution::Runner::new(
+                        &execution,
+                        &paths.cache_root,
+                        supervisor,
+                        ownership.clone(),
+                    )?;
+                    runner.recover_owned().await?;
+                    crate::execution::budget::recover_orphans(&ownership).await?;
+                }
+                Ok(())
+            })
+            .map_err(io::Error::other)?
+    })();
+    let closing = runtime.clone();
+    let closed = runtime
+        .bootstrap(async move { closing.close_diagnostics().await })
+        .and_then(std::convert::identity)
+        .map_err(io::Error::other);
+    match (result, closed) {
+        (Ok(()), result) | (result, Ok(())) => result,
+        (Err(error), Err(close)) => Err(io::Error::other(format!(
+            "{error}; native maintenance drain also failed: {close}"
+        ))),
+    }
 }
 
 fn remove_counted(path: &Path, bytes: &mut u64, files: &mut usize) -> io::Result<()> {
@@ -306,34 +325,42 @@ fn candidate(path: &Path) -> io::Result<Candidate> {
                 entry.display()
             )));
         }
-        rows.push((
-            entry
+        rows.push(PhysicalFile {
+            path: entry
                 .strip_prefix(path)
                 .map_err(io::Error::other)?
                 .to_path_buf(),
-            meta.dev(),
-            meta.ino(),
-            meta.mode(),
-            meta.len(),
-            meta.mtime(),
-            meta.mtime_nsec(),
-            meta.ctime(),
-            meta.ctime_nsec(),
-        ));
+            device: meta.dev(),
+            inode: meta.ino(),
+            mode: meta.mode(),
+            bytes: meta.len(),
+            modified_seconds: meta.mtime(),
+            modified_nanoseconds: meta.mtime_nsec(),
+            changed_seconds: meta.ctime(),
+            changed_nanoseconds: meta.ctime_nsec(),
+        });
     }
-    rows.sort();
     Ok(Candidate {
         path: path.to_owned(),
         files,
         directories,
         file_bytes,
-        inventory_digest: canonical::digest_hex(&serde_json::to_value(rows)?),
+        inventory_digest: Key::PhysicalInventory
+            .hex_digest(&PhysicalInventory { files: rows })
+            .map_err(io::Error::other)?,
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn close(runtime: enrichment_store::runtime::QueryRuntime) {
+        let closing = runtime.clone();
+        runtime
+            .bootstrap(async move { closing.close_diagnostics().await })
+            .unwrap()
+            .unwrap();
+    }
     fn fixture() -> (tempfile::TempDir, StatePaths) {
         let temp = tempfile::tempdir().unwrap();
         let paths = StatePaths::explicit(temp.path().join("cache"), temp.path().join("data"));
@@ -350,6 +377,7 @@ mod tests {
             .bootstrap(async move { control.pin().await })
             .unwrap()
             .unwrap();
+        close(runtime);
         fs::create_dir(paths.data_root.join("blobs")).unwrap();
         fs::write(paths.data_root.join("blobs/evidence"), b"facts").unwrap();
         fs::create_dir(paths.cache_root.join("capsules")).unwrap();
@@ -361,6 +389,7 @@ mod tests {
         let (_temp, paths) = fixture();
         let config = Config::default();
         let preview = cleanup(&config, &paths, Scope::Cache, false).unwrap();
+        assert!(preview.error.is_none(), "{preview:?}");
         assert!(!preview.applied);
         assert!(preview.removed.is_empty());
         assert_eq!(preview.candidates[0].file_bytes, 7);
@@ -370,6 +399,7 @@ mod tests {
         assert_eq!(applied.removed_file_bytes, 7);
         assert!(paths.data_root.join("blobs/evidence").exists());
         let evidence = cleanup(&config, &paths, Scope::Evidence, true).unwrap();
+        assert!(evidence.error.is_none(), "{evidence:?}");
         assert!(evidence.removed_file_bytes >= 5);
         assert!(!paths.data_root.join("blobs").exists());
         state::verify(&paths).unwrap();
@@ -469,6 +499,8 @@ mod tests {
             })
             .unwrap()
             .unwrap();
+        drop(_runner);
+        close(runtime);
         config.execution.storage_root = Some(temp.path().join("engine-b"));
         let result = cleanup(&config, &paths, Scope::Cache, true).unwrap();
         assert!(result.error.as_deref().unwrap().contains("creator"));

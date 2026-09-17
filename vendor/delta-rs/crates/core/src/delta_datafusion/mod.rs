@@ -493,6 +493,23 @@ impl PhysicalExtensionCodec for DeltaPhysicalCodec {
 #[derive(Debug)]
 pub struct DeltaLogicalCodec {}
 
+impl DeltaLogicalCodec {
+    /// Encode only an immutable native provider to a caller-bounded writer. Logical
+    /// extensions and physical plans are intentionally outside this method's contract.
+    pub fn encode_immutable_provider(
+        &self,
+        node: &dyn TableProvider,
+        writer: impl std::io::Write,
+    ) -> Result<(), DataFusionError> {
+        let scan = node.downcast_ref::<DeltaScanNext>().ok_or_else(|| {
+            DataFusionError::Plan("immutable codec requires a native Delta scan".into())
+        })?;
+        scan.validate_immutable_codec()?;
+        serde_json::to_writer(writer, scan)
+            .map_err(|error| DataFusionError::External(Box::new(error)))
+    }
+}
+
 impl LogicalExtensionCodec for DeltaLogicalCodec {
     fn try_decode(
         &self,
@@ -525,11 +542,7 @@ impl LogicalExtensionCodec for DeltaLogicalCodec {
         node: Arc<dyn TableProvider>,
         buf: &mut Vec<u8>,
     ) -> Result<(), DataFusionError> {
-        let scan = node.downcast_ref::<DeltaScanNext>().ok_or_else(|| {
-            DataFusionError::Internal("Can't encode non-delta tables".to_string())
-        })?;
-        serde_json::to_writer(buf, scan)
-            .map_err(|_| DataFusionError::Internal("Error encoding delta table".to_string()))
+        self.encode_immutable_provider(node.as_ref(), buf)
     }
 }
 

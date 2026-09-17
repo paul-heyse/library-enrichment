@@ -33,12 +33,14 @@ class DiscoverySelection(BaseModel):
     )
     cursor: str | None = None
     kind: DiscoveryKind
-    max_characters: int | None = Field(
+    max_characters: str | None = Field(
         None,
         description="None requests the complete retained text; callers may request a bounded preview.",
-        ge=0,
+        pattern="^(?:(?:1[0-9]{4}|[2-5][0-9]{4}|6(?:0[0-9]{3}|[1-4][0-9]{3}|5(?:0[0-9]{2}|[1-4][0-9]{2}|5(?:0[0-9]{1}|[1-2][0-9]{1}|3[0-6][0-9]{0}))))|[1-9][0-9]{0,3})$",
     )
-    max_items: int | None = Field(32, ge=0)
+    max_items: str | None = Field(
+        "32", pattern="^(?:10(?:0[0-9]{1}|[1-1][0-9]{1}|2[0-4][0-9]{0})|[1-9][0-9]{0,2})$"
+    )
 
 
 class InspectionAspect(StrEnum):
@@ -80,15 +82,20 @@ class JobRequest(BaseModel):
     action: Action | None = Action.status
     interest_token: str | None = None
     job_id: str = Field(..., min_length=1)
-    max_bytes: int | None = Field(None, ge=1024)
-    wait_seconds: int | None = Field(0, ge=0, le=10)
+    max_bytes: str | None = Field(
+        None,
+        pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
+    )
+    wait_seconds: str | None = Field("0", pattern="^(?:0|10|[1-9][0-9]{0,0})$")
 
 
 class ManifestRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    snapshot_id: str = Field(..., description="The snapshot to describe.", min_length=1)
+    snapshot_id: str = Field(
+        ..., description="The snapshot to describe.", min_length=1, pattern="^snap_[0-9a-f]{64}$"
+    )
 
 
 class OverviewRequest(BaseModel):
@@ -96,21 +103,32 @@ class OverviewRequest(BaseModel):
         extra="forbid",
     )
     area: str | None = Field(None, description="Narrow to one module subtree.")
-    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
+    context_id: str = Field(
+        ...,
+        description="The context from `resolve_library`.",
+        min_length=1,
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
     discovery: list[DiscoverySelection] | None = Field(
         None,
         description="Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.",
+        max_length=4,
+        min_length=0,
     )
-    max_bytes: int | None = Field(
-        None, description="Advisory byte budget; the configured inline budget bounds it.", ge=1024
+    max_bytes: str | None = Field(
+        None,
+        description="Advisory byte budget; the configured inline budget bounds it.",
+        pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
     )
-    max_items: int | None = Field(
+    max_items: str | None = Field(
         None,
         description="Cap on child entries per namespace; the configured limit bounds it.",
-        ge=1,
+        pattern="^(?:1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
     )
     snapshot_id: str | None = Field(
-        None, description="A specific snapshot; the context's current one when omitted."
+        None,
+        description="A specific snapshot; the context's current one when omitted.",
+        pattern="^snap_[0-9a-f]{64}$",
     )
 
 
@@ -224,23 +242,32 @@ class SearchRequest(BaseModel):
     area: str | None = Field(
         None, description="Restrict symbol/fragment subjects to this namespace subtree."
     )
-    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
+    context_id: str = Field(
+        ...,
+        description="The context from `resolve_library`.",
+        min_length=1,
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
     cursor: str | None = Field(None, description="Continue a previous page.")
     kinds: list[str] | None = Field(
         None,
         description="Evidence families: `api`, `docs`, `examples`, `release_notes`, `features`, `source`.",
     )
-    max_bytes: int | None = Field(
+    max_bytes: str | None = Field(
         None,
         description="Byte budget for the page; the configured inline budget bounds it.",
-        ge=1024,
+        pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
     )
-    max_items: int | None = Field(
-        None, description="Page size; the configured limit bounds it.", ge=1
+    max_items: str | None = Field(
+        None,
+        description="Page size; the configured limit bounds it.",
+        pattern="^(?:1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
     )
     query: str = Field(..., description="The query.", min_length=1)
     snapshot_id: str | None = Field(
-        None, description="A specific snapshot; the context's current one when omitted."
+        None,
+        description="A specific snapshot; the context's current one when omitted.",
+        pattern="^snap_[0-9a-f]{64}$",
     )
 
 
@@ -283,14 +310,25 @@ class VerifyRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    context_id: str
-    max_bytes: int | None = Field(None, ge=0)
+    context_id: str = Field(
+        ...,
+        description="Binds a release to an environment and a research mode.",
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
+    max_bytes: str | None = Field(
+        None,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
     mode: Mode1 | None = Mode1.typecheck
     profile: Profile1 | None = Field(
         Profile1.build,
         description="The three execution profiles (§10).\n\nThe values are, in order: `static`, `build`, `runtime`.",
     )
-    snapshot_id: str | None = None
+    snapshot_id: str | None = Field(
+        None,
+        description="Names one immutable set of evidence available for a context.",
+        pattern="^snap_[0-9a-f]{64}$",
+    )
     snippet: str
     test_intent: str | None = None
 
@@ -371,34 +409,58 @@ class AspectSelection(BaseModel):
     )
     aspect: InspectionAspect
     cursor: str | None = None
-    max_characters: int | None = Field(
+    max_characters: str | None = Field(
         None,
         description="Requested text projection for documentation/examples. None requests complete text.",
-        ge=0,
+        pattern="^(?:(?:1[0-9]{4}|[2-5][0-9]{4}|6(?:0[0-9]{3}|[1-4][0-9]{3}|5(?:0[0-9]{2}|[1-4][0-9]{2}|5(?:0[0-9]{1}|[1-2][0-9]{1}|3[0-6][0-9]{0}))))|[1-9][0-9]{0,3})$",
     )
-    max_items: int | None = Field(32, ge=0)
+    max_items: str | None = Field(
+        "32", pattern="^(?:10(?:0[0-9]{1}|[1-1][0-9]{1}|2[0-4][0-9]{0})|[1-9][0-9]{0,2})$"
+    )
 
 
 class CompareRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    after_context_id: str | None = None
-    after_snapshot_id: str | None = None
+    after_context_id: str | None = Field(
+        None,
+        description="Binds a release to an environment and a research mode.",
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
+    after_snapshot_id: str | None = Field(
+        None,
+        description="Names one immutable set of evidence available for a context.",
+        pattern="^snap_[0-9a-f]{64}$",
+    )
     alternative_cursor: str | None = Field(
         None,
         description="Continue alternatives within one changed key, independently of the changed-key page.",
     )
-    before_context_id: str | None = None
-    before_snapshot_id: str | None = None
+    before_context_id: str | None = Field(
+        None,
+        description="Binds a release to an environment and a research mode.",
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
+    before_snapshot_id: str | None = Field(
+        None,
+        description="Names one immutable set of evidence available for a context.",
+        pattern="^snap_[0-9a-f]{64}$",
+    )
     cursor: str | None = None
     ecosystem: Ecosystem | None = Field(
         None,
         description="Which package ecosystem a release belongs to.\n\nThe values are, in order: `rust`, `python`. No variant carries a doc comment -- see the\nmodule docs in [`crate::wire`].",
     )
     from_version: str | None = None
-    max_bytes: int | None = Field(None, ge=0)
-    max_items: int | None = Field(None, ge=0)
+    max_bytes: str | None = Field(
+        None,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
+    max_items: str | None = Field(
+        None,
+        pattern="^(?:0|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{0,18})$",
+    )
     name: str | None = None
     scopes: list[Scope] | None = None
     to_version: str | None = None
@@ -412,6 +474,8 @@ class InspectionOptions(BaseModel):
     methods: list[SemanticMethod] | None = Field(
         [],
         description="Empty selects hover, definition, references and diagnostics for semantic inspection.",
+        max_length=5,
+        min_length=0,
     )
     position: Utf8Position | None = Field(
         None,
@@ -436,10 +500,10 @@ class ReadArtifactRequest(BaseModel):
     )
     artifact_id: str = Field(..., description="A service-issued artifact handle.", min_length=1)
     cursor: str | None = Field(None, description="Continue a previous read.")
-    max_bytes: int | None = Field(
+    max_bytes: str | None = Field(
         None,
         description="Byte budget for this slice; the configured inline budget bounds it.",
-        ge=1024,
+        pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
     )
     section: ArtifactSection | None = Field(
         None,
@@ -451,7 +515,7 @@ class ResearchSelection2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    aspects: list[AspectSelection]
+    aspects: list[AspectSelection] = Field(..., max_length=10, min_length=1)
     mode: Literal["explicit"]
 
 
@@ -482,7 +546,12 @@ class InspectRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    context_id: str = Field(..., description="The context from `resolve_library`.", min_length=1)
+    context_id: str = Field(
+        ...,
+        description="The context from `resolve_library`.",
+        min_length=1,
+        pattern="^ctx_[0-9a-f]{64}$",
+    )
     definition_id: str | None = Field(
         None,
         description="Select one definition at this path, using an inspection candidate or search result.",
@@ -490,8 +559,10 @@ class InspectRequest(BaseModel):
     execution: InspectionOptions | None = Field(
         None, description="Retained execution selection and explicit execution intent (ADR-0026)."
     )
-    max_bytes: int | None = Field(
-        None, description="Byte budget; the configured inline budget bounds it.", ge=1024
+    max_bytes: str | None = Field(
+        None,
+        description="Byte budget; the configured inline budget bounds it.",
+        pattern="^(?:(?:1(?:0(?:2[4-9][0-9]{0}|[3-8][0-9]{1}|9[0-9]{1})|[1-8][0-9]{2}|9[0-9]{2})|[2-8][0-9]{3}|9[0-9]{3})|1(?:0[0-9]{18}|[1-7][0-9]{18}|8(?:0[0-9]{17}|[1-3][0-9]{17}|4(?:0[0-9]{16}|[1-3][0-9]{16}|4(?:0[0-9]{15}|[1-5][0-9]{15}|6(?:0[0-9]{14}|[1-6][0-9]{14}|7(?:0[0-9]{13}|[1-3][0-9]{13}|4(?:0[0-9]{12}|[1-3][0-9]{12}|40(?:0[0-9]{10}|[1-6][0-9]{10}|7(?:0[0-9]{9}|[1-2][0-9]{9}|3(?:0[0-9]{8}|[1-6][0-9]{8}|70(?:0[0-9]{6}|[1-8][0-9]{6}|9(?:0[0-9]{5}|[1-4][0-9]{5}|5(?:0[0-9]{4}|[1-4][0-9]{4}|5(?:0[0-9]{3}|1(?:0[0-9]{2}|[1-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5][0-9]{0}))))))))))))))))|[1-9][0-9]{4,18})$",
     )
     selection: ResearchSelection | None = Field(
         {"mode": "default"},
@@ -499,7 +570,9 @@ class InspectRequest(BaseModel):
         validate_default=True,
     )
     snapshot_id: str | None = Field(
-        None, description="A specific snapshot; the context's current one when omitted."
+        None,
+        description="A specific snapshot; the context's current one when omitted.",
+        pattern="^snap_[0-9a-f]{64}$",
     )
     symbol_path: str = Field(
         ..., description="A qualified path, or a bare name when unambiguous.", min_length=1

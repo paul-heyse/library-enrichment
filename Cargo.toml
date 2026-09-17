@@ -30,7 +30,12 @@ publish = false
 # object_store major, i.e. a single Arrow type universe.
 [workspace.dependencies]
 datafusion = "=55.1.0"
+datafusion-proto = "=55.1.0"
 deltalake = { version = "1.0.0", git = "https://github.com/delta-io/delta-rs.git", rev = "58f07cd62bfbce3649a7e1c87c696288068ae184", default-features = false, features = ["datafusion", "rustls"] }
+# Use Delta's exact Cargo source identity; Cargo.lock pins both packages at 8ba063f8.
+# A second rev source here would produce a second, incompatible kernel type universe.
+delta_kernel = { package = "buoyant_kernel", git = "https://github.com/buoyant-data/delta-kernel-rs", branch = "buoyant/main", features = ["arrow-59", "internal-api"] }
+delta_kernel_default_engine = { package = "buoyant_kernel_engine", git = "https://github.com/buoyant-data/delta-kernel-rs", branch = "buoyant/main", default-features = false, features = ["arrow-59", "rustls"] }
 arrow = { version = "59.3.0", features = ["canonical_extension_types"] }
 arrow-schema = { version = "59.3.0", features = ["canonical_extension_types"] }
 parquet = { version = "59.3.0", features = ["arrow_canonical_extension_types"] }
@@ -38,6 +43,8 @@ object_store = "=0.13.2"
 chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
 async-trait = "0.1.92"
 futures = "0.3.34"
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", default-features = false, features = ["registry"] }
 
 # One exact format-61 model in both parsing passes. ADR-0048 records the minimal
 # upstream renderer patch and independent fact/renderer qualification.
@@ -82,6 +89,8 @@ tokio = { version = "1.53.1", features = [
   "fs",
   "process",
 ] }
+# Existing transitive release; lifecycle tracking releases completed task storage immediately.
+tokio-util = { version = "=0.7.19", features = ["rt"] }
 thiserror = "2.0.20"
 
 # Mints request identities in the core, where §1.1 puts identity. Already in Cargo.lock via

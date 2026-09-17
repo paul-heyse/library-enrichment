@@ -1,6 +1,6 @@
 //! Bounded physical qualification receipts. Their eligibility is a native relation.
 use crate::{config::ExecutionResources, execution::ProcessObservation};
-use arrow::datatypes::{DataType, Field, Fields};
+use arrow::datatypes::Fields;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -29,14 +29,5 @@ pub struct Receipt {
 }
 
 pub fn resource_fields() -> Fields {
-    [
-        ("cpu_quota_micros", DataType::UInt64),
-        ("cpu_period_micros", DataType::UInt64),
-        ("memory_bytes", DataType::UInt64),
-        ("swap_bytes", DataType::UInt64),
-        ("scratch_bytes", DataType::UInt64),
-        ("pids", DataType::UInt32),
-    ]
-    .map(|(name, kind)| std::sync::Arc::new(Field::new(name, kind, false)))
-    .into()
+    <ExecutionResources as crate::native_union::NativeStruct>::fields()
 }

@@ -148,7 +148,8 @@ pub async fn receive(
                 stderr,
             } => {
                 if operation_id != operation.id()
-                    || inventory_digest != canonical::digest_hex(&serde_json::json!(entries))
+                    || inventory_digest
+                        != enrichment_core::capsule_protocol::inventory::digest(&entries)?
                     || stdout.len() > operation.output_bytes
                     || stderr.len() > operation.output_bytes
                     || end == ProcessEnd::Cancelled
@@ -239,7 +240,8 @@ mod tests {
             stream,
             &Frame::Complete {
                 operation_id: operation.id(),
-                inventory_digest: canonical::digest_hex(&serde_json::json!(entries)),
+                inventory_digest: enrichment_core::capsule_protocol::inventory::digest(&entries)
+                    .unwrap(),
                 exit_code: Some(0),
                 end: ProcessEnd::Exited,
                 stdout: b"{\"frame\":\"complete\"}".to_vec(),

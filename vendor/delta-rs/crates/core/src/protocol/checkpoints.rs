@@ -9,7 +9,7 @@ use chrono::{TimeZone, Utc};
 use delta_kernel::snapshot::Snapshot;
 use futures::{StreamExt, TryStreamExt};
 use regex::Regex;
-use tracing::{debug, error};
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::kernel::{Version, spawn_blocking_with_span};
@@ -112,29 +112,81 @@ pub async fn create_checkpoint_from_table_url_and_cleanup(
 /// See also: https://github.com/delta-io/delta-rs/issues/3692 for background on
 /// why cleanup must align to an existing checkpoint.
 pub async fn cleanup_expired_logs_for(
-    mut keep_version: Version,
+    keep_version: Version,
     log_store: &dyn LogStore,
     cutoff_timestamp: i64,
     operation_id: Option<Uuid>,
 ) -> DeltaResult<usize> {
+    cleanup_expired_logs_for_bounded(
+        keep_version,
+        log_store,
+        cutoff_timestamp,
+        operation_id,
+        LogCleanupLimits::default(),
+    )
+    .await
+}
+
+/// Bounds for the complete log inventory needed before any destructive decision.
+#[derive(Debug, Clone, Copy)]
+pub struct LogCleanupLimits {
+    /// Maximum number of entries, including entries that are not eligible for removal.
+    pub entries: usize,
+    /// Maximum captured metadata bytes, including paths, ETags and version identifiers.
+    pub metadata_bytes: usize,
+}
+impl Default for LogCleanupLimits {
+    fn default() -> Self {
+        Self {
+            entries: 100_000,
+            metadata_bytes: 32 * 1024 * 1024,
+        }
+    }
+}
+
+/// A complete bounded inventory is mandatory. Listing errors and budget exhaustion
+/// return before delete_stream is constructed, rather than silently omitting history.
+pub async fn cleanup_expired_logs_for_bounded(
+    mut keep_version: Version,
+    log_store: &dyn LogStore,
+    cutoff_timestamp: i64,
+    operation_id: Option<Uuid>,
+    limits: LogCleanupLimits,
+) -> DeltaResult<usize> {
     debug!("called cleanup_expired_logs_for");
+    let cutoff = Utc
+        .timestamp_millis_opt(cutoff_timestamp)
+        .single()
+        .ok_or_else(|| {
+            DeltaTableError::Generic("log cleanup cutoff is outside the timestamp range".into())
+        })?;
     let object_store = log_store.object_store(operation_id);
     let log_path = log_store.log_path();
 
-    // List all log entries under _delta_log
-    let log_entries: Vec<Result<crate::ObjectMeta, _>> =
-        object_store.list(Some(log_path)).collect().await;
+    let mut log_entries = Vec::new();
+    let mut metadata_bytes = 0usize;
+    let mut listing = object_store.list(Some(log_path));
+    while let Some(meta) = listing.try_next().await? {
+        let bytes = std::mem::size_of::<crate::ObjectMeta>()
+            .checked_add(meta.location.as_ref().len())
+            .and_then(|n| n.checked_add(meta.e_tag.as_ref().map_or(0, String::len)))
+            .and_then(|n| n.checked_add(meta.version.as_ref().map_or(0, String::len)))
+            .and_then(|n| n.checked_add(metadata_bytes));
+        if log_entries.len() >= limits.entries || bytes.is_none_or(|n| n > limits.metadata_bytes) {
+            return Err(crate::DeltaTableError::Generic(
+                "log cleanup inventory exceeds declared bounds".into(),
+            ));
+        }
+        metadata_bytes = bytes.expect("checked metadata bound");
+        log_entries.push(meta);
+    }
 
     debug!("starting keep_version: {:?}", keep_version);
-    debug!(
-        "starting cutoff_timestamp: {:?}",
-        Utc.timestamp_millis_opt(cutoff_timestamp).unwrap()
-    );
+    debug!("starting cutoff_timestamp: {:?}", cutoff);
 
     // Step 1: Find min_retention_version among DELTA_LOG files with ts >= cutoff_timestamp
     let min_retention_version = log_entries
         .iter()
-        .filter_map(|m| m.as_ref().ok())
         .filter_map(|m| {
             let path = m.location.as_ref();
             DELTA_LOG_REGEX
@@ -156,7 +208,6 @@ pub async fn cleanup_expired_logs_for(
     // Step 3: Find safe checkpoint with checkpoint_version <= keep_version (no ts restriction)
     let safe_checkpoint_version_opt = log_entries
         .iter()
-        .filter_map(|m| m.as_ref().ok())
         .filter_map(|m| {
             let path = m.location.as_ref();
             CHECKPOINT_REGEX
@@ -180,14 +231,7 @@ pub async fn cleanup_expired_logs_for(
 
     // Step 4: Delete DELTA_LOG files where log_ver < safe_checkpoint_version && ts <= cutoff_timestamp
     let locations = futures::stream::iter(log_entries.into_iter())
-        .filter_map(move |meta: Result<crate::ObjectMeta, _>| async move {
-            let meta = match meta {
-                Ok(m) => m,
-                Err(err) => {
-                    error!("Error received while cleaning up expired logs: {err:?}");
-                    return None;
-                }
-            };
+        .filter_map(move |meta: crate::ObjectMeta| async move {
             let path_str = meta.location.as_ref();
             let captures = DELTA_LOG_REGEX.captures(path_str)?;
             let ts = meta.last_modified.timestamp_millis();
@@ -206,11 +250,11 @@ pub async fn cleanup_expired_logs_for(
 
     let deleted = object_store
         .delete_stream(locations)
-        .try_collect::<Vec<_>>()
+        .try_fold(0usize, |count, _| async move { Ok(count + 1) })
         .await?;
 
-    debug!("Deleted {} expired logs", deleted.len());
-    Ok(deleted.len())
+    debug!("Deleted {} expired logs", deleted);
+    Ok(deleted)
 }
 
 /// Parse `_last_checkpoint` JSON bytes into a [`LastCheckpointHint`].

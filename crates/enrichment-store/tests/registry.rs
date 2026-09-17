@@ -88,6 +88,7 @@ async fn native_markers_use_supplied_environment_and_independent_extra_rows() {
         [3]
     );
     assert!(Requirement::parse("pkg; extra == 'off' and unknown == 'x'").is_err());
+    runtime.close_diagnostics().await.unwrap();
 }
 
 #[tokio::test]
@@ -125,15 +126,22 @@ async fn native_python_selection_obeys_pep440_environment_and_artifact_policy() 
         ("1.1".into(), vec![yanked]),
         ("2.0b1".into(), vec![file("sample-2.0b1-py3-none-any.whl")]),
     ]);
-    let selected = python_registry::select(&runtime, &releases, &request, None, false)
-        .await
-        .unwrap()
-        .unwrap();
+    let python_facts = |values: &BTreeMap<String, Vec<DistributionFile>>| {
+        runtime
+            .session()
+            .read_batches(enrichment_core::producer::python::facts::decode(values, 2).unwrap())
+            .unwrap()
+    };
+    let selected =
+        python_registry::select(&runtime, python_facts(&releases), &request, None, false)
+            .await
+            .unwrap()
+            .unwrap();
     assert_eq!(selected.version, "1.0.post1");
     assert!(selected.file.filename.ends_with(".whl"));
     request.version = Some("1.0post1".into()); // Equivalent PEP 440 spelling is an exact match.
     assert_eq!(
-        python_registry::select(&runtime, &releases, &request, None, false)
+        python_registry::select(&runtime, python_facts(&releases), &request, None, false)
             .await
             .unwrap()
             .unwrap()
@@ -142,14 +150,14 @@ async fn native_python_selection_obeys_pep440_environment_and_artifact_policy() 
     );
     request.version = Some("1.1".into());
     assert!(
-        python_registry::select(&runtime, &releases, &request, None, false)
+        python_registry::select(&runtime, python_facts(&releases), &request, None, false)
             .await
             .unwrap()
             .is_none()
     );
     request.allow_yanked = true;
     assert!(
-        python_registry::select(&runtime, &releases, &request, None, false)
+        python_registry::select(&runtime, python_facts(&releases), &request, None, false)
             .await
             .unwrap()
             .is_some()
@@ -158,7 +166,7 @@ async fn native_python_selection_obeys_pep440_environment_and_artifact_policy() 
     request.allow_yanked = false;
     request.allow_prerelease = true;
     assert_eq!(
-        python_registry::select(&runtime, &releases, &request, None, false)
+        python_registry::select(&runtime, python_facts(&releases), &request, None, false)
             .await
             .unwrap()
             .unwrap()
@@ -188,10 +196,16 @@ async fn native_python_selection_obeys_pep440_environment_and_artifact_policy() 
         request.target = target.map(str::to_owned);
         let inputs = BTreeMap::from([("1.0".into(), vec![file(wheel)])]);
         assert_eq!(
-            python_registry::select(&runtime, &inputs, &request, Some(">=1,<2"), true)
-                .await
-                .unwrap()
-                .is_some(),
+            python_registry::select(
+                &runtime,
+                python_facts(&inputs),
+                &request,
+                Some(">=1,<2"),
+                true
+            )
+            .await
+            .unwrap()
+            .is_some(),
             expected,
             "{wheel}"
         );
@@ -199,18 +213,43 @@ async fn native_python_selection_obeys_pep440_environment_and_artifact_policy() 
     request.target = None;
     request.python_version = None;
     assert!(
-        python_registry::select(&runtime, &releases, &request, Some(">=2"), true)
-            .await
-            .unwrap()
-            .is_none()
+        python_registry::select(
+            &runtime,
+            python_facts(&releases),
+            &request,
+            Some(">=2"),
+            true
+        )
+        .await
+        .unwrap()
+        .is_none()
     );
     let versions = ["1.0", "1.0.post1", "1!0.1", "1.0b1", "not-a-version"].map(str::to_owned);
+    let versions = runtime
+        .session()
+        .read_batch(
+            arrow::record_batch::RecordBatch::try_new(
+                std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+                    arrow::datatypes::Field::new(
+                        "version",
+                        arrow::datatypes::DataType::Utf8,
+                        false,
+                    ),
+                ])),
+                vec![std::sync::Arc::new(arrow::array::StringArray::from(
+                    versions.to_vec(),
+                ))],
+            )
+            .unwrap(),
+        )
+        .unwrap();
     assert_eq!(
-        python_registry::ordered_versions(&runtime, &versions, false, 2)
+        python_registry::ordered_versions(&runtime, versions, false, 2)
             .await
             .unwrap(),
         ["1!0.1", "1.0.post1"]
     );
+    runtime.close_diagnostics().await.unwrap();
 }
 
 #[tokio::test]
@@ -225,7 +264,14 @@ async fn native_registry_preserves_exact_requests_source_lines_and_nested_acquis
         r#"{"name":"sample","vers":"0.4.0-beta.2","cksum":"preview"}"#,
         r#"{"name":"sample","vers":"invalid-version","cksum":"invalid"}"#,
     ].join("\n");
-    let index = RustIndex::new(&runtime, facts::decode(&document, 2).unwrap()).unwrap();
+    let index = RustIndex::new(
+        &runtime,
+        runtime
+            .session()
+            .read_batches(facts::decode(&document, 2).unwrap())
+            .unwrap(),
+    )
+    .unwrap();
     let exact = index
         .select(Some("0.1.0"), false, false)
         .await
@@ -281,9 +327,17 @@ async fn native_registry_preserves_exact_requests_source_lines_and_nested_acquis
         }
         other => panic!("unexpected {other:?}"),
     }
-    let empty = RustIndex::new(&runtime, facts::decode("", 2).unwrap()).unwrap();
+    let empty = RustIndex::new(
+        &runtime,
+        runtime
+            .session()
+            .read_batches(facts::decode("", 2).unwrap())
+            .unwrap(),
+    )
+    .unwrap();
     assert!(matches!(
         empty.select(None, false, false).await.unwrap(),
         Err(SelectionError::NoVersions)
     ));
+    runtime.close_diagnostics().await.unwrap();
 }

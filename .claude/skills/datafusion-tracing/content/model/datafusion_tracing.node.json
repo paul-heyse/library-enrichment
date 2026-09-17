@@ -1,0 +1,81 @@
+{
+  "module": "datafusion_tracing::node",
+  "crate": "datafusion-tracing",
+  "api": "api/datafusion_tracing.node.md",
+  "items": [
+    {
+      "path": "datafusion_tracing::node::NodeRecorder",
+      "name": "NodeRecorder",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct NodeRecorder",
+      "summary": "Records the `datafusion.node` span field once execution completes across all partitions, when the value is fully qualified.",
+      "doc": "api/datafusion_tracing.node.md#noderecorder",
+      "visibility": "internal",
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "visibility": "internal",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(execution_plan: Arc<dyn ExecutionPlan>, span: Span) -> Self",
+          "visibility": "internal"
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> Span",
+          "visibility": "internal"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::node::NodeRecordingStream",
+      "name": "NodeRecordingStream",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct NodeRecordingStream",
+      "summary": "A wrapper around a DataFusion stream that keeps a `NodeRecorder` alive so the `datafusion.node` field is recorded only when the stream completes.",
+      "doc": "api/datafusion_tracing.node.md#noderecordingstream",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_execution::stream::RecordBatchStream",
+        "futures_core::stream::Stream"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(inner: SendableRecordBatchStream, recorder: Arc<NodeRecorder>) -> Self",
+          "visibility": "internal"
+        },
+        {
+          "name": "poll_next",
+          "signature": "fn poll_next(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>>",
+          "visibility": "internal",
+          "via_trait": "futures_core::stream::Stream"
+        },
+        {
+          "name": "project",
+          "signature": "fn project<'pin>(_pin_project::__private::Pin<&'pin mut self>) -> __NodeRecordingStreamProjection<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "project_ref",
+          "signature": "fn project_ref<'pin>(_pin_project::__private::Pin<&'pin self>) -> __NodeRecordingStreamProjectionRef<'pin>",
+          "visibility": "internal"
+        },
+        {
+          "name": "schema",
+          "signature": "fn schema(&self) -> SchemaRef",
+          "visibility": "internal",
+          "via_trait": "datafusion_execution::stream::RecordBatchStream"
+        }
+      ]
+    }
+  ]
+}

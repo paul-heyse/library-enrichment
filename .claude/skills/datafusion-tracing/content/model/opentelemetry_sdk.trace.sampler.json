@@ -1,0 +1,87 @@
+{
+  "module": "opentelemetry_sdk::trace::sampler",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.trace.sampler.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::trace::sampler::Sampler",
+      "name": "Sampler",
+      "kind": "enum",
+      "crate": "opentelemetry_sdk",
+      "signature": "enum Sampler",
+      "summary": "Default Sampling options",
+      "doc": "api/opentelemetry_sdk.trace.sampler.md#sampler",
+      "aliases": [
+        "opentelemetry_sdk::trace::Sampler"
+      ],
+      "variants": [
+        "AlwaysOn",
+        "AlwaysOff",
+        "ParentBased",
+        "TraceIdRatioBased",
+        "JaegerRemote"
+      ],
+      "implements": [
+        "opentelemetry_sdk::trace::sampler::ShouldSample"
+      ],
+      "methods": [
+        {
+          "name": "jaeger_remote",
+          "signature": "fn jaeger_remote<C, Sampler, R, Svc>(runtime: R, http_client: C, default_sampler: Sampler, service_name: Svc) -> JaegerRemoteSamplerBuilder<C, Sampler, R> where C: HttpClient + 'static, Sampler: ShouldSample, R: runtime::RuntimeChannel, Svc: Into<String>",
+          "summary": "Create a jaeger remote sampler builder."
+        },
+        {
+          "name": "should_sample",
+          "signature": "fn should_sample(&self, parent_context: Option<&Context>, trace_id: TraceId, name: &str, span_kind: &SpanKind, attributes: &[KeyValue], links: &[Link]) -> SamplingResult",
+          "via_trait": "opentelemetry_sdk::trace::sampler::ShouldSample"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::sampler::CloneShouldSample",
+      "name": "CloneShouldSample",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait CloneShouldSample",
+      "summary": "This trait should not be used directly instead users should use [`ShouldSample`].",
+      "doc": "api/opentelemetry_sdk.trace.sampler.md#cloneshouldsample",
+      "required_methods": [
+        "box_clone"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "box_clone",
+          "signature": "fn box_clone(&self) -> Box<dyn ShouldSample>"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::trace::sampler::ShouldSample",
+      "name": "ShouldSample",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait ShouldSample: CloneShouldSample + Send + Sync + std::fmt::Debug",
+      "summary": "The [`ShouldSample`] interface allows implementations to provide samplers which will return a sampling [`SamplingResult`] based on information that is typically available just before the [`Span`] was created.",
+      "doc": "api/opentelemetry_sdk.trace.sampler.md#shouldsample",
+      "aliases": [
+        "opentelemetry_sdk::trace::ShouldSample"
+      ],
+      "implementors": [
+        "opentelemetry_sdk::trace::sampler::Sampler",
+        "opentelemetry_sdk::trace::sampler::jaeger_remote::sampler::JaegerRemoteSampler"
+      ],
+      "required_methods": [
+        "should_sample"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "should_sample",
+          "signature": "fn should_sample(&self, parent_context: Option<&Context>, trace_id: TraceId, name: &str, span_kind: &SpanKind, attributes: &[KeyValue], links: &[Link]) -> SamplingResult",
+          "summary": "Returns the [`SamplingDecision`] for a [`Span`] to be created."
+        }
+      ]
+    }
+  ]
+}

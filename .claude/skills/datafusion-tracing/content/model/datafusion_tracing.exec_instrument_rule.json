@@ -1,0 +1,119 @@
+{
+  "module": "datafusion_tracing::exec_instrument_rule",
+  "crate": "datafusion-tracing",
+  "api": "api/datafusion_tracing.exec_instrument_rule.md",
+  "items": [
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::new_instrument_rule",
+      "name": "new_instrument_rule",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn new_instrument_rule(span_create_fn: std::sync::Arc<dyn Fn() -> tracing::Span + Send + Sync>, options: options::InstrumentationOptions) -> std::sync::Arc<dyn PhysicalOptimizerRule + Send + Sync>",
+      "summary": "",
+      "doc": null,
+      "visibility": "doc-hidden"
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::INIT",
+      "name": "INIT",
+      "kind": "static",
+      "crate": "datafusion-tracing",
+      "signature": "static INIT: std::sync::Once",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::InstrumentRule",
+      "name": "InstrumentRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct InstrumentRule",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implements": [
+        "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> datafusion::error::Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "schema_check",
+          "signature": "fn schema_check(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::SpanTracer",
+      "name": "SpanTracer",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct SpanTracer",
+      "summary": "A simple tracer that ensures any spawned task or blocking closure inherits the current span via `in_current_span`.",
+      "doc": "api/datafusion_tracing.exec_instrument_rule.md#spantracer",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_common_runtime::trace_utils::JoinSetTracer"
+      ],
+      "methods": [
+        {
+          "name": "trace_block",
+          "signature": "fn trace_block(&self, f: Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>) -> Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>",
+          "visibility": "internal",
+          "via_trait": "datafusion_common_runtime::trace_utils::JoinSetTracer",
+          "summary": "Instruments a boxed blocking closure by running it inside the `Span::current()` context."
+        },
+        {
+          "name": "trace_future",
+          "signature": "fn trace_future(&self, fut: futures::future::BoxFuture<'static, Box<dyn Any + Send>>) -> futures::future::BoxFuture<'static, Box<dyn Any + Send>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_common_runtime::trace_utils::JoinSetTracer",
+          "summary": "Instruments a boxed future to run in the current span. The future's return type is erased to `BoxedAny`, which we simply run inside the `Span::current()` context."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::BoxedAny",
+      "name": "BoxedAny",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type BoxedAny = Box<dyn Any + Send>",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::BoxedClosure",
+      "name": "BoxedClosure",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type BoxedClosure = Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::exec_instrument_rule::BoxedFuture",
+      "name": "BoxedFuture",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type BoxedFuture = futures::future::BoxFuture<'static, Box<dyn Any + Send>>",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal"
+    }
+  ]
+}

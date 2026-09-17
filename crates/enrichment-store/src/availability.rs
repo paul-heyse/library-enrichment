@@ -10,8 +10,7 @@ use enrichment_core::{
 enrichment_core::native_struct! {
 struct Input {
     observed: Option<ObservedConfiguration> => Rule::Text,
-    features: Vec<String> => Rule::Set,
-    features_known: bool => Rule::Text,
+    features: Option<Vec<String>> => Rule::Set,
     default_features: Option<bool> => Rule::Text,
     target: Option<String> => Rule::Text,
     cfg_hints: Option<Vec<String>> => Rule::Sequence,
@@ -31,13 +30,16 @@ pub async fn select(
         Input::batch(&[Input {
             observed: observed.cloned(),
             features: environment.features.clone(),
-            features_known: environment.features_known,
             default_features: environment.default_features,
             target: environment.target.clone(),
             cfg_hints: cfg_hints.map(<[String]>::to_vec),
         }])?,
     )?;
-    let requested = session.sql("SELECT observed, cfg_hints, CASE WHEN features_known OR cardinality(features)>0 THEN features ELSE NULL END AS features, default_features,target FROM availability_input").await?;
+    let requested = session
+        .sql(
+            "SELECT observed, cfg_hints, features, default_features,target FROM availability_input",
+        )
+        .await?;
     let requested = requested.select(vec![
         datafusion::prelude::col("observed"),
         datafusion::prelude::col("cfg_hints"),

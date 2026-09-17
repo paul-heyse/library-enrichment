@@ -1,0 +1,197 @@
+{
+  "_comment": [
+    "The `rejected` field is load-bearing. For this subject a reader's first instinct is almost",
+    "always `read the documentation`, and that instinct loses sixteen methods. Naming the wrong",
+    "source and WHY it is wrong is the whole value of a row; a row that only named the right",
+    "artifact would leave the instinct untouched.",
+    "",
+    "Every `recipe` is executed by verify.py and must return something."
+  ],
+  "preamble": "Eighteen questions. The third column is the one to read: it names the source you were about to trust and says what it would have told you.",
+  "areas": ["Configuring it", "Calling it", "Reading the trace", "Wiring it up", "Checking your own code"],
+  "questions": [
+    {
+      "question": "How do I configure InstrumentationOptions?",
+      "area": "Configuring it",
+      "entry_point": "catalogs/options.md",
+      "rejected": [
+        ["docs.rs", "InstrumentationOptionsBuilder answers 404 and is absent from all.html, so the documentation shows a builder() returning a type with no methods"],
+        ["struct literal", "the four fields are pub, so it compiles -- and there is no field for add_custom_field, whose whole job is to add keys"]
+      ],
+      "recipe": "rg -P '\\treachable-undocumented\\t' content/index/methods.tsv | cut -f1,2",
+      "probe": "-"
+    },
+    {
+      "question": "Which RuleInstrumentationOptions constructor do I want?",
+      "area": "Configuring it",
+      "entry_point": "catalogs/options.md",
+      "rejected": [
+        ["full() or phase_only()", "those are the only two documented, and neither instruments a single phase; the ten per-phase selectors are on the undocumented builder"]
+      ],
+      "recipe": "rg -P 'RuleInstrumentationOptionsBuilder\\t' content/index/methods.tsv | cut -f2",
+      "probe": "-"
+    },
+    {
+      "question": "How do I turn on result previews?",
+      "area": "Configuring it",
+      "entry_point": "seams/preview.md",
+      "rejected": [
+        ["preview_limit alone", "it sets a row count; with no preview_fn there is nothing to render and the field never appears"]
+      ],
+      "recipe": "rg -P '\\tdatafusion.preview\\t' content/index/span-fields.tsv",
+      "probe": "S002"
+    },
+    {
+      "question": "How do I record DataFusion metrics on the spans?",
+      "area": "Configuring it",
+      "entry_point": "seams/metrics.md",
+      "rejected": [
+        ["the metrics module", "metrics.rs is private; record_metrics(true) on the options builder is the only switch"]
+      ],
+      "recipe": "rg -P '\\tmetric\\t' content/index/span-fields.tsv | head -5",
+      "probe": "S003"
+    },
+    {
+      "question": "Which macro do I call to instrument execution?",
+      "area": "Calling it",
+      "entry_point": "catalogs/macros.md",
+      "rejected": [
+        ["new_instrument_rule", "it is #[doc(hidden)] and upstream says it is public only because the macros need it"],
+        ["InstrumentedExec::new", "the type is private by design and nothing public yields one"]
+      ],
+      "recipe": "rg -P '^instrument_with_info_spans\\t' content/index/macros.tsv | cut -f3",
+      "probe": "S001"
+    },
+    {
+      "question": "Which macro instruments the planning phases?",
+      "area": "Calling it",
+      "entry_point": "catalogs/macros.md",
+      "rejected": [
+        ["instrument_session_state", "it is advertised by lib.rs and appears in NEITHER rustdoc document, hosted or private"]
+      ],
+      "recipe": "rg -P '^instrument_rules_with_info_spans\\t' content/index/macros.tsv | cut -f3",
+      "probe": "-"
+    },
+    {
+      "question": "What arguments does the macro take?",
+      "area": "Calling it",
+      "entry_point": "index/macros.tsv",
+      "rejected": [
+        ["the rendered signature", "rustdoc renders a macro as its header alone; the arms carry the grammar and the body is elided at every format version"]
+      ],
+      "recipe": "cut -f1,3 content/index/macros.tsv | head -4",
+      "probe": "-"
+    },
+    {
+      "question": "Why does my custom field never appear on a span?",
+      "area": "Calling it",
+      "entry_point": "catalogs/macros.md",
+      "rejected": [
+        ["add_custom_field alone", "it sets a value; a tracing span's field set is fixed at creation, so the key must also be declared in the macro as field::Empty"]
+      ],
+      "recipe": "rg -n 'field::Empty' content/corpus/examples/integration-utils/src/lib.rs",
+      "probe": "S004"
+    },
+    {
+      "question": "Where do I register the instrumentation rule?",
+      "area": "Calling it",
+      "entry_point": "seams/exec-instrumentation.md",
+      "rejected": [
+        ["anywhere in the chain", "the rule captures the plan it is handed, so a rule added after it produces nodes nobody instrumented"]
+      ],
+      "recipe": "rg -n 'register the instrumentation rule last' content/corpus/docs/README.md",
+      "probe": "-"
+    },
+    {
+      "question": "How do I instrument the object store?",
+      "area": "Calling it",
+      "entry_point": "seams/object-store.md",
+      "rejected": [
+        ["InstrumentationOptions", "object-store instrumentation is a separate crate and a separate call; no option enables it"]
+      ],
+      "recipe": "rg -P 'instrument_object_store' content/index/symbols.tsv",
+      "probe": "S008"
+    },
+    {
+      "question": "What span names will I see?",
+      "area": "Reading the trace",
+      "entry_point": "catalogs/spans.md",
+      "rejected": [
+        ["the source", "span names are macro-generated and node-dependent; the observed set comes from upstream's snapshots"]
+      ],
+      "recipe": "cut -f1,2 content/index/spans.tsv",
+      "probe": "-"
+    },
+    {
+      "question": "What fields does a node span carry?",
+      "area": "Reading the trace",
+      "entry_point": "index/span-fields.tsv",
+      "rejected": [
+        ["a fixed list", "datafusion.metrics.* is built with format!() from whatever the node reports, so the vocabulary is open"]
+      ],
+      "recipe": "rg -P '^InstrumentedExec\\t' content/index/span-fields.tsv | cut -f2,3,6",
+      "probe": "-"
+    },
+    {
+      "question": "Why does my EnvFilter receive nothing?",
+      "area": "Reading the trace",
+      "entry_point": "catalogs/spans.md",
+      "rejected": [
+        ["datafusion_tracing=info", "the macros default target: to module_path!(), which expands at the CALL SITE, so the spans carry your crate's target and not this library's"]
+      ],
+      "recipe": "cut -f1,2 content/index/spans.tsv | rg -v 'instrumented_object_store'",
+      "probe": "S006"
+    },
+    {
+      "question": "What does a preview actually look like?",
+      "area": "Reading the trace",
+      "entry_point": "index/previews.tsv",
+      "rejected": [
+        ["the signature of pretty_format_compact_batch", "four integers and a Result; nothing in it says what happens to a column that does not fit"]
+      ],
+      "recipe": "rg -P '\\tcompact\\t' content/index/previews.tsv | head -3",
+      "probe": "S005"
+    },
+    {
+      "question": "Which opentelemetry versions go together?",
+      "area": "Wiring it up",
+      "entry_point": "catalogs/compatibility.md",
+      "rejected": [
+        ["matching minors", "tracing-opentelemetry runs one minor AHEAD of the opentelemetry family, and a mismatched pair fails with a trait error that never mentions versions"],
+        ["crates.io latest", "the newest releases have already moved past anything datafusion-tracing has shipped against"]
+      ],
+      "recipe": "cut -f1,7,10 content/index/compatibility.tsv | head -5",
+      "probe": "-"
+    },
+    {
+      "question": "Which DataFusion version does this release need?",
+      "area": "Wiring it up",
+      "entry_point": "index/compatibility.tsv",
+      "rejected": [
+        ["the version number", "it has matched DataFusion's major at every release, but the column is read from each release's own manifest rather than assumed"]
+      ],
+      "recipe": "cut -f1,4 content/index/compatibility.tsv | head -5",
+      "probe": "-"
+    },
+    {
+      "question": "How do I set up a subscriber and an OTLP exporter?",
+      "area": "Wiring it up",
+      "entry_point": "content/corpus/examples/otlp.rs",
+      "rejected": [
+        ["this library", "it emits spans and collects nothing; until a Subscriber is installed there is no output at all"]
+      ],
+      "recipe": "rg -n 'tracing_opentelemetry::layer|SdkTracerProvider' content/corpus/examples/otlp.rs",
+      "probe": "-"
+    },
+    {
+      "question": "What is my own code leaving on the table?",
+      "area": "Checking your own code",
+      "entry_point": "queries/rules/project/",
+      "rejected": [
+        ["reading the diff", "the mistakes here do not fail loudly: a rule registered too early still compiles and still traces, just not the plan you meant"]
+      ],
+      "recipe": "ls queries/rules/project/",
+      "probe": "-"
+    }
+  ]
+}

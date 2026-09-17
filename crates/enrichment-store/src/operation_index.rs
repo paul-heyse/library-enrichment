@@ -1,421 +1,604 @@
-//! Once-only native key/score computation shared by count and page in one operation.
-//!
-//! DataFusion's spill writer owns the temporary bytes and quota; its streaming provider
-//! owns scans. This is not a persisted cache: the private provider is never registered in
-//! the daemon template, and its last reader drops the spill and captured snapshot leases.
+//! Declared operation intermediates, planned through DataFusion CacheFactory (ADR-0052).
+//! Planning never fills a cache. The immutable binding owns one execution-time result across
+//! separately prepared readers; native spill and the existing runtime own physical resources.
 use std::{
+    cmp::Ordering,
     fmt,
-    io::{self, Write},
-    sync::Arc,
+    hash::{Hash, Hasher},
+    sync::{
+        Arc, OnceLock,
+        atomic::{AtomicU8, AtomicU64, Ordering as AtomicOrdering},
+    },
 };
 
-use arrow::{
-    buffer::Buffer,
-    datatypes::SchemaRef,
-    ipc::{reader::StreamDecoder, writer::StreamWriter},
-};
+use async_trait::async_trait;
 use datafusion::{
-    catalog::{TableProvider, streaming::StreamingTable},
+    catalog::Session,
+    common::{DFSchemaRef, Result, tree_node::TreeNodeRecursion},
     dataframe::DataFrame,
-    error::Result,
-    execution::{
-        TaskContext,
-        disk_manager::DiskManager,
-        memory_pool::MemoryConsumer,
-        spill_file::{SpillFile, SpillWriter},
+    error::DataFusionError,
+    execution::{SessionState, TaskContext, session_state::CacheFactory},
+    logical_expr::{
+        Expr, Extension, LogicalPlan, UserDefinedLogicalNode, UserDefinedLogicalNodeCore,
+        physical_planning_context::PhysicalPlanningContext,
     },
     physical_plan::{
-        SendableRecordBatchStream, stream::RecordBatchStreamAdapter, streaming::PartitionStream,
+        DisplayAs, DisplayFormatType, ExecutionPlan, Partitioning, PlanProperties,
+        SendableRecordBatchStream,
+        execution_plan::{Boundedness, EmissionType},
+        metrics::{ExecutionPlanMetricsSet, MetricBuilder, MetricsSet},
+        stream::RecordBatchStreamAdapter,
     },
+    physical_planner::{ExtensionPlanner, PhysicalPlanner},
 };
-use futures::TryStreamExt;
+use enrichment_core::telemetry::{
+    MaterializationActivity, MaterializationFamily, MaterializationObservation,
+};
+use futures::{
+    FutureExt, TryStreamExt,
+    future::{BoxFuture, Shared},
+};
 
 use crate::{
     preparation::QueryFamily,
     runtime::{OperationContext, QueryRuntime},
 };
 
-/// DataFusion 55.1's OS spill writer returns an untyped io::ErrorKind::Other on quota
-/// exhaustion. Preserve a typed witness where the public counters prove the limit before
-/// writing. The native writer still owns atomic quota enforcement under concurrent writes;
-/// an ambiguous native I/O failure remains I/O, never a classification guessed from text.
-struct IndexWriter {
-    inner: Box<dyn SpillWriter>,
-    disk: Arc<DiskManager>,
-}
-impl Write for IndexWriter {
-    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        let observed = self
-            .disk
-            .used_disk_space()
-            .saturating_add(bytes.len() as u64);
-        let allowed = self.disk.max_temp_directory_size();
-        if observed > allowed {
-            return Err(io::Error::other(
-                datafusion::error::DataFusionError::External(Box::new(
-                    crate::runtime::BudgetFailure {
-                        rule: "operation index spill bytes".into(),
-                        cause: enrichment_core::wire::DiagnosticCause::Capacity,
-                        observed: Some(observed),
-                        allowed: Some(allowed),
-                        operation_id: crate::runtime::operation_id(),
-                    },
-                )),
-            ));
-        }
-        self.inner.write(bytes)
-    }
-    fn flush(&mut self) -> io::Result<()> {
-        self.inner.flush()
-    }
-}
-impl SpillWriter for IndexWriter {
-    fn finish(&mut self) -> Result<()> {
-        self.inner.finish()
-    }
-}
+mod spill;
+#[cfg(test)]
+mod tests;
 
-struct IndexPartition {
-    schema: SchemaRef,
-    file: Arc<dyn SpillFile>,
-    max_batch_bytes: usize,
+type FillResult = std::result::Result<Arc<spill::Filled>, Arc<DataFusionError>>;
+type SharedFill = Shared<BoxFuture<'static, FillResult>>;
+static NEXT_BINDING: AtomicU64 = AtomicU64::new(1);
+const UNSTARTED: u8 = 0;
+const FILLING: u8 = 1;
+const READY: u8 = 2;
+const FAILED: u8 = 3;
+const CANCELLED: u8 = 4;
+
+#[derive(Clone)]
+struct Observer {
+    id: u64,
+    family: MaterializationFamily,
     operation: OperationContext,
     history: crate::telemetry_history::History,
 }
-
-impl fmt::Debug for IndexPartition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("OperationIndex")
-            .field("max_batch_bytes", &self.max_batch_bytes)
-            .finish_non_exhaustive()
+impl Observer {
+    fn emit(&self, activity: MaterializationActivity) {
+        self.history.materialization(
+            self.operation.id(),
+            MaterializationObservation {
+                binding: self.id,
+                family: self.family,
+                activity,
+            },
+        );
     }
 }
 
-impl PartitionStream for IndexPartition {
-    fn schema(&self) -> &SchemaRef {
-        &self.schema
+struct Binding {
+    id: u64,
+    family: MaterializationFamily,
+    runtime: QueryRuntime,
+    observer: Observer,
+    input: LogicalPlan,
+    session: SessionState,
+    options: Vec<(String, Option<String>)>,
+    state: Arc<AtomicU8>,
+    fill: OnceLock<SharedFill>,
+    metrics: ExecutionPlanMetricsSet,
+}
+impl fmt::Debug for Binding {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MaterializationBinding")
+            .field("id", &self.id)
+            .field("family", &self.family.as_str())
+            .field("operation", &self.observer.operation.id())
+            .field("definition", &crate::runtime::DEFINITION_REVISION)
+            .field("state", &self.state.load(AtomicOrdering::Acquire))
+            .finish_non_exhaustive()
     }
-
-    fn execute(&self, ctx: Arc<TaskContext>) -> SendableRecordBatchStream {
-        self.history.index(self.operation.id(), None);
-        let schema = Arc::clone(self.schema());
-        let result = (|| {
-            // One unbuffered IPC batch plus decode workspace. Charge before opening the
-            // reader, and keep both reservation and operation leases until stream drop.
-            let reservation =
-                MemoryConsumer::new("operation_index_reader").register(ctx.memory_pool());
-            // The pinned native spill reader uses a 128 KiB byte buffer independently of
-            // this index's batch size; account for it even when batches are tiny.
-            reservation.try_grow(
-                self.max_batch_bytes
-                    .saturating_mul(2)
-                    .saturating_add(128 * 1024),
-            )?;
-            let input = self.file.read_stream()?;
-            let file = Arc::clone(&self.file);
-            let operation = self.operation.clone();
-            let state = (
-                input,
-                StreamDecoder::new(),
-                Buffer::from(&[]),
-                file,
-                reservation,
-                operation,
-            );
-            let input = futures::stream::try_unfold(state, |mut state| async move {
-                loop {
-                    if !state.2.is_empty()
-                        && let Some(batch) = state.1.decode(&mut state.2)?
-                    {
-                        return Ok(Some((batch, state)));
-                    }
-                    match state.0.try_next().await? {
-                        Some(bytes) => state.2 = Buffer::from(bytes),
-                        None => {
-                            state.1.finish()?;
-                            return Ok(None);
+}
+fn options(session: &dyn Session) -> Vec<(String, Option<String>)> {
+    let mut entries: Vec<_> = session
+        .config_options()
+        .entries()
+        .into_iter()
+        .map(|entry| (entry.key, entry.value))
+        .collect();
+    entries.sort();
+    entries
+}
+fn invalid(rule: &str) -> DataFusionError {
+    crate::preparation::InvariantFailure::contract(rule, "operation_materialization", vec![])
+}
+impl Binding {
+    fn require(&self, session: &dyn Session) -> Result<()> {
+        self.observer.operation.require_current()?;
+        if self.options != options(session)
+            || !Arc::ptr_eq(&self.runtime.session().runtime_env(), session.runtime_env())
+        {
+            return Err(invalid("materialization session policy/runtime changed"));
+        }
+        QueryFamily::Intermediate(self.family).require(self.input.schema().as_arrow())
+    }
+    fn shared(
+        &self,
+        input: Arc<dyn ExecutionPlan>,
+        context: Arc<TaskContext>,
+        admission: crate::runtime::QueryAdmission,
+    ) -> SharedFill {
+        self.fill.get_or_init(|| {
+            self.state.store(FILLING, AtomicOrdering::Release);
+            MetricBuilder::new(&self.metrics).counter("cache_fills", 0).add(1);
+            let runtime = self.runtime.clone();
+            let observer = self.observer.clone();
+            let operation = observer.operation.clone();
+            observer.emit(MaterializationActivity::Fill);
+            let metrics = self.metrics.clone();
+            let state = self.state.clone();
+            // The task owns no Binding or SharedFill: dropping the last binding can abort
+            // it, and dropping one waiter cannot. Already-running blocking callbacks retain
+            // their input/spill/reservation and physical-exit token independently.
+            let task = self.runtime.spawn(admission.scope(async move {
+                let outcome = async {
+                    let cancellation = operation.cancellation()?;
+                    let remaining = runtime.remaining()?;
+                    tokio::select! {
+                        biased;
+                        () = cancellation.cancelled() => {
+                            state.store(CANCELLED, AtomicOrdering::Release);
+                            Err(invalid("operation materialization cancelled"))
+                        }
+                        result = tokio::time::timeout(remaining, spill::fill(
+                            runtime.clone(), input, context, metrics.clone()
+                        )) => match result {
+                            Ok(result) => result,
+                            Err(_) => {
+                                state.store(CANCELLED, AtomicOrdering::Release);
+                                Err(DataFusionError::External(Box::new(crate::runtime::BudgetFailure {
+                                    rule: "operation materialization deadline".into(),
+                                    cause: enrichment_core::wire::DiagnosticCause::Capacity,
+                                    observed: None, allowed: None,
+                                    operation_id: operation.id().map(str::to_owned),
+                                })))
+                            }
                         }
                     }
+                }.await;
+                match outcome {
+                    Ok(value) => {
+                        observer.emit(MaterializationActivity::Ready { spill_bytes: value.bytes() });
+                        state.store(READY, AtomicOrdering::Release);
+                        Ok(Arc::new(value))
+                    }
+                    Err(error) => {
+                        if state.load(AtomicOrdering::Acquire) != CANCELLED {
+                            state.store(FAILED, AtomicOrdering::Release);
+                        }
+                        observer.emit(if state.load(AtomicOrdering::Acquire) == CANCELLED {
+                            MaterializationActivity::Cancelled
+                        } else { MaterializationActivity::Failed });
+                        MetricBuilder::new(&metrics).counter("cache_failures", 0).add(1);
+                        Err(Arc::new(error))
+                    }
                 }
-            });
-            Ok(
-                Box::pin(RecordBatchStreamAdapter::new(Arc::clone(&schema), input))
-                    as SendableRecordBatchStream,
-            )
-        })();
-        result.unwrap_or_else(|error| {
-            Box::pin(RecordBatchStreamAdapter::new(
-                schema,
-                futures::stream::once(async move { Err(error) }),
-            ))
+            }));
+            async move {
+                task.await.map_err(|error| Arc::new(DataFusionError::Execution(
+                    format!("owned materialization task: {error}")
+                )))?
+            }.boxed().shared()
+        }).clone()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Materialization {
+    input: LogicalPlan,
+    binding: Arc<Binding>,
+    admitted: bool,
+}
+impl PartialEq for Materialization {
+    fn eq(&self, other: &Self) -> bool {
+        self.binding.id == other.binding.id
+            && self.admitted == other.admitted
+            && self.input == other.input
+    }
+}
+impl Eq for Materialization {}
+impl Hash for Materialization {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.binding.id.hash(state);
+        self.admitted.hash(state);
+        self.input.hash(state);
+    }
+}
+impl PartialOrd for Materialization {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self == other {
+            Some(Ordering::Equal)
+        } else {
+            None
+        }
+    }
+}
+impl UserDefinedLogicalNodeCore for Materialization {
+    fn name(&self) -> &str {
+        "OperationMaterialization"
+    }
+    fn inputs(&self) -> Vec<&LogicalPlan> {
+        vec![&self.input]
+    }
+    fn schema(&self) -> &DFSchemaRef {
+        self.binding.input.schema()
+    }
+    fn expressions(&self) -> Vec<Expr> {
+        vec![]
+    }
+    fn fmt_for_explain(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "OperationMaterialization: {} binding={} operation={}",
+            self.binding.family.as_str(),
+            self.binding.id,
+            self.binding.observer.operation.id().unwrap_or("unbound")
+        )
+    }
+    fn with_exprs_and_inputs(
+        &self,
+        exprs: Vec<Expr>,
+        mut inputs: Vec<LogicalPlan>,
+    ) -> Result<Self> {
+        if !exprs.is_empty() || inputs.len() != 1 {
+            return Err(invalid(
+                "materialization input changed; bind a new intermediate",
+            ));
+        }
+        let input = inputs.remove(0);
+        if input != self.binding.input
+            && self.binding.session.optimize(&input)? != self.binding.input
+        {
+            return Err(invalid(
+                "materialization input changed; bind a new intermediate",
+            ));
+        }
+        Ok(Self {
+            input: self.binding.input.clone(),
+            ..self.clone()
         })
+    }
+    // Default predicate/projection/limit barriers keep every reader outside the shared base.
+}
+
+#[derive(Debug)]
+pub(crate) struct OperationCacheFactory;
+impl CacheFactory for OperationCacheFactory {
+    fn create(&self, plan: LogicalPlan, state: &SessionState) -> Result<LogicalPlan> {
+        let LogicalPlan::Extension(extension) = plan else {
+            return Err(invalid(
+                "cache requires an explicitly declared operation binding",
+            ));
+        };
+        let Some(request) = extension.node.as_any().downcast_ref::<Materialization>() else {
+            return Err(invalid(
+                "cache requires an explicitly declared operation binding",
+            ));
+        };
+        request.binding.require(state)?;
+        Ok(LogicalPlan::Extension(Extension {
+            node: Arc::new(Materialization {
+                admitted: true,
+                ..request.clone()
+            }),
+        }))
+    }
+}
+
+/// Admit immutable native input before optimization can erase an effect or volatile expression.
+fn admit_source(source: &dyn datafusion::catalog::TableProvider, depth: usize) -> Result<()> {
+    if depth > 64 {
+        return Err(invalid("materialization provider nesting bound"));
+    }
+    if let Some(plan) = source.get_logical_plan() {
+        admit(&plan, depth + 1)
+    } else if let Some(leased) = source.downcast_ref::<crate::leases::LeasedProvider>() {
+        let input = leased.materialization_source()?;
+        if let Some(plan) = input.get_logical_plan() {
+            admit(&plan, depth + 1)
+        } else {
+            Ok(())
+        }
+    } else if let Some(admitted) =
+        source.downcast_ref::<crate::admitted_provider::AdmittedProvider>()
+    {
+        if admitted.is_captured_batch() {
+            Ok(())
+        } else {
+            admit_source(admitted.input().as_ref(), depth + 1)
+        }
+    } else {
+        Err(invalid(
+            "materialization input lacks immutable retention binding",
+        ))
+    }
+}
+
+fn admit(input: &LogicalPlan, depth: usize) -> Result<()> {
+    if depth > 64 {
+        return Err(invalid("materialization view nesting bound"));
+    }
+    input.apply_with_subqueries(|plan| {
+        match plan {
+            LogicalPlan::Dml(_)
+            | LogicalPlan::Ddl(_)
+            | LogicalPlan::Copy(_)
+            | LogicalPlan::Statement(_)
+            | LogicalPlan::Explain(_)
+            | LogicalPlan::Analyze(_)
+            | LogicalPlan::DescribeTable(_)
+            | LogicalPlan::RecursiveQuery(_) => {
+                return Err(invalid("effect or unsupported input in materialization"));
+            }
+            LogicalPlan::Extension(extension) => {
+                if let Some(cache) = extension.node.as_any().downcast_ref::<Materialization>() {
+                    if !cache.admitted {
+                        return Err(invalid("unadmitted nested materialization"));
+                    }
+                    cache.binding.observer.operation.require_current()?;
+                } else if !extension
+                    .node
+                    .as_any()
+                    .is::<crate::arrow_contract::ArrowContract>()
+                    && !extension.node.as_any().is::<crate::leases::Retention>()
+                {
+                    return Err(invalid("unsupported extension in materialization"));
+                }
+            }
+            LogicalPlan::TableScan(scan) => {
+                let source = datafusion::datasource::source_as_provider(&scan.source)?;
+                admit_source(source.as_ref(), depth + 1)?;
+            }
+            _ => {}
+        }
+        if plan.expressions().iter().any(Expr::is_volatile) {
+            return Err(invalid("volatile input in materialization"));
+        }
+        Ok(TreeNodeRecursion::Continue)
+    })?;
+    Ok(())
+}
+
+/// Bind a family once, then let DataFusion plan every count/page consumer of the cached frame.
+pub(crate) async fn cache(
+    runtime: &QueryRuntime,
+    frame: DataFrame,
+    family: QueryFamily,
+) -> Result<DataFrame> {
+    let family = family
+        .materialization()
+        .ok_or_else(|| invalid("undeclared materialization family"))?;
+    let operation = crate::runtime::capture_operation();
+    operation.require_current()?;
+    let frame = crate::provider::derived(frame, "operation_index")?;
+    let (state, input) = frame.into_parts();
+    admit(&input, 0)?;
+    enrichment_core::native_analysis::validate_plan(&input)?;
+    // Seal the fully analyzed and optimized meaning before sharing. Later consumers may
+    // rewrite above this boundary; a changed base must create its own binding.
+    let input = state.optimize(&input)?;
+    QueryFamily::Intermediate(family).require(input.schema().as_arrow())?;
+    let id = NEXT_BINDING.fetch_add(1, AtomicOrdering::Relaxed);
+    let binding = Arc::new(Binding {
+        id,
+        family,
+        observer: Observer {
+            id,
+            family,
+            operation,
+            history: runtime.native_history(),
+        },
+        runtime: runtime.clone(),
+        input: input.clone(),
+        options: options(&state),
+        session: state.clone(),
+        state: Arc::new(AtomicU8::new(UNSTARTED)),
+        fill: OnceLock::new(),
+        metrics: ExecutionPlanMetricsSet::new(),
+    });
+    DataFrame::new(
+        state,
+        LogicalPlan::Extension(Extension {
+            node: Arc::new(Materialization {
+                input,
+                binding,
+                admitted: false,
+            }),
+        }),
+    )
+    .cache()
+    .await
+}
+
+/// Count is a native aggregate over the shared base, never fill completion metadata.
+pub(crate) async fn count(runtime: &QueryRuntime, frame: DataFrame) -> Result<u64> {
+    use datafusion::{functions_aggregate::expr_fn::count, prelude::lit};
+    let counted = frame.aggregate(
+        vec![],
+        vec![
+            datafusion::logical_expr::expr_fn::cast(
+                count(lit(1)),
+                arrow::datatypes::DataType::UInt64,
+            )
+            .alias("count"),
+        ],
+    )?;
+    let output = runtime
+        .execute_family(counted, Some(QueryFamily::CountUnsigned))
+        .await?;
+    Ok(crate::projection::search::count(&output.batches)?)
+}
+
+pub(crate) struct MaterializationPlanner;
+#[async_trait]
+impl ExtensionPlanner for MaterializationPlanner {
+    async fn plan_extension(
+        &self,
+        _: &dyn PhysicalPlanner,
+        node: &dyn UserDefinedLogicalNode,
+        _: &[&LogicalPlan],
+        inputs: &[Arc<dyn ExecutionPlan>],
+        session: &dyn Session,
+        _: &PhysicalPlanningContext,
+    ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
+        let Some(cache) = node.as_any().downcast_ref::<Materialization>() else {
+            return Ok(None);
+        };
+        if !cache.admitted || inputs.len() != 1 {
+            return Err(invalid("unadmitted materialization or physical arity"));
+        }
+        cache.binding.require(session)?;
+        Ok(Some(Arc::new(MaterializationExec::new(
+            inputs[0].clone(),
+            cache.binding.clone(),
+        )?)))
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct CompletedIndex {
-    provider: Arc<dyn TableProvider>,
-    pub(crate) rows: u64,
-    family: QueryFamily,
-    operation_id: Option<String>,
+struct MaterializationExec {
+    input: Arc<dyn ExecutionPlan>,
+    binding: Arc<Binding>,
+    properties: Arc<PlanProperties>,
 }
-
-impl CompletedIndex {
-    pub(crate) fn register(
-        self,
-        session: &datafusion::prelude::SessionContext,
-        name: &str,
-    ) -> Result<()> {
-        if self.operation_id != crate::runtime::operation_id() {
-            return Err(datafusion::error::DataFusionError::Execution(
-                "completed index belongs to another operation".into(),
+impl MaterializationExec {
+    fn new(input: Arc<dyn ExecutionPlan>, binding: Arc<Binding>) -> Result<Self> {
+        if input.schema().as_ref() != binding.input.schema().as_arrow() {
+            return Err(invalid("materialization physical schema changed"));
+        }
+        if input.properties().boundedness != Boundedness::Bounded {
+            return Err(invalid(
+                "operation materialization requires a bounded input",
             ));
         }
-        self.family.require(&self.provider.schema())?;
-        crate::native_catalog::work(session, name, self.provider)
-    }
-}
-
-/// Materialize only a declared operation index, not evidence payloads or an arbitrary table.
-/// Upstream plans, all scan batches, writer work and readers retain the operation deadline.
-pub(crate) async fn materialize(
-    runtime: &QueryRuntime,
-    frame: DataFrame,
-    family: QueryFamily,
-) -> Result<CompletedIndex> {
-    if !matches!(
-        family,
-        QueryFamily::SearchIndex
-            | QueryFamily::ComparisonKeys
-            | QueryFamily::OverviewChildren
-            | QueryFamily::OverviewNamespaces
-    ) {
-        return Err(datafusion::error::DataFusionError::Internal(
-            "only a declared key/score index may be retained for operation reuse".into(),
+        // FIFO replay preserves a single input's equivalences, proven keys and ordering.
+        // Combining partitions establishes neither global order nor partition constants.
+        let mut equivalence = input.properties().eq_properties.clone();
+        if input.properties().partitioning.partition_count() > 1 {
+            equivalence.clear_orderings();
+            equivalence.clear_per_partition_constants();
+        }
+        let properties = Arc::new(PlanProperties::new(
+            equivalence,
+            Partitioning::UnknownPartitioning(1),
+            EmissionType::Final,
+            Boundedness::Bounded,
         ));
-    }
-    // Declare exact native output fields across Parquet string-view adaptation before IPC.
-    let session = runtime.session();
-    let frame = crate::provider::derived(frame, "operation_index")?;
-    let schema = Arc::new(frame.schema().as_arrow().clone());
-    let env = session.runtime_env();
-    let file = env
-        .disk_manager
-        .create_tmp_file("operation key/score index")?;
-    let output = Arc::clone(&file);
-    let fields = Arc::clone(&schema);
-    let disk = Arc::clone(&env.disk_manager);
-    let writer = runtime
-        .blocking(move || -> Result<_> {
-            Ok(StreamWriter::try_new(
-                IndexWriter {
-                    inner: output.open_writer()?,
-                    disk,
-                },
-                &fields,
-            )?)
+        Ok(Self {
+            input,
+            binding,
+            properties,
         })
-        .await??;
-    let pool = Arc::clone(&env.memory_pool);
-    let completed = runtime
-        .fold_blocking(
-            frame,
-            family,
-            usize::MAX,
-            (writer, 0usize),
-            move |(mut writer, maximum), batch| {
-                let size = batch.get_array_memory_size();
-                let reservation = MemoryConsumer::new("operation_index_writer").register(&pool);
-                reservation.try_grow(size.saturating_mul(2))?;
-                writer.write(batch)?;
-                Ok((writer, maximum.max(size)))
-            },
-        )
-        .await?;
-    let (writer, max_batch_bytes) = completed.value;
-    runtime
-        .blocking(move || -> Result<()> { writer.into_inner()?.finish() })
-        .await??;
-    let bytes = file.size().ok_or_else(|| {
-        datafusion::error::DataFusionError::Internal(
-            "operation index needs an accounted local spill file".into(),
-        )
-    })?;
-    runtime
-        .index_history()
-        .index(crate::runtime::capture_operation().id(), Some(bytes));
-    let partition = IndexPartition {
-        schema: Arc::clone(&schema),
-        file,
-        max_batch_bytes,
-        operation: crate::runtime::capture_operation(),
-        history: runtime.index_history(),
-    };
-    // Publish only properties of the completed native stream. Complex physical sort
-    // expressions stay unknown until a supported logical representation is established.
-    let ordering = completed
-        .properties
-        .output_ordering()
-        .and_then(|order| {
-            order
-                .iter()
-                .map(|sort| {
-                    sort.expr
-                        .downcast_ref::<datafusion::physical_expr::expressions::Column>()
-                        .map(|column| {
-                            datafusion::prelude::col(column.name())
-                                .sort(!sort.options.descending, sort.options.nulls_first)
-                        })
-                })
-                .collect::<Option<Vec<_>>>()
-        })
-        .unwrap_or_default();
-    let provider = StreamingTable::try_new(schema, vec![Arc::new(partition)])?
-        .with_sort_order(ordering)
-        .with_output_partitioning(completed.properties.partitioning.clone());
-    Ok(CompletedIndex {
-        provider: Arc::new(provider),
-        rows: completed.rows as u64,
-        family,
-        operation_id: crate::runtime::operation_id(),
-    })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::runtime::QueryLimits;
-
-    async fn input(runtime: &QueryRuntime) -> DataFrame {
-        runtime.session().sql("SELECT CAST(0 AS BIGINT UNSIGNED) AS plan, 'α' AS key, 'one' AS label UNION ALL SELECT CAST(0 AS BIGINT UNSIGNED), 'β', NULL UNION ALL SELECT CAST(0 AS BIGINT UNSIGNED), 'α', 'one'").await.unwrap()
-    }
-
-    #[tokio::test]
-    async fn index_replays_exact_native_rows_and_drops_quota_after_last_reader() {
-        let dir = tempfile::tempdir().unwrap();
-        let runtime = QueryRuntime::new(dir.path(), QueryLimits::default()).unwrap();
-        let env = runtime.session().runtime_env();
-        let index = materialize(&runtime, input(&runtime).await, QueryFamily::ComparisonKeys)
-            .await
-            .unwrap();
-        assert_eq!(index.rows, 3);
-        assert_eq!(
-            runtime.diagnostic_summary().await.unwrap().index_reads,
-            0,
-            "count is completion metadata, not an IPC replay"
-        );
-        assert!(env.disk_manager.used_disk_space() > 0);
-        let session = runtime.session();
-        let frame = session.read_table(Arc::clone(&index.provider)).unwrap();
-        crate::native_catalog::work(&session, "keys", frame.into_view()).unwrap();
-        let result = runtime.execute(session.sql("SELECT key, label, count(*) AS count FROM keys GROUP BY key, label ORDER BY key").await.unwrap()).await.unwrap();
-        let text = arrow::util::pretty::pretty_format_batches(&result.batches)
-            .unwrap()
-            .to_string();
-        assert!(text.contains("α   | one   | 2"), "{text}");
-        assert!(text.contains("β   |       | 1"), "{text}");
-        let frame = session
-            .table("keys")
-            .await
-            .unwrap()
-            .limit(0, Some(1))
-            .unwrap();
-        drop(session);
-        drop(index);
-        assert!(
-            env.disk_manager.used_disk_space() > 0,
-            "selected reader keeps file alive"
-        );
-        assert_eq!(runtime.execute(frame).await.unwrap().rows, 1);
-        assert_eq!(env.disk_manager.used_disk_space(), 0);
-        assert_eq!(env.memory_pool.reserved(), 0);
-    }
-
-    #[tokio::test]
-    async fn completed_ordering_has_real_ties_nulls_and_projection_behavior() {
-        use datafusion::{physical_plan::ExecutionPlanProperties, prelude::col};
-        let dir = tempfile::tempdir().unwrap();
-        let runtime = QueryRuntime::new(dir.path(), QueryLimits::default()).unwrap();
-        for sorted in [false, true] {
-            let frame = input(&runtime).await;
-            let order = vec![col("label").sort(true, true), col("key").sort(false, false)];
-            let frame = if sorted {
-                frame.sort(order.clone()).unwrap()
-            } else {
-                frame
-            };
-            let index = materialize(&runtime, frame, QueryFamily::ComparisonKeys)
-                .await
-                .unwrap();
-            assert_eq!(index.rows, 3);
-            let session = runtime.session();
-            let frame = session.read_table(index.provider).unwrap();
-            let physical = frame.clone().create_physical_plan().await.unwrap();
-            assert_eq!(physical.output_ordering().is_some(), sorted);
-            assert_eq!(physical.output_partitioning().partition_count(), 1);
-            let selected = frame
-                .clone()
-                .select(vec![col("key")])
-                .unwrap()
-                .create_physical_plan()
-                .await
-                .unwrap();
-            assert!(
-                selected.output_ordering().is_none(),
-                "dropping the leading key cannot preserve its order"
-            );
-            let rows = runtime.execute(frame.sort(order).unwrap()).await.unwrap();
-            let labels =
-                crate::projection::TextColumn::new(rows.batches[0].column(2).as_ref()).unwrap();
-            assert_eq!(labels.get(0), None);
-            assert_eq!(labels.get(1), Some("one"));
-            assert_eq!(labels.get(2), Some("one"));
-        }
-    }
-
-    #[tokio::test]
-    async fn empty_and_failed_index_release_native_spill_reservations() {
-        for spill_bytes in [128, 1024 * 1024] {
-            let dir = tempfile::tempdir().unwrap();
-            let runtime = QueryRuntime::new(
-                dir.path(),
-                QueryLimits {
-                    spill_bytes,
-                    ..Default::default()
-                },
-            )
-            .unwrap();
-            let env = runtime.session().runtime_env();
-            let input = input(&runtime)
-                .await
-                .filter(datafusion::prelude::lit(false))
-                .unwrap();
-            let result = materialize(&runtime, input, QueryFamily::ComparisonKeys).await;
-            if spill_bytes == 128 {
-                let error = result.expect_err("IPC header must respect the native disk quota");
-                assert_eq!(
-                    crate::QueryError::from(error).diagnostic().cause,
-                    enrichment_core::wire::DiagnosticCause::Capacity
-                );
-            } else {
-                let index = result.unwrap();
-                assert_eq!(index.rows, 0);
-                assert_eq!(runtime.diagnostic_summary().await.unwrap().index_reads, 0);
-                assert_eq!(
-                    runtime
-                        .execute(runtime.session().read_table(index.provider).unwrap())
-                        .await
-                        .unwrap()
-                        .rows,
-                    0
-                );
-            }
-            assert_eq!(env.disk_manager.used_disk_space(), 0);
-            assert_eq!(env.memory_pool.reserved(), 0);
-        }
     }
 }
-
-#[cfg(test)]
-#[path = "index_measurements.rs"]
-mod measurements;
+impl DisplayAs for MaterializationExec {
+    fn fmt_as(&self, _: DisplayFormatType, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "OperationMaterializationExec: {} binding={}",
+            self.binding.family.as_str(),
+            self.binding.id
+        )
+    }
+}
+impl ExecutionPlan for MaterializationExec {
+    fn cardinality_effect(&self) -> datafusion::physical_plan::execution_plan::CardinalityEffect {
+        datafusion::physical_plan::execution_plan::CardinalityEffect::Equal
+    }
+    fn child_stats_requests(
+        &self,
+        _: Option<usize>,
+    ) -> Vec<datafusion::physical_plan::statistics::ChildStats> {
+        // The one replay partition contains every input partition. Input partition 0
+        // alone is not its cardinality or column statistics.
+        vec![datafusion::physical_plan::statistics::ChildStats::At(None)]
+    }
+    fn statistics_from_inputs(
+        &self,
+        stats: &[Arc<datafusion::common::Statistics>],
+        args: &datafusion::physical_plan::statistics::StatisticsArgs,
+    ) -> Result<Arc<datafusion::common::Statistics>> {
+        if args.partition().is_some_and(|partition| partition != 0) {
+            return Err(invalid("materialization statistics partition"));
+        }
+        stats
+            .first()
+            .cloned()
+            .ok_or_else(|| invalid("materialization input statistics missing"))
+    }
+    fn name(&self) -> &str {
+        "OperationMaterializationExec"
+    }
+    fn properties(&self) -> &Arc<PlanProperties> {
+        &self.properties
+    }
+    fn children(&self) -> Vec<&Arc<dyn ExecutionPlan>> {
+        vec![&self.input]
+    }
+    fn apply_expressions(
+        &self,
+        _: &mut dyn FnMut(
+            &Arc<dyn datafusion::physical_expr::PhysicalExpr>,
+        ) -> Result<TreeNodeRecursion>,
+    ) -> Result<TreeNodeRecursion> {
+        Ok(TreeNodeRecursion::Continue)
+    }
+    fn with_new_children(
+        self: Arc<Self>,
+        mut children: Vec<Arc<dyn ExecutionPlan>>,
+    ) -> Result<Arc<dyn ExecutionPlan>> {
+        if children.len() != 1 {
+            return Err(invalid("materialization physical input arity"));
+        }
+        Ok(Arc::new(Self::new(
+            children.remove(0),
+            self.binding.clone(),
+        )?))
+    }
+    fn execute(
+        &self,
+        partition: usize,
+        context: Arc<TaskContext>,
+    ) -> Result<SendableRecordBatchStream> {
+        if partition != 0 {
+            return Err(invalid("materialization has one replay partition"));
+        }
+        self.binding.observer.operation.require_current()?;
+        let binding = self.binding.clone();
+        let input = self.input.clone();
+        let schema = self.schema();
+        let admission = crate::runtime::capture_query_admission();
+        let stream = futures::stream::once(async move {
+            binding.observer.operation.require_current()?;
+            binding.observer.emit(MaterializationActivity::Wait);
+            MetricBuilder::new(&binding.metrics)
+                .counter("cache_waiters", 0)
+                .add(1);
+            let filled = binding
+                .shared(input, context.clone(), admission)
+                .await
+                .map_err(DataFusionError::Shared)?;
+            binding.observer.operation.require_current()?;
+            MetricBuilder::new(&binding.metrics)
+                .counter("cache_reads", 0)
+                .add(1);
+            spill::read(filled, binding, context)
+        })
+        .try_flatten();
+        Ok(Box::pin(RecordBatchStreamAdapter::new(schema, stream)))
+    }
+    fn metrics(&self) -> Option<MetricsSet> {
+        Some(self.binding.metrics.clone_inner())
+    }
+}

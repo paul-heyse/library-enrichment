@@ -1,0 +1,179 @@
+{
+  "_comment": [
+    "datafusion-tracing is published on crates.io, so hosted rustdoc JSON exists -- and is not",
+    "enough. lib.rs declares `mod options;` and `mod rule_options;` PRIVATE and selectively",
+    "re-exports only InstrumentationOptions and RuleInstrumentationOptions. Both builders are",
+    "therefore public types in private modules: docs.rs serves 404 for them, they are absent",
+    "from all.html, and the rustdoc JSON carries the structs with zero impl blocks. Seventeen",
+    "public methods -- six of which the crate's own README quick-start chains -- exist in no",
+    "published artifact at all.",
+    "",
+    "So each subject crate is captured TWICE: once from docs.rs (the published surface) and once",
+    "locally with --document-private-items (the reachable surface). model.py diffs them into a",
+    "`visibility` column. See build/README.md and reference.md limit 3.",
+    "",
+    "The wiring crate set is indexed because datafusion-tracing cannot be used without a",
+    "tracing-subscriber, and its versions are the ones THIS release of datafusion-tracing is",
+    "known to compose with -- taken from examples/Cargo.toml at tag 55.0.0, not from crates.io",
+    "latest, which has already moved a minor ahead on both otel lines.",
+    "",
+    "DataFusion, Arrow and object_store are deliberately NOT indexed. Their access paths land in",
+    "unresolved.tsv. That is a boundary, not a gap."
+  ],
+
+  "repository": {
+    "name": "datafusion-tracing",
+    "title": "datafusion-tracing, instrumented-object-store, and the tracing/OpenTelemetry wiring",
+    "description": "Pinned API surface, macro grammar, emitted span contract, executed probes and the version-compatibility matrix for DataFusion query instrumentation."
+  },
+
+  "tools": {
+    "ast_grep_version": "0.45.3",
+    "_rustdoc_format_note": [
+      "docs.rs serves this crate set at FIVE different format versions, because it builds on",
+      "its own schedule and its fleet is not uniform. Measured 2026-09-17: the subject crates",
+      "and tracing/tracing-core at 61, tracing-subscriber at 59, tracing-futures at 60, and all",
+      "four OpenTelemetry crates at 56 -- older than any sibling repository in this family has",
+      "had to parse. 56 was not added on the assumption that it is close enough: acquire.py",
+      "asserts the field vocabulary model.py depends on is present in every document it accepts,",
+      "so a format that merely parses far enough to produce confident nonsense is a stop."
+    ],
+    "rustdoc_format_supported": [56, 57, 59, 60, 61],
+    "probe_toolchain": {
+      "toolchain": "1.98.1",
+      "rustc_expected": ["1.98.1"],
+      "note": "The probes build on STABLE, because a probe is a claim about what a consumer will observe and a consumer builds on stable. Pinned rather than inherited: this workstation's rustup default is nightly, and the first run of probes.py silently reported what a nightly compiler produced. datafusion-tracing 55.0.0 declares rust-version 1.94.0, so any stable at or above it works; 1.98.1 is the one recorded here."
+    },
+    "local_rustdoc": {
+      "toolchain": "nightly-2026-09-13",
+      "rustc_expected": ["1.100.0-nightly", "809936eac"],
+      "target": "x86_64-unknown-linux-gnu",
+      "note": "A recorded producer identity, not a build configuration. The dated form is required: a bare +nightly floats, and a floating producer cannot be re-pinned."
+    }
+  },
+
+  "crate_sets": [
+    {
+      "name": "subject",
+      "subject": "datafusion-tracing",
+      "version": "55.0.0",
+      "capture": ["docs_rs", "private"],
+      "crates": [
+        {
+          "package": "datafusion-tracing",
+          "facade": "datafusion_tracing",
+          "note": "12 macro_rules! macros, 2 option structs, 1 formatter fn, 2 doc(hidden) fns."
+        },
+        {
+          "package": "instrumented-object-store",
+          "facade": "instrumented_object_store",
+          "note": "Exports exactly one item: instrument_object_store."
+        }
+      ]
+    },
+    {
+      "name": "wiring",
+      "subject": "tracing",
+      "capture": ["docs_rs"],
+      "crates": [
+        { "package": "tracing",              "version": "0.1.44" },
+        { "package": "tracing-core",         "version": "0.1.36" },
+        { "package": "tracing-subscriber",   "version": "0.3.23" },
+        { "package": "tracing-futures",      "version": "0.2.5"  },
+        { "package": "tracing-attributes",   "version": "0.1.31",
+          "note": "tracing::instrument is a re-export of this crate's proc macro. Without it the access path resolves to nothing, and #[instrument] is the first thing anyone reaches for." }
+      ]
+    },
+    {
+      "name": "otel",
+      "subject": "opentelemetry",
+      "capture": ["docs_rs"],
+      "_comment": "The versions examples/Cargo.toml pins at tag 55.0.0. tracing-opentelemetry runs one minor AHEAD of the opentelemetry family; see catalogs/compatibility.md.",
+      "crates": [
+        { "package": "tracing-opentelemetry", "version": "0.32.0" },
+        { "package": "opentelemetry",         "version": "0.31.0" },
+        { "package": "opentelemetry_sdk",     "version": "0.31.0" },
+        { "package": "opentelemetry-otlp",    "version": "0.31.0" }
+      ]
+    }
+  ],
+
+  "corpora": [
+    {
+      "name": "source",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "datafusion-tracing/src/",
+      "dest": "corpus/source/datafusion-tracing",
+      "suffixes": [".rs"],
+      "note": "The source is shipped because it is the ONLY documentation of the two builders."
+    },
+    {
+      "name": "source-object-store",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "instrumented-object-store/src/",
+      "dest": "corpus/source/instrumented-object-store",
+      "suffixes": [".rs"]
+    },
+    {
+      "name": "traces",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "tests/snapshots/",
+      "dest": "corpus/traces",
+      "suffixes": [".snap"],
+      "note": "Upstream insta captures of the emitted span stream. The span contract, as JSON."
+    },
+    {
+      "name": "tests",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "tests/",
+      "dest": "corpus/tests",
+      "suffixes": [".rs"],
+      "note": "The capture harness the probes mirror: in_memory_writer.rs and init_subscriber."
+    },
+    {
+      "name": "examples",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "examples/",
+      "dest": "corpus/examples",
+      "suffixes": [".rs", ".toml"],
+      "note": "otlp.rs is the full subscriber-plus-exporter wiring, and its Cargo.toml is the version-lock evidence."
+    },
+    {
+      "name": "integration-utils",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "integration-utils/",
+      "dest": "corpus/examples/integration-utils",
+      "suffixes": [".rs", ".sql", ".toml"],
+      "note": "publish = false upstream, and upstream says not for production use. Read it as evidence of usage, never as an API."
+    },
+    {
+      "name": "docs",
+      "repo": "datafusion-contrib/datafusion-tracing",
+      "ref": "55.0.0",
+      "ref_kind": "tag",
+      "source_prefix": "",
+      "dest": "corpus/docs",
+      "suffixes": ["README.md", "CHANGELOG.md", "Cargo.toml", "rust-toolchain.toml"]
+    }
+  ],
+
+  "compatibility": {
+    "crate": "datafusion-tracing",
+    "repo": "datafusion-contrib/datafusion-tracing",
+    "example_manifest": "examples/Cargo.toml",
+    "track": ["opentelemetry", "opentelemetry_sdk", "opentelemetry-otlp", "tracing-opentelemetry"],
+    "note": "One row per published release. The datafusion column is read from the release's own Cargo.toml, not inferred from the version number -- although at every release so far they have matched."
+  }
+}

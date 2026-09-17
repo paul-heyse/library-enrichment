@@ -238,6 +238,7 @@ pub(crate) enum BindingKind {
     FoldedRecords,
     ValidatedHistory,
     Metadata,
+    Declarations,
 }
 impl BindingKind {
     fn schema(self) -> &'static str {
@@ -247,6 +248,7 @@ impl BindingKind {
             Self::FoldedRecords => "records",
             Self::ValidatedHistory => "history",
             Self::Metadata => "metadata",
+            Self::Declarations => "declarations",
         }
     }
     fn trust(self) -> &'static str {
@@ -257,6 +259,7 @@ impl BindingKind {
             Self::FoldedRecords => "folded_records",
             Self::ValidatedHistory => "validated_history",
             Self::Metadata => "derived_metadata",
+            Self::Declarations => "generated_declaration",
         }
     }
 }
@@ -266,6 +269,54 @@ impl BindingKind {
 pub(crate) struct BoundSchema {
     tables: Tables,
     kind: BindingKind,
+}
+
+/// Generated, immutable policy inputs are built once per runtime and shared by every session.
+/// The schema provider refuses registration/removal through its default mutation contracts.
+pub(crate) fn declarations(
+    retention: &enrichment_core::operation::retention::RetentionPolicy,
+) -> Result<Tables> {
+    use enrichment_core::{
+        evidence::execution::{ExecutionDefinition, ExecutionKind},
+        native_union::NativeStruct,
+        wire::research::{AspectDefinition, DiscoveryDefinition, DiscoveryKind, InspectionAspect},
+    };
+    [
+        (
+            "retention_policy",
+            enrichment_core::operation::retention::RetentionPolicy::batch(std::slice::from_ref(
+                retention,
+            ))?,
+        ),
+        (
+            "execution_payloads",
+            ExecutionDefinition::batch(&ExecutionKind::definitions())?,
+        ),
+        (
+            "inspection_aspects",
+            AspectDefinition::batch(&InspectionAspect::definitions())?,
+        ),
+        (
+            "discovery_facets",
+            DiscoveryDefinition::batch(&DiscoveryKind::definitions())?,
+        ),
+        (
+            "operations",
+            enrichment_core::operation::Definition::batch(
+                &enrichment_core::request::operation_definitions(),
+            )?,
+        ),
+    ]
+    .into_iter()
+    .map(|(name, batch)| {
+        Ok((
+            name.into(),
+            Arc::new(crate::admitted_provider::AdmittedProvider::from_batch(
+                batch,
+            )?) as Arc<dyn TableProvider>,
+        ))
+    })
+    .collect()
 }
 
 impl BoundSchema {

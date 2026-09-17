@@ -1,0 +1,242 @@
+{
+  "module": "tracing_core::metadata",
+  "crate": "tracing-core",
+  "api": "api/tracing_core.metadata.md",
+  "items": [
+    {
+      "path": "tracing_core::metadata::Kind",
+      "name": "Kind",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Kind",
+      "summary": "Indicates whether the callsite is a span or event.",
+      "doc": "api/tracing_core.metadata.md#kind",
+      "aliases": [
+        "tracing_core::Kind"
+      ],
+      "methods": [
+        {
+          "name": "hint",
+          "signature": "const fn hint(self) -> Self",
+          "summary": "Sets that this `Kind` is a [hint](Self::HINT)."
+        },
+        {
+          "name": "is_event",
+          "signature": "fn is_event(&self) -> bool",
+          "summary": "Return true if the callsite kind is `Event`"
+        },
+        {
+          "name": "is_hint",
+          "signature": "fn is_hint(&self) -> bool",
+          "summary": "Return true if the callsite kind is `Hint`"
+        },
+        {
+          "name": "is_span",
+          "signature": "fn is_span(&self) -> bool",
+          "summary": "Return true if the callsite kind is `Span`"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::metadata::Level",
+      "name": "Level",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Level",
+      "summary": "Describes the level of verbosity of a span or event.",
+      "doc": "api/tracing_core.metadata.md#level",
+      "aliases": [
+        "tracing::Level",
+        "tracing_core::Level"
+      ],
+      "implements": [
+        "core::fmt::Display",
+        "core::str::traits::FromStr"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &'static str",
+          "summary": "Returns the string representation of the `Level`."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(s: &str) -> Result<Self, ParseLevelError>",
+          "via_trait": "core::str::traits::FromStr"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::metadata::LevelFilter",
+      "name": "LevelFilter",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct LevelFilter",
+      "summary": "A filter comparable to a verbosity [`Level`].",
+      "doc": "api/tracing_core.metadata.md#levelfilter",
+      "aliases": [
+        "tracing::level_filters::LevelFilter",
+        "tracing_core::LevelFilter",
+        "tracing_subscriber::filter::LevelFilter"
+      ],
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::str::traits::FromStr",
+        "tracing_subscriber::layer::Filter",
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "current",
+          "signature": "fn current() -> Self",
+          "summary": "Returns a `LevelFilter` that matches the most verbose [`Level`] that any currently active [`Subscriber`] will enable."
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(level: Level) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_level",
+          "signature": "const fn from_level(level: Level) -> Self",
+          "summary": "Returns a `LevelFilter` that enables spans and events with verbosity up to and including `level`."
+        },
+        {
+          "name": "from_str",
+          "signature": "fn from_str(from: &str) -> Result<Self, Self::Err>",
+          "via_trait": "core::str::traits::FromStr"
+        },
+        {
+          "name": "into_level",
+          "signature": "const fn into_level(self) -> Option<Level>",
+          "summary": "Returns the most verbose [`Level`] that this filter accepts, or `None` if it is [`OFF`]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::metadata::Metadata",
+      "name": "Metadata",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Metadata<'a>",
+      "summary": "Metadata describing a [span] or [event].",
+      "doc": "api/tracing_core.metadata.md#metadata",
+      "aliases": [
+        "tracing::Metadata",
+        "tracing_core::Metadata"
+      ],
+      "methods": [
+        {
+          "name": "callsite",
+          "signature": "fn callsite(&self) -> callsite::Identifier",
+          "summary": "Returns an opaque `Identifier` that uniquely identifies the callsite this `Metadata` originated from."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> &field::FieldSet",
+          "summary": "Returns the names of the fields on the described span or event."
+        },
+        {
+          "name": "file",
+          "signature": "fn file(&self) -> Option<&'a str>",
+          "summary": "Returns the name of the source code file where the span occurred, or `None` if the file is unknown"
+        },
+        {
+          "name": "is_event",
+          "signature": "fn is_event(&self) -> bool",
+          "summary": "Returns true if the callsite kind is `Event`."
+        },
+        {
+          "name": "is_span",
+          "signature": "fn is_span(&self) -> bool",
+          "summary": "Return true if the callsite kind is `Span`."
+        },
+        {
+          "name": "level",
+          "signature": "fn level(&self) -> &Level",
+          "summary": "Returns the level of verbosity of the described span or event."
+        },
+        {
+          "name": "line",
+          "signature": "fn line(&self) -> Option<u32>",
+          "summary": "Returns the line number in the source code file where the span occurred, or `None` if the line number is unknown."
+        },
+        {
+          "name": "module_path",
+          "signature": "fn module_path(&self) -> Option<&'a str>",
+          "summary": "Returns the path to the Rust module where the span occurred, or `None` if the module path is unknown."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "summary": "Returns the name of the span."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new(name: &'static str, target: &'a str, level: Level, file: Option<&'a str>, line: Option<u32>, module_path: Option<&'a str>, fields: field::FieldSet, kind: Kind) -> Self",
+          "summary": "Construct new metadata for a span or event, with a name, target, level, field names, and optional source code location."
+        },
+        {
+          "name": "target",
+          "signature": "fn target(&self) -> &'a str",
+          "summary": "Returns a string describing the part of the system where the span or event that this metadata describes occurred."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::metadata::ParseLevelError",
+      "name": "ParseLevelError",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct ParseLevelError",
+      "summary": "Returned if parsing a `Level` fails.",
+      "doc": "api/tracing_core.metadata.md#parselevelerror",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::metadata::ParseLevelFilterError",
+      "name": "ParseLevelFilterError",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct ParseLevelFilterError",
+      "summary": "Indicates that a string could not be parsed to a valid level.",
+      "doc": "api/tracing_core.metadata.md#parselevelfiltererror",
+      "aliases": [
+        "tracing::level_filters::ParseLevelFilterError",
+        "tracing_subscriber::filter::LevelParseError"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    }
+  ]
+}

@@ -49,12 +49,12 @@ impl ExtensionOptions for NativePolicy {
             (
                 "native_workers",
                 self.limits.concurrency.to_string(),
-                "Shared native async worker count",
+                "Native async workers per owned compute/I/O lane",
             ),
             (
                 "native_blocking_threads",
                 self.limits.native.blocking_threads.to_string(),
-                "Shared native blocking-worker ceiling",
+                "Native blocking-worker ceiling per owned compute/I/O lane",
             ),
             (
                 "native_worker_stack_bytes",
@@ -63,10 +63,10 @@ impl ExtensionOptions for NativePolicy {
             ),
             (
                 "native_stack_capacity_bytes",
-                (self.limits.native.worker_stack_bytes
+                (2 * self.limits.native.worker_stack_bytes
                     * (self.limits.concurrency + self.limits.native.blocking_threads))
                     .to_string(),
-                "Maximum configured thread stack capacity; separate from Arrow reservations",
+                "Both owned lanes' maximum thread stack capacity; separate from Arrow reservations",
             ),
             (
                 "decoder_filter",

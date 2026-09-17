@@ -14,7 +14,7 @@ use std::{
 };
 
 /// The encoded representation participates in retained-result and replay definitions.
-pub const REVISION: &str = "native-json/1";
+pub const REVISION: &str = "native-json/3";
 
 /// Checks the cap before forwarding bytes, including JSON escaping and delimiters.
 pub struct BoundedWriter<W> {
@@ -59,7 +59,7 @@ fn quoted(writer: &mut dyn Write, text: &str) -> io::Result<()> {
 
 /// Write one admitted value without an intermediate owned semantic object.
 /// Nulls are explicit; lists retain order; decimals and binary values are exact strings.
-/// UInt64 uses its complete decimal JSON numeral (the Python transport preserves integers).
+/// Full-range UInt64 and Int64 values use decimal strings, including zero and small values.
 pub fn write_value(
     writer: impl Write,
     limit: usize,
@@ -375,15 +375,27 @@ fn value(
                 arrow::util::display::ArrayFormatter::try_new(array, &options).map_err(invalid)?;
             quoted(writer, &formatted.value(row).to_string())
         }
+        DataType::UInt64 => quoted(
+            writer,
+            &array
+                .as_primitive::<arrow::datatypes::UInt64Type>()
+                .value(row)
+                .to_string(),
+        ),
+        DataType::Int64 => quoted(
+            writer,
+            &array
+                .as_primitive::<arrow::datatypes::Int64Type>()
+                .value(row)
+                .to_string(),
+        ),
         DataType::Boolean
         | DataType::UInt8
         | DataType::UInt16
         | DataType::UInt32
-        | DataType::UInt64
         | DataType::Int8
         | DataType::Int16
-        | DataType::Int32
-        | DataType::Int64 => {
+        | DataType::Int32 => {
             // These encoders have a fixed upper bound; no value-sized allocation is possible.
             let options = arrow::json::writer::EncoderOptions::default();
             let mut encoder =
@@ -481,7 +493,7 @@ mod tests {
                 &unsigned,
                 0
             ),
-            b"18446744073709551615"
+            br#""18446744073709551615""#
         );
         let decimal = Decimal128Array::from(vec![12345678901234567890123456789012345678_i128])
             .with_precision_and_scale(38, 7)

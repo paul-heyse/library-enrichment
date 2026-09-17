@@ -23,7 +23,8 @@ use std::{
 use tokio::sync::{mpsc, oneshot};
 
 const TABLE: &str = "native_events";
-const QUEUE: usize = 32;
+const QUEUE: usize = 512;
+const WRITE_ROWS: usize = 128;
 pub(crate) const READ_ROWS: usize = 32;
 pub(crate) const READ_BYTES: usize = 8 * 1024 * 1024;
 #[derive(Default, Clone)]
@@ -36,10 +37,15 @@ struct Ingress {
     closed: Arc<AtomicBool>,
     send: mpsc::Sender<Message>,
     pool: Arc<dyn MemoryPool>,
+    completion: tokio::sync::Mutex<Completion>,
+}
+struct Completion {
+    task: Option<tokio::task::JoinHandle<Result<()>>>,
+    failure: Option<String>,
 }
 struct Entry {
-    batch: RecordBatch,
-    _memory: MemoryReservation,
+    event: Event,
+    memory: MemoryReservation,
 }
 enum Message {
     Entry(Entry),
@@ -51,13 +57,14 @@ enum Selection {
     Operations,
     Summary,
     ServiceCounters,
+    Kernel,
     Failures,
     Flush,
     Close,
 }
 impl History {
     /// The writer uses the same executor/pool and an unobserved runtime clone. Its queue owns
-    /// Arrow memory reservations; it never owns an observed History and cannot form a cycle.
+    /// capture/encoding reservations; it never owns an observed History and cannot form a cycle.
     pub(crate) fn start(
         runtime: QueryRuntime,
         root: &Path,
@@ -68,6 +75,11 @@ impl History {
         let store = DeltaStore::new(root, runtime.clone())?;
         store.prepare_root(TABLE)?;
         let closed = Arc::new(AtomicBool::new(false));
+        let task_closed = closed.clone();
+        let task_id = runtime_id.clone();
+        let task = runtime
+            .executor_handle()
+            .spawn(async move { actor(runtime, store, task_id, receive, task_closed).await });
         let ingress = Arc::new(Ingress {
             runtime_id: runtime_id.clone(),
             next_query: AtomicU64::new(0),
@@ -76,10 +88,10 @@ impl History {
             closed: closed.clone(),
             send,
             pool,
-        });
-        let executor = runtime.executor_handle();
-        executor.spawn(async move {
-            actor(runtime, store, runtime_id, receive, closed).await;
+            completion: tokio::sync::Mutex::new(Completion {
+                task: Some(task),
+                failure: None,
+            }),
         });
         Ok(Self(Some(ingress)))
     }
@@ -97,14 +109,23 @@ impl History {
         self.0.is_some()
     }
     fn emit(&self, operation_id: Option<&str>, payload: impl FnOnce() -> EventPayload) {
+        self.emit_reserved(operation_id, 2 * READ_BYTES, payload);
+    }
+    fn emit_reserved(
+        &self,
+        operation_id: Option<&str>,
+        capture_bytes: usize,
+        payload: impl FnOnce() -> EventPayload,
+    ) {
         let Some(h) = &self.0 else {
             return;
         };
         let write = || -> Result<()> {
-            // Reserve the bounded ingress arena before cloning or Arrow encoding. The
-            // resulting buffers retain their reservation until the writer releases them.
+            // Capture only a bounded owned event here. The actor encodes a whole group
+            // once; native/kernel callbacks must not construct the wide Arrow schema.
+            // Reserve for both captured values and encoding before either allocation.
             let memory = MemoryConsumer::new("native_telemetry_ingress").register(&h.pool);
-            memory.try_grow(READ_BYTES)?;
+            memory.try_grow(capture_bytes)?;
             let event = Event {
                 runtime_id: h.runtime_id.clone(),
                 sequence: h.next_event.fetch_add(1, Ordering::Relaxed) + 1,
@@ -112,26 +133,17 @@ impl History {
                 operation_id: operation_id.map(str::to_owned),
                 payload: payload(),
             };
-            let batch = Event::batch(&[event])?;
-            let bytes = datafusion::common::utils::memory::get_record_batch_memory_size(&batch);
-            if bytes > READ_BYTES {
-                return Err(DataFusionError::ResourcesExhausted(
-                    "diagnostic Arrow ingress bound".into(),
-                ));
-            }
-            memory.shrink(READ_BYTES - bytes);
             h.send
-                .try_send(Message::Entry(Entry {
-                    batch,
-                    _memory: memory,
-                }))
+                .try_send(Message::Entry(Entry { event, memory }))
                 .map_err(|e| {
                     DataFusionError::ResourcesExhausted(format!("diagnostic ingress: {e}"))
                 })
         };
         if let Err(error) = write() {
-            h.dropped.fetch_add(1, Ordering::AcqRel);
-            eprintln!("native diagnostic observation not retained: {error}");
+            let dropped = h.dropped.fetch_add(1, Ordering::AcqRel).saturating_add(1);
+            if dropped.is_power_of_two() {
+                eprintln!("{dropped} native diagnostic observations not retained; latest: {error}");
+            }
         }
     }
     pub(crate) fn query(&self, query: &QueryDiagnostics) {
@@ -143,11 +155,13 @@ impl History {
         let id = operation.operation_id.clone();
         self.emit(Some(&id), || EventPayload::Operation { value: operation });
     }
-    pub(crate) fn index(&self, operation_id: Option<&str>, bytes: Option<u64>) {
-        self.emit(operation_id, || {
-            bytes.map_or(EventPayload::IndexRead, |bytes| {
-                EventPayload::IndexMaterialization { bytes }
-            })
+    pub(crate) fn materialization(
+        &self,
+        operation_id: Option<&str>,
+        value: telemetry::MaterializationObservation,
+    ) {
+        self.emit_reserved(operation_id, 64 * 1024, || EventPayload::Materialization {
+            value,
         });
     }
     pub(crate) fn service(&self, observation: telemetry::ServiceObservation) {
@@ -156,10 +170,24 @@ impl History {
             value: observation,
         });
     }
+    pub(crate) fn kernel(
+        &self,
+        operation_id: Option<&str>,
+        event: delta_kernel::metrics::MetricEvent,
+    ) {
+        // Kernel variants have only fixed numeric fields and at most two bounded 1-KiB
+        // attributes. Shared Arrow encoding receives a separate actor-side reservation.
+        self.emit_reserved(operation_id, 64 * 1024, || EventPayload::Kernel {
+            value: crate::kernel_metrics::capture(event),
+        });
+    }
     pub(crate) async fn service_counters(&self) -> Result<telemetry::ServiceCounters> {
         decode::<telemetry::ServiceCounters>(self.select(Selection::ServiceCounters).await?)?
             .pop()
             .ok_or_else(|| invalid("native service diagnostic aggregate missing"))
+    }
+    pub(crate) async fn kernel_diagnostics(&self) -> Result<Vec<telemetry::kernel::Diagnostic>> {
+        decode(self.select(Selection::Kernel).await?)
     }
     pub(crate) fn failure(&self, diagnostic: enrichment_core::wire::Diagnostic) {
         match telemetry::Failure::try_from(diagnostic) {
@@ -209,23 +237,39 @@ impl History {
         self.select(Selection::Flush).await.map(|_| ())
     }
     pub(crate) async fn close(&self) -> Result<()> {
-        if self
-            .0
-            .as_ref()
-            .is_some_and(|h| h.closed.load(Ordering::Acquire))
-        {
+        let Some(history) = &self.0 else {
             return Ok(());
+        };
+        // Serialize concurrent close calls. Keep the handle in its owner while awaiting it:
+        // cancelling a closer must not detach the actor or lose its persistence failure.
+        let mut completion = history.completion.lock().await;
+        if let Some(task) = completion.task.as_mut() {
+            let barrier = if history.closed.load(Ordering::Acquire) {
+                Ok(())
+            } else {
+                self.select(Selection::Close).await.map(|_| ())
+            };
+            let exited = task
+                .await
+                .map_err(|error| invalid(&format!("native diagnostic writer task: {error}")))
+                .and_then(std::convert::identity);
+            // A cancelled closer can leave a successful Close queued with no receiver.
+            // Joined physical success and the actor's close flag survive that lost reply.
+            let acknowledged = if history.closed.load(Ordering::Acquire) {
+                Ok(())
+            } else {
+                barrier
+            };
+            completion.failure = exited
+                .and(acknowledged)
+                .err()
+                .map(|error| error.to_string());
+            completion.task = None;
         }
-        let closed = self.select(Selection::Close).await.map(|_| ());
-        if self
-            .0
+        completion
+            .failure
             .as_ref()
-            .is_some_and(|h| h.closed.load(Ordering::Acquire))
-        {
-            Ok(())
-        } else {
-            closed
-        }
+            .map_or(Ok(()), |failure| Err(invalid(failure)))
     }
 }
 fn decode<T: NativeStruct>(batches: Vec<RecordBatch>) -> Result<Vec<T>> {
@@ -245,10 +289,13 @@ async fn actor(
     runtime_id: String,
     mut receive: mpsc::Receiver<Message>,
     closed: Arc<AtomicBool>,
-) {
+) -> Result<()> {
+    let contract = StorageContract::new(telemetry::schema::events())?;
     let mut pending = Vec::new();
     let mut commit_sequence = 0i64;
     let mut waiting = None;
+    let mut table = None;
+    let mut close_replies = Vec::new();
     while let Some(message) = match waiting.take() {
         Some(message) => Some(message),
         None => receive.recv().await,
@@ -256,67 +303,105 @@ async fn actor(
         match message {
             Message::Entry(entry) => {
                 pending.push(entry);
-                while pending.len() < QUEUE {
-                    match receive.try_recv() {
-                        Ok(Message::Entry(entry)) => pending.push(entry),
-                        Ok(message) => {
+                // Coalesce bursts into native Delta writes. Read/close barriers flush
+                // immediately; otherwise the maximum added visibility delay is 10 ms.
+                let deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(10);
+                while pending.len() < WRITE_ROWS {
+                    match tokio::time::timeout_at(deadline, receive.recv()).await {
+                        Ok(Some(Message::Entry(entry))) => pending.push(entry),
+                        Ok(Some(message)) => {
                             waiting = Some(message);
                             break;
                         }
-                        Err(_) => break,
+                        Ok(None) | Err(_) => break,
                     }
                 }
                 commit_sequence += 1;
-                if let Err(error) =
-                    persist(&runtime, &store, &runtime_id, commit_sequence, &pending).await
+                match persist(
+                    &runtime,
+                    &store,
+                    &contract,
+                    &runtime_id,
+                    commit_sequence,
+                    std::mem::take(&mut pending),
+                    table.take(),
+                )
+                .await
                 {
-                    // A failed/indeterminate diagnostic commit cannot produce a successful
-                    // aggregate. Closing the channel makes subsequent read barriers fail.
-                    eprintln!("native diagnostic persistence stopped: {error}");
-                    return;
+                    Ok(committed) => table = Some(committed),
+                    Err(error) => {
+                        // A failed/indeterminate diagnostic commit cannot produce a successful
+                        // aggregate. Closing the channel makes subsequent read barriers fail.
+                        eprintln!("native diagnostic persistence stopped: {error}");
+                        return Err(error);
+                    }
                 }
-                pending.clear();
             }
             Message::Read(Selection::Close, response) => {
-                closed.store(true, Ordering::Release);
-                let _ = response.send(Ok(Vec::new()));
-                return;
+                // Closing admission preserves entries already queued after this barrier,
+                // including permits acquired before close. Tokio returns None only after
+                // every accepted message/permit has been consumed or released.
+                receive.close();
+                close_replies.push(response);
             }
             Message::Read(selection, response) => {
-                let _ = response.send(select(&runtime, &store, &runtime_id, selection).await);
+                let _ = response
+                    .send(select(&runtime, &store, &contract, &runtime_id, selection).await);
             }
         }
     }
+    closed.store(true, Ordering::Release);
+    for response in close_replies {
+        let _ = response.send(Ok(Vec::new()));
+    }
+    Ok(())
 }
 async fn persist(
     runtime: &QueryRuntime,
     store: &DeltaStore,
+    contract: &StorageContract,
     runtime_id: &str,
     commit_sequence: i64,
-    entries: &[Entry],
-) -> Result<()> {
-    let contract = StorageContract::new(telemetry::schema::events())?;
-    store.prepare_root(TABLE)?;
-    let batches: Vec<_> = entries.iter().map(|entry| entry.batch.clone()).collect();
-    let input = runtime.session().read_batches(batches)?;
+    entries: Vec<Entry>,
+    mut captured: Option<deltalake::DeltaTable>,
+) -> Result<deltalake::DeltaTable> {
+    let (events, reservations): (Vec<_>, Vec<_>) = entries
+        .into_iter()
+        .map(|entry| (entry.event, entry.memory))
+        .unzip();
+    let encoding = MemoryConsumer::new("native_telemetry_encoding")
+        .register(&runtime.session().runtime_env().memory_pool);
+    encoding.try_grow(READ_BYTES)?;
+    let reserved = reservations
+        .iter()
+        .map(MemoryReservation::size)
+        .sum::<usize>()
+        + encoding.size();
+    let batch = Event::batch(&events)?;
+    let bytes = datafusion::common::utils::memory::get_record_batch_memory_size(&batch);
+    if bytes > reserved {
+        return Err(DataFusionError::ResourcesExhausted(
+            "diagnostic Arrow ingress bound".into(),
+        ));
+    }
+    drop(events);
+    // Keep the capture/encoding reservations through the complete Delta writer.
+    let _reservations = reservations;
+    let input = runtime.session().read_batch(batch)?;
     // Producer observations can enter the queue out of allocation order. Delta transaction
     // versions follow this sole writer's commit order, independently of observation sequence.
     for _ in 0..16 {
-        let table = match store.load(TABLE, None).await {
-            Ok(table) => table,
-            Err(error) if missing_table(&error) => {
-                match store.create(TABLE, &contract, false).await {
-                    Ok(table) => table,
-                    Err(error) if transaction_conflict(&error) => continue,
-                    Err(error) => return Err(error),
-                }
-            }
-            Err(error) => return Err(error),
+        // Native append returns its updated snapshot. Reuse that exact state instead of
+        // rebuilding it from the complete log for every event batch. Another writer's
+        // conflict discards it and returns to the controlled native opener on the next try.
+        let table = match captured.take() {
+            Some(table) => table,
+            None => store.open_or_create(TABLE, contract, false, &[]).await?,
         };
         match store
             .append(
                 table,
-                &contract,
+                contract,
                 input.clone(),
                 vec![deltalake::kernel::Transaction::new(
                     format!("telemetry/{runtime_id}"),
@@ -325,7 +410,7 @@ async fn persist(
             )
             .await
         {
-            Ok(_) => return Ok(()),
+            Ok(committed) => return Ok(committed),
             Err(error) if transaction_conflict(&error) => continue,
             Err(error) => return Err(error),
         }
@@ -334,7 +419,7 @@ async fn persist(
 }
 fn aggregate(grouped: bool) -> String {
     format!(
-        "SELECT {} CAST(count(*) FILTER (WHERE kind='query') AS BIGINT UNSIGNED) AS executions, CAST(count(*) FILTER (WHERE kind='query' AND query.completed) AS BIGINT UNSIGNED) AS completed, CAST(count(*) FILTER (WHERE kind='query' AND NOT query.completed) AS BIGINT UNSIGNED) AS incomplete, CAST(coalesce(sum(query.planning_micros),0) AS BIGINT UNSIGNED) AS planning_micros, CAST(coalesce(sum(query.elapsed_micros),0) AS BIGINT UNSIGNED) AS elapsed_micros, CAST(count(*) FILTER (WHERE kind='index_materialization') AS BIGINT UNSIGNED) AS index_materializations, CAST(coalesce(sum(index_bytes),0) AS BIGINT UNSIGNED) AS index_spill_bytes, CAST(count(*) FILTER (WHERE kind='index_read') AS BIGINT UNSIGNED) AS index_reads, CAST(coalesce(sum(query.queue_micros),0) AS BIGINT UNSIGNED) AS queue_micros, CAST(coalesce(sum(query.output_rows),0) AS BIGINT UNSIGNED) AS output_rows, CAST(coalesce(sum(query.output_arrow_bytes),0) AS BIGINT UNSIGNED) AS output_arrow_bytes FROM current_events {}",
+        "SELECT {} CAST(count(*) FILTER (WHERE kind='query') AS BIGINT UNSIGNED) AS executions, CAST(count(*) FILTER (WHERE kind='query' AND query.completed) AS BIGINT UNSIGNED) AS completed, CAST(count(*) FILTER (WHERE kind='query' AND NOT query.completed) AS BIGINT UNSIGNED) AS incomplete, CAST(coalesce(sum(query.planning_micros),0) AS BIGINT UNSIGNED) AS planning_micros, CAST(coalesce(sum(query.elapsed_micros),0) AS BIGINT UNSIGNED) AS elapsed_micros, CAST(count(*) FILTER (WHERE kind='materialization' AND materialization.activity.kind='ready') AS BIGINT UNSIGNED) AS materialization_fills, CAST(coalesce(sum(materialization.activity.ready.spill_bytes),0) AS BIGINT UNSIGNED) AS materialization_spill_bytes, CAST(count(*) FILTER (WHERE kind='materialization' AND materialization.activity.kind='read') AS BIGINT UNSIGNED) AS materialization_reads, CAST(coalesce(sum(query.queue_micros),0) AS BIGINT UNSIGNED) AS queue_micros, CAST(coalesce(sum(query.output_rows),0) AS BIGINT UNSIGNED) AS output_rows, CAST(coalesce(sum(query.output_arrow_bytes),0) AS BIGINT UNSIGNED) AS output_arrow_bytes FROM current_events {}",
         if grouped { "operation_id," } else { "" },
         if grouped { "GROUP BY operation_id" } else { "" }
     )
@@ -342,6 +427,7 @@ fn aggregate(grouped: bool) -> String {
 async fn select(
     runtime: &QueryRuntime,
     store: &DeltaStore,
+    contract: &StorageContract,
     runtime_id: &str,
     selection: Selection,
 ) -> Result<Vec<RecordBatch>> {
@@ -350,16 +436,13 @@ async fn select(
     }
     let session = runtime.session();
     let all = match store.load(TABLE, None).await {
-        Ok(table) => session.read_table(
-            store
-                .provider(&table, &StorageContract::new(telemetry::schema::events())?)
-                .await?,
-        )?,
+        Ok(table) => session.read_table(store.provider(&table, contract).await?)?,
         Err(error) if missing_table(&error) => session
             .read_empty()?
             .filter(datafusion::prelude::lit(false))?
             .select(
-                telemetry::schema::events()
+                contract
+                    .semantic_schema()
                     .fields()
                     .iter()
                     .map(|field| {
@@ -374,7 +457,7 @@ async fn select(
         Err(error) => return Err(error),
     };
     crate::native_catalog::work(&session, "event_records", all.into_view())?;
-    let all = session.sql("SELECT runtime_id,sequence,recorded_at,operation_id,payload.kind AS kind,payload.query.value AS query,payload.operation.value AS operation,payload.failure.value AS failure,payload.index_materialization.bytes AS index_bytes,payload.service.value AS service FROM event_records").await?;
+    let all = session.sql("SELECT runtime_id,sequence,recorded_at,operation_id,payload.kind AS kind,payload.query.value AS query,payload.operation.value AS operation,payload.failure.value AS failure,payload.materialization.value AS materialization,payload.service.value AS service,payload.kernel.value AS kernel FROM event_records").await?;
     crate::native_catalog::work(&session, "all_events", all.clone().into_view())?;
     crate::native_catalog::work(
         &session,
@@ -390,6 +473,7 @@ async fn select(
         }
         Selection::Summary => aggregate(false),
         Selection::ServiceCounters => service_totals(),
+        Selection::Kernel => "SELECT operation_id,sequence,recorded_at,kernel AS value FROM (SELECT * FROM current_events WHERE kind='kernel' ORDER BY sequence DESC LIMIT 32) ORDER BY sequence".into(),
         Selection::Operations => {
             crate::native_catalog::work(&session, "operation_totals", session.sql(&aggregate(true)).await?.into_view())?;
             let arrow::datatypes::DataType::Struct(fields) = telemetry::schema::operation() else { unreachable!() };
@@ -492,4 +576,154 @@ fn service_totals() -> String {
     format!(
         "SELECT {fetch} AS fetch,{evidence} AS evidence,{verification} AS verification FROM current_events WHERE kind='service'"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    fn observation(bytes: u64) -> enrichment_core::telemetry::MaterializationObservation {
+        enrichment_core::telemetry::MaterializationObservation {
+            binding: 1,
+            family: enrichment_core::telemetry::MaterializationFamily::ComparisonKeys,
+            activity: enrichment_core::telemetry::MaterializationActivity::Ready {
+                spill_bytes: bytes,
+            },
+        }
+    }
+
+    use super::*;
+
+    #[test]
+    fn close_drains_events_accepted_across_the_close_barrier() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let owned = runtime.clone();
+        runtime.bootstrap(async move {
+            let history = owned.native_history();
+            let ingress = history.0.as_ref().unwrap();
+            // Hold real channel permits to make the admission/close race deterministic.
+            let event = ingress
+                .send
+                .reserve()
+                .await
+                .map_err(|_| invalid("event permit"))?;
+            let query = ingress
+                .send
+                .reserve()
+                .await
+                .map_err(|_| invalid("read permit"))?;
+            let (close, mut closed) = oneshot::channel();
+            ingress
+                .send
+                .send(Message::Read(Selection::Close, close))
+                .await
+                .map_err(|_| invalid("close admission"))?;
+            ingress.send.closed().await;
+            assert!(matches!(
+                closed.try_recv(),
+                Err(oneshot::error::TryRecvError::Empty)
+            ));
+            let memory = MemoryConsumer::new("close_race_capture").register(&ingress.pool);
+            memory.try_grow(64 * 1024)?;
+            event.send(Message::Entry(Entry {
+                event: Event {
+                    runtime_id: ingress.runtime_id.clone(),
+                    sequence: ingress.next_event.fetch_add(1, Ordering::Relaxed) + 1,
+                    recorded_at: enrichment_core::native_time::EventTime::now()?,
+                    operation_id: None,
+                    payload: EventPayload::Materialization {
+                        value: observation(29),
+                    },
+                },
+                memory,
+            }));
+            let (reply, received) = oneshot::channel();
+            query.send(Message::Read(Selection::Summary, reply));
+            let summary = decode::<Summary>(received.await.map_err(|_| invalid("read reply"))??)?;
+            assert_eq!(
+                (
+                    summary[0].materialization_fills,
+                    summary[0].materialization_spill_bytes
+                ),
+                (1, 29)
+            );
+            closed.await.map_err(|_| invalid("close reply"))??;
+            owned.close_diagnostics().await?;
+            assert_eq!(history.dropped(), 0);
+            Ok(())
+        })?
+    }
+
+    #[test]
+    fn cached_native_snapshot_reloads_after_another_writer_advances() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let history = root.path().join("history");
+        let first = QueryRuntime::with_diagnostics(
+            &root.path().join("first"),
+            &history,
+            Default::default(),
+        )?;
+        let second = QueryRuntime::with_diagnostics(
+            &root.path().join("second"),
+            &history,
+            Default::default(),
+        )?;
+        let driver = first.clone();
+        driver.bootstrap(async move {
+            first.native_history().materialization(None, observation(1));
+            first.flush_diagnostics().await?;
+            second
+                .native_history()
+                .materialization(None, observation(2));
+            second.flush_diagnostics().await?;
+            // The first actor still holds its earlier exact Delta snapshot.
+            first.native_history().materialization(None, observation(4));
+            first.flush_diagnostics().await?;
+            let left = first.diagnostic_summary().await?;
+            let right = second.diagnostic_summary().await?;
+            assert_eq!(
+                (left.materialization_fills, left.materialization_spill_bytes),
+                (2, 5)
+            );
+            assert_eq!(
+                (
+                    right.materialization_fills,
+                    right.materialization_spill_bytes
+                ),
+                (1, 2)
+            );
+            let (a, b) = tokio::join!(first.close_diagnostics(), second.close_diagnostics());
+            a?;
+            b
+        })?
+    }
+
+    #[test]
+    fn lost_close_acknowledgement_still_joins_the_native_writer() -> Result<()> {
+        let root = tempfile::tempdir()?;
+        let runtime = QueryRuntime::new(root.path(), Default::default())?;
+        let owned = runtime.clone();
+        runtime.bootstrap(async move {
+            let history = owned.native_history();
+            history.materialization(None, observation(19));
+            assert_eq!(history.summary().await?.materialization_spill_bytes, 19);
+            let (send, receive) = oneshot::channel();
+            history
+                .0
+                .as_ref()
+                .unwrap()
+                .send
+                .send(Message::Read(Selection::Close, send))
+                .await
+                .map_err(|_| invalid("test close admission"))?;
+            drop(receive); // Actual close is queued, but its caller has disconnected.
+            let (first, second) =
+                tokio::join!(owned.close_diagnostics(), owned.close_diagnostics());
+            first?;
+            second?;
+            let completion = history.0.as_ref().unwrap().completion.lock().await;
+            assert!(completion.task.is_none(), "writer must have been joined");
+            assert!(completion.failure.is_none());
+            Ok(())
+        })?
+    }
 }

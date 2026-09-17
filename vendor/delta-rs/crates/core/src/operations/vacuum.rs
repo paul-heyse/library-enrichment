@@ -41,7 +41,7 @@ use crate::kernel::{
     ActiveAddOptions, AddStatsPolicy, EagerSnapshot, Snapshot, TombstoneView, Version,
     resolve_snapshot,
 };
-use crate::logstore::{LogStore, LogStoreRef};
+use crate::logstore::{LogStore, LogStoreExt as _, LogStoreRef};
 use crate::protocol::DeltaOperation;
 use crate::table::config::TablePropertiesExt as _;
 use crate::table::state::DeltaTableState;
@@ -73,17 +73,64 @@ async fn collect_active_paths(
     snapshot: &Snapshot,
     log_store: &dyn LogStore,
 ) -> DeltaResult<HashSet<Path>> {
-    snapshot
-        .active_adds(
-            log_store,
-            ActiveAddOptions {
-                predicate: None,
-                stats: AddStatsPolicy::None,
-            },
-        )
-        .map_ok(|file| file.object_store_path())
-        .try_collect()
-        .await
+    let root = log_store.table_root_url();
+    let mut files = snapshot.active_adds(
+        log_store,
+        ActiveAddOptions {
+            predicate: None,
+            stats: AddStatsPolicy::None,
+        },
+    );
+    let mut protected = HashSet::new();
+    while let Some(file) = files.try_next().await? {
+        protected.insert(file.object_store_path());
+        if let Some(descriptor) = file.checked_deletion_vector_descriptor()? {
+            if let Some(url) = descriptor.absolute_path(&root)? {
+                protected.insert(relative_deletion_vector_path(&root, &url)?);
+            }
+        }
+    }
+    Ok(protected)
+}
+
+// Service maintenance owns one admitted table root. Resolve using the kernel, then
+// preserve exact native object-store keys. Foreign references are unsupported here;
+// silently omitting one would make the retained-version guarantee false.
+fn relative_deletion_vector_path(root: &url::Url, file: &url::Url) -> DeltaResult<Path> {
+    let refused = || {
+        DeltaTableError::Generic("vacuum deletion vector is outside the admitted table root".into())
+    };
+    if root.scheme() != file.scheme()
+        || root.host_str() != file.host_str()
+        || root.port_or_known_default() != file.port_or_known_default()
+        || root.username() != file.username()
+        || root.password() != file.password()
+        || file.query().is_some()
+        || file.fragment().is_some()
+        || root.query().is_some()
+        || root.fragment().is_some()
+    {
+        return Err(refused());
+    }
+    // Some HTTPS backends strip a bucket/container during scheme parsing. Check
+    // the decoded URL namespace as well as the resulting native object path.
+    let root_url_path = Path::from_url_path(root.path())?;
+    let file_url_path = Path::from_url_path(file.path())?;
+    if file_url_path.prefix_match(&root_url_path).is_none() {
+        return Err(refused());
+    }
+    let (_, root_path) = object_store::ObjectStoreScheme::parse(root)
+        .map_err(|e| DeltaTableError::Generic(e.to_string()))?;
+    let (_, file_path) = object_store::ObjectStoreScheme::parse(file)
+        .map_err(|e| DeltaTableError::Generic(e.to_string()))?;
+    let relative: Path = file_path
+        .prefix_match(&root_path)
+        .ok_or_else(refused)?
+        .collect();
+    if relative.as_ref().is_empty() {
+        return Err(refused());
+    }
+    Ok(relative)
 }
 
 fn tombstone_object_store_path(tombstone: &TombstoneView) -> Path {
@@ -648,8 +695,7 @@ impl VacuumPlan {
         };
 
         // Begin VACUUM START COMMIT
-        let mut start_props = CommitProperties::default();
-        start_props.app_metadata = commit_properties.app_metadata.clone();
+        let mut start_props = commit_properties.clone();
         start_props.app_metadata.insert(
             "operationMetrics".to_owned(),
             serde_json::to_value(start_metrics)?,

@@ -1,7 +1,6 @@
 //! Pinned comparisons read immutable evidence; version convenience explicitly resolves first.
 use std::collections::BTreeSet;
 
-use enrichment_core::canonical;
 use enrichment_core::compare::{
     Scope,
     page::{AlternativeCursor, ComparisonCursor},
@@ -10,7 +9,6 @@ use enrichment_core::evidence::EvidenceKind;
 use enrichment_core::request::CompareRequest;
 use enrichment_core::wire::data::{CompareData, ComparisonSide};
 use enrichment_core::wire::{Coverage, Envelope, ErrorCode, Page};
-use serde_json::json;
 
 use super::common::{self, Opened};
 use crate::envelope::{self, Research};
@@ -27,8 +25,8 @@ fn invalid(message: &str) -> Envelope {
 fn side(opened: &Opened, coverage: Coverage) -> ComparisonSide {
     ComparisonSide {
         coverage,
-        context_id: opened.context.context_id.to_string(),
-        snapshot_id: opened.snapshot_id.to_string(),
+        context_id: opened.context.context_id.clone(),
+        snapshot_id: opened.snapshot_id.clone(),
         release: opened.release.clone(),
         environment: opened.environment.clone(),
     }
@@ -36,18 +34,7 @@ fn side(opened: &Opened, coverage: Coverage) -> ComparisonSide {
 
 /// Compare two exact snapshots without changing either input.
 pub async fn compare(service: &Service, request: CompareRequest) -> Envelope {
-    let pinned = request.before_context_id.is_some() || request.after_context_id.is_some();
-    let versions = request.ecosystem.is_some()
-        || request.name.is_some()
-        || request.from_version.is_some()
-        || request.to_version.is_some();
-    if pinned == versions {
-        return invalid("Exactly one comparison input form is required");
-    }
-    if !pinned {
-        if let Err(error) = request.resolutions() {
-            return invalid(&error);
-        }
+    if request.before_context_id.is_none() {
         return super::compare_job::submit(service, request).await;
     }
     read(service, request).await
@@ -83,7 +70,7 @@ async fn read_inner(
         service,
         std::sync::Arc::clone(&catalog),
         before_id,
-        request.before_snapshot_id.as_deref(),
+        request.before_snapshot_id.as_ref(),
     )
     .await
     {
@@ -94,7 +81,7 @@ async fn read_inner(
         service,
         catalog,
         after_id,
-        request.after_snapshot_id.as_deref(),
+        request.after_snapshot_id.as_ref(),
     )
     .await
     {
@@ -107,7 +94,7 @@ async fn read_inner(
     {
         return invalid("Comparison requires the same package, ecosystem and registry");
     }
-    let mut scopes = request.scopes.clone().unwrap_or_else(|| {
+    let scopes = request.scopes.clone().unwrap_or_else(|| {
         vec![
             Scope::Api,
             Scope::Docs,
@@ -117,8 +104,10 @@ async fn read_inner(
             Scope::Relationships,
         ]
     });
-    scopes.sort();
-    scopes.dedup();
+    let scopes = match enrichment_core::native_key::ordered_set(&scopes) {
+        Ok(values) => values,
+        Err(error) => return common::operation_error(&error, "comparison_selection"),
+    };
     if scopes.is_empty() {
         return invalid("Select at least one comparison scope");
     }
@@ -181,14 +170,17 @@ async fn read_inner(
     if same_release && before.release.key.artifact_digest != after.release.key.artifact_digest {
         confounders.push("Different artifact variants of the same version were selected".into());
     }
-    let scope = format!("{}:{}", before.snapshot_id, after.snapshot_id);
+    let scope = enrichment_core::compare::page::SnapshotPair {
+        before: before.snapshot_id.clone(),
+        after: after.snapshot_id.clone(),
+    };
     let budget = common::byte_budget(service, request.max_bytes);
-    let digest = canonical::digest_hex(&json!([
-        "typed-comparison/2",
-        scopes,
-        budget,
-        request.max_items
-    ]));
+    let digest = enrichment_core::operation::selections::ComparisonSelection {
+        scopes: scopes.clone(),
+        max_items: request.max_items,
+        max_bytes: budget,
+    }
+    .identity();
     let cursor = match request
         .cursor
         .as_deref()
@@ -310,8 +302,8 @@ async fn read_inner(
         data: common::payload(&data),
         coverage,
         freshness: envelope::unverified_freshness(),
-        context_id: Some(after.context.context_id.to_string()),
-        snapshot_id: Some(after.snapshot_id.to_string()),
+        context_id: Some(after.context.context_id.clone()),
+        snapshot_id: Some(after.snapshot_id.clone()),
         evidence: Vec::new(),
         artifacts: Vec::new(),
     };

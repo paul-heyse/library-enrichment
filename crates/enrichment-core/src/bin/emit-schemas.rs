@@ -54,11 +54,11 @@ fn main() -> ExitCode {
             format!(
                 "{}\n",
                 serde_json::to_string_pretty(&enrichment_core::canonical::canonicalize(
-                    schemars::generate::SchemaSettings::draft2020_12()
+                    enrichment_core::native_wire::schema(schemars::generate::SchemaSettings::draft2020_12()
                         .for_serialize()
                         .into_generator()
                         .into_root_schema_for::<enrichment_core::producer::python::WorkerProtocol>()
-                        .to_value()
+                        .to_value())
                 ))
                 .expect("schema")
             ),

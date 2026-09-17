@@ -53,7 +53,11 @@ impl EvidenceTables {
     pub async fn providers(
         &self,
         bindings: &[DeltaBinding],
+        protection: crate::leases::ReadProtection,
     ) -> Result<BTreeMap<Relation, Arc<dyn TableProvider>>> {
+        protection
+            .require_tables(&self.delta.root, bindings)
+            .await?;
         let mut providers = BTreeMap::new();
         for binding in bindings {
             let relation = Relation::ALL
@@ -67,14 +71,10 @@ impl EvidenceTables {
             {
                 return Err(invalid("invalid evidence version vector"));
             }
-            let table = self
+            let provider = self
                 .delta
-                .load(&binding.table_uri, Some(binding.version))
+                .immutable_provider(binding, &contract, &protection)
                 .await?;
-            if table.snapshot().map_err(external)?.metadata().id() != binding.table_id {
-                return Err(invalid("evidence table identity changed"));
-            }
-            let provider = self.delta.provider(&table, &contract).await?;
             providers.insert(
                 relation,
                 cohort_view(
@@ -97,10 +97,27 @@ impl EvidenceTables {
         &self,
         before: &[DeltaBinding],
         after: &[DeltaBinding],
+        retention: &crate::retention::RetentionStore,
     ) -> Result<DataFrame> {
         use datafusion::logical_expr::JoinType;
-        let old = self.providers(before).await?;
-        let new = self.providers(after).await?;
+        if retention.namespace() != self.delta.root {
+            return Err(invalid(
+                "CDF protection belongs to a different Delta namespace",
+            ));
+        }
+        let protection = retention.enroll_changes(before, after).await?;
+        let old = self
+            .providers(
+                before,
+                crate::leases::ReadProtection::Durable(protection.clone()),
+            )
+            .await?;
+        let new = self
+            .providers(
+                after,
+                crate::leases::ReadProtection::Durable(protection.clone()),
+            )
+            .await?;
         let mut output: Option<DataFrame> = None;
         for relation in Relation::ALL {
             let a = before
@@ -195,7 +212,13 @@ impl EvidenceTables {
                 Some(previous) => previous.union(delta)?,
             });
         }
-        output.ok_or_else(|| invalid("empty evidence relation registry"))
+        let output = output.ok_or_else(|| invalid("empty evidence relation registry"))?;
+        let session = self.delta.session();
+        session.read_table(crate::leases::protected_provider(
+            output.into_view(),
+            protection,
+            &session,
+        )?)
     }
 }
 fn cohort_view(
@@ -218,7 +241,4 @@ fn cohort_view(
 }
 fn invalid(message: &str) -> DataFusionError {
     DataFusionError::Execution(message.into())
-}
-fn external(error: impl std::error::Error + Send + Sync + 'static) -> DataFusionError {
-    DataFusionError::External(Box::new(error))
 }

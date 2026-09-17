@@ -1,16 +1,13 @@
 //! Bounded byte-preserving Markdown section locations, independent of evidence extraction.
+use enrichment_core::operation::selections::ArtifactWindow;
 use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
 
-pub(super) fn section(
-    file: &mut std::fs::File,
-    wanted: &str,
-) -> io::Result<Option<(usize, usize, String)>> {
+pub(super) fn sections(file: &mut std::fs::File) -> io::Result<Vec<ArtifactWindow>> {
     file.rewind()?;
     let mut reader = BufReader::new(file);
     let mut offset = 0;
-    let mut active = wanted
-        .eq_ignore_ascii_case("preamble")
-        .then(|| (0, "preamble".to_owned()));
+    let mut active = (0, "preamble".to_owned());
+    let mut windows = Vec::new();
     let mut fence = None;
     loop {
         let start = offset;
@@ -33,7 +30,12 @@ pub(super) fn section(
             line.push(byte);
         }
         if start == offset {
-            return Ok(active.map(|(body, heading)| (body, offset, heading)));
+            windows.push(ArtifactWindow {
+                start: active.0,
+                end: offset,
+                section: Some(active.1),
+            });
+            return Ok(windows);
         }
         // Malformed body bytes remain original bytes; only valid heading syntax is decoded.
         let Ok(line) = std::str::from_utf8(&line) else {
@@ -60,12 +62,17 @@ pub(super) fn section(
         if heading.is_empty() {
             continue;
         }
-        if let Some((body, heading)) = active {
-            return Ok(Some((body, start, heading)));
+        if windows.len() >= 8191 {
+            return Err(io::Error::other(
+                "artifact heading count exceeds 8192-window bound",
+            ));
         }
-        if heading.eq_ignore_ascii_case(wanted) {
-            active = Some((offset, heading.to_owned()));
-        }
+        windows.push(ArtifactWindow {
+            start: active.0,
+            end: start,
+            section: Some(active.1),
+        });
+        active = (offset, heading.to_owned());
     }
 }
 
@@ -85,17 +92,27 @@ mod tests {
         let mut file = tempfile::tempfile().unwrap();
         let bytes = b"preamble\r# Title\r\n\r\nbody\xff\r\n```\r# ignored\r```\r## Next\nend";
         file.write_all(bytes).unwrap();
-        let (start, end, label) = section(&mut file, "title").unwrap().unwrap();
-        assert_eq!(label, "Title");
+        let windows = sections(&mut file).unwrap();
+        assert_eq!(windows.len(), 3);
+        let ArtifactWindow {
+            start,
+            end,
+            section: label,
+        } = &windows[1];
+        let (start, end) = (*start, *end);
+        assert_eq!(label.as_deref(), Some("Title"));
         assert_eq!(&bytes[start..end], b"\r\nbody\xff\r\n```\r# ignored\r```\r");
         assert_eq!(
             range(&mut file, start, end - start).unwrap(),
             &bytes[start..end]
         );
-        assert!(section(&mut file, "absent").unwrap().is_none());
         assert_eq!(
-            section(&mut file, "preamble").unwrap().unwrap(),
-            (0, 9, "preamble".into())
+            windows[0],
+            ArtifactWindow {
+                start: 0,
+                end: 9,
+                section: Some("preamble".into())
+            }
         );
     }
 }

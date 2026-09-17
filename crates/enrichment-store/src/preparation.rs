@@ -1,6 +1,7 @@
 //! Native result contracts use Arrow fields, not a parallel type system.
 use arrow::datatypes::{DataType, Field, Schema};
 use datafusion::error::{DataFusionError, Result};
+use enrichment_core::telemetry::MaterializationFamily;
 use enrichment_core::wire::Diagnostic;
 
 pub(crate) fn witnesses(batches: &[arrow::record_batch::RecordBatch]) -> Vec<String> {
@@ -103,18 +104,23 @@ pub enum QueryFamily {
     CatalogArtifact,
     StaticInputs,
     Coverage,
-    SearchIndex,
-    OverviewChildren,
-    OverviewNamespaces,
+    Intermediate(MaterializationFamily),
     OverviewSummary,
     KindCounts { namespace: bool },
     Search,
-    ComparisonKeys,
     ComparisonAlternatives,
     RevisionDisposition,
 }
 
 impl QueryFamily {
+    /// Finite operation-local reuse eligibility belongs to the output declaration.
+    pub(crate) const fn materialization(self) -> Option<MaterializationFamily> {
+        match self {
+            Self::Intermediate(family) => Some(family),
+            _ => None,
+        }
+    }
+
     pub fn require(self, actual: &Schema) -> Result<()> {
         use crate::admission::Relation;
         let relation_fields = |relation: Relation| -> Result<Vec<Field>> {
@@ -271,7 +277,7 @@ impl QueryFamily {
                     ),
                 ],
             ),
-            Self::Search | Self::SearchIndex => {
+            Self::Search | Self::Intermediate(MaterializationFamily::SearchIndex) => {
                 let mut fields = vec![
                     Field::new("hit_order", DataType::UInt32, false),
                     Field::new("candidate_id", DataType::Utf8, true),
@@ -316,7 +322,7 @@ impl QueryFamily {
                 }
                 ("search_index_or_output", fields)
             }
-            Self::ComparisonKeys => (
+            Self::Intermediate(MaterializationFamily::ComparisonKeys) => (
                 "comparison_keys",
                 vec![
                     Field::new("plan", DataType::UInt64, false),
@@ -324,7 +330,7 @@ impl QueryFamily {
                     Field::new("label", DataType::Utf8, true),
                 ],
             ),
-            Self::OverviewChildren => (
+            Self::Intermediate(MaterializationFamily::OverviewChildren) => (
                 "overview_children",
                 vec![
                     Field::new("namespace_path", DataType::Utf8, true),
@@ -347,7 +353,8 @@ impl QueryFamily {
                     Field::new("definition_position", DataType::UInt64, false),
                 ],
             ),
-            Self::OverviewSummary | Self::OverviewNamespaces => {
+            Self::OverviewSummary
+            | Self::Intermediate(MaterializationFamily::OverviewNamespaces) => {
                 let mut fields = vec![
                     Field::new("path", DataType::Utf8, true),
                     Field::new(

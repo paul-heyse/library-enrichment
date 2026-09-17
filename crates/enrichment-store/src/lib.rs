@@ -12,6 +12,7 @@ mod admitted_provider;
 mod arrow_contract;
 mod arrow_input;
 pub mod artifact_catalog;
+pub mod artifact_selection;
 pub mod atomic;
 mod attempt_plan;
 pub mod availability;
@@ -34,12 +35,16 @@ mod field_admission;
 pub mod http_cache;
 pub mod ingest;
 mod invariants;
+mod kernel_metrics;
+mod kernel_runtime;
 pub mod leases;
 mod native_catalog;
 pub mod native_delta;
 pub mod native_discovery;
 pub mod native_effect;
 mod native_policy;
+mod native_process;
+mod native_rows;
 pub mod native_rustdoc;
 pub mod network_policy;
 mod operation_index;
@@ -47,6 +52,7 @@ pub mod paths;
 pub mod preparation;
 pub mod projection;
 mod provider;
+mod provider_cache;
 mod publication_plan;
 pub mod publication_probe;
 pub mod query;
@@ -57,8 +63,12 @@ pub mod resolution_policy;
 pub mod result;
 pub mod result_catalog;
 pub mod result_delivery;
+#[cfg(test)]
+mod result_measure;
 pub mod result_plan;
 mod result_relations;
+pub mod retention;
+mod retention_tasks;
 pub mod runtime;
 pub mod scoring;
 pub mod search_plan;
@@ -82,13 +92,17 @@ pub mod python_normalize;
 pub mod python_registry;
 pub mod record_writer;
 pub mod registry;
+pub mod registry_capture;
+pub mod revision_capture;
 pub mod rust_normalize;
 
 #[doc(hidden)]
 pub mod native_worker;
 
 mod operation_policy;
-mod request_admission;
+pub mod request_admission;
+pub mod research_outcomes;
+pub mod research_selection;
 
 pub mod operation_policies;
 

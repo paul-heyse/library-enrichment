@@ -1,0 +1,198 @@
+{
+  "module": "tracing_subscriber::registry",
+  "crate": "tracing-subscriber",
+  "api": "api/tracing_subscriber.registry.md",
+  "items": [
+    {
+      "path": "tracing_subscriber::registry::Scope",
+      "name": "Scope",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Scope<'a, R>",
+      "summary": "An iterator over the parents of a span, ordered from leaf to root.",
+      "doc": "api/tracing_subscriber.registry.md#scope",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "from_root",
+          "signature": "fn from_root(self) -> ScopeFromRoot<'a, R>",
+          "summary": "Flips the order of the iterator, so that it is ordered from root to leaf."
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::registry::ScopeFromRoot",
+      "name": "ScopeFromRoot",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct ScopeFromRoot<'a, R> where R: LookupSpan<'a>",
+      "summary": "An iterator over the parents of a span, ordered from root to leaf.",
+      "doc": "api/tracing_subscriber.registry.md#scopefromroot",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        },
+        {
+          "name": "size_hint",
+          "signature": "fn size_hint(&self) -> (usize, Option<usize>)",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::registry::SpanRef",
+      "name": "SpanRef",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct SpanRef<'a, R: LookupSpan<'a>>",
+      "summary": "A reference to [span data] and the associated [registry].",
+      "doc": "api/tracing_subscriber.registry.md#spanref",
+      "methods": [
+        {
+          "name": "extensions",
+          "signature": "fn extensions(&self) -> Extensions<'_>",
+          "summary": "Returns a reference to this span's `Extensions`."
+        },
+        {
+          "name": "extensions_mut",
+          "signature": "fn extensions_mut(&self) -> ExtensionsMut<'_>",
+          "summary": "Returns a mutable reference to this span's `Extensions`."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> &FieldSet",
+          "summary": "Returns a list of [fields] defined by the span."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> Id",
+          "summary": "Returns this span's ID."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &'static Metadata<'static>",
+          "summary": "Returns a static reference to the span's metadata."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &'static str",
+          "summary": "Returns the span's name,"
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<Self>",
+          "summary": "Returns a `SpanRef` describing this span's parent, or `None` if this span is the root of its trace tree."
+        },
+        {
+          "name": "scope",
+          "signature": "fn scope(&self) -> Scope<'a, R>",
+          "summary": "Returns an iterator over all parents of this span, starting with this span, ordered from leaf to root."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::registry::LookupSpan",
+      "name": "LookupSpan",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait LookupSpan<'a>",
+      "summary": "Provides access to stored span data.",
+      "doc": "api/tracing_subscriber.registry.md#lookupspan",
+      "implementors": [
+        "tracing_subscriber::fmt::Subscriber",
+        "tracing_subscriber::layer::layered::Layered",
+        "tracing_subscriber::registry::sharded::Registry"
+      ],
+      "required_methods": [
+        "span_data"
+      ],
+      "provided_methods": [
+        "register_filter",
+        "span"
+      ],
+      "methods": [
+        {
+          "name": "register_filter",
+          "signature": "fn register_filter(&mut self) -> FilterId",
+          "summary": "Registers a [`Filter`] for [per-layer filtering] with this [`Subscriber`]."
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&'a self, id: &Id) -> Option<SpanRef<'a, Self>> where Self: Sized",
+          "summary": "Returns a [`SpanRef`] for the span with the given `Id`, if it exists."
+        },
+        {
+          "name": "span_data",
+          "signature": "fn span_data(&'a self, id: &Id) -> Option<Self::Data>",
+          "summary": "Returns the [`SpanData`] for a given `Id`, if it exists."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::registry::SpanData",
+      "name": "SpanData",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait SpanData<'a>",
+      "summary": "A stored representation of data associated with a span.",
+      "doc": "api/tracing_subscriber.registry.md#spandata",
+      "implementors": [
+        "tracing_subscriber::registry::sharded::Data"
+      ],
+      "required_methods": [
+        "extensions",
+        "extensions_mut",
+        "id",
+        "metadata",
+        "parent"
+      ],
+      "provided_methods": [
+        "is_enabled_for"
+      ],
+      "methods": [
+        {
+          "name": "extensions",
+          "signature": "fn extensions(&self) -> Extensions<'_>",
+          "summary": "Returns a reference to this span's `Extensions`."
+        },
+        {
+          "name": "extensions_mut",
+          "signature": "fn extensions_mut(&self) -> ExtensionsMut<'_>",
+          "summary": "Returns a mutable reference to this span's `Extensions`."
+        },
+        {
+          "name": "id",
+          "signature": "fn id(&self) -> Id",
+          "summary": "Returns this span's ID."
+        },
+        {
+          "name": "is_enabled_for",
+          "signature": "fn is_enabled_for(&self, filter: FilterId) -> bool",
+          "summary": "Returns `true` if this span is enabled for the [per-layer filter][plf] corresponding to the provided [`FilterId`]."
+        },
+        {
+          "name": "metadata",
+          "signature": "fn metadata(&self) -> &'static Metadata<'static>",
+          "summary": "Returns a reference to the span's `Metadata`."
+        },
+        {
+          "name": "parent",
+          "signature": "fn parent(&self) -> Option<&Id>",
+          "summary": "Returns a reference to the ID"
+        }
+      ]
+    }
+  ]
+}

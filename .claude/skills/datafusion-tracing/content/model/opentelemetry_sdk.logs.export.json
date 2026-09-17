@@ -1,0 +1,83 @@
+{
+  "module": "opentelemetry_sdk::logs::export",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.logs.export.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::logs::export::LogBatch",
+      "name": "LogBatch",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct LogBatch<'a>",
+      "summary": "A batch of log records to be exported by a `LogExporter`.",
+      "doc": "api/opentelemetry_sdk.logs.export.md#logbatch",
+      "aliases": [
+        "opentelemetry_sdk::logs::LogBatch"
+      ],
+      "methods": [
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> impl Iterator<Item = (&SdkLogRecord, &InstrumentationScope)>",
+          "summary": "Returns an iterator over the log records and instrumentation scopes in the batch."
+        },
+        {
+          "name": "new",
+          "signature": "fn new(data: &'a [(&'a SdkLogRecord, &'a InstrumentationScope)]) -> LogBatch<'a>",
+          "summary": "Creates a new instance of `LogBatch`."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::logs::export::LogExporter",
+      "name": "LogExporter",
+      "kind": "trait",
+      "crate": "opentelemetry_sdk",
+      "signature": "trait LogExporter: Send + Sync + Debug",
+      "summary": "`LogExporter` defines the interface that log exporters should implement.",
+      "doc": "api/opentelemetry_sdk.logs.export.md#logexporter",
+      "aliases": [
+        "opentelemetry_sdk::logs::LogExporter"
+      ],
+      "implementors": [
+        "opentelemetry_otlp::logs::LogExporter",
+        "opentelemetry_sdk::logs::in_memory_exporter::InMemoryLogExporter"
+      ],
+      "required_methods": [
+        "export"
+      ],
+      "provided_methods": [
+        "event_enabled",
+        "set_resource",
+        "shutdown",
+        "shutdown_with_timeout"
+      ],
+      "methods": [
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, _level: Severity, _target: &str, _name: Option<&str>) -> bool",
+          "summary": "Check if logs are enabled."
+        },
+        {
+          "name": "export",
+          "signature": "fn export(&self, batch: LogBatch<'_>) -> impl std::future::Future<Output = OTelSdkResult> + Send",
+          "summary": "Exports a batch of log records and their associated instrumentation scopes."
+        },
+        {
+          "name": "set_resource",
+          "signature": "fn set_resource(&mut self, _resource: &Resource)",
+          "summary": "Set the resource for the exporter."
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&self) -> OTelSdkResult",
+          "summary": "Shuts down the exporter with a default timeout."
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, _timeout: time::Duration) -> OTelSdkResult",
+          "summary": "Shuts down the exporter."
+        }
+      ]
+    }
+  ]
+}

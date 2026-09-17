@@ -1,0 +1,24 @@
+id: model-doc-hidden
+language: json
+severity: hint
+message: public only because a macro needs it; the macro is the supported route
+note: |
+  `#[doc(hidden)]` is not recorded in rustdoc JSON at format 61 -- measured: the item comes
+  back with `attrs: []`. This classification is read from the pinned source with an ast-grep
+  rule instead. Upstream's own comment beside these re-exports says they are "only public
+  because they need to be accessed by the macros, but they're not intended for direct use".
+
+  Calling one works. It also opts you out of every compatibility promise the macros carry.
+metadata:
+  record: reachability
+  reads: content/model
+# Deliberately NOT anchored on `json-record`. An item record carries a "path" and a method
+# record does not, and the sixteen findings that matter here are methods -- anchoring on the
+# item would have reported two structs and hidden every method inside them.
+rule:
+  kind: object
+  has:
+    matches:
+      json-string-field:
+        key-pattern: { regex: '^"visibility"$' }
+        value-pattern: { regex: '^"doc-hidden"$' }

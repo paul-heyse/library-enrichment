@@ -2,45 +2,37 @@
 use crate::{identity::Ecosystem, request::ResolveRequest};
 mod inputs;
 
+crate::native_struct! {
 /// Declared input reachability is distinct from a proof of complete generated/build inputs.
-#[derive(
-    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
-#[serde(deny_unknown_fields)]
 pub struct RevisionExtraction {
-    pub archive_sha256: String,
-    pub policy: String,
-    pub omissions: Vec<crate::archive::ArchiveOmission>,
-    pub selected_package: String,
-    pub declared_inputs: Vec<String>,
+    archive_sha256: String => crate::native_union::Rule::Sha256,
+    policy: String => crate::native_union::Rule::NonEmpty,
+    omissions: Vec<crate::archive::ArchiveOmission> => crate::native_union::Rule::Set,
+    selected_package: String => crate::native_union::Rule::Text,
+    declared_inputs: Vec<String> => crate::native_union::Rule::Set,
     /// Candidate source directories from the selected package and declared local dependencies.
-    pub source_roots: Vec<String>,
-    pub missing_inputs: Vec<String>,
-    pub affected_omissions: Vec<String>,
-    pub source_closure: SourceClosure,
+    source_roots: Vec<String> => crate::native_union::Rule::Set,
+    missing_inputs: Vec<String> => crate::native_union::Rule::Set,
+    affected_omissions: Vec<String> => crate::native_union::Rule::Set,
+    source_closure: SourceClosure => crate::native_union::Rule::Text,
+}
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-pub enum SourceClosure {
-    Unknown,
-    Incomplete,
-}
+crate::native_vocabulary! { pub enum SourceClosure { Unknown = "unknown", Incomplete = "incomplete" } }
 
+crate::native_struct! {
 /// Filesystem observations collected without deciding the selected package's coverage.
 /// The store lowers these facts into its native requested-domain assessment before publication.
-#[derive(Debug, Clone)]
 pub struct RevisionInputs {
-    pub archive_sha256: String,
-    pub policy: String,
-    pub omissions: Vec<crate::archive::ArchiveOmission>,
-    pub selected_package: String,
-    pub declared_inputs: Vec<String>,
+    archive_sha256: String => crate::native_union::Rule::Sha256,
+    policy: String => crate::native_union::Rule::NonEmpty,
+    omissions: Vec<crate::archive::ArchiveOmission> => crate::native_union::Rule::Set,
+    selected_package: String => crate::native_union::Rule::Text,
+    declared_inputs: Vec<String> => crate::native_union::Rule::Set,
     /// Candidate source directories from the selected package and declared local dependencies.
-    pub source_roots: Vec<String>,
-    pub missing_inputs: Vec<String>,
+    source_roots: Vec<String> => crate::native_union::Rule::Set,
+    missing_inputs: Vec<String> => crate::native_union::Rule::Set,
+}
 }
 
 impl RevisionInputs {
@@ -63,17 +55,18 @@ impl RevisionInputs {
     }
 }
 
+crate::native_struct! {
 /// The validated initial Git provider and package selection.
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Revision {
     /// Canonical HTTPS repository URL.
-    pub repository: String,
+    repository: String => crate::native_union::Rule::NonEmpty,
     /// Validated owner/repository path for API construction.
-    pub repository_path: String,
+    repository_path: String => crate::native_union::Rule::NonEmpty,
     /// Full lowercase commit identity.
-    pub commit: String,
+    commit: String => crate::native_union::Rule::NonEmpty,
     /// Empty means the repository root.
-    pub package_subdir: String,
+    package_subdir: String => crate::native_union::Rule::Text,
+}
 }
 impl Revision {
     /// Validate identity without accepting mutable refs or path selectors.

@@ -28,7 +28,7 @@ mod tests {
         let before = Environment::unspecified();
         let mut after = before.clone();
         after.target = Some("aarch64-unknown-linux-gnu".into());
-        after.features_known = true;
+        after.features = Some(vec![]);
         let observed = ObservedConfiguration {
             features: vec!["b".into(), "a".into()],
             all_features: false,
@@ -51,9 +51,9 @@ mod tests {
         assert!(differences.iter().any(|value|matches!(value,ConfigurationDifference::Target {before:None,after:Some(value)} if value=="aarch64-unknown-linux-gnu")));
         assert!(differences.iter().any(|value| matches!(
             value,
-            ConfigurationDifference::FeaturesKnown {
-                before: false,
-                after: true
+            ConfigurationDifference::Features {
+                before: None,
+                after: Some(_)
             }
         )));
         assert!(
@@ -150,7 +150,7 @@ pub async fn assess(
         .into_iter()
         .map(|row| row.difference)
         .collect::<Vec<_>>();
-    let messages = session.sql("WITH sides AS (SELECT 'before' AS label, before AS environment FROM configuration_inputs UNION ALL SELECT 'after',after FROM configuration_inputs), missing AS (SELECT label,'toolchain' AS field FROM sides WHERE environment.toolchain IS NULL UNION ALL SELECT label,'target' FROM sides WHERE environment.target IS NULL UNION ALL SELECT label,'features/extras' FROM sides WHERE NOT environment.features_known UNION ALL SELECT label,'dependency resolution' FROM sides WHERE environment.lock_digest IS NULL) SELECT concat(label,' ',field,' is unknown') AS message FROM missing ORDER BY label,field").await?;
+    let messages = session.sql("WITH sides AS (SELECT 'before' AS label, before AS environment FROM configuration_inputs UNION ALL SELECT 'after',after FROM configuration_inputs), missing AS (SELECT label,'toolchain' AS field FROM sides WHERE environment.toolchain IS NULL UNION ALL SELECT label,'target' FROM sides WHERE environment.target IS NULL UNION ALL SELECT label,'features/extras' FROM sides WHERE environment.features IS NULL UNION ALL SELECT label,'dependency resolution' FROM sides WHERE environment.lock_digest IS NULL) SELECT concat(label,' ',field,' is unknown') AS message FROM missing ORDER BY label,field").await?;
     let mut confounders = runtime
         .records::<Confounder>(messages, 8)
         .await?

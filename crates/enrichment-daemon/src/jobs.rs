@@ -129,12 +129,7 @@ impl Jobs {
     ) -> io::Result<(JobRecord, String, bool)> {
         self.reconcile_finished().await?;
         let specification = request.into();
-        let kind = match &specification {
-            Arguments::Resolve { .. } => enrichment_store::native_effect::CommandKind::Resolve,
-            Arguments::Compare { .. } => enrichment_store::native_effect::CommandKind::Compare,
-            Arguments::Inspect { .. } => enrichment_store::native_effect::CommandKind::Inspect,
-            Arguments::Verify { .. } => enrichment_store::native_effect::CommandKind::Verify,
-        };
+        let kind = specification.command_kind();
         let arguments = specification;
         let interest = format!("interest_{}", uuid::Uuid::new_v4().simple());
         let (id, fresh) = self

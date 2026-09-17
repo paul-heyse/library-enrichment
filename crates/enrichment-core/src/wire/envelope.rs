@@ -21,15 +21,15 @@ use super::ids::RequestId;
 use super::job::JobHandle;
 use super::research::DeliveryDescriptor;
 
-/// The wire schema version. Currently only `3.0`.
+/// The wire schema version. Currently only `5.0`.
 ///
 /// No variant carries a doc comment -- see the module docs in [`super`](crate::wire).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[schemars(inline)]
 pub enum SchemaVersion {
     #[default]
-    #[serde(rename = "3.0")]
-    V3_0,
+    #[serde(rename = "5.0")]
+    V5_0,
 }
 
 crate::native_vocabulary! {
@@ -90,9 +90,9 @@ pub struct EnvelopeBody {
     /// One-line account of what this result establishes.
     pub summary: String,
     /// The research context, or `null` for context-free tools such as `service_status`.
-    pub context_id: Option<String>,
+    pub context_id: Option<crate::identity::ContextId>,
     /// The snapshot read, or `null` when nothing was read.
-    pub snapshot_id: Option<String>,
+    pub snapshot_id: Option<crate::identity::SnapshotId>,
     /// Tool-specific payload.
     pub data: ToolData,
     /// What was looked at, and what was not.
@@ -120,7 +120,7 @@ pub struct EnvelopeBody {
     transform = status_conditionals
 )]
 pub struct Envelope {
-    /// Always `3.0` for this contract.
+    /// Always `5.0` for this contract.
     pub schema_version: SchemaVersion,
     /// Opaque per-request identifier.
     pub request_id: RequestId,
@@ -128,9 +128,9 @@ pub struct Envelope {
     /// One-line account of what this result establishes.
     pub summary: String,
     /// The research context, or `null`.
-    pub context_id: Option<String>,
+    pub context_id: Option<crate::identity::ContextId>,
     /// The snapshot read, or `null`.
-    pub snapshot_id: Option<String>,
+    pub snapshot_id: Option<crate::identity::SnapshotId>,
     /// Tool-specific payload.
     pub data: ToolData,
     /// What was looked at, and what was not.
@@ -158,7 +158,7 @@ impl Envelope {
             Outcome::Error { job, error } => (job, Some(error)),
         };
         Self {
-            schema_version: SchemaVersion::V3_0,
+            schema_version: SchemaVersion::V5_0,
             request_id: body.request_id,
             status,
             summary: body.summary,
@@ -271,9 +271,9 @@ struct RawEnvelope {
     status: Status,
     summary: String,
     #[serde(deserialize_with = "super::required_option")]
-    context_id: Option<String>,
+    context_id: Option<crate::identity::ContextId>,
     #[serde(deserialize_with = "super::required_option")]
-    snapshot_id: Option<String>,
+    snapshot_id: Option<crate::identity::SnapshotId>,
     data: ToolData,
     coverage: Coverage,
     freshness: Freshness,
@@ -329,10 +329,10 @@ impl TryFrom<RawEnvelope> for Envelope {
 
     fn try_from(raw: RawEnvelope) -> Result<Self, EnvelopeError> {
         // `schema_version` is enforced by its type: `SchemaVersion` has exactly one variant, so
-        // deserializing anything but "3.0" already fails. This irrefutable pattern consumes it
+        // deserializing anything but "5.0" already fails. This irrefutable pattern consumes it
         // and doubles as a tripwire -- adding a second variant makes this line stop compiling,
         // forcing a deliberate decision about accepting an older document.
-        let SchemaVersion::V3_0 = raw.schema_version;
+        let SchemaVersion::V5_0 = raw.schema_version;
         if matches!(raw.delivery, DeliveryDescriptor::Artifact { .. }) {
             if !raw.data.is_empty() {
                 return Err(EnvelopeError::ArtifactWithData);
@@ -506,7 +506,7 @@ mod tests {
 
     fn raw_envelope(status: Status, has_job: bool, has_error: bool) -> RawEnvelope {
         RawEnvelope {
-            schema_version: SchemaVersion::V3_0,
+            schema_version: SchemaVersion::V5_0,
             request_id: RequestId::try_from("req_matrix".to_owned()).expect("non-empty"),
             status,
             summary: String::new(),

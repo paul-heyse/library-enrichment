@@ -25,7 +25,7 @@ use datafusion::{
 use std::{collections::HashSet, sync::Arc};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ArrowContract {
+pub(crate) struct ArrowContract {
     input: LogicalPlan,
     schema: DFSchemaRef,
 }
@@ -206,7 +206,9 @@ impl QueryPlanner for NativePlanner {
     ) -> Result<Arc<dyn ExecutionPlan>> {
         DefaultPhysicalPlanner::with_extension_planners(vec![
             Arc::new(ContractPlanner),
+            Arc::new(crate::leases::RetentionExtensionPlanner),
             Arc::new(crate::native_effect::CommandPlanner),
+            Arc::new(crate::operation_index::MaterializationPlanner),
             deltalake::delta_datafusion::planner::DeltaExtensionPlanner::new(),
         ])
         .create_physical_plan(logical, session)

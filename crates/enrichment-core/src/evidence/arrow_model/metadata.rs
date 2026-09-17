@@ -29,11 +29,17 @@ pub fn fields(rows: &[ReleaseMetadata]) -> Result<RecordBatch, ArrowError> {
             false,
             "key:release-metadata",
         ),
-        column(
-            "release_id",
-            text(rows.iter().map(|row| row.release_id.as_str())),
-            false,
-            "ref:release",
+        (
+            crate::native_union::field::<crate::identity::ReleaseId>(
+                "release_id",
+                crate::native_union::Rule::Text,
+            ),
+            <crate::identity::ReleaseId as crate::native_union::Cell>::encode(
+                &rows
+                    .iter()
+                    .map(|row| Some(&row.release_id))
+                    .collect::<Vec<_>>(),
+            )?,
         ),
     ];
     columns.extend(
@@ -66,7 +72,10 @@ pub fn decode(batch: &RecordBatch) -> Result<Vec<ReleaseMetadata>, ArrowError> {
             let row = rows.row(index);
             let value = ReleaseMetadata {
                 metadata_id: row.text("metadata_id")?.into(),
-                release_id: row.text("release_id")?.into(),
+                release_id: <crate::identity::ReleaseId as crate::native_union::Cell>::decode(
+                    row,
+                    "release_id",
+                )?,
                 details: NativeUnion::decode(payload.row(index))?,
                 source: decode::source(row.structure("source")?)?,
             };

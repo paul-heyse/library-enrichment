@@ -126,15 +126,6 @@ impl Reservation {
             closed: false,
         })
     }
-    pub async fn close(mut self) -> io::Result<()> {
-        self.remove()?;
-        self.store
-            .release_storage(&self.id)
-            .await
-            .map_err(io::Error::other)?;
-        self.closed = true;
-        Ok(())
-    }
     fn remove(&self) -> io::Result<()> {
         match fs::remove_dir_all(&self.root) {
             Ok(()) => {}

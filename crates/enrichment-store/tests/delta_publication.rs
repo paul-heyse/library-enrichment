@@ -82,10 +82,25 @@ fn repository(root: &std::path::Path, store_blob: bool) -> EvidenceRepository {
     .expect("repository")
 }
 
-#[tokio::test]
-async fn publication_selects_native_delta_vector_and_exports_cohorts() {
-    let root = tempfile::tempdir().unwrap();
+#[test]
+fn publication_selects_native_delta_vector_and_exports_cohorts() {
+    let root = std::sync::Arc::new(tempfile::tempdir().unwrap());
     let repo = repository(root.path(), true);
+    let runtime = repo.runtime.clone();
+    // Match the daemon's owned native entry point. Arrow construction and native
+    // logical planning execute on the configured workers as well as physical I/O.
+    let journey_root = root.clone();
+    runtime
+        .bootstrap(async move { publication_journey(journey_root, repo).await })
+        .unwrap();
+    let close = runtime.clone();
+    runtime
+        .bootstrap(async move { close.close_diagnostics().await })
+        .unwrap()
+        .unwrap();
+}
+
+async fn publication_journey(root: std::sync::Arc<tempfile::TempDir>, repo: EvidenceRepository) {
     let metadata = metadata();
     let publication =
         native_ingest::publish_rows(&repo, metadata.clone(), evidence(&metadata), None, None)
@@ -118,7 +133,10 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
         repo.runtime.clone(),
     )
     .unwrap();
-    assert!(native.providers(&forged.tables).await.is_err());
+    let protection = enrichment_store::leases::ReadProtection::Root(
+        enrichment_store::leases::shared(&root.path().join("data")).unwrap(),
+    );
+    assert!(native.providers(&forged.tables, protection).await.is_err());
     // A private cohort and an actual native OPTIMIZE commit lie inside the next CDF window.
     // Neither changes the selected publication's semantic search contents.
     let fragments = publication
@@ -279,25 +297,35 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
     )
     .unwrap();
     let mut prior_definition = initial.clone();
+    let retention = enrichment_store::retention::RetentionStore::new(
+        repo.catalog.clone(),
+        repo.runtime.clone(),
+    );
     prior_definition.revision = "previous-target-definition".into();
     let revision_rebuild = search
-        .prepare(&successor, &recomputed, Some(&prior_definition), false)
+        .prepare(
+            &successor,
+            &recomputed,
+            Some(&prior_definition),
+            false,
+            &retention,
+        )
         .await
         .unwrap();
     assert_eq!(
-        revision_rebuild.mode,
+        revision_rebuild.checkpoint.mode,
         enrichment_store::search_projection::ProjectionMode::RevisionRebuild
     );
     assert_eq!(
-        revision_rebuild.revision,
+        revision_rebuild.checkpoint.revision,
         enrichment_store::search_projection::revision()
     );
     let rebuilt = search
-        .prepare(&successor, &recomputed, Some(&initial), false)
+        .prepare(&successor, &recomputed, Some(&initial), false, &retention)
         .await
         .unwrap();
     assert_eq!(
-        rebuilt.mode,
+        rebuilt.checkpoint.mode,
         enrichment_store::search_projection::ProjectionMode::HistoryRebuild
     );
     // Output commits alone cannot select the candidate or advance its source offsets.
@@ -313,7 +341,7 @@ async fn publication_selects_native_delta_vector_and_exports_cohorts() {
     assert_eq!(still_selected, checkpoint);
     repo.catalog
         .commit(enrichment_store::control::ControlBatch {
-            search_projections: vec![rebuilt],
+            search_projections: vec![rebuilt.checkpoint],
             ..Default::default()
         })
         .await

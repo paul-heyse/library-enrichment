@@ -1,71 +1,22 @@
 //! Mechanical sparse-index decoding. Release policy is evaluated by native plans.
 use super::{IndexEntry, RegistryError};
 use arrow::{
-    datatypes::{DataType, Field, Schema, SchemaRef},
+    datatypes::{Schema, SchemaRef},
     record_batch::RecordBatch,
 };
 use std::sync::Arc;
 
-fn text(name: &str, nullable: bool) -> Field {
-    Field::new(name, DataType::Utf8, nullable)
-}
-fn strings(name: &str) -> Field {
-    Field::new(name, DataType::List(Arc::new(text("item", false))), false)
+use crate::native_union::{NativeStruct, Rule};
+
+crate::native_struct! {
+    pub struct Fact {
+        source_line: u64 => Rule::Coordinate(crate::native_union::Unit::LineOneBased),
+        release: IndexEntry => Rule::Text,
+    }
 }
 
-/// Complete upstream release facts, including physical input-line provenance.
 pub fn schema() -> SchemaRef {
-    let dependency = DataType::Struct(
-        vec![
-            text("name", false),
-            text("req", false),
-            strings("features"),
-            Field::new("optional", DataType::Boolean, false),
-            Field::new("default_features", DataType::Boolean, false),
-            text("target", true),
-            text("kind", true),
-            text("package", true),
-        ]
-        .into(),
-    );
-    let features = DataType::Map(
-        Arc::new(Field::new(
-            "entries",
-            DataType::Struct(vec![text("keys", false), strings("values")].into()),
-            false,
-        )),
-        false,
-    );
-    let release = DataType::Struct(
-        vec![
-            text("name", false),
-            text("vers", false),
-            Field::new(
-                "deps",
-                DataType::List(Arc::new(Field::new("item", dependency, false))),
-                false,
-            ),
-            text("cksum", false),
-            Field::new("features", features.clone(), false),
-            Field::new("features2", features, false),
-            Field::new("yanked", DataType::Boolean, false),
-            text("links", true),
-            Field::new("v", DataType::UInt32, false),
-            text("rust_version", true),
-            text("pubtime", true),
-        ]
-        .into(),
-    );
-    Arc::new(Schema::new(vec![
-        Field::new("source_line", DataType::UInt64, false),
-        Field::new("release", release, false),
-    ]))
-}
-
-#[derive(serde::Serialize)]
-struct Fact {
-    source_line: u64,
-    release: IndexEntry,
+    Arc::new(Schema::new(Fact::fields()))
 }
 
 /// Decode only input syntax/defaults; do not select, sort or derive semantic rows here.
@@ -76,10 +27,6 @@ pub fn decode(text: &str, batch_rows: usize) -> Result<Vec<RecordBatch>, Registr
         return Err(RegistryError::ArrowFacts("invalid fact batch bound".into()));
     }
     let contract = schema();
-    let mut decoder = arrow::json::ReaderBuilder::new(contract.clone())
-        .with_batch_size(batch_rows)
-        .build_decoder()
-        .map_err(|e| RegistryError::ArrowFacts(e.to_string()))?;
     let mut batches = Vec::new();
     let mut rows = Vec::with_capacity(batch_rows.min(1024));
     for (index, line) in text.lines().enumerate() {
@@ -94,28 +41,12 @@ pub fn decode(text: &str, batch_rows: usize) -> Result<Vec<RecordBatch>, Registr
             })?,
         });
         if rows.len() == batch_rows {
-            decoder
-                .serialize(&rows)
-                .map_err(|e| RegistryError::ArrowFacts(e.to_string()))?;
-            if let Some(batch) = decoder
-                .flush()
-                .map_err(|e| RegistryError::ArrowFacts(e.to_string()))?
-            {
-                batches.push(batch);
-            }
+            batches.push(Fact::batch(&rows).map_err(|e| RegistryError::ArrowFacts(e.to_string()))?);
             rows.clear();
         }
     }
     if !rows.is_empty() {
-        decoder
-            .serialize(&rows)
-            .map_err(|e| RegistryError::ArrowFacts(e.to_string()))?;
-        if let Some(batch) = decoder
-            .flush()
-            .map_err(|e| RegistryError::ArrowFacts(e.to_string()))?
-        {
-            batches.push(batch);
-        }
+        batches.push(Fact::batch(&rows).map_err(|e| RegistryError::ArrowFacts(e.to_string()))?);
     }
     if batches.is_empty() {
         batches.push(RecordBatch::new_empty(contract));

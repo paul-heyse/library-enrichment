@@ -15,14 +15,18 @@ crate::native_payload! {
 #[serde(deny_unknown_fields)]
 pub struct ReleaseMetadata {
     pub metadata_id: String,
-    pub release_id: String,
+    pub release_id: crate::identity::ReleaseId,
     pub details: ReleaseDetails,
     pub source: FactSource,
 }
 
 impl ReleaseMetadata {
     #[must_use]
-    pub fn new(release_id: String, details: ReleaseDetails, source: FactSource) -> Self {
+    pub fn new(
+        release_id: crate::identity::ReleaseId,
+        details: ReleaseDetails,
+        source: FactSource,
+    ) -> Self {
         let mut value = Self {
             metadata_id: String::new(),
             release_id,
@@ -42,14 +46,13 @@ impl ReleaseMetadata {
     /// Metadata must name the exact release and retain a valid qualified source.
     pub fn validate(&self) -> Result<(), String> {
         self.source.validate()?;
-        if self.release_id.is_empty()
-            || Self::new(
-                self.release_id.clone(),
-                self.details.clone(),
-                self.source.clone(),
-            )
-            .metadata_id
-                != self.metadata_id
+        if Self::new(
+            self.release_id.clone(),
+            self.details.clone(),
+            self.source.clone(),
+        )
+        .metadata_id
+            != self.metadata_id
         {
             return Err("release metadata identity is invalid".into());
         }

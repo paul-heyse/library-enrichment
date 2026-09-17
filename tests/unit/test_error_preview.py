@@ -1,48 +1,67 @@
-"""Presentation regressions; raw stdio journeys separately prove live recovery."""
+"""Mechanical SDK framing; native recovery decisions have Rust unit and codec probes."""
 
 import json
-from pathlib import Path
 
-from mcp.types import CallToolResult, TextContent
+import pytest
+from mcp_types import JSONRPCResponse
 
-from enrichment_mcp import presentation
-from enrichment_mcp.server import MCP_FRAME_ALLOWANCE_BYTES, _tool_result
-
-ROOT = Path(__file__).resolve().parents[2]
+from enrichment_mcp.framing import measure, native_result
+from enrichment_mcp.presentation import delivery_contract
 
 
-def test_large_diagnostic_preserves_bounded_error_and_native_recovery() -> None:
-    result = json.loads((ROOT / "tests/fixtures/wire/error.fixture.json").read_text())
-    result["error"]["message"] = 'Escaped diagnostic: "\\\n🌍' * 1000
-    actual = _tool_result(result, tool="inspect_symbol")
-    assert actual.is_error
-    assert actual.structured_content == result
-    assert len(actual.content) == 1
-    content = actual.content[0]
-    assert isinstance(content, TextContent)
-    preview = json.loads(content.text)
-    assert preview["details_omitted"] is True
-    assert preview["code"] == result["error"]["code"]
-    assert preview["next_action"] == result["error"]["next_action"]
-    frame = CallToolResult(
-        content=actual.content, structured_content=result, is_error=actual.is_error
-    )
-    structured = json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode()
-    assert len(frame.model_dump_json(by_alias=True).encode()) + 128 <= (
-        len(structured) + MCP_FRAME_ALLOWANCE_BYTES
-    )
-
-
-def test_failed_job_without_an_artifact_preserves_its_inline_recovery() -> None:
-    result = json.loads((ROOT / "tests/fixtures/wire/error.fixture.json").read_text())
-    terminal = {
-        "outcome": {"status": "error", "error": result["error"]},
-        "delivery": result["delivery"],
+@pytest.mark.parametrize("protocol", ["2025-11-25", "2026-07-28"])
+@pytest.mark.parametrize("request_id", [7, "7", 'é🦀"\n', "x" * 4096])
+def test_native_content_is_preserved_with_exact_sdk_bytes(
+    protocol: str, request_id: str | int
+) -> None:
+    contract = delivery_contract()
+    payload = {
+        "content": [{"type": "text", "text": 'Required recovery: é "quoted"\n'}],
+        "structuredContent": {"request_id": "req_fixture", "recovery": "exact"},
+        "isError": True,
     }
-    result |= {"status": "ok", "error": None, "data": {"job_id": "job_fixture", "result": terminal}}
-    for compact in (False, True):
-        preview = presentation.error_preview(result, compact=compact)
-        assert preview["job_id"] == "job_fixture"
-        assert preview["code"] == "POLICY_DENIED"
-        assert preview["next_action"] == terminal["outcome"]["error"]["next_action"]
-        assert "read" not in preview
+    if protocol == "2026-07-28":
+        payload |= {
+            "resultType": "complete",
+            "_meta": {
+                "io.modelcontextprotocol/serverInfo": {
+                    "name": contract["server_name"],
+                    "version": contract["server_version"],
+                }
+            },
+        }
+    frame = (
+        JSONRPCResponse(jsonrpc="2.0", id=request_id, result=payload)
+        .model_dump_json(by_alias=True, exclude_unset=True)
+        .encode()
+        + b"\n"
+    )
+    facts = measure(protocol, request_id)
+    result = native_result(payload, len(frame), facts)
+    assert result.is_error
+    assert result.structured_content == payload["structuredContent"]
+    assert (
+        json.loads(result.to_mcp_result().model_dump_json(by_alias=True, exclude_none=True))[
+            "content"
+        ]
+        == payload["content"]
+    )
+    with pytest.raises(ValueError, match="measurements disagree"):
+        native_result(payload, len(frame) + 1, facts)
+
+
+def test_rpc_identity_and_transport_bounds_are_exact() -> None:
+    assert measure("2025-11-25", "7").bytes - measure("2025-11-25", 7).bytes == 2
+    with pytest.raises(ValueError, match="framing bound"):
+        measure("2025-11-25", "x" * 17000)
+    with pytest.raises(ValueError, match="protocol"):
+        measure("unknown-protocol", 7)
+
+
+def test_missing_modern_stamp_is_refused_before_sdk_can_add_bytes() -> None:
+    with pytest.raises(ValueError, match="server identity stamp"):
+        native_result(
+            {"content": [], "structuredContent": {}, "isError": False, "resultType": "complete"},
+            0,
+            measure("2026-07-28", 7),
+        )

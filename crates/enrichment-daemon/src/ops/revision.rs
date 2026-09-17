@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use enrichment_core::{
-    canonical,
     evidence::{Artifact, ArtifactKind, EvidenceKind, Gap, GapReason},
     identity::{Context, Ecosystem, Release, ReleaseKey},
     policy::ArchivePolicy,
@@ -11,7 +10,6 @@ use enrichment_core::{
     request::{FreshnessMode, ResolveRequest},
     wire::{Coverage, Envelope, ErrorCode, Freshness, SourceVersionMatch, data::ResolveData},
 };
-use serde_json::json;
 use url::Url;
 
 use super::{
@@ -122,13 +120,14 @@ async fn acquire(
     if tree.len() != 40 || !tree.bytes().all(|c| c.is_ascii_hexdigit()) {
         return Err("Invalid commit tree identity".into());
     }
-    acq.store(
-        &commit,
-        ArtifactKind::RegistryVersionMetadata,
-        "application/json",
-        commit_url.as_str(),
-    )
-    .map_err(|e| e.to_string())?;
+    let commit_artifact = acq
+        .store(
+            &commit,
+            ArtifactKind::RegistryVersionMetadata,
+            "application/json",
+            commit_url.as_str(),
+        )
+        .map_err(|e| e.to_string())?;
     let archive_url = Url::parse(&format!(
         "{api}/repos/{}/tarball/{}",
         identity.repository_path, identity.commit
@@ -179,18 +178,44 @@ async fn acquire(
             archive_digest, &extracted, &package_subdir, ecosystem, &text)?;
         Ok((root, text, declared, wrapper, disposition))
     }).await.map_err(|e| e.to_string())??;
-    let extraction = match enrichment_store::coverage::assess_revision_inputs(
+    let receipt = match enrichment_store::revision_capture::retain(
+        service.repository.catalog.clone(),
         &service.repository.runtime,
-        extraction_inputs,
+        enrichment_core::operation::sources::RevisionCapture {
+            identity: identity.clone(),
+            tree: tree.to_owned(),
+            declared_project_version: declared_version,
+            archive: stored.clone(),
+            commit: commit_artifact,
+            archive_response: archive.metadata(),
+            commit_response: commit.metadata(),
+            inputs: extraction_inputs,
+            decoder: enrichment_store::revision_capture::decoder_identity(),
+        },
     )
     .await
     {
-        Ok(extraction) => extraction,
+        Ok(receipt) => receipt,
         Err(error) => return Ok(common::query_error(&error.into())),
     };
-    let acquisition_id = uuid::Uuid::new_v4().to_string();
-    let receipt = json!({"acquisition_id":acquisition_id,"repository":identity.repository,"package_subdir":identity.package_subdir,"source_revision":identity.commit,"tree":tree,"declared_project_version":declared_version,"archive_sha256":stored.sha256,"extraction":extraction,"archive_request":archive_url.as_str(),"archive_http":archive,"commit_request":commit_url.as_str(),"commit_http":commit});
-    let receipt_bytes = canonical::to_canonical_string(&receipt).into_bytes();
+    // The artifact is a bounded generated projection of the retained native source and its
+    // assessment. The Delta capture is the authority; the byte receipt is a portable citation.
+    use enrichment_core::native_union::Cell;
+    let field = std::sync::Arc::new(enrichment_core::native_union::field::<
+        enrichment_core::operation::sources::RevisionReceipt,
+    >("receipt", enrichment_core::native_union::Rule::Text));
+    let array = enrichment_core::operation::sources::RevisionReceipt::encode(&[Some(&receipt)])
+        .map_err(|e| e.to_string())?;
+    let mut receipt_bytes = Vec::new();
+    enrichment_core::native_json::write_value(
+        &mut receipt_bytes,
+        8 * 1024 * 1024,
+        &field,
+        array.as_ref(),
+        0,
+    )
+    .map_err(|e| e.to_string())?;
+    let extraction = &receipt.extraction;
     let retrieved_at =
         enrichment_core::native_time::AcquisitionTime::now().map_err(|error| error.to_string())?;
     let receipt_artifact = service
@@ -424,7 +449,7 @@ async fn publish_rust(
             data: common::payload(&data),
             coverage,
             freshness,
-            context_id: Some(context.context_id.to_string()),
+            context_id: Some(context.context_id.clone()),
             snapshot_id: None,
             evidence: Vec::new(),
             artifacts,
@@ -458,7 +483,7 @@ async fn publish_rust(
     .await?;
     acq.work
         .and_then(|work| work.committed.get())
-        .filter(|(_, snapshot, _)| snapshot == manifest.snapshot_id.as_str())
+        .filter(|(_, snapshot, _)| snapshot == &manifest.snapshot_id)
         .map(|(_, _, result)| result.clone())
         .ok_or_else(|| "revision resolution lacks prepared committed delivery".into())
 }

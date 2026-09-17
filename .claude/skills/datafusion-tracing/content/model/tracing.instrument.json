@@ -1,0 +1,171 @@
+{
+  "module": "tracing::instrument",
+  "crate": "tracing",
+  "api": "api/tracing.instrument.md",
+  "items": [
+    {
+      "path": "tracing::instrument::Instrumented",
+      "name": "Instrumented",
+      "kind": "struct",
+      "crate": "tracing",
+      "signature": "struct Instrumented<T>",
+      "summary": "A [`Future`] that has been instrumented with a `tracing` [`Span`].",
+      "doc": "api/tracing.instrument.md#instrumented",
+      "implements": [
+        "core::future::future::Future",
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &T",
+          "summary": "Borrows the wrapped type."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut T",
+          "summary": "Mutably borrows the wrapped type."
+        },
+        {
+          "name": "inner_pin_mut",
+          "signature": "fn inner_pin_mut(Pin<&mut self>) -> Pin<&mut T>",
+          "summary": "Get a pinned mutable reference to the wrapped type."
+        },
+        {
+          "name": "inner_pin_ref",
+          "signature": "fn inner_pin_ref(Pin<&self>) -> Pin<&T>",
+          "summary": "Get a pinned reference to the wrapped type."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> T",
+          "summary": "Consumes the `Instrumented`, returning the wrapped type."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        },
+        {
+          "name": "span",
+          "signature": "fn span(&self) -> &Span",
+          "summary": "Borrows the `Span` that this type is instrumented by."
+        },
+        {
+          "name": "span_mut",
+          "signature": "fn span_mut(&mut self) -> &mut Span",
+          "summary": "Mutably borrows the `Span` that this type is instrumented by."
+        }
+      ]
+    },
+    {
+      "path": "tracing::instrument::WithDispatch",
+      "name": "WithDispatch",
+      "kind": "struct",
+      "crate": "tracing",
+      "signature": "struct WithDispatch<T>",
+      "summary": "A [`Future`] that has been instrumented with a `tracing` [`Subscriber`].",
+      "doc": "api/tracing.instrument.md#withdispatch",
+      "implements": [
+        "core::future::future::Future"
+      ],
+      "methods": [
+        {
+          "name": "dispatcher",
+          "signature": "fn dispatcher(&self) -> &Dispatch",
+          "summary": "Borrows the [`Dispatch`] that is entered when this type is polled."
+        },
+        {
+          "name": "inner",
+          "signature": "fn inner(&self) -> &T",
+          "summary": "Borrows the wrapped type."
+        },
+        {
+          "name": "inner_mut",
+          "signature": "fn inner_mut(&mut self) -> &mut T",
+          "summary": "Mutably borrows the wrapped type."
+        },
+        {
+          "name": "inner_pin_mut",
+          "signature": "fn inner_pin_mut(Pin<&mut self>) -> Pin<&mut T>",
+          "summary": "Get a pinned mutable reference to the wrapped type."
+        },
+        {
+          "name": "inner_pin_ref",
+          "signature": "fn inner_pin_ref(Pin<&self>) -> Pin<&T>",
+          "summary": "Get a pinned reference to the wrapped type."
+        },
+        {
+          "name": "into_inner",
+          "signature": "fn into_inner(self) -> T",
+          "summary": "Consumes the `Instrumented`, returning the wrapped type."
+        },
+        {
+          "name": "poll",
+          "signature": "fn poll(Pin<&mut self>, cx: &mut Context<'_>) -> Poll<Self::Output>",
+          "via_trait": "core::future::future::Future"
+        }
+      ]
+    },
+    {
+      "path": "tracing::instrument::Instrument",
+      "name": "Instrument",
+      "kind": "trait",
+      "crate": "tracing",
+      "signature": "trait Instrument: Sized",
+      "summary": "Attaches spans to a [`std::future::Future`].",
+      "doc": "api/tracing.instrument.md#instrument",
+      "aliases": [
+        "tracing::Instrument"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "in_current_span",
+        "instrument"
+      ],
+      "methods": [
+        {
+          "name": "in_current_span",
+          "signature": "fn in_current_span(self) -> Instrumented<Self>",
+          "summary": "Instruments this type with the [current] [`Span`], returning an `Instrumented` wrapper."
+        },
+        {
+          "name": "instrument",
+          "signature": "fn instrument(self, span: Span) -> Instrumented<Self>",
+          "summary": "Instruments this type with the provided [`Span`], returning an `Instrumented` wrapper."
+        }
+      ]
+    },
+    {
+      "path": "tracing::instrument::WithSubscriber",
+      "name": "WithSubscriber",
+      "kind": "trait",
+      "crate": "tracing",
+      "signature": "trait WithSubscriber: Sized",
+      "summary": "Extension trait allowing futures to be instrumented with a `tracing` [`Subscriber`](crate::Subscriber).",
+      "doc": "api/tracing.instrument.md#withsubscriber",
+      "required_methods": [],
+      "provided_methods": [
+        "with_current_subscriber",
+        "with_subscriber"
+      ],
+      "methods": [
+        {
+          "name": "with_current_subscriber",
+          "signature": "fn with_current_subscriber(self) -> WithDispatch<Self>",
+          "summary": "Attaches the current [default] [`Subscriber`] to this type, returning a [`WithDispatch`] wrapper."
+        },
+        {
+          "name": "with_subscriber",
+          "signature": "fn with_subscriber<S>(self, subscriber: S) -> WithDispatch<Self> where S: Into<Dispatch>",
+          "summary": "Attaches the provided [`Subscriber`] to this type, returning a [`WithDispatch`] wrapper."
+        }
+      ]
+    }
+  ]
+}

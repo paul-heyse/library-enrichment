@@ -1,0 +1,230 @@
+{
+  "module": "tracing_core::dispatcher",
+  "crate": "tracing-core",
+  "api": "api/tracing_core.dispatcher.md",
+  "items": [
+    {
+      "path": "tracing_core::dispatcher::get_default",
+      "name": "get_default",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn get_default<T, F>(f: F) -> T where F: FnMut(&Dispatch) -> T",
+      "summary": "Executes a closure with a reference to this thread's current [dispatcher].",
+      "doc": "api/tracing_core.dispatcher.md#get_default",
+      "aliases": [
+        "tracing::dispatcher::get_default"
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::set_default",
+      "name": "set_default",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn set_default(dispatcher: &Dispatch) -> DefaultGuard",
+      "summary": "Sets the dispatch as the default dispatch for the duration of the lifetime of the returned DefaultGuard",
+      "doc": "api/tracing_core.dispatcher.md#set_default",
+      "aliases": [
+        "tracing::dispatcher::set_default"
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::set_global_default",
+      "name": "set_global_default",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn set_global_default(dispatcher: Dispatch) -> Result<(), SetGlobalDefaultError>",
+      "summary": "Sets this dispatch as the global default for the duration of the entire program. Will be used as a fallback if no thread-local dispatch has been set in a thread (using `with_default`.)",
+      "doc": "api/tracing_core.dispatcher.md#set_global_default",
+      "aliases": [
+        "tracing::dispatcher::set_global_default"
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::with_default",
+      "name": "with_default",
+      "kind": "function",
+      "crate": "tracing-core",
+      "signature": "fn with_default<T>(dispatcher: &Dispatch, f: impl FnOnce() -> T) -> T",
+      "summary": "Sets this dispatch as the default for the duration of a closure.",
+      "doc": "api/tracing_core.dispatcher.md#with_default",
+      "aliases": [
+        "tracing::dispatcher::with_default"
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::DefaultGuard",
+      "name": "DefaultGuard",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct DefaultGuard",
+      "summary": "A guard that resets the current default dispatcher to the prior default dispatcher when dropped.",
+      "doc": "api/tracing_core.dispatcher.md#defaultguard",
+      "aliases": [
+        "tracing::dispatcher::DefaultGuard",
+        "tracing::subscriber::DefaultGuard"
+      ],
+      "implements": [
+        "core::ops::drop::Drop"
+      ],
+      "methods": [
+        {
+          "name": "drop",
+          "signature": "fn drop(&mut self)",
+          "via_trait": "core::ops::drop::Drop"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::Dispatch",
+      "name": "Dispatch",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Dispatch",
+      "summary": "`Dispatch` trace data to a [`Subscriber`].",
+      "doc": "api/tracing_core.dispatcher.md#dispatch",
+      "aliases": [
+        "tracing::Dispatch",
+        "tracing::dispatcher::Dispatch",
+        "tracing_core::Dispatch"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "clone_span",
+          "signature": "fn clone_span(&self, id: &span::Id) -> span::Id",
+          "summary": "Notifies the subscriber that a [span ID] has been cloned."
+        },
+        {
+          "name": "current_span",
+          "signature": "fn current_span(&self) -> span::Current",
+          "summary": "Returns a type representing this subscriber's view of the current span."
+        },
+        {
+          "name": "downcast_ref",
+          "signature": "fn downcast_ref<T: Any>(&self) -> Option<&T>",
+          "summary": "Returns some reference to the `Subscriber` this `Dispatch` forwards to if it is of type `T`, or `None` if it isn't."
+        },
+        {
+          "name": "downgrade",
+          "signature": "fn downgrade(&self) -> WeakDispatch",
+          "summary": "Creates a [`WeakDispatch`] from this `Dispatch`."
+        },
+        {
+          "name": "drop_span",
+          "signature": "fn drop_span(&self, id: span::Id)",
+          "summary": "Notifies the subscriber that a [span ID] has been dropped."
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>) -> bool",
+          "summary": "Returns true if a span with the specified [metadata] would be recorded."
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self, span: &span::Id)",
+          "summary": "Records that a span has been can_enter."
+        },
+        {
+          "name": "event",
+          "signature": "fn event(&self, event: &Event<'_>)",
+          "summary": "Records that an [`Event`] has occurred."
+        },
+        {
+          "name": "exit",
+          "signature": "fn exit(&self, span: &span::Id)",
+          "summary": "Records that a span has been exited."
+        },
+        {
+          "name": "from",
+          "signature": "fn from(subscriber: S) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "is",
+          "signature": "fn is<T: Any>(&self) -> bool",
+          "summary": "Returns `true` if this `Dispatch` forwards to a `Subscriber` of type `T`."
+        },
+        {
+          "name": "new",
+          "signature": "fn new<S>(subscriber: S) -> Self where S: Subscriber + Send + Sync + 'static",
+          "summary": "Returns a `Dispatch` that forwards to the given [`Subscriber`]."
+        },
+        {
+          "name": "new_span",
+          "signature": "fn new_span(&self, span: &span::Attributes<'_>) -> span::Id",
+          "summary": "Record the construction of a new span, returning a new [ID] for the span being constructed."
+        },
+        {
+          "name": "none",
+          "signature": "fn none() -> Self",
+          "summary": "Returns a new `Dispatch` that discards events and spans."
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self, span: &span::Id, values: &span::Record<'_>)",
+          "summary": "Record a set of values on a span."
+        },
+        {
+          "name": "record_follows_from",
+          "signature": "fn record_follows_from(&self, span: &span::Id, follows: &span::Id)",
+          "summary": "Adds an indication that `span` follows from the span with the id `follows`."
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, metadata: &'static Metadata<'static>) -> subscriber::Interest",
+          "summary": "Registers a new callsite with this subscriber, returning whether or not the subscriber is interested in being notified about the callsite."
+        },
+        {
+          "name": "try_close",
+          "signature": "fn try_close(&self, id: span::Id) -> bool",
+          "summary": "Notifies the subscriber that a [span ID] has been dropped, and returns `true` if there are now 0 IDs referring to that span."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::SetGlobalDefaultError",
+      "name": "SetGlobalDefaultError",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct SetGlobalDefaultError",
+      "summary": "Returned if setting the global dispatcher fails.",
+      "doc": "api/tracing_core.dispatcher.md#setglobaldefaulterror",
+      "aliases": [
+        "tracing::dispatcher::SetGlobalDefaultError",
+        "tracing::subscriber::SetGlobalDefaultError"
+      ],
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::dispatcher::WeakDispatch",
+      "name": "WeakDispatch",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct WeakDispatch",
+      "summary": "`WeakDispatch` is a version of [`Dispatch`] that holds a non-owning reference to a [`Subscriber`].",
+      "doc": "api/tracing_core.dispatcher.md#weakdispatch",
+      "aliases": [
+        "tracing::dispatcher::WeakDispatch"
+      ],
+      "methods": [
+        {
+          "name": "upgrade",
+          "signature": "fn upgrade(&self) -> Option<Dispatch>",
+          "summary": "Attempts to upgrade this `WeakDispatch` to a [`Dispatch`]."
+        }
+      ]
+    }
+  ]
+}

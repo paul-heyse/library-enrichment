@@ -51,7 +51,7 @@ impl BuildSpec {
         }
         Ok(Self {
             target: target.into(),
-            features: environment.features.clone(),
+            features: environment.features.clone().unwrap_or_default(),
             default_features: environment.default_features.unwrap_or(true),
         })
     }

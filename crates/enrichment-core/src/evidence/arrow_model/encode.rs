@@ -18,41 +18,7 @@ pub fn definitions(rows: &[Definition]) -> Result<RecordBatch, ArrowError> {
     for row in rows {
         row.validate().map_err(ArrowError::InvalidArgumentError)?;
     }
-    batch(
-        "definitions",
-        vec![
-            column(
-                "definition_id",
-                text(rows.iter().map(|r| r.definition_id.as_str())),
-                false,
-                "key:definition",
-            ),
-            column(
-                "kind",
-                text(rows.iter().map(|r| r.kind.as_str())),
-                false,
-                "vocabulary:symbol-kind/1",
-            ),
-            column(
-                "definition_path",
-                text(rows.iter().map(|r| r.definition_path.as_str())),
-                false,
-                "definition-path",
-            ),
-            column(
-                "defined_in_package",
-                text(rows.iter().map(|r| r.defined_in_package.as_str())),
-                false,
-                "package-name",
-            ),
-            column(
-                "qualifier",
-                optional(rows.iter().map(|r| r.qualifier.as_deref())),
-                true,
-                "definition-qualifier",
-            ),
-        ],
-    )
+    <Definition as crate::native_union::NativeStruct>::batch(rows)
 }
 
 /// Public binding rows. Display text is separate from exact typed component identity.
@@ -187,11 +153,17 @@ pub(crate) fn observations_fields(rows: &[ApiObservation]) -> Result<RecordBatch
             false,
             "vocabulary:api-origin/1",
         ),
-        column(
-            "environment_id",
-            text(rows.iter().map(|r| r.environment_id.as_str())),
-            false,
-            "ref:environment",
+        (
+            crate::native_union::field::<crate::identity::EnvironmentId>(
+                "environment_id",
+                crate::native_union::Rule::Text,
+            ),
+            <crate::identity::EnvironmentId as crate::native_union::Cell>::encode(
+                &rows
+                    .iter()
+                    .map(|row| Some(&row.environment_id))
+                    .collect::<Vec<_>>(),
+            )?,
         ),
         column("payload", payload(rows)?, false, "api-payload"),
     ];

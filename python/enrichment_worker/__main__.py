@@ -156,7 +156,8 @@ def extract(request: WorkerRequest, output: BinaryIO) -> None:
     """Stream mechanical facts and per-file receipts under the Rust-owned schema."""
     if request.schema_version != CONTRACT["protocol"]:
         raise ValueError("unsupported worker protocol")
-    if not 1 <= request.max_observations <= CONTRACT["max_observations"]:
+    max_observations = int(request.max_observations)
+    if not 1 <= max_observations <= CONTRACT["max_observations"]:
         raise ValueError("unsupported worker observation bound")
     if len(request.files) > CONTRACT["max_files"]:
         raise ValueError("worker file inventory exceeds bound")
@@ -228,7 +229,7 @@ def extract(request: WorkerRequest, output: BinaryIO) -> None:
                     modules_collection=loader.modules_collection,
                 )
                 for fact in _walk(module, file):
-                    if total >= request.max_observations:
+                    if total >= max_observations:
                         raise ValueError("observation budget exhausted")
                     emit(
                         fact="observation",
@@ -255,11 +256,13 @@ def main() -> int:
         if len(raw) > MAX_INPUT:
             raise ValueError("worker input exceeds byte budget")
         request = WorkerRequest.model_validate_json(raw)
-        if request.max_memory_bytes <= 0 or request.max_cpu_seconds <= 0:
+        max_memory_bytes = int(request.max_memory_bytes)
+        max_cpu_seconds = int(request.max_cpu_seconds)
+        if max_memory_bytes <= 0 or max_cpu_seconds <= 0:
             raise ValueError("Rust worker allocation/deadline bounds are required")
         for kind, cap in (
-            (resource.RLIMIT_AS, request.max_memory_bytes),
-            (resource.RLIMIT_CPU, request.max_cpu_seconds),
+            (resource.RLIMIT_AS, max_memory_bytes),
+            (resource.RLIMIT_CPU, max_cpu_seconds),
             (resource.RLIMIT_CORE, 0),
         ):
             soft, hard = resource.getrlimit(kind)

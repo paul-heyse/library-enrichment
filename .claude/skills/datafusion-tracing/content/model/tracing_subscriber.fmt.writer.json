@@ -1,0 +1,440 @@
+{
+  "module": "tracing_subscriber::fmt::writer",
+  "crate": "tracing-subscriber",
+  "api": "api/tracing_subscriber.fmt.writer.md",
+  "items": [
+    {
+      "path": "tracing_subscriber::fmt::writer::EitherWriter",
+      "name": "EitherWriter",
+      "kind": "enum",
+      "crate": "tracing-subscriber",
+      "signature": "enum EitherWriter<A, B>",
+      "summary": "A [writer] that is one of two types implementing [`io::Write`].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#eitherwriter",
+      "variants": [
+        "A",
+        "B"
+      ],
+      "implements": [
+        "std::io::Write"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "none",
+          "signature": "fn none() -> Self",
+          "summary": "Returns a [disabled writer]."
+        },
+        {
+          "name": "some",
+          "signature": "fn some(t: T) -> Self",
+          "summary": "Returns an enabled writer of type `T`."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_fmt",
+          "signature": "fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_vectored",
+          "signature": "fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::BoxMakeWriter",
+      "name": "BoxMakeWriter",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct BoxMakeWriter",
+      "summary": "A writer that erases the specific [`io::Write`] and [`MakeWriter`] types being used.",
+      "doc": "api/tracing_subscriber.fmt.writer.md#boxmakewriter",
+      "implements": [
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<M>(make_writer: M) -> Self where M: for<'a> MakeWriter<'a> + Send + Sync + 'static",
+          "summary": "Constructs a `BoxMakeWriter` wrapping a type implementing [`MakeWriter`]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::MutexGuardWriter",
+      "name": "MutexGuardWriter",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct MutexGuardWriter<'a, W>",
+      "summary": "A type implementing [`io::Write`] for a [`MutexGuard`] where the type inside the [`Mutex`] implements [`io::Write`].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#mutexguardwriter",
+      "implements": [
+        "std::io::Write"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_fmt",
+          "signature": "fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_vectored",
+          "signature": "fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::OrElse",
+      "name": "OrElse",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct OrElse<A, B>",
+      "summary": "Combines a [`MakeWriter`] that returns an [`OptionalWriter`] with another [`MakeWriter`], so that the second [`MakeWriter`] is used when the first [`MakeWriter`] returns [`OptionalWriter::none`][own].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#orelse",
+      "implements": [
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<'a, W>(inner: A, or_else: B) -> Self where A: MakeWriter<'a, Writer = OptionalWriter<W>>, B: MakeWriter<'a>, W: Write",
+          "summary": "Combines"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::Tee",
+      "name": "Tee",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Tee<A, B>",
+      "summary": "Combines two types implementing [`MakeWriter`] (or [`std::io::Write`]) to produce a writer that writes to both [`MakeWriter`]'s returned writers.",
+      "doc": "api/tracing_subscriber.fmt.writer.md#tee",
+      "implements": [
+        "std::io::Write",
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(a: A, b: B) -> Self",
+          "summary": "Combines two types implementing [`MakeWriter`], returning a new [`MakeWriter`] that produces [writers] that write to *both* outputs."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_all",
+          "signature": "fn write_all(&mut self, buf: &[u8]) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_fmt",
+          "signature": "fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "write_vectored",
+          "signature": "fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::TestWriter",
+      "name": "TestWriter",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct TestWriter",
+      "summary": "A writer intended to support [`libtest`'s output capturing][capturing] for use in unit tests.",
+      "doc": "api/tracing_subscriber.fmt.writer.md#testwriter",
+      "aliases": [
+        "tracing_subscriber::fmt::TestWriter"
+      ],
+      "implements": [
+        "std::io::Write",
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "flush",
+          "signature": "fn flush(&mut self) -> io::Result<()>",
+          "via_trait": "std::io::Write"
+        },
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Returns a new `TestWriter` with the default configuration."
+        },
+        {
+          "name": "with_stderr",
+          "signature": "fn with_stderr() -> Self",
+          "summary": "Returns a new `TestWriter` that writes to `stderr` instead of `stdout`."
+        },
+        {
+          "name": "write",
+          "signature": "fn write(&mut self, buf: &[u8]) -> io::Result<usize>",
+          "via_trait": "std::io::Write"
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::WithFilter",
+      "name": "WithFilter",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct WithFilter<M, F>",
+      "summary": "A [`MakeWriter`] combinator that wraps a [`MakeWriter`] with a predicate for span and event [`Metadata`], so that the [`MakeWriter::make_writer_for`] method returns [`OptionalWriter::some`][ows] when the predicate returns `true`, and [`Opt…",
+      "doc": "api/tracing_subscriber.fmt.writer.md#withfilter",
+      "implements": [
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(make: M, filter: F) -> Self where F: Fn(&Metadata<'_>) -> bool",
+          "summary": "Wraps `make` with the provided `filter`, returning a [`MakeWriter`] that will call `make.make_writer_for()` when `filter` returns `true` for a span or event's [`Metadata`], and returns a [`sink`] otherwise."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::WithMaxLevel",
+      "name": "WithMaxLevel",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct WithMaxLevel<M>",
+      "summary": "A [`MakeWriter`] combinator that only returns an enabled [writer] for spans and events with metadata at or below a specified verbosity [`Level`].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#withmaxlevel",
+      "implements": [
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(make: M, level: tracing_core::Level) -> Self",
+          "summary": "Wraps the provided [`MakeWriter`] with a maximum [`Level`], so that it returns [`OptionalWriter::none`] for spans and events whose level is more verbose than the maximum level."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::WithMinLevel",
+      "name": "WithMinLevel",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct WithMinLevel<M>",
+      "summary": "A [`MakeWriter`] combinator that only returns an enabled [writer] for spans and events with metadata at or above a specified verbosity [`Level`].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#withminlevel",
+      "implements": [
+        "tracing_subscriber::fmt::writer::MakeWriter"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "via_trait": "tracing_subscriber::fmt::writer::MakeWriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(make: M, level: tracing_core::Level) -> Self",
+          "summary": "Wraps the provided [`MakeWriter`] with a minimum [`Level`], so that it returns [`OptionalWriter::none`] for spans and events whose level is less verbose than the maximum level."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::MakeWriter",
+      "name": "MakeWriter",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait MakeWriter<'a>",
+      "summary": "A type that can create [`io::Write`] instances.",
+      "doc": "api/tracing_subscriber.fmt.writer.md#makewriter",
+      "aliases": [
+        "tracing_subscriber::fmt::MakeWriter"
+      ],
+      "implementors": [
+        "alloc::sync::Arc",
+        "std::fs::File",
+        "std::sync::poison::mutex::Mutex",
+        "tracing_subscriber::fmt::writer::BoxMakeWriter",
+        "tracing_subscriber::fmt::writer::OrElse",
+        "tracing_subscriber::fmt::writer::Tee",
+        "tracing_subscriber::fmt::writer::TestWriter",
+        "tracing_subscriber::fmt::writer::WithFilter",
+        "tracing_subscriber::fmt::writer::WithMaxLevel",
+        "tracing_subscriber::fmt::writer::WithMinLevel"
+      ],
+      "required_methods": [
+        "make_writer"
+      ],
+      "provided_methods": [
+        "make_writer_for"
+      ],
+      "methods": [
+        {
+          "name": "make_writer",
+          "signature": "fn make_writer(&'a self) -> Self::Writer",
+          "summary": "Returns an instance of [`Writer`]."
+        },
+        {
+          "name": "make_writer_for",
+          "signature": "fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer",
+          "summary": "Returns a [`Writer`] for writing data from the span or event described by the provided [`Metadata`]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::MakeWriterExt",
+      "name": "MakeWriterExt",
+      "kind": "trait",
+      "crate": "tracing-subscriber",
+      "signature": "trait MakeWriterExt<'a>: MakeWriter<'a>",
+      "summary": "Extension trait adding combinators for working with types implementing [`MakeWriter`].",
+      "doc": "api/tracing_subscriber.fmt.writer.md#makewriterext",
+      "aliases": [
+        "tracing_subscriber::prelude::_"
+      ],
+      "required_methods": [],
+      "provided_methods": [
+        "and",
+        "or_else",
+        "with_filter",
+        "with_max_level",
+        "with_min_level"
+      ],
+      "methods": [
+        {
+          "name": "and",
+          "signature": "fn and<B>(self, other: B) -> Tee<Self, B> where Self: Sized, B: MakeWriter<'a> + Sized",
+          "summary": "Combines `self` with another type implementing [`MakeWriter`], returning a new [`MakeWriter`] that produces [writers] that write to *both* outputs."
+        },
+        {
+          "name": "or_else",
+          "signature": "fn or_else<W, B>(self, other: B) -> OrElse<Self, B> where Self: MakeWriter<'a, Writer = OptionalWriter<W>> + Sized, B: MakeWriter<'a> + Sized, W: Write",
+          "summary": "Combines `self` with another type implementing [`MakeWriter`], returning a new [`MakeWriter`] that calls `other`'s [`make_writer`] if `self`'s `make_writer` returns [`OptionalWriter::none`][own]."
+        },
+        {
+          "name": "with_filter",
+          "signature": "fn with_filter<F>(self, filter: F) -> WithFilter<Self, F> where Self: Sized, F: Fn(&Metadata<'_>) -> bool",
+          "summary": "Wraps `self` with a predicate that takes a span or event's [`Metadata`] and returns a `bool`. The returned [`MakeWriter`]'s [`MakeWriter::make_writer_for`] method will check the predicate to determine if  a writer should be produced for a…"
+        },
+        {
+          "name": "with_max_level",
+          "signature": "fn with_max_level(self, level: tracing_core::Level) -> WithMaxLevel<Self> where Self: Sized",
+          "summary": "Wraps `self` and returns a [`MakeWriter`] that will only write output for events at or below the provided verbosity [`Level`]. For instance, `Level::TRACE` is considered to be _more verbose` than `Level::INFO`."
+        },
+        {
+          "name": "with_min_level",
+          "signature": "fn with_min_level(self, level: tracing_core::Level) -> WithMinLevel<Self> where Self: Sized",
+          "summary": "Wraps `self` and returns a [`MakeWriter`] that will only write output for events at or above the provided verbosity [`Level`]."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::fmt::writer::OptionalWriter",
+      "name": "OptionalWriter",
+      "kind": "type_alias",
+      "crate": "tracing-subscriber",
+      "signature": "type OptionalWriter<T> = EitherWriter<T, std::io::Sink>",
+      "summary": "A [writer] which may or may not be enabled.",
+      "doc": "api/tracing_subscriber.fmt.writer.md#optionalwriter"
+    }
+  ]
+}

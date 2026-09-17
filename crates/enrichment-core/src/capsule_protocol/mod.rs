@@ -9,7 +9,7 @@ use std::{
     path::{Component, Path},
 };
 
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 4;
 pub const DATA_LIMIT: u64 = 64 * 1024 * 1024 * 1024;
 pub const HEADER_LIMIT: usize = 16 * 1024 * 1024;
 pub const ENTRY_LIMIT: usize = 100_000;

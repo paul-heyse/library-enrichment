@@ -16,7 +16,7 @@ use std::{
     io::{self, Read, Seek, Write},
 };
 
-pub const MAX_BYTES: u64 = 32 * 1024 * 1024;
+pub use enrichment_core::operation::results::MAX_BYTES;
 const INDEX_BYTES: u64 = MAX_BYTES;
 const MAGIC: &[u8; 8] = b"LERES004";
 pub use enrichment_core::operation::results::{JOB_URI, MEDIA_TYPE};
@@ -132,10 +132,10 @@ fn body<W: Write>(writer: W, result: &Envelope) -> io::Result<Index> {
             end: out.bytes,
         };
         sections.insert(format!("data.{}", field.name()), window);
-        if let Some(section) = field.metadata().get("enrichment.section") {
-            if sections.insert(section.clone(), window).is_some() {
-                return Err(io::Error::other("duplicate declared result section"));
-            }
+        if let Some(section) = field.metadata().get("enrichment.section")
+            && sections.insert(section.clone(), window).is_some()
+        {
+            return Err(io::Error::other("duplicate declared result section"));
         }
     }
     out.write_all(b"}")?;

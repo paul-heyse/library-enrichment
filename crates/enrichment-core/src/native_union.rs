@@ -7,14 +7,18 @@ use arrow::{
     datatypes::{DataType, Field, Fields},
     error::ArrowError,
 };
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Domain {
     Symbol,
     Definition,
     Release,
+    Environment,
+    Context,
+    Snapshot,
     Artifact,
     ProducerBinding,
 }
@@ -27,6 +31,9 @@ impl Domain {
             Self::Symbol => Key::PublicBinding.prefix(),
             Self::Definition => Key::Definition.prefix(),
             Self::Release => Key::Release.prefix(),
+            Self::Environment => Key::Environment.prefix(),
+            Self::Context => Key::Context.prefix(),
+            Self::Snapshot => Key::Snapshot.prefix(),
             Self::Artifact => "art",
             Self::ProducerBinding => Key::ProducerBinding.prefix(),
         }
@@ -38,7 +45,7 @@ impl Domain {
             Self::Definition => Some(("definitions", "definition_id")),
             Self::Artifact => Some(("input_artifacts", "artifact_id")),
             Self::ProducerBinding => Some(("producer_runs", "producer_binding_id")),
-            Self::Release => None,
+            Self::Release | Self::Environment | Self::Context | Self::Snapshot => None,
         }
     }
 }
@@ -69,21 +76,40 @@ pub trait NativeStruct: Sized {
     }
 }
 
-/// A declared output field is present even when its value is NULL. Request defaults are
-/// explicit serde defaults on the same field declaration, never implicit Option fallbacks.
-pub fn required_value<'de, D: serde::Deserializer<'de>, T: serde::Deserialize<'de>>(
-    deserializer: D,
-) -> Result<T, D::Error> {
-    T::deserialize(deserializer)
-}
-
 #[macro_export]
 macro_rules! native_struct {
+    // One declaration generates the checked wire input and native decoder as well as the
+    // public record. Cross-field boundary validation runs for both Arrow and Serde input.
+    (@checked $raw:ident; $(#[$attr:meta])* $vis:vis struct $name:ident { $($(#[$member_attr:meta])* $member:ident : $ty:ty => $rule:expr),* $(,)? }) => {
+        #[derive(serde::Deserialize, schemars::JsonSchema)]
+        #[serde(deny_unknown_fields)]
+        #[schemars(inline)]
+        struct $raw {
+            $(#[serde(deserialize_with = "enrichment_core::native_wire::deserialize")]
+                $member: $ty,)*
+        }
+        $crate::native_struct! { @record [#[serde(deny_unknown_fields)]]
+            [validate |value: Self| Self::try_from($raw { $($member: value.$member,)* })
+                .map_err($crate::evidence::arrow_model::cells::invalid)]
+            $(#[$attr])* $vis struct $name { $($(#[$member_attr])* $member: $ty => $rule,)* }
+        }
+    };
     ($(#[$attr:meta])* $vis:vis struct $name:ident { $($(#[$member_attr:meta])* $member:ident : $ty:ty => $rule:expr),* $(,)? } $(ephemeral { $($ephemeral:ident : $ephemeral_ty:ty = $initial:expr),* $(,)? })?) => {
+        $crate::native_struct! { @record [#[serde(deny_unknown_fields)]] [validate Ok]
+            $(#[$attr])* $vis struct $name { $($(#[$member_attr])* $member: $ty => $rule,)* }
+            $(ephemeral { $($ephemeral: $ephemeral_ty = $initial,)* })?
+        }
+    };
+    // Open external source records preserve unmodeled fields in the raw source artifact.
+    // Service-owned declarations remain closed by default.
+    (@source $(#[$attr:meta])* $vis:vis struct $name:ident { $($(#[$member_attr:meta])* $member:ident : $ty:ty => $rule:expr),* $(,)? }) => {
+        $crate::native_struct! { @record [] [validate Ok] $(#[$attr])* $vis struct $name { $($(#[$member_attr])* $member: $ty => $rule,)* } }
+    };
+    (@record [$($contract:tt)*] [validate $validate:expr] $(#[$attr:meta])* $vis:vis struct $name:ident { $($(#[$member_attr:meta])* $member:ident : $ty:ty => $rule:expr),* $(,)? } $(ephemeral { $($ephemeral:ident : $ephemeral_ty:ty = $initial:expr),* $(,)? })?) => {
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
         $(#[$attr])*
-        #[serde(deny_unknown_fields)]
-        $vis struct $name { $($(#[$member_attr])* #[serde(deserialize_with = "enrichment_core::native_union::required_value")] pub $member: $ty,)* $($(#[serde(skip)] pub $ephemeral: $ephemeral_ty,)*)? }
+        $($contract)*
+        $vis struct $name { $($(#[$member_attr])* #[schemars(transform = |schema: &mut schemars::Schema| enrichment_core::native_wire::field_rule(schema, $rule))] #[serde(serialize_with = "enrichment_core::native_wire::serialize", deserialize_with = "enrichment_core::native_wire::deserialize")] pub $member: $ty,)* $($(#[serde(skip)] pub $ephemeral: $ephemeral_ty,)*)? }
         impl $crate::native_union::NativeStruct for $name {
             fn fields() -> arrow::datatypes::Fields {
                 let fields: Vec<arrow::datatypes::Field> = vec![$($crate::native_union::field::<$ty>(stringify!($member), $rule)),*];
@@ -98,7 +124,7 @@ macro_rules! native_struct {
             }
             fn decode(row: $crate::evidence::arrow_model::cells::Row<'_>) -> Result<Self, arrow::error::ArrowError> {
                 row.exact_fields(&Self::fields())?;
-                Ok(Self { $($member: <$ty as $crate::native_union::Cell>::decode(row, stringify!($member))?,)* $($($ephemeral: $initial,)*)? })
+                ($validate)(Self { $($member: <$ty as $crate::native_union::Cell>::decode(row, stringify!($member))?,)* $($($ephemeral: $initial,)*)? })
             }
         }
         impl $crate::native_union::Cell for $name {
@@ -242,7 +268,15 @@ macro_rules! native_vocabulary {
     };
 }
 
-pub trait Cell: Sized {
+pub trait Cell: Sized + serde::Serialize + serde::de::DeserializeOwned {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.serialize(serializer)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        Self::deserialize(deserializer)
+    }
     fn empty_record() -> Result<Self, ArrowError> {
         Err(cells::invalid("native cell is not an empty record"))
     }
@@ -255,6 +289,27 @@ pub trait Cell: Sized {
     }
     fn encode(values: &[Option<&Self>]) -> Result<ArrayRef, ArrowError>;
     fn decode(row: Row<'_>, name: &str) -> Result<Self, ArrowError>;
+}
+
+impl<const N: usize> Cell for [u8; N]
+where
+    [u8; N]: serde::Serialize + serde::de::DeserializeOwned,
+{
+    fn data_type() -> DataType {
+        DataType::FixedSizeBinary(i32::try_from(N).expect("declared binary width fits Arrow"))
+    }
+    fn encode(values: &[Option<&Self>]) -> Result<ArrayRef, ArrowError> {
+        Ok(Arc::new(
+            arrow::array::FixedSizeBinaryArray::try_from_sparse_iter_with_size(
+                values.iter().copied(),
+                i32::try_from(N)
+                    .map_err(|_| cells::invalid("declared binary width exceeds Arrow"))?,
+            )?,
+        ))
+    }
+    fn decode(row: Row<'_>, name: &str) -> Result<Self, ArrowError> {
+        row.fixed_binary(name)
+    }
 }
 
 impl Cell for String {
@@ -327,7 +382,40 @@ impl Cell for i32 {
         Self::try_from(row.signed(name)?).map_err(|error| cells::invalid(error.to_string()))
     }
 }
+impl Cell for i64 {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        crate::native_wire::signed(deserializer)
+    }
+    fn data_type() -> DataType {
+        DataType::Int64
+    }
+    fn encode(values: &[Option<&Self>]) -> Result<ArrayRef, ArrowError> {
+        Ok(Arc::new(arrow::array::Int64Array::from(
+            values
+                .iter()
+                .map(|value| value.copied())
+                .collect::<Vec<_>>(),
+        )))
+    }
+    fn decode(row: Row<'_>, name: &str) -> Result<Self, ArrowError> {
+        row.signed(name)
+    }
+}
 impl<T: Cell> Cell for Vec<T> {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.iter().map(crate::native_wire::Ref))
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        Vec::<crate::native_wire::Owned<T>>::deserialize(deserializer)
+            .map(|values| values.into_iter().map(|value| value.0).collect())
+    }
     fn data_type() -> DataType {
         DataType::List(Arc::new(
             field::<T>("item", Rule::Text).with_nullable(T::nullable()),
@@ -377,6 +465,15 @@ impl<T: Cell> Cell for Vec<T> {
 }
 
 impl<T: Cell + Ord + Clone> Cell for std::collections::BTreeSet<T> {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.iter().map(crate::native_wire::Ref))
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        Vec::<crate::native_wire::Owned<T>>::deserialize(deserializer)
+            .map(|values| values.into_iter().map(|value| value.0).collect())
+    }
     fn data_type() -> DataType {
         Vec::<T>::data_type()
     }
@@ -399,6 +496,25 @@ impl<T: Cell + Ord + Clone> Cell for std::collections::BTreeSet<T> {
 }
 
 impl<T: Cell> Cell for std::collections::BTreeMap<String, T> {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_map(
+            self.iter()
+                .map(|(key, value)| (key, crate::native_wire::Ref(value))),
+        )
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        std::collections::BTreeMap::<String, crate::native_wire::Owned<T>>::deserialize(
+            deserializer,
+        )
+        .map(|values| {
+            values
+                .into_iter()
+                .map(|(key, value)| (key, value.0))
+                .collect()
+        })
+    }
     fn data_type() -> DataType {
         DataType::Map(
             Arc::new(Field::new(
@@ -498,8 +614,40 @@ macro_rules! unsigned_cell {
 }
 unsigned_cell!(u16, UInt16, UInt16Array);
 unsigned_cell!(u32, UInt32, UInt32Array);
-unsigned_cell!(u64, UInt64, UInt64Array);
+impl Cell for u64 {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        crate::native_wire::unsigned(deserializer)
+    }
+    fn data_type() -> DataType {
+        DataType::UInt64
+    }
+    fn encode(values: &[Option<&Self>]) -> Result<ArrayRef, ArrowError> {
+        Ok(Arc::new(UInt64Array::from(
+            values
+                .iter()
+                .map(|value| value.copied())
+                .collect::<Vec<_>>(),
+        )))
+    }
+    fn decode(row: Row<'_>, name: &str) -> Result<Self, ArrowError> {
+        row.number(name)
+    }
+}
 impl Cell for usize {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        Self::try_from(crate::native_wire::unsigned(deserializer)?)
+            .map_err(serde::de::Error::custom)
+    }
     fn data_type() -> DataType {
         DataType::UInt64
     }
@@ -516,6 +664,14 @@ impl Cell for usize {
     }
 }
 impl<T: Cell> Cell for Box<T> {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        T::serialize_wire(self.as_ref(), serializer)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        T::deserialize_wire(deserializer).map(Box::new)
+    }
     fn data_type() -> DataType {
         T::data_type()
     }
@@ -538,6 +694,17 @@ impl<T: Cell> Cell for Box<T> {
     }
 }
 impl<T: Cell> Cell for Option<T> {
+    fn serialize_wire<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.as_ref()
+            .map(crate::native_wire::Ref)
+            .serialize(serializer)
+    }
+    fn deserialize_wire<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Self, D::Error> {
+        Option::<crate::native_wire::Owned<T>>::deserialize(deserializer)
+            .map(|value| value.map(|value| value.0))
+    }
     fn metadata() -> HashMap<String, String> {
         T::metadata()
     }
@@ -694,7 +861,7 @@ macro_rules! native_union {
         $(#[$attr])*
         #[serde(tag = $discriminator, deny_unknown_fields)]
         $vis enum $name {
-            $($(#[$variant_attr])* #[serde(rename = $tag)] $variant $({ $($member: $ty),* })?),*
+            $($(#[$variant_attr])* #[serde(rename = $tag)] $variant $({ $(#[schemars(transform = |schema: &mut schemars::Schema| enrichment_core::native_wire::field_rule(schema, $rule))] #[serde(serialize_with = "enrichment_core::native_wire::serialize", deserialize_with = "enrichment_core::native_wire::deserialize")] $member: $ty),* })?),*
         }
         $crate::native_union_cell!($name);
         impl $crate::native_union::NativeUnion for $name {

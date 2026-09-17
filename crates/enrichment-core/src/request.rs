@@ -49,7 +49,7 @@ pub struct ResolveRequest {
     mode: Option<ResearchMode> => crate::native_union::Rule::Text,
     /// Features the caller's project enables, when known.
     #[serde(default)]
-    features: Option<Vec<String>> => crate::native_union::Rule::Sequence,
+    features: Option<Vec<String>> => crate::native_union::Rule::Set,
     /// Whether the caller's project enables default features, when known.
     #[serde(default)]
     default_features: Option<bool> => crate::native_union::Rule::Text,
@@ -61,7 +61,7 @@ pub struct ResolveRequest {
     python_version: Option<String> => crate::native_union::Rule::Text,
     /// Explicit Python extras, distinct from Rust feature selection.
     #[serde(default)]
-    extras: Option<Vec<String>> => crate::native_union::Rule::Sequence,
+    extras: Option<Vec<String>> => crate::native_union::Rule::Set,
     /// Freshness policy for this call.
     #[serde(default)]
     freshness: FreshnessMode => crate::native_union::Rule::Text,
@@ -121,111 +121,41 @@ impl ResolveRequest {
     pub fn declares_environment(&self) -> bool {
         self.features.is_some() || self.default_features.is_some() || self.target.is_some()
     }
-
-    /// Reject requests that cannot be acted on, with a message a caller can fix.
-    ///
-    /// # Errors
-    ///
-    /// Returns the problem in prose.
-    pub fn validate(&self) -> Result<(), String> {
-        if self.name.trim().is_empty() {
-            return Err("`name` must not be empty".to_owned());
-        }
-        if self.name.chars().any(|c| {
-            !(c.is_ascii_alphanumeric()
-                || c == '-'
-                || c == '_'
-                || (self.ecosystem == Ecosystem::Python && c == '.'))
-        }) {
-            return Err(format!(
-                "`{}` is not a package name: only ASCII letters, digits, `-` and `_` are allowed",
-                self.name
-            ));
-        }
-        if self.effective_mode() == ResearchMode::Revision {
-            if self.version.is_some() {
-                return Err("version and revision forms are exclusive".into());
-            }
-            crate::producer::revision::Revision::from_request(self)?;
-        } else if self.repository.is_some()
-            || self.revision.is_some()
-            || self.package_subdir.is_some()
-        {
-            return Err("repository/revision/package_subdir require mode=revision".into());
-        }
-        if let Some(version) = &self.version {
-            let valid = match self.ecosystem {
-                Ecosystem::Rust => semver::Version::parse(version).is_ok(),
-                Ecosystem::Python => version.parse::<pep440_rs::Version>().is_ok(),
-            };
-            if !valid {
-                return Err(format!(
-                    "`{version}` is not an exact version for {:?}",
-                    self.ecosystem
-                ));
-            }
-        }
-        match self.ecosystem {
-            Ecosystem::Rust if self.python_version.is_some() || self.extras.is_some() => {
-                return Err("Python interpreter/extras do not describe a Rust environment".into());
-            }
-            Ecosystem::Python if self.features.is_some() || self.default_features.is_some() => {
-                return Err(
-                    "Use extras for Python; Rust features/default_features are not applicable"
-                        .into(),
-                );
-            }
-            _ => {}
-        }
-        if let Some(version) = &self.python_version {
-            let parsed = version
-                .parse::<pep440_rs::Version>()
-                .map_err(|e| e.to_string())?;
-            if parsed.release().len() < 2 || parsed.any_prerelease() {
-                return Err("python_version must specify a stable major.minor[.patch]".into());
-            }
-        }
-        Ok(())
-    }
 }
 
 crate::native_struct! {
 /// What `library_overview` asks for.
-#[derive(Default)]
 pub struct OverviewRequest {
     /// Independently paged library-level feature/docs/note/example discovery; None uses bounded defaults.
     #[serde(default)]
-    discovery: Option<Vec<crate::wire::research::DiscoverySelection>> => crate::native_union::Rule::Text,
+    discovery: Option<Vec<crate::wire::research::DiscoverySelection>> => crate::native_union::Rule::SequenceBounds { min: 0, max: crate::wire::research::DiscoveryKind::VALUES.len() as u64 },
     /// The context from `resolve_library`.
     #[schemars(length(min = 1))]
-    context_id: String => crate::native_union::Rule::NonEmpty,
+    context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
     /// A specific snapshot; the context's current one when omitted.
     #[serde(default)]
-    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     /// Narrow to one module subtree.
     #[serde(default)]
     area: Option<String> => crate::native_union::Rule::Text,
     /// Cap on child entries per namespace; the configured limit bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1))]
-    max_items: Option<usize> => crate::native_union::Rule::Text,
+    max_items: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1, max: u64::MAX },
     /// Advisory byte budget; the configured inline budget bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1024))]
-    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+    max_bytes: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1024, max: u64::MAX },
 }
 }
 
 crate::native_struct! {
 /// What `search_evidence` asks for.
-#[derive(Default)]
 pub struct SearchRequest {
     /// The context from `resolve_library`.
     #[schemars(length(min = 1))]
-    context_id: String => crate::native_union::Rule::NonEmpty,
+    context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
     /// A specific snapshot; the context's current one when omitted.
     #[serde(default)]
-    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     /// The query.
     #[schemars(length(min = 1))]
     query: String => crate::native_union::Rule::NonEmpty,
@@ -240,12 +170,10 @@ pub struct SearchRequest {
     cursor: Option<String> => crate::native_union::Rule::Text,
     /// Page size; the configured limit bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1))]
-    max_items: Option<usize> => crate::native_union::Rule::Text,
+    max_items: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1, max: u64::MAX },
     /// Byte budget for the page; the configured inline budget bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1024))]
-    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+    max_bytes: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1024, max: u64::MAX },
 }
 }
 
@@ -253,14 +181,13 @@ crate::native_struct! {
 /// How much `inspect_symbol` retrieves.
 ///
 /// What `inspect_symbol` asks for.
-#[derive(Default)]
 pub struct InspectRequest {
     /// The context from `resolve_library`.
     #[schemars(length(min = 1))]
-    context_id: String => crate::native_union::Rule::NonEmpty,
+    context_id: crate::identity::ContextId => crate::native_union::Rule::Text,
     /// A specific snapshot; the context's current one when omitted.
     #[serde(default)]
-    snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     /// A qualified path, or a bare name when unambiguous.
     #[schemars(length(min = 1))]
     symbol_path: String => crate::native_union::Rule::NonEmpty,
@@ -272,8 +199,7 @@ pub struct InspectRequest {
     selection: crate::wire::ResearchSelection => crate::native_union::Rule::Text,
     /// Byte budget; the configured inline budget bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1024))]
-    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+    max_bytes: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1024, max: u64::MAX },
     /// Retained execution selection and explicit execution intent (ADR-0026).
     #[serde(default)]
     execution: Option<InspectionOptions> => crate::native_union::Rule::Text,
@@ -304,7 +230,7 @@ pub struct InspectionOptions {
     /// Advanced override; zero-based UTF-8 byte position at a character boundary.
     position: Option<crate::evidence::execution::Utf8Position> => crate::native_union::Rule::Text,
     /// Empty selects hover, definition, references and diagnostics for semantic inspection.
-    methods: Vec<crate::evidence::execution::SemanticMethod> => crate::native_union::Rule::Sequence,
+    methods: Vec<crate::evidence::execution::SemanticMethod> => crate::native_union::Rule::SequenceBounds { min: 0, max: crate::evidence::execution::SemanticMethod::VALUES.len() as u64 },
     /// Explicit Python selection. Import and introspection hooks may execute in the runtime capsule.
     runtime: Option<RuntimeSelection> => crate::native_union::Rule::Text,
 }
@@ -315,62 +241,6 @@ pub struct RuntimeSelection {
     module: String => crate::native_union::Rule::Text,
     attributes: Vec<String> => crate::native_union::Rule::Sequence,
 }
-}
-
-impl InspectionOptions {
-    pub fn validate(&self, input_bound: usize) -> Result<(), String> {
-        if self.methods.len() > 5
-            || self
-                .methods
-                .iter()
-                .enumerate()
-                .any(|(i, m)| self.methods[..i].contains(m))
-        {
-            return Err("select at most five distinct semantic methods".into());
-        }
-        if let Some(text) = &self.snippet {
-            if text.trim().is_empty() || text.len() > input_bound {
-                return Err("consumer snippet is empty or exceeds its byte budget".into());
-            }
-            if let Some(position) = self.position {
-                position.validate(text)?;
-            }
-        } else if self.position.is_some() {
-            return Err("an explicit position requires its exact consumer snippet".into());
-        }
-        if let Some(runtime) = &self.runtime {
-            let identifier = |s: &str| {
-                let mut chars = s.chars();
-                chars.next().is_some_and(|c| c == '_' || c.is_alphabetic())
-                    && chars.all(|c| c == '_' || c.is_alphanumeric())
-            };
-            if runtime.module.len() > 512
-                || runtime.attributes.len() > 32
-                || !runtime.module.split('.').all(identifier)
-                || runtime
-                    .attributes
-                    .iter()
-                    .any(|s| s.len() > 512 || !identifier(s))
-                || self.snippet.is_some()
-                || !self.methods.is_empty()
-            {
-                return Err("runtime inspection needs a bounded import/attribute selection, without semantic query fields".into());
-            }
-        }
-        if self.intent != InspectionIntent::Retained {
-            let expected = if self.runtime.is_some() {
-                crate::policy::ExecutionProfile::Runtime
-            } else {
-                crate::policy::ExecutionProfile::Build
-            };
-            if self.profile != Some(expected) {
-                return Err(format!(
-                    "this execution requires the explicit {expected:?} profile"
-                ));
-            }
-        }
-        Ok(())
-    }
 }
 
 crate::native_struct! {
@@ -388,8 +258,7 @@ pub struct ReadArtifactRequest {
     cursor: Option<String> => crate::native_union::Rule::Text,
     /// Byte budget for this slice; the configured inline budget bounds it.
     #[serde(default)]
-    #[schemars(range(min = 1024))]
-    max_bytes: Option<usize> => crate::native_union::Rule::Text,
+    max_bytes: Option<usize> => crate::native_union::Rule::UnsignedRange { min: 1024, max: u64::MAX },
 }
 }
 
@@ -400,10 +269,10 @@ crate::native_struct! {
 pub struct CompareRequest {
     /// Continue alternatives within one changed key, independently of the changed-key page.
     alternative_cursor: Option<String> => crate::native_union::Rule::Text,
-    before_context_id: Option<String> => crate::native_union::Rule::Text,
-    after_context_id: Option<String> => crate::native_union::Rule::Text,
-    before_snapshot_id: Option<String> => crate::native_union::Rule::Text,
-    after_snapshot_id: Option<String> => crate::native_union::Rule::Text,
+    before_context_id: Option<crate::identity::ContextId> => crate::native_union::Rule::Text,
+    after_context_id: Option<crate::identity::ContextId> => crate::native_union::Rule::Text,
+    before_snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
+    after_snapshot_id: Option<crate::identity::SnapshotId> => crate::native_union::Rule::Text,
     ecosystem: Option<Ecosystem> => crate::native_union::Rule::Text,
     name: Option<String> => crate::native_union::Rule::Text,
     from_version: Option<String> => crate::native_union::Rule::Text,
@@ -415,80 +284,155 @@ pub struct CompareRequest {
 }
 }
 
-impl CompareRequest {
-    /// Closed acquisition prerequisites for the version convenience form.
-    pub fn resolutions(&self) -> Result<[ResolveRequest; 2], String> {
-        if self.before_context_id.is_some()
-            || self.after_context_id.is_some()
-            || self.before_snapshot_id.is_some()
-            || self.after_snapshot_id.is_some()
-        {
-            return Err("version comparison cannot contain context or snapshot IDs".into());
-        }
-        let ecosystem = self
-            .ecosystem
-            .ok_or("version comparison needs an ecosystem")?;
-        let name = self
-            .name
-            .as_ref()
-            .ok_or("version comparison needs a name")?;
-        let from = self
-            .from_version
-            .as_ref()
-            .ok_or("version comparison needs from_version")?;
-        let to = self
-            .to_version
-            .as_ref()
-            .ok_or("version comparison needs to_version")?;
-        let requests = [from, to].map(|version| ResolveRequest {
-            ecosystem,
-            name: name.clone(),
-            version: Some(version.clone()),
-            ..Default::default()
-        });
-        for request in &requests {
-            request.validate()?;
-        }
-        Ok(requests)
-    }
-}
-
 crate::native_struct! {
 /// What the snapshot-manifest resource asks for.
-#[derive(Default)]
 pub struct ManifestRequest {
     /// The snapshot to describe.
     #[schemars(length(min = 1))]
-    snapshot_id: String => crate::native_union::Rule::NonEmpty,
+    snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
 }
 }
 
+macro_rules! durable_arguments {
+    (@collect [$($variant:ident($input:ty) = $tag:literal,)*];) => {
+        crate::native_union! { pub enum Arguments {
+            $($variant = $tag { request: $input => crate::native_union::Rule::Text }),*
+        } }
+        crate::native_vocabulary! {
+            #[derive(Hash, PartialOrd, Ord)]
+            pub enum CommandKind { $($variant = $tag),* }
+        }
+        impl Arguments {
+            pub fn command_kind(&self) -> CommandKind {
+                match self { $(Self::$variant { .. } => CommandKind::$variant),* }
+            }
+        }
+        impl From<Arguments> for ResearchRequest {
+            fn from(arguments: Arguments) -> Self {
+                match arguments { $(Arguments::$variant { request } => Self::$variant(request)),* }
+            }
+        }
+    };
+    (@collect [$($done:tt)*]; $variant:ident($input:ty) = $tag:literal => Durable; $($rest:tt)*) => {
+        durable_arguments! { @collect [$($done)* $variant($input) = $tag,]; $($rest)* }
+    };
+    (@collect [$($done:tt)*]; $variant:ident($input:ty) = $tag:literal => Immediate; $($rest:tt)*) => {
+        durable_arguments! { @collect [$($done)*]; $($rest)* }
+    };
+}
+macro_rules! request_budget {
+    (Bytes, $request:ident) => {
+        $request.max_bytes
+    };
+    (None, $request:ident) => {{
+        let _ = $request;
+        None
+    }};
+}
+macro_rules! output_page {
+    (Paged, $value:ident) => {
+        Some(&mut $value.page)
+    };
+    (None, $value:ident) => {{
+        let _ = $value;
+        None
+    }};
+}
 macro_rules! research_operations {
-    ($($variant:ident($input:ty) = $name:literal => ($output:ty,$rpc:literal,$description:literal,$effect:ident,$published:literal)),* $(,)?) => {
+    ($($variant:ident($input:ty) = $name:literal => ($result:ident($output:ty),$rpc:literal,$description:literal,$effect:ident,$published:literal,$internal:literal,$durability:ident,$budget:ident,$response:ident,$page:ident)),* $(,)?) => {
         crate::native_payload! { @tag "method", "params";
             /// Every operation shares its native field, wire and MCP binding declaration.
             #[derive(JsonSchema)]
             pub enum ResearchRequest { $($variant($input) = $name),* }
         }
+        crate::native_vocabulary! { pub enum Operation { $($variant = $internal),* } }
+        crate::native_payload! { @untagged "tool";
+            /// Native payloads derive from the same operation declaration as their requests.
+            #[derive(JsonSchema)]
+            #[schemars(rename = "LibraryEnrichmentToolData")]
+            pub enum ToolData {
+                Empty(crate::wire::data::EmptyData) = "empty",
+                AdapterStatus(Box<crate::wire::data::LocalStatus>) = "adapter_status",
+                $($result(Box<$output>) = $name),*
+            }
+        }
+        $(impl From<$output> for ToolData {
+            fn from(value: $output) -> Self { Self::$result(Box::new(value)) }
+        })*
+        impl ToolData {
+            pub fn page_mut(&mut self) -> Option<&mut crate::wire::Page> {
+                match self {
+                    $(Self::$result(value) => output_page!($page, value),)*
+                    Self::Empty(_) | Self::AdapterStatus(_) => None,
+                }
+            }
+        }
+        pub fn register_output_schemas(generator: &mut schemars::SchemaGenerator) {
+            $(let _ = generator.subschema_for::<$output>();)*
+        }
+
+        $(impl From<$input> for ResearchRequest {
+            fn from(request: $input) -> Self { Self::$variant(request) }
+        })*
+        impl ResearchRequest {
+            /// One generated RPC decoder, including the non-tool manifest resource.
+            pub fn from_rpc(method: &str, params: serde_json::Value) -> Option<Result<Self,serde_json::Error>> {
+                match method { $($rpc => Some(serde_json::from_value(params).map(Self::$variant)),)* _ => None }
+            }
+            pub fn operation(&self) -> Operation {
+                match self { $(Self::$variant(_) => Operation::$variant),* }
+            }
+            pub fn requested_budget(&self) -> Option<usize> {
+                match self { $(Self::$variant(request) => request_budget!($budget, request)),* }
+            }
+        }
+        impl Operation {
+            pub fn rpc(self) -> &'static str { match self { $(Self::$variant => $rpc),* } }
+            /// Request/result fields and native codec revisions jointly invalidate continuations.
+            pub fn contract_id(self) -> &'static str {
+                match self { $(Self::$variant => {
+                    static CONTRACT: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+                        let schema = arrow::datatypes::Schema::new(vec![
+                            crate::native_union::field::<$input>(concat!($internal,"_request"), crate::native_union::Rule::Text),
+                            crate::native_union::field::<$output>(concat!($internal,"_result"), crate::native_union::Rule::Text),
+                        ]);
+                        crate::native_contract::Manifest::new(&schema, &schema)
+                            .and_then(|manifest| crate::operation::Contract::new(Operation::$variant.definition(), manifest).identity())
+                            .expect("finite operation contract declaration")
+                    });
+                    CONTRACT.as_str()
+                }),* }
+            }
+            pub fn definition(self) -> crate::operation::Definition {
+                match self { $(Self::$variant => crate::operation::Definition {
+                    operation: self, name: $name.into(), rpc: $rpc.into(), description: $description.into(),
+                    effect: crate::wire::bindings::Effect::$effect, published: $published,
+                    durability: crate::operation::Durability::$durability,
+                    response: crate::operation::ResponsePolicy::$response,
+                }),* }
+            }
+        }
+        pub fn operation_definitions() -> Vec<crate::operation::Definition> {
+            vec![$(Operation::$variant.definition()),*]
+        }
+        durable_arguments! { @collect []; $($variant($input) = $internal => $durability;)* }
         /// Generated transport catalog, emitted with the request schema.
         pub fn operation_bindings() -> Vec<serde_json::Value> {
-            vec![$(crate::wire::bindings::binding::<$input,$output>(
-                $name,$rpc,$description,crate::wire::bindings::Effect::$effect,$published
-            )),*]
+            vec![$(crate::wire::bindings::binding::<$input,$output>(Operation::$variant.definition())),*]
         }
     };
 }
 research_operations! {
-    Resolve(ResolveRequest) = "resolve_library" => (crate::wire::data::ResolveData,"library.resolve","Establish exact identity and environment before research.",Acquire,true),
-    Overview(OverviewRequest) = "library_overview" => (crate::wire::data::OverviewData,"library.overview","Inspect published library capabilities, coverage and environment.",Read,true),
-    Search(SearchRequest) = "search_evidence" => (crate::wire::data::SearchData,"evidence.search","Find bounded evidence with native ranking and provenance.",Read,true),
-    Inspect(InspectRequest) = "inspect_symbol" => (crate::wire::data::InspectData,"symbol.inspect","Inspect a symbol and requested aspects; execution requires explicit intent and native authorization.",Execute,true),
-    Compare(CompareRequest) = "compare_releases" => (crate::wire::data::CompareData,"library.compare","Compare exact evidence scopes with explicit coverage and environment confounders.",Acquire,true),
-    Verify(crate::execution::VerifyRequest) = "verify_usage" => (crate::execution::VerificationData,"usage.verify","Test a proposed usage in an authorized isolated environment.",Execute,true),
-    ReadArtifact(ReadArtifactRequest) = "read_artifact" => (crate::wire::data::ArtifactSliceData,"artifact.read","Read bounded immutable content or an independently retained result section.",Read,true),
-    Job(crate::execution::JobRequest) = "job_control" => (crate::execution::JobData,"job.control","Observe, wait for or cancel your interest in durable work.",Execute,true),
-    ServiceStatus(StatusRequest) = "service_status" => (crate::wire::status::StatusData,"service.status","Inspect readiness and capabilities without indexing.",Read,true),
-    SnapshotManifest(ManifestRequest) = "snapshot_manifest" => (crate::wire::data::ManifestData,"snapshot.manifest","Read an exact published snapshot manifest.",Read,false),
+    Resolve(ResolveRequest) = "resolve_library" => (ResolveLibrary(crate::wire::data::ResolveData),"library.resolve","Establish exact identity and environment before research.",Acquire,true,"resolve",Durable,None,Research,None),
+    Overview(OverviewRequest) = "library_overview" => (LibraryOverview(crate::wire::data::OverviewData),"library.overview","Inspect published library capabilities, coverage and environment.",Read,true,"overview",Immediate,Bytes,Research,None),
+    Search(SearchRequest) = "search_evidence" => (SearchEvidence(crate::wire::data::SearchData),"evidence.search","Find bounded evidence with native ranking and provenance.",Read,true,"search",Immediate,Bytes,Research,Paged),
+    Inspect(InspectRequest) = "inspect_symbol" => (InspectSymbol(crate::wire::data::InspectData),"symbol.inspect","Inspect a symbol and requested aspects; execution requires explicit intent and native authorization.",Execute,true,"inspect",Durable,Bytes,Research,None),
+    Compare(CompareRequest) = "compare_releases" => (CompareReleases(crate::wire::data::CompareData),"library.compare","Compare exact evidence scopes with explicit coverage and environment confounders.",Acquire,true,"compare",Durable,Bytes,Research,Paged),
+    Verify(crate::execution::VerifyRequest) = "verify_usage" => (VerifyUsage(crate::execution::VerificationData),"usage.verify","Test a proposed usage in an authorized isolated environment.",Execute,true,"verify",Durable,Bytes,Verification,None),
+    ReadArtifact(ReadArtifactRequest) = "read_artifact" => (ReadArtifact(crate::wire::data::ArtifactSliceData),"artifact.read","Read bounded immutable content or an independently retained result section.",Read,true,"read_artifact",Immediate,Bytes,Research,Paged),
+    Job(crate::execution::JobRequest) = "job_control" => (JobControl(crate::execution::JobData),"job.control","Observe, wait for or cancel your interest in durable work.",Execute,true,"job",Immediate,Bytes,Job,None),
+    ServiceStatus(StatusRequest) = "service_status" => (ServiceStatus(crate::wire::status::StatusData),"service.status","Inspect readiness and capabilities without indexing.",Read,true,"service_status",Immediate,None,Status,None),
+    SnapshotManifest(ManifestRequest) = "snapshot_manifest" => (SnapshotManifest(crate::wire::data::ManifestData),"snapshot.manifest","Read an exact published snapshot manifest.",Read,false,"snapshot_manifest",Immediate,None,Research,None),
 }
 
 /// The request schema also carries the generated transport catalog, outside its validation keywords.
@@ -498,7 +442,8 @@ pub fn request_schema() -> serde_json::Value {
         .into_root_schema_for::<ResearchRequest>()
         .to_value();
     schema["x-enrichment-operations"] = serde_json::Value::Array(operation_bindings());
-    schema
+    schema["x-enrichment-mcp-delivery"] = crate::mcp_delivery::contract();
+    crate::native_wire::schema(schema)
 }
 
 crate::native_struct! {
@@ -514,33 +459,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn inspection_options_bind_execution_intent_and_utf8_positions() {
+    fn inspection_options_have_a_closed_transport_vocabulary() {
         let defaults: InspectionOptions = serde_json::from_value(serde_json::json!({})).unwrap();
         assert_eq!(defaults.intent, InspectionIntent::Retained);
-        defaults.validate(32768).unwrap();
-        let mut execute = defaults.clone();
-        execute.intent = InspectionIntent::ExecuteOnMiss;
-        assert!(execute.validate(32768).is_err());
-        execute.profile = Some(crate::policy::ExecutionProfile::Build);
-        execute.snippet = Some("# 😀\nvalue()".into());
-        execute.position = Some(crate::evidence::execution::Utf8Position { line: 0, byte: 3 });
-        assert!(execute.validate(32768).is_err());
-        execute.position = Some(crate::evidence::execution::Utf8Position { line: 1, byte: 0 });
-        execute.validate(32768).unwrap();
-        assert!(
-            serde_json::from_value::<InspectionOptions>(
-                serde_json::json!({"methods":["arbitrary/method"]})
-            )
-            .is_err()
-        );
-        assert!(
-            serde_json::from_value::<InspectionOptions>(
-                serde_json::json!({"host_path":"/tmp/source.py"})
-            )
-            .is_err()
-        );
-        let runtime: InspectionOptions = serde_json::from_value(serde_json::json!({"intent":"rerun","profile":"runtime", "runtime":{"module":"fixture","attributes":["f"]}})).unwrap();
-        runtime.validate(32768).unwrap();
+        for unknown in [
+            serde_json::json!({"methods":["arbitrary/method"]}),
+            serde_json::json!({"host_path":"/tmp/source.py"}),
+        ] {
+            assert!(serde_json::from_value::<InspectionOptions>(unknown).is_err());
+        }
     }
 
     #[test]
@@ -558,28 +485,6 @@ mod tests {
     }
 
     #[test]
-    fn bad_requests_are_rejected_with_a_reason() {
-        assert!(ResolveRequest::default().validate().is_err());
-        let bad_name = ResolveRequest {
-            name: "../etc".into(),
-            ..ResolveRequest::default()
-        };
-        assert!(bad_name.validate().is_err());
-        let bad_version = ResolveRequest {
-            name: "serde".into(),
-            version: Some("latest".into()),
-            ..ResolveRequest::default()
-        };
-        assert!(bad_version.validate().is_err());
-        let ok = ResolveRequest {
-            name: "serde_json".into(),
-            version: Some("1.0.0".into()),
-            ..ResolveRequest::default()
-        };
-        assert_eq!(ok.validate(), Ok(()));
-    }
-
-    #[test]
     fn unknown_fields_are_rejected_and_omitted_ones_default() {
         let parsed: ResolveRequest =
             serde_json::from_str(r#"{"name":"serde"}"#).expect("minimal request parses");
@@ -587,7 +492,7 @@ mod tests {
         assert_eq!(parsed.ecosystem, Ecosystem::Rust);
         assert!(serde_json::from_str::<ResolveRequest>(r#"{"name":"x","upgrade":true}"#).is_err());
         let inspect: InspectRequest =
-            serde_json::from_str(r#"{"context_id":"ctx_x","symbol_path":"a::b"}"#).expect("parses");
+            serde_json::from_value(serde_json::json!({"context_id":format!("ctx_{}", "a".repeat(64)),"symbol_path":"a::b"})).expect("parses");
         assert_eq!(inspect.selection, crate::wire::ResearchSelection::Default);
         assert!(
             serde_json::from_str::<SearchRequest>(r#"{"context_id":"c","query":"q","sort":1}"#)

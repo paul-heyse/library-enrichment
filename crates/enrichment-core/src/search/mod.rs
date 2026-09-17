@@ -12,9 +12,7 @@
 //! checksum over all four. A cursor presented against a different query or snapshot is
 //! refused with `INVALID_CURSOR` rather than producing an inconsistent page.
 
-use serde::{Deserialize, Serialize};
-
-use crate::canonical;
+use crate::{native_key::Key, native_union::Rule};
 pub mod page;
 pub mod row_page;
 
@@ -33,32 +31,16 @@ pub const FACTORS: &[(&str, u32)] = &[
     ("text_token", 50),
     ("definition_path", 5),
 ];
-/// Digest of what a search asked for, so a cursor can be checked against it.
-#[must_use]
-#[cfg(test)]
-fn query_digest(query: &str, kinds: &[String]) -> String {
-    let mut kinds = kinds.to_vec();
-    kinds.sort();
-    canonical::short_id(
-        "q",
-        &serde_json::json!({ "query": query.trim().to_lowercase(), "kinds": kinds }),
-    )
-}
-
-/// A pagination cursor (§7.3): scope, query digest, sort and position, checksummed.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Cursor {
-    /// What is being paged: a snapshot id, or an artifact id.
-    pub scope: String,
-    /// Digest of the query and filters.
-    pub query_digest: String,
-    /// The sort in force.
-    pub sort: String,
-    /// Next position.
-    pub offset: u64,
-    /// Checksum over the other fields.
-    pub check: String,
+crate::native_struct! {
+    /// Artifact window bound to immutable content and the exact requested selection.
+    pub struct Cursor {
+        scope: String => Rule::Reference(crate::native_union::Domain::Artifact),
+        query_digest: String => Rule::NonEmpty,
+        sort: String => Rule::NonEmpty,
+        offset: u64 => Rule::Text,
+        contract: String => Rule::NonEmpty,
+        check: String => Rule::NonEmpty,
+    }
 }
 
 /// Why a cursor was refused.
@@ -84,23 +66,29 @@ impl Cursor {
             query_digest: query_digest.to_owned(),
             sort: sort.to_owned(),
             offset,
+            contract: crate::request::Operation::ReadArtifact.contract_id().into(),
             check: Self::checksum(scope, query_digest, sort, offset),
         }
     }
 
     fn checksum(scope: &str, query_digest: &str, sort: &str, offset: u64) -> String {
-        canonical::digest_hex(&serde_json::json!({
-            "contract": "artifact-window/2",
-            "scope": scope, "query": query_digest, "sort": sort, "offset": offset
-        }))[..16]
-            .to_owned()
+        Key::ArtifactCursor
+            .record(&Self {
+                scope: scope.into(),
+                query_digest: query_digest.into(),
+                sort: sort.into(),
+                offset,
+                contract: crate::request::Operation::ReadArtifact.contract_id().into(),
+                check: String::new(),
+            })
+            .expect("declared native artifact cursor identity")
     }
 
     /// The opaque wire form.
     /// # Errors
     /// Serialization failure cannot become an empty valid-looking cursor.
     pub fn encode(&self) -> Result<String, serde_json::Error> {
-        Ok(format!("artifact2_{}", hex(&serde_json::to_vec(self)?)))
+        Ok(format!("artifact10_{}", hex(&serde_json::to_vec(self)?)))
     }
 
     /// Parse and check a cursor against what the caller is paging now.
@@ -118,17 +106,18 @@ impl Cursor {
             return Err(CursorError::Malformed);
         }
         let body = text
-            .strip_prefix("artifact2_")
+            .strip_prefix("artifact10_")
             .ok_or(CursorError::Malformed)?;
         let bytes = unhex(body).ok_or(CursorError::Malformed)?;
         let cursor: Self = serde_json::from_slice(&bytes).map_err(|_| CursorError::Malformed)?;
-        if cursor.check
-            != Self::checksum(
-                &cursor.scope,
-                &cursor.query_digest,
-                &cursor.sort,
-                cursor.offset,
-            )
+        if cursor.contract != crate::request::Operation::ReadArtifact.contract_id()
+            || cursor.check
+                != Self::checksum(
+                    &cursor.scope,
+                    &cursor.query_digest,
+                    &cursor.sort,
+                    cursor.offset,
+                )
         {
             return Err(CursorError::Malformed);
         }
@@ -174,10 +163,10 @@ mod tests {
     use super::*;
     #[test]
     fn cursors_bind_scope_query_and_sort() {
-        let digest = query_digest("Widget", &["api".to_owned()]);
+        let digest = "query-api";
         let cursor = Cursor::new("snap_x", &digest, "score", 12);
         let text = cursor.encode().expect("cursor serializes");
-        assert!(text.starts_with("artifact2_"));
+        assert!(text.starts_with("artifact10_"));
         assert_eq!(
             Cursor::decode(&text, "snap_x", &digest, "score")
                 .expect("ok")
@@ -190,7 +179,7 @@ mod tests {
                 field: "snapshot or artifact"
             })
         ));
-        let other = query_digest("Widget", &["docs".to_owned()]);
+        let other = "query-docs";
         assert!(matches!(
             Cursor::decode(&text, "snap_x", &other, "score"),
             Err(CursorError::Mismatch {
@@ -198,7 +187,7 @@ mod tests {
             })
         ));
         assert!(matches!(
-            Cursor::decode("artifact2_zz", "snap_x", &digest, "score"),
+            Cursor::decode("artifact10_zz", "snap_x", &digest, "score"),
             Err(CursorError::Malformed)
         ));
         assert!(matches!(
@@ -208,7 +197,7 @@ mod tests {
         // A tampered offset fails the checksum.
         assert!(
             Cursor::decode(
-                &text.replacen("artifact2_", "cur_", 1),
+                &text.replacen("artifact10_", "cur_", 1),
                 "snap_x",
                 &digest,
                 "score"

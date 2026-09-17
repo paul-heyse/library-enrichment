@@ -74,7 +74,7 @@ pub(crate) async fn admit(
         "operation_input",
         session.read_batches(input.batches)?.into_view(),
     )?;
-    let scope = session.sql("SELECT t.*, d.job_key,d.policy_id,d.operation_revision,d.operation,coalesce(d.ecosystem,r.ecosystem) AS ecosystem,d.context_id,d.snapshot_id,c.environment_id,d.profile,d.requested_profile,d.freshness,d.snippet,d.snippet_limit FROM operation_input d JOIN operation_queued t ON d.job_id=t.job_id LEFT JOIN state.records.contexts c ON c.context_id=d.context_id LEFT JOIN state.records.releases r ON c.release_id=r.release_id").await?;
+    let scope = session.sql("SELECT t.*, d.job_key,d.policy_id,d.operation_revision,d.operation,coalesce(d.ecosystem,r.key.ecosystem) AS ecosystem,d.context_id,d.snapshot_id,c.environment_id,d.profile,d.requested_profile,d.freshness,d.snippet,d.snippet_limit FROM operation_input d JOIN operation_queued t ON d.job_id=t.job_id LEFT JOIN state.records.contexts c ON c.context_id=d.context_id LEFT JOIN state.records.releases r ON c.release_id=r.release_id").await?;
     crate::native_catalog::work(session, "operation_scope", scope.into_view())?;
     let decisions = session.sql(r#"
         SELECT q.*,r.image_id,

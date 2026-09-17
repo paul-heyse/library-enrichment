@@ -1,0 +1,61 @@
+id: project-instrument-rule-not-last
+language: rust
+severity: hint
+message: a physical optimizer rule is registered AFTER the instrumentation rule
+note: |
+  The instrumentation rule wraps whatever plan it is handed, so a rule registered after it
+  produces nodes that nothing instrumented, and the trace describes an intermediate plan rather
+  than the one that ran. Upstream's README states it directly: "always register the
+  instrumentation rule last in your physical optimizer chain". The second reason it gives is
+  that instrumentation stays purely observational only while no other rule has to deal with an
+  `InstrumentedExec`.
+
+  Neither failure is loud. It compiles, it traces, and the trace is of the wrong plan.
+
+  PRECISION. ast-grep resolves no bindings, so which variable holds the instrumentation rule is
+  not decidable from syntax. This rule fires on the two cases that are: the macro invoked
+  inline in the chain, and an argument whose identifier contains `instrument` -- which is the
+  name upstream's own README uses. A rule bound to a variable named something else is missed,
+  and that is a chosen limit rather than an oversight: the unanchored form matched every
+  multi-rule chain in a real workspace, all false.
+metadata:
+  record: capability-gap
+  capability: exec-instrumentation
+rule:
+  any:
+    # Chained form: an outer `.with_physical_optimizer_rule(...)` whose receiver already
+    # registered the instrumentation rule, so the outer one runs afterwards.
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: field_expression
+            has: { field: field, regex: '^with_physical_optimizer_rule$' }
+        - has:
+            stopBy: end
+            kind: call_expression
+            all:
+              - has:
+                  field: function
+                  kind: field_expression
+                  has: { field: field, regex: '^with_physical_optimizer_rule$' }
+              - has:
+                  stopBy: end
+                  any:
+                    - { kind: identifier, regex: 'instrument' }
+                    - { kind: macro_invocation, regex: '^instrument_with_' }
+    # Vector form: `vec![a, b, instrument_rule]`. tree-sitter does not parse a macro's
+    # contents into expressions -- they are one `token_tree` of raw tokens -- so the elements
+    # cannot be walked as siblings and `follows` never fires. Matching the token tree's text
+    # for an `instrument*` token followed by a comma is decidable and says exactly the thing
+    # that matters: it is not the last element.
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: field_expression
+            has: { field: field, regex: '^with_physical_optimizer_rules$' }
+        - has:
+            stopBy: end
+            kind: token_tree
+            regex: 'instrument[A-Za-z0-9_]*(!\s*\([^)]*\))?\s*,'

@@ -62,31 +62,64 @@ macro_rules! content_identity {
         )]
         #[serde(into = "String", try_from = "String")]
         #[schemars(inline, extend("pattern" = $pattern))]
-        pub struct $name(String);
+        pub struct $name([u8; 32]);
 
         impl $name {
             /// The prefix every identity of this kind carries.
             pub const PREFIX: &'static str = $prefix;
 
-            fn from_record<T: Serialize>(value: &T) -> Self {
-                Self(Key::$key.value(value).expect("declared native identity contract"))
+            fn from_record<T: crate::native_union::NativeStruct>(value: &T) -> Self {
+                Self(Key::$key.record_digest(value).expect("declared native identity contract"))
             }
 
-            /// Borrow the identity as a string slice.
+            /// Native identity bytes. Text is produced only at protocol/path boundaries.
             #[must_use]
-            pub fn as_str(&self) -> &str {
+            pub fn as_bytes(&self) -> &[u8; 32] {
                 &self.0
+            }
+
+            /// A typed literal retains the domain before native coercion and optimization.
+            pub fn literal(&self) -> datafusion::logical_expr::Expr {
+                let parameter = self.parameter();
+                datafusion::logical_expr::Expr::Literal(parameter.value, parameter.metadata)
+            }
+
+            /// DataFusion's parameter contract carries the same semantic field as literals.
+            pub fn parameter(&self) -> datafusion::common::metadata::ScalarAndMetadata {
+                let field = crate::native_union::field::<Self>("identity", crate::native_union::Rule::Text);
+                datafusion::common::metadata::ScalarAndMetadata::new(
+                    datafusion::common::ScalarValue::FixedSizeBinary(32, Some(self.0.to_vec())),
+                    Some(datafusion::common::metadata::FieldMetadata::from(&field)),
+                )
             }
         }
 
         impl crate::native_union::Cell for $name {
-            fn data_type() -> arrow::datatypes::DataType { arrow::datatypes::DataType::Utf8 }
+            fn data_type() -> arrow::datatypes::DataType { arrow::datatypes::DataType::FixedSizeBinary(32) }
+            fn metadata() -> std::collections::HashMap<String, String> {
+                use arrow_schema::extension::ExtensionType;
+                let extension = crate::native_types::IdentityType::try_new(
+                    &Self::data_type(),
+                    crate::native_types::TypeMetadata::new(crate::native_union::Domain::$key),
+                ).expect("declared identity extension");
+                arrow::datatypes::Field::new("identity", Self::data_type(), false)
+                    .with_extension_type(extension).metadata().clone()
+            }
             fn encode(values: &[Option<&Self>]) -> Result<arrow::array::ArrayRef, arrow::error::ArrowError> {
-                Ok(crate::evidence::arrow_model::cells::optional(values.iter().map(|value| value.map(Self::as_str))))
+                <[u8; 32] as crate::native_union::Cell>::encode(
+                    &values.iter().map(|value| value.map(Self::as_bytes)).collect::<Vec<_>>()
+                )
             }
             fn decode(row: crate::evidence::arrow_model::cells::Row<'_>, name: &str) -> Result<Self, arrow::error::ArrowError> {
-                Self::try_from(row.text(name)?.to_owned()).map_err(|error| crate::evidence::arrow_model::cells::invalid(error.to_string()))
+                row.fixed_binary(name).map(Self)
             }
+        }
+
+        impl datafusion::logical_expr::Literal for &$name {
+            fn lit(&self) -> datafusion::logical_expr::Expr { self.literal() }
+        }
+        impl datafusion::logical_expr::Literal for $name {
+            fn lit(&self) -> datafusion::logical_expr::Expr { self.literal() }
         }
 
         impl TryFrom<String> for $name {
@@ -94,7 +127,13 @@ macro_rules! content_identity {
 
             fn try_from(value: String) -> Result<Self, Self::Error> {
                 if is_well_formed(&value, $prefix) {
-                    Ok(Self(value))
+                    let mut bytes = [0u8; 32];
+                    let encoded = &value.as_bytes()[$prefix.len() + 1..];
+                    for (byte, pair) in bytes.iter_mut().zip(encoded.chunks_exact(2)) {
+                        let digit = |value: u8| if value <= b'9' { value - b'0' } else { value - b'a' + 10 };
+                        *byte = (digit(pair[0]) << 4) | digit(pair[1]);
+                    }
+                    Ok(Self(bytes))
                 } else {
                     Err(IdentityError {
                         expected_prefix: $prefix,
@@ -106,13 +145,15 @@ macro_rules! content_identity {
 
         impl From<$name> for String {
             fn from(value: $name) -> Self {
-                value.0
+                value.to_string()
             }
         }
 
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str(&self.0)
+                write!(f, "{}_", $prefix)?;
+                for byte in self.0 { write!(f, "{byte:02x}")?; }
+                Ok(())
             }
         }
     };
@@ -287,10 +328,8 @@ pub struct Environment {
     toolchain: Option<String> => crate::native_union::Rule::Text,
     /// Target triple or platform tag, when known.
     target: Option<String> => crate::native_union::Rule::Text,
-    /// Enabled features or extras, sorted and deduplicated.
-    features: Vec<String> => crate::native_union::Rule::Set,
-    /// Whether an empty feature selection was explicitly supplied.
-    features_known: bool => crate::native_union::Rule::Text,
+    /// None is unknown; Some(empty) is an explicitly empty set of features or extras.
+    features: Option<Vec<String>> => crate::native_union::Rule::Set,
     /// Whether default features are enabled. `None` when unspecified.
     default_features: Option<bool> => crate::native_union::Rule::Text,
     /// Digest of the dependency lock, when one was supplied.
@@ -306,7 +345,7 @@ impl Environment {
             self.resolution,
             self.toolchain.clone(),
             self.target.clone(),
-            self.features_known.then(|| self.features.clone()),
+            self.features.clone(),
             self.default_features,
             self.lock_digest.clone(),
         );
@@ -387,27 +426,16 @@ impl Environment {
         default_features: Option<bool>,
         lock_digest: Option<String>,
     ) -> Self {
-        let features_known = features.is_some();
-        let features = crate::native_key::ordered_strings(&features.unwrap_or_default())
-            .expect("declared native feature set");
-        #[derive(Serialize)]
-        struct EnvironmentKey<'a> {
-            resolution: EnvironmentResolution,
-            toolchain: &'a Option<String>,
-            target: &'a Option<String>,
-            features: &'a [String],
-            features_known: bool,
-            default_features: Option<bool>,
-            lock_digest: &'a Option<String>,
-        }
+        let features = features.map(|values| {
+            crate::native_key::ordered_strings(&values).expect("declared native feature set")
+        });
         let environment_id = EnvironmentId::from_record(&EnvironmentKey {
             resolution,
-            toolchain: &toolchain,
-            target: &target,
-            features: &features,
-            features_known,
+            toolchain: toolchain.clone(),
+            target: target.clone(),
+            features: features.clone(),
             default_features,
-            lock_digest: &lock_digest,
+            lock_digest: lock_digest.clone(),
         });
         Self {
             environment_id,
@@ -415,7 +443,6 @@ impl Environment {
             toolchain,
             target,
             features,
-            features_known,
             default_features,
             lock_digest,
         }
@@ -474,36 +501,42 @@ impl Context {
     ) -> ContextId {
         // The parent is provenance, not identity: two routes to the same (release, environment,
         // mode) must name the same context, or an offline replay could not find its snapshot.
-        #[derive(Serialize)]
-        struct ContextKey<'a> {
-            release_id: &'a ReleaseId,
-            environment_id: &'a EnvironmentId,
-            mode: ResearchMode,
-        }
         ContextId::from_record(&ContextKey {
-            release_id: release,
-            environment_id: environment,
+            release_id: release.clone(),
+            environment_id: environment.clone(),
             mode,
         })
     }
 }
 
-/// Everything a snapshot identity is derived from.
-///
-/// Schema and normalizer versions are part of the key (§6.3) so improved normalization of the
-/// same inputs is a new snapshot, and the old one stays readable.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+crate::native_struct! {
+/// The complete native defining inputs of an immutable snapshot.
 pub struct SnapshotInputs {
-    /// The wire schema version in force.
-    pub schema_version: String,
-    /// The normalizer version in force.
-    pub normalizer_version: String,
-    /// The context the snapshot serves.
-    pub context_id: ContextId,
-    /// Input artifact digests, keyed by role (e.g. `rustdoc_json`, `crate_tarball`).
-    pub input_digests: BTreeMap<String, String>,
-    /// Producer identities, keyed by producer name.
-    pub producers: BTreeMap<String, String>,
+    schema_version: String => crate::native_union::Rule::NonEmpty,
+    normalizer_version: String => crate::native_union::Rule::NonEmpty,
+    context_id: ContextId => crate::native_union::Rule::Text,
+    input_digests: BTreeMap<String, String> => crate::native_union::Rule::Map,
+    producers: BTreeMap<String, String> => crate::native_union::Rule::Map,
+}
+}
+
+crate::native_struct! {
+pub(crate) struct EnvironmentKey {
+    resolution: EnvironmentResolution => crate::native_union::Rule::Text,
+    toolchain: Option<String> => crate::native_union::Rule::Text,
+    target: Option<String> => crate::native_union::Rule::Text,
+    features: Option<Vec<String>> => crate::native_union::Rule::Set,
+    default_features: Option<bool> => crate::native_union::Rule::Text,
+    lock_digest: Option<String> => crate::native_union::Rule::Text,
+}
+}
+
+crate::native_struct! {
+pub(crate) struct ContextKey {
+    release_id: ReleaseId => crate::native_union::Rule::Text,
+    environment_id: EnvironmentId => crate::native_union::Rule::Text,
+    mode: ResearchMode => crate::native_union::Rule::Text,
+}
 }
 
 impl SnapshotId {
@@ -521,7 +554,7 @@ mod tests {
     #[test]
     fn target_identity_vectors_preserve_environment_knowledge_and_separate_scopes() {
         // Independently calculated from typed Arrow byte framing with Python hashlib.
-        // Receipt: .dev-state/plan17/execution/identity-vectors.json; no JSON identity preimage.
+        // Receipt: .dev-state/plan17/execution/identity-vectors-10.json; no JSON identity preimage.
         let release = Release::new(ReleaseKey {
             ecosystem: Ecosystem::Rust,
             registry: "crates.io".into(),
@@ -530,18 +563,18 @@ mod tests {
             artifact_digest: None,
         });
         assert_eq!(
-            release.release_id.as_str(),
-            "rel_2e25bfd237b4e258ceca5cc71c6e9766a0009724925c6258ed88dfecb0058fac"
+            release.release_id.to_string(),
+            "rel_86f537d09e98eedc0728339b6c1648b4de37445a0031e977efc610cb5d4fa7ab"
         );
         let unknown = Environment::unspecified();
         let empty = Environment::declared(None, Some(vec![]), None);
         assert_eq!(
-            unknown.environment_id.as_str(),
-            "env_fa0596c75bb9c3f42555709d63d6ba29ec382f613aaef655ea61b2a7758f9f0a"
+            unknown.environment_id.to_string(),
+            "env_0ef4e0bf0c262b7f0c9767b6fb7b5660574f4eb005d8cf2cbaad754ff835a58a"
         );
         assert_eq!(
-            empty.environment_id.as_str(),
-            "env_ebad71df91a31b263312eb556cd49ca8573ecf036752826cd393d030c4d5e8aa"
+            empty.environment_id.to_string(),
+            "env_92f75003de40df6110a1d9fa625cb93b30f9b13d9b7a4ca212a3cfff4f1ac490"
         );
         let context = Context::new(
             release.release_id,
@@ -549,19 +582,19 @@ mod tests {
             ResearchMode::Upstream,
         );
         assert_eq!(
-            context.context_id.as_str(),
-            "ctx_01209aee3b5c62314cceaef3c010081c48a28e8d73c972ce2a31d81f4ca2503b"
+            context.context_id.to_string(),
+            "ctx_43a2657302b180830ec18ef2b9bd1c25fab6529768b3739e38832250bad2ce81"
         );
         let snapshot = SnapshotId::derive(&SnapshotInputs {
-            schema_version: "8.0".into(),
-            normalizer_version: "native/8".into(),
+            schema_version: "10.0".into(),
+            normalizer_version: "native/10".into(),
             context_id: context.context_id,
             input_digests: [("coverage".into(), "a".repeat(64))].into_iter().collect(),
             producers: [("fixture".into(), "1".into())].into_iter().collect(),
         });
         assert_eq!(
-            snapshot.as_str(),
-            "snap_95d2b2bbec951e7f5db4483521395ed479f2a4d5b3cc484a8d7c204bcac26f20"
+            snapshot.to_string(),
+            "snap_40d237fdb4bac5ff335532d54625dff9dbbbc71f30a0dc040fc3b2c8d7837f4d"
         );
     }
 
@@ -578,7 +611,7 @@ mod tests {
     #[test]
     fn a_release_identity_is_deterministic() {
         assert_eq!(key().id(), key().id());
-        assert!(key().id().as_str().starts_with("rel_"));
+        assert!(key().id().to_string().starts_with("rel_"));
     }
 
     #[test]
@@ -604,18 +637,18 @@ mod tests {
             producers: BTreeMap::new(),
         });
         let all = [
-            release.as_str(),
-            environment.as_str(),
-            context.as_str(),
-            snapshot.as_str(),
+            release.to_string(),
+            environment.to_string(),
+            context.to_string(),
+            snapshot.to_string(),
         ];
         for (i, a) in all.iter().enumerate() {
             for (j, b) in all.iter().enumerate() {
                 assert_eq!(i == j, a == b);
             }
         }
-        assert!(ContextId::try_from(release.as_str().to_owned()).is_err());
-        assert!(SnapshotId::try_from(context.as_str().to_owned()).is_err());
+        assert!(ContextId::try_from(release.to_string().to_owned()).is_err());
+        assert!(SnapshotId::try_from(context.to_string().to_owned()).is_err());
     }
 
     #[test]
@@ -646,7 +679,7 @@ mod tests {
             Some(true),
         );
         assert_eq!(a.environment_id, b.environment_id);
-        assert_eq!(a.features, vec!["a".to_owned(), "b".to_owned()]);
+        assert_eq!(a.features, Some(vec!["a".to_owned(), "b".to_owned()]));
     }
 
     #[test]
@@ -654,13 +687,13 @@ mod tests {
         let omitted = Environment::declared(None, None, Some(true));
         let empty = Environment::declared(None, Some(vec![]), Some(true));
         assert_ne!(omitted.environment_id, empty.environment_id);
-        assert!(!omitted.features_known);
-        assert!(empty.features_known);
+        assert_eq!(omitted.features, None);
+        assert_eq!(empty.features, Some(vec![]));
         let mut missing_knowledge = serde_json::to_value(&empty).expect("serialize");
         missing_knowledge
             .as_object_mut()
             .expect("object")
-            .remove("features_known");
+            .remove("features");
         assert!(serde_json::from_value::<Environment>(missing_knowledge).is_err());
     }
 
@@ -713,11 +746,11 @@ mod tests {
     }
 
     #[test]
-    fn a_release_record_serializes_its_key_flat() {
+    fn a_release_record_projects_its_native_key_at_the_wire_boundary() {
         let release = Release::new(key());
         let value = serde_json::to_value(&release).expect("serializes");
         assert_eq!(value["package"], "enr-fixture");
-        assert_eq!(value["release_id"], release.release_id.as_str());
+        assert_eq!(value["release_id"], release.release_id.to_string());
         let back: Release = serde_json::from_value(value).expect("round trips");
         assert_eq!(back, release);
     }

@@ -27,6 +27,7 @@ wrong in the way that is hardest to notice -- code that reads correctly and fail
 | [`pyrefly-ruff/`](pyrefly-ruff/SKILL.md) | 42 ruff and pyrefly crates, and every catalog the two tools emit about themselves | rustdoc JSON + the tools' own JSON oracles |
 | [`ast-grep-ripgrep/`](ast-grep-ripgrep/SKILL.md) | every flag, node kind, rule field and regex construct of both tools, plus the 23 library crates underneath | the installed binaries' own help, ast-grep's shipped schemas, PCRE2 10.48's manual, rustdoc JSON — and 49 **executed** probes |
 | [`rust-code-model/`](rust-code-model/SKILL.md) | the seven layers of Rust program knowledge -- rustdoc JSON, ra_ap_syntax, ra_ap_hir, the project-loading layer, MIR, dataflow and cargo metadata -- across 11 crates | docs.rs rustdoc JSON, pinned rustc and rust-analyzer source, and 33 **executed** probes |
+| [`datafusion-tracing/`](datafusion-tracing/SKILL.md) | `datafusion-tracing` and `instrumented-object-store`, plus the `tracing` and OpenTelemetry wiring they cannot be used without -- 11 crates | docs.rs rustdoc JSON **and** a local `--document-private-items` capture, upstream's own trace snapshots, 16 releases of registry history, and executed probes |
 | [`typer-rich/`](typer-rich/SKILL.md) | `typer`, `rich`, and the Click that typer 0.26 vendored, as three subjects; plus 855 files of upstream docs, runnable tutorials, examples and tests | Griffe + ty + pyrefly + pinned GitHub tarballs, and 19 **executed** probes that capture rendered output |
 
 Each carries a `build/` that can reproduce it, a `verify.py` whose checks include a byte-for-byte
@@ -61,6 +62,25 @@ with three subjects and two pins: typer's vendored Click is indexed separately, 
 `typer._click.Command` and `click.Command` are different classes with the same name and the one an
 agent imports is the wrong one. `nameable: no` was where fastmcp's model stopped; here 201 rows
 carry a `reachability` column instead, saying how you meet a class you cannot import.
+
+`datafusion-tracing` is the one whose subject's own documentation is the adversary. Its
+published API is fifteen items, which sounds like a repository not worth building -- until you
+notice that `lib.rs` declares the two option modules private and re-exports only the types out
+of them. Both option *builders* are `pub` inside private modules, so docs.rs answers 404 for
+them, they are absent from `all.html`, and the hosted rustdoc JSON carries the structs with no
+impl block at all. **Sixteen public methods exist that no published artifact documents**, six of
+which the crate's own front-page example chains -- so the documentation demonstrates a method it
+does not document, and a reader who searches for it concludes they misread the example. This is
+the first repository here to build its index from two captures of the same crate and carry a
+`visibility` column saying which one each row came from, and the discriminator is not rustdoc's
+own `visibility` field: that calls `InstrumentedExec` public exactly as it calls the builders
+public, and upstream documents `InstrumentedExec` as deliberately unreachable. Building it also
+turned up that `#[doc(hidden)]` is not recorded in rustdoc JSON at format 61, that
+`instrument_session_state` is `pub use`d by `lib.rs` and appears in *neither* capture, and that
+one of upstream's shipped trace snapshots is not valid JSON -- its own insta filter emits
+`Some\("…"\)` inside a JSON string. It is also the second here whose subject can be executed:
+upstream ships the span contract as trace captures, and probes with controls promote what they
+reproduce from `recorded` to `confirmed`.
 
 `ast-grep-ripgrep` is the one whose subjects are *programs* rather than libraries, so it can do
 something most of the others cannot: execute them. Its index carries observed behaviour alongside

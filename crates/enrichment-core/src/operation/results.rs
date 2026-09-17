@@ -2,6 +2,7 @@
 use crate::native_union::{Domain, Rule, Unit};
 pub const JOB_URI: &str = "service:job-delivery/4";
 pub const MEDIA_TYPE: &str = "application/vnd.library-enrichment.native-result";
+pub const MAX_BYTES: u64 = 32 * 1024 * 1024;
 
 crate::native_struct! {
 /// Complete result authority before any inline or retained transport projection.
@@ -46,8 +47,8 @@ crate::native_struct! {
 /// Typed retained outcome. Recovery reads this admitted record without interpreting JSON fields.
 pub struct ResultHeader {
     summary: String => Rule::Text,
-    context_id: Option<String> => Rule::Text,
-    snapshot_id: Option<String> => Rule::Text,
+    context_id: Option<crate::identity::ContextId> => Rule::Text,
+    snapshot_id: Option<crate::identity::SnapshotId> => Rule::Text,
     coverage: crate::wire::Coverage => Rule::Text,
     freshness: crate::wire::Freshness => Rule::Text,
     outcome: crate::wire::Outcome => Rule::Text,

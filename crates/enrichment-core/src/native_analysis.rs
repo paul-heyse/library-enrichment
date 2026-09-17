@@ -233,12 +233,19 @@ fn expression(expr: &Expr, schema: &DFSchema) -> Result<()> {
             }
             Expr::ScalarFunction(function)
                 if crate::native_identity::is_value_encoder(&function.func)
+                    || crate::native_id::is_projection(&function.func)
                     || crate::native_predicate::is_predicate(&function.func)
                     || crate::native_collections::is_projection(&function.func)
                     || crate::native_time::is_projection(&function.func) =>
             {
                 // The concrete encoder verifies its declared full input fields. Its Binary
                 // output is an explicit, domain-framed representation for native hashing.
+                field(expr, schema)?;
+            }
+            Expr::ScalarFunction(function) if crate::native_transport::is_measurement(&function.func) =>
+            {
+                // A verified format kernel observes encoded length without reinterpreting
+                // any input domain. Its full-field contract still applies before execution.
                 field(expr, schema)?;
             }
             Expr::ScalarFunction(function)

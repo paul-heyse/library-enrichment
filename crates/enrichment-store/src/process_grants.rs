@@ -1,9 +1,9 @@
 //! Native process eligibility and exact durable operation witnesses under a live command grant.
 use crate::{
+    control::ControlStore,
     control_jobs::{Claim, Grant, JobStore},
     execution_policy::{Capture, Policy},
     immutable_definitions::{Binding, Definitions},
-    native_delta::DeltaStore,
 };
 use datafusion::{
     error::{DataFusionError, Result},
@@ -25,8 +25,8 @@ pub struct Witness {
     pub effect_binding: Binding,
     pub operation_id: String,
     pub grant_id: String,
-    pub environment_id: Option<String>,
-    pub snapshot_id: Option<String>,
+    pub environment_id: Option<enrichment_core::identity::EnvironmentId>,
+    pub snapshot_id: Option<enrichment_core::identity::SnapshotId>,
 }
 use enrichment_core::operation::jobs::Effect;
 #[derive(Debug, Clone)]
@@ -52,7 +52,7 @@ pub(crate) async fn admit(
     grant: Grant,
     jobs: &JobStore,
     claim: &Claim,
-    delta: DeltaStore,
+    control: ControlStore,
     facts: Facts<'_>,
 ) -> Result<ProcessGrant> {
     facts.operation.validate()?;
@@ -113,7 +113,7 @@ pub(crate) async fn admit(
         return Err(invalid("process requires one exact command route"));
     }
     let operations = Definitions::new(
-        delta.clone(),
+        control.clone(),
         runtime.clone(),
         "process_operations",
         Key::ProcessOperation,
@@ -161,7 +161,7 @@ pub(crate) async fn admit(
         .pop()
         .ok_or_else(|| invalid("process effect projection missing"))?;
     let definitions = Definitions::new(
-        delta,
+        control,
         runtime.clone(),
         "process_effects",
         Key::ProcessEffect,

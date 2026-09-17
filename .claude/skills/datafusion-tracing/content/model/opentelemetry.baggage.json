@@ -1,0 +1,197 @@
+{
+  "module": "opentelemetry::baggage",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.baggage.md",
+  "items": [
+    {
+      "path": "opentelemetry::baggage::Baggage",
+      "name": "Baggage",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct Baggage",
+      "summary": "A set of name/value pairs describing user-defined properties.",
+      "doc": "api/opentelemetry.baggage.md#baggage",
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display",
+        "core::iter::traits::collect::FromIterator"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(value: I) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "from_iter",
+          "signature": "fn from_iter<I: IntoIterator<Item = (Key, (StringValue, BaggageMetadata))>>(iter: I) -> Self",
+          "via_trait": "core::iter::traits::collect::FromIterator"
+        },
+        {
+          "name": "get",
+          "signature": "fn get<K: AsRef<str>>(&self, key: K) -> Option<&StringValue>",
+          "summary": "Returns a reference to the value associated with a given name"
+        },
+        {
+          "name": "get_with_metadata",
+          "signature": "fn get_with_metadata<K: AsRef<str>>(&self, key: K) -> Option<&(StringValue, BaggageMetadata)>",
+          "summary": "Returns a reference to the value and metadata associated with a given name"
+        },
+        {
+          "name": "insert",
+          "signature": "fn insert<K, V>(&mut self, key: K, value: V) -> Option<StringValue> where K: Into<Key>, V: Into<StringValue>",
+          "summary": "Inserts a name/value pair into the baggage."
+        },
+        {
+          "name": "insert_with_metadata",
+          "signature": "fn insert_with_metadata<K, V, S>(&mut self, key: K, value: V, metadata: S) -> Option<(StringValue, BaggageMetadata)> where K: Into<Key>, V: Into<StringValue>, S: Into<BaggageMetadata>",
+          "summary": "Inserts a name/value(+metadata) pair into the baggage."
+        },
+        {
+          "name": "is_empty",
+          "signature": "fn is_empty(&self) -> bool",
+          "summary": "Returns `true` if the baggage contains no items."
+        },
+        {
+          "name": "iter",
+          "signature": "fn iter(&self) -> Iter<'_>",
+          "summary": "Gets an iterator over the baggage items, in any order."
+        },
+        {
+          "name": "len",
+          "signature": "fn len(&self) -> usize",
+          "summary": "Returns the number of attributes for this baggage"
+        },
+        {
+          "name": "new",
+          "signature": "fn new() -> Self",
+          "summary": "Creates an empty `Baggage`."
+        },
+        {
+          "name": "remove",
+          "signature": "fn remove<K: AsRef<str>>(&mut self, key: K) -> Option<(StringValue, BaggageMetadata)>",
+          "summary": "Removes a name from the baggage, returning the value corresponding to the name if the pair was previously in the map."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::baggage::BaggageMetadata",
+      "name": "BaggageMetadata",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct BaggageMetadata",
+      "summary": "An optional property set that can be added to [`Baggage`] values.",
+      "doc": "api/opentelemetry.baggage.md#baggagemetadata",
+      "implements": [
+        "core::convert::From",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "as_str",
+          "signature": "fn as_str(&self) -> &str",
+          "summary": "Return underlying string"
+        },
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "from",
+          "signature": "fn from(s: String) -> BaggageMetadata",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::baggage::Iter",
+      "name": "Iter",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct Iter<'a>",
+      "summary": "An iterator over the entries of a [`Baggage`].",
+      "doc": "api/opentelemetry.baggage.md#iter",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::baggage::KeyValueMetadata",
+      "name": "KeyValueMetadata",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct KeyValueMetadata",
+      "summary": "[`Baggage`] name/value pairs with their associated metadata.",
+      "doc": "api/opentelemetry.baggage.md#keyvaluemetadata",
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(kv: KeyValue) -> Self",
+          "via_trait": "core::convert::From"
+        },
+        {
+          "name": "new",
+          "signature": "fn new<K, V, S>(key: K, value: V, metadata: S) -> Self where K: Into<Key>, V: Into<StringValue>, S: Into<BaggageMetadata>",
+          "summary": "Create a new `KeyValue` pair with metadata"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::baggage::BaggageExt",
+      "name": "BaggageExt",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait BaggageExt",
+      "summary": "Methods for sorting and retrieving baggage data in a context.",
+      "doc": "api/opentelemetry.baggage.md#baggageext",
+      "implementors": [
+        "opentelemetry::context::Context"
+      ],
+      "required_methods": [
+        "baggage",
+        "current_with_baggage",
+        "with_baggage",
+        "with_cleared_baggage"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "baggage",
+          "signature": "fn baggage(&self) -> &Baggage",
+          "summary": "Returns a reference to this context's baggage, or the default empty baggage if none has been set."
+        },
+        {
+          "name": "current_with_baggage",
+          "signature": "fn current_with_baggage<T: Into<Baggage>>(baggage: T) -> Self",
+          "summary": "Returns a clone of the current context with the included name/value pairs."
+        },
+        {
+          "name": "with_baggage",
+          "signature": "fn with_baggage<T: Into<Baggage>>(&self, baggage: T) -> Self",
+          "summary": "Returns a clone of the given context with the included name/value pairs."
+        },
+        {
+          "name": "with_cleared_baggage",
+          "signature": "fn with_cleared_baggage(&self) -> Self",
+          "summary": "Returns a clone of the given context with no baggage."
+        }
+      ]
+    }
+  ]
+}

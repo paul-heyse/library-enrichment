@@ -841,7 +841,6 @@ async def test_failed_worker_preserves_acquired_source_and_documentation(tmp_pat
 async def test_complete_stdio_frames_have_one_envelope_and_measured_allowance(tmp_path):
     import asyncio
 
-    from enrichment_mcp.server import MCP_FRAME_ALLOWANCE_BYTES
 
     root = tmp_path / "upstream"
     build_upstream(root, tmp_path / "side-effect")
@@ -920,7 +919,7 @@ async def test_complete_stdio_frames_have_one_envelope_and_measured_allowance(tm
                         json.dumps(structured, ensure_ascii=False, separators=(",", ":")).encode()
                     )
                     assert size <= budget, (budget, size)
-                    assert len(frame) <= budget + MCP_FRAME_ALLOWANCE_BYTES, (budget, len(frame))
+                    assert len(frame) <= budget, (budget, len(frame))
                     assert 1 <= len(result["content"]) <= 2
                     assert all(item["type"] == "resource_link" for item in result["content"][1:])
                     assert result["content"][0]["type"] == "text"

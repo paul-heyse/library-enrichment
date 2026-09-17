@@ -1,0 +1,145 @@
+{
+  "_comment": [
+    "Executed behaviour probes. Each runs a scenario of build/fixtures/probe-crate against the",
+    "pinned crates and records what the span stream actually contained.",
+    "",
+    "The `control` field is what makes a probe evidence rather than a coincidence. A capture",
+    "that contains a string proves only that something produced it; it cannot distinguish 'the",
+    "option did this' from 'this was there anyway'. So a probe carries a second scenario,",
+    "identical but for the thing under test, whose expectation must come out the other way.",
+    "Both halves must hold or the verdict is `divergent`, which fails verify.py -- never a pass.",
+    "",
+    "expect / control_expect: substring | absent:X | re:PATTERN | exit:N",
+    "control_mode: opposite (default) | differs | record-both",
+    "",
+    "B001 is not a span probe. It is a tripwire on this repository's central claim: that no",
+    "published artifact carries the option builders. If a future release re-exports them the",
+    "claim becomes vacuous, and a repository that went on asserting it would be worse than one",
+    "that never made it."
+  ],
+  "probes": [
+    {
+      "id": "B001",
+      "topic": "reachability",
+      "kind": "documents",
+      "query": "item:add_custom_field",
+      "question": "Does the hosted document carry NO item named add_custom_field while the private capture does?",
+      "expect": "exit:1",
+      "control_expect": "exit:0",
+      "note": "A tripwire on this repository's central claim, not a span observation. The first draft of this probe searched the documents as text and came out `refuted` -- correctly, and that refutation is the finding in B002. Rewritten to ask the structured index whether any ITEM carries the name, which is the thing that decides whether a reader can look the method up."
+    },
+    {
+      "id": "B002",
+      "topic": "reachability",
+      "kind": "documents",
+      "query": "prose:.add_custom_field(",
+      "question": "Does the hosted document SHOW add_custom_field being called while documenting no such method?",
+      "expect": "exit:0",
+      "control_expect": "exit:0",
+      "control_mode": "record-both",
+      "note": "The sharpest statement of why this repository exists. The crate's front-page documentation -- the first thing anyone reads -- chains six builder methods, and docs.rs documents none of them: the page for the type they are called on answers 404. A reader sees the call, searches for the method, finds nothing, and concludes they have misread the example. Found by accident: the first draft of B001 searched raw text, expected the name to be absent, and was refuted by this."
+    },
+    {
+      "id": "S001",
+      "topic": "exec-instrumentation",
+      "question": "Does registering the rule produce a node span at all?",
+      "scenario": "plain",
+      "expect": "InstrumentedExec",
+      "control": "bare",
+      "control_expect": "absent:InstrumentedExec",
+      "note": "The control is the point: without the rule the same query under the same subscriber emits no node spans, so the span is the rule's doing and not the subscriber's."
+    },
+    {
+      "id": "S002",
+      "topic": "preview",
+      "question": "Does preview_limit(0) suppress datafusion.preview?",
+      "scenario": "preview-zero",
+      "expect": "absent:datafusion.preview",
+      "control": "preview-on",
+      "control_expect": "datafusion.preview",
+      "note": "preview_limit defaults to 0, so the absent case is also the default case. Worth knowing that setting preview_fn alone changes nothing."
+    },
+    {
+      "id": "S003",
+      "topic": "metrics",
+      "question": "Does record_metrics(false) suppress the datafusion.metrics.* fields?",
+      "scenario": "metrics-off",
+      "expect": "absent:datafusion.metrics.",
+      "control": "metrics-on",
+      "control_expect": "datafusion.metrics.output_rows",
+      "note": "record_metrics is off by default, which is the single most common reason a trace looks empty of numbers."
+    },
+    {
+      "id": "S004",
+      "topic": "exec-instrumentation",
+      "question": "Does add_custom_field reach a span only when the macro also declares the key?",
+      "scenario": "custom-undeclared",
+      "expect": "absent:\"env\"",
+      "control": "custom-declared",
+      "control_expect": "\"env\"",
+      "note": "The sharpest probe here. Both halves call add_custom_field(\"env\", \"probe\") with identical options; the only difference is whether the macro declares `env = field::Empty`. A tracing span's field set is fixed at creation, so the undeclared value goes nowhere -- silently, with no error at compile time or run time. Upstream's own comment in integration-utils says the same: custom fields keys must be defined at compile time."
+    },
+    {
+      "id": "S005",
+      "topic": "preview",
+      "question": "Does pretty_format_compact_batch draw the |===| header rule?",
+      "scenario": "preview-on",
+      "expect": "|===",
+      "control": "preview-zero",
+      "control_expect": "absent:|===",
+      "note": "The compact formatter's header separator is what distinguishes its output from pretty_format_batches at a glance, and no signature carries it."
+    },
+    {
+      "id": "S006",
+      "topic": "span-contract",
+      "question": "Do the node spans carry the CALLING crate's target rather than datafusion_tracing?",
+      "scenario": "plain",
+      "expect": "\"target\":\"probe\"",
+      "control": "plain",
+      "control_expect": "absent:\"target\":\"datafusion_tracing\"",
+      "control_mode": "record-both",
+      "note": "The macros default target: to module_path!(), which expands at the call site. An EnvFilter written as datafusion_tracing=info therefore receives nothing at all. Both halves are the same capture read two ways, so this is recorded rather than confirmed -- there is no second construction that would come out the other way without passing target: explicitly."
+    },
+    {
+      "id": "S007",
+      "topic": "rule-instrumentation",
+      "question": "Does full() emit Rule spans that phase_only() does not?",
+      "scenario": "rules-full",
+      "expect": "\"Rule\"",
+      "control": "rules-phase-only",
+      "control_expect": "absent:\"Rule\"",
+      "note": "On a large plan the per-rule spans are the bulk of the trace volume, so this is the switch to reach for before sampling."
+    },
+    {
+      "id": "S008",
+      "topic": "rule-instrumentation",
+      "question": "Can the undocumented builder instrument the physical optimizer alone?",
+      "scenario": "rules-physical-only",
+      "expect": "Phase",
+      "control": "rules-full",
+      "control_expect": "Phase",
+      "control_mode": "differs",
+      "note": "There is no documented way to do this: full() and phase_only() are the whole published surface, and physical_optimizer() is on the builder that docs.rs answers 404 for. Both captures contain Phase spans, so the finding is that they differ -- which is why this probe uses the differs mode rather than an opposite."
+    },
+    {
+      "id": "S009",
+      "topic": "subscriber-wiring",
+      "question": "Does an INFO filter drop instrumentation emitted at DEBUG entirely?",
+      "scenario": "debug-filtered-to-info",
+      "expect": "absent:InstrumentedExec",
+      "control": "info-filtered-to-info",
+      "control_expect": "InstrumentedExec",
+      "note": "Choosing instrument_with_debug_spans! and then filtering at INFO produces a silent nothing. The two halves differ only in which macro built the rule."
+    },
+    {
+      "id": "S010",
+      "topic": "subscriber-wiring",
+      "question": "Does the DEBUG-level macro emit at DEBUG when nothing filters it?",
+      "scenario": "debug-level",
+      "expect": "\"level\":\"DEBUG\"",
+      "control": "plain",
+      "control_expect": "absent:\"level\":\"DEBUG\"",
+      "note": "The level is baked into the macro's name, which is the only thing distinguishing the six of them and is invisible in a signature because there is no signature."
+    }
+  ]
+}

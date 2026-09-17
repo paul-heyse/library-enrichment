@@ -1,6 +1,17 @@
 //! Durable physical ownership shares the native control predecessor with jobs and publication.
 use crate::native_union::Rule;
 
+crate::native_struct! { pub struct RetainedCapsule {
+    key: String => Rule::NonEmpty,
+    inputs: crate::operation::identities::CapsuleIdentity => Rule::Text,
+    cache: String => Rule::NonEmpty,
+    generation: String => Rule::NonEmpty,
+    environment: crate::identity::Environment => Rule::Text,
+    lock: String => Rule::Text,
+    inventory: crate::capsule_protocol::inventory::Inventory => Rule::Map,
+    sequence: u64 => Rule::Text,
+} }
+
 crate::native_struct! { pub struct ExecutionRoot {
     root: String => Rule::NonEmpty,
     cache: String => Rule::NonEmpty,

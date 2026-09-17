@@ -299,8 +299,8 @@ pub async fn execution(
     let context = IngestContext {
         ecosystem: metadata.release.key.ecosystem,
         symbol_package: metadata.symbol_package.clone(),
-        release_id: metadata.release.release_id.to_string(),
-        environment_id: metadata.environment.environment_id.to_string(),
+        release_id: metadata.release.release_id.clone(),
+        environment_id: metadata.environment.environment_id.clone(),
         source_version_match: enrichment_core::wire::SourceVersionMatch::Exact,
         producing_attempt: run.attempt_id.clone(),
         producer_runs: vec![run],
@@ -395,7 +395,7 @@ pub async fn execution(
             observations
                 .clone()
                 .filter(
-                    col("environment_id").not_eq(lit(metadata.environment.environment_id.as_str())),
+                    col("environment_id").not_eq(metadata.environment.environment_id.literal()),
                 )?
                 .select(vec![col("source").field("artifact_id").alias("witness_id")])?,
             "execution_environment",
@@ -506,7 +506,10 @@ async fn coverage(
             .into_view(),
     )?;
     runtime.require_empty(session.sql("SELECT kind AS witness_id FROM coverage_declared GROUP BY kind HAVING count(*)<>1").await?,"coverage_declaration_conflict","document_ingress").await?;
-    let gaps = projection::provenance::gaps(&[&context.gaps])?;
+    let gaps =
+        <Vec<enrichment_core::evidence::Gap> as enrichment_core::native_union::Cell>::encode(&[
+            Some(&context.gaps),
+        ])?;
     session.register_table(
         "coverage_gap_lists",
         session
@@ -587,8 +590,8 @@ mod tests {
         IngestContext {
             ecosystem: Ecosystem::Rust,
             symbol_package: "example".into(),
-            release_id: "rel_example".into(),
-            environment_id: "env_example".into(),
+            release_id: format!("rel_{}", "1".repeat(64)).try_into().unwrap(),
+            environment_id: format!("env_{}", "1".repeat(64)).try_into().unwrap(),
             source_version_match: SourceVersionMatch::Exact,
             producing_attempt: "attempt_documents".into(),
             producer_runs: vec![ProducerRun {

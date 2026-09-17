@@ -47,13 +47,14 @@ use crate::service::Service;
 
 /// Resolve a request to a context, fetching what freshness allows.
 pub async fn resolve(service: &Service, mut request: ResolveRequest) -> Envelope {
-    if let Err(message) = request.validate() {
-        return envelope::error(
-            ErrorCode::VersionNotFound,
-            message,
-            "Pass an exact package version or an explicit upstream/revision request.",
-            false,
-        );
+    if let Err(error) = enrichment_store::request_admission::research(
+        &service.repository.runtime,
+        &request.clone().into(),
+        service.config.limits.verification_input_bytes,
+    )
+    .await
+    {
+        return common::operation_error(&error, "resolution_request_admission");
     }
     let version = if request.effective_mode() == enrichment_core::identity::ResearchMode::Revision {
         request.revision.as_deref()
@@ -143,14 +144,14 @@ async fn resolution_policy(
         catalog,
         enrichment_store::resolution_policy::Scope {
             ecosystem: request.ecosystem,
-            name: &request.name,
-            registry: &registry,
-            version,
-            environment_id: environment.environment_id.as_str(),
+            name: request.name.clone(),
+            registry: registry.clone(),
+            version: version.map(str::to_owned),
+            environment_id: environment.environment_id.clone(),
             mode: request.effective_mode(),
             allow_local_build: request.allow_local_build,
             freshness: request.freshness,
-            profiles: &service.config.policy.enabled_profiles,
+            profiles: service.config.policy.enabled_profiles.clone(),
         },
     )
     .await?)
@@ -159,8 +160,8 @@ async fn resolution_policy(
 async fn retained_envelope(
     service: &Service,
     catalog: std::sync::Arc<enrichment_store::control::ControlSnapshot>,
-    context_id: &str,
-    snapshot_id: &str,
+    context_id: &enrichment_core::identity::ContextId,
+    snapshot_id: &enrichment_core::identity::SnapshotId,
 ) -> Envelope {
     let opened =
         match common::open_context_at(service, catalog, context_id, Some(snapshot_id)).await {
@@ -246,7 +247,7 @@ pub(super) async fn render_retained(
         declared_crate_version: manifest.crate_version.clone(),
     });
     let summary = SnapshotSummary {
-        snapshot_id: snapshot_id.to_string(),
+        snapshot_id: snapshot_id.clone(),
         normalizer_version: manifest.normalizer_version.clone(),
         counts: manifest.counts.clone(),
         published_at: manifest.published_at,
@@ -277,18 +278,17 @@ pub(super) async fn render_retained(
         coverage,
         freshness: Freshness {
             registry_checked_at: None,
-            source_version_match: if manifest.crate_version.as_deref()
-                == Some(release.key.version.as_str())
-                || context.mode == enrichment_core::identity::ResearchMode::Revision
-            {
-                SourceVersionMatch::Exact
-            } else {
-                SourceVersionMatch::Unknown
-            },
+            source_version_match: enrichment_store::research_outcomes::source_version(
+                reader.runtime(),
+                context.mode,
+                manifest.crate_version.as_deref(),
+                &release.key.version,
+            )
+            .await?,
             latest_verified: false,
         },
-        context_id: Some(context.context_id.to_string()),
-        snapshot_id: Some(snapshot_id.to_string()),
+        context_id: Some(context.context_id.clone()),
+        snapshot_id: Some(snapshot_id.clone()),
         evidence: Vec::new(),
         artifacts: artifacts
             .iter()
@@ -346,10 +346,10 @@ pub(super) async fn replay_selected(
             Err(error) => return Some(super::common::operation_error(&error, "acquisition_clock")),
         });
     replay.freshness.latest_verified = upstream.is_some();
-    if let Some(upstream) = upstream {
-        if let enrichment_core::wire::data::ToolData::ResolveLibrary(data) = &mut replay.data {
-            data.upstream = Some(upstream.clone());
-        }
+    if let Some(upstream) = upstream
+        && let enrichment_core::wire::data::ToolData::ResolveLibrary(data) = &mut replay.data
+    {
+        data.upstream = Some(upstream.clone());
     }
     replay.coverage.limitations.pop();
     replay.coverage.limitations.push("The mutable registry selection was revalidated; unchanged exact artifact and environment reuse retained evidence without running extraction again.".into());
@@ -364,11 +364,11 @@ pub(super) async fn replay_selected(
     // The mutable lookup is real work, even when extraction is unnecessary. Commit its
     // exact selected result and actual registry attempt through the same durable publication.
     if acquisition.work.is_some() {
-        let selected_context = replay.context_id.as_deref()?;
+        let selected_context = replay.context_id.as_ref()?;
         let opened = match super::common::open_context(
             service,
             selected_context,
-            replay.snapshot_id.as_deref(),
+            replay.snapshot_id.as_ref(),
         )
         .await
         {
@@ -430,9 +430,7 @@ pub(super) async fn replay_selected(
         };
         let work = acquisition.work?;
         return Some(match work.committed.get() {
-            Some((_, snapshot, result)) if snapshot == manifest.snapshot_id.as_str() => {
-                result.clone()
-            }
+            Some((_, snapshot, result)) if snapshot == &manifest.snapshot_id => result.clone(),
             _ => envelope::error(
                 ErrorCode::InternalError,
                 "Selected resolution has no prepared committed delivery",
@@ -620,18 +618,14 @@ impl<'a> Acquisition<'a> {
             attempt_id: uuid::Uuid::new_v4().to_string(),
             producer: producer.to_owned(),
             producer_version: version.to_owned(),
-            config_digest: enrichment_core::producer::spec::config_digest(&serde_json::json!({
-                "github": self.config.producers.github_api_url,
-                "index": self.config.producers.rust.crates_io_index_url,
-                "api": self.config.producers.rust.crates_io_api_url,
-                "docs": self.config.producers.rust.docs_rs_url,
-                "python": if producer == "python-static" {Some(serde_json::json!({
-                    "pypi":self.config.producers.python.pypi_url,
-                    "simple":self.config.producers.python.simple_url,
-                    "worker":self.config.producers.python.worker_python,
-                    "deadline":self.config.producers.python.worker_timeout_seconds,
-                }))}else{None},
-            })),
+            config_digest: enrichment_core::native_key::Key::AcquisitionConfiguration
+                .hex_digest(
+                    &enrichment_core::operation::identities::AcquisitionConfiguration {
+                        producer: producer.into(),
+                        configuration: self.config.producers.clone(),
+                    },
+                )
+                .map_err(|error| error.to_string())?,
             inputs,
             profile: ExecutionProfile::Static,
             started_at,
@@ -934,10 +928,29 @@ pub(super) async fn acquire(
         );
     };
     let registry_checked_at = index_fetched.retrieved_at;
+    let index_artifact = match acq.store(
+        &index_fetched,
+        ArtifactKind::RegistryIndexEntry,
+        "text/plain",
+        &index_url,
+    ) {
+        Ok(a) => a,
+        Err(err) => return common::operation_error(&err, "acquisition_storage"),
+    };
+    let captured = match enrichment_store::registry_capture::RegistryStore::new(
+        service.repository.catalog.clone(),
+        service.repository.runtime.clone(),
+    )
+    .rust_index(&index_artifact, Some("text/plain"), entries)
+    .await
+    {
+        Ok(facts) => facts,
+        Err(err) => return common::operation_error(&err, "registry_capture"),
+    };
 
     // 2. Select the exact version -- never an upgrade -- and note the newest separately.
     let native_index =
-        match enrichment_store::registry::RustIndex::new(&service.repository.runtime, entries) {
+        match enrichment_store::registry::RustIndex::new(&service.repository.runtime, captured) {
             Ok(index) => index,
             Err(err) => return common::operation_error(&err, "registry_facts"),
         };
@@ -956,15 +969,6 @@ pub(super) async fn acquire(
     let selected = choice.entry;
     let upstream = choice.upstream;
     let line_no = choice.source_line;
-    let index_artifact = match acq.store(
-        &index_fetched,
-        ArtifactKind::RegistryIndexEntry,
-        "text/plain",
-        &index_url,
-    ) {
-        Ok(a) => a,
-        Err(err) => return common::operation_error(&err, "acquisition_storage"),
-    };
     let excerpt = serde_json::to_string(&selected).expect("registry selection serializes");
     acq.indexed.insert(EvidenceKind::RegistryMetadata);
 
@@ -1443,10 +1447,16 @@ pub(super) async fn acquire(
         environment.environment_id.clone(),
         request.effective_mode(),
     );
-    let source_version_match = match &declared_crate_version {
-        Some(v) if v == &selected.vers => SourceVersionMatch::Exact,
-        Some(_) => SourceVersionMatch::Mismatched,
-        None => SourceVersionMatch::Unknown,
+    let source_version_match = match enrichment_store::research_outcomes::source_version(
+        &service.repository.runtime,
+        request.effective_mode(),
+        declared_crate_version.as_deref(),
+        &selected.vers,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "source_version_scope"),
     };
     let observed_configuration: Option<DocsRsMetadata> =
         extracted.as_ref().map(|e| e.facts.docs_rs.clone());
@@ -1543,7 +1553,7 @@ pub(super) async fn acquire(
         data: to_object(&data),
         coverage,
         freshness,
-        context_id: Some(context.context_id.to_string()),
+        context_id: Some(context.context_id.clone()),
         snapshot_id: None,
         evidence: acq.evidence.clone(),
         artifacts: handles,
@@ -1833,7 +1843,7 @@ async fn normalize_and_publish(
         inputs.insert("crate_tarball".to_owned(), extracted.tarball.sha256.clone());
         producers.insert(source::PRODUCER.to_owned(), source::VERSION.to_owned());
         if let Some(built) = request.local_build {
-            observed.features = built.environment.features.clone();
+            observed.features = built.environment.features.clone().unwrap_or_default();
             observed.all_features = false;
             observed.no_default_features = built.environment.default_features == Some(false);
         } else {
@@ -1968,7 +1978,7 @@ async fn normalize_and_publish(
         )
     })?;
     Ok(SnapshotSummary {
-        snapshot_id: published.snapshot_id.to_string(),
+        snapshot_id: published.snapshot_id.clone(),
         normalizer_version: published.normalizer_version.clone(),
         counts: published.counts,
         published_at: published.published_at,

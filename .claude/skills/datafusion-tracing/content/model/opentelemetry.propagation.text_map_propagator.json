@@ -1,0 +1,85 @@
+{
+  "module": "opentelemetry::propagation::text_map_propagator",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.propagation.text_map_propagator.md",
+  "items": [
+    {
+      "path": "opentelemetry::propagation::text_map_propagator::FieldIter",
+      "name": "FieldIter",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct FieldIter<'a>",
+      "summary": "An iterator over fields of a [`TextMapPropagator`]",
+      "doc": "api/opentelemetry.propagation.text_map_propagator.md#fielditer",
+      "implements": [
+        "core::iter::traits::iterator::Iterator"
+      ],
+      "methods": [
+        {
+          "name": "new",
+          "signature": "fn new(fields: &'a [String]) -> Self",
+          "summary": "Create a new `FieldIter` from a slice of propagator fields"
+        },
+        {
+          "name": "next",
+          "signature": "fn next(&mut self) -> Option<Self::Item>",
+          "via_trait": "core::iter::traits::iterator::Iterator"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::propagation::text_map_propagator::TextMapPropagator",
+      "name": "TextMapPropagator",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait TextMapPropagator: Debug",
+      "summary": "Methods to inject and extract a value as text into injectors and extractors that travel in-band across process boundaries.",
+      "doc": "api/opentelemetry.propagation.text_map_propagator.md#textmappropagator",
+      "aliases": [
+        "opentelemetry::propagation::TextMapPropagator"
+      ],
+      "implementors": [
+        "opentelemetry::propagation::composite::TextMapCompositePropagator",
+        "opentelemetry::trace::noop::NoopTextMapPropagator",
+        "opentelemetry_sdk::propagation::baggage::BaggagePropagator",
+        "opentelemetry_sdk::propagation::trace_context::TraceContextPropagator"
+      ],
+      "required_methods": [
+        "extract_with_context",
+        "fields",
+        "inject_context"
+      ],
+      "provided_methods": [
+        "extract",
+        "inject"
+      ],
+      "methods": [
+        {
+          "name": "extract",
+          "signature": "fn extract(&self, extractor: &dyn Extractor) -> Context",
+          "summary": "Retrieves encoded data using the provided [`Extractor`]. If no data for this format was retrieved OR if the retrieved data is invalid, then the current [`Context`] is returned."
+        },
+        {
+          "name": "extract_with_context",
+          "signature": "fn extract_with_context(&self, cx: &Context, extractor: &dyn Extractor) -> Context",
+          "summary": "Retrieves encoded data using the provided [`Extractor`]. If no data for this format was retrieved OR if the retrieved data is invalid, then the given [`Context`] is returned."
+        },
+        {
+          "name": "fields",
+          "signature": "fn fields(&self) -> FieldIter<'_>",
+          "summary": "Returns iter of fields used by [`TextMapPropagator`]"
+        },
+        {
+          "name": "inject",
+          "signature": "fn inject(&self, injector: &mut dyn Injector)",
+          "summary": "Properly encodes the values of the current [`Context`] and injects them into the [`Injector`]."
+        },
+        {
+          "name": "inject_context",
+          "signature": "fn inject_context(&self, cx: &Context, injector: &mut dyn Injector)",
+          "summary": "Properly encodes the values of the [`Context`] and injects them into the [`Injector`]."
+        }
+      ]
+    }
+  ]
+}

@@ -117,7 +117,6 @@ pub fn violations(
     let mut output = Vec::new();
     let mut predicates = Vec::new();
     tagged_checks(schema.fields(), None, lit(true), &mut predicates)?;
-    relation_checks(&frame, schema, key, &mut predicates, &mut output)?;
     for field in schema.fields() {
         field_checks(
             &frame,
@@ -132,62 +131,6 @@ pub fn violations(
     }
     add_violations(frame, key, "fields", predicates, &mut output)?;
     Ok(output)
-}
-
-fn relation_checks(
-    frame: &DataFrame,
-    schema: &Schema,
-    key: &str,
-    predicates: &mut Vec<Expr>,
-    output: &mut Vec<(String, DataFrame)>,
-) -> Result<()> {
-    use datafusion::functions::{string::expr_fn::concat, unicode::expr_fn::left};
-    use datafusion::functions_nested::expr_fn::array_length;
-    match schema
-        .metadata()
-        .get("enrichment.relation")
-        .map(String::as_str)
-    {
-        Some("input_artifacts") => {
-            predicates.push(col("artifact_id").not_eq(concat(vec![
-                lit("art_"),
-                left(
-                    col("sha256"),
-                    lit(super::super::ARTIFACT_ID_HEX_DIGITS as i64),
-                ),
-            ])));
-            predicates.push(empty(col("role")));
-        }
-        Some("api_observations" | "relationships") => {
-            predicates.push(
-                col("subject")
-                    .field("kind")
-                    .in_list(vec![lit("symbol"), lit("definition")], true),
-            );
-        }
-        Some("coverage") => {
-            let indexed = col("outcome").eq(lit("indexed"));
-            let empty = array_length(col("gaps")).eq(lit(0u64));
-            predicates.push(
-                indexed
-                    .clone()
-                    .and(empty.clone().not())
-                    .or(indexed.not().and(empty)),
-            );
-            let gaps = frame
-                .clone()
-                .select(vec![col(key), col("kind"), col("gaps")])?
-                .unnest_columns_with_options(
-                    &["gaps"],
-                    datafusion::common::UnnestOptions::new().with_preserve_nulls(false),
-                )?
-                .filter(col("gaps").field("kind").not_eq(col("kind")))?
-                .select(vec![col(key)])?;
-            output.push(("coverage gap kind".into(), gaps));
-        }
-        _ => {}
-    }
-    Ok(())
 }
 
 fn add_violations(
@@ -382,6 +325,31 @@ pub(crate) fn declared_invalid(field: &Field, value: Expr) -> Result<Option<Expr
                     .clone()
                     .in_list(values.iter().map(lit).collect(), true),
             ),
+            Rule::Reference(domain) | Rule::ScopedReference { domain, .. }
+                if matches!(field.data_type(), DataType::FixedSizeBinary(32)) =>
+            {
+                use crate::native_types::IdentityType;
+                use arrow_schema::extension::ExtensionType;
+                crate::native_types::validate_field(field)?;
+                let metadata = IdentityType::deserialize_metadata(
+                    field
+                        .metadata()
+                        .get("ARROW:extension:metadata")
+                        .map(String::as_str),
+                )?;
+                if field
+                    .metadata()
+                    .get("ARROW:extension:name")
+                    .map(String::as_str)
+                    != Some(IdentityType::NAME)
+                    || metadata.meaning() != &domain
+                {
+                    return datafusion::common::plan_err!(
+                        "reference domain disagrees with binary identity declaration"
+                    );
+                }
+                None
+            }
             Rule::NonEmpty | Rule::Reference(_) | Rule::ScopedReference { .. } => {
                 Some(empty(value.clone()).or(regexp_like(value.clone(), lit(r"[\p{Cc}]"), None)))
             }

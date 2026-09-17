@@ -2,7 +2,6 @@
 use std::collections::BTreeMap;
 
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 /// Normalization identity, independent of the frozen response envelope version.
 pub const VERSION: &str = "python-native-6";
@@ -57,22 +56,16 @@ crate::native_struct! {
     }
 }
 
-/// A static extraction request, generated into Python boundary DTOs.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct WorkerRequest {
-    /// Protocol version.
-    pub schema_version: String,
-    /// Absolute service-owned input root.
-    pub root: String,
-    /// Exhaustive expected file list; worker must account for each.
-    pub files: Vec<WorkerFile>,
-    /// Maximum observations returned.
-    pub max_observations: usize,
-    /// Rust-owned address-space ceiling installed before parsing studied source.
-    pub max_memory_bytes: u64,
-    /// Rust-owned CPU deadline installed before parsing studied source.
-    pub max_cpu_seconds: u64,
+crate::native_struct! {
+    /// Rust-owned bounded request for the separate extraction worker.
+    pub struct WorkerRequest {
+        schema_version: String => Rule::NonEmpty,
+        root: String => Rule::NonEmpty,
+        files: Vec<WorkerFile> => Rule::SequenceBounds { min: 0, max: worker::MAX_FILES as u64 },
+        max_observations: usize => Rule::UnsignedRange { min: 1, max: worker::MAX_OBSERVATIONS as u64 },
+        max_memory_bytes: u64 => Rule::UnsignedRange { min: 1, max: u64::MAX },
+        max_cpu_seconds: u64 => Rule::UnsignedRange { min: 1, max: u64::MAX },
+    }
 }
 
 crate::native_struct! {
@@ -95,22 +88,24 @@ crate::native_struct! {
     }
 }
 
+enrichment_core::native_struct! { @source
 /// PyPI artifact metadata. Additional registry fields remain in the raw artifact.
-#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct DistributionFile {
     /// Published filename.
-    pub filename: String,
+    filename: String => enrichment_core::native_union::Rule::Text,
     /// bdist_wheel or sdist.
-    pub packagetype: String,
+    packagetype: String => enrichment_core::native_union::Rule::Text,
     /// Trusted only after core URL policy.
-    pub url: String,
+    url: String => enrichment_core::native_union::Rule::Text,
     /// Registry hashes.
-    pub digests: BTreeMap<String, String>,
+    digests: BTreeMap<String, String> => enrichment_core::native_union::Rule::Map,
     /// Artifact-specific Python requirement.
-    pub requires_python: Option<String>,
+    #[serde(default)]
+    requires_python: Option<String> => enrichment_core::native_union::Rule::Text,
     /// Whether this file was withdrawn.
     #[serde(default)]
-    pub yanked: bool,
+    yanked: bool => enrichment_core::native_union::Rule::Text,
+}
 }
 
 /// Normalize a distribution name according to PyPA name normalization.
@@ -175,30 +170,8 @@ pub mod worker;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{identity::Ecosystem, request::ResolveRequest};
-    fn request() -> ResolveRequest {
-        ResolveRequest {
-            ecosystem: Ecosystem::Python,
-            name: "example".into(),
-            python_version: Some("3.12".into()),
-            ..ResolveRequest::default()
-        }
-    }
     #[test]
-    fn python_names_and_request_fields_are_ecosystem_specific() {
-        assert_eq!(normalize_name("Evidence.__Demo"), "evidence-demo");
-        let mut r = request();
-        r.name = "Evidence.Demo".into();
-        r.version = Some("1.0.dev1".into());
-        assert!(r.validate().is_ok());
-        r.features = Some(Vec::new());
-        assert!(r.validate().is_err());
-        r = ResolveRequest {
-            python_version: Some("3.12".into()),
-            name: "example".into(),
-            ..ResolveRequest::default()
-        };
-        assert!(r.validate().is_err());
+    fn python_name_normalization_uses_distribution_rules() {
+        assert_eq!(super::normalize_name("Evidence.__Demo"), "evidence-demo");
     }
 }

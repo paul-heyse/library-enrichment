@@ -304,7 +304,7 @@ async fn query(
         image: session.image_id().into(),
         containment: query.containment,
         producer: "semantic-inspection".into(),
-        version: inspect_execution::producer_identity(false).1,
+        version: inspect_execution::producer_identity(false)?.1,
         profile: ExecutionProfile::Build,
         started_at,
         finished_at: enrichment_core::native_time::ObservationTime::now()

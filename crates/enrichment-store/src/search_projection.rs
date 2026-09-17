@@ -69,6 +69,10 @@ pub struct SearchProjection {
     evidence: EvidenceTables,
     runtime: QueryRuntime,
 }
+pub struct PreparedProjection {
+    pub checkpoint: Checkpoint,
+    pub obligation: crate::retention::CleanupObligation,
+}
 impl SearchProjection {
     pub fn new(root: &Path, runtime: QueryRuntime) -> Result<Self> {
         Ok(Self {
@@ -86,15 +90,23 @@ impl SearchProjection {
         full: &SessionContext,
         previous: Option<&Checkpoint>,
         export: bool,
-    ) -> Result<Checkpoint> {
+        retention: &crate::retention::RetentionStore,
+    ) -> Result<PreparedProjection> {
+        if retention.namespace() != self.delta.root {
+            return Err(invalid("projection writer and retention namespace differ"));
+        }
         let mode = self.mode(manifest, previous, export, true).await?;
-        match self.prepare_once(manifest, full, previous, mode).await {
+        match self
+            .prepare_once(manifest, full, previous, mode, retention)
+            .await
+        {
             Err(error) if mode == ProjectionMode::Incremental && missing_history(&error) => {
                 self.prepare_once(
                     manifest,
                     full,
                     previous,
                     self.mode(manifest, previous, export, false).await?,
+                    retention,
                 )
                 .await
             }
@@ -150,23 +162,57 @@ impl SearchProjection {
         full: &SessionContext,
         previous: Option<&Checkpoint>,
         mode: ProjectionMode,
-    ) -> Result<Checkpoint> {
+        retention: &crate::retention::RetentionStore,
+    ) -> Result<PreparedProjection> {
         let incremental = previous.filter(|_| mode == ProjectionMode::Incremental);
         let changes = match incremental {
             Some(previous) => Some(
                 self.evidence
-                    .change_plan(&previous.inputs, &manifest.tables)
+                    .change_plan(&previous.inputs, &manifest.tables, retention)
                     .await?,
             ),
             None => None,
         };
         let cohort = uuid::Uuid::new_v4().to_string();
-        let mut outputs = Vec::new();
+        let mut plans = Vec::new();
         for (name, key) in SURFACES {
             let fresh = full.table(format!("snapshot.domain.{name}")).await?;
             let contract =
                 crate::delta_cohort::contract(Arc::new(fresh.schema().as_arrow().clone()))?;
             let table_name = format!("search_{name}_{}", contract.identity());
+            plans.push((name, key, fresh, contract, table_name));
+        }
+        let obligation = retention
+            .create_obligation(
+                cohort.clone(),
+                plans
+                    .iter()
+                    .map(
+                        |(_, _, _, _, name)| crate::retention::Dependency::TableScope {
+                            table_uri: name.clone(),
+                        },
+                    )
+                    .collect(),
+            )
+            .await?;
+        let prior_guard = match incremental {
+            Some(previous) => Some(
+                retention
+                    .enroll(
+                        format!("projection/{cohort}"),
+                        crate::retention::ProtectionKind::Query,
+                        previous
+                            .outputs
+                            .iter()
+                            .map(crate::retention::dependency)
+                            .collect(),
+                    )
+                    .await?,
+            ),
+            None => None,
+        };
+        let mut outputs = Vec::new();
+        for (name, key, fresh, contract, table_name) in plans {
             let frame = if let (Some(previous), Some(changes)) = (incremental, &changes) {
                 let binding = output(previous, name)?;
                 if binding.table_uri != table_name {
@@ -175,6 +221,16 @@ impl SearchProjection {
                     ));
                 }
                 let old = self.delta.cohort(binding, &contract).await?;
+                let session = self.runtime.session();
+                let old = session.read_table(crate::leases::protected_provider(
+                    old.into_view(),
+                    Arc::clone(
+                        prior_guard
+                            .as_ref()
+                            .ok_or_else(|| invalid("projection reader has no enrollment"))?,
+                    ),
+                    &session,
+                )?)?;
                 let affected = affected(old.clone(), fresh.clone(), changes.clone(), name, key)?;
                 old.join(affected.clone(), JoinType::LeftAnti, &[key], &[key], None)?
                     .union(fresh.join(affected, JoinType::LeftSemi, &[key], &[key], None)?)?
@@ -187,7 +243,8 @@ impl SearchProjection {
                     vec![],
                     vec![datafusion::functions_aggregate::expr_fn::count(lit(1)).alias("rows")],
                 )?)
-                .await?;
+                .await
+                .map_err(|error| error.context(format!("projection {name} row count")))?;
             let rows = match datafusion::common::ScalarValue::try_from_array(
                 count.batches[0].column(0),
                 0,
@@ -200,23 +257,33 @@ impl SearchProjection {
             outputs.push(
                 self.delta
                     .append_cohort(&table_name, name, &cohort, &contract, frame, rows)
-                    .await?,
+                    .await
+                    .map_err(|error| error.context(format!("projection {name} Delta append")))?,
             );
         }
-        Ok(Checkpoint {
-            projection_id: enrichment_core::native_key::Key::Projection.record(
-                &ProjectionIdentity {
-                    snapshot_id: manifest.snapshot_id.to_string(),
-                    revision: revision().into(),
-                },
-            )?,
-            snapshot_id: manifest.snapshot_id.to_string(),
-            revision: revision().into(),
-            sequence: 0,
-            mode,
-            predecessor: previous.map(|p| p.projection_id.clone()),
-            inputs: manifest.tables.clone(),
-            outputs,
+        retention
+            .release_obligation(
+                &obligation,
+                outputs.iter().map(crate::retention::dependency).collect(),
+            )
+            .await?;
+        Ok(PreparedProjection {
+            obligation,
+            checkpoint: Checkpoint {
+                projection_id: enrichment_core::native_key::Key::Projection.record(
+                    &ProjectionIdentity {
+                        snapshot_id: manifest.snapshot_id.clone(),
+                        revision: revision().into(),
+                    },
+                )?,
+                snapshot_id: manifest.snapshot_id.clone(),
+                revision: revision().into(),
+                sequence: 0,
+                mode,
+                predecessor: previous.map(|p| p.projection_id.clone()),
+                inputs: manifest.tables.clone(),
+                outputs,
+            },
         })
     }
 
@@ -226,7 +293,7 @@ impl SearchProjection {
         checkpoint: &Checkpoint,
         full: &SessionContext,
     ) -> Result<crate::native_catalog::Tables> {
-        if checkpoint.snapshot_id != manifest.snapshot_id.as_str()
+        if checkpoint.snapshot_id != manifest.snapshot_id.clone()
             || checkpoint.inputs != manifest.tables
             || checkpoint.revision != revision()
         {

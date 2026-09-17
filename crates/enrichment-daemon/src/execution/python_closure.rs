@@ -3,6 +3,7 @@ use super::capsule::PreparationError;
 use crate::{ops::common::Opened, service::Service};
 use enrichment_core::{
     canonical,
+    evidence::{Artifact, ArtifactKind},
     identity::Ecosystem,
     producer::python::{
         self, DistributionFile,
@@ -76,6 +77,7 @@ pub async fn resolve(
                 .environment
                 .features
                 .iter()
+                .flatten()
                 .map(|v| python::normalize_name(v))
                 .collect(),
             downloaded_bytes: 0,
@@ -125,9 +127,38 @@ pub async fn resolve(
                     name
                 ))
                 .map_err(|e| e.to_string())?;
-                let index_bytes = fetch(service, &url, &cancel, deadline).await?;
+                let response = fetch(service, &url, &cancel, deadline).await?;
                 let index: Index =
-                    serde_json::from_slice(&index_bytes).map_err(|e| e.to_string())?;
+                    serde_json::from_slice(&response.bytes).map_err(|e| e.to_string())?;
+                let artifact = service
+                    .blobs
+                    .put(&response.bytes, |_| {
+                        let mut artifact = Artifact::describe(
+                            &response.bytes,
+                            ArtifactKind::RegistryVersionMetadata,
+                            "application/json",
+                            url.as_str(),
+                            response.retrieved_at,
+                        );
+                        artifact.final_url = (response.final_url != url.as_str())
+                            .then(|| response.final_url.clone());
+                        artifact.etag = response.etag.clone();
+                        artifact.last_modified = response.last_modified.clone();
+                        artifact
+                    })
+                    .map_err(|e| e.to_string())?
+                    .acquired;
+                let releases = enrichment_store::registry_capture::RegistryStore::new(
+                    service.repository.catalog.clone(),
+                    service.repository.runtime.clone(),
+                )
+                .python_files(
+                    &artifact,
+                    None,
+                    python::facts::decode(&index.releases, 1024).map_err(|e| e.to_string())?,
+                )
+                .await
+                .map_err(|e| e.to_string())?;
                 let request = ResolveRequest {
                     ecosystem: Ecosystem::Python,
                     name: name.clone(),
@@ -136,7 +167,7 @@ pub async fn resolve(
                 };
                 let choice = enrichment_store::python_registry::select(
                     &service.repository.runtime,
-                    &index.releases,
+                    releases,
                     &request,
                     Some(&specifiers),
                     true,
@@ -156,7 +187,7 @@ pub async fn resolve(
                     return Err("unsafe dependency wheel filename".into());
                 }
                 let url = url::Url::parse(&file.url).map_err(|e| e.to_string())?;
-                let bytes = fetch(service, &url, &cancel, deadline).await?;
+                let bytes = fetch(service, &url, &cancel, deadline).await?.bytes;
                 if canonical::sha256_hex(&bytes) != sha {
                     return Err("dependency wheel digest differs from registry metadata".into());
                 }
@@ -240,7 +271,7 @@ async fn fetch(
     url: &url::Url,
     cancel: &AtomicBool,
     deadline: tokio::time::Instant,
-) -> Result<Vec<u8>, PreparationError> {
+) -> Result<crate::fetch::Fetched, PreparationError> {
     check(cancel, deadline)?;
     let response = tokio::select! {
         _ = cancelled(cancel) => return Err(PreparationError::Cancelled),
@@ -250,5 +281,5 @@ async fn fetch(
     if response.status != 200 {
         return Err(format!("dependency endpoint returned HTTP {}", response.status).into());
     }
-    Ok(response.bytes)
+    Ok(response)
 }

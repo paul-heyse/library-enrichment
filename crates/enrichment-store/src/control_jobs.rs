@@ -19,21 +19,6 @@ pub(crate) fn interests() -> SchemaRef {
     Arc::new(Schema::new(Interest::fields()))
 }
 
-/// Encode bounded protocol values directly into the declared Arrow schema. Arrow's serializer
-/// does not construct a JSON document or a domain corpus; Delta stores only the typed columns.
-pub(crate) fn encode<T: serde::Serialize>(
-    schema: SchemaRef,
-    rows: &[T],
-) -> datafusion::error::Result<arrow::record_batch::RecordBatch> {
-    let mut decoder = arrow::json::ReaderBuilder::new(schema.clone())
-        .with_batch_size(rows.len().max(1))
-        .build_decoder()?;
-    decoder.serialize(rows)?;
-    Ok(decoder
-        .flush()?
-        .unwrap_or_else(|| arrow::record_batch::RecordBatch::new_empty(schema)))
-}
-
 use crate::{
     control::{ControlSnapshot, ControlStore, Table},
     runtime::QueryRuntime,
@@ -79,7 +64,7 @@ impl Grant {
             self.clone(),
             &self.0.store,
             &self.0.claim,
-            self.0.store.control.delta_namespace(),
+            self.0.store.control.clone(),
             facts,
         )
         .await
@@ -167,10 +152,8 @@ impl JobStore {
             .await
     }
     pub async fn command_with_id(&self, job_id: String, arguments: Arguments) -> Result<Command> {
-        let policies = crate::operation_policies::Policies::new(
-            self.control.delta_namespace(),
-            self.runtime.clone(),
-        );
+        let policies =
+            crate::operation_policies::Policies::new(self.control.clone(), self.runtime.clone());
         let policy_binding = self
             .policy_binding
             .get_or_try_init(|| policies.retain(&self.config))
@@ -287,10 +270,8 @@ impl JobStore {
         )
         .await?;
         crate::operation_policy::validate(&self.runtime, &command).await?;
-        let policies = crate::operation_policies::Policies::new(
-            self.control.delta_namespace(),
-            self.runtime.clone(),
-        );
+        let policies =
+            crate::operation_policies::Policies::new(self.control.clone(), self.runtime.clone());
         policies
             .read(&command.policy_id, &command.policy_binding)
             .await?;
@@ -389,6 +370,18 @@ impl JobStore {
         policy: &crate::execution_policy::Policy,
     ) -> Result<bool> {
         use datafusion::common::ScalarValue;
+        // Definition enrollment changes control state. Capture it before choosing
+        // the predecessor that authorizes a claim; commands are immutable.
+        let captured = self.control.capture().await?;
+        let Some(command) = self.command(&captured, id).await? else {
+            return Ok(false);
+        };
+        let policies =
+            crate::operation_policies::Policies::new(self.control.clone(), self.runtime.clone());
+        let configuration = policies
+            .read(&command.policy_id, &command.policy_binding)
+            .await?;
+        drop(captured);
         for _ in 0..16 {
             let pin = self.pin().await?;
             let session = pin.session(&self.runtime).await?;
@@ -403,21 +396,10 @@ impl JobStore {
             {
                 return Ok(false);
             }
-            let command = self
-                .command(&pin, id)
-                .await?
-                .ok_or_else(|| invalid("missing queued command"))?;
-            let policies = crate::operation_policies::Policies::new(
-                self.control.delta_namespace(),
-                self.runtime.clone(),
-            );
-            let configuration = policies
-                .read(&command.policy_id, &command.policy_binding)
-                .await?;
             crate::native_catalog::work(
                 &session,
                 "operation_configuration",
-                configuration.into_view(),
+                configuration.clone().into_view(),
             )?;
             let admitted =
                 crate::operation_policy::admit(&self.runtime, &session, eligible, policy).await?;

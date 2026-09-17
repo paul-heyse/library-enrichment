@@ -54,7 +54,7 @@ use crate::delta_datafusion::{
     create_session_state_with_spill_config, resolve_session_state, update_datafusion_session,
 };
 use crate::errors::{ColumnMappingOperation, DeltaResult, DeltaTableError};
-use crate::kernel::transaction::{CommitBuilder, CommitProperties, DEFAULT_RETRIES, PROTOCOL};
+use crate::kernel::transaction::{CommitBuilder, CommitProperties, PROTOCOL};
 use crate::kernel::{Action, Add, DataType, PartitionsExt, Remove, StructType, Version};
 use crate::kernel::{EagerSnapshot, resolve_snapshot};
 use crate::logstore::{LogStore, LogStoreRef, ObjectStoreRef};
@@ -941,7 +941,6 @@ impl MergePlan {
         let mut total_metrics = orig_metrics.clone();
 
         let mut last_commit = Instant::now();
-        let mut commits_made = 0;
         let mut snapshot = snapshot.clone();
         loop {
             let next = stream.next().await.transpose()?;
@@ -964,8 +963,7 @@ impl MergePlan {
                 let actions = std::mem::take(&mut actions);
                 last_commit = now;
 
-                let mut properties = CommitProperties::default();
-                properties.app_metadata = commit_properties.app_metadata.clone();
+                let mut properties = commit_properties.clone();
                 properties
                     .app_metadata
                     .insert("readVersion".to_owned(), self.read_table_version.into());
@@ -985,7 +983,6 @@ impl MergePlan {
                     .with_actions(actions)
                     .with_operation_id(operation_id)
                     .with_post_commit_hook_handler(handle.cloned())
-                    .with_max_retries(DEFAULT_RETRIES + commits_made)
                     .build(
                         Some(&snapshot),
                         log_store.clone(),
@@ -993,7 +990,6 @@ impl MergePlan {
                     )
                     .await?;
                 snapshot = commit.snapshot().snapshot;
-                commits_made += 1;
             }
 
             if end {

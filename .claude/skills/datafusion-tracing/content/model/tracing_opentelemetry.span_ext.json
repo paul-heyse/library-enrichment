@@ -1,0 +1,89 @@
+{
+  "module": "tracing_opentelemetry::span_ext",
+  "crate": "tracing-opentelemetry",
+  "api": "api/tracing_opentelemetry.span_ext.md",
+  "items": [
+    {
+      "path": "tracing_opentelemetry::span_ext::SetParentError",
+      "name": "SetParentError",
+      "kind": "enum",
+      "crate": "tracing-opentelemetry",
+      "signature": "enum SetParentError",
+      "summary": "",
+      "doc": null,
+      "variants": [
+        "LayerNotFound",
+        "AlreadyStarted",
+        "SpanDisabled"
+      ]
+    },
+    {
+      "path": "tracing_opentelemetry::span_ext::OpenTelemetrySpanExt",
+      "name": "OpenTelemetrySpanExt",
+      "kind": "trait",
+      "crate": "tracing-opentelemetry",
+      "signature": "trait OpenTelemetrySpanExt",
+      "summary": "Utility functions to allow tracing [`Span`]s to accept and return [OpenTelemetry] [`Context`]s.",
+      "doc": "api/tracing_opentelemetry.span_ext.md#opentelemetryspanext",
+      "aliases": [
+        "tracing_opentelemetry::OpenTelemetrySpanExt"
+      ],
+      "implementors": [
+        "tracing::span::Span"
+      ],
+      "required_methods": [
+        "add_event",
+        "add_event_with_timestamp",
+        "add_link",
+        "add_link_with_attributes",
+        "context",
+        "set_attribute",
+        "set_parent",
+        "set_status"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "add_event",
+          "signature": "fn add_event(&self, name: impl Into<Cow<'static, str>>, attributes: Vec<KeyValue>)",
+          "summary": "Adds an OpenTelemetry event directly to this span, bypassing `tracing::event!`. This allows for adding events with dynamic attribute keys, similar to `set_attribute` for span attributes. Events are added with the current timestamp."
+        },
+        {
+          "name": "add_event_with_timestamp",
+          "signature": "fn add_event_with_timestamp(&self, name: impl Into<Cow<'static, str>>, timestamp: SystemTime, attributes: Vec<KeyValue>)",
+          "summary": "Adds an OpenTelemetry event with a specific timestamp directly to this span. Similar to `add_event`, but allows overriding the event timestamp."
+        },
+        {
+          "name": "add_link",
+          "signature": "fn add_link(&self, cx: SpanContext)",
+          "summary": "Associates `self` with a given OpenTelemetry trace, using the provided followed span [`SpanContext`]."
+        },
+        {
+          "name": "add_link_with_attributes",
+          "signature": "fn add_link_with_attributes(&self, cx: SpanContext, attributes: Vec<KeyValue>)",
+          "summary": "Associates `self` with a given OpenTelemetry trace, using the provided followed span [`SpanContext`] and attributes."
+        },
+        {
+          "name": "context",
+          "signature": "fn context(&self) -> Context",
+          "summary": "Extracts an OpenTelemetry [`Context`] from `self`."
+        },
+        {
+          "name": "set_attribute",
+          "signature": "fn set_attribute(&self, key: impl Into<Key>, value: impl Into<Value>)",
+          "summary": "Sets an OpenTelemetry attribute directly for this span, bypassing `tracing`. If fields set here conflict with `tracing` fields, the `tracing` fields will supersede fields set with `set_attribute`. This allows for more than 32 fields."
+        },
+        {
+          "name": "set_parent",
+          "signature": "fn set_parent(&self, cx: Context) -> Result<(), SetParentError>",
+          "summary": "Associates `self` with a given OpenTelemetry trace, using the provided parent [`Context`]."
+        },
+        {
+          "name": "set_status",
+          "signature": "fn set_status(&self, status: Status)",
+          "summary": "Sets an OpenTelemetry status for this span. This is useful for setting the status of a span that was created by a library that does not declare the otel.status_code field of the span in advance."
+        }
+      ]
+    }
+  ]
+}

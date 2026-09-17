@@ -7,14 +7,13 @@
 //! the extracted crate archive, confined to it. LSP depth is a later phase and is named as
 //! such rather than silently degraded.
 
-use enrichment_core::evidence::{ArtifactKind, EvidenceKind, FragmentKind, SymbolHeader};
+use enrichment_core::evidence::{ArtifactKind, EvidenceKind, FragmentKind};
 use enrichment_core::producer::source;
 use enrichment_core::request::InspectRequest;
 use enrichment_core::search::row_page::RowCursor;
 use enrichment_core::wire::data::InspectData;
 use enrichment_core::wire::{
     AspectOutcome, AspectState, Envelope, ErrorCode, Freshness, InspectionAspect, Page,
-    SourceVersionMatch,
 };
 
 use super::common::{self, evidence_from_fragment};
@@ -22,71 +21,17 @@ use crate::envelope::{self, Research};
 use crate::service::Service;
 
 /// Aspects this build can return.
-pub const ASPECTS: &[&str] = &[
-    "signature",
-    "availability",
-    "relationships",
-    "documentation",
-    "examples",
-    "source",
-    "semantics",
-    "runtime",
-    "children",
-    "members",
-];
+pub const ASPECTS: &[&str] = InspectionAspect::VALUES;
 
 /// Select retained results first. Only explicit execution intent can schedule a producer.
 pub async fn inspect(service: &Service, request: InspectRequest) -> Envelope {
     use enrichment_core::request::InspectionIntent;
-    if let Err(error) = request.selection.validate() {
-        return envelope::error(
-            ErrorCode::UnsupportedFormat,
-            error,
-            "Use a unique, bounded aspect selection.",
-            false,
-        );
-    }
-    if let Some(options) = &request.execution {
-        if let Err(error) = options.validate(service.config.limits.verification_input_bytes) {
-            return envelope::error(
-                ErrorCode::UnsupportedFormat,
-                error,
-                "Use bounded typed inspection options.",
-                false,
-            );
-        }
-        if options.intent != InspectionIntent::Retained
-            && request
-                .selection
-                .aspects()
-                .iter()
-                .any(|a| a.aspect == enrichment_core::wire::InspectionAspect::Runtime)
-            && options.runtime.is_none()
-        {
-            return envelope::error(
-                ErrorCode::UnsupportedFormat,
-                "Runtime execution requires an explicit module and attribute selection",
-                "Set execution.runtime to the exact selected public binding.",
-                false,
-            );
-        }
-        if options.intent != InspectionIntent::Retained {
-            let selected = request.selection.aspects();
-            let target = if options.runtime.is_some() {
-                InspectionAspect::Runtime
-            } else {
-                InspectionAspect::Semantics
-            };
-            if !selected.iter().any(|selection| selection.aspect == target) {
-                return envelope::error(
-                    ErrorCode::UnsupportedFormat,
-                    "Execution intent must name its selected inspection aspect",
-                    "Include runtime for execution.runtime, or semantics for semantic execution, in selection.aspects.",
-                    false,
-                );
-            }
-            return super::inspect_execution::submit(service, request).await;
-        }
+    if request
+        .execution
+        .as_ref()
+        .is_some_and(|options| options.intent != InspectionIntent::Retained)
+    {
+        return super::inspect_execution::submit(service, request).await;
     }
     read(service, request).await
 }
@@ -102,64 +47,58 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             false,
         );
     }
-    if let Err(error) = request.selection.validate() {
-        return envelope::error(
-            ErrorCode::UnsupportedFormat,
-            error,
-            "Use a unique, bounded aspect selection.",
-            false,
-        );
-    }
-    let selection = request.selection.aspects();
+    let selection = match enrichment_store::research_selection::inspection(
+        &service.repository.runtime,
+        &request.selection,
+    )
+    .await
+    {
+        Ok(selection) => selection,
+        Err(error) => return common::operation_error(&error, "research_selection"),
+    };
     let want = |name: &str| selection.iter().any(|s| s.aspect.as_str() == name);
 
-    let opened =
-        match common::open_context(service, &request.context_id, request.snapshot_id.as_deref())
-            .await
-        {
-            Ok(opened) => opened,
-            Err(envelope) => return *envelope,
-        };
+    let opened = match common::open_context(
+        service,
+        &request.context_id,
+        request.snapshot_id.as_ref(),
+    )
+    .await
+    {
+        Ok(opened) => opened,
+        Err(envelope) => return *envelope,
+    };
     let manifest = opened.reader.manifest().clone();
 
-    // Exact path first; a bare name is accepted only when it names one definition.
-    let mut matches = match opened
+    let bindings = match opened
         .reader
-        .symbols_at(wanted, request.definition_id.as_deref())
+        .inspection_bindings(wanted, request.definition_id.as_deref())
         .await
     {
-        Ok(m) => m,
-        Err(err) => return common::query_error(&err),
+        Ok(value) => value,
+        Err(error) => return common::query_error(&error),
     };
-    if matches.is_empty() && !wanted.contains("::") && !wanted.contains('.') {
-        matches = match opened
-            .reader
-            .symbols_ending_with(wanted, request.definition_id.as_deref())
-            .await
-        {
-            Ok(m) => m,
-            Err(err) => return common::query_error(&err),
-        };
-    }
-    let mut definitions: Vec<String> = matches.iter().map(|s| s.definition_id.clone()).collect();
-    definitions.sort();
-    definitions.dedup();
 
-    let source_version_match =
-        if manifest.crate_version.as_deref() == Some(opened.release.key.version.as_str()) {
-            SourceVersionMatch::Exact
-        } else {
-            SourceVersionMatch::Unknown
-        };
+    let source_version_match = match enrichment_store::research_outcomes::source_version(
+        &service.repository.runtime,
+        opened.context.mode,
+        manifest.crate_version.as_deref(),
+        &opened.release.key.version,
+    )
+    .await
+    {
+        Ok(value) => value,
+        Err(error) => return common::operation_error(&error, "source_version_scope"),
+    };
     let freshness = Freshness {
         registry_checked_at: None,
         source_version_match,
         latest_verified: false,
     };
-    let context_id = Some(opened.context.context_id.to_string());
-    let snapshot_id = Some(opened.snapshot_id.to_string());
+    let context_id = Some(opened.context.context_id.clone());
+    let snapshot_id = Some(opened.snapshot_id.clone());
 
-    if matches.is_empty() {
+    if bindings.definition_count == 0 {
         return envelope::error(
             ErrorCode::ArtifactUnavailable,
             format!(
@@ -173,22 +112,8 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             false,
         );
     }
-    if definitions.len() > 1 {
-        let mut candidates: Vec<_> = matches
-            .iter()
-            .map(|s| enrichment_core::wire::data::InspectionCandidate {
-                path: s.path.clone(),
-                definition_id: s.definition_id.clone(),
-                kind: s.kind,
-                qualifier: s.qualifier.clone(),
-            })
-            .collect();
-        candidates.sort_by(|a, b| {
-            a.definition_id
-                .cmp(&b.definition_id)
-                .then_with(|| a.path.cmp(&b.path))
-        });
-        candidates.dedup();
+    if bindings.definition_count > 1 {
+        let candidates = bindings.candidates;
         let data = InspectData {
             children: Vec::new(),
             members: Vec::new(),
@@ -209,7 +134,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         return Research {
             summary: format!(
                 "`{wanted}` is ambiguous: {} definitions match.",
-                definitions.len()
+                bindings.definition_count
             ),
             data: common::payload(&data),
             coverage: match opened.reader.assess(&[EvidenceKind::PublicApi], None,
@@ -229,13 +154,12 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         .partial();
     }
 
-    // One definition: prefer the definition's own path, list the others.
-    matches.sort_by(|a, b| {
-        a.is_reexport
-            .cmp(&b.is_reexport)
-            .then_with(|| a.path.cmp(&b.path))
-    });
-    let selected: SymbolHeader = matches[0].clone();
+    let Some(selected) = bindings.selected else {
+        return common::operation_error(
+            &std::io::Error::other("native inspection selection omitted the unique binding"),
+            "inspection_selection",
+        );
+    };
     let also_at = match opened
         .reader
         .aliases_for(&selected.definition_id, &selected.path)
@@ -252,7 +176,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         let after = match aspect
             .cursor
             .as_deref()
-            .map(|text| RowCursor::decode(text, manifest.snapshot_id.as_str(), &digest))
+            .map(|text| RowCursor::decode(text, &manifest.snapshot_id, &digest))
             .transpose()
         {
             Ok(value) => value.map(|c| c.after),
@@ -271,7 +195,6 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
     let mut observations = Vec::new();
     let mut evidence = Vec::new();
     let mut fragments = Vec::new();
-    let mut returned_aspects = Vec::new();
     let mut relationships = Vec::new();
     let mut children = Vec::new();
     let mut members = Vec::new();
@@ -301,7 +224,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 .await
                 {
                     Ok(page) => {
-                        let result = aspect_page(manifest.snapshot_id.as_str(), digest, &page);
+                        let result = aspect_page(&manifest.snapshot_id, digest, &page);
                         execution_observations.extend(page.items);
                         Some(result)
                     }
@@ -314,7 +237,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 .await
             {
                 Ok(page) => {
-                    let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                    let result = aspect_page(&manifest.snapshot_id, digest, &page);
                     observations = page.items;
                     Some(result)
                 }
@@ -326,7 +249,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                 .await
             {
                 Ok(page) => {
-                    let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                    let result = aspect_page(&manifest.snapshot_id, digest, &page);
                     relationships = page.items;
                     Some(result)
                 }
@@ -344,7 +267,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                     .await
                 {
                     Ok(page) => {
-                        let result = aspect_page(manifest.snapshot_id.as_str(), digest, &page);
+                        let result = aspect_page(&manifest.snapshot_id, digest, &page);
                         let entries = page
                             .items
                             .into_iter()
@@ -383,7 +306,7 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                     .await
                 {
                     Ok(page) => {
-                        let result = aspect_page(&manifest.snapshot_id.to_string(), digest, &page);
+                        let result = aspect_page(&manifest.snapshot_id, digest, &page);
                         if aspect.aspect == InspectionAspect::Documentation {
                             docs_truncated = page.has_more;
                         }
@@ -403,11 +326,11 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                                 }
                                 let full_digest = selection_digest(&selected.symbol_id, &full_aspect, budget, &execution);
                                 full_aspect.cursor = after.as_ref().map(|key| RowCursor::encode(
-                                    manifest.snapshot_id.as_str(), &full_digest, key.clone(),
+                                    &manifest.snapshot_id, &full_digest, key.clone(),
                                 ).expect("bounded admitted fragment identity serializes"));
                                 enrichment_core::wire::RecoveryAction::CallTool {
                                     request: Box::new(enrichment_core::request::ResearchRequest::Inspect(InspectRequest {
-                                        context_id: opened.context.context_id.to_string(), snapshot_id: Some(manifest.snapshot_id.to_string()),
+                                        context_id: opened.context.context_id.clone(), snapshot_id: Some(manifest.snapshot_id.clone()),
                                         symbol_path: selected.path.clone(), definition_id: Some(selected.definition_id.clone()),
                                         selection: enrichment_core::wire::ResearchSelection::Explicit { aspects: vec![full_aspect] },
                                         max_bytes: request.max_bytes, execution,
@@ -455,9 +378,6 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
                     outcome.diagnostic = error.error().map(|e| e.diagnostic.clone());
                 }
             }
-        }
-        if outcome.state != AspectState::Failed {
-            returned_aspects.push(aspect.aspect.as_str().into());
         }
         outcomes.push(outcome);
     }
@@ -553,46 +473,26 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
             .to_owned(),
     );
 
-    let kinds: Vec<_> = selection
-        .iter()
-        .map(|aspect| match aspect.aspect {
-            InspectionAspect::Signature
-            | InspectionAspect::Availability
-            | InspectionAspect::Relationships
-            | InspectionAspect::Children
-            | InspectionAspect::Members => EvidenceKind::PublicApi,
-            InspectionAspect::Documentation => EvidenceKind::Documentation,
-            InspectionAspect::Examples => EvidenceKind::Examples,
-            InspectionAspect::Source => {
-                if opened.release.key.ecosystem == enrichment_core::identity::Ecosystem::Python {
-                    EvidenceKind::DistributionSource
-                } else {
-                    EvidenceKind::CrateSource
-                }
-            }
-            InspectionAspect::Runtime => EvidenceKind::RuntimeApi,
-            InspectionAspect::Semantics => EvidenceKind::SemanticQueries,
-        })
-        .collect();
-    let execution_kinds: std::collections::BTreeSet<_> = execution_observations
-        .iter()
-        .map(|fact| match fact.payload {
-            enrichment_core::evidence::execution::ExecutionPayload::SemanticQuery(_) => {
-                EvidenceKind::SemanticQueries
-            }
-            enrichment_core::evidence::execution::ExecutionPayload::RuntimeObject(_) => {
-                EvidenceKind::RuntimeApi
-            }
-            enrichment_core::evidence::execution::ExecutionPayload::UsageProbe(_) => {
-                EvidenceKind::UsageProbes
-            }
-        })
-        .collect();
-    let other_kinds: Vec<_> = kinds
-        .iter()
-        .filter(|kind| !execution_kinds.contains(kind))
-        .copied()
-        .collect();
+    let kinds = match enrichment_store::research_outcomes::inspection_kinds(
+        &service.repository.runtime,
+        opened.release.key.ecosystem,
+        &selection,
+    )
+    .await
+    {
+        Ok(kinds) => kinds,
+        Err(error) => return common::operation_error(&error, "inspection_coverage_scope"),
+    };
+    let other_kinds = match enrichment_store::research_outcomes::non_execution_kinds(
+        &service.repository.runtime,
+        &kinds,
+        &execution_observations,
+    )
+    .await
+    {
+        Ok(kinds) => kinds,
+        Err(error) => return common::operation_error(&error, "inspection_execution_scope"),
+    };
     let scope = format!(
         "requested aspects of {} in {}",
         selected.path, manifest.snapshot_id
@@ -622,51 +522,24 @@ pub async fn read(service: &Service, request: InspectRequest) -> Envelope {
         coverage.limitations.extend(assessed.limitations);
         coverage.refresh_kinds();
     }
-    for outcome in &mut outcomes {
-        if outcome.state == AspectState::Failed {
-            continue;
-        }
-        if outcome.state == AspectState::Absent
-            && coverage.assessments.iter().any(|item| {
-                item.kind
-                    == kinds[selection
-                        .iter()
-                        .position(|a| a.aspect == outcome.aspect)
-                        .expect("selected aspect")]
-                    && item.state != enrichment_core::wire::ScopeState::Indexed
-            })
-        {
-            outcome.state = AspectState::Unavailable;
-        }
-        if outcome.aspect == InspectionAspect::Source && source_excerpt.is_none() {
-            outcome.state = AspectState::Unavailable;
-            outcome.reason = Some("No trustworthy recorded source window is available".into());
-        }
-        if outcome.aspect == InspectionAspect::Availability && availability.is_none() {
-            outcome.state = AspectState::Unavailable;
-            outcome.reason = Some("No observed build configuration is retained; availability has not been established for the requested environment".into());
-        }
-        if matches!(
-            outcome.aspect,
-            InspectionAspect::Semantics | InspectionAspect::Runtime
-        ) && outcome.page.as_ref().is_some_and(|page| page.returned == 0)
-        {
-            outcome.state = AspectState::Unavailable;
-            outcome.reason = Some("No retained execution result for this scope; explicit execution intent and an enabled profile are required".into());
-        }
-    }
-    returned_aspects.retain(|name| {
-        outcomes
-            .iter()
-            .any(|o| o.aspect.as_str() == name && o.state == AspectState::Available)
-    });
     coverage.missing.extend(missing);
     coverage.limitations.extend(limitations);
-    let partial = !coverage.complete()
-        || !coverage.missing.is_empty()
-        || outcomes
-            .iter()
-            .any(|o| matches!(o.state, AspectState::Unavailable | AspectState::Failed));
+    let disposition = match enrichment_store::research_outcomes::inspection(
+        &service.repository.runtime,
+        opened.release.key.ecosystem,
+        outcomes,
+        &coverage,
+        source_excerpt.is_some(),
+        availability.is_some(),
+    )
+    .await
+    {
+        Ok(disposition) => disposition,
+        Err(error) => return common::operation_error(&error, "inspection_outcomes"),
+    };
+    let partial = disposition.partial;
+    let outcomes = disposition.outcomes;
+    let returned_aspects = disposition.returned;
     let data = InspectData {
         children,
         members,
@@ -707,14 +580,15 @@ fn selection_digest(
     budget: usize,
     execution: &Option<enrichment_core::request::InspectionOptions>,
 ) -> String {
-    enrichment_core::canonical::digest_hex(&serde_json::json!([
-        symbol,
-        aspect.aspect,
-        aspect.max_items,
-        aspect.max_characters,
-        budget,
-        execution,
-    ]))
+    enrichment_core::operation::selections::InspectionSelection {
+        symbol_id: symbol.into(),
+        aspect: aspect.aspect,
+        max_items: aspect.max_items,
+        max_characters: aspect.max_characters,
+        max_bytes: budget,
+        execution: execution.clone(),
+    }
+    .identity()
 }
 
 fn fail_aspect(
@@ -730,7 +604,7 @@ fn fail_aspect(
 }
 
 fn aspect_page<T>(
-    snapshot: &str,
+    snapshot: &enrichment_core::identity::SnapshotId,
     digest: &str,
     page: &enrichment_store::query::NativePage<T>,
 ) -> Result<Page, enrichment_store::QueryError> {

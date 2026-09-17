@@ -1,0 +1,477 @@
+{
+  "module": "opentelemetry_sdk::metrics::data",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.metrics.data.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::metrics::data::AggregatedMetrics",
+      "name": "AggregatedMetrics",
+      "kind": "enum",
+      "crate": "opentelemetry_sdk",
+      "signature": "enum AggregatedMetrics",
+      "summary": "Aggregated metrics data from an instrument",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#aggregatedmetrics",
+      "variants": [
+        "F64",
+        "U64",
+        "I64"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: MetricData<i64>) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::MetricData",
+      "name": "MetricData",
+      "kind": "enum",
+      "crate": "opentelemetry_sdk",
+      "signature": "enum MetricData<T>",
+      "summary": "Metric data for all types",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#metricdata",
+      "variants": [
+        "Gauge",
+        "Sum",
+        "Histogram",
+        "ExponentialHistogram"
+      ],
+      "implements": [
+        "core::convert::From"
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "signature": "fn from(value: Histogram<T>) -> Self",
+          "via_trait": "core::convert::From"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::Exemplar",
+      "name": "Exemplar",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Exemplar<T>",
+      "summary": "A measurement sampled from a time series providing a typical example.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#exemplar",
+      "fields": [
+        "value"
+      ],
+      "methods": [
+        {
+          "name": "filtered_attributes",
+          "signature": "fn filtered_attributes(&self) -> impl Iterator<Item = &KeyValue>",
+          "summary": "Returns an iterator over the filtered attributes in [Exemplar]."
+        },
+        {
+          "name": "span_id",
+          "signature": "fn span_id(&self) -> &[u8; 8]",
+          "summary": "Returns the ID of the span that was active during the measurement."
+        },
+        {
+          "name": "time",
+          "signature": "fn time(&self) -> SystemTime",
+          "summary": "Returns the time when the measurement was recorded."
+        },
+        {
+          "name": "trace_id",
+          "signature": "fn trace_id(&self) -> &[u8; 16]",
+          "summary": "Returns the ID of the trace the active span belonged to during the measurement."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::ExponentialBucket",
+      "name": "ExponentialBucket",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ExponentialBucket",
+      "summary": "A set of bucket counts, encoded in a contiguous array of counts.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#exponentialbucket",
+      "methods": [
+        {
+          "name": "counts",
+          "signature": "fn counts(&self) -> impl Iterator<Item = u64> + '_",
+          "summary": "Returns an iterator over the counts."
+        },
+        {
+          "name": "offset",
+          "signature": "fn offset(&self) -> i32",
+          "summary": "Returns the bucket index of the first entry in the counts vec."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::ExponentialHistogram",
+      "name": "ExponentialHistogram",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ExponentialHistogram<T>",
+      "summary": "The histogram of all measurements of values from an instrument.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#exponentialhistogram",
+      "methods": [
+        {
+          "name": "data_points",
+          "signature": "fn data_points(&self) -> impl Iterator<Item = &ExponentialHistogramDataPoint<T>>",
+          "summary": "Returns an iterator over the [ExponentialHistogramDataPoint]s in [ExponentialHistogram]."
+        },
+        {
+          "name": "start_time",
+          "signature": "fn start_time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was started."
+        },
+        {
+          "name": "temporality",
+          "signature": "fn temporality(&self) -> Temporality",
+          "summary": "Returns the temporality describing if the aggregation is reported as the change from the last report time, or the cumulative changes since a fixed start time."
+        },
+        {
+          "name": "time",
+          "signature": "fn time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was recorded."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::ExponentialHistogramDataPoint",
+      "name": "ExponentialHistogramDataPoint",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ExponentialHistogramDataPoint<T>",
+      "summary": "A single exponential histogram data point in a time series.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#exponentialhistogramdatapoint",
+      "methods": [
+        {
+          "name": "attributes",
+          "signature": "fn attributes(&self) -> impl Iterator<Item = &KeyValue>",
+          "summary": "Returns an iterator over the attributes in [ExponentialHistogramDataPoint]."
+        },
+        {
+          "name": "count",
+          "signature": "fn count(&self) -> usize",
+          "summary": "Returns the number of updates this histogram has been calculated with."
+        },
+        {
+          "name": "exemplars",
+          "signature": "fn exemplars(&self) -> impl Iterator<Item = &Exemplar<T>>",
+          "summary": "Returns an iterator over the exemplars in [ExponentialHistogramDataPoint]."
+        },
+        {
+          "name": "max",
+          "signature": "fn max(&self) -> Option<T>",
+          "summary": "Returns the maximum value recorded."
+        },
+        {
+          "name": "min",
+          "signature": "fn min(&self) -> Option<T>",
+          "summary": "Returns the minimum value recorded."
+        },
+        {
+          "name": "negative_bucket",
+          "signature": "fn negative_bucket(&self) -> &ExponentialBucket",
+          "summary": "Returns the range of negative value bucket counts."
+        },
+        {
+          "name": "positive_bucket",
+          "signature": "fn positive_bucket(&self) -> &ExponentialBucket",
+          "summary": "Returns the range of positive value bucket counts."
+        },
+        {
+          "name": "scale",
+          "signature": "fn scale(&self) -> i8",
+          "summary": "Returns the resolution of the histogram."
+        },
+        {
+          "name": "sum",
+          "signature": "fn sum(&self) -> T",
+          "summary": "Returns the sum of the values recorded."
+        },
+        {
+          "name": "zero_count",
+          "signature": "fn zero_count(&self) -> u64",
+          "summary": "Returns the number of values whose absolute value is less than or equal to zero_threshold."
+        },
+        {
+          "name": "zero_threshold",
+          "signature": "fn zero_threshold(&self) -> f64",
+          "summary": "Returns the width of the zero region."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::Gauge",
+      "name": "Gauge",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Gauge<T>",
+      "summary": "A measurement of the current value of an instrument.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#gauge",
+      "methods": [
+        {
+          "name": "data_points",
+          "signature": "fn data_points(&self) -> impl Iterator<Item = &GaugeDataPoint<T>>",
+          "summary": "Returns an iterator over the [GaugeDataPoint]s in [Gauge]."
+        },
+        {
+          "name": "start_time",
+          "signature": "fn start_time(&self) -> Option<SystemTime>",
+          "summary": "Returns the time when the time series was started."
+        },
+        {
+          "name": "time",
+          "signature": "fn time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was recorded."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::GaugeDataPoint",
+      "name": "GaugeDataPoint",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct GaugeDataPoint<T>",
+      "summary": "DataPoint is a single data point in a time series.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#gaugedatapoint",
+      "methods": [
+        {
+          "name": "attributes",
+          "signature": "fn attributes(&self) -> impl Iterator<Item = &KeyValue>",
+          "summary": "Returns an iterator over the attributes in [GaugeDataPoint]."
+        },
+        {
+          "name": "exemplars",
+          "signature": "fn exemplars(&self) -> impl Iterator<Item = &Exemplar<T>>",
+          "summary": "Returns an iterator over the [Exemplar]s in [GaugeDataPoint]."
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> T",
+          "summary": "Returns the value of this data point."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::Histogram",
+      "name": "Histogram",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Histogram<T>",
+      "summary": "Represents the histogram of all measurements of values from an instrument.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#histogram",
+      "methods": [
+        {
+          "name": "data_points",
+          "signature": "fn data_points(&self) -> impl Iterator<Item = &HistogramDataPoint<T>>",
+          "summary": "Returns an iterator over the [HistogramDataPoint]s in [Histogram]."
+        },
+        {
+          "name": "start_time",
+          "signature": "fn start_time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was started."
+        },
+        {
+          "name": "temporality",
+          "signature": "fn temporality(&self) -> Temporality",
+          "summary": "Returns the temporality describing if the aggregation is reported as the change from the last report time, or the cumulative changes since a fixed start time."
+        },
+        {
+          "name": "time",
+          "signature": "fn time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was recorded."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::HistogramDataPoint",
+      "name": "HistogramDataPoint",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct HistogramDataPoint<T>",
+      "summary": "A single histogram data point in a time series.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#histogramdatapoint",
+      "methods": [
+        {
+          "name": "attributes",
+          "signature": "fn attributes(&self) -> impl Iterator<Item = &KeyValue>",
+          "summary": "Returns an iterator over the attributes in [HistogramDataPoint]."
+        },
+        {
+          "name": "bounds",
+          "signature": "fn bounds(&self) -> impl Iterator<Item = f64> + '_",
+          "summary": "Returns an iterator over the bucket boundaries in [HistogramDataPoint]."
+        },
+        {
+          "name": "bucket_counts",
+          "signature": "fn bucket_counts(&self) -> impl Iterator<Item = u64> + '_",
+          "summary": "Returns an iterator over the bucket counts in [HistogramDataPoint]."
+        },
+        {
+          "name": "count",
+          "signature": "fn count(&self) -> u64",
+          "summary": "Returns the number of updates this histogram has been calculated with."
+        },
+        {
+          "name": "exemplars",
+          "signature": "fn exemplars(&self) -> impl Iterator<Item = &Exemplar<T>>",
+          "summary": "Returns an iterator over the exemplars in [HistogramDataPoint]."
+        },
+        {
+          "name": "max",
+          "signature": "fn max(&self) -> Option<T>",
+          "summary": "Returns the maximum value recorded."
+        },
+        {
+          "name": "min",
+          "signature": "fn min(&self) -> Option<T>",
+          "summary": "Returns the minimum value recorded."
+        },
+        {
+          "name": "sum",
+          "signature": "fn sum(&self) -> T",
+          "summary": "Returns the sum of the values recorded."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::Metric",
+      "name": "Metric",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Metric",
+      "summary": "A collection of one or more aggregated time series from an [Instrument].",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#metric",
+      "methods": [
+        {
+          "name": "data",
+          "signature": "fn data(&self) -> &AggregatedMetrics",
+          "summary": "Returns the aggregated data from the instrument."
+        },
+        {
+          "name": "description",
+          "signature": "fn description(&self) -> &str",
+          "summary": "Returns the description of the instrument."
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "summary": "Returns the name of the instrument that created this data."
+        },
+        {
+          "name": "unit",
+          "signature": "fn unit(&self) -> &str",
+          "summary": "Returns the unit in which the instrument reports."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::ResourceMetrics",
+      "name": "ResourceMetrics",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ResourceMetrics",
+      "summary": "A collection of [ScopeMetrics] and the associated [Resource] that created them.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#resourcemetrics",
+      "methods": [
+        {
+          "name": "resource",
+          "signature": "fn resource(&self) -> &Resource",
+          "summary": "Returns a reference to the [Resource] in [ResourceMetrics]."
+        },
+        {
+          "name": "scope_metrics",
+          "signature": "fn scope_metrics(&self) -> impl Iterator<Item = &ScopeMetrics>",
+          "summary": "Returns an iterator over the [ScopeMetrics] in [ResourceMetrics]."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::ScopeMetrics",
+      "name": "ScopeMetrics",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct ScopeMetrics",
+      "summary": "A collection of metrics produced by a meter.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#scopemetrics",
+      "methods": [
+        {
+          "name": "metrics",
+          "signature": "fn metrics(&self) -> impl Iterator<Item = &Metric>",
+          "summary": "Returns an iterator over the [Metric]s in [ScopeMetrics]."
+        },
+        {
+          "name": "scope",
+          "signature": "fn scope(&self) -> &InstrumentationScope",
+          "summary": "Returns a reference to the [InstrumentationScope] in [ScopeMetrics]."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::Sum",
+      "name": "Sum",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct Sum<T>",
+      "summary": "Represents the sum of all measurements of values from an instrument.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#sum",
+      "methods": [
+        {
+          "name": "data_points",
+          "signature": "fn data_points(&self) -> impl Iterator<Item = &SumDataPoint<T>>",
+          "summary": "Returns an iterator over the [SumDataPoint]s in [Sum]."
+        },
+        {
+          "name": "is_monotonic",
+          "signature": "fn is_monotonic(&self) -> bool",
+          "summary": "Returns whether this aggregation only increases or decreases."
+        },
+        {
+          "name": "start_time",
+          "signature": "fn start_time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was started."
+        },
+        {
+          "name": "temporality",
+          "signature": "fn temporality(&self) -> Temporality",
+          "summary": "Returns the temporality describing if the aggregation is reported as the change from the last report time, or the cumulative changes since a fixed start time."
+        },
+        {
+          "name": "time",
+          "signature": "fn time(&self) -> SystemTime",
+          "summary": "Returns the time when the time series was recorded."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::data::SumDataPoint",
+      "name": "SumDataPoint",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct SumDataPoint<T>",
+      "summary": "DataPoint is a single data point in a time series.",
+      "doc": "api/opentelemetry_sdk.metrics.data.md#sumdatapoint",
+      "methods": [
+        {
+          "name": "attributes",
+          "signature": "fn attributes(&self) -> impl Iterator<Item = &KeyValue>",
+          "summary": "Returns an iterator over the attributes in [SumDataPoint]."
+        },
+        {
+          "name": "exemplars",
+          "signature": "fn exemplars(&self) -> impl Iterator<Item = &Exemplar<T>>",
+          "summary": "Returns an iterator over the [Exemplar]s in [SumDataPoint]."
+        },
+        {
+          "name": "value",
+          "signature": "fn value(&self) -> T",
+          "summary": "Returns the value of this data point."
+        }
+      ]
+    }
+  ]
+}

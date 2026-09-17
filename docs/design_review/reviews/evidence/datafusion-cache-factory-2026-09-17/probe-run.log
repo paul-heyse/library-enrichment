@@ -1,0 +1,23 @@
+DataFusion 55.1.0 isolated cache factory characterization
+P01 default_eager input_calls_at_cache=1 input_calls_after_two_reads=1
+P02 factory_is_hook factory_calls=1 input_calls_after_two_reads=2
+caching in memory
+fetching directly from cache manager
+fetching directly from cache manager
+P03 upstream_planning_materializes input_calls_after_create_physical_plan=1 after_reads=1
+caching in memory
+P04 upstream_explain_without_analyze input_calls=1
+P05 missing_extension_planner_refuses error=Error during planning: No installed planner was able to convert the custom node to an execution plan: CacheNode { input: Projection(Projection { expr: [Alias(Alias { expr: ScalarFunction(ScalarFunction { func: ScalarUDF { inner: SimpleScalarUDF { name: "observed", signature: Signature { type_signature: Exact([Int64]), volatility: Volatile, parameter_names: None }, return_type: Int64, fun: "<FUNC>" } }, args: [Column(Column { relation: Some(Bare { table: "input" }), name: "x" })] }), relation: None, name: "x", metadata: None })], input: TableScan(TableScan { table_name: Bare { table: "input" }, source: "...", projection: Some([0]), projected_schema: DFSchema { inner: Schema { fields: [Field { name: "x", data_type: Int64, metadata: {"enrichment.probe": "exact-field"} }], metadata: {} }, field_qualifiers: [Some(Bare { table: "input" })], functional_dependencies: FunctionalDependencies { deps: [] } }, filters: [], fetch: None, .. }), schema: DFSchema { inner: Schema { fields: [Field { name: "x", data_type: Int64, nullable: true }], metadata: {} }, field_qualifiers: [None], functional_dependencies: FunctionalDependencies { deps: [] } } }) }
+P06 cloned_session_factory_retained calls=1
+P07 admission_refusal_before_execution error=Error during planning: probe cache eligibility refusal
+P08 factory_can_replace_schema type=Utf8
+P09 default_cache_retained_bytes=4195072 pool_limit=1024 reserved=0 metadata_preserved=true
+caching in memory
+caching in memory
+P10 concurrent_example_misses input_calls=2
+caching in memory
+fetching directly from cache manager
+P11 independent_cache_calls_share_example_entry input_calls=1 entries_after_frames_dropped=1
+P12 default_cache_keys=0 ordered_before=true ordered_after=false
+P13 native_default_cache lru=true bytes=true hits=true table_invalidation=true oversized_rejected=true held_value_survives_eviction=true
+P14 statistics_schema_fingerprint_ignores_semantic_metadata=true

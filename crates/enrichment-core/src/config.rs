@@ -13,7 +13,46 @@
 
 use std::path::{Path, PathBuf};
 
-use serde::Deserialize;
+/// TOML is an operator format with exact integer tokens. Project those tokens through the
+/// declared native widths before using the strict decimal-string research wire codec.
+pub fn parse<T: crate::native_union::Cell>(text: &str) -> Result<T, String> {
+    fn project(value: &mut serde_json::Value, kind: &arrow::datatypes::DataType) {
+        use arrow::datatypes::DataType;
+        match kind {
+            DataType::UInt64 => {
+                if let Some(number) = value.as_u64() {
+                    *value = serde_json::Value::String(number.to_string());
+                }
+            }
+            DataType::Int64 => {
+                if let Some(number) = value.as_i64() {
+                    *value = serde_json::Value::String(number.to_string());
+                }
+            }
+            DataType::Struct(fields) => {
+                if let Some(object) = value.as_object_mut() {
+                    for field in fields {
+                        if let Some(member) = object.get_mut(field.name()) {
+                            project(member, field.data_type());
+                        }
+                    }
+                }
+            }
+            DataType::List(item) => {
+                if let Some(values) = value.as_array_mut() {
+                    for value in values {
+                        project(value, item.data_type());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    let parsed: toml::Value = toml::from_str(text).map_err(|e| e.to_string())?;
+    let mut value = serde_json::to_value(parsed).map_err(|e| e.to_string())?;
+    project(&mut value, &T::data_type());
+    serde_json::from_value(value).map_err(|e| e.to_string())
+}
 
 crate::native_struct! {
 /// Everything the daemon reads out of its configuration file.
@@ -42,6 +81,7 @@ pub struct ArrowConfig {
     native: NativeQueryConfig => crate::native_union::Rule::Text,
     memory_bytes: usize => crate::native_union::Rule::Text,
     spill_bytes: u64 => crate::native_union::Rule::Text,
+    descriptor_cache_bytes: usize => crate::native_union::Rule::Text,
     metadata_cache_bytes: usize => crate::native_union::Rule::Text,
     batch_rows: usize => crate::native_union::Rule::Text,
     partitions: usize => crate::native_union::Rule::Text,
@@ -61,12 +101,15 @@ impl Default for ArrowConfig {
     fn default() -> Self {
         Self {
             native: NativeQueryConfig::default(),
-            memory_bytes: 128 * 1024 * 1024,
-            spill_bytes: 512 * 1024 * 1024,
-            metadata_cache_bytes: 16 * 1024 * 1024,
+            // Performance-first defaults for the operator's 16-core / 192 GiB
+            // workstation. These are shared ceilings, not eager allocations.
+            memory_bytes: 32 * 1024 * 1024 * 1024,
+            spill_bytes: 64 * 1024 * 1024 * 1024,
+            descriptor_cache_bytes: 1024 * 1024 * 1024,
+            metadata_cache_bytes: 2 * 1024 * 1024 * 1024,
             batch_rows: 1024,
-            partitions: 2,
-            concurrency: 4,
+            partitions: 16,
+            concurrency: 16,
             result_rows: 10_000,
             result_bytes: 16 * 1024 * 1024,
             query_deadline_seconds: 30,
@@ -94,6 +137,7 @@ pub struct NativeQueryConfig {
     target_file_bytes: u64 => crate::native_union::Rule::Text,
     claim_lease_seconds: u64 => crate::native_union::Rule::Text,
     normalization_depth: u32 => crate::native_union::Rule::Text,
+    retention: crate::operation::retention::RetentionPolicy => crate::native_union::Rule::Text,
 }
 }
 
@@ -101,7 +145,7 @@ impl Default for NativeQueryConfig {
     fn default() -> Self {
         Self {
             worker_stack_bytes: 16 * 1024 * 1024,
-            blocking_threads: 4,
+            blocking_threads: 16,
             decoder_filter: true,
             observation_bloom: true,
             reorder_filters: true,
@@ -110,6 +154,7 @@ impl Default for NativeQueryConfig {
             target_file_bytes: 64 * 1024 * 1024,
             claim_lease_seconds: 600,
             normalization_depth: 64,
+            retention: Default::default(),
         }
     }
 }
@@ -469,7 +514,7 @@ impl Config {
             path: path.to_path_buf(),
             source,
         })?;
-        let mut config: Self = toml::from_str(&text).map_err(|err| ConfigError::Parse {
+        let mut config: Self = parse(&text).map_err(|err| ConfigError::Parse {
             path: path.to_path_buf(),
             message: err.to_string(),
         })?;
@@ -523,7 +568,7 @@ mod tests {
                 .contains(&"runtime".into())
         );
         assert!(
-            toml::from_str::<Config>(FROZEN_EXAMPLE).is_err(),
+            parse::<Config>(FROZEN_EXAMPLE).is_err(),
             "retired options cannot be silently accepted"
         );
     }
@@ -546,14 +591,14 @@ mod tests {
         let rows = crate::evidence::arrow_model::cells::RowSet::batch(&batch).unwrap();
         assert_eq!(Config::decode(rows.row(0)).unwrap(), Config::default());
         for source in ["unknown = true", "[network]\nunknown = true"] {
-            assert!(toml::from_str::<Config>(source).is_err());
+            assert!(parse::<Config>(source).is_err());
         }
-        toml::from_str::<Config>(include_str!("../../../config/service.dev.toml")).unwrap();
+        parse::<Config>(include_str!("../../../config/service.dev.toml")).unwrap();
     }
 
     #[test]
     fn a_configured_value_overrides_the_default() {
-        let config: Config = toml::from_str(
+        let config: Config = parse(
             "[limits]\nrpc_message_bytes = 4096\n\n[policy]\nenabled_profiles = [\"static\"]\n",
         )
         .expect("parses");
@@ -567,7 +612,7 @@ mod tests {
     #[test]
     fn the_registry_base_urls_are_configurable() {
         // What lets a test point the daemon at a loopback fixture upstream, and nothing else.
-        let config: Config = toml::from_str(
+        let config: Config = parse(
             "[producers.rust]\ndocs_rs_url = \"http://127.0.0.1:9/\"\n\n[network]\nmax_redirects = 0\n",
         )
         .expect("parses");
@@ -591,7 +636,7 @@ mod tests {
     fn an_empty_profile_list_is_honoured_rather_than_replaced() {
         // The regression this guards: reporting a built-in default as the operator's policy.
         // An operator who disables every profile must not be told `static` is enabled.
-        let config: Config = toml::from_str("[policy]\nenabled_profiles = []\n").expect("parses");
+        let config: Config = parse("[policy]\nenabled_profiles = []\n").expect("parses");
         assert!(config.policy.enabled_profiles.is_empty());
     }
 
@@ -620,7 +665,7 @@ mod tests {
     #[test]
     fn workstation_capacity_is_preserved_and_invalid_requests_are_rejected() {
         let config: Config =
-            toml::from_str(include_str!("../../../config/service.workstation.toml")).unwrap();
+            parse(include_str!("../../../config/service.workstation.toml")).unwrap();
         let resource = config.execution.resources().unwrap();
         assert_eq!(resource.cpu_quota_micros, 3_200_000);
         assert_eq!(resource.memory_bytes, 32 * 1024 * 1024 * 1024);
@@ -628,7 +673,7 @@ mod tests {
         assert_eq!(resource.pids, 2048);
         assert_eq!(resource.swap_bytes, 0);
         for field in ["cpus", "memory_mib", "scratch_mib", "pids"] {
-            let config: Execution = toml::from_str(&format!("{field} = 0")).unwrap();
+            let config: Execution = parse(&format!("{field} = 0")).unwrap();
             assert!(config.resources().is_err(), "{field}");
         }
         let small = Execution {
@@ -761,14 +806,14 @@ impl Execution {
     }
 }
 
-/// Requested cgroup and writable-workspace limits. These are capacities, not eager allocations.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+crate::native_struct! {
+/// Requested cgroup and writable-workspace limits. Capacities, not eager allocations.
 pub struct ExecutionResources {
-    pub cpu_quota_micros: u64,
-    pub cpu_period_micros: u64,
-    pub memory_bytes: u64,
-    pub swap_bytes: u64,
-    pub scratch_bytes: u64,
-    pub pids: u32,
+    cpu_quota_micros: u64 => crate::native_union::Rule::Text,
+    cpu_period_micros: u64 => crate::native_union::Rule::Text,
+    memory_bytes: u64 => crate::native_union::Rule::Text,
+    swap_bytes: u64 => crate::native_union::Rule::Text,
+    scratch_bytes: u64 => crate::native_union::Rule::Text,
+    pids: u32 => crate::native_union::Rule::Text,
+}
 }

@@ -1,5 +1,4 @@
 use crate::evidence::{
-    SymbolKind,
     path::PublicPath,
     relational::{
         ApiObservation, ApiOrigin, ApiPayload, Definition, FactSource, PublicBinding, SubjectRef,
@@ -20,14 +19,7 @@ pub fn definitions(batch: &RecordBatch) -> Result<Vec<Definition>, ArrowError> {
     (0..batch.num_rows())
         .map(|i| {
             let r = columns.row(i);
-            let definition = Definition {
-                definition_id: r.text("definition_id")?.into(),
-                kind: SymbolKind::parse(r.text("kind")?)
-                    .ok_or_else(|| invalid("unknown symbol kind"))?,
-                definition_path: r.text("definition_path")?.into(),
-                defined_in_package: r.text("defined_in_package")?.into(),
-                qualifier: r.owned("qualifier")?,
-            };
+            let definition = <Definition as crate::native_union::NativeStruct>::decode(r)?;
             definition.validate().map_err(invalid)?;
             Ok(definition)
         })
@@ -100,7 +92,11 @@ pub fn observations(batch: &RecordBatch) -> Result<Vec<ApiObservation>, ArrowErr
                     "stub" => ApiOrigin::Stub,
                     _ => return Err(invalid("unknown API origin")),
                 },
-                environment_id: r.text("environment_id")?.into(),
+                environment_id:
+                    <crate::identity::EnvironmentId as crate::native_union::Cell>::decode(
+                        r,
+                        "environment_id",
+                    )?,
                 payload: payload(r.structure("payload")?, r.owned("docs")?)?,
                 source: source(r.structure("source")?)?,
             };

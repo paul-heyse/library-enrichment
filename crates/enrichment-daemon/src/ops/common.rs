@@ -32,8 +32,8 @@ pub struct Opened {
 /// JSON has no snapshot, and the error says so rather than pretending an empty index.
 pub async fn open_context(
     service: &Service,
-    context_id: &str,
-    snapshot_id: Option<&str>,
+    context_id: &ContextId,
+    snapshot_id: Option<&SnapshotId>,
 ) -> Result<Opened, Box<Envelope>> {
     let catalog = service
         .repository
@@ -48,20 +48,13 @@ pub async fn open_context(
 pub async fn open_context_at(
     service: &Service,
     catalog: std::sync::Arc<enrichment_store::control::ControlSnapshot>,
-    context_id: &str,
-    snapshot_id: Option<&str>,
+    context_id: &ContextId,
+    snapshot_id: Option<&SnapshotId>,
 ) -> Result<Opened, Box<Envelope>> {
-    let id = ContextId::try_from(context_id.to_owned()).map_err(|_| {
-        Box::new(envelope::error(
-            ErrorCode::ArtifactUnavailable,
-            "Invalid context identity",
-            "Use the context_id returned by resolve_library.",
-            false,
-        ))
-    })?;
+    let id = context_id;
     let runtime = &service.repository.runtime;
     let (context, environment) = catalog
-        .context(runtime, &id)
+        .context(runtime, id)
         .await
         .map_err(|e| Box::new(operation_error(&e, "context_selection")))?
         .ok_or_else(|| {
@@ -85,16 +78,9 @@ pub async fn open_context_at(
             ))
         })?;
     let snapshot_id = match snapshot_id {
-        Some(value) => SnapshotId::try_from(value.to_owned()).map_err(|_| {
-            Box::new(envelope::error(
-                ErrorCode::ArtifactUnavailable,
-                "Invalid snapshot identity",
-                "Use a snapshot_id returned by this service.",
-                false,
-            ))
-        })?,
+        Some(value) => value.clone(),
         None => catalog
-            .current(runtime, &id)
+            .current(runtime, id)
             .await
             .map_err(|e| Box::new(operation_error(&e, "context_selection")))?
             .ok_or_else(|| {
@@ -109,7 +95,7 @@ pub async fn open_context_at(
     let reader = SnapshotReader::open(&service.repository, catalog, &snapshot_id)
         .await
         .map_err(|e| Box::new(query_error(&e)))?;
-    if reader.manifest().context_id != id {
+    if &reader.manifest().context_id != id {
         return Err(Box::new(envelope::error(
             ErrorCode::ArtifactUnavailable,
             "Snapshot belongs to a different context",
@@ -256,10 +242,24 @@ pub fn payload<T: Clone + Into<enrichment_core::wire::data::ToolData>>(
 
 /// Enforce the complete serialized envelope budget. Oversized answers remain available as
 /// immutable JSON artifacts; only the per-call request ID is excluded from reusable content.
-pub async fn enforce_budget(
+pub fn enforce_budget(
     service: &Service,
     result: Envelope,
     requested: Option<usize>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Envelope> + Send + '_>> {
+    Box::pin(enforce_delivery_budget(
+        service,
+        result,
+        requested,
+        Default::default(),
+    ))
+}
+
+pub async fn enforce_delivery_budget(
+    service: &Service,
+    result: Envelope,
+    requested: Option<usize>,
+    profile: enrichment_core::mcp_delivery::DeliveryProfile,
 ) -> Envelope {
     let result = match enrichment_store::runtime::charge_result(json_size(&result)) {
         Ok(()) => result,
@@ -272,6 +272,7 @@ pub async fn enforce_budget(
         result,
         byte_budget(service, requested),
         requested,
+        profile,
     )
     .await
     .unwrap_or_else(|error| {

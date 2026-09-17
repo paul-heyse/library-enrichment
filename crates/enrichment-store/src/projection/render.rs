@@ -50,7 +50,7 @@ pub(crate) fn api_observations(
                     "stub" => ApiOrigin::Stub,
                     _ => return Err(invalid("unknown API origin")),
                 },
-                environment_id: r.text("environment_id")?.into(),
+                environment_id: <enrichment_core::identity::EnvironmentId as enrichment_core::native_union::Cell>::decode(r, "environment_id")?,
                 payload: decode::payload(
                     r.structure("payload")?,
                     if docs_included {

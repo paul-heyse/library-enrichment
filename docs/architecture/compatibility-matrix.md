@@ -1547,3 +1547,37 @@ The independent [source verification](../design_review/reviews/evidence/combined
 records precise source locations, quotes and primary URLs: listing uses `try_collect().await?`;
 Delta factory uses `table.table_provider()` without an owned opener. Those interfaces were
 verified; complete composed-route behavior remains subject to the named tests, not inferred.
+
+## Plan 17 owned kernel execution and telemetry — verified 2026-09-16
+
+The DataFusion and Delta skills, exact cached sources, an independent upstream-verifier, and
+focused executed probes establish this boundary. Pins remain DataFusion 55.1.0, Arrow 59.3.0,
+delta-rs 58f07cd6 and kernel 8ba063f8. [ADR-0051](../adr/0051-owned-kernel-io-handlers.md)
+records the narrow handler/context patches; `vendor/delta-rs/PROVENANCE.json` identifies their bytes.
+
+| Capability | Exact source / evidence | Scope and consequence |
+|---|---|---|
+| Kernel handlers accept an application executor | [TaskExecutor and DefaultEngine, kernel 8ba063f8](https://github.com/buoyant-data/delta-kernel-rs/blob/8ba063f8f84fec222000f66d40d70911d7c79675/default-engine/src/executor.rs) | `block_on`, `spawn`, `spawn_blocking`, `enter`; native JSON/Parquet/storage remain upstream implementations. Separate owned compute/I/O lanes avoid a synchronous callback awaiting filesystem work queued behind itself. |
+| Provider scans construct their own DataFusionEngine | [Delta engine, 58f07cd6](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/delta_datafusion/engine/mod.rs) | Overriding LogStore alone is insufficient. The vendored KernelIoEngine SessionConfig extension supplies native handlers to this constructor too. It binds the admitted local root backend; arbitrary multi-store routing is not qualified. |
+| Local latest-version discovery uses the receiver's engine | [Delta LogStore, 58f07cd6](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/logstore/mod.rs#L789) | The wrapper calls the native helper with itself as receiver. Delegating to its inner local store recreated the default engine and reproduced blocking-pool exhaustion. Other backends require separate qualification. |
+| Kernel metrics have a typed callback boundary | [Kernel metrics, 8ba063f8](https://github.com/buoyant-data/delta-kernel-rs/tree/8ba063f8f84fec222000f66d40d70911d7c79675/kernel/src/metrics) | MetricsReporter/ReportGeneratorLayer now populate all twenty MetricEvent variants in generated native records. Binary metric IDs, exact durations and counters are retained. Text is bounded with explicit truncation. No Display parsing. |
+| Task tracking waits for future destruction | [tokio-util 0.7.19 TaskTracker](https://docs.rs/tokio-util/0.7.19/src/tokio_util/task/task_tracker.rs.html#489-555) | Existing locked release promoted to a direct dependency with `rt`; no new crate version. Exact quote: “when it is dropped, not when it returns”. Tokens cover callbacks independently of dropped join handles. |
+| Closing the tracker permits descendants | [TaskTracker close/wait](https://docs.rs/tokio-util/0.7.19/src/tokio_util/task/task_tracker.rs.html#299-338) | Exact quote: “It does not prevent you from spawning new tasks.” Stop/join transport roots before drain; tracked parents bridge child creation. Only explicit startup/export shutdown supervisors bypass counting to avoid waiting for themselves. |
+| Closing channel admission preserves accepted messages | [Tokio 1.53.1 bounded Receiver](https://docs.rs/tokio/1.53.1/src/tokio/sync/mpsc/bounded.rs.html#437-480) | Verified 2026-09-16 against the exact registry source. `close()` refuses new admission; `recv()` reaches None only after queued messages and outstanding permits are consumed/released. Diagnostic shutdown drains to None, persists accepted events, then joins its actor. This does not recover observations previously rejected at capacity. |
+| Native append returns the committed snapshot | [Delta write, 58f07cd6](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/operations/write/mod.rs#L624), [transaction conflict handling](https://github.com/delta-io/delta-rs/blob/58f07cd62bfbce3649a7e1c87c696288068ae184/crates/core/src/kernel/transaction/mod.rs#L869) | Exact quote: `commit.snapshot`; `DeltaTable::new_with_state`. With max_retries(0), a newer head or atomic version collision fails; the actor discards cached state and reopens through contract admission. Non-conflict errors stop persistence. This does not authorize external table replacement or log rewriting. |
+
+Recorded focused receipts in `.dev-state/plan17/execution/`:
+
+- `kernel-session-engine-oracle.log`: two passed, 0.70 s; real checkpoint-only reopen/scan and
+  DataFusionEngine storage progress with one compute worker/blocking thread.
+- `kernel-session-dv-oracle.log`: one passed, 1.18 s; current/historical external-DV readback and
+  maintenance. Both receipts precede structured telemetry and physical-drain changes.
+- `kernel-correlation-final.log`: two passed, 2.61 s; actual snapshot/scan correlation,
+  non-recursive diagnostic reads, and an unowned span closed inside another operation.
+- `native-history-two-writer-reload.log`: one passed, 3.76 s; two real runtime writers alternate
+  commits against one Delta history, preserving exact per-runtime counts after stale-state reload.
+- `owned-resource-history-final.log`: three passed, 3.31 s; current actor contract reuse,
+  conflicting writers, lost close acknowledgement and deterministic accepted-message drain.
+
+Full final-source shutdown, workload, resource, crash and installed-product qualification remain
+Plan 17 requirements. Callback tracking does not make a stuck blocking operation cancellable.

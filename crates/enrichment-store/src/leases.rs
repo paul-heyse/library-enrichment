@@ -106,86 +106,368 @@ enum Retained {
     Evidence(Arc<File>),
     Staging(Arc<tempfile::TempDir>),
     Captured(Arc<tempfile::TempDir>, Arc<File>),
+    Durable(Arc<crate::retention::LeaseGuard>),
+    Memory(Arc<datafusion::execution::memory_pool::MemoryReservation>),
+    Combined(Arc<Retained>, Arc<Retained>),
+}
+
+/// Protection captured before opening a version. Read-only exports currently use
+/// the shared physical root guard; writable service reads use exact durable facts.
+#[derive(Clone, Debug)]
+pub enum ReadProtection {
+    Durable(Arc<crate::retention::LeaseGuard>),
+    Root(Arc<File>),
+}
+impl ReadProtection {
+    pub(crate) async fn require_tables(
+        &self,
+        namespace: &Path,
+        bindings: &[enrichment_core::evidence::snapshot::DeltaBinding],
+    ) -> Result<()> {
+        match self {
+            Self::Durable(guard) => guard.require_tables(namespace, bindings).await,
+            Self::Root(guard) => {
+                // Read-only roots cannot append durable leases. Verify the pinned inode
+                // belongs to this namespace before opening any dependent provider.
+                let root = namespace
+                    .parent()
+                    .ok_or_else(|| io::Error::other("missing read root"))?;
+                let actual = open(root)?.metadata()?;
+                let held = guard.metadata()?;
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::MetadataExt;
+                    if (actual.dev(), actual.ino()) != (held.dev(), held.ino()) {
+                        return Err(DataFusionError::Plan(
+                            "read protection namespace mismatch".into(),
+                        ));
+                    }
+                }
+                #[cfg(not(unix))]
+                {
+                    let _ = (actual, held);
+                    return Err(DataFusionError::NotImplemented(
+                        "read-only root identity requires inode qualification".into(),
+                    ));
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub(crate) fn provider(
+        self,
+        input: Arc<dyn TableProvider>,
+        session: &datafusion::prelude::SessionContext,
+    ) -> Result<Arc<dyn TableProvider>> {
+        let lease = match self {
+            Self::Durable(guard) => Retained::Durable(guard),
+            Self::Root(guard) => Retained::Evidence(guard),
+        };
+        if input.get_logical_plan().is_some() {
+            retained_view(&input, session, lease)
+        } else {
+            Ok(Arc::new(LeasedProvider::retaining(input, lease)))
+        }
+    }
 }
 impl Retained {
+    fn protects_delta(&self) -> bool {
+        match self {
+            Self::Evidence(_) | Self::Captured(..) | Self::Durable(_) => true,
+            Self::Combined(a, b) => a.protects_delta() || b.protects_delta(),
+            Self::Staging(_) | Self::Memory(_) => false,
+        }
+    }
+    fn protects_staging(&self) -> bool {
+        match self {
+            Self::Staging(_) | Self::Captured(..) => true,
+            Self::Combined(a, b) => a.protects_staging() || b.protects_staging(),
+            Self::Evidence(_) | Self::Durable(_) | Self::Memory(_) => false,
+        }
+    }
     fn same(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Evidence(a), Self::Evidence(b)) => Arc::ptr_eq(a, b),
             (Self::Staging(a), Self::Staging(b)) => Arc::ptr_eq(a, b),
             (Self::Captured(a, x), Self::Captured(b, y)) => Arc::ptr_eq(a, b) && Arc::ptr_eq(x, y),
+            (Self::Durable(a), Self::Durable(b)) => Arc::ptr_eq(a, b),
+            (Self::Memory(a), Self::Memory(b)) => Arc::ptr_eq(a, b),
+            (Self::Combined(a, x), Self::Combined(b, y)) => Arc::ptr_eq(a, b) && Arc::ptr_eq(x, y),
             _ => false,
         }
     }
 }
 
-/// Keep ownership outside native operators that release their inputs after completion.
-/// This delegates every planning decision; it adds only retention and the same native
-/// partition coalescing used by execute_stream. Each invocation still creates a fresh plan.
-#[derive(Debug)]
-pub(crate) struct RetentionPlanner {
-    pub(crate) inner: Arc<dyn datafusion::execution::context::QueryPlanner + Send + Sync>,
+// The ownership node is installed before logical optimization. QueryPlanner sees an
+// already optimized logical plan, too late to retain a scan removed by exact statistics.
+#[derive(Debug, Clone)]
+pub(crate) struct Retention {
+    input: datafusion::logical_expr::LogicalPlan,
+    leases: Vec<Retained>,
+}
+impl PartialEq for Retention {
+    fn eq(&self, other: &Self) -> bool {
+        self.input == other.input
+            && self.leases.len() == other.leases.len()
+            && self
+                .leases
+                .iter()
+                .zip(&other.leases)
+                .all(|(a, b)| a.same(b))
+    }
+}
+impl Eq for Retention {}
+impl std::hash::Hash for Retention {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.input.hash(state);
+        fn lease_hash<H: std::hash::Hasher>(lease: &Retained, state: &mut H) {
+            std::mem::discriminant(lease).hash(state);
+            match lease {
+                Retained::Evidence(a) => Arc::as_ptr(a).hash(state),
+                Retained::Staging(a) => Arc::as_ptr(a).hash(state),
+                Retained::Captured(a, b) => {
+                    Arc::as_ptr(a).hash(state);
+                    Arc::as_ptr(b).hash(state);
+                }
+                Retained::Durable(a) => Arc::as_ptr(a).hash(state),
+                Retained::Memory(a) => Arc::as_ptr(a).hash(state),
+                Retained::Combined(a, b) => {
+                    Arc::as_ptr(a).hash(state);
+                    Arc::as_ptr(b).hash(state);
+                }
+            }
+        }
+        for lease in &self.leases {
+            lease_hash(lease, state);
+        }
+    }
+}
+impl PartialOrd for Retention {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        if self.leases.len() != other.leases.len()
+            || !self
+                .leases
+                .iter()
+                .zip(&other.leases)
+                .all(|(a, b)| a.same(b))
+        {
+            None
+        } else {
+            self.input.partial_cmp(&other.input)
+        }
+    }
+}
+impl datafusion::logical_expr::UserDefinedLogicalNodeCore for Retention {
+    fn name(&self) -> &str {
+        "NativeRetention"
+    }
+    fn inputs(&self) -> Vec<&datafusion::logical_expr::LogicalPlan> {
+        vec![&self.input]
+    }
+    fn schema(&self) -> &datafusion::common::DFSchemaRef {
+        self.input.schema()
+    }
+    fn expressions(&self) -> Vec<Expr> {
+        vec![]
+    }
+    fn fmt_for_explain(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "NativeRetention: {} captured resources",
+            self.leases.len()
+        )
+    }
+    fn with_exprs_and_inputs(
+        &self,
+        expressions: Vec<Expr>,
+        mut inputs: Vec<datafusion::logical_expr::LogicalPlan>,
+    ) -> Result<Self> {
+        if !expressions.is_empty() || inputs.len() != 1 {
+            return datafusion::common::internal_err!("retention node arity");
+        }
+        Ok(Self {
+            input: inputs.remove(0),
+            leases: self.leases.clone(),
+        })
+    }
+    fn supports_limit_pushdown(&self) -> bool {
+        true
+    }
 }
 
-#[async_trait]
-impl datafusion::execution::context::QueryPlanner for RetentionPlanner {
-    async fn create_physical_plan(
+#[derive(Debug)]
+pub(crate) struct RetentionAnalyzer;
+impl datafusion::optimizer::analyzer::AnalyzerRule for RetentionAnalyzer {
+    fn name(&self) -> &str {
+        "capture_native_retention"
+    }
+    fn analyze(
         &self,
-        logical: &datafusion::logical_expr::LogicalPlan,
-        state: &dyn Session,
-    ) -> Result<Arc<dyn ExecutionPlan>> {
-        use datafusion::{
-            common::tree_node::TreeNode,
-            physical_plan::{ExecutionPlanProperties, coalesce_partitions::CoalescePartitionsExec},
-        };
-        // Exact statistics may remove a physical scan. Capture its ownership from the
-        // resolved native logical leaves before physical optimization can eliminate it.
-        let mut leases: Vec<Retained> = Vec::new();
-        logical.apply_with_subqueries(|node| {
-            if let datafusion::logical_expr::LogicalPlan::TableScan(scan) = node {
-                let provider = datafusion::datasource::source_as_provider(&scan.source)?;
-                if let Some(owned) = provider.downcast_ref::<LeasedProvider>()
-                    && !leases.iter().any(|lease| lease.same(&owned.lease))
-                {
+        plan: datafusion::logical_expr::LogicalPlan,
+        _: &ConfigOptions,
+    ) -> Result<datafusion::logical_expr::LogicalPlan> {
+        use datafusion::logical_expr::{Extension, LogicalPlan};
+        fn collect(plan: &LogicalPlan, leases: &mut Vec<Retained>, depth: usize) -> Result<()> {
+            if depth > 64 {
+                return datafusion::common::plan_err!("retention view nesting bound");
+            }
+            plan.apply_with_subqueries(|node| {
+                if let LogicalPlan::TableScan(scan) = node {
+                    let provider = datafusion::datasource::source_as_provider(&scan.source)?;
+                    capture(&provider, leases, depth)?;
+                }
+                Ok(TreeNodeRecursion::Continue)
+            })?;
+            Ok(())
+        }
+        fn capture(
+            provider: &Arc<dyn TableProvider>,
+            leases: &mut Vec<Retained>,
+            depth: usize,
+        ) -> Result<()> {
+            if depth > 64 {
+                return datafusion::common::plan_err!("retention provider nesting bound");
+            }
+            if let Some(owned) = provider.downcast_ref::<LeasedProvider>() {
+                if !leases.iter().any(|lease| lease.same(&owned.lease)) {
                     if leases.len() == 1024 {
                         return Err(DataFusionError::ResourcesExhausted(
-                            "query retention ownership exceeds 1024 leases".into(),
+                            "query retention exceeds 1024 resources".into(),
                         ));
                     }
                     leases.push(owned.lease.clone());
                 }
+                capture(&owned.input, leases, depth + 1)?;
+            } else if let Some(input) = provider.get_logical_plan() {
+                collect(&input, leases, depth + 1)?;
             }
-            Ok(TreeNodeRecursion::Continue)
-        })?;
-        let mut plan = self.inner.create_physical_plan(logical, state).await?;
-        plan.apply(|node| {
-            if let Some(owned) = node.downcast_ref::<LeasedExec>()
-                && !leases.iter().any(|lease| lease.same(&owned.lease))
-            {
-                if leases.len() == 1024 {
-                    return Err(DataFusionError::ResourcesExhausted(
-                        "query retention ownership exceeds 1024 leases".into(),
-                    ));
-                }
-                leases.push(owned.lease.clone());
-            }
-            Ok(TreeNodeRecursion::Continue)
-        })?;
-        if !leases.is_empty() && plan.output_partitioning().partition_count() > 1 {
-            plan = Arc::new(CoalescePartitionsExec::new(plan));
+            Ok(())
         }
-        for lease in leases {
-            plan = Arc::new(LeasedExec { input: plan, lease });
+        if let LogicalPlan::Extension(extension) = &plan
+            && extension.node.as_any().is::<Retention>()
+        {
+            return Ok(plan);
         }
-        Ok(plan)
+        let mut leases = Vec::new();
+        collect(&plan, &mut leases, 0)?;
+        if leases.is_empty() {
+            Ok(plan)
+        } else {
+            Ok(LogicalPlan::Extension(Extension {
+                node: Arc::new(Retention {
+                    input: plan,
+                    leases,
+                }),
+            }))
+        }
     }
 }
-impl LeasedProvider {
-    pub(crate) fn new(input: Arc<dyn TableProvider>, lease: Arc<File>) -> Self {
-        Self {
-            input,
-            lease: Retained::Evidence(lease),
+
+pub(crate) struct RetentionExtensionPlanner;
+#[async_trait]
+impl datafusion::physical_planner::ExtensionPlanner for RetentionExtensionPlanner {
+    async fn plan_extension(
+        &self,
+        _: &dyn datafusion::physical_planner::PhysicalPlanner,
+        node: &dyn datafusion::logical_expr::UserDefinedLogicalNode,
+        _: &[&datafusion::logical_expr::LogicalPlan],
+        inputs: &[Arc<dyn ExecutionPlan>],
+        _: &dyn Session,
+        _: &datafusion::logical_expr::physical_planning_context::PhysicalPlanningContext,
+    ) -> Result<Option<Arc<dyn ExecutionPlan>>> {
+        use datafusion::physical_plan::{
+            ExecutionPlanProperties, coalesce_partitions::CoalescePartitionsExec,
+        };
+        let Some(retention) = node.as_any().downcast_ref::<Retention>() else {
+            return Ok(None);
+        };
+        if inputs.len() != 1 {
+            return datafusion::common::internal_err!("retention physical arity");
         }
+        let mut plan = Arc::clone(&inputs[0]);
+        if plan.output_partitioning().partition_count() > 1 {
+            plan = Arc::new(CoalescePartitionsExec::new(plan));
+        }
+        for lease in &retention.leases {
+            plan = Arc::new(LeasedExec {
+                input: plan,
+                lease: lease.clone(),
+            });
+        }
+        Ok(Some(plan))
     }
+}
+
+impl LeasedProvider {
+    /// Inspect the actual source through ownership wrappers. A wrapper alone never
+    /// proves immutability (it could enclose a mutable table or a volatile view).
+    pub(crate) fn materialization_source(&self) -> Result<Arc<dyn TableProvider>> {
+        let mut input = self.input.clone();
+        loop {
+            if let Some(nested) = input.downcast_ref::<Self>() {
+                input = nested.input.clone();
+            } else if let Some(admitted) =
+                input.downcast_ref::<crate::admitted_provider::AdmittedProvider>()
+            {
+                if admitted.is_captured_batch() {
+                    return Ok(input);
+                }
+                input = admitted.input().clone();
+            } else {
+                break;
+            }
+        }
+        if input.get_logical_plan().is_some() {
+            return Ok(input);
+        }
+        if let Some(scan) = input.downcast_ref::<deltalake::delta_datafusion::DeltaScanNext>() {
+            if self.lease.protects_delta() {
+                scan.validate_immutable_codec()?;
+                return Ok(input);
+            }
+        } else if input.is::<datafusion::datasource::listing::ListingTable>()
+            && self.lease.protects_staging()
+        {
+            return Ok(input);
+        }
+        Err(DataFusionError::Plan(
+            "materialization source has no immutable provider witness".into(),
+        ))
+    }
+    pub(crate) fn new(input: Arc<dyn TableProvider>, lease: Arc<File>) -> Self {
+        Self::retaining(input, Retained::Evidence(lease))
+    }
+    fn retaining(input: Arc<dyn TableProvider>, lease: Retained) -> Self {
+        // A second wrapper must preserve the first ownership even if exact statistics
+        // eliminate the scan. The planner captures the outer lease before optimization.
+        let mut source = input.as_ref();
+        while let Some(admitted) =
+            source.downcast_ref::<crate::admitted_provider::AdmittedProvider>()
+        {
+            source = admitted.input().as_ref();
+        }
+        let lease = match source.downcast_ref::<Self>() {
+            Some(existing) => Retained::Combined(Arc::new(existing.lease.clone()), Arc::new(lease)),
+            None => lease,
+        };
+        Self { input, lease }
+    }
+}
+
+pub(crate) fn accounted_provider(
+    input: Arc<dyn TableProvider>,
+    memory: Arc<datafusion::execution::memory_pool::MemoryReservation>,
+) -> Arc<dyn TableProvider> {
+    Arc::new(LeasedProvider::retaining(input, Retained::Memory(memory)))
+}
+
+pub(crate) fn protected_provider(
+    input: Arc<dyn TableProvider>,
+    guard: Arc<crate::retention::LeaseGuard>,
+    session: &datafusion::prelude::SessionContext,
+) -> Result<Arc<dyn TableProvider>> {
+    ReadProtection::Durable(guard).provider(input, session)
 }
 
 /// Attach request ownership to exact scan leaves, then keep native view inlining available.
@@ -245,10 +527,8 @@ fn retained_view(
                     "cached domain view has an unexpanded nested view".into(),
                 ));
             }
-            scan.source = provider_as_source(Arc::new(LeasedProvider {
-                input,
-                lease: lease.clone(),
-            }));
+            scan.source =
+                provider_as_source(Arc::new(LeasedProvider::retaining(input, lease.clone())));
             Ok(Transformed::yes(LogicalPlan::TableScan(scan)))
         })?
         .data;

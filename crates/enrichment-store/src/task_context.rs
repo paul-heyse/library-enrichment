@@ -5,6 +5,34 @@ use datafusion::common::{
 };
 use futures::future::BoxFuture;
 use std::{any::Any, sync::OnceLock};
+use tokio_util::task::TaskTracker;
+use tracing::{Instrument, instrument::WithSubscriber};
+
+tokio::task_local! { static TASKS: Option<TaskTracker>; }
+
+/// Runtime ownership is distinct from operation/effect authority. Root drivers establish
+/// this scope; DataFusion children keep a token through physical exit, including callbacks
+/// that cannot be cancelled after spawn_blocking has started.
+#[derive(Clone)]
+pub(crate) struct PhysicalContext(Option<TaskTracker>);
+impl PhysicalContext {
+    pub(crate) fn owned(tasks: TaskTracker) -> Self {
+        Self(Some(tasks))
+    }
+    pub(crate) fn detached() -> Self {
+        Self(None)
+    }
+    pub(crate) async fn scope<T>(self, work: impl Future<Output = T>) -> T {
+        TASKS.scope(self.0, work).await
+    }
+    pub(crate) fn run<T>(self, work: impl FnOnce() -> T) -> T {
+        TASKS.sync_scope(self.0, work)
+    }
+}
+
+fn physical_context() -> PhysicalContext {
+    PhysicalContext(TASKS.try_with(Clone::clone).ok().flatten())
+}
 
 struct NativeContext;
 impl JoinSetTracer for NativeContext {
@@ -13,8 +41,18 @@ impl JoinSetTracer for NativeContext {
         work: BoxFuture<'static, Box<dyn Any + Send>>,
     ) -> BoxFuture<'static, Box<dyn Any + Send>> {
         let operation = crate::runtime::capture_operation();
+        let admission = crate::runtime::capture_query_admission();
         let effects = crate::native_effect::capture();
-        Box::pin(operation.scope(effects.scope(work)))
+        let physical = physical_context();
+        let tasks = physical.0.clone();
+        let work = physical
+            .scope(admission.scope(operation.scope(effects.scope(work))))
+            .instrument(tracing::Span::current())
+            .with_current_subscriber();
+        match tasks {
+            Some(tasks) => Box::pin(tasks.track_future(work)),
+            None => Box::pin(work),
+        }
     }
 
     fn trace_block(
@@ -22,8 +60,19 @@ impl JoinSetTracer for NativeContext {
         work: Box<dyn FnOnce() -> Box<dyn Any + Send> + Send>,
     ) -> Box<dyn FnOnce() -> Box<dyn Any + Send> + Send> {
         let operation = crate::runtime::capture_operation();
+        let admission = crate::runtime::capture_query_admission();
         let effects = crate::native_effect::capture();
-        Box::new(move || operation.run(|| effects.run(work)))
+        let dispatch = tracing::dispatcher::get_default(Clone::clone);
+        let span = tracing::Span::current();
+        let physical = physical_context();
+        let token = physical.0.as_ref().map(TaskTracker::token);
+        Box::new(move || {
+            let _token = token;
+            tracing::dispatcher::with_default(&dispatch, || {
+                let _span = span.enter();
+                physical.run(|| admission.run(|| operation.run(|| effects.run(work))))
+            })
+        })
     }
 }
 

@@ -32,9 +32,9 @@ def request(root, files):
         {
             "schema_version": CONTRACT["protocol"],
             "root": str(root),
-            "max_observations": 10000,
-            "max_memory_bytes": 1024 * 1024 * 1024,
-            "max_cpu_seconds": 30,
+            "max_observations": "10000",
+            "max_memory_bytes": str(1024 * 1024 * 1024),
+            "max_cpu_seconds": "30",
             "files": [
                 {"file": file, "module": module, "origin": origin} for file, module, origin in files
             ],

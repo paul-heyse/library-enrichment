@@ -60,31 +60,32 @@ pub fn name_variants(name: &str) -> Vec<String> {
     }
 }
 
+enrichment_core::native_struct! { @source
 /// One dependency as the index records it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IndexDependency {
     /// Dependency name (the renamed name when `package` is set).
-    pub name: String,
+    name: String => enrichment_core::native_union::Rule::Text,
     /// SemVer requirement.
-    pub req: String,
+    req: String => enrichment_core::native_union::Rule::Text,
     /// Features enabled on the dependency.
     #[serde(default)]
-    pub features: Vec<String>,
+    features: Vec<String> => enrichment_core::native_union::Rule::Sequence,
     /// Whether the dependency is optional.
     #[serde(default)]
-    pub optional: bool,
+    optional: bool => enrichment_core::native_union::Rule::Text,
     /// Whether default features are enabled.
     #[serde(default = "default_true")]
-    pub default_features: bool,
+    default_features: bool => enrichment_core::native_union::Rule::Text,
     /// Target platform, when target-specific.
     #[serde(default)]
-    pub target: Option<String>,
+    target: Option<String> => enrichment_core::native_union::Rule::Text,
     /// `normal`, `dev` or `build`.
     #[serde(default)]
-    pub kind: Option<String>,
+    kind: Option<String> => enrichment_core::native_union::Rule::Text,
     /// The original package name when renamed.
     #[serde(default)]
-    pub package: Option<String>,
+    package: Option<String> => enrichment_core::native_union::Rule::Text,
+}
 }
 
 fn default_true() -> bool {
@@ -95,39 +96,40 @@ fn default_schema_version() -> u32 {
     1
 }
 
+enrichment_core::native_struct! { @source
 /// One published version as the sparse index records it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct IndexEntry {
     /// Package name.
-    pub name: String,
+    name: String => enrichment_core::native_union::Rule::Text,
     /// Exact version.
-    pub vers: String,
+    vers: String => enrichment_core::native_union::Rule::Text,
     /// Direct dependencies.
     #[serde(default)]
-    pub deps: Vec<IndexDependency>,
+    deps: Vec<IndexDependency> => enrichment_core::native_union::Rule::Sequence,
     /// SHA-256 of the `.crate` file, lower-case hex.
-    pub cksum: String,
+    cksum: String => enrichment_core::native_union::Rule::Text,
     /// Feature definitions (schema version 1 syntax).
     #[serde(default)]
-    pub features: BTreeMap<String, Vec<String>>,
+    features: BTreeMap<String, Vec<String>> => enrichment_core::native_union::Rule::Map,
     /// Feature definitions with extended syntax (`dep:`, `?/`), schema version 2.
     #[serde(default)]
-    pub features2: BTreeMap<String, Vec<String>>,
+    features2: BTreeMap<String, Vec<String>> => enrichment_core::native_union::Rule::Map,
     /// Whether the version is yanked.
     #[serde(default)]
-    pub yanked: bool,
+    yanked: bool => enrichment_core::native_union::Rule::Text,
     /// The `links` value, when set.
     #[serde(default)]
-    pub links: Option<String>,
+    links: Option<String> => enrichment_core::native_union::Rule::Text,
     /// Index entry schema version; 1 when absent.
     #[serde(default = "default_schema_version")]
-    pub v: u32,
+    v: u32 => enrichment_core::native_union::Rule::Text,
     /// Minimum supported Rust version, when declared.
     #[serde(default)]
-    pub rust_version: Option<String>,
+    rust_version: Option<String> => enrichment_core::native_union::Rule::Text,
     /// Original publish time, ISO 8601 UTC, when recorded.
     #[serde(default)]
-    pub pubtime: Option<String>,
+    pubtime: Option<String> => enrichment_core::native_union::Rule::Text,
+}
 }
 
 impl IndexEntry {

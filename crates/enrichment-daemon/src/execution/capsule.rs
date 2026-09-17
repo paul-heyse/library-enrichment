@@ -73,18 +73,6 @@ impl Drop for Capsule {
     }
 }
 
-/// What a retained capsule records about itself, so a later session can reuse it without
-/// repeating the preparation that built it.
-#[derive(serde::Serialize, serde::Deserialize)]
-struct RetainedCapsule {
-    version: u32,
-    key: String,
-    generation: String,
-    environment: Environment,
-    lock: String,
-    inventory: super::inventory::Inventory,
-}
-
 /// The content identity of a capsule: same inputs, same directory, same warm session.
 ///
 /// Deliberately not the job ID. Two questions about the same release in the same environment
@@ -92,24 +80,32 @@ struct RetainedCapsule {
 /// them two of each and call it a cache.
 #[must_use]
 pub fn capsule_key(opened: &Opened, image: &str, containment: &str) -> String {
-    canonical::digest_hex(&serde_json::json!({
-        "artifact": opened.release.key.artifact_digest,
-        "release": opened.release.release_id,
-        "environment": opened.environment,
-        "image": image,
-        "context": opened.context,
-        "preparation": "retained-capsule-3",
-        "containment": containment,
-        "profile": "build",
-    }))
+    enrichment_core::native_key::Key::CapsuleIdentity
+        .record(&capsule_inputs(opened, image, containment))
+        .expect("declared native capsule identity")
+}
+
+fn capsule_inputs(
+    opened: &Opened,
+    image: &str,
+    containment: &str,
+) -> enrichment_core::operation::identities::CapsuleIdentity {
+    enrichment_core::operation::identities::CapsuleIdentity {
+        release: opened.release.clone(),
+        environment: opened.environment.clone(),
+        context: opened.context.clone(),
+        image: image.into(),
+        containment: containment.into(),
+        profile: enrichment_core::policy::ExecutionProfile::Build,
+    }
 }
 
 /// Prepare a capsule that outlives its request, reusing one already built for these inputs.
 ///
 /// # Errors
 ///
-/// Same failures as [`prepare`]. A reused capsule whose record cannot be read is rebuilt rather
-/// than trusted.
+/// Same failures as [`prepare`]. Native catalog errors refuse reuse; a missing or changed
+/// physical inventory requires a new prepared generation.
 pub async fn prepare_retained(
     service: &Service,
     opened: &Opened,
@@ -117,13 +113,16 @@ pub async fn prepare_retained(
     image: &str,
     cancel: Arc<AtomicBool>,
 ) -> Result<Capsule, PreparationError> {
-    let key = capsule_key(
+    let inputs = capsule_inputs(
         opened,
         image,
         &runner
             .containment_identity()
             .map_err(|e| PreparationError::from_runner(&e))?,
     );
+    let key = enrichment_core::native_key::Key::CapsuleIdentity
+        .record(&inputs)
+        .map_err(|e| PreparationError::Policy(e.to_string()))?;
     let capsules = service.paths.cache_root.join("capsules");
     fs::create_dir_all(&capsules).map_err(|e| e.to_string())?;
     runner
@@ -132,82 +131,40 @@ pub async fn prepare_retained(
         .ok_or("retained preparation requires an execution lease")?
         .hold_capsule_lock(&capsules.join(format!("{key}.lock")))
         .map_err(|error| PreparationError::Policy(error.to_string()))?;
-    // One atomic host-only manifest names one complete generation. A replacement is built
-    // elsewhere; neither corruption nor interruption erases the previous generation.
-    let record = capsules.join(format!("{key}.json"));
-    if record.is_file()
-        && let Ok(bytes) = fs::read(&record)
-        && let Ok(retained) = serde_json::from_slice::<RetainedCapsule>(&bytes)
-        && retained.version == 3
-        && retained.key == key
-        && retained
-            .generation
-            .strip_prefix(&format!("{key}-"))
-            .is_some_and(|suffix| {
-                suffix.len() == 32 && suffix.bytes().all(|b| b.is_ascii_hexdigit())
-            })
-        && retained.environment
-            == Environment::resolved(
-                retained.environment.toolchain.clone().unwrap_or_default(),
-                retained.environment.target.clone().unwrap_or_default(),
-                retained.environment.features.clone(),
-                retained.environment.default_features,
-                canonical::sha256_hex(retained.lock.as_bytes()),
-            )
-        && canonical::sha256_hex(retained.lock.as_bytes())
-            == retained.environment.lock_digest.clone().unwrap_or_default()
-        && super::inventory::capture(
-            &capsules.join(&retained.generation),
-            service
-                .config
-                .execution
-                .capsule_budget_mib
-                .saturating_mul(1024 * 1024),
-        )
-        .is_ok_and(|actual| actual == retained.inventory)
+    // The admitted Delta record selects the exact generation. Filesystem capture is
+    // an observation; native inventory equality decides whether that generation is reusable.
+    if let Some(retained) = runner
+        .ownership
+        .retained_capsule(&key)
+        .await
+        .map_err(|e| PreparationError::Policy(e.to_string()))?
     {
-        return Ok(Capsule {
-            root: capsules.join(&retained.generation),
-            environment: retained.environment,
-            lock: retained.lock.into_bytes(),
-            observations: Vec::new(),
-            retain: true,
-            runner: runner.clone(),
-            storage: None,
-        });
+        let root = capsules.join(&retained.generation);
+        if let Ok(actual) =
+            super::inventory::capture(&root, service.config.execution.scratch_bytes())
+            && enrichment_store::physical_ownership::reusable_capsule(
+                &service.repository.runtime,
+                &retained,
+                &actual,
+            )
+            .await
+            .map_err(|e| PreparationError::Policy(e.to_string()))?
+        {
+            return Ok(Capsule {
+                root,
+                environment: retained.environment,
+                lock: retained.lock.into_bytes(),
+                observations: Vec::new(),
+                retain: true,
+                runner: runner.clone(),
+                storage: None,
+            });
+        }
     }
     let generation = format!("{key}-{}", uuid::Uuid::new_v4().simple());
     let mut capsule = prepare(service, opened, runner, image, &generation, cancel).await?;
-    let written = serde_json::to_vec(&RetainedCapsule {
-        version: 3,
-        key,
-        generation,
-        environment: capsule.environment.clone(),
-        lock: String::from_utf8(capsule.lock.clone()).map_err(|e| e.to_string())?,
-        inventory: super::inventory::capture(
-            &capsule.root,
-            service
-                .config
-                .execution
-                .capsule_budget_mib
-                .saturating_mul(1024 * 1024),
-        )
-        .map_err(|e| e.to_string())?,
-    })
-    .map_err(|e| e.to_string())?;
-    let manifest_reservation = super::budget::Reservation::acquire(
-        &runner.ownership,
-        written.len() as u64,
-        service
-            .config
-            .execution
-            .capsule_budget_mib
-            .saturating_mul(1024 * 1024),
-    )
-    .await
-    .map_err(|e| PreparationError::Policy(e.to_string()))?;
-    // Persist the entire generation before the manifest can point at it. Once publication
-    // starts, keep this generation even on a failed fsync; the pointer may already name it.
+    // Persist bytes before the Delta transaction can select them. A lost commit
+    // acknowledgement preserves this generation for native reconciliation.
     let inventory =
         super::inventory::capture(&capsule.root, service.config.execution.scratch_bytes())
             .map_err(|e| e.to_string())?;
@@ -223,12 +180,21 @@ pub async fn prepare_retained(
         .and_then(|f| f.sync_all())
         .map_err(|e| e.to_string())?;
     capsule.retain = true;
-    enrichment_store::atomic::write_atomic(&record, &written).map_err(|e| e.to_string())?;
-    capsule.storage.take();
-    manifest_reservation
-        .close()
+    runner
+        .ownership
+        .publish_capsule(&enrichment_core::operation::ownership::RetainedCapsule {
+            key,
+            inputs,
+            cache: runner.ownership.cache().into(),
+            generation,
+            environment: capsule.environment.clone(),
+            lock: String::from_utf8(capsule.lock.clone()).map_err(|e| e.to_string())?,
+            inventory,
+            sequence: 0,
+        })
         .await
-        .map_err(|error| PreparationError::Policy(error.to_string()))?;
+        .map_err(|e| PreparationError::Policy(e.to_string()))?;
+    capsule.storage.take();
     Ok(capsule)
 }
 struct Staging {
@@ -464,7 +430,8 @@ pub async fn prepare(
             }
             fs::create_dir(root.join("src")).map_err(|e| e.to_string())?;
             let features =
-                serde_json::to_string(&opened.environment.features).map_err(|e| e.to_string())?;
+                serde_json::to_string(&opened.environment.features.as_deref().unwrap_or_default())
+                    .map_err(|e| e.to_string())?;
             let default_features = opened.environment.default_features.unwrap_or(true);
             let manifest = format!(
                 "[package]\nname=\"enrichment-consumer\"\nversion=\"0.0.0\"\nedition=\"2024\"\n[workspace]\n[dependencies]\n{}={{path=\"source/{}\",features={},default-features={}}}\n",
@@ -521,7 +488,7 @@ pub async fn prepare(
     let environment = Environment::resolved(
         toolchain,
         target,
-        opened.environment.features.clone(),
+        opened.environment.features.clone().unwrap_or_default(),
         defaults,
         canonical::sha256_hex(&lock),
     );

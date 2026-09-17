@@ -1,0 +1,238 @@
+{
+  "module": "tracing_core::subscriber",
+  "crate": "tracing-core",
+  "api": "api/tracing_core.subscriber.md",
+  "items": [
+    {
+      "path": "tracing_core::subscriber::Interest",
+      "name": "Interest",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct Interest",
+      "summary": "Indicates a [`Subscriber`]'s interest in a particular callsite.",
+      "doc": "api/tracing_core.subscriber.md#interest",
+      "aliases": [
+        "tracing::subscriber::Interest",
+        "tracing_core::Interest"
+      ],
+      "methods": [
+        {
+          "name": "always",
+          "signature": "fn always() -> Self",
+          "summary": "Returns an `Interest` indicating the subscriber is always interested in being notified about a callsite."
+        },
+        {
+          "name": "is_always",
+          "signature": "fn is_always(&self) -> bool",
+          "summary": "Returns `true` if the subscriber is always interested in being notified about this callsite."
+        },
+        {
+          "name": "is_never",
+          "signature": "fn is_never(&self) -> bool",
+          "summary": "Returns `true` if the subscriber is never interested in being notified about this callsite."
+        },
+        {
+          "name": "is_sometimes",
+          "signature": "fn is_sometimes(&self) -> bool",
+          "summary": "Returns `true` if the subscriber is sometimes interested in being notified about this callsite."
+        },
+        {
+          "name": "never",
+          "signature": "fn never() -> Self",
+          "summary": "Returns an `Interest` indicating that the subscriber is never interested in being notified about a callsite."
+        },
+        {
+          "name": "sometimes",
+          "signature": "fn sometimes() -> Self",
+          "summary": "Returns an `Interest` indicating the subscriber is sometimes interested in being notified about a callsite."
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::subscriber::NoSubscriber",
+      "name": "NoSubscriber",
+      "kind": "struct",
+      "crate": "tracing-core",
+      "signature": "struct NoSubscriber",
+      "summary": "A no-op [`Subscriber`].",
+      "doc": "api/tracing_core.subscriber.md#nosubscriber",
+      "aliases": [
+        "tracing::subscriber::NoSubscriber"
+      ],
+      "implements": [
+        "tracing_core::subscriber::Subscriber"
+      ],
+      "methods": [
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, _metadata: &Metadata<'_>) -> bool",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self, _span: &span::Id)",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "event",
+          "signature": "fn event(&self, _event: &Event<'_>)",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "exit",
+          "signature": "fn exit(&self, _span: &span::Id)",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "new",
+          "signature": "const fn new() -> Self",
+          "summary": "Returns a new `NoSubscriber`."
+        },
+        {
+          "name": "new_span",
+          "signature": "fn new_span(&self, _: &span::Attributes<'_>) -> span::Id",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self, _span: &span::Id, _values: &span::Record<'_>)",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "record_follows_from",
+          "signature": "fn record_follows_from(&self, _span: &span::Id, _follows: &span::Id)",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, _: &'static Metadata<'static>) -> Interest",
+          "via_trait": "tracing_core::subscriber::Subscriber"
+        }
+      ]
+    },
+    {
+      "path": "tracing_core::subscriber::Subscriber",
+      "name": "Subscriber",
+      "kind": "trait",
+      "crate": "tracing-core",
+      "signature": "trait Subscriber: 'static",
+      "summary": "Trait representing the functions required to collect trace data.",
+      "doc": "api/tracing_core.subscriber.md#subscriber",
+      "aliases": [
+        "tracing::Subscriber",
+        "tracing::subscriber::Subscriber",
+        "tracing_core::Subscriber"
+      ],
+      "implementors": [
+        "alloc::boxed::Box",
+        "alloc::sync::Arc",
+        "tracing_core::subscriber::NoSubscriber",
+        "tracing_subscriber::fmt::Subscriber",
+        "tracing_subscriber::layer::layered::Layered",
+        "tracing_subscriber::registry::sharded::Registry"
+      ],
+      "required_methods": [
+        "enabled",
+        "enter",
+        "event",
+        "exit",
+        "new_span",
+        "record",
+        "record_follows_from"
+      ],
+      "provided_methods": [
+        "clone_span",
+        "current_span",
+        "downcast_raw",
+        "drop_span",
+        "event_enabled",
+        "max_level_hint",
+        "on_register_dispatch",
+        "register_callsite",
+        "try_close"
+      ],
+      "methods": [
+        {
+          "name": "clone_span",
+          "signature": "fn clone_span(&self, id: &span::Id) -> span::Id",
+          "summary": "Notifies the subscriber that a [span ID] has been cloned."
+        },
+        {
+          "name": "current_span",
+          "signature": "fn current_span(&self) -> span::Current",
+          "summary": "Returns a type representing this subscriber's view of the current span."
+        },
+        {
+          "name": "downcast_raw",
+          "signature": "unsafe fn downcast_raw(&self, id: TypeId) -> Option<*const ()>",
+          "summary": "If `self` is the same type as the provided `TypeId`, returns an untyped `*const` pointer to that type. Otherwise, returns `None`."
+        },
+        {
+          "name": "drop_span",
+          "signature": "fn drop_span(&self, _id: span::Id)",
+          "summary": "**This method is deprecated.**"
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>) -> bool",
+          "summary": "Returns true if a span or event with the specified [metadata] would be recorded."
+        },
+        {
+          "name": "enter",
+          "signature": "fn enter(&self, span: &span::Id)",
+          "summary": "Records that a span has been entered."
+        },
+        {
+          "name": "event",
+          "signature": "fn event(&self, event: &Event<'_>)",
+          "summary": "Records that an [`Event`] has occurred."
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, event: &Event<'_>) -> bool",
+          "summary": "Determine if an [`Event`] should be recorded."
+        },
+        {
+          "name": "exit",
+          "signature": "fn exit(&self, span: &span::Id)",
+          "summary": "Records that a span has been exited."
+        },
+        {
+          "name": "max_level_hint",
+          "signature": "fn max_level_hint(&self) -> Option<LevelFilter>",
+          "summary": "Returns the highest [verbosity level][level] that this `Subscriber` will enable, or `None`, if the subscriber does not implement level-based filtering or chooses not to implement this method."
+        },
+        {
+          "name": "new_span",
+          "signature": "fn new_span(&self, span: &span::Attributes<'_>) -> span::Id",
+          "summary": "Visit the construction of a new span, returning a new [span ID] for the span being constructed."
+        },
+        {
+          "name": "on_register_dispatch",
+          "signature": "fn on_register_dispatch(&self, subscriber: &Dispatch)",
+          "summary": "Invoked when this subscriber becomes a [`Dispatch`]."
+        },
+        {
+          "name": "record",
+          "signature": "fn record(&self, span: &span::Id, values: &span::Record<'_>)",
+          "summary": "Record a set of values on a span."
+        },
+        {
+          "name": "record_follows_from",
+          "signature": "fn record_follows_from(&self, span: &span::Id, follows: &span::Id)",
+          "summary": "Adds an indication that `span` follows from the span with the id `follows`."
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest",
+          "summary": "Registers a new [callsite] with this subscriber, returning whether or not the subscriber is interested in being notified about the callsite."
+        },
+        {
+          "name": "try_close",
+          "signature": "fn try_close(&self, id: span::Id) -> bool",
+          "summary": "Notifies the subscriber that a [span ID] has been dropped, and returns `true` if there are now 0 IDs that refer to that span."
+        }
+      ]
+    }
+  ]
+}

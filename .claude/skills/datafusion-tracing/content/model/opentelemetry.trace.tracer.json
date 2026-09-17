@@ -1,0 +1,194 @@
+{
+  "module": "opentelemetry::trace::tracer",
+  "crate": "opentelemetry",
+  "api": "api/opentelemetry.trace.tracer.md",
+  "items": [
+    {
+      "path": "opentelemetry::trace::tracer::SamplingDecision",
+      "name": "SamplingDecision",
+      "kind": "enum",
+      "crate": "opentelemetry",
+      "signature": "enum SamplingDecision",
+      "summary": "Decision about whether or not to sample",
+      "doc": "api/opentelemetry.trace.tracer.md#samplingdecision",
+      "aliases": [
+        "opentelemetry::trace::SamplingDecision"
+      ],
+      "variants": [
+        "Drop",
+        "RecordOnly",
+        "RecordAndSample"
+      ],
+      "methods": []
+    },
+    {
+      "path": "opentelemetry::trace::tracer::SamplingResult",
+      "name": "SamplingResult",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct SamplingResult",
+      "summary": "The result of sampling logic for a given span.",
+      "doc": "api/opentelemetry.trace.tracer.md#samplingresult",
+      "aliases": [
+        "opentelemetry::trace::SamplingResult"
+      ],
+      "fields": [
+        "decision",
+        "attributes",
+        "trace_state"
+      ],
+      "methods": []
+    },
+    {
+      "path": "opentelemetry::trace::tracer::SpanBuilder",
+      "name": "SpanBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry",
+      "signature": "struct SpanBuilder",
+      "summary": "`SpanBuilder` allows span attributes to be configured before the span has started.",
+      "doc": "api/opentelemetry.trace.tracer.md#spanbuilder",
+      "aliases": [
+        "opentelemetry::trace::SpanBuilder"
+      ],
+      "fields": [
+        "trace_id",
+        "span_id",
+        "span_kind",
+        "name",
+        "start_time",
+        "end_time",
+        "attributes",
+        "events",
+        "links",
+        "status",
+        "sampling_result"
+      ],
+      "methods": [
+        {
+          "name": "from_name",
+          "signature": "fn from_name<T: Into<Cow<'static, str>>>(name: T) -> Self",
+          "summary": "Create a new span builder from a span name"
+        },
+        {
+          "name": "start",
+          "signature": "fn start<T: Tracer>(self, tracer: &T) -> T::Span",
+          "summary": "Builds a span with the given tracer from this configuration."
+        },
+        {
+          "name": "start_with_context",
+          "signature": "fn start_with_context<T: Tracer>(self, tracer: &T, parent_cx: &Context) -> T::Span",
+          "summary": "Builds a span with the given tracer from this configuration and parent."
+        },
+        {
+          "name": "with_attributes",
+          "signature": "fn with_attributes<I>(self, attributes: I) -> Self where I: IntoIterator<Item = KeyValue>",
+          "summary": "Assign span attributes from an iterable. Providing duplicate keys will result in multiple attributes with the same key, as there is no de-duplication performed."
+        },
+        {
+          "name": "with_end_time",
+          "signature": "fn with_end_time<T: Into<SystemTime>>(self, end_time: T) -> Self",
+          "summary": "Assign span end time"
+        },
+        {
+          "name": "with_events",
+          "signature": "fn with_events(self, events: Vec<Event>) -> Self",
+          "summary": "Assign events"
+        },
+        {
+          "name": "with_kind",
+          "signature": "fn with_kind(self, span_kind: SpanKind) -> Self",
+          "summary": "Assign span kind"
+        },
+        {
+          "name": "with_links",
+          "signature": "fn with_links(self, links: Vec<Link>) -> Self",
+          "summary": "Assign links"
+        },
+        {
+          "name": "with_sampling_result",
+          "signature": "fn with_sampling_result(self, sampling_result: SamplingResult) -> Self",
+          "summary": "Assign sampling result"
+        },
+        {
+          "name": "with_span_id",
+          "signature": "fn with_span_id(self, span_id: SpanId) -> Self",
+          "summary": "Assign span id"
+        },
+        {
+          "name": "with_start_time",
+          "signature": "fn with_start_time<T: Into<SystemTime>>(self, start_time: T) -> Self",
+          "summary": "Assign span start time"
+        },
+        {
+          "name": "with_status",
+          "signature": "fn with_status(self, status: Status) -> Self",
+          "summary": "Assign status code"
+        },
+        {
+          "name": "with_trace_id",
+          "signature": "fn with_trace_id(self, trace_id: TraceId) -> Self",
+          "summary": "Specify trace id to use if no parent context exists"
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry::trace::tracer::Tracer",
+      "name": "Tracer",
+      "kind": "trait",
+      "crate": "opentelemetry",
+      "signature": "trait Tracer",
+      "summary": "The interface for constructing [`Span`]s.",
+      "doc": "api/opentelemetry.trace.tracer.md#tracer",
+      "aliases": [
+        "opentelemetry::trace::Tracer"
+      ],
+      "implementors": [
+        "opentelemetry::global::trace::BoxedTracer",
+        "opentelemetry::trace::noop::NoopTracer",
+        "opentelemetry_sdk::trace::tracer::SdkTracer"
+      ],
+      "required_methods": [
+        "build_with_context"
+      ],
+      "provided_methods": [
+        "build",
+        "in_span",
+        "span_builder",
+        "start",
+        "start_with_context"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(&self, builder: SpanBuilder) -> Self::Span",
+          "summary": "Start a [`Span`] from a [`SpanBuilder`]."
+        },
+        {
+          "name": "build_with_context",
+          "signature": "fn build_with_context(&self, builder: SpanBuilder, parent_cx: &Context) -> Self::Span",
+          "summary": "Start a span from a [`SpanBuilder`] with a parent context."
+        },
+        {
+          "name": "in_span",
+          "signature": "fn in_span<T, F, N>(&self, name: N, f: F) -> T where F: FnOnce(Context) -> T, N: Into<Cow<'static, str>>, Self::Span: Send + Sync + 'static",
+          "summary": "Start a new span and execute the given closure with reference to the context in which the span is active."
+        },
+        {
+          "name": "span_builder",
+          "signature": "fn span_builder<T>(&self, name: T) -> SpanBuilder where T: Into<Cow<'static, str>>",
+          "summary": "Creates a span builder."
+        },
+        {
+          "name": "start",
+          "signature": "fn start<T>(&self, name: T) -> Self::Span where T: Into<Cow<'static, str>>",
+          "summary": "Starts a new [`Span`]."
+        },
+        {
+          "name": "start_with_context",
+          "signature": "fn start_with_context<T>(&self, name: T, parent_cx: &Context) -> Self::Span where T: Into<Cow<'static, str>>",
+          "summary": "Starts a new [`Span`] with a given context."
+        }
+      ]
+    }
+  ]
+}

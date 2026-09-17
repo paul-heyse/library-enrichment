@@ -1,0 +1,19 @@
+id: project-instrumented-exec-referenced
+language: rust
+severity: hint
+message: InstrumentedExec is private by design; this cannot compile against the published crate
+note: |
+  `InstrumentedExec` is `pub` inside a private module. rustdoc records it as public and docs.rs
+  does not render it; there is no path that reaches it, and upstream's README says the wrapper
+  "is intentionally private so downstream code cannot depend on its internals".
+
+  The supported surface is the optimizer rule plus the ordinary `ExecutionPlan` trait, and
+  instrumented plans preserve the usual introspection -- you can examine the wrapped node's
+  type without naming the wrapper.
+metadata:
+  record: unreachable-api
+  capability: exec-instrumentation
+rule:
+  any:
+    - { kind: type_identifier, regex: '^InstrumentedExec$' }
+    - { kind: identifier, regex: '^InstrumentedExec$' }

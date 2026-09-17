@@ -1,0 +1,561 @@
+{
+  "module": "datafusion_tracing::rule_instrumentation",
+  "crate": "datafusion-tracing",
+  "api": "api/datafusion_tracing.rule_instrumentation.md",
+  "items": [
+    {
+      "path": "datafusion_tracing::rule_instrumentation::OPTIMIZER_PASS_TRACKER",
+      "name": "OPTIMIZER_PASS_TRACKER",
+      "kind": "constant",
+      "crate": "datafusion-tracing",
+      "signature": "const OPTIMIZER_PASS_TRACKER: thread::LocalKey<std::cell::RefCell<OptimizerPassTracker>> = _",
+      "summary": "Tracks optimizer pass count and the parent span ID to detect new queries.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#optimizer_pass_tracker",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::PLANNING_CONTEXT",
+      "name": "PLANNING_CONTEXT",
+      "kind": "constant",
+      "crate": "datafusion-tracing",
+      "signature": "const PLANNING_CONTEXT: thread::LocalKey<std::cell::RefCell<Option<PlanningContext>>> = _",
+      "summary": "The current planning context, if any phase is active.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#planning_context",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::PlanningPhase",
+      "name": "PlanningPhase",
+      "kind": "enum",
+      "crate": "datafusion-tracing",
+      "signature": "enum PlanningPhase",
+      "summary": "The phase of query planning currently active.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#planningphase",
+      "visibility": "internal",
+      "variants": [
+        "Analyzer",
+        "Optimizer",
+        "PhysicalOptimizer"
+      ],
+      "methods": []
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::close_phase_span",
+      "name": "close_phase_span",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn close_phase_span<P: FormatPlan>(ctx: PlanningContext, plan_after: &P)",
+      "summary": "Closes a phase span, recording effective rules and plan diff if enabled.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#close_phase_span",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::detect_and_record_modification",
+      "name": "detect_and_record_modification",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn detect_and_record_modification(before_str: &str, after_str: &str, span: &tracing::Span, record_diff: bool, rule_name: &str)",
+      "summary": "Detects if a plan was modified and updates span attributes accordingly.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#detect_and_record_modification",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::drop_planning_context",
+      "name": "drop_planning_context",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn drop_planning_context()",
+      "summary": "Drops the current planning context on a fatal rule error, closing the active phase span and resetting `OPTIMIZER_PASS_TRACKER` for `Optimizer` and `PhysicalOptimizer` phases so the next query starts at pass 0.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#drop_planning_context",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::generate_plan_diff",
+      "name": "generate_plan_diff",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn generate_plan_diff(before: &str, after: &str) -> String",
+      "summary": "Generates a unified diff between two plan strings.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#generate_plan_diff",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::instrument_analyzer_rules",
+      "name": "instrument_analyzer_rules",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn instrument_analyzer_rules(rules: Vec<std::sync::Arc<dyn AnalyzerRule + Send + Sync>>, options: &rule_options::RuleInstrumentationOptions, span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>, phase_span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Vec<std::sync::Arc<dyn AnalyzerRule + Send + Sync>>",
+      "summary": "Instruments analyzer rules with phase sentinel and optional rule-level spans.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrument_analyzer_rules",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::instrument_optimizer_rules",
+      "name": "instrument_optimizer_rules",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn instrument_optimizer_rules(rules: Vec<std::sync::Arc<dyn OptimizerRule + Send + Sync>>, options: &rule_options::RuleInstrumentationOptions, span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>, phase_span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Vec<std::sync::Arc<dyn OptimizerRule + Send + Sync>>",
+      "summary": "Instruments optimizer rules with phase sentinel and optional rule-level spans.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrument_optimizer_rules",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::instrument_physical_optimizer_rules",
+      "name": "instrument_physical_optimizer_rules",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn instrument_physical_optimizer_rules(rules: Vec<std::sync::Arc<dyn PhysicalOptimizerRule + Send + Sync>>, options: &rule_options::RuleInstrumentationOptions, span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>, phase_span_create_fn: &std::sync::Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Vec<std::sync::Arc<dyn PhysicalOptimizerRule + Send + Sync>>",
+      "summary": "Instruments physical optimizer rules with phase sentinel and optional rule-level spans.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrument_physical_optimizer_rules",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::record_modified_rule_in_context",
+      "name": "record_modified_rule_in_context",
+      "kind": "function",
+      "crate": "datafusion-tracing",
+      "signature": "fn record_modified_rule_in_context(rule_name: &str)",
+      "summary": "Records that a rule modified the plan in the current phase.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#record_modified_rule_in_context",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::AnalyzerPhaseSentinel",
+      "name": "AnalyzerPhaseSentinel",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct AnalyzerPhaseSentinel",
+      "summary": "Sentinel analyzer rule that toggles the phase span. First call opens the span, second call closes it.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#analyzerphasesentinel",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::analyzer::AnalyzerRule"
+      ],
+      "methods": [
+        {
+          "name": "analyze",
+          "signature": "fn analyze(&self, plan: LogicalPlan, _config: &ConfigOptions) -> Result<LogicalPlan>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::ErrorCleanupAnalyzerRule",
+      "name": "ErrorCleanupAnalyzerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct ErrorCleanupAnalyzerRule",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::analyzer::AnalyzerRule"
+      ],
+      "methods": [
+        {
+          "name": "analyze",
+          "signature": "fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPlan>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::ErrorCleanupOptimizerRule",
+      "name": "ErrorCleanupOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct ErrorCleanupOptimizerRule",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::optimizer::OptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "apply_order",
+          "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "supports_rewrite",
+          "signature": "fn supports_rewrite(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::ErrorCleanupPhysicalOptimizerRule",
+      "name": "ErrorCleanupPhysicalOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct ErrorCleanupPhysicalOptimizerRule",
+      "summary": "",
+      "doc": null,
+      "visibility": "internal",
+      "implements": [
+        "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "schema_check",
+          "signature": "fn schema_check(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::InstrumentedAnalyzerRule",
+      "name": "InstrumentedAnalyzerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct InstrumentedAnalyzerRule",
+      "summary": "A wrapper for an `AnalyzerRule` that adds tracing instrumentation.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrumentedanalyzerrule",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::analyzer::AnalyzerRule"
+      ],
+      "methods": [
+        {
+          "name": "analyze",
+          "signature": "fn analyze(&self, plan: LogicalPlan, config: &ConfigOptions) -> Result<LogicalPlan>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::analyzer::AnalyzerRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn AnalyzerRule + Send + Sync>, options: RuleInstrumentationOptions, span_create_fn: Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Self",
+          "visibility": "internal",
+          "summary": "Creates a new instrumented analyzer rule."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::InstrumentedOptimizerRule",
+      "name": "InstrumentedOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct InstrumentedOptimizerRule",
+      "summary": "A wrapper for an `OptimizerRule` that adds tracing instrumentation.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrumentedoptimizerrule",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::optimizer::OptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "apply_inner",
+          "signature": "fn apply_inner(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>",
+          "visibility": "internal",
+          "summary": "Applies the inner rule to the plan, handling tree traversal appropriately."
+        },
+        {
+          "name": "apply_order",
+          "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn OptimizerRule + Send + Sync>, options: RuleInstrumentationOptions, span_create_fn: Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Self",
+          "visibility": "internal",
+          "summary": "Creates a new instrumented optimizer rule."
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "supports_rewrite",
+          "signature": "fn supports_rewrite(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::InstrumentedPhysicalOptimizerRule",
+      "name": "InstrumentedPhysicalOptimizerRule",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct InstrumentedPhysicalOptimizerRule",
+      "summary": "A wrapper for a `PhysicalOptimizerRule` that adds tracing instrumentation.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#instrumentedphysicaloptimizerrule",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: Arc<dyn PhysicalOptimizerRule + Send + Sync>, options: RuleInstrumentationOptions, span_create_fn: Arc<dyn Fn(&str) -> tracing::Span + Send + Sync>) -> Self",
+          "visibility": "internal",
+          "summary": "Creates a new instrumented physical optimizer rule."
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "schema_check",
+          "signature": "fn schema_check(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::OptimizerPassTracker",
+      "name": "OptimizerPassTracker",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct OptimizerPassTracker",
+      "summary": "Tracks the optimizer pass count, resetting when a new query starts. A new query is detected by a change in the parent span ID or when the physical optimizer phase completes.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#optimizerpasstracker",
+      "visibility": "internal",
+      "methods": [
+        {
+          "name": "get_and_increment",
+          "signature": "fn get_and_increment(&mut self, current_parent_id: Option<tracing::span::Id>) -> usize",
+          "visibility": "internal",
+          "summary": "Gets the current pass number, resetting if this is a new query (different parent span)."
+        },
+        {
+          "name": "new",
+          "signature": "const fn new() -> Self",
+          "visibility": "internal"
+        },
+        {
+          "name": "reset",
+          "signature": "fn reset(&mut self)",
+          "visibility": "internal",
+          "summary": "Explicitly resets the pass counter. Called when physical optimizer completes to provide a deterministic end-of-query signal."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::OptimizerPhaseSentinel",
+      "name": "OptimizerPhaseSentinel",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct OptimizerPhaseSentinel",
+      "summary": "Sentinel optimizer rule that toggles the phase span. First call opens the span, second call closes it.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#optimizerphasesentinel",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_optimizer::optimizer::OptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "apply_order",
+          "signature": "fn apply_order(&self) -> Option<ApplyOrder>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "rewrite",
+          "signature": "fn rewrite(&self, plan: LogicalPlan, config: &dyn OptimizerConfig) -> Result<Transformed<LogicalPlan>, DataFusionError>",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        },
+        {
+          "name": "supports_rewrite",
+          "signature": "fn supports_rewrite(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_optimizer::optimizer::OptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::PhysicalOptimizerPhaseSentinel",
+      "name": "PhysicalOptimizerPhaseSentinel",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct PhysicalOptimizerPhaseSentinel",
+      "summary": "Sentinel physical optimizer rule that toggles the phase span. First call opens the span, second call closes it.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#physicaloptimizerphasesentinel",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+      ],
+      "methods": [
+        {
+          "name": "name",
+          "signature": "fn name(&self) -> &str",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "optimize",
+          "signature": "fn optimize(&self, plan: Arc<dyn ExecutionPlan>, _config: &ConfigOptions) -> Result<Arc<dyn ExecutionPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        },
+        {
+          "name": "schema_check",
+          "signature": "fn schema_check(&self) -> bool",
+          "visibility": "internal",
+          "via_trait": "datafusion_session::physical_optimizer::PhysicalOptimizerRule"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::PlanningContext",
+      "name": "PlanningContext",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct PlanningContext",
+      "summary": "Context for tracking the active planning phase span.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#planningcontext",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::SingleSpanTreeTraverser",
+      "name": "SingleSpanTreeTraverser",
+      "kind": "struct",
+      "crate": "datafusion-tracing",
+      "signature": "struct SingleSpanTreeTraverser<'a>",
+      "summary": "Applies an optimizer rule across the tree manually, keeping all work under a single span.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#singlespantreetraverser",
+      "visibility": "internal",
+      "implements": [
+        "datafusion_common::tree_node::TreeNodeRewriter"
+      ],
+      "methods": [
+        {
+          "name": "f_down",
+          "signature": "fn f_down(&mut self, node: LogicalPlan) -> Result<Transformed<LogicalPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_common::tree_node::TreeNodeRewriter"
+        },
+        {
+          "name": "f_up",
+          "signature": "fn f_up(&mut self, node: LogicalPlan) -> Result<Transformed<LogicalPlan>>",
+          "visibility": "internal",
+          "via_trait": "datafusion_common::tree_node::TreeNodeRewriter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(apply_order: ApplyOrder, rule: &'a dyn OptimizerRule, config: &'a dyn OptimizerConfig) -> Self",
+          "visibility": "internal"
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::FormatPlan",
+      "name": "FormatPlan",
+      "kind": "trait",
+      "crate": "datafusion-tracing",
+      "signature": "trait FormatPlan",
+      "summary": "Trait for formatting plans as strings for diffing and tracing.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#formatplan",
+      "visibility": "internal",
+      "implementors": [
+        "alloc::sync::Arc",
+        "datafusion_expr::logical_plan::plan::LogicalPlan"
+      ],
+      "required_methods": [
+        "format_for_diff"
+      ],
+      "provided_methods": [],
+      "methods": [
+        {
+          "name": "format_for_diff",
+          "signature": "fn format_for_diff(&self) -> String",
+          "visibility": "internal",
+          "summary": "Formats the plan as a string suitable for diff comparison."
+        }
+      ]
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::PhaseSpanCreateFn",
+      "name": "PhaseSpanCreateFn",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type PhaseSpanCreateFn = dyn Fn(&str) -> tracing::Span + Send + Sync",
+      "summary": "Type alias for a function that creates a phase span given the phase name. Example phase names: \"analyze_logical_plan\", \"optimize_logical_plan\", \"optimize_physical_plan\".",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#phasespancreatefn",
+      "visibility": "internal"
+    },
+    {
+      "path": "datafusion_tracing::rule_instrumentation::RuleSpanCreateFn",
+      "name": "RuleSpanCreateFn",
+      "kind": "type_alias",
+      "crate": "datafusion-tracing",
+      "signature": "type RuleSpanCreateFn = dyn Fn(&str) -> tracing::Span + Send + Sync",
+      "summary": "Function type that creates a span for a rule, given the rule name.",
+      "doc": "api/datafusion_tracing.rule_instrumentation.md#rulespancreatefn",
+      "visibility": "internal"
+    }
+  ]
+}

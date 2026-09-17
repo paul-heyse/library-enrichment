@@ -1,47 +1,8 @@
-//! Canonical JSON and content digests.
-//!
-//! Every content-derived identity in this service (blueprint §3.1, §6.3) is a SHA-256 over a
-//! canonical rendering of its defining fields: object keys sorted recursively, arrays kept in
-//! order, compact separators. Two facts that are equal produce the same bytes regardless of the
-//! map type serde_json was compiled with -- which matters here because DataFusion turns on
-//! `serde_json/preserve_order` for the whole workspace under feature unification, swapping
-//! `serde_json::Map` from a `BTreeMap` to an insertion-ordered `IndexMap`. Sorting explicitly
-//! is what keeps an identity stable across `cargo run -p` and `cargo nextest run --workspace`.
-//!
-//! Wall-clock timestamps and temporary paths are never part of a canonical value (§6.3): they
-//! belong in provenance, so a consumer can tell "the same facts retrieved later" from "changed
-//! evidence".
+//! Byte-content digests and deterministic JSON encoding for external artifacts.
+//! Semantic identities are defined in native_key and native_identity, never in this module.
 
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
-
-/// Serialize an existing JSON value canonically without copying its strings or arrays.
-pub struct BorrowedValue<'a>(pub &'a Value);
-
-impl serde::Serialize for BorrowedValue<'_> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::{SerializeMap, SerializeSeq};
-        match self.0 {
-            Value::Object(values) => {
-                let mut entries: Vec<_> = values.iter().collect();
-                entries.sort_by_key(|(key, _)| *key);
-                let mut map = serializer.serialize_map(Some(entries.len()))?;
-                for (key, value) in entries {
-                    map.serialize_entry(key, &Self(value))?;
-                }
-                map.end()
-            }
-            Value::Array(values) => {
-                let mut array = serializer.serialize_seq(Some(values.len()))?;
-                for value in values {
-                    array.serialize_element(&Self(value))?;
-                }
-                array.end()
-            }
-            scalar => scalar.serialize(serializer),
-        }
-    }
-}
 
 /// Sort every object's keys, recursively. Arrays keep their order.
 #[must_use]
@@ -197,72 +158,6 @@ pub fn serialized_size(value: &impl serde::Serialize, limit: usize) -> std::io::
     Ok(counter.bytes)
 }
 
-/// SHA-256 of a value's canonical rendering.
-#[must_use]
-pub fn digest_hex(value: &Value) -> String {
-    sha256_hex(to_canonical_string(value).as_bytes())
-}
-
-/// Incremental canonical digest of an ordered JSON string array. The caller supplies the
-/// chosen order; this kernel retains neither the strings nor a second encoded document.
-pub struct StringArrayDigest {
-    digest: Sha256,
-    first: bool,
-}
-
-impl Default for StringArrayDigest {
-    fn default() -> Self {
-        let mut digest = Sha256::new();
-        digest.update(b"[");
-        Self {
-            digest,
-            first: true,
-        }
-    }
-}
-
-impl StringArrayDigest {
-    /// Append one string using exactly serde_json's canonical string escaping.
-    /// # Errors
-    /// Serialization errors are propagated; the hash writer itself cannot fail.
-    pub fn push(&mut self, value: &str) -> std::io::Result<()> {
-        struct Writer<'a>(&'a mut Sha256);
-        impl std::io::Write for Writer<'_> {
-            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-                self.0.update(bytes);
-                Ok(bytes.len())
-            }
-            fn flush(&mut self) -> std::io::Result<()> {
-                Ok(())
-            }
-        }
-        if !self.first {
-            self.digest.update(b",");
-        }
-        self.first = false;
-        serde_json::to_writer(Writer(&mut self.digest), value).map_err(Into::into)
-    }
-
-    #[must_use]
-    pub fn finish(mut self) -> String {
-        self.digest.update(b"]");
-        hex(self.digest.finalize().as_slice())
-    }
-}
-
-/// The number of hex digits kept in a short content identity.
-pub const SHORT_ID_HEX_DIGITS: usize = 16;
-
-/// `<prefix>_<first 16 hex digits of the canonical digest>`.
-///
-/// Sixty-four bits is ample for identities that are always paired with the full record they
-/// name, and short enough to read in a tool result.
-#[must_use]
-pub fn short_id(prefix: &str, value: &Value) -> String {
-    let digest = digest_hex(value);
-    format!("{prefix}_{}", &digest[..SHORT_ID_HEX_DIGITS])
-}
-
 fn hex(bytes: &[u8]) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     let mut out = String::with_capacity(bytes.len() * 2);
@@ -290,22 +185,6 @@ mod tests {
     }
 
     #[test]
-    fn array_order_is_significant() {
-        assert_ne!(digest_hex(&json!([1, 2])), digest_hex(&json!([2, 1])));
-    }
-
-    #[test]
-    fn streamed_string_array_preserves_the_canonical_preimage() {
-        for values in [vec![], vec!["", "a\n\"\\", "é", "🦀"]] {
-            let mut digest = StringArrayDigest::default();
-            for value in &values {
-                digest.push(value).expect("hash");
-            }
-            assert_eq!(digest.finish(), digest_hex(&json!(values)));
-        }
-    }
-
-    #[test]
     fn sha256_matches_the_known_vector() {
         // SHA-256("") from FIPS 180-4.
         assert_eq!(
@@ -316,13 +195,5 @@ mod tests {
             sha256_hex(b"abc"),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
-    }
-
-    #[test]
-    fn a_short_id_carries_its_prefix_and_sixteen_hex_digits() {
-        let id = short_id("rel", &json!({"x": 1}));
-        assert!(id.starts_with("rel_"));
-        assert_eq!(id.len(), 4 + SHORT_ID_HEX_DIGITS);
-        assert!(id[4..].chars().all(|c| c.is_ascii_hexdigit()));
     }
 }

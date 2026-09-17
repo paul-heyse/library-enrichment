@@ -1,0 +1,93 @@
+{
+  "module": "opentelemetry_sdk::metrics::meter_provider",
+  "crate": "opentelemetry_sdk",
+  "api": "api/opentelemetry_sdk.metrics.meter_provider.md",
+  "items": [
+    {
+      "path": "opentelemetry_sdk::metrics::meter_provider::MeterProviderBuilder",
+      "name": "MeterProviderBuilder",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct MeterProviderBuilder",
+      "summary": "Configuration options for a [MeterProvider].",
+      "doc": "api/opentelemetry_sdk.metrics.meter_provider.md#meterproviderbuilder",
+      "aliases": [
+        "opentelemetry_sdk::metrics::MeterProviderBuilder"
+      ],
+      "methods": [
+        {
+          "name": "build",
+          "signature": "fn build(self) -> SdkMeterProvider",
+          "summary": "Construct a new [MeterProvider] with this configuration."
+        },
+        {
+          "name": "with_periodic_exporter",
+          "signature": "fn with_periodic_exporter<T>(self, exporter: T) -> Self where T: PushMetricExporter",
+          "summary": "Adds a [`PushMetricExporter`] to the [`MeterProvider`] and configures it to export metrics at **fixed** intervals (60 seconds) using a [`PeriodicReader`]."
+        },
+        {
+          "name": "with_reader",
+          "signature": "fn with_reader<T: MetricReader>(self, reader: T) -> Self",
+          "summary": "Associates a [MetricReader] with a [MeterProvider]. [`MeterProviderBuilder::with_periodic_exporter()] can be used to add a PeriodicReader which is the most common use case."
+        },
+        {
+          "name": "with_resource",
+          "signature": "fn with_resource(self, resource: Resource) -> Self",
+          "summary": "Associates a [Resource] with a [MeterProvider]."
+        },
+        {
+          "name": "with_view",
+          "signature": "fn with_view<T>(self, view: T) -> Self where T: Fn(&Instrument) -> Option<Stream> + Send + Sync + 'static",
+          "summary": "Adds a view to the [MeterProvider]."
+        }
+      ]
+    },
+    {
+      "path": "opentelemetry_sdk::metrics::meter_provider::SdkMeterProvider",
+      "name": "SdkMeterProvider",
+      "kind": "struct",
+      "crate": "opentelemetry_sdk",
+      "signature": "struct SdkMeterProvider",
+      "summary": "Handles the creation and coordination of [Meter]s.",
+      "doc": "api/opentelemetry_sdk.metrics.meter_provider.md#sdkmeterprovider",
+      "aliases": [
+        "opentelemetry_sdk::metrics::SdkMeterProvider"
+      ],
+      "implements": [
+        "opentelemetry::metrics::meter::MeterProvider"
+      ],
+      "methods": [
+        {
+          "name": "builder",
+          "signature": "fn builder() -> MeterProviderBuilder",
+          "summary": "Return default [MeterProviderBuilder]"
+        },
+        {
+          "name": "force_flush",
+          "signature": "fn force_flush(&self) -> OTelSdkResult",
+          "summary": "Flushes all pending telemetry."
+        },
+        {
+          "name": "meter",
+          "signature": "fn meter(&self, name: &'static str) -> Meter",
+          "via_trait": "opentelemetry::metrics::meter::MeterProvider"
+        },
+        {
+          "name": "meter_with_scope",
+          "signature": "fn meter_with_scope(&self, scope: InstrumentationScope) -> Meter",
+          "via_trait": "opentelemetry::metrics::meter::MeterProvider"
+        },
+        {
+          "name": "shutdown",
+          "signature": "fn shutdown(&self) -> OTelSdkResult",
+          "summary": "shutdown with default timeout"
+        },
+        {
+          "name": "shutdown_with_timeout",
+          "signature": "fn shutdown_with_timeout(&self, _timeout: Duration) -> OTelSdkResult",
+          "summary": "Shuts down the meter provider flushing all pending telemetry and releasing any held computational resources."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "module": "tracing_subscriber::reload",
+  "crate": "tracing-subscriber",
+  "api": "api/tracing_subscriber.reload.md",
+  "items": [
+    {
+      "path": "tracing_subscriber::reload::Error",
+      "name": "Error",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Error",
+      "summary": "Indicates that an error occurred when reloading a layer.",
+      "doc": "api/tracing_subscriber.reload.md#error",
+      "implements": [
+        "core::error::Error",
+        "core::fmt::Display"
+      ],
+      "methods": [
+        {
+          "name": "fmt",
+          "signature": "fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result",
+          "via_trait": "core::fmt::Display"
+        },
+        {
+          "name": "is_dropped",
+          "signature": "fn is_dropped(&self) -> bool",
+          "summary": "Returns `true` if this error occurred because the `Subscriber` containing the reloadable layer was dropped."
+        },
+        {
+          "name": "is_poisoned",
+          "signature": "fn is_poisoned(&self) -> bool",
+          "summary": "Returns `true` if this error occurred because the layer was poisoned by a panic on another thread."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::reload::Handle",
+      "name": "Handle",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Handle<L, S>",
+      "summary": "Allows reloading the state of an associated [`Layer`](crate::layer::Layer).",
+      "doc": "api/tracing_subscriber.reload.md#handle",
+      "methods": [
+        {
+          "name": "clone_current",
+          "signature": "fn clone_current(&self) -> Option<L> where L: Clone",
+          "summary": "Returns a clone of the layer or filter's current value if it still exists. Otherwise, if the subscriber has been dropped, returns `None`."
+        },
+        {
+          "name": "modify",
+          "signature": "fn modify(&self, f: impl FnOnce(&mut L)) -> Result<(), Error>",
+          "summary": "Invokes a closure with a mutable reference to the current layer or filter, allowing it to be modified in place."
+        },
+        {
+          "name": "reload",
+          "signature": "fn reload(&self, new_value: impl Into<L>) -> Result<(), Error>",
+          "summary": "Replace the current [`Layer`] or [`Filter`] with the provided `new_value`."
+        },
+        {
+          "name": "with_current",
+          "signature": "fn with_current<T>(&self, f: impl FnOnce(&L) -> T) -> Result<T, Error>",
+          "summary": "Invokes a closure with a borrowed reference to the current layer or filter, returning the result (or an error if the subscriber no longer exists)."
+        }
+      ]
+    },
+    {
+      "path": "tracing_subscriber::reload::Layer",
+      "name": "Layer",
+      "kind": "struct",
+      "crate": "tracing-subscriber",
+      "signature": "struct Layer<L, S>",
+      "summary": "Wraps a `Layer` or `Filter`, allowing it to be reloaded dynamically at runtime.",
+      "doc": "api/tracing_subscriber.reload.md#layer",
+      "implements": [
+        "tracing_subscriber::layer::Filter",
+        "tracing_subscriber::layer::Layer"
+      ],
+      "methods": [
+        {
+          "name": "callsite_enabled",
+          "signature": "fn callsite_enabled(&self, metadata: &'static Metadata<'static>) -> Interest",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>, ctx: &layer::Context<'_, S>) -> bool",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "enabled",
+          "signature": "fn enabled(&self, metadata: &Metadata<'_>, ctx: layer::Context<'_, S>) -> bool",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "event_enabled",
+          "signature": "fn event_enabled(&self, event: &Event<'_>, ctx: layer::Context<'_, S>) -> bool",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "handle",
+          "signature": "fn handle(&self) -> Handle<L, S>",
+          "summary": "Returns a `Handle` that can be used to reload the wrapped [`Layer`] or [`Filter`]."
+        },
+        {
+          "name": "max_level_hint",
+          "signature": "fn max_level_hint(&self) -> Option<LevelFilter>",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "new",
+          "signature": "fn new(inner: L) -> (Self, Handle<L, S>)",
+          "summary": "Wraps the given [`Layer`] or [`Filter`], returning a `reload::Layer` and a `Handle` that allows the inner value to be modified at runtime."
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "on_close",
+          "signature": "fn on_close(&self, id: span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "on_enter",
+          "signature": "fn on_enter(&self, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_event",
+          "signature": "fn on_event(&self, event: &Event<'_>, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "on_exit",
+          "signature": "fn on_exit(&self, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_follows_from",
+          "signature": "fn on_follows_from(&self, span: &span::Id, follows: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_id_change",
+          "signature": "fn on_id_change(&self, old: &span::Id, new: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_layer",
+          "signature": "fn on_layer(&mut self, subscriber: &mut S)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "on_new_span",
+          "signature": "fn on_new_span(&self, attrs: &span::Attributes<'_>, id: &span::Id, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, span: &span::Id, values: &span::Record<'_>, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Filter"
+        },
+        {
+          "name": "on_record",
+          "signature": "fn on_record(&self, span: &span::Id, values: &span::Record<'_>, ctx: layer::Context<'_, S>)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "on_register_dispatch",
+          "signature": "fn on_register_dispatch(&self, subscriber: &Dispatch)",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        },
+        {
+          "name": "register_callsite",
+          "signature": "fn register_callsite(&self, metadata: &'static Metadata<'static>) -> Interest",
+          "via_trait": "tracing_subscriber::layer::Layer"
+        }
+      ]
+    }
+  ]
+}

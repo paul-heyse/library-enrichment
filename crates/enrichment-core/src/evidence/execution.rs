@@ -145,13 +145,35 @@ crate::native_struct! {
         stderr: String => Rule::Text,
     }
 }
-crate::native_payload! {
-    #[derive(JsonSchema)]
-    pub enum ExecutionPayload {
-        SemanticQuery(SemanticQuery) = "semantic_query",
-        RuntimeObject(RuntimeObject) = "runtime_object",
-        UsageProbe(UsageProbe) = "usage_probe",
+crate::native_struct! {
+    pub struct ExecutionDefinition {
+        kind: ExecutionKind => Rule::Text,
+        evidence_kind: super::EvidenceKind => Rule::Text,
     }
+}
+
+macro_rules! execution_payloads {
+    ($($variant:ident($payload:ty) = $tag:literal => $evidence:ident),* $(,)?) => {
+        crate::native_vocabulary! {
+            pub enum ExecutionKind { $($variant = $tag),* }
+        }
+        crate::native_payload! {
+            #[derive(JsonSchema)]
+            pub enum ExecutionPayload { $($variant($payload) = $tag),* }
+        }
+        impl ExecutionKind {
+            pub fn definitions() -> Vec<ExecutionDefinition> {
+                vec![$(ExecutionDefinition {
+                    kind: Self::$variant, evidence_kind: super::EvidenceKind::$evidence,
+                }),*]
+            }
+        }
+    };
+}
+execution_payloads! {
+    SemanticQuery(SemanticQuery) = "semantic_query" => SemanticQueries,
+    RuntimeObject(RuntimeObject) = "runtime_object" => RuntimeApi,
+    UsageProbe(UsageProbe) = "usage_probe" => UsageProbes,
 }
 impl ExecutionPayload {
     /// Canonical result content is written before binding its source/observation identity.
@@ -281,9 +303,9 @@ crate::native_struct! {
 pub struct ExecutionObservation {
     observation_id: String => crate::native_union::Rule::Text,
     subject: SubjectRef => crate::native_union::Rule::Text,
-    environment_id: String => crate::native_union::Rule::Text,
-    image_id: String => crate::native_union::Rule::Text,
-    containment_identity: String => crate::native_union::Rule::Text,
+    environment_id: crate::identity::EnvironmentId => crate::native_union::Rule::Text,
+    image_id: String => crate::native_union::Rule::NonEmpty,
+    containment_identity: String => crate::native_union::Rule::Sha256,
     payload: ExecutionPayload => crate::native_union::Rule::Text,
     source: FactSource => crate::native_union::Rule::Text,
 }
@@ -291,7 +313,7 @@ pub struct ExecutionObservation {
 impl ExecutionObservation {
     pub fn new(
         subject: SubjectRef,
-        environment_id: String,
+        environment_id: crate::identity::EnvironmentId,
         image_id: String,
         containment_identity: String,
         payload: ExecutionPayload,
@@ -300,8 +322,7 @@ impl ExecutionObservation {
         subject.validate()?;
         source.validate()?;
         payload.validate(&subject)?;
-        if environment_id.is_empty()
-            || !image_id.strip_prefix("sha256:").is_some_and(digest)
+        if !image_id.strip_prefix("sha256:").is_some_and(digest)
             || !digest(&containment_identity)
             || source.artifact_id
                 != super::artifact_id_for(&canonical::sha256_hex(&payload.canonical_bytes()?))

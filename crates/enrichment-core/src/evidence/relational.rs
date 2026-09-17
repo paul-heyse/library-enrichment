@@ -18,7 +18,7 @@ crate::native_union! {
     pub enum SubjectRef {
         Symbol = "symbol" { symbol_id: String => Rule::Reference(Domain::Symbol) },
         Definition = "definition" { definition_id: String => Rule::Reference(Domain::Definition) },
-        Library = "library" { release_id: String => Rule::Reference(Domain::Release) },
+        Library = "library" { release_id: crate::identity::ReleaseId => Rule::Reference(Domain::Release) },
         Feature = "feature" { name: String => Rule::NonEmpty },
         Document = "document" {
             artifact_id: String => Rule::Reference(Domain::Artifact),
@@ -40,7 +40,7 @@ impl SubjectRef {
         let id = match self {
             Self::Symbol { symbol_id } => symbol_id,
             Self::Definition { definition_id } => definition_id,
-            Self::Library { release_id } => release_id,
+            Self::Library { .. } => return Ok(()),
             Self::Feature { name } => name,
             Self::Document { artifact_id, .. } => artifact_id,
             Self::Example { artifact_id, path } => {
@@ -286,15 +286,15 @@ impl FactSource {
     }
 }
 
-/// A definition is not an exposed alias or one producer's signature observation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct Definition {
-    pub definition_id: String,
-    pub kind: SymbolKind,
-    pub definition_path: String,
-    pub defined_in_package: String,
-    pub qualifier: Option<String>,
+crate::native_struct! {
+    /// A definition is not an exposed alias or one producer's signature observation.
+    pub struct Definition {
+        definition_id: String => Rule::Text,
+        kind: SymbolKind => Rule::Text,
+        definition_path: String => Rule::NonEmpty,
+        defined_in_package: String => Rule::NonEmpty,
+        qualifier: Option<String> => Rule::Text,
+    }
 }
 
 impl Definition {
@@ -331,6 +331,16 @@ pub struct PublicBinding {
     pub qualifier: Option<String>,
 }
 
+crate::native_struct! {
+pub(crate) struct PublicBindingIdentity {
+    package: String => Rule::Text,
+    ecosystem: crate::identity::Ecosystem => Rule::Text,
+    components: Vec<String> => Rule::Sequence,
+    kind: SymbolKind => Rule::Text,
+    qualifier: Option<String> => Rule::Text,
+}
+}
+
 impl PublicBinding {
     /// Typed component boundaries, kind and qualifier all contribute to public identity.
     #[must_use]
@@ -340,21 +350,13 @@ impl PublicBinding {
         kind: SymbolKind,
         qualifier: Option<&str>,
     ) -> String {
-        #[derive(Serialize)]
-        struct KeyInput<'a> {
-            package: &'a str,
-            ecosystem: crate::identity::Ecosystem,
-            components: &'a [String],
-            kind: SymbolKind,
-            qualifier: Option<&'a str>,
-        }
         crate::native_key::Key::PublicBinding
-            .value(&KeyInput {
-                package,
+            .record(&PublicBindingIdentity {
+                package: package.into(),
                 ecosystem: path.ecosystem(),
-                components: path.components(),
+                components: path.components().to_vec(),
                 kind,
-                qualifier,
+                qualifier: qualifier.map(str::to_owned),
             })
             .expect("declared native public binding identity")
     }
@@ -418,7 +420,7 @@ pub struct ApiObservation {
     pub observation_id: String,
     pub subject: SubjectRef,
     pub origin: ApiOrigin,
-    pub environment_id: String,
+    pub environment_id: crate::identity::EnvironmentId,
     pub payload: ApiPayload,
     pub source: FactSource,
 }
@@ -431,7 +433,7 @@ impl ApiObservation {
     pub fn new(
         subject: SubjectRef,
         origin: ApiOrigin,
-        environment_id: String,
+        environment_id: crate::identity::EnvironmentId,
         payload: ApiPayload,
         source: FactSource,
     ) -> Result<Self, String> {
@@ -443,10 +445,7 @@ impl ApiObservation {
         ) {
             return Err("an API observation requires a symbol or definition subject".into());
         }
-        if source.producer_binding_id.is_empty()
-            || source.artifact_id.is_empty()
-            || environment_id.is_empty()
-        {
+        if source.producer_binding_id.is_empty() || source.artifact_id.is_empty() {
             return Err(
                 "an API observation requires producer, artifact and environment identity".into(),
             );
@@ -570,19 +569,19 @@ pub struct RelationshipObservation {
 }
 }
 
-/// Exact content and acquisition binding for a producer input. Blob bytes remain deduplicated.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct InputArtifact {
-    pub input_id: String,
-    pub producer_binding_id: String,
-    pub role: String,
-    pub artifact_id: String,
-    pub sha256: String,
-    pub media_type: String,
-    pub kind: super::ArtifactKind,
-    pub size_bytes: u64,
-    pub source_uri: String,
+crate::native_struct! {
+    /// Exact content and acquisition binding; blob bytes remain deduplicated.
+    pub struct InputArtifact {
+        input_id: String => crate::native_union::Rule::Text,
+        producer_binding_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::ProducerBinding),
+        role: String => crate::native_union::Rule::NonEmpty,
+        artifact_id: String => crate::native_union::Rule::ArtifactIdentity { digest: "sha256".into() },
+        sha256: String => crate::native_union::Rule::Sha256,
+        media_type: String => crate::native_union::Rule::Text,
+        kind: super::ArtifactKind => crate::native_union::Rule::Text,
+        size_bytes: u64 => crate::native_union::Rule::Text,
+        source_uri: String => crate::native_union::Rule::NonEmpty,
+    }
 }
 
 impl InputArtifact {
@@ -641,25 +640,20 @@ impl InputArtifact {
     }
 }
 
-/// Successful empty scope, missing evidence and a partial observation remain distinguishable.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum CoverageOutcome {
-    Indexed,
-    Partial,
-    Missing,
+crate::native_vocabulary! {
+    /// Successful empty scope, missing evidence and partial observations remain distinct.
+    pub enum CoverageOutcome { Indexed = "indexed", Partial = "partial", Missing = "missing" }
 }
-
-/// Coverage is evidence about a declared subject scope and producer, not a table-presence guess.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct CoverageFact {
-    pub coverage_id: String,
-    pub producer_binding_id: String,
-    pub subject: SubjectRef,
-    pub kind: super::EvidenceKind,
-    pub outcome: CoverageOutcome,
-    pub gaps: Vec<super::Gap>,
+crate::native_struct! {
+    /// Coverage describes a declared scope and producer, not table presence.
+    pub struct CoverageFact {
+        coverage_id: String => crate::native_union::Rule::Text,
+        producer_binding_id: String => crate::native_union::Rule::Reference(crate::native_union::Domain::ProducerBinding),
+        subject: SubjectRef => crate::native_union::Rule::Text,
+        kind: super::EvidenceKind => crate::native_union::Rule::Text,
+        outcome: CoverageOutcome => crate::native_union::Rule::Text,
+        gaps: Vec<super::Gap> => crate::native_union::Rule::Set,
+    }
 }
 
 impl CoverageFact {
@@ -792,7 +786,7 @@ mod tests {
                 symbol_id: "sym_test".into(),
             },
             ApiOrigin::Source,
-            "env_test".into(),
+            crate::identity::Environment::unspecified().environment_id,
             ApiPayload {
                 declared_kind: SymbolKind::Function,
                 signature: Some("def f() -> int".into()),

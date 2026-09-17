@@ -40,7 +40,7 @@ pub enum ScopeState {
 
 crate::native_struct! {
 pub struct ScopeAssessment {
-    snapshot_id: String => crate::native_union::Rule::Text,
+    snapshot_id: crate::identity::SnapshotId => crate::native_union::Rule::Text,
     subject: crate::evidence::relational::SubjectRef => crate::native_union::Rule::Text,
     kind: crate::evidence::EvidenceKind => crate::native_union::Rule::Text,
     state: ScopeState => crate::native_union::Rule::Text,

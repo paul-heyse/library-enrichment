@@ -98,10 +98,13 @@ impl Service {
                 && !self.jobs.has_owned_work()
                 && self.execution.is_idle()
             {
-                self.repository
-                    .runtime
-                    .close_diagnostics()
+                tokio::time::timeout_at(deadline, self.repository.runtime.close_diagnostics())
                     .await
+                    .map_err(|_| {
+                        io::Error::other(
+                            "shutdown deadline while awaiting native physical completion",
+                        )
+                    })?
                     .map_err(io::Error::other)?;
                 return Ok(());
             }
@@ -120,16 +123,17 @@ impl Service {
     /// This identifies the effective daemon policy; producer admission still enforces it.
     pub fn operation_descriptor(
         &self,
-        method: &str,
-        request: &impl serde::Serialize,
+        request: &enrichment_core::request::ResearchRequest,
     ) -> enrichment_core::telemetry::OperationDescriptor {
         enrichment_core::telemetry::OperationDescriptor {
-            method: method.into(),
-            request_digest: enrichment_core::canonical::digest_hex(&serde_json::json!([
-                "research-operation/2",
-                method,
-                request
-            ])),
+            method: request.operation().rpc().into(),
+            request_digest: enrichment_core::native_key::Key::ResearchInvocation
+                .hex_digest(
+                    &enrichment_core::operation::identities::ResearchInvocation {
+                        request: request.clone(),
+                    },
+                )
+                .expect("declared native research request identity"),
             policy_digest: enrichment_core::native_key::Key::OperationPolicy
                 .record(&self.config)
                 .expect("validated typed effective configuration"),
@@ -173,18 +177,7 @@ impl Service {
         let runtime = QueryRuntime::with_diagnostics(
             &paths.cache_root.join("query-spill"),
             &paths.data_root.join("diagnostics"),
-            QueryLimits {
-                native: arrow.native.clone(),
-                memory_bytes: arrow.memory_bytes,
-                spill_bytes: arrow.spill_bytes,
-                metadata_cache_bytes: arrow.metadata_cache_bytes,
-                batch_rows: arrow.batch_rows,
-                partitions: arrow.partitions,
-                concurrency: arrow.concurrency,
-                result_rows: arrow.result_rows,
-                result_bytes: arrow.result_bytes,
-                deadline: std::time::Duration::from_secs(arrow.query_deadline_seconds),
-            },
+            QueryLimits::from(arrow),
         )
         .map_err(|e| store_err(&paths.cache_root)(io::Error::other(e.to_string())))?;
         let repository = EvidenceRepository::new(
@@ -228,9 +221,14 @@ impl Service {
         let recovery_config = config.execution.clone();
         let recovery_paths = paths.clone();
         let recovery_supervisor = execution.clone();
+        let recovery_retention = repository.retention();
         repository
             .runtime
             .bootstrap(async move {
+                recovery_retention
+                    .reconcile_processes()
+                    .await
+                    .map_err(io::Error::other)?;
                 crate::execution::ownership::validate_for_state(
                     &recovery_paths,
                     &recovery_config,
